@@ -1,0 +1,9 @@
+name = Lingotek
+description = Extends Drupal support for multilingual features using the Lingotek Collaborative Translation Platform.
+dependencies[] = locale
+dependencies[] = translation
+package = Lingotek
+project = "lingotek"
+configure = admin/settings/lingotek
+version = "6.x-20110323.20095"
+core = "6.x"
