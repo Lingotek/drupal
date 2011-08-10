@@ -1,0 +1,105 @@
+<?php
+/**
+ * @file
+ * Installation for Lingotek Community Translation Module
+ */
+
+/*
+ * Install the Lingotek module
+ */
+function lingotek_install() {
+  db_update('system')->fields(array('weight' => 3))->condition('name', 'lingotek')->execute();
+
+  //TODO Add documents to Lingotek for all existing nodes
+
+}
+
+/*
+ * Uninstall the Lingotek module
+ */
+function lingotek_uninstall() {
+  //variable_del('lingotek_community');
+
+}
+
+/*
+ * Install the database schema for the Lingotek module
+ */
+function lingotek_schema() {
+  $schema['lingotek'] = array
+  (
+    'description' => 'Table for storing node related data.',
+    'fields' => array
+    (
+      'nid' => array
+      (
+        'description' => 'The primary identifier for a node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'lingokey' => array
+      (
+        'description' => 'lingoNode attribute',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'lingovalue' => array
+      (
+        'description' => 'Value of the specified key',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array
+    (
+      'nid',
+      'lingokey',
+    ),
+  );
+  $schema['lingotek_mt_queue'] = array
+  (
+    'description' => 'Table for storing a Machine Translation queue.',
+    'fields' => array
+    (
+      'uid' => array
+      (
+        'description' => 'The primary identifier for a user.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array
+      (
+        'description' => 'The primary identifier for a node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'language' => array
+      (
+        'description' => 'Language to machine translate',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'engine' => array
+      (
+        'description' => 'Engine used to machine translate',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+  );
+  return $schema;
+}

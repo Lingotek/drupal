@@ -2,26 +2,33 @@
 // $Id:lingotek.admin.inc,LingoTek$
 /**
  * @file
- * Administer the Lingotek Community Translation module
+ * Administrative Settings for the module
  */
 
+include_once('lingotek.session.inc');
+
 /*
- * settings_page hook
+ * hook_settings_page
  *
  * Get the form for the administration page
  */
-function lingotek_settings_page($op = NULL) {
-  $output = drupal_get_form('lingotek_general_settings_form');
-  return $output;
+function lingotek_settings_page() {
+  return drupal_get_form('lingotek_administrative_settings_form');
 }
 
 /*
- * Admistration Form for configuring the LingoTek Module.
+ * Admistration Form for configuring the Lingotek Module.
  */
-function lingotek_general_settings_form() {
+function lingotek_administrative_settings_form() {
+
+  preg_match('.Revision: (\d+) .', '$Revision: 21829 $', $revision);
 
   //Authentication Settings
-    $form['auth'] = array('#type' => 'fieldset', '#title' => t('Authentication Settings'));
+    $form['auth'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Authentication Settings'),
+      '#description' => 'Lingotek Module Version 7.' . $revision[1] . '<br />Logging in: ' . lingotek_can_log_in()
+    );
 
     $form['auth']['lingotek_login_id'] = array(
       '#type' => 'textfield',
@@ -29,6 +36,7 @@ function lingotek_general_settings_form() {
       '#description' => t('During flow of control, sometimes a Dashboard login id is not available.  In such instances, this login id will be used.  The only restriction is that the login id must exist in the Dashboard.'),
       '#default_value' => variable_get('lingotek_login_id', ''),
     );
+
     $form['auth']['lingotek_login_key'] = array(
       '#type' => 'textfield',
       '#title' => t('Login Key'),
@@ -93,73 +101,62 @@ function lingotek_general_settings_form() {
       );
     }
 
-  //Drupal Settings
-    $form['drupal'] = array('#type' => 'fieldset', '#title' => t('Drupal Settings'));
-
-    //Display enabled languages for the neutral language setting.
+  //Options
     $options = array();
-    foreach (language_list() as $language) {
-      if ($language->enabled) {
-        $options[$language->language] = $language->native;
-      }
-    }
+    $options[FALSE] = t("Disabled");
+    $options[TRUE] = t("Enabled");
 
-    $form['drupal']['lingotek_neutral_language'] = array(
+  //Default Settings
+    $form['defaults'] = array('#type' => 'fieldset', '#title' => t('Page Default Settings'));
+
+    $form['defaults']['lingotek_phase_template'] = array(
       '#type' => 'select',
-      '#title' => t('Neutral Language'),
-      '#description' => t('Use this language as the source language when an article is language neutral.'),
-      '#options' => $options,
-      '#default_value' => variable_get('lingotek_neutral_language', 'en'),
-    );
-
-    $form['drupal']['lingotek_menu_overwrite'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Overwrite Menus'),
-      '#description' => t('Use this to help map menus to nodes point to the correct currently selected language.  This feature requires the Menu Translation module in i18n.'),
-      '#default_value' => variable_get('lingotek_menu_overwrite', FALSE),
-    );
-
-    if(variable_get('lingotek_menu_overwrite', FALSE)) {
-    	db_query("UPDATE {system} SET weight = 1 WHERE name = 'i18nmenu'");
-    }
-    else {
-    	db_query("UPDATE {system} SET weight = 0 WHERE name = 'i18nmenu'");
-    }
-
-    //This setting may not work fluidly with the current version of Lingotek's workbench.
-    $form['drupal']['lingotek_use_lightbox'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable Lightbox2'),
-      '#description' => t('Use Lightbox2 to display LingoDex.  Disable this if you want it to load in another window.  This feature requires the Lightbox2 module.'),
-      '#default_value' => variable_get('lingotek_use_lightbox', FALSE),
-    );
-
-  //Default Settings (Phase Template)
-    $form['default_settings'] = array('#type' => 'fieldset', '#title' => t('Default Settings'));
-
-    $form['default_settings']['lingotek_phase_template'] = array(
-      '#type' => 'select',
-      '#title' => t('Phase Template'),
-      '#description' => t('Use this phase template as the default when creating new pages or translating existing ones.'),
+      '#title' => t('Phase Template (Workflow)'),
+      '#description' => t('Use this phase template as the default when creating new pages.'),
       '#options' => lingotek_get_phase_templates(),
       '#default_value' => variable_get('lingotek_phase_template', ''),
     );
 
-    $engines = lingotek_get_machine_translation_engines();
-    $form['default_settings']['lingotek_publish_with_mt'] = array(
-      '#type' => 'select',
-      '#title' => t('Machine Translation Engine'),
-      '#description' => t('Choose which translation engine should be used by default on new pages for the automatically pasted translations.'),
-      '#options' => $engines,
-      '#default_value' => variable_get('lingotek_publish_with_mt', 'google'),
+    $form['defaults']['lingotek_sync'] = array(
+      '#type' => 'radios',
+      '#title' => t('Synchronization Method'),
+      '#description' => t('Use this synchronization method as the default when creating new pages.'),
+      '#options' => lingotek_get_sync_methods(),
+      '#default_value' => variable_get('lingotek_sync', FALSE),
     );
 
-    $form['default_settings']['lingotek_available_mt_options'] = array(
+    $form['defaults']['lingotek_use_source'] = array(
+      '#type' => 'select',
+      '#title' => t('Include source text in synchronization.'),
+      '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
+      '#options' => $options,
+      '#default_value' => variable_get('lingotek_use_source', TRUE),
+    );
+
+    $engines = lingotek_get_machine_translation_engines();
+    $form['defaults']['lingotek_mt_engine'] = array(
+      '#type' => 'select',
+      '#title' => t('Machine Translation Engine'),
+      '#description' => t('Choose which translation engine should be used for the automatically pasted translations.'),
+      '#options' => $engines,
+      '#default_value' => variable_get('lingotek_mt_engine', FALSE),
+    );
+    $form['defaults']['lingotek_available_mt_options'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Available Machine Translation Options'),
-      '#description' => t('Choose which engines are available.'),
+      '#description' => t('Choose which engines are available to the page creator.'),
       '#options' => $engines,
       '#default_value' => variable_get('lingotek_available_mt_options', array_keys($engines)),
+    );
+
+  //Developer Settings
+    $form['developer_settings'] = array('#type' => 'fieldset', '#title' => t('Developer Settings'));
+
+    $form['developer_settings']['lingotek_error_log'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable Error Log'),
+      '#description' => t('This prints errors and warnings to the web server\'s error logs in addition to adding them to watchdog.'),
+      '#default_value' => variable_get('lingotek_error_log', FALSE),
     );
 
   return system_settings_form($form);

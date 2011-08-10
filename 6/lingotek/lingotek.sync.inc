@@ -1,6 +1,4 @@
 <?php
-// $Id:lingotek.sync.inc,LingoTek$
-
 /**
  * @file
  * Update the Drupal Nodes with new information from the Lingotek Collaborative
@@ -18,10 +16,9 @@
  *  Keys are the languages, values are the node ids
  */
 function lingotek_update_nodes($node) {
-  global $_lingotek_client;
+  global $_lingotek_client, $_lingotek_locale;
 
   $mt_queue = array();
-  $locales = variable_get('lingotek_languages', array());
 
   if ($node->language == "") {
     $node->language = variable_get('lingotek_neutral_language', 'en');
@@ -30,44 +27,29 @@ function lingotek_update_nodes($node) {
   $languages = array();
   foreach (language_list() as $language) {
     if ($language->language != $node->language && $language->enabled) {
-      array_push($languages, $locales[$language->language]);
+      array_push($languages, $_lingotek_locale[$language->language]);
     }
   }
 
   //Is the document uploaded?  If not, let's upload it.
   if (!lingotek_lingonode($node->nid, 'document_id')) {
-    $file_name = tempnam("temp", "Doc");
-    $file_handle = fopen($file_name, "w");
+    $xml = "<?xml version=\"1.0\"?><contents><title><![CDATA[" . $node->title . "]]></title><body><![CDATA[" . $node->body . "]]></body></contents>";
 
-    $body = $node->body;
-
-    fwrite($file_handle, "<?xml version=\"1.0\"?><contents><title><![CDATA[" . $node->title . "]]></title><body><![CDATA[" . $body . "]]></body></contents>");
-
-    $data = array
+    $param = array
     (
       'projectId' => variable_get('lingotek_project', ''),
       'documentName' => $node->title,
+      'documentDesc' => $node->title,
       'format' => 'XML',
-      'encoding' => 'UTF-8',
-      'sourceLanguage' => $locales[$node->language],
+      'sourceLanguage' => $_lingotek_locale[$node->language],
       'tmVaultId' => variable_get('lingotek_vault', 1),
+      'content' => $xml,
     );
 
-    $output = $_lingotek_client->upload
-    (
-      'addDocument',
-      $data,
-      $file_name
-    );
-
-    fclose($file_handle);
+    $output = $_lingotek_client->request('addContentDocument', $param);
 
     if ($output->results == "success") {
       lingotek_lingonode($node->nid, 'document_id', $output->id);
-    }
-    else {
-      error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") addDocument FAILED - projectId: " . variable_get('lingotek_project', '') . ", documentName: " . $node->title . ", node language: " . $node->language . ", sourceLanguage: " . $locales[$node->language]);
-      error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") addDocument message: " . $output->message);
     }
   }
 
@@ -75,9 +57,6 @@ function lingotek_update_nodes($node) {
 
   //Flush % complete for documents
   $output = $_lingotek_client->request("flushDocumentProgress", array('documentId' => $doc_id));
-  if ($output->results != "success") {
-    error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") flushDocumentProgress FAILED - documentId: " . $doc_id);
-  }
 
   //Is the Target Language added?
   $output = $_lingotek_client->request("getDocument", array('documentId' => $doc_id));
@@ -105,13 +84,12 @@ function lingotek_update_nodes($node) {
           $target_node->comment = $node->comment;
 
           //Link to the node so it can be visible:
-          //We don't check 'publishWithMt' in case it changed since the time the article was created (although it shouldn't), so that it will still be published independent of the setting.
           $tnid = lingotek_lingonode($target_node->nid, "tnid");
           //Check if it wasn't published initially:
           if ($tnid) {
             $target_node->tnid = $tnid;
           }
-					node_save($target_node);
+          node_save($target_node);
         }
 
         //Needs to be updated every time.
@@ -138,7 +116,12 @@ function lingotek_update_nodes($node) {
         array
         (
           'documentId' => $doc_id,
-          'targetLanguage' => $lang
+          'targetLanguage' => $lang,
+        ),
+        array
+        (
+          'drupal languages' => $languages,
+          'existing languages' => $target_languages,
         )
       );
       if ($add_translation_target->results == "success") {
@@ -149,11 +132,9 @@ function lingotek_update_nodes($node) {
         }
 
         $apply_phase_template = $_lingotek_client->request("applyPhaseTemplate", array('translationTargetId' => $add_translation_target->id, 'phaseTemplateId' => $phase_template_id));
-
         if ($apply_phase_template->results == "success") {
 
           $get_translation_target = $_lingotek_client->request("getTranslationTarget", array('translationTargetId' => $add_translation_target->id));
-
           //Create placeholder nodes for target languages:
           if ($get_translation_target->results == "success") {
             $target_node = new stdClass();
@@ -164,42 +145,21 @@ function lingotek_update_nodes($node) {
             $target_node->format = $node->format;
             $target_node->status = 0;
 
-						//Submit so we can get the new node's nid
+            //Submit so we can get the new node's nid
             node_submit($target_node);
 
-            if (lingotek_lingonode($node->nid, 'publishWithMt')) {
-              //Add node to target queue for MT Translation:
-              $mt_queue[$lang] = $target_node->nid;
-            }
             $target_node->tnid = $target_node->nid;
 
             node_save($target_node);
             lingotek_lingonode($target_node->nid, "tnid", $node->nid);
           }
-          else {
-            error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") getTranslationTarget FAILED - translationTargetId: " . $add_translation_target->id);
-            error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") getTranslationTarget message: " . $get_translation_target->message);
-          }
         }
-        else {
-          error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") applyPhaseTemplate FAILED - translationTargetId: " . $add_translation_target->id . ", phaseTemplateId: " . $phase_template_id);
-          error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") applyPhaseTemplate message: " . $apply_phase_template->error);
-        }
-      }
-      else {
-        error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") addTranslationTarget FAILED - documentId: " . $doc_id . ", targetLanguage: " . $lang . ", phaseTemplateId: " . 2);
-        error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") addTranslationTarget message: " . $add_translation_target->message);
       }
     }
-  }
-  else {
-    error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") getDocument FAILED - documentId: " . $doc_id);
-    error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") getDocument message: " . $output->message);
   }
 
   if (!$node->tnid || $node->tnid == "") {
     $node->tnid = $node->nid;
     node_save($node);
   }
-  return $mt_queue;
 }

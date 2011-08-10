@@ -1,0 +1,332 @@
+<?php
+/**
+ * @file
+ * Module core functionality
+ */
+
+include_once('lingotek.session.inc');
+include_once('lingotek.reference.inc');
+include_once('lingotek.util.inc');
+include_once('lingotek.api.inc');
+include_once('lingotek.mt.inc');
+
+
+//While Testing, uncomment this to rebuild the menus:
+//menu_rebuild();
+
+/*
+ * hook_menu
+ */
+function lingotek_menu() {
+  $items = array();
+
+  $items['admin/settings/lingotek'] = array
+  (
+    'title' => 'Lingotek',
+    'access arguments' => array('administration'),
+    'description' => 'Community Translation Settings',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'lingotek_settings_page',
+  );
+
+  $items['node/%node/lingotek_pm'] = array
+  (
+    'title' => 'Lingotek',
+    'access arguments' => array('pm'),
+    'file' => 'lingotek.page.inc',
+    'page arguments' => array(1),
+    'page callback' => 'lingotek_pm',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+
+  $items['lingotek/update'] = array
+  (
+    'access arguments' => array('pm'),
+    'file' => 'lingotek.page.inc',
+    'page callback' => 'lingotek_update',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['lingotek/mt_all'] = array
+  (
+    'access arguments' => array('administration'),
+    'file' => 'lingotek.pages.inc',
+    'page callback' => 'lingotek_mt_all',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['lingotek/segment'] = array
+  (
+    'access arguments' => array('mt'),
+    'file' => 'lingotek.mt.inc',
+    'page callback' => 'lingotek_mt_save_segment',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/*
+ * hook_permission
+ */
+function lingotek_permission() {
+  return array(
+    'administration' => array('title' => 'Administration Menu', 'description' => t('Access the administrative page for the module.')),
+    'pm' => array('title' => 'Project Management', 'description' => t('Access the Lingotek tab on content types.')),
+    'translation' => array('title' => 'Translate', 'description' => t('Allow access to the workbench for translation (first) phases.')),
+    'review' => array('title' => 'Review', 'description' => t('Allow access to the workbench for review (following) phases.')),
+    'phase_template' => array('title' => 'Phase Template (Workflow)', 'description' => t('Allow node-level setting of the phase template')),
+    'use_source' => array('title' => 'Paste Source', 'description' => t('Allow node-level setting of showing the source when no translation is available yet.')),
+    'sync_method' => array('title' => 'Synchronization Method', 'description' => t('Allow node-level setting of setting the synchronization method')),
+    'mt' => array('title' => 'Machine Translation', 'description' => t('Allow node-level setting of machine translation')),
+  );
+}
+
+/*
+ * hook_form_alter
+ */
+function lingotek_form_alter(&$form, $form_state, $form_id) {
+
+  if (isset($form['#id']) && strpos($form['#id'], 'node-form') === FALSE) {
+    return;
+  }
+
+  $options = array();
+  $options[TRUE] = t('Enabled');
+  $options[FALSE] = t('Disabled');
+
+  //Vertical Tab
+  $form['lingotek'] = array
+  (
+    '#title' => t('Lingotek Translation Settings'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'additional_settings',
+  );
+
+  $node = lingotek_empty_node();
+  $document_id = FALSE;
+  if (isset($form['nid']['#value'])) {
+    $nid = $form['nid']['#value'];
+    $document_id = lingotek_lingonode($nid, 'document_id');
+    $node = node_load($nid);
+  }
+
+  //Document already added?  Then don't show the phase template settings
+  if (!$document_id) {
+    //Phase Template
+    $form['lingotek']['phaseTemplate'] = array
+    (
+      '#type' => 'select',
+      '#title' => t('Phase Template (Workflow)'),
+      '#default_value' => variable_get('lingotek_phase_template', 2),
+      '#options' => lingotek_get_phase_templates(),
+      '#access' => user_access('phase_template'),
+    );
+  }
+
+  //Sync Setting
+  $form['lingotek']['syncMethod'] = array
+  (
+    '#type' => 'radios',
+    '#title' => t('Synchronization Method'),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', FALSE),
+    '#options' => lingotek_get_sync_methods(),
+    '#access' => user_access('sync_method'),
+  );
+
+  //Paste Source Setting
+  $form['lingotek']['useSource'] = array
+  (
+    '#type' => 'select',
+    '#title' => t('Include source text in synchronization.'),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'use_source'), 'lingotek_use_source', TRUE),
+    '#options' => $options,
+    '#access' => user_access('use_source'),
+  );
+
+  //MT Settings
+  if (user_access('mt')) {
+    $available_engines = lingotek_get_machine_translation_engines();
+    $enabled_engines = variable_get('lingotek_available_mt_options', array_keys($available_engines));
+    $engines = array();
+    foreach ($enabled_engines as $engine) {
+      $engines[$engine] = $available_engines[$engine];
+    }
+
+    $form['lingotek']['mtEngine'] = array
+    (
+      '#type' => 'select',
+      '#title' => t('Machine Translation Engine'),
+      '#default_value' => FALSE, //Only run MT when specified
+      '#options' => $engines,
+    );
+
+    $languages = array();
+    $checked = array();
+    foreach (language_list() as $language) {
+      if ($language->enabled && $language->language != $node->language) {
+        $languages[$language->language] = $language->native . " (" . $language->name . ")";
+        array_push($checked, $language->language);
+      }
+    }
+
+    $form['lingotek']['mtTargets'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Apply Machine Translation to the following languages'),
+      '#options' => $languages,
+      '#default_value' => $checked,
+    );
+  }
+}
+
+/*
+ * hook_node_view
+ */
+function lingotek_node_view($node, $view_mode) {
+  global $language;
+
+  if ($view_mode == 'full') {
+    lingotek_node_sync($node);
+
+    //Node added while module disabled or before the module was installed?
+    lingotek_node_init_default($node);
+    drupal_set_title(lingotek_get_title($node), PASS_THROUGH);
+
+    if ($language->language != $node->language) {
+      $link = lingotek_get_workbench_url($node, $language->language, t("Help make it better."));
+      if ($link != "") {
+        $message = t("The translation of this page is still being worked on.") . " ";
+        $message .= $link;
+        drupal_set_message($message);
+      }
+    }
+  }
+}
+
+/*
+ * hook_node_view_alter
+ */
+function lingotek_node_view_alter(&$build) {
+  //Make sure any changes are loaded instantly rather than waiting for a refresh (when sync-ing):
+  if (array_key_exists('body', $build)) {
+    $node = node_load($build['body']['#object']->nid, NULL, TRUE);
+    $build['body'][0]['#markup'] = $node->body[$build['body']['#language']][0]['safe_value'];
+  }
+}
+
+/*
+ * hook_preprocess_node
+ */
+function lingotek_preprocess_node(&$node, $hook) {
+  //Translate the node titles when not viewing the node as a full page.
+  $node['title'] = lingotek_get_title(node_load($node['nid']));
+}
+
+/*
+ * hook_preprocess_page
+ */
+function lingotek_preprocess_page(&$page, $hook) {
+  //Process MT queue once per page load
+  lingotek_dequeue();
+}
+
+/*
+ * hook_node_insert
+ */
+function lingotek_node_insert($node) {
+  lingotek_node_update($node);
+}
+
+/*
+ * hook_node_update
+ */
+function lingotek_node_update($node) {
+
+  if (isset($node->mtTargets)) {
+    $node->mtTargets = array_filter($node->mtTargets, "lingotek_unselected");
+  }
+  //If document never added, FIRST RUN ONLY
+  if (!lingotek_lingonode($node->nid, 'document_id')) {
+    $phase_template = variable_get('lingotek_phase_template', 2);
+    //If user defines the phase template
+    if (user_access('phase_template') && isset($node->phaseTemplate)) {
+      $phase_template = $node->phaseTemplate;
+    }
+    lingotek_add_document($node);
+    lingotek_lingonode($node->nid, 'phase_template_id', $phase_template);
+
+    //Run MT for the first time
+    if (user_access('mt') && isset($node->mtEngine) && $node->mtEngine) {
+      lingotek_mt($node, $node->mtTargets, $node->mtEngine);
+    }
+    else {
+      $checked = array();
+      foreach (language_list() as $language) {
+        if ($language->enabled) {
+          array_push($checked, $language->language);
+        }
+      }
+      lingotek_mt($node, $checked, variable_get('lingotek_mt_engine', FALSE));
+    }
+  }
+  else {
+    //Keep source document up to date
+    lingotek_update_document($node);
+
+    //Run MT
+    if (user_access('mt') && isset($node->mtEngine) && $node->mtEngine) {
+      lingotek_mt($node, $node->mtTargets, $node->mtEngine);
+    }
+  }
+
+  if (user_access('sync_method') && isset($node->syncMethod)) {
+    lingotek_lingonode($node->nid, 'sync_method', $node->syncMethod);
+  }
+  if (user_access('use_source') && isset($node->useSource)) {
+    lingotek_lingonode($node->nid, 'use_source', $node->useSource);
+  }
+
+  #Add any missing languages and their phase templates
+  lingotek_add_missing_targets($node);
+}
+
+/*
+ * hook_language_switch_links_alter
+ */
+function lingotek_language_switch_links_alter(&$links, $type, $path) {
+  if (!user_access('translation') && !user_access('review')) {
+    return;
+  }
+
+  if (preg_match("!^node/(\d+)(/.+|)!", $path, $matches) && ($node = node_load((int) $matches[1]))) {
+    lingotek_node_init_default($node);
+
+    $source = $node->language;
+
+    foreach ($links as $lang => $link) {
+      //This removes the css class that crosses it out, and prepares the object for uninitialized languages.
+      $links[$lang]['attributes']['class'] = array();
+      if (isset($node->body[$lang])) {
+        $links[$lang]['href'] = $links[$source]['href'];
+      }
+      else {
+        $links[$lang]['title'] = $links[$lang]['title'] . ' ' . t('- Help translate!');
+        $links[$lang]['href'] = lingotek_get_workbench_url($node, $lang);
+        $links[$lang]['attributes']['target'] = '_blank';
+      }
+    }
+  }
+}
+
+/*
+ * hook_help
+ */
+function lingotek_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#lingotek':
+      return t('Please see our DevZone:') . ' ' . l(t('Drupal Integration'), 'http://lingotek.com/support/devzone/drupal-integration');
+  }
+}

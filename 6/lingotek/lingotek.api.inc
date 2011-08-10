@@ -1,6 +1,4 @@
 <?php
-// $Id:lingotek.api.inc,LingoTek$
-
 /**
  * @file
  * Call the Lingotek APIs using CURL
@@ -9,18 +7,18 @@
 $GLOBALS['_lingotek_client'] = new LingotekSession();
 
 /*
- * Get the Lingotek user's current project
+ * Get the Lingotek user's current projects
  */
 function lingotek_get_projects() {
   global $_lingotek_client;
 
   $options = array();
 
-  if (!$_lingotek_client->isLoggedIn()) {
+  if (!$_lingotek_client->canLogIn()) {
     return $options;
   }
 
-  $list_projects = $_lingotek_client->request("listAssignedProjects", array());
+  $list_projects = $_lingotek_client->request("listAssignedProjects");
   if ($list_projects->results == "success") {
     foreach ($list_projects->projectAssignments as $project) {
       $options[$project->projectId] = t($project->projectName);
@@ -38,11 +36,11 @@ function lingotek_get_vaults() {
 
   $options = array();
 
-  if (!$_lingotek_client->isLoggedIn()) {
+  if (!$_lingotek_client->canLogIn()) {
     return $options;
   }
 
-  $list_TM_vaults = $_lingotek_client->request("listTMVaults", array());
+  $list_TM_vaults = $_lingotek_client->request("listTMVaults");
   if ($list_TM_vaults->results == "success") {
     foreach ($list_TM_vaults->personalVaults as $vault) {
       $options["Personal Vaults"][$vault->id] = t($vault->name);
@@ -67,12 +65,12 @@ function lingotek_get_phase_templates() {
   $options[3] = t("Translation + 2 reviews");
   $options[4] = t("Translation + 3 reviews");
 
-  if (!$_lingotek_client->isLoggedIn()) {
+  if (!$_lingotek_client->canLogIn()) {
     return $options;
   }
 
   //Add custom phase templates to the list:
-  $list_phase_templates = $_lingotek_client->request("listPhaseTemplates", array());
+  $list_phase_templates = $_lingotek_client->request("listPhaseTemplates");
   if ($list_phase_templates->results == "success") {
     foreach ($list_phase_templates->phaseTemplates as $phase_template) {
       $options[$phase_template->id] = t($phase_template->name);
@@ -133,19 +131,33 @@ function lingotek_node_get_translations($tnid) {
  *  Node object
  */
 function lingotek_get_node($lang_prefix, $tnid) {
+  $result = db_query("SELECT n.nid FROM {node} n INNER JOIN {lingotek} ln ON n.nid = ln.nid AND ln.lingokey = 'tnid' WHERE n.language = '%s' AND ln.lingovalue = '%s'", $lang_prefix, $tnid);
+  $row = db_fetch_object($result);
+
+  if ($row) {
+    return node_load(array('nid' => $row->nid));
+  }
   //If it was published with MT, then the tnid was set:
-  if (lingotek_lingonode($tnid, "publishWithMt") && lingotek_lingonode($tnid, "publishWithMt") != 'deferred') {
+  else {
     return node_load(array('language' => $lang_prefix, 'tnid' => $tnid));
   }
-  //Otherwise, we need to look it up in the lingonode table:
-  else {
-    $result = db_query("SELECT n.nid FROM {node} n INNER JOIN {lingotek} ln ON n.nid = ln.nid AND ln.lingokey = 'tnid' WHERE n.language = '%s' AND ln.lingovalue = '%s'", $lang_prefix, $tnid);
-    $row = db_fetch_object($result);
+}
 
-    if ($row) {
-      return node_load(array('nid' => $row->nid));
-    }
-  }
+/*
+ * Retrieve xliff for a document
+ *
+ * @param $doc_id
+ *  Document Id as used by Lingotek
+ *
+ * @return
+ *  xlf source text
+ */
+function lingotek_get_xliff($doc_id) {
+  global $_lingotek_client;
+
+  $xliff_text = "";
+  $params = array('documentId' => $doc_id);
+  return $_lingotek_client->download("downloadDocumentAsXliff", $params);
 }
 
 /*
@@ -168,6 +180,37 @@ function lingotek_tnid($node) {
   else {
     return $node->tnid;
   }
+}
+
+/*
+ * Save a segment
+ *
+ * Helper method so that if a node has the tnid deferred until later, it will
+ * get it from the database instead.
+ *
+ * @param $source_text
+ *  Source text
+ * @param $target_text
+ *  Target text that should be saved in the segment
+ * @param $target_language
+ *  Target language as used by lingotek (locale_country)
+ * @param $doc_id
+ *  Document Id
+ * @return
+ *  boolean, true if the api call was successful
+ */
+function lingotek_save_segment($source_text, $target_text, $target_language, $doc_id) {
+  global $_lingotek_client;
+  $param = array
+  (
+    "sourceText" => $source_text,
+    "targetText" => $target_text,
+    "targetLanguage" => $target_language,
+    "documentId" => $doc_id,
+    "overwrite" => FALSE,
+  );
+  $save_segment = $_lingotek_client->request("saveSegment", $param);
+  return ($save_segment->results == "success");
 }
 
 /*
@@ -218,40 +261,24 @@ function lingotek_workbench_phase_link($document_id, $phase_id, $label) {
  *  Should the currently used target node be saved within this process?
  */
 function lingotek_download_document($source_node, $target_node, $save = TRUE) {
-  global $_lingotek_client;
-
-  $locales = variable_get('lingotek_languages', array());
+  global $_lingotek_client, $_lingotek_locale;
 
   $document_id = lingotek_lingonode($source_node->nid, 'document_id');
-  $target_language = $locales[$target_node->language];
+  $target_language = $_lingotek_locale[$target_node->language];
+  $params = array('documentId' => $document_id, 'targetLanguage' => $target_language);
 
   if (!isset($target_language) || !isset($document_id)) {
-    error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") downloadDocument NOT CALLED - (missing parameters) documentId: " . $document_id . " targetLanguage: " . $target_language);
+    lingotek_error('downloadDocument was not called because it was missing parameters', $params);
     return;
   }
   //Get the finished document
-  $params = array('documentId' => $document_id, 'targetLanguage' => $target_language);
-  $file = $_lingotek_client->download("downloadDocument", $params);
-  if (isset($file->results)) {
-  	error_log("LINGOTEK: Error downloading document - " . __FILE__ . ":" . __LINE__);
-    return;
-  }
-  $zip = new ZipArchive;
-  $zip->open($file);
-  $name = $zip->getNameIndex(0);
-  $doc = $zip->getStream($name);
-  $text = "";
-  while (!feof($doc)) {
-    $text .= fread($doc, 2);
-  }
-  fclose($doc);
+  $text = $_lingotek_client->download("downloadDocument", $params);
 
   try {
     $xml = new SimpleXMLElement($text);
   }
   catch (Exception $e) {
-    error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") downloadDocument FAILED - XML ERROR, text: " . $text);
-    error_log("LINGOTEK API: " . __FILE__ . ":(" . __LINE__ . ") downloadDocument FAILED - XML ERROR, Exception Message: " . $e->getMessage());
+    lingotek_error("downloadDocument FAILED", array('xml' => $text, 'error' => $e->getMessage()));
   }
 
   //Update the Node details to show the translated document
@@ -273,108 +300,14 @@ function lingotek_download_document($source_node, $target_node, $save = TRUE) {
 }
 
 /*
- * Helper function, for storing additional information with a Node.
- *
- * @param $nid
- *  NodeId.
- * @param $key
- *  (optional) "" Key to look up in the database.  If no key is specified, then
- *  every key for the Node is returned with it's value.
- * @param $value
- *  (optional) "" Value to save.  If "" or no value is given for $value, then
- *  it will return the $value of the first found instance of the specified $key
- *  in the database.  Returns FALSE if no value is found.
+ * Can we log in and are the credentials right for logging in?
  */
-function lingotek_lingonode($nid, $key = "", $value = "") {
-  if (is_numeric($nid) && $nid) {
-    //Return an array with all of the keys and values.
-    if ($key == "") {
-      $lingo_node = array();
-
-      $result = db_query('SELECT n.lingokey, n.lingovalue FROM {lingotek} n WHERE n.nid = %d', $nid);
-      while ($row = db_fetch_object($result)) {
-        $lingo_node[$row->lingokey] = $row->lingovalue;
-      }
-
-      return $lingo_node;
-    }
-    //Get value for the specified key, only returns the first match
-    elseif ($value == "") {
-      $result = db_query("SELECT n.lingovalue FROM {lingotek} n WHERE n.nid = %d AND n.lingokey = '%s'", $nid, $key);
-      $row = db_fetch_object($result);
-
-      if ($row) {
-        return $row->lingovalue;
-      }
-      else {
-        return FALSE;
-      }
-    }
-    //Insert the specified key and value
-    else {
-      //insert or update
-      if (lingotek_lingonode($nid, $key) === FALSE) { //Insert
-        db_query("INSERT INTO {lingotek} VALUES(%d, '%s', '%s')", $nid, $key, $value);
-      }
-      else { //Update
-        db_query("UPDATE {lingotek} SET lingovalue = '%s' WHERE nid = %d AND lingokey = '%s'", $value, $nid, $key);
-      }
-    }
+function lingotek_can_log_in() {
+  global $_lingotek_client;
+  if ($_lingotek_client->canLogIn()) {
+    return t("True");
   }
-}
-
-/*
- * Revert from having been embedded in XML
- *
- * @param $text
- *  Text to be unescaped
- * @return
- *  Text that has been unescaped
- */
-function lingotek_xml_decode($text) {
-  $text = str_replace("&lt;", "<", $text);
-  $text = str_replace("&gt;", ">", $text);
-  $text = str_replace("&apos;", "'", $text);
-  $text = str_replace("&quot;", "\"", $text);
-  $text = str_replace("&amp;", "&", $text);
-  return $text;
-}
-
-/*
- * Match Lingotek's language code to what drupal uses
- *
- * @param $string
- *  Language Code returned from Lingotek
- * @return
- *  Language Code as used by drupal (only uses default, not dynamic)
- */
-function lingotek_language_matching($string) {
-  switch ($string) {
-    case 'pt_BR':
-      return "pt-br";
-    case 'pt_PT':
-      return "pt-pt";
-    case 'zh_CN':
-      return "zh-hans";
-    case 'zh_TW':
-      return "zh-hant";
-    default:
-      return preg_replace("/_.*$/", "", $string);
+  else {
+    return t("False");
   }
-}
-
-/*
- * Get a string representation of an object
- *
- * @param $obj
- *  Object to be var_dump'ed
- * @return
- *  String with the output of var_dump
- */
-function lingotek_dump($obj) {
-  ob_start();
-  var_dump($obj);
-  $string = ob_get_contents();
-  ob_end_clean();
-  return $string;
 }
