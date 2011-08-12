@@ -1,6 +1,0 @@
-name = "Lingotek"
-description = "Extends Drupal's multilingual features using the Lingotek Collaborative Translation Platform."
-core = "6.x"
-dependencies[] = locale
-dependencies[] = translation
-php = "5.2"
