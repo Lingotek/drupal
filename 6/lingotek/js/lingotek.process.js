@@ -87,16 +87,21 @@ lingotek.ProcessManager = function() {
 	};
 
 	this.mask = function() {
-		jQuery("body").mask(
-			'<div id="lingotek-process" class="lingotekProgress"></div>' +
-			'<table id="lingotek-process-table" style="display: none;"></table>' +
-			'<input type="button" value="' + lingotek.util.localize('stop') + '" onclick="location.reload(true);" />',
-			null
-		);
+		jQuery("body").append(
+			'<div id="lingotek-mask" class="lingotekMask"></div>' +
+			'<div id="lingotek-container" class="lingotekContainer">' +
+				'<div id="lingotek-contents" id="lingotek-contents" class="lingotekContents">' +
+					'<div id="lingotek-process" class="lingotekProgress"></div>' +
+					'<table id="lingotek-process-table" style="display: none;"></table>' +
+					'<input type="button" value="' + lingotek.util.localize('stop') + '" onclick="location.reload(true);" />' +
+				'</div>' +
+			'</div>'
+		).scrollTop(0);
 	};
 
 	this.unmask = function() {
-		jQuery("body").unmask();
+		jQuery("#lingotek-mask").remove();
+		jQuery("#lingotek-container").remove();
 	};
 
 	//Initialize:

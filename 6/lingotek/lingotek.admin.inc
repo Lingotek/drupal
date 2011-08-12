@@ -19,13 +19,13 @@ function lingotek_settings_page($op = NULL) {
  */
 function lingotek_general_settings_form() {
 
-  preg_match('.Revision: (\d+) .', '$Revision: 21829 $', $revision);
+  preg_match('.Revision: (\d+) .', '$Revision: 21871 $', $revision);
 
   //Authentication Settings
     $form['auth'] = array(
       '#type' => 'fieldset',
       '#title' => t('Authentication Settings'),
-      '#description' => 'Lingotek Module Version 7.' . $revision[1] . '<br />Logging in: ' . lingotek_can_log_in()
+      '#description' => t('Lingotek Module Version 7.@revision<br />Logging in: @status', array('@revision' => $revision[1], '@status' => lingotek_can_log_in()))
     );
 
     $form['auth']['lingotek_login_id'] = array(
