@@ -1,5 +1,4 @@
 <?php
-// $Id:lingotek.util.inc,LingoTek$
 /**
  * @file
  * Utilities

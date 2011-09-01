@@ -1,5 +1,4 @@
 <?php
-// $Id:lingotek.admin.inc,LingoTek$
 /**
  * @file
  * Administrative Settings for the module
@@ -77,8 +76,6 @@ function lingotek_dequeue() {
     drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.process.js');
     drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.translate.js');
     drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.mt.js');
-
-    lingotek_localize_js();
   }
 }
 

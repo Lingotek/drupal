@@ -1,5 +1,4 @@
 <?php
-// $Id:lingotek.session.inc,LingoTek$
 /**
  * @file
  * Handles api calls, logging in and logging out of LingoTek
@@ -214,10 +213,10 @@ class LingotekSession {
     );
     $data = $this->request('keyLogin', $params, NULL, FALSE);
 
-    $this->headers = array("Cookie" =>  $data->headers['set-cookie']);
     $response = json_decode($data->data);
 
     if ($response && $response->results == "success") {
+      $this->headers = array("Cookie" =>  $data->headers['set-cookie']);
       $this->logged_in = TRUE;
     }
     else {

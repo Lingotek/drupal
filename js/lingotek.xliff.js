@@ -2,7 +2,7 @@ var lingotek;
 if(!lingotek) lingotek = {};
 
 lingotek.Xliff = function(selector) {
-	var object = jQuery(selector);
+  var object = jQuery(selector);
   var xliff = unescape(object.text());
   var results = new Array();
 
@@ -10,35 +10,35 @@ lingotek.Xliff = function(selector) {
   var footer = xliff.substring(xliff.match("</body>").index);
   var sourceLanguage = xliff.match(/source-language="([^"]*)"/)[1];
 
-	var found;
-	var sourceText = new Array();
-	var re = /<source[^>]*>([^<]*)<\/source>/g;
-	while(found = re.exec(xliff)) {
-  	sourceText.push(found[1]);
+  var found;
+  var sourceText = new Array();
+  var re = /<source[^>]*>([^<]*)<\/source>/g;
+  while(found = re.exec(xliff)) {
+    sourceText.push(found[1]);
   }
 
   var tuIds = new Array();
   re = /<trans-unit[^>]*id="([^"]*)"/g;
-	while(found = re.exec(xliff)) {
-  	tuIds.push(found[1]);
+  while(found = re.exec(xliff)) {
+    tuIds.push(found[1]);
   }
 
   var count = sourceText.length;
   var completed = 0;
 
-	this.getSource = function(index) {
-		return sourceText[index];
-	};
+  this.getSource = function(index) {
+    return sourceText[index];
+  };
 
-	this.getSegmentCount = function() {
-		return sourceText.length;
-	};
+  this.getSegmentCount = function() {
+    return sourceText.length;
+  };
 
-	this.getDocId = function() {
-		return object.attr("doc");
-	}
+  this.getDocId = function() {
+    return object.attr("doc");
+  }
 
-	this.getTuId = function(index) {
-		return tuIds[index];
-	};
+  this.getTuId = function(index) {
+    return tuIds[index];
+  };
 };

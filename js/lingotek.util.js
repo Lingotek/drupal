@@ -1,7 +1,6 @@
 var lingotek;
 if(!lingotek) lingotek = {};
 if(!lingotek.util) lingotek.util = {};
-if(!lingotek.util.localization) lingotek.util.localization = {};
 
 lingotek.util.escapeForXml = function(text) {
   text = text.replace('&', '&amp;');
@@ -37,8 +36,4 @@ lingotek.util.parseLanguage = function(lang) {
   }
 
   return l[0];
-}
-
-lingotek.util.localize = function(key) {
-	return lingotek.util.localization[key];
 }

@@ -240,19 +240,3 @@ function lingotek_language_native($language) {
   $languages = language_list();
   return $languages[$language]->native;
 }
-
-/*
- * Append localization of the javascript.
- */
-function lingotek_localize_js() {
-  $localization = array
-  (
-    'stop' => t('Stop')
-  );
-
-  $loc = "";
-  foreach ($localization as $key => $value) {
-    $loc .= "lingotek.util.localization.$key = \"$value\";\n";
-  }
-  drupal_add_js($loc, array('type' => 'inline', 'scope' => 'footer', 'weight' => 5));
-}

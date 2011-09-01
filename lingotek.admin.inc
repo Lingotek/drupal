@@ -1,5 +1,4 @@
 <?php
-// $Id:lingotek.admin.inc,LingoTek$
 /**
  * @file
  * Administrative Settings for the module
@@ -21,7 +20,7 @@ function lingotek_settings_page() {
  */
 function lingotek_administrative_settings_form() {
 
-  preg_match('.Revision: (\d+) .', '$Revision: 21871 $', $revision);
+  preg_match('.Revision: (\d+) .', '$Revision: 22184 $', $revision);
 
   //Authentication Settings
     $form['auth'] = array(
@@ -87,7 +86,7 @@ function lingotek_administrative_settings_form() {
       $form['dash']['lingotek_vault'] = array(
         '#type' => 'textfield',
         '#title' => t('Vault ID'),
-        '#description' => t('Vault id under which the translations will exist. (1 is typically the public vault.)') . ' ' . $warning,
+        '#description' => t('Vault id under which the translations will exist. (1 is typically the public vault.) %warning%', array('%warning%' => $warning)),
         '#default_value' => variable_get('lingotek_vault', 1),
       );
     }
@@ -96,7 +95,7 @@ function lingotek_administrative_settings_form() {
         '#type' => 'select',
         '#title' => t('Vault'),
         '#options' => $vaults,
-        '#description' => t('Vault where translations are saved.') . ' ' . $warning,
+        '#description' => t('Vault where translations are saved. %warning%', array('%warning%' => $warning)),
         '#default_value' => variable_get('lingotek_vault', 1),
       );
     }

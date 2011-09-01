@@ -10,7 +10,6 @@ include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
 include_once('lingotek.mt.inc');
 
-
 //While Testing, uncomment this to rebuild the menus:
 //menu_rebuild();
 
@@ -193,7 +192,7 @@ function lingotek_node_view($node, $view_mode) {
 
     //Node added while module disabled or before the module was installed?
     lingotek_node_init_default($node);
-    drupal_set_title(lingotek_get_title($node), PASS_THROUGH);
+    drupal_set_title(filter_xss(lingotek_get_title($node)), PASS_THROUGH);
 
     if ($language->language != $node->language) {
       $link = lingotek_get_workbench_url($node, $language->language, t("Help make it better."));
