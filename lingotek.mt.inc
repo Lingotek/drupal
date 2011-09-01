@@ -61,8 +61,7 @@ function lingotek_dequeue() {
       echo '<textarea style="display:none;" tag="lingotek-mt-xliff" nid="' . $nid . '" doc="' . $doc_id . '" engine="' . $row['engine'] . '" source="' . $node->language . '" targets="' . $targets . '" node="' . $node->title . '">' . $xliff . '</textarea>';
     }
 
-    drupal_add_css(drupal_get_path('module', 'lingotek') . '/lib/jquery.loadmask.css');
-    drupal_add_js(drupal_get_path('module', 'lingotek') . '/lib/jquery.loadmask.min.js');
+    drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/lingotek.mask.css');
     drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/progress.css');
 
     $available_engines = variable_get('lingotek_available_mt_options', array_keys(lingotek_get_machine_translation_engines()));
