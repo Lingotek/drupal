@@ -34,7 +34,7 @@ function lingotek_schema() {
     (
       'nid' => array
       (
-        'description' => 'The primary identifier for a node.',
+        'description' => 'The primary identifier for a node',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -42,7 +42,7 @@ function lingotek_schema() {
       ),
       'lingokey' => array
       (
-        'description' => 'lingoNode attribute',
+        'description' => 'Key in key/value pairs',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,

@@ -6,7 +6,7 @@
 
 include_once('lingotek.session.inc');
 
-preg_match('.Revision: (\d+) .', '$Revision: 22509 $', $revision);
+preg_match('.Revision: (\d+) .', '$Revision: 22529 $', $revision);
 $GLOBALS['_version'] = $revision[1];
 
 /*
@@ -104,7 +104,7 @@ function lingotek_signup_form() {
       'Lingotek Module Version 7.@revision<br />Please login using your existing Lingotek ID, or click !link if you need to create a new account.',
       array(
         '@revision' => $_version,
-        '!link' => l(t("here"), variable_get('lingotek_url', 'http://myaccount.lingotek.com') . "/lingopoint/portal/communitySignup.action") //TODO - autoprovisioning
+        '!link' => l(t("here"), variable_get('lingotek_url', 'http://myaccount.lingotek.com') . "/lingopoint/portal/communitySignup.action")
       )
     ),
     '#collapsible' => TRUE,

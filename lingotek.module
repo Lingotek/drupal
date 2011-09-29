@@ -15,9 +15,6 @@ include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
 include_once('lingotek.mt.inc');
 
-//While Testing, uncomment this to rebuild the menus:
-//menu_rebuild();
-
 /*
  * hook_menu
  */
@@ -314,14 +311,6 @@ function lingotek_preprocess_node(&$node, $hook) {
 }
 
 /*
- * hook_preprocess_page
- */
-function lingotek_preprocess_page(&$page, $hook) {
-  //Process MT queue once per page load
-  lingotek_dequeue();
-}
-
-/*
  * hook_node_insert
  */
 function lingotek_node_insert($node) {
@@ -433,6 +422,10 @@ function lingotek_language_switch_links_alter(&$links, $type, $path) {
         lingotek_trace("lingotek_language_switch_links_alter skipping current", array('language' => $lang));
         continue;
       }
+      if (!lingotek_supported_language($lang)) {
+      	lingotek_trace("lingotek_language_switch_links_alter skipping unsupported language", array('language' => $lang));
+      	continue;
+      }
       //This removes the css class that crosses it out, and prepares the object for uninitialized languages.
       $links[$lang]['attributes']['class'] = array();
 
@@ -448,6 +441,15 @@ function lingotek_language_switch_links_alter(&$links, $type, $path) {
       }
     }
   }
+}
+
+/*
+ * hook_preprocess_page
+ * flush the queue for machine translation on every page load
+ */
+function lingotek_preprocess_page(&$page, $hook) {
+  //Process MT queue once per page load
+  lingotek_dequeue();
 }
 
 /*

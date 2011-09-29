@@ -78,7 +78,8 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
 
       return $lingo_node;
     }
-    elseif ($value == "") { //Get value for the specified key, only returns the first match
+    //Get value for the specified key, only returns the first match
+    elseif ($value == "") {
       $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('lingovalue')))->condition(db_escape_field('nid'), $nid)->condition(db_escape_field('lingokey'), $key)->execute();
       $row = $result->fetchObject();
 
@@ -89,7 +90,8 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
         return FALSE;
       }
     }
-    else { //Insert/Update the specified key and value
+	//Insert/Update the specified key and value
+    else {
       $row = array(
         db_escape_field('nid') => $nid,
         db_escape_field('lingokey') => $key,
@@ -236,9 +238,10 @@ function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERR
   watchdog
   (
     'lingotek',
-    '<span style="word-break: break-all;"><b>MESSAGE:</b> ' . $msg . ' <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b>%function<br /><b>ARGS:</b> %args</span>',
+    '<span style="word-break: break-all;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b>%function<br /><b>ARGS:</b> %args</span>',
     array
     (
+      '%msg' => $msg,
       '%data' => $data_output,
       '%location' =>  $location,
       '%function' => $function,
@@ -277,7 +280,7 @@ function lingotek_xml_node_body($node) {
     $language = LANGUAGE_NONE;
   }
   $body = $node->body[$language][0]['value'];
-  return "<?xml version=\"1.0\"?><contents><title contentType=\"html\"><![CDATA[" . $node->title . "]]></title><body contentType=\"html\"><![CDATA[" . $body . "]]></body></contents>";
+  return "<?xml version=\"1.0\"?><contents><title><![CDATA[" . $node->title . "]]></title><body contentType=\"html\"><![CDATA[" . $body . "]]></body></contents>";
 }
 
 

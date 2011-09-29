@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Administrative Settings for the module
+ * Machine Translation
  */
 
 /*

@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Administrative Settings for the module
+ * Lingotek Reference Utilities
  */
 include_once(DRUPAL_ROOT . '/includes/iso.inc');
 
@@ -142,7 +142,7 @@ static $_lingotek_locale = array
     'pau' => 'pau_PW',
   'pl' => 'pl_PL',
   'ps' => 'ps_AF',
-  'pt' => 'pt_PT',
+  'pt-pt' => 'pt_PT',
   'pt-br' => 'pt_BR',
   'qu' => 'qu_BO',
     'rar' => 'rar_CK',
