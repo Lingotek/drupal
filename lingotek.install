@@ -9,6 +9,7 @@
  */
 function lingotek_install() {
   db_update('system')->fields(array('weight' => 3))->condition('name', 'lingotek')->execute();
+  db_update('field_config')->fields(array('translatable' => 1))->condition('field_name', 'body')->execute();
 
   //TODO Add documents to Lingotek for all existing nodes
 

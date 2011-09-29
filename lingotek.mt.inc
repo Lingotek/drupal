@@ -47,8 +47,8 @@ function lingotek_dequeue() {
     }
 
     foreach ($xlf as $nid => $row) {
-      $doc_id = lingotek_lingonode($nid, 'document_id');
       $node = node_load($nid);
+      $doc_id = lingotek_lingonode($nid, 'document_id_' . $node->language);
       $xliff = lingotek_get_xliff($doc_id);
 
       $target_languages = array();
@@ -58,6 +58,7 @@ function lingotek_dequeue() {
       $targets = implode(",", $target_languages);
 
       echo '<textarea style="display:none;" tag="lingotek-mt-xliff" nid="' . $nid . '" doc="' . $doc_id . '" engine="' . $row['engine'] . '" source="' . $node->language . '" targets="' . $targets . '" node="' . $node->title . '">' . $xliff . '</textarea>';
+      lingotek_trace('lingotek_dequeue', array("title" => $node->title, "nid" => $nid, "document_id" => $doc_id, "engine" => $row['engine'], "source" => $node->language, "targets" => $targets));
     }
 
     drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/lingotek.mask.css');

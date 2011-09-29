@@ -14,8 +14,9 @@ function lingotek_pm($node) {
 
   $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
   $header = array($checkbox, t('Target Language'), t('Progress'));
-  $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id'));
+  $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
 
+	$rows = array();
   foreach ($progress as $language => $target) {
     $row = array
     (
@@ -23,6 +24,7 @@ function lingotek_pm($node) {
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
     );
+    lingotek_trace("lingotek_pm table row", array('language' => $language));
     $rows[] = $row;
   }
   $table = theme('table', array('header' => $header, 'rows' => $rows));

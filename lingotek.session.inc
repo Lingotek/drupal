@@ -23,9 +23,11 @@ class LingotekSession {
    * Constructor
    */
   function __construct() {
-    $this->url = variable_get('lingotek_url', '') . "/lingopoint/api";
+    $this->url = variable_get('lingotek_url', 'http://myaccount.lingotek.com') . "/lingopoint/api";
     $this->community = variable_get('lingotek_community', '');
     $this->login_id = variable_get('lingotek_login_id', '');
+    $this->key = variable_get('lingotek_login_key', '');
+    $this->password = variable_get('lingotek_password', '');
   }
 
   /*
@@ -184,8 +186,7 @@ class LingotekSession {
    * Hash the key for logging in for this user.
    */
   public static function create_mac($json_msg) {
-    $key = variable_get('lingotek_login_key', '');
-    $resp = base64_encode(hash_hmac('sha256', $json_msg, pack('H*', $key), TRUE));
+    $resp = base64_encode(hash_hmac('sha256', $json_msg, pack('H*', variable_get('lingotek_login_key', '')), TRUE));
     return ($resp);
   }
 
@@ -195,24 +196,38 @@ class LingotekSession {
   /*
    * login to the lingotek platform
    */
-  private function login($version = "3.10", $xml = FALSE) {
-    $arr = array
-    (
-      'community' => $this->community,
-      'login_id' => $this->login_id,
-      'time' => time(),
-    );
-    $json_str = json_encode($arr);
+  private function login($version = "3.11", $xml = FALSE) {
 
-    $params = array
-    (
-      "auth_json" => $json_str,
-      "hmac" => LingotekSession::create_mac($json_str),
-      "version" => $version,
-      "returnXML" => $xml,
-    );
-    $data = $this->request('keyLogin', $params, NULL, FALSE);
+		if ($this->key == "") {
+		  $params = array
+		  (
+		    'userLogin' => $this->login_id,
+		    'password' => $this->password,
+		    'version' => $version,
+		    'community' => $this->community,
+		  );
+		  $login = 'login';
+    }
+		else {
+			$arr = array
+		  (
+		    'community' => $this->community,
+		    'login_id' => $this->login_id,
+		    'time' => time(),
+		  );
+		  $json_str = json_encode($arr);
 
+		  $params = array
+		  (
+		    "auth_json" => $json_str,
+		    "hmac" => LingotekSession::create_mac($json_str),
+		    "version" => $version,
+		    "returnXML" => $xml,
+		  );
+		  $login = 'keyLogin';
+		}
+
+    $data = $this->request($login, $params, NULL, FALSE);
     $response = json_decode($data->data);
 
     if ($response && $response->results == "success") {
@@ -220,6 +235,8 @@ class LingotekSession {
       $this->logged_in = TRUE;
     }
     else {
+    	//Delete the key so they can use a password to log in again (otherwise the password fails every time since it defaults to using the key)
+    	variable_del("lingotek_login_key");
       $this->logged_in = FALSE;
       lingotek_error
       (
