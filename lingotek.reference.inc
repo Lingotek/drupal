@@ -229,17 +229,17 @@ function lingotek_drupal_language($locale) {
  */
 function lingotek_language_name($language) {
   $languages = language_list();
-  if(array_key_exists($language, $languages)) {
-  	return $languages[$language]->name;
+  if (array_key_exists($language, $languages)) {
+    return $languages[$language]->name;
   }
   else {
-  	$languages = _locale_get_predefined_list();
-		if(array_key_exists(0, $languages)) {
-			return $languages[$language][0];
-		}
-		else {
-			return $language;
-		}
+    $languages = _locale_get_predefined_list();
+    if (array_key_exists(0, $languages)) {
+      return $languages[$language][0];
+    }
+    else {
+      return $language;
+    }
   }
 }
 
@@ -248,16 +248,16 @@ function lingotek_language_name($language) {
  */
 function lingotek_language_native($language) {
   $languages = language_list();
-  if(array_key_exists($language, $languages)) {
-  	return $languages[$language]->native;
+  if (array_key_exists($language, $languages)) {
+    return $languages[$language]->native;
   }
   else {
-		$languages = _locale_get_predefined_list();
-		if(array_key_exists(1, $languages)) {
-			return $languages[$language][1];
-		}
-		else {
-			return lingotek_language_name($language);
-		}
+    $languages = _locale_get_predefined_list();
+    if (array_key_exists(1, $languages)) {
+      return $languages[$language][1];
+    }
+    else {
+      return lingotek_language_name($language);
+    }
   }
 }

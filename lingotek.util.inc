@@ -55,8 +55,8 @@ function lingotek_get_title($node) {
  */
 function lingotek_lingonode($nid, $key = "", $value = "") {
   if ($nid == 'all') {
-	  $lingo_node = array();
-	  $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('nid'), db_escape_field('lingokey'), db_escape_field('lingovalue')))->execute();
+    $lingo_node = array();
+    $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('nid'), db_escape_field('lingokey'), db_escape_field('lingovalue')))->execute();
     foreach ($result as $row) {
       $lingo_node[$row->nid][$row->lingokey] = $row->lingovalue;
     }
@@ -135,7 +135,7 @@ function lingotek_xml_decode($text) {
  */
 function lingotek_node_init_default($node) {
   if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
-  	lingotek_trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
+    lingotek_trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
     lingotek_add_document($node);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
   }
@@ -200,10 +200,10 @@ function lingotek_variable_get($var, $drupal, $default) {
  * Debug/Trace error logging
  */
 function lingotek_trace($msg, $data = NULL) {
-	if (variable_get('lingotek_trace_log', TRUE)) {
-		return;
-	}
-	lingotek_error($msg, $data, $depth = 1, WATCHDOG_DEBUG);
+  if (variable_get('lingotek_trace_log', TRUE)) {
+    return;
+  }
+  lingotek_error($msg, $data, $depth = 1, WATCHDOG_DEBUG);
 }
 
 /*
@@ -219,9 +219,9 @@ function lingotek_trace($msg, $data = NULL) {
  *  default = WATCHDOG_ERROR, watchdog severity
  */
 function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERROR) {
-	if ($severity == WATCHDOG_WARNING && variable_get('lingotek_warning_log', FALSE)) {
-		return;
-	}
+  if ($severity == WATCHDOG_WARNING && variable_get('lingotek_warning_log', FALSE)) {
+    return;
+  }
 
   $backtrace = debug_backtrace();
   $location = $backtrace[$depth]['file'] . ':' . $backtrace[$depth]['line'];
@@ -272,8 +272,8 @@ function lingotek_dump($obj) {
  * Return the xml representation of the source content for a node.
  */
 function lingotek_xml_node_body($node) {
-	$language = $node->language;
-	if(!array_key_exists($language,$node->body)) {
+  $language = $node->language;
+  if (!array_key_exists($language, $node->body)) {
     $language = LANGUAGE_NONE;
   }
   $body = $node->body[$language][0]['value'];
@@ -312,18 +312,18 @@ function lingotek_supported_type($type) {
  *   Boolean value.
  */
 function lingotek_supported_language($language) {
-	global $_lingotek_locale;
-	$supported = $language != LANGUAGE_NONE && array_key_exists($language, $_lingotek_locale);
-	if (!$supported) {
-		lingotek_error
-		(
-		  "Unsupported language detected",
-		  array('language' => $language),
-		  1,
-		  WATCHDOG_WARNING
-		);
-	}
-	return $supported;
+  global $_lingotek_locale;
+  $supported = $language != LANGUAGE_NONE && array_key_exists($language, $_lingotek_locale);
+  if (!$supported) {
+    lingotek_error
+    (
+      "Unsupported language detected",
+      array('language' => $language),
+      1,
+      WATCHDOG_WARNING
+    );
+  }
+  return $supported;
 }
 
 /**
@@ -333,5 +333,5 @@ function lingotek_supported_language($language) {
  *   Boolean value.
  */
 function lingotek_do_cache() {
-	return !(variable_get('lingotek_flush_cache', FALSE) && user_access('dev'));
+  return !(variable_get('lingotek_flush_cache', FALSE) && user_access('dev'));
 }

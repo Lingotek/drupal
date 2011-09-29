@@ -113,16 +113,16 @@ function lingotek_permission() {
  * hook_form_alter
  */
 function lingotek_form_alter(&$form, $form_state, $form_id) {
-	global $_lingotek_locale;
+  global $_lingotek_locale;
 
   if (isset($form['#id']) && strpos($form['#id'], 'node-form') === FALSE) {
     return;
   }
   if (!lingotek_supported_type($form['#node']->type)) {
-		return;
-	}
+    return;
+  }
 
-	drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
+  drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $options = array();
   $options[TRUE] = t('Enabled');
@@ -144,19 +144,19 @@ function lingotek_form_alter(&$form, $form_state, $form_id) {
 
   $form['lingotek']['note'] = array
   (
-  	'#type' => 'item',
-  	'#title' => t('Lingotek Translation Settings'),
-  	'#description' => t('Please select a language for Lingotek to use as the source language.  The source language cannot be language neutral.'),
+    '#type' => 'item',
+    '#title' => t('Lingotek Translation Settings'),
+    '#description' => t('Please select a language for Lingotek to use as the source language.  The source language cannot be language neutral.'),
   );
   $form['lingotek']['content'] = array
   (
-  	'#type' => 'container',
+    '#type' => 'container',
   );
   $form['lingotek']['content']['note'] = array
   (
-  	'#type' => 'item',
-  	'#title' => t('Lingotek Translation Settings'),
-  	'#description' => t("The Lingotek Collaborative Translation module was developed by Lingotek to aid administrators of Drupal-created websites in getting their web content translated. The module integrates Lingotek's Collaborative Translation Platform directly into Drupal, so that your users can leverage the power of Lingotek's translation tools without ever having to leave the comfort of their Drupal environment."),
+    '#type' => 'item',
+    '#title' => t('Lingotek Translation Settings'),
+    '#description' => t("The Lingotek Collaborative Translation module was developed by Lingotek to aid administrators of Drupal-created websites in getting their web content translated. The module integrates Lingotek's Collaborative Translation Platform directly into Drupal, so that your users can leverage the power of Lingotek's translation tools without ever having to leave the comfort of their Drupal environment."),
   );
 
   $node = lingotek_empty_node();
@@ -239,16 +239,16 @@ function lingotek_form_alter(&$form, $form_state, $form_id) {
     );
   }
 
-	$form['lingotek']['developer'] = array(
-  	'#type' => 'fieldset',
-  	'#title' => t('Developer Settings (Advanced)'),
-  	'#collapsible' => TRUE,
-	  '#collapsed' => TRUE,
-	  '#group' => 'developer_settings',
-	  '#access' => user_access('dev'),
+  $form['lingotek']['developer'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Developer Settings (Advanced)'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'developer_settings',
+    '#access' => user_access('dev'),
   );
   if ($document_id === False) {
-  	$document_id = '';
+    $document_id = '';
   }
   $form['lingotek']['developer']['document_id'] = array(
     '#type' => 'textfield',
@@ -257,10 +257,10 @@ function lingotek_form_alter(&$form, $form_state, $form_id) {
     '#default_value' => $document_id,
   );
 
-	$values = t('None');
-	if (isset($nid)) {
-		$values = json_encode(lingotek_lingonode($nid));
-	}
+  $values = t('None');
+  if (isset($nid)) {
+    $values = json_encode(lingotek_lingonode($nid));
+  }
   $form['lingotek']['developer']['current_lingonode'] = array(
     '#type' => 'item',
     '#title' => t('Node Variables'),
@@ -276,7 +276,7 @@ function lingotek_node_view($node, $view_mode) {
   global $language, $first_load;
 
   if ($view_mode == 'full' && lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
-  	lingotek_trace('lingotek_node_view');
+    lingotek_trace('lingotek_node_view');
     lingotek_node_sync($node);
 
     //Node added while module disabled or before the module was installed?
@@ -335,19 +335,19 @@ function lingotek_node_update($node) {
 
   #Overwrite Doc Id:
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
-  	lingotek_lingonode($node->nid, 'document_id_' . $node->language, $node->document_id);
+    lingotek_lingonode($node->nid, 'document_id_' . $node->language, $node->document_id);
   }
 
-	if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
-		return;
-	}
+  if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
+    return;
+  }
 
   if (isset($node->mtTargets)) {
     $node->mtTargets = array_filter($node->mtTargets, "lingotek_unselected");
   }
   //If document never added, FIRST RUN ONLY
   if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
-  	lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));
+    lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));
     $phase_template = variable_get('lingotek_phase_template', 2);
     //If user defines the phase template
     if (user_access('phase_template') && isset($node->phaseTemplate)) {
@@ -358,8 +358,8 @@ function lingotek_node_update($node) {
 
     //Run MT for the first time
     if (user_access('mt')) {
-    	if (isset($node->mtEngine) && $node->mtEngine) {
-      	lingotek_mt($node, $node->mtTargets, $node->mtEngine);
+      if (isset($node->mtEngine) && $node->mtEngine) {
+        lingotek_mt($node, $node->mtTargets, $node->mtEngine);
       }
     }
     else {
@@ -409,19 +409,19 @@ function lingotek_form_node_type_form_alter(&$form, &$form_state) {
  * hook_language_switch_links_alter
  */
 function lingotek_language_switch_links_alter(&$links, $type, $path) {
-	global $language;
+  global $language;
 
   if (!user_access('translation') && !user_access('review')) {
-  	lingotek_trace("lingotek_language_switch_links_alter returning early", array('translation access' => user_access('translation'), 'review access' => user_access('review')));
+    lingotek_trace("lingotek_language_switch_links_alter returning early", array('translation access' => user_access('translation'), 'review access' => user_access('review')));
     return;
   }
 
   if (preg_match("!^node/(\d+)(/.+|)!", $path, $matches) && ($node = node_load((int) $matches[1]))) {
 
-		if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
-			lingotek_trace("lingotek_language_switch_links_alter returning early 2", array('type supported' => lingotek_supported_type($node->type), 'language supported' => lingotek_supported_language($node->language)));
-			return;
-		}
+    if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
+      lingotek_trace("lingotek_language_switch_links_alter returning early 2", array('type supported' => lingotek_supported_type($node->type), 'language supported' => lingotek_supported_language($node->language)));
+      return;
+    }
 
     lingotek_node_init_default($node);
 
@@ -429,19 +429,19 @@ function lingotek_language_switch_links_alter(&$links, $type, $path) {
     $source = $node->language;
 
     foreach ($links as $lang => $link) {
-    	if($lang == $current) {
-    		lingotek_trace("lingotek_language_switch_links_alter skipping current", array('language' => $lang));
-    		continue;
-    	}
+      if ($lang == $current) {
+        lingotek_trace("lingotek_language_switch_links_alter skipping current", array('language' => $lang));
+        continue;
+      }
       //This removes the css class that crosses it out, and prepares the object for uninitialized languages.
       $links[$lang]['attributes']['class'] = array();
 
       if (isset($node->body[$lang])) {
-      	lingotek_trace("lingotek_language_switch_links_alter linking to existing content", array('language' => $lang));
+        lingotek_trace("lingotek_language_switch_links_alter linking to existing content", array('language' => $lang));
         //$links[$lang]['href'] = $links[$source]['href'];
       }
       else {
-      	lingotek_trace("lingotek_language_switch_links_alter linking to workbench", array('language' => $lang));
+        lingotek_trace("lingotek_language_switch_links_alter linking to workbench", array('language' => $lang));
         $links[$lang]['title'] = $links[$lang]['title'] . ' ' . t('- Help translate!');
         $links[$lang]['href'] = lingotek_get_workbench_url($node, $lang);
         $links[$lang]['attributes']['target'] = '_blank';

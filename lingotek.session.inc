@@ -198,34 +198,34 @@ class LingotekSession {
    */
   private function login($version = "3.11", $xml = FALSE) {
 
-		if ($this->key == "") {
-		  $params = array
-		  (
-		    'userLogin' => $this->login_id,
-		    'password' => $this->password,
-		    'version' => $version,
-		    'community' => $this->community,
-		  );
-		  $login = 'login';
+    if ($this->key == "") {
+      $params = array
+      (
+        'userLogin' => $this->login_id,
+        'password' => $this->password,
+        'version' => $version,
+        'community' => $this->community,
+      );
+      $login = 'login';
     }
-		else {
-			$arr = array
-		  (
-		    'community' => $this->community,
-		    'login_id' => $this->login_id,
-		    'time' => time(),
-		  );
-		  $json_str = json_encode($arr);
+    else {
+      $arr = array
+      (
+        'community' => $this->community,
+        'login_id' => $this->login_id,
+        'time' => time(),
+      );
+      $json_str = json_encode($arr);
 
-		  $params = array
-		  (
-		    "auth_json" => $json_str,
-		    "hmac" => LingotekSession::create_mac($json_str),
-		    "version" => $version,
-		    "returnXML" => $xml,
-		  );
-		  $login = 'keyLogin';
-		}
+      $params = array
+      (
+        "auth_json" => $json_str,
+        "hmac" => LingotekSession::create_mac($json_str),
+        "version" => $version,
+        "returnXML" => $xml,
+      );
+      $login = 'keyLogin';
+    }
 
     $data = $this->request($login, $params, NULL, FALSE);
     $response = json_decode($data->data);
@@ -235,8 +235,8 @@ class LingotekSession {
       $this->logged_in = TRUE;
     }
     else {
-    	//Delete the key so they can use a password to log in again (otherwise the password fails every time since it defaults to using the key)
-    	variable_del("lingotek_login_key");
+      //Delete the key so they can use a password to log in again (otherwise the password fails every time since it defaults to using the key)
+      variable_del("lingotek_login_key");
       $this->logged_in = FALSE;
       lingotek_error
       (

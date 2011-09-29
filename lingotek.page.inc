@@ -16,7 +16,7 @@ function lingotek_pm($node) {
   $header = array($checkbox, t('Target Language'), t('Progress'));
   $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
 
-	$rows = array();
+  $rows = array();
   foreach ($progress as $language => $target) {
     $row = array
     (
