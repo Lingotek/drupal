@@ -196,7 +196,9 @@ function lingotek_variable_get($var, $drupal, $default) {
   }
 }
 
-
+/*
+ * Debug/Trace error logging
+ */
 function lingotek_trace($msg, $data = NULL) {
 	if (variable_get('lingotek_trace_log', TRUE)) {
 		return;
