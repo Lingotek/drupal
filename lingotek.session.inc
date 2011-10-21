@@ -100,20 +100,26 @@ class LingotekSession {
     );
 
     if ($returnJson) {
-      $json = json_decode($response->data);
-      if ($json->results != "success") {
+      if (isset($response->data) && ($json = json_decode($response->data)) && $json->results == "success") {
+        return $json;
+      }
+      else {
         lingotek_error
         (
           'API ' . $api . ' FAILED',
           array
           (
             'params' => $params,
-            'response' => $json,
+            'error' => isset($response->error) ? $response->error : "",
+            'response' => isset($json) ? $json : "",
+            'logged_in' => $this->logged_in,
           ),
           1
         );
+        $json = new stdClass();
+        $json->results = 'fail';
+        return $json;
       }
-      return $json;
     }
     else {
       return $response;
@@ -134,26 +140,25 @@ class LingotekSession {
   public function download($api, $params) {
     $result = $this->request($api, $params, NULL, FALSE);
 
-    $tmpFile = tempnam("/tmp", "lingotek");
-    $fp = fopen($tmpFile, 'w');
-
-    fwrite($fp, $result->data);
-    fclose($fp);
-
-    $json = json_decode($result->data);
-    if (isset($json->results)) {
+    if (!isset($result->data) || ( ($json = json_decode($result->data)) && isset($json->results) )) {
       lingotek_error
       (
         'Error downloading document',
         array
         (
           'params' => $params,
-          'response' => $file_uri,
+          'response' => $result,
         ),
         1
       );
       return "";
     }
+
+    $tmpFile = tempnam("/tmp", "lingotek");
+    $fp = fopen($tmpFile, 'w');
+
+    fwrite($fp, $result->data);
+    fclose($fp);
 
     $text = "";
     $file = FALSE;
@@ -228,15 +233,16 @@ class LingotekSession {
     }
 
     $data = $this->request($login, $params, NULL, FALSE);
-    $response = json_decode($data->data);
 
-    if ($response && $response->results == "success") {
+    if (!isset($data->error) && ($response = json_decode($data->data)) && $response->results == "success") {
       $this->headers = array("Cookie" =>  $data->headers['set-cookie']);
       $this->logged_in = TRUE;
     }
     else {
       //Delete the key so they can use a password to log in again (otherwise the password fails every time since it defaults to using the key)
-      variable_del("lingotek_login_key");
+      if(!isset($data->error)) {
+        variable_del("lingotek_login_key");
+      }
       $this->logged_in = FALSE;
       lingotek_error
       (
@@ -244,10 +250,11 @@ class LingotekSession {
         array
         (
           'params' => $params,
-          'response' => $response,
+          'error' => isset($data->error) ? $data->error : "",
+          'response' => isset($response) ? $response : "",
         ),
         2,
-        WATCHDOG_WARNING
+        isset($data->error) ? WATCHDOG_ERROR : WATCHDOG_WARNING
       );
     }
   }

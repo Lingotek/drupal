@@ -338,6 +338,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
         $results[lingotek_drupal_language($target->language)] = $target;
       }
     }
+    lingotek_trace("lingotek_get_document_targets GENERATING NEW CACHE DATA getDocument", array('document_id' => $document_id, 'flushCache' => $flush_cache));
     cache_set('lingotek_targets_' . $document_id, $results, 'cache', time() + 900);
   }
   return $results;
@@ -517,9 +518,10 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
 
     //We're getting all links now, and other calls will pull the cached ones:
     foreach ($targets as $lang => $translation_target) {
+    	lingotek_trace("lingotek_get_workbench_url TARGETS", array("lang" => $lang, "translation_target" => $translation_target));
       $phases = lingotek_get_translation_target($translation_target->id)->phases;
 
-      $phase_id;
+      $phase_id = -1;
       $which_phase = 0;
       foreach ($phases as $phase) {
         if ($phase->percentComplete < 100) {
@@ -530,7 +532,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
       }
 
       $l = "";
-      if (isset($phase_id)) {
+      if ($phase_id != -1) {
         if ($label === FALSE) {
           $l = lingotek_workbench_url($node, $phase_id);
         }
@@ -549,7 +551,9 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
         'link' => $l,
       );
     }
-    cache_set('lingotek_link_' . $node->nid . '-' . $node->language . "-$label", $link, 'cache', time() + 900);
+    $cache = 'lingotek_link_' . $node->nid . '-' . $node->language . "-$label";
+    lingotek_trace("lingotek_get_workbench_url cache_set", array("links" => $link, "cache" => $cache));
+    cache_set($cache, $link, 'cache', time() + 900);
   }
 
   if ($link[$language]['which_phase'] == 0 && !user_access('translation')) {
@@ -558,6 +562,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
   if ($link[$language]['which_phase'] > 0 && !user_access('review')) {
     return "";
   }
+  lingotek_trace("lingotek_get_workbench_url return", array('language' => $language, 'link' => $link));
   return $link[$language]['link'];
 }
 

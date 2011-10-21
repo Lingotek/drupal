@@ -24,6 +24,8 @@ function lingotek_workbench_url($node, $phase_id) {
   $mode = 'cmsWorkbench.action';
   $json_str = json_encode($arr);
 
+	lingotek_trace("lingotek_workbench_url", $arr);
+
   return variable_get('lingotek_url', '') . "/lingopoint/portal/" . $mode . "?auth_json=" . urlencode($json_str) . "&hmac=" . urlencode(LingotekSession::create_mac($json_str));
 }
 
@@ -32,12 +34,17 @@ function lingotek_workbench_url($node, $phase_id) {
  */
 function lingotek_get_title($node) {
   global $language;
-  $title = lingotek_lingonode($node->nid, $language->language . '_title');
-  if (!$title) {
-    $title = $node->title;
-  }
-  lingotek_trace('lingotek_get_title', array("title" => $title, "language" => $language->language));
-  return $title;
+  if ($node !== FALSE) {
+		$title = lingotek_lingonode($node->nid, $language->language . '_title');
+		if (!$title) {
+		  $title = $node->title;
+		}
+		lingotek_trace('lingotek_get_title', array("title" => $title, "language" => $language->language));
+		return $title;
+	}
+	else {
+		return "";
+	}
 }
 
 /*

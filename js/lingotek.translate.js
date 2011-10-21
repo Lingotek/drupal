@@ -56,12 +56,14 @@ lingotek.Translate = function(nid, engine, sourceLanguage, targetLanguages) {
             this.addTarget(index, text, targetLanguages[i]);
           }
           else {
-            count++;
+            this.saved();
           }
         }
       }
       else {
-        this.saved();
+        for(var i = 0; i < targetLanguages.length; i++) {
+          this.saved();
+        }
       }
     }
     else { //Otherwise, let's try this again up to the default retry count:
@@ -112,7 +114,6 @@ lingotek.Translate = function(nid, engine, sourceLanguage, targetLanguages) {
       Microsoft.Translator.translate(xliff.getSource(index), sourceLanguage, mtLang, lingotek.translate["microsoftResult_" + nid + "_" + function_counter]);
     }
     catch(err) {
-      console.log(mtLang);
       this.saved();
     }
   };
