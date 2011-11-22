@@ -541,7 +541,11 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
           if ($label === TRUE) {
             $label = lingotek_get_phase_name($phase_id);
           }
-          $l = l(t($label), '#', array('attributes' => array('onclick' => 'window.open(\'' . $path . '\'); return false;')));
+          $l = l(t($label), '#', array('attributes' => array(
+          	'onclick' => 'window.open(\'' . $path . '\'); return false;',
+          	'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
+          	'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
+          )));
         }
       }
 

@@ -9,13 +9,17 @@
  */
 function lingotek_workbench_url($node, $phase_id) {
   global $user;
+  $name = "null";
+  if(isset($user->name)) {
+    $name = $user->name;
+  }
 
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
   $arr = array
   (
     'community' => variable_get('lingotek_community', ''),
-    'id' => $user->name,
+    'id' => $name,
     'time' => time(),
     'document' => $document_id,
     'phase' => $phase_id
@@ -24,7 +28,7 @@ function lingotek_workbench_url($node, $phase_id) {
   $mode = 'cmsWorkbench.action';
   $json_str = json_encode($arr);
 
-	lingotek_trace("lingotek_workbench_url", $arr);
+  lingotek_trace("lingotek_workbench_url", $arr);
 
   return variable_get('lingotek_url', '') . "/lingopoint/portal/" . $mode . "?auth_json=" . urlencode($json_str) . "&hmac=" . urlencode(LingotekSession::create_mac($json_str));
 }
@@ -35,16 +39,16 @@ function lingotek_workbench_url($node, $phase_id) {
 function lingotek_get_title($node) {
   global $language;
   if ($node !== FALSE) {
-		$title = lingotek_lingonode($node->nid, $language->language . '_title');
-		if (!$title) {
-		  $title = $node->title;
-		}
-		lingotek_trace('lingotek_get_title', array("title" => $title, "language" => $language->language));
-		return $title;
-	}
-	else {
-		return "";
-	}
+    $title = lingotek_lingonode($node->nid, $language->language . '_title');
+    if (!$title) {
+      $title = $node->title;
+    }
+    lingotek_trace('lingotek_get_title', array("title" => $title, "language" => $language->language));
+    return $title;
+  }
+  else {
+    return "";
+  }
 }
 
 /*
@@ -97,7 +101,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
         return FALSE;
       }
     }
-	//Insert/Update the specified key and value
+  //Insert/Update the specified key and value
     else {
       $row = array(
         db_escape_field('nid') => $nid,
