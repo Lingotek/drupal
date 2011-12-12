@@ -18,8 +18,7 @@ function lingotek_pm($node) {
 
   $rows = array();
   foreach ($progress as $language => $target) {
-    $row = array
-    (
+    $row = array(
       '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
@@ -43,7 +42,7 @@ function lingotek_pm($node) {
 function lingotek_update($nid) {
   $node = node_load($nid);
   foreach ($_POST['targets'] as $target) {
-    lingotek_download_document($node, $target);
+    lingotek_download_document($node, check_plain($target));
   }
   drupal_json_output(array('status' => 0, 'updated' => $_POST['targets'], 'nid' => $nid));
 }

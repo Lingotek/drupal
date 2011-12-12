@@ -167,8 +167,7 @@ function lingotek_form_alter(&$form, $form_state, $form_id) {
   //Document already added?  Then don't show the phase template settings
   if (!$document_id) {
     //Phase Template
-    $form['lingotek']['content']['phaseTemplate'] = array
-    (
+    $form['lingotek']['content']['phaseTemplate'] = array(
       '#type' => 'select',
       '#title' => t('Phase Template (Workflow)'),
       '#default_value' => variable_get('lingotek_phase_template', 2),
@@ -209,8 +208,7 @@ function lingotek_form_alter(&$form, $form_state, $form_id) {
       $engines[$engine] = $available_engines[$engine];
     }
 
-    $form['lingotek']['content']['mtEngine'] = array
-    (
+    $form['lingotek']['content']['mtEngine'] = array(
       '#type' => 'select',
       '#title' => t('Machine Translation Engine'),
       '#default_value' => variable_get('lingotek_mt_engine', FALSE), //Only run MT when specified

@@ -62,8 +62,7 @@ function lingotek_dev_form($ignore, $param) {
     $rs = lingotek_lingonode('all');
     foreach ($rs as $nid => $entry) {
       foreach ($entry as $key => $value) {
-        $row = array
-        (
+        $row = array(
           $nid,
           $key,
           $value,
@@ -76,8 +75,7 @@ function lingotek_dev_form($ignore, $param) {
     $rs = lingotek_lingonode($nid);
     $header = array(t('Key'), t('Value'));
     foreach ($rs as $key => $value) {
-      $row = array
-      (
+      $row = array(
         $key,
         $value,
       );

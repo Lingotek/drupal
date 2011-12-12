@@ -98,6 +98,6 @@ function lingotek_mt_all() {
  * AJAX call to save a segment's machine translation
  */
 function lingotek_mt_save_segment() {
-  $result = lingotek_save_segment($_POST['sourceText'], $_POST['targetText'], $_POST['targetLanguage'], $_POST['document']);
+  $result = lingotek_save_segment($_POST['sourceText'], $_POST['targetText'], check_plain($_POST['targetLanguage']), $_POST['document']);
   drupal_json_output(array('status' => 0, 'result' => $result));
 }

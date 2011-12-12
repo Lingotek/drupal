@@ -271,8 +271,7 @@ function lingotek_add_vault_to_project() {
   $vault_id = variable_get('lingotek_vault', '');
   $project_id = variable_get('lingotek_project', '');
   if ($vault_id != '' && $project_id != '') {
-    $param = array
-    (
+    $param = array(
       'project_id' => $project_id,
       'index_id' => $vault_id
     );
@@ -549,8 +548,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
         }
       }
 
-      $link[$lang] = array
-      (
+      $link[$lang] = array(
         'which_phase' => $which_phase,
         'link' => $l,
       );

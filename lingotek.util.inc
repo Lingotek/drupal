@@ -69,7 +69,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
     $lingo_node = array();
     $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('nid'), db_escape_field('lingokey'), db_escape_field('lingovalue')))->execute();
     foreach ($result as $row) {
-      $lingo_node[$row->nid][$row->lingokey] = $row->lingovalue;
+      $lingo_node[$row->nid][$row->lingokey] = check_plain($row->lingovalue);
     }
     return $lingo_node;
   }
@@ -84,7 +84,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
 
       $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('lingokey'), db_escape_field('lingovalue')))->condition(db_escape_field('nid'), $nid)->execute();
       foreach ($result as $row) {
-        $lingo_node[$row->lingokey] = $row->lingovalue;
+        $lingo_node[$row->lingokey] = check_plain($row->lingovalue);
       }
 
       return $lingo_node;
@@ -95,7 +95,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
       $row = $result->fetchObject();
 
       if ($row) {
-        return $row->lingovalue;
+        return check_plain($row->lingovalue);
       }
       else {
         return FALSE;
@@ -250,8 +250,7 @@ function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERR
   (
     'lingotek',
     '<span style="word-break: break-all;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b>%function<br /><b>ARGS:</b> %args</span>',
-    array
-    (
+    array(
       '%msg' => $msg,
       '%data' => $data_output,
       '%location' =>  $location,
@@ -329,8 +328,7 @@ function lingotek_supported_language($language) {
   global $_lingotek_locale;
   $supported = $language != LANGUAGE_NONE && array_key_exists($language, $_lingotek_locale);
   if (!$supported) {
-    lingotek_error
-    (
+    lingotek_error(
       "Unsupported language detected",
       array('language' => $language),
       1,

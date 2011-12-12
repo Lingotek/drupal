@@ -88,11 +88,9 @@ class LingotekSession {
 
     $this->headers["Content-Type"] = "application/x-www-form-urlencoded;";
 
-    $response = drupal_http_request
-    (
+    $response = drupal_http_request(
       $this->url . "/" . $api,
-      array
-      (
+      array(
         'headers' => $this->headers,
         'method' => 'POST',
         'data' => $query
@@ -104,11 +102,9 @@ class LingotekSession {
         return $json;
       }
       else {
-        lingotek_error
-        (
+        lingotek_error(
           'API ' . $api . ' FAILED',
-          array
-          (
+          array(
             'params' => $params,
             'error' => isset($response->error) ? $response->error : "",
             'response' => isset($json) ? $json : "",
@@ -141,11 +137,9 @@ class LingotekSession {
     $result = $this->request($api, $params, NULL, FALSE);
 
     if (!isset($result->data) || ( ($json = json_decode($result->data)) && isset($json->results) )) {
-      lingotek_error
-      (
+      lingotek_error(
         'Error downloading document',
-        array
-        (
+        array(
           'params' => $params,
           'response' => $result,
         ),
@@ -204,8 +198,7 @@ class LingotekSession {
   private function login($version = "3.11", $xml = FALSE) {
 
     if ($this->key == "") {
-      $params = array
-      (
+      $params = array(
         'userLogin' => $this->login_id,
         'password' => $this->password,
         'version' => $version,
@@ -214,16 +207,14 @@ class LingotekSession {
       $login = 'login';
     }
     else {
-      $arr = array
-      (
+      $arr = array(
         'community' => $this->community,
         'login_id' => $this->login_id,
         'time' => time(),
       );
       $json_str = json_encode($arr);
 
-      $params = array
-      (
+      $params = array(
         "auth_json" => $json_str,
         "hmac" => LingotekSession::create_mac($json_str),
         "version" => $version,
@@ -244,11 +235,9 @@ class LingotekSession {
         variable_del("lingotek_login_key");
       }
       $this->logged_in = FALSE;
-      lingotek_error
-      (
+      lingotek_error(
         "Unable to log in",
-        array
-        (
+        array(
           'params' => $params,
           'error' => isset($data->error) ? $data->error : "",
           'response' => isset($response) ? $response : "",
