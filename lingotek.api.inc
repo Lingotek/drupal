@@ -517,7 +517,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
 
     //We're getting all links now, and other calls will pull the cached ones:
     foreach ($targets as $lang => $translation_target) {
-    	lingotek_trace("lingotek_get_workbench_url TARGETS", array("lang" => $lang, "translation_target" => $translation_target));
+      lingotek_trace("lingotek_get_workbench_url TARGETS", array("lang" => $lang, "translation_target" => $translation_target));
       $phases = lingotek_get_translation_target($translation_target->id)->phases;
 
       $phase_id = -1;
@@ -541,9 +541,9 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
             $label = lingotek_get_phase_name($phase_id);
           }
           $l = l(t($label), '#', array('attributes' => array(
-          	'onclick' => 'window.open(\'' . $path . '\'); return false;',
-          	'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
-          	'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
+            'onclick' => 'window.open(\'' . $path . '\'); return false;',
+            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
+            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
           )));
         }
       }

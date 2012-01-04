@@ -56,8 +56,8 @@ function lingotek_dequeue() {
         array_push($target_languages, $_lingotek_locale[$lang]);
       }
       $targets = implode(",", $target_languages);
-			if ($doc_id) {
-      	echo '<textarea style="display:none;" tag="lingotek-mt-xliff" nid="' . $nid . '" doc="' . $doc_id . '" engine="' . $row['engine'] . '" source="' . $node->language . '" targets="' . $targets . '" node="' . $node->title . '">' . $xliff . '</textarea>';
+      if ($doc_id) {
+        echo '<textarea style="display:none;" tag="lingotek-mt-xliff" nid="' . $nid . '" doc="' . $doc_id . '" engine="' . $row['engine'] . '" source="' . $node->language . '" targets="' . $targets . '" node="' . $node->title . '">' . $xliff . '</textarea>';
       }
       lingotek_trace('lingotek_dequeue', array("title" => $node->title, "nid" => $nid, "document_id" => $doc_id, "engine" => $row['engine'], "source" => $node->language, "targets" => $targets));
     }
