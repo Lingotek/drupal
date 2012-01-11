@@ -79,7 +79,6 @@ function lingotek_download_document(&$node, $target_language) {
   $title = decode_entities(lingotek_xml_decode($titles[0]));
   $body = lingotek_xml_decode($bodies[0]);
 
-  node_object_prepare($node);
   lingotek_lingonode($node->nid, $target_language . '_title', $title);
 
   $node->body[$target_language][0]['value'] = $body;

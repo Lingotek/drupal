@@ -161,7 +161,8 @@ function lingotek_node_init_default($node) {
  */
 function lingotek_node_sync(&$node) {
   //Keep syncronized?
-  $sync_method = lingotek_lingonode($node->nid, 'sync_method');
+  $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 0);
+  lingotek_trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
   if ($sync_method != "0") {
     $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
     //Check for changes in % complete
@@ -173,8 +174,12 @@ function lingotek_node_sync(&$node) {
         ($sync_method == "1" && $before !== (string)$after) ||
         ($sync_method == "100" && $after == "100" && $before !== (string)$after)
       ) {
+        lingotek_trace("lingotek_node_sync percent complete changed", array('target_language' => $lang, 'nid' => $node->nid, 'percent' => $after));
         lingotek_lingonode($node->nid, $key, $after);
         lingotek_download_document($node, $lang);
+      }
+      else {
+        lingotek_trace("lingotek_node_sync percent complete stayed the same", array('target_language' => $lang, 'nid' => $node->nid, 'percent' => $after));
       }
     }
   }
