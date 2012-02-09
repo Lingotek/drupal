@@ -67,26 +67,29 @@ function lingotek_download_document(&$node, $target_language) {
   $text = $_lingotek_client->download("downloadDocument", $params);
 
   try {
-    $xml = new SimpleXMLElement($text);
+    $iter = new SimpleXMLIterator($text);
   }
   catch (Exception $e) {
     lingotek_error("downloadDocument FAILED", array('xml' => $text, 'error' => $e->getMessage()));
   }
 
-  //Update the Node details to show the translated document
-  $titles = $xml->xpath("title");
-  $bodies = $xml->xpath("body");
-  $title = decode_entities(lingotek_xml_decode($titles[0]));
-  $body = lingotek_xml_decode($bodies[0]);
-
-  lingotek_lingonode($node->nid, $target_language . '_title', $title);
-
-  $node->body[$target_language][0]['value'] = $body;
-  if (array_key_exists($node->language, $node->body)) {
-    $node->body[$target_language][0]['format'] = $node->body[$node->language][0]['format'];
-    $node->body[$target_language][0]['summary'] = $node->body[$node->language][0]['summary'];
-  }
-
+	for ($iter->rewind(); $iter->valid(); $iter->next()) {
+		$tag = $iter->key();
+		$target = $iter->current();
+		$field = field_info_field($tag);
+		if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+			$data = & $node->$tag;
+		  $data[$target_language][0]['value'] = decode_entities(lingotek_xml_decode($target));
+			if (array_key_exists($node->language, $data)) {
+				if(array_key_exists('format', $data[$node->language][0])) {
+					$data[$target_language][0]['format'] = $data[$node->language][0]['format'];
+				}
+				if(array_key_exists('summary', $data[$node->language][0])) {
+					$data[$target_language][0]['summary'] = $data[$node->language][0]['summary'];
+				}
+			}
+		}
+	}
   node_save($node);
 }
 

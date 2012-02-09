@@ -10,7 +10,6 @@
  */
 function lingotek_pm($node) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
-  drupal_set_title(lingotek_get_title($node), PASS_THROUGH);
 
   $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
   $header = array($checkbox, t('Target Language'), t('Progress'));

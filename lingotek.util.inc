@@ -34,24 +34,6 @@ function lingotek_workbench_url($node, $phase_id) {
 }
 
 /*
- * Get the translated title for a node
- */
-function lingotek_get_title($node) {
-  global $language;
-  if ($node !== FALSE) {
-    $title = lingotek_lingonode($node->nid, $language->language . '_title');
-    if (!$title) {
-      $title = $node->title;
-    }
-    lingotek_trace('lingotek_get_title', array("title" => $title, "language" => $language->language));
-    return $title;
-  }
-  else {
-    return "";
-  }
-}
-
-/*
  * Helper function, for storing additional information with a Node.
  *
  * @param $nid
@@ -295,7 +277,31 @@ function lingotek_xml_node_body($node) {
     $language = LANGUAGE_NONE;
   }
   $body = $node->body[$language][0]['value'];
-  return "<?xml version=\"1.0\"?><contents><title><![CDATA[" . $node->title . "]]></title><body contentType=\"html\"><![CDATA[" . $body . "]]></body></contents>";
+
+  $translatable = array();
+  foreach($node as $key => $value) {
+		$field = field_info_field($key);
+		if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+			array_push($translatable, $key);
+		}
+  }
+
+	$content = "";
+	foreach($translatable as $field) {
+		$language = $node->language;
+		if (!array_key_exists($language, $node->$field)) {
+			$language = LANGUAGE_NONE;
+		}
+		$text = & $node->$field;
+		//Deal with not being initialized right, such as pre-existing titles.
+		if (!array_key_exists($language, $node->$field) || !array_key_exists(0, $text[$language])) {
+			continue;
+		}
+		$txt = $text[$language][0]['value'];
+		$content = $content . "<$field><![CDATA[$txt]]></$field>\n";
+	}
+
+  return "<?xml version=\"1.0\"?><contents>$content</contents>";
 }
 
 

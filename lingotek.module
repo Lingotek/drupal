@@ -107,14 +107,11 @@ function lingotek_permission() {
 }
 
 /*
- * hook_form_alter
+ * hook_form_BASE_FORM_ID_alter
  */
-function lingotek_form_alter(&$form, $form_state, $form_id) {
+function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   global $_lingotek_locale;
 
-  if (isset($form['#id']) && strpos($form['#id'], 'node-form') === FALSE) {
-    return;
-  }
   if (!lingotek_supported_type($form['#node']->type)) {
     return;
   }
@@ -277,7 +274,6 @@ function lingotek_node_view($node, $view_mode) {
 
     //Node added while module disabled or before the module was installed?
     lingotek_node_init_default($node);
-    drupal_set_title(filter_xss(lingotek_get_title($node)), PASS_THROUGH);
 
     if ($language->language != $node->language) {
       $link = lingotek_get_workbench_url($node, $language->language, t("Help make it better."));
@@ -291,14 +287,6 @@ function lingotek_node_view($node, $view_mode) {
       }
     }
   }
-}
-
-/*
- * hook_preprocess_node
- */
-function lingotek_preprocess_node(&$node, $hook) {
-  //Translate the node titles when not viewing the node as a full page.
-  $node['title'] = lingotek_get_title(node_load($node['nid']));
 }
 
 /*
@@ -383,6 +371,32 @@ function lingotek_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
   $form['workflow']['language_content_type']['#options'][LINGOTEK_ENABLED] = t('Enabled, with Lingotek translation');
   $form['workflow']['language_content_type']['#description'] .= ' ' . t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Enable Lingotek translation on a field type
+ */
+function lingotek_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+	$default = 0;
+	if (array_key_exists('lingotek_translatable',  $form['#field'])) {
+		$default = $form['#field']['lingotek_translatable'];
+	}
+
+  $form['field']['lingotek_translatable'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Lingotek Translation'),
+    '#description' => t('This allows fields to be translatable using the Lingotek Collaborative Translations Platform.'),
+    '#default_value' => $default,
+  );
+  array_push($form['#submit'], 'lingotek_update_field');
+  return $form;
+}
+
+function lingotek_update_field($form, $form_state) {
+  $field = $form['#field']['field_name'];
+  db_update('field_config')->fields(array('translatable' => $form['field']['lingotek_translatable']['#value']))->condition('field_name', $field)->execute();
 }
 
 /*
