@@ -4,7 +4,5 @@ package = Multilingual
 core = "7.x"
 dependencies[] = locale
 dependencies[] = translation
-dependencies[] = title
-dependencies[] = entity
 php = "5.2"
 configure = admin/settings/lingotek

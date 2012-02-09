@@ -289,6 +289,13 @@ function lingotek_node_view($node, $view_mode) {
   }
 }
 
+function lingotek_node_presave($node) {
+	//Make sure the title isn't overwritten with the translation when using the title module:
+	if (module_exists('title') && array_key_exists('title_field', $node)) {
+		$node->title = $node->title_field[$node->language][0]['value'];
+	}
+}
+
 /*
  * hook_node_insert
  */
@@ -300,7 +307,6 @@ function lingotek_node_insert($node) {
  * hook_node_update
  */
 function lingotek_node_update($node) {
-
   #Overwrite Doc Id:
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
     lingotek_lingonode($node->nid, 'document_id_' . $node->language, $node->document_id);
