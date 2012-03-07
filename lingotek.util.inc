@@ -151,6 +151,9 @@ function lingotek_node_sync(&$node) {
     foreach ($progress as $lang => $target) {
       $key = 'percent_complete_' . $lang;
       $before = lingotek_lingonode($node->nid, $key);
+      if ($before == "") {
+        $before = "0";
+      }
       $after = $target->percentComplete;
       if (
         ($sync_method == "1" && $before !== (string)$after) ||
@@ -272,36 +275,62 @@ function lingotek_dump($obj) {
  * Return the xml representation of the source content for a node.
  */
 function lingotek_xml_node_body($node) {
-  $language = $node->language;
-  if (!array_key_exists($language, $node->body)) {
-    $language = LANGUAGE_NONE;
-  }
-  $body = $node->body[$language][0]['value'];
 
   $translatable = array();
   foreach($node as $key => $value) {
-		$field = field_info_field($key);
-		if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
-			array_push($translatable, $key);
-		}
+    $field = field_info_field($key);
+    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+      array_push($translatable, $key);
+    }
   }
 
-	$content = "";
-	foreach($translatable as $field) {
-		$language = $node->language;
-		if (!array_key_exists($language, $node->$field)) {
-			$language = LANGUAGE_NONE;
-		}
-		$text = & $node->$field;
-		//Deal with not being initialized right, such as pre-existing titles.
-		if (!array_key_exists($language, $node->$field) || !array_key_exists(0, $text[$language])) {
-			continue;
-		}
-		$txt = $text[$language][0]['value'];
-		$content = $content . "<$field><![CDATA[$txt]]></$field>\n";
-	}
+  $content = "";
+  foreach($translatable as $field) {
+    $language = $node->language;
+    if (!array_key_exists($language, $node->$field)) {
+      $language = LANGUAGE_NONE;
+    }
+    $text = & $node->$field;
+    //Deal with not being initialized right, such as pre-existing titles.
+    if (!array_key_exists($language, $node->$field) || !array_key_exists(0, $text[$language])) {
+      continue;
+    }
+    $content = $content . "<$field>";
+    foreach($text[$language] as $key => $value) {
+		  if (!array_key_exists('value', $value)) {
+		    //TODO add TAGs to be translatable
+		    /*
+		    $terms = $node->$field;
+		    foreach ($terms[$language] as $term) {
+		      dpm($term->name);
+		    }
+		    */
+		    continue;
+		  }
+		  $txt = $value['value'];
+		  $content = $content . "<element><![CDATA[$txt]]></element>\n";
+    }
+    $content = $content . "</$field>\n";
+  }
 
-  return "<?xml version=\"1.0\"?><contents>$content</contents>";
+  //Menus related to the page:
+  $menu = menu_link_get_preferred('node/' . $node->nid);
+  $txt = $menu['link_title'];
+  if($txt != "") {
+    $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
+  }
+
+  //URL Alias related to the page:
+  $conditions = array('source' => 'node/' . $node->nid);
+  if ($node->language != LANGUAGE_NONE) {
+    $conditions['language'] = $node->language;
+  }
+  $path = path_load($conditions);
+  if ($path !== FALSE) {
+    $url = $path['alias'];
+    $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+  }
+  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 }
 
 
@@ -327,6 +356,16 @@ function lingotek_access($node, $permission) {
  */
 function lingotek_supported_type($type) {
   return variable_get('language_content_type_' . $type, 0) == LINGOTEK_ENABLED;
+}
+
+/**
+ * Returns whether the given field type has support for translations.
+ *
+ * @return
+ *   Boolean value.
+ */
+function lingotek_supported_field_type($type) {
+  return in_array($type, array('text_long', 'text_with_summary', 'text')); //'taxonomy_term_reference'));
 }
 
 /**

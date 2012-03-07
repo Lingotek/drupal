@@ -65,27 +65,51 @@ function lingotek_download_document(&$node, $target_language) {
 
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
-
   try {
-    $iter = new SimpleXMLIterator($text);
+    $xml = new SimpleXMLElement($text);
   }
   catch (Exception $e) {
     lingotek_error("downloadDocument FAILED", array('xml' => $text, 'error' => $e->getMessage()));
+    return;
   }
 
-	for ($iter->rewind(); $iter->valid(); $iter->next()) {
-		$tag = $iter->key();
-		$target = $iter->current();
-		$field = field_info_field($tag);
-		if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
-			$data = & $node->$tag;
-		  $data[$target_language][0]['value'] = decode_entities(lingotek_xml_decode($target));
-			if (array_key_exists($node->language, $data)) {
-				if(array_key_exists('format', $data[$node->language][0])) {
-					$data[$target_language][0]['format'] = $data[$node->language][0]['format'];
-				}
-				if(array_key_exists('summary', $data[$node->language][0])) {
-					$data[$target_language][0]['summary'] = $data[$node->language][0]['summary'];
+	foreach ($xml as $tag => $content) {
+		if ($tag == 'menu_title') {
+			//TODO handle menu translation
+		}
+		else if ($tag == 'url_alias') {
+      $target = check_plain($content);
+
+      //URL Alias related to the page:
+      $conditions = array('source' => 'node/' . $node->nid);
+      if ($node->language != LANGUAGE_NONE) {
+        $conditions['language'] = $node->language;
+      }
+      $path = path_load($conditions);
+      if ($path !== FALSE) {
+        $conditions['language'] = $target_language;
+        $conditions['alias'] = $target;
+        if ($path['alias'] != $conditions['alias']) {
+          path_save($conditions);
+        }
+      }
+		}
+		else {
+			$field = field_info_field($tag);
+			if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+				$data = & $node->$tag;
+				$index = 0;
+				foreach ($content as $text) {
+					$data[$target_language][$index]['value'] = decode_entities(lingotek_xml_decode($text));
+			    if (array_key_exists($node->language, $data)) {
+			      if(array_key_exists('format', $data[$node->language][0])) {
+			        $data[$target_language][$index]['format'] = $data[$node->language][0]['format'];
+			      }
+			      if(array_key_exists('summary', $data[$node->language][0])) {
+			        $data[$target_language][$index]['summary'] = $data[$node->language][0]['summary'];
+			      }
+			    }
+			    $index++;
 				}
 			}
 		}
@@ -279,6 +303,14 @@ function lingotek_add_vault_to_project() {
     );
     $_lingotek_client->request('addProjectTMVault', $param);
   }
+}
+
+/*
+ * Analyze the Project
+ */
+function lingotek_analyze_project() {
+  global $_lingotek_client;
+  $_lingotek_client->request("analyzeProject", array('projectId' => variable_get('lingotek_project', -1)));
 }
 
 #GETTERS

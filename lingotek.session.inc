@@ -230,10 +230,6 @@ class LingotekSession {
       $this->logged_in = TRUE;
     }
     else {
-      //Delete the key so they can use a password to log in again (otherwise the password fails every time since it defaults to using the key)
-      if(!isset($data->error)) {
-        variable_del("lingotek_login_key");
-      }
       $this->logged_in = FALSE;
       lingotek_error(
         "Unable to log in",

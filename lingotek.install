@@ -103,3 +103,34 @@ function lingotek_schema() {
   );
   return $schema;
 }
+
+/*
+ * Update
+ * 1. Create the mt-queue
+ * 2. delete the reference variable that was stored in lingotek_languages
+ */
+function lingotek_update_7200(&$sandbox) {
+	drupal_load('module', 'lingotek');
+
+  if (!isset($sandbox['progress'])){
+		$result = db_select('lingotek', 'n')->distinct(True)->fields('n', array(db_escape_field('nid')))->execute();
+		$nodes = array();
+		foreach ($result as $row) {
+			array_push($nodes, $row->nid);
+		}
+
+    $sandbox['progress'] = 0;
+    $sandbox['max'] = count($nodes);
+    $sandbox['nodes'] = $nodes;
+  }
+	$node = node_load($sandbox['nodes'][$sandbox['progress']]);
+	if ($node !== False) {
+		lingotek_update_document($node);
+	}
+
+	$sandbox['progress']++;
+  $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
+  if ($sandbox['#finished'] == 1) {
+  	lingotek_analyze_project();
+  }
+}

@@ -7,12 +7,9 @@
         $('#lingotek_fieldset').drupalSetSummary(Drupal.t(sourceLanguageSet ? 'Enabled' : 'Disabled'));
         //Show all languages for MT Translation
         $('#lingotek_fieldset #edit-mttargets > div').show();
-        //Re-check the target languages
-        $('#lingotek_fieldset #edit-mttargets input[type="checkbox"]').attr('checked', 'checked');
         if (sourceLanguageSet) {
           $('#edit-note').hide();
           $('#edit-content').show();
-          $('#edit-mttargets-' + language).removeAttr('checked');
           $('#lingotek_fieldset .form-item-mtTargets-' + language).hide();
         }
         else {

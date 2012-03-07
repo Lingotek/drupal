@@ -6,7 +6,7 @@
 
 include_once('lingotek.session.inc');
 
-preg_match('.Revision: (\d+) .', '$Revision: 24094 $', $revision);
+preg_match('.Revision: (\d+) .', '$Revision: 25159 $', $revision);
 $GLOBALS['_version'] = $revision[1];
 
 /*
@@ -82,7 +82,7 @@ function lingotek_community_form() {
   $form['auth'] = array(
     '#type' => 'fieldset',
     '#title' => t('Community Setting'),
-    '#description' => t('Lingotek Module Version 7.8.@revision', array('@revision' => $_version)),
+    '#description' => t('Lingotek Module Version 7.12.@revision', array('@revision' => $_version)),
   );
   $form['auth']['lingotek_community'] = array(
     '#type' => 'select',
@@ -102,7 +102,7 @@ function lingotek_signup_form() {
     '#type' => 'fieldset',
     '#title' => t('Authentication Settings'),
     '#description' => t(
-      'Lingotek Module Version 7.8.@revision<br />Please login using your existing Lingotek ID, or click !link if you need to create a new account.',
+      'Lingotek Module Version 7.12.@revision<br />Please login using your existing Lingotek ID, or click !link if you need to create a new account.',
       array(
         '@revision' => $_version,
         '!link' => l(t("here"), variable_get('lingotek_url', 'http://myaccount.lingotek.com') . "/lingopoint/portal/communitySignup.action")
@@ -337,7 +337,7 @@ function lingotek_admin_form() {
     $form['auth'] = array(
       '#type' => 'fieldset',
       '#title' => t('Authentication Settings'),
-      '#description' => t('Lingotek Module Version 7.8.@revision', array('@revision' => $_version)),
+      '#description' => t('Lingotek Module Version 7.12.@revision', array('@revision' => $_version)),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#group' => 'administrative_settings',

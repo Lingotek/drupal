@@ -4,5 +4,7 @@ package = Multilingual
 core = "7.x"
 dependencies[] = locale
 dependencies[] = translation
+dependencies[] = field_ui
 php = "5.2"
 configure = admin/settings/lingotek
+version = 7.12.$Revision: 25159 $
