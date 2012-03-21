@@ -297,18 +297,18 @@ function lingotek_xml_node_body($node) {
     }
     $content = $content . "<$field>";
     foreach($text[$language] as $key => $value) {
-		  if (!array_key_exists('value', $value)) {
-		    //TODO add TAGs to be translatable
-		    /*
-		    $terms = $node->$field;
-		    foreach ($terms[$language] as $term) {
-		      dpm($term->name);
-		    }
-		    */
-		    continue;
-		  }
-		  $txt = $value['value'];
-		  $content = $content . "<element><![CDATA[$txt]]></element>\n";
+      if (!array_key_exists('value', $value)) {
+        //TODO add TAGs to be translatable
+        /*
+        $terms = $node->$field;
+        foreach ($terms[$language] as $term) {
+          dpm($term->name);
+        }
+        */
+        continue;
+      }
+      $txt = $value['value'];
+      $content = $content . "<element><![CDATA[$txt]]></element>\n";
     }
     $content = $content . "</$field>\n";
   }

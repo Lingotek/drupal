@@ -73,11 +73,11 @@ function lingotek_download_document(&$node, $target_language) {
     return;
   }
 
-	foreach ($xml as $tag => $content) {
-		if ($tag == 'menu_title') {
-			//TODO handle menu translation
-		}
-		else if ($tag == 'url_alias') {
+  foreach ($xml as $tag => $content) {
+    if ($tag == 'menu_title') {
+      //TODO handle menu translation
+    }
+    else if ($tag == 'url_alias') {
       $target = check_plain($content);
 
       //URL Alias related to the page:
@@ -88,32 +88,43 @@ function lingotek_download_document(&$node, $target_language) {
       $path = path_load($conditions);
       if ($path !== FALSE) {
         $conditions['language'] = $target_language;
-        $conditions['alias'] = $target;
-        if ($path['alias'] != $conditions['alias']) {
-          path_save($conditions);
+        if ($path['alias'] != $target) {
+          $original = path_load($conditions);
+          $conditions['alias'] = $target;
+          if ($original === FALSE) {
+            path_save($conditions);
+          }
+          else {
+            path_delete($original);
+            path_save($conditions);
+          }
         }
       }
-		}
-		else {
-			$field = field_info_field($tag);
-			if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
-				$data = & $node->$tag;
-				$index = 0;
-				foreach ($content as $text) {
-					$data[$target_language][$index]['value'] = decode_entities(lingotek_xml_decode($text));
-			    if (array_key_exists($node->language, $data)) {
-			      if(array_key_exists('format', $data[$node->language][0])) {
-			        $data[$target_language][$index]['format'] = $data[$node->language][0]['format'];
-			      }
-			      if(array_key_exists('summary', $data[$node->language][0])) {
-			        $data[$target_language][$index]['summary'] = $data[$node->language][0]['summary'];
-			      }
-			    }
-			    $index++;
-				}
-			}
-		}
-	}
+    }
+    else {
+      $field = field_info_field($tag);
+      if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+        $data = & $node->$tag;
+        $index = 0;
+        foreach ($content as $text) {
+          $data[$target_language][$index]['value'] = decode_entities(lingotek_xml_decode($text));
+          if (array_key_exists($node->language, $data)) {
+            if(array_key_exists('format', $data[$node->language][0])) {
+              $data[$target_language][$index]['format'] = $data[$node->language][0]['format'];
+            }
+            if(array_key_exists('summary', $data[$node->language][0])) {
+              $data[$target_language][$index]['summary'] = $data[$node->language][0]['summary'];
+            }
+          }
+          $index++;
+        }
+      }
+    }
+  }
+
+  //Fix for pathauto expecting the form:
+  $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
+  $node->path['pathauto'] = 0;
   node_save($node);
 }
 
