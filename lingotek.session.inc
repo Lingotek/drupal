@@ -148,7 +148,7 @@ class LingotekSession {
       return "";
     }
 
-    $tmpFile = tempnam("/tmp", "lingotek");
+    $tmpFile = tempnam(file_directory_temp(), "lingotek");
     $fp = fopen($tmpFile, 'w');
 
     fwrite($fp, $result->data);
@@ -174,6 +174,7 @@ class LingotekSession {
       }
     }
     fclose($file);
+    unlink($tmpFile);
 
     return $text;
   }
