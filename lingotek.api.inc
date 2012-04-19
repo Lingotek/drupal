@@ -540,7 +540,7 @@ function lingotek_get_vaults() {
  * @return
  *  Either a link pointing the the url, or the url itself if $label is FALSE
  */
-function lingotek_get_workbench_url($node, $language, $label = FALSE) {
+function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = FALSE) {
   global $_lingotek_client, $_lingotek_locale;
 
   if (!isset($_lingotek_locale[$language])) {
@@ -568,7 +568,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE) {
       $phase_id = -1;
       $which_phase = 0;
       foreach ($phases as $phase) {
-        if ($phase->percentComplete < 100) {
+        if ($phase->percentComplete < 100 || $force) {
           $phase_id = $phase->id;
           break;
         }

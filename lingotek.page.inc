@@ -12,7 +12,7 @@ function lingotek_pm($node) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
 
   $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
-  $header = array($checkbox, t('Target Language'), t('Progress'));
+  $header = array($checkbox, t('Target Language'), t('Progress'), t('Task'));
   $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language), TRUE);
 
   $rows = array();
@@ -21,6 +21,7 @@ function lingotek_pm($node) {
       '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
+      lingotek_get_workbench_url($node, $language, TRUE, TRUE),
     );
     lingotek_trace("lingotek_pm table row", array('language' => $language));
     $rows[] = $row;
