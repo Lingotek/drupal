@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Module core functionality
+ * Module core functionality.
  */
 
 /**
@@ -15,14 +15,13 @@ include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
 include_once('lingotek.mt.inc');
 
-/*
- * hook_menu
+/**
+ * Implements hook_menu().
  */
 function lingotek_menu() {
   $items = array();
 
-  $items['admin/settings/lingotek'] = array
-  (
+  $items['admin/settings/lingotek'] = array(
     'title' => 'Lingotek',
     'access arguments' => array('administration'),
     'description' => 'Community Translation Settings',
@@ -30,8 +29,7 @@ function lingotek_menu() {
     'page callback' => 'lingotek_settings_page',
   );
 
-  $items['node/%node/lingotek_pm'] = array
-  (
+  $items['node/%node/lingotek_pm'] = array(
     'title' => 'Lingotek',
     'access arguments' => array(1, 'pm'),
     'access callback' => 'lingotek_access',
@@ -42,41 +40,46 @@ function lingotek_menu() {
     'weight' => 3,
   );
 
-  $items['lingotek/update'] = array
-  (
+  $items['lingotek/update'] = array(
     'access arguments' => array('pm'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_update',
     'type' => MENU_CALLBACK,
   );
 
-  $items['lingotek/mt_all'] = array
-  (
+  $items['lingotek/mt_all'] = array(
     'access arguments' => array('administration'),
     'file' => 'lingotek.pages.inc',
     'page callback' => 'lingotek_mt_all',
     'type' => MENU_CALLBACK,
   );
 
-  $items['lingotek/segment'] = array
-  (
+  $items['lingotek/segment'] = array(
     'access arguments' => array('mt'),
     'file' => 'lingotek.mt.inc',
     'page callback' => 'lingotek_mt_save_segment',
     'type' => MENU_CALLBACK,
   );
 
-  $items['admin/settings/lingotek/dev'] = array
-  (
+  $items['admin/settings/lingotek/dev'] = array(
     'title' => 'Lingotek Developer Tools',
     'access arguments' => array('dev'),
     'description' => 'Developer Tools',
     'file' => 'lingotek.dev.inc',
     'page callback' => 'lingotek_dev_page',
   );
+  
+  $items['admin/config/regional/field-data-cleanup'] = array(
+    'title' => 'Lingotek Field Data Cleanup Utility',
+    'description' => 'Updates language settings for existing field data.',
+    'access arguments' => array('access lingotek utilities'),
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_form_field_language_utility'),
+    'type' => MENU_NORMAL_ITEM,
+  );
 
-  $items['node/%node/lingotek_dev'] = array
-  (
+  $items['node/%node/lingotek_dev'] = array(
     'title' => 'Lingotek Developer Tools',
     'access arguments' => array('dev'),
     'description' => 'Developer Tools',
@@ -89,11 +92,15 @@ function lingotek_menu() {
   return $items;
 }
 
-/*
- * hook_permission
+/**
+ * Implements hook_permission().
  */
 function lingotek_permission() {
   return array(
+    'access lingotek utilities' => array(
+      'title' => t('Access Lingotek Utilities'),
+      'description' => t('Access admin-only utility pages.')
+    ),
     'administration' => array('title' => 'Administration Menu', 'description' => t('Access the administrative page for the module.')),
     'pm' => array('title' => 'Project Management', 'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')),
     'translation' => array('title' => 'Translate', 'description' => t('Allow access to the workbench for translation (first) phases')),
@@ -433,4 +440,81 @@ function lingotek_help($path, $arg) {
     case 'admin/help#lingotek':
       return t('Please see our DevZone:') . ' ' . l(t('Drupal Integration'), 'http://lingotek.com/support/devzone/drupal-integration');
   }
+}
+
+/**
+ * Batch API processor for field data language updates.
+ */
+function lingotek_handle_batch_field_language_update($nid, &$context) {
+  $process_node = node_load($nid);
+  
+  if ($process_node->nid) {
+    lingotek_update_language_field_data($process_node->nid);
+    $context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
+  }
+  
+  $context['finished'] = 1;
+}
+
+/**
+ * Ensures correct language-specific field data for the specified item.
+ *
+ * @param int $nid
+ *   The node ID of the item to be updated.
+ *
+ * @return bool
+ *   TRUE if the specified node's field data was updated. FALSE if no changes were made.
+ */
+function lingotek_update_language_field_data($nid) {
+  $edited = FALSE;
+  
+  $node = node_load($nid, NULL, TRUE);
+  if ($node->nid) {
+    if ($node->language != 'und') {
+      $translatable_fields = lingotek_translatable_node_fields();
+      foreach ($translatable_fields as $field_name) {
+        if (!empty($node->{$field_name}['und']) && empty($node->{$field_name}[$node->language])) {
+          $node->{$field_name}[$node->language] = $node->{$field_name}['und'];
+          $edited = TRUE;
+        }
+      } 
+    }
+
+    if ($edited) {
+      node_save($node);
+    }
+  }
+  else {
+    watchdog('lingotek', 'Attempted to update field data for a non-existent node: @node_id',
+      array('@node_id' => $node_id), WATCHDOG_ERROR);
+  }
+  
+  return $edited;
+}
+
+/**
+ * Gets a list of fields with translation enabled.
+ *
+ * @return array
+ *   An array of the machine names for translatable fields in the system.
+ */
+function lingotek_translatable_node_fields() {
+  $fields = field_info_fields();
+  $translatable_fields = array();
+  foreach ($fields as $field_id => $field) {
+    foreach ($field['bundles'] as $type => $instance) {
+      if (field_is_translatable($type, $field)) {
+        $translatable_fields[] = $field['field_name'];
+      }
+    }
+  }
+  
+  return $translatable_fields;
+}
+
+/**
+ * "Finished" callback for language update batch operations.
+ */
+function lingotek_field_language_update_finished($success, $results, $operations) {
+  drupal_set_message('Updated field data for nodes.') ;
 }

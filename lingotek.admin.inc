@@ -383,3 +383,72 @@ function lingotek_admin_form() {
 
     return $form;
 }
+
+/**
+ * Administration form for the field language cleanup utility.
+ *
+ * @param array
+ *   The current FAPI form state array.
+ *
+ * @return array
+ *   A FAPI form array.
+ */
+function lingotek_form_field_language_utility($form_state) {
+  $form = array();
+    
+  $form['description'] = array(
+    '#markup' => '<p class="help">' . t('This tool processes all existing field data for translation-enabled fields on nodes, 
+      ensuring that if data was entered before enabling field translation on a field 
+      that the existing field data is copied over to the parent node\'s current language.') . 
+      '</p>',
+  );
+  
+  $form['warning'] = array(
+    '#markup' => '<p class="help">' . t('<strong>WARNING:</strong> This tool makes changes to your site\'s data. We strongly encourage you to back up your database before using this tool.') . 
+      '</p>',
+  );  
+
+  $translatable_fields = lingotek_translatable_node_fields();
+  
+  $form['status'] = array(
+    '#markup' => theme('item_list', array('items' => $translatable_fields, 'title' => t('Translation-enabled Fields'), 'type' => 'ul')),
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update Field Data'),
+  );
+  
+  return $form;
+}
+
+/**
+ * Submit handler for the lingotek_form_field_language_utility form.
+ *
+ * @param array $form
+ *   The FAPI form array.
+ * @param array $form_state
+ *   The FAPI form state array.
+ */
+function lingotek_form_field_language_utility_submit($form, $form_state) {
+  $query = new EntityFieldQuery();
+  $entity_type = 'node';
+  $nodes = $query->entityCondition('entity_type', $entity_type)
+    ->propertyCondition('language', 'und', '<>')
+    ->execute();
+  
+  $operations = array();
+  foreach ($nodes[$entity_type] as $node) {
+    $operations[] = array('lingotek_handle_batch_field_language_update', 
+      array($node->nid));
+  }
+  
+  $batch = array(
+    'title' => t('LingoTek Field Language Updater'),
+    'operations' => $operations,
+    'finished' => 'lingotek_field_language_update_finished',
+    'file' => 'lingotek.admin.inc',
+  );
+  
+  batch_set($batch);  
+}
