@@ -73,11 +73,13 @@ function lingotek_download_document(&$node, $target_language) {
     return;
   }
 
+   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0);
+
   foreach ($xml as $tag => $content) {
     if ($tag == 'menu_title') {
       //TODO handle menu translation
     }
-    else if ($tag == 'url_alias') {
+    else if ($tag == 'url_alias' && $url_alias_translation == 1) {
       $target = check_plain($content);
 
       //URL Alias related to the page:
@@ -118,6 +120,14 @@ function lingotek_download_document(&$node, $target_language) {
           }
           $index++;
         }
+      }
+
+      //Set URL alias
+      $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0);
+      if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $node->language != LANGUAGE_NONE) {
+        module_load_include('inc', 'pathauto');
+        $uri = entity_uri('node', $node);
+        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node), $node->type, $target_language);
       }
     }
   }
@@ -325,6 +335,17 @@ function lingotek_analyze_project() {
 }
 
 #GETTERS
+
+/*
+ * Get available URL alias methods
+ */
+function lingotek_get_url_alias_translations() {
+  $methods = array();
+  $methods[0] = t("Don't translate");
+  $methods[1] = t("Translate the URL alias");
+  $methods[2] = t("Use the translated page title");
+  return $methods;
+}
 
 /*
  * Get the Lingotek user's cms key for the community they are currently logged in with

@@ -295,7 +295,17 @@ function lingotek_admin_form() {
       '#default_value' => variable_get('lingotek_available_mt_options', array_keys($engines)),
     );
 
-  //Developer Settings
+    //URL Alias Translation
+    $form['defaults']['lingotek_url_alias_translation'] = array
+    (
+      '#type' => 'radios',
+      '#title' => t('URL Alias Translation'),
+      '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules; and define a path pattern."),
+      '#options' => lingotek_get_url_alias_translations(),
+      '#default_value' => variable_get('lingotek_url_alias_translation', 0),
+    );
+
+    //Developer Settings
     $form['developer_settings'] = array(
       '#type' => 'fieldset',
       '#title' => t('Developer Settings'),

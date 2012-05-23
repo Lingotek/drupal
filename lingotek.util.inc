@@ -8,18 +8,12 @@
  * Get the raw url for the Lingotek Workbench for a given Node and phase (workflow step)
  */
 function lingotek_workbench_url($node, $phase_id) {
-  global $user;
-  $name = "null";
-  if(isset($user->name)) {
-    $name = $user->name;
-  }
-
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
   $arr = array
   (
     'community' => variable_get('lingotek_community', ''),
-    'id' => $name,
+    'id' => variable_get('lingotek_login_id', ''),
     'time' => time(),
     'document' => $document_id,
     'phase' => $phase_id
@@ -321,15 +315,19 @@ function lingotek_xml_node_body($node) {
   }
 
   //URL Alias related to the page:
-  $conditions = array('source' => 'node/' . $node->nid);
-  if ($node->language != LANGUAGE_NONE) {
-    $conditions['language'] = $node->language;
+  $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0);
+  if ($url_alias_translation == 1) {
+    $conditions = array('source' => 'node/' . $node->nid);
+    if ($node->language != LANGUAGE_NONE) {
+      $conditions['language'] = $node->language;
+    }
+    $path = path_load($conditions);
+    if ($path !== FALSE) {
+      $url = $path['alias'];
+      $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+    }
   }
-  $path = path_load($conditions);
-  if ($path !== FALSE) {
-    $url = $path['alias'];
-    $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
-  }
+
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 }
 

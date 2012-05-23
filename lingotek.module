@@ -108,6 +108,7 @@ function lingotek_permission() {
     'phase_template' => array('title' => 'Phase Template (Workflow)', 'description' => t('Allow node-level setting of the phase template on node creation.  Can only be set once per node.')),
     'use_source' => array('title' => 'Paste Source', 'description' => t('Allow node-level setting of showing the source when no translation is available yet')),
     'sync_method' => array('title' => 'Synchronization Method', 'description' => t('Allow node-level setting of setting the synchronization method')),
+    'url_alias_translation' => array('title' => 'URL Alias Translation', 'description' => t('Allow node-level setting of setting the URL alias translation')),    
     'mt' => array('title' => 'Machine Translation', 'description' => t('Allow node-level setting of machine translation')),
     'dev' => array('title' => 'Developer', 'description' => t('Access useful debugging features')),
   );
@@ -242,6 +243,17 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     );
   }
 
+  //URL Alias Translation
+  $form['lingotek']['content']['urlAliasTranslation'] = array
+  (
+    '#type' => 'radios',
+    '#title' => t('URL Alias Translation'),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0),
+    '#options' => lingotek_get_url_alias_translations(),
+    '#access' => user_access('url_alias_translation'),
+    '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules; and define a path pattern."),
+  );
+  
   $form['lingotek']['developer'] = array(
     '#type' => 'fieldset',
     '#title' => t('Developer Settings (Advanced)'),
@@ -328,6 +340,9 @@ function lingotek_node_update($node) {
   }
   if (isset($node->mtEngine)) {
     lingotek_lingonode($node->nid, 'mt_engine', $node->mtEngine);
+  }
+  if (user_access('url_alias_translation') && isset($node->urlAliasTranslation)) {
+    lingotek_lingonode($node->nid, 'url_alias_translation', $node->urlAliasTranslation);
   }
 
   if (isset($node->mtTargets)) {
