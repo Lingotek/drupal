@@ -251,7 +251,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#title' => t('URL Alias Translation'),
       '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0),
       '#options' => lingotek_get_url_alias_translations(),
-      '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check "Enable Lingotek Translation" for the Title field."),
+      '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check \"Enable Lingotek Translation\" for the Title field."),
     );
   }
   
