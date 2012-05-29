@@ -171,19 +171,18 @@ function lingotek_save_segment($source_text, $target_text, $target_language, $do
 
 #API ADDERS
 
-/*
- * Add a document to the Lingotek platform
+/**
+ * Add a document to the Lingotek platform.
  *
  * This saves a node's source language to the Lingotek platform.
  *
- * @param $node
- *  Node being added
+ * @param object $node
+ *   The Drupal node being added to Lingotek.
  */
 function lingotek_add_document($node) {
   global $_lingotek_client, $_lingotek_locale;
 
-  $param = array
-  (
+  $param = array(
     'projectId' => variable_get('lingotek_project', ''),
     'documentName' => $node->title,
     'documentDesc' => $node->title,
@@ -191,10 +190,11 @@ function lingotek_add_document($node) {
     'sourceLanguage' => $_lingotek_locale[$node->language],
     'tmVaultId' => variable_get('lingotek_vault', 1),
     'content' => lingotek_xml_node_body($node),
+    'note' => url('node/' . $node->nid, array('absolute' => TRUE))
   );
 
   $output = $_lingotek_client->request('addContentDocument', $param);
-  if ($output->results == "success") {
+  if ($output->results == 'success') {
     lingotek_lingonode($node->nid, 'document_id_' . $node->language, $output->id);
     lingotek_trace('lingotek_add_document', array('nid' => $node->nid, 'document_id_' . $node->language => $output->id));
   }
