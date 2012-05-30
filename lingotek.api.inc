@@ -190,7 +190,7 @@ function lingotek_add_document($node) {
     'sourceLanguage' => $_lingotek_locale[$node->language],
     'tmVaultId' => variable_get('lingotek_vault', 1),
     'content' => lingotek_xml_node_body($node),
-    'note' => url('node/' . $node->nid, array('absolute' => TRUE))
+    'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
   );
 
   $output = $_lingotek_client->request('addContentDocument', $param);
