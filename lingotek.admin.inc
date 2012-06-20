@@ -171,16 +171,16 @@ function lingotek_admin_form() {
       '#group' => 'administrative_settings',
     );
 
-    //If projects are available from Lingotek because the above login credentials worked, then display them in a drop list instead of a text box for the Id
+    // If projects are available from Lingotek because the above login credentials worked, then display them in a drop list instead of a text box for the Id
     if ($_lingotek_client->canLogIn()) {
-      $projects = lingotek_get_projects();
+      $projects = (class_exists('LingotekApi')) ? LingotekApi::instance()->listProjects() : array();
       $id = variable_get('lingotek_project', '');
 
       if ($id == '' || !array_key_exists($id, $projects)) { //No project id set, project deleted, or community changed to one without that project.  Try to find the Drupal project
         $id = array_search($site, $projects);
         if ($id === False) { //Setup a default Drupal project
           $id = lingotek_add_project($site);
-          $projects = lingotek_get_projects();
+          $projects = (class_exists('LingotekApi')) ? LingotekApi::instance()->listProjects() : array();
         }
         else { //Assign to an existing Drupal project
           variable_set('lingotek_project', $id);
@@ -189,9 +189,9 @@ function lingotek_admin_form() {
 
       $form['dash']['lingotek_project'] = array(
         '#type' => 'select',
-        '#title' => t('Project'),
+        '#title' => t('Default Project ID'),
         '#options' => $projects,
-        '#description' => t('Project under which the translations will exist.'),
+        '#description' => t('The default Lingotek Project ID with which translations will be associated.'),
         '#default_value' => $id,
       );
     }
@@ -199,8 +199,8 @@ function lingotek_admin_form() {
       $form['dash']['#description'] ='Save your Authentication Settings first.  Then you can select projects and vaults by name instead of ID.';
       $form['dash']['lingotek_project'] = array(
         '#type' => 'textfield',
-        '#title' => t('Project ID'),
-        '#description' => t('Project id under which the translations will exist.'),
+        '#title' => t('Default Project ID'),
+        '#description' => t('The default Lingotek Project ID with which translations will be associated.'),
         '#default_value' => variable_get('lingotek_project', ''),
       );
     }

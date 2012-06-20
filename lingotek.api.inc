@@ -183,7 +183,7 @@ function lingotek_add_document($node) {
   global $_lingotek_client, $_lingotek_locale;
 
   $param = array(
-    'projectId' => variable_get('lingotek_project', ''),
+    'projectId' => $node->lingotek_project_id,
     'documentName' => $node->title,
     'documentDesc' => $node->title,
     'format' => 'XML',
@@ -464,28 +464,6 @@ function lingotek_get_phase_templates() {
   if ($list_phase_templates->results == "success") {
     foreach ($list_phase_templates->phaseTemplates as $phase_template) {
       $options[$phase_template->id] = t($phase_template->name);
-    }
-  }
-
-  return $options;
-}
-
-/*
- * Get the Lingotek user's current projects
- */
-function lingotek_get_projects() {
-  global $_lingotek_client;
-
-  $options = array();
-
-  if (!$_lingotek_client->canLogIn()) {
-    return $options;
-  }
-
-  $list_projects = $_lingotek_client->request("listProjects");
-  if ($list_projects->results == "success") {
-    foreach ($list_projects->projects as $project) {
-      $options[$project->id] = t($project->name);
     }
   }
 

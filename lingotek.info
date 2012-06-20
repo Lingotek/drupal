@@ -5,6 +5,9 @@ core = "7.x"
 dependencies[] = locale
 dependencies[] = translation
 dependencies[] = field_ui
+
+files[] = lib/Drupal/lingotek/LingotekApi.php
+
 php = "5.2"
 configure = admin/settings/lingotek
 version = 7.12.$Revision: 25159 $
