@@ -34,6 +34,36 @@ class LingotekApi {
   }
   
   /**
+   * Adds a target language to an existing Lingotek Document.
+   *
+   * @param int $lingotek_document_id
+   *   The document to which the new translation target should be added.
+   * @param string $target_language_code
+   *   The two letter code representing the language which should be added as a translation target.
+   *
+   * @return mixed
+   *  The ID of the new translation target in the Lingotek system, or FALSE on error.
+   */
+  public function addTranslationTarget($lingotek_document_id, $target_language_code) {
+    global $_lingotek_client, $_lingotek_locale;
+    
+    lingotek_trace('LingotekApi::addTranslationTarget()', array('document_id' => $document_id, 'target_language' => $target_language));
+    
+    $parameters = array(
+      'documentId' => $document_id,
+      'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
+      'targetLanguage' => $_lingotek_locale[$target_language]
+    );
+    
+    if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
+      return $new_translation_target->id;
+    }
+    else {
+      return FALSE;
+    }    
+  }
+  
+  /**
    * Gets available Lingotek projects.
    *
    * @return array
@@ -44,11 +74,29 @@ class LingotekApi {
     
     if ($projects_raw = $this->request('listProjects')) {
       foreach ($projects_raw->projects as $project) {
-        $options[$project->id] = $project->name;
+        $projects[$project->id] = $project->name;
       }      
     }
 
-    return $options;
+    return $projects;
+  }
+  
+  /**
+   * Gets available Lingotek Workflows.
+   *
+   * @return array
+   *   An array of available Workflows with workflow IDs as keys, workflow labels as values.
+   */
+  public function listWorkflows() {
+    $workflows = array();
+    
+    if ($workflows_raw = $this->request('listWorkflows')) {
+      foreach ($workflows_raw->workflows as $workflow) {
+        $workflows[$workflow->id] = $workflow->name;
+      }
+    }
+
+    return $workflows;
   }
   
   /**

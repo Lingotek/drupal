@@ -167,3 +167,10 @@ function lingotek_update_7201(&$sandbox) {
 
   $sandbox['#finished'] = empty($sandbox['nodes']);
 }
+
+/**
+ * Ensure the Administrator role is automatically granted newly-introduced permissions.
+ */
+function lingotek_update_7202(&$sandbox) {
+  
+}

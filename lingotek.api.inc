@@ -200,18 +200,21 @@ function lingotek_add_document($node) {
   }
 }
 
-/*
- * Add target languages
+/**
+ * Add target languages to the Lingotek document associated with a node.
  *
  * This saves any missing target languages to the Lingotek platform.
  *
  * @param $node
- *  Node being checked
+ *   Node being checked.
+ *
+ * @return bool
+ *   TRUE on success, FALSE on error.
  */
 function lingotek_add_missing_targets($node) {
   global $_lingotek_client, $_lingotek_locale;
 
-  $phase_template_id = lingotek_lingonode($node->nid, 'phase_template_id');
+  $lingotek_workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
   $languages_already_added = array();
@@ -228,12 +231,22 @@ function lingotek_add_missing_targets($node) {
   }
 
   foreach (language_list() as $target_language) {
-    if ($target_language->enabled && lingotek_supported_language($target_language->language) && !in_array($_lingotek_locale[$target_language->language], $languages_already_added) && $node->language != $target_language->language) {
-      $translation_target_id = lingotek_add_target_language($document_id, $target_language->language);
-      lingotek_add_phase_template($translation_target_id, $phase_template_id);
+    if ($target_language->enabled && lingotek_supported_language($target_language->language) && 
+      !in_array($_lingotek_locale[$target_language->language], $languages_already_added) && 
+      $node->language != $target_language->language) {
+      
+      $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
     }
     else {
-      lingotek_trace("lingotek_add_missing_targets skipping language", array('language' => $target_language->language, 'enabled' => $target_language->enabled, 'supported' => lingotek_supported_language($target_language->language), 'added' => lingotek_supported_language($target_language->language) && in_array($_lingotek_locale[$target_language->language], $languages_already_added), 'isTarget' => $node->language != $target_language->language));
+      lingotek_trace("lingotek_add_missing_targets skipping language", 
+        array(
+          'language' => $target_language->language,
+          'enabled' => $target_language->enabled,
+          'supported' => lingotek_supported_language($target_language->language),
+          'added' => lingotek_supported_language($target_language->language) && in_array($_lingotek_locale[$target_language->language], $languages_already_added),
+          'isTarget' => $node->language != $target_language->language
+        )
+      );
     }
   }
   return TRUE;
@@ -267,30 +280,6 @@ function lingotek_add_project($name) {
   if ($output->results == "success") {
     variable_set('lingotek_project', $output->id);
     return $output->id;
-  }
-}
-
-/*
- * Add target language
- *
- * This saves a target languages to the Lingotek platform.
- *
- * @param $document_id
- *  Document Id as stored in the Lingotek platform for a specific drupal node.
- * @param $target_language
- *  Language to be added
- * @return translation target id
- */
-function lingotek_add_target_language($document_id, $target_language) {
-  global $_lingotek_client, $_lingotek_locale;
-  lingotek_trace('lingotek_add_target_language', array('document_id' => $document_id, 'target_language' => $target_language));
-
-  $add_translation_target = $_lingotek_client->request("addTranslationTarget", array('documentId' => $document_id, 'targetLanguage' => $_lingotek_locale[$target_language]));
-  if ($add_translation_target->results == "success") {
-    return $add_translation_target->id;
-  }
-  else {
-    return -1;
   }
 }
 
@@ -441,33 +430,6 @@ function lingotek_get_phase_name($phase_id) {
   else {
     return "";
   }
-}
-
-/*
- * Get the Lingotek user's phase (workflow) templates
- */
-function lingotek_get_phase_templates() {
-  global $_lingotek_client;
-
-  $options = array();
-  $options[1] = t("Translation Only");
-  $options[2] = t("Translation + 1 review");
-  $options[3] = t("Translation + 2 reviews");
-  $options[4] = t("Translation + 3 reviews");
-
-  if (!$_lingotek_client->canLogIn()) {
-    return $options;
-  }
-
-  //Add custom phase templates:
-  $list_phase_templates = $_lingotek_client->request("listPhaseTemplates");
-  if ($list_phase_templates->results == "success") {
-    foreach ($list_phase_templates->phaseTemplates as $phase_template) {
-      $options[$phase_template->id] = t($phase_template->name);
-    }
-  }
-
-  return $options;
 }
 
 /*
