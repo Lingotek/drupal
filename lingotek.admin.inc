@@ -209,14 +209,14 @@ function lingotek_admin_form() {
 
   //If vaults are available from Lingotek because the above login credentials worked, then display them in a drop list instead of a text box for the Id
   if ($_lingotek_client->canLogIn()) {
-    $vaults = lingotek_get_vaults();
+    $vaults = (class_exists('LingotekApi')) ? LingotekApi::instance()->listVaults() : array();
     $id = variable_get('lingotek_vault', '');
 
     if ($id == '') { //No vault id set. (Vaults are not community specific, so we don't have to test this like we did the project)  Try to find the Drupal vault
       $id = array_search($site, $vaults);
       if ($id === FALSE) { //Setup a default Drupal vault
         $id = lingotek_add_vault($site);
-        $vaults = lingotek_get_vaults();
+        $vaults = (class_exists('LingotekApi')) ? LingotekApi::instance()->listVaults() : array();
       }
       else { //Assign to an existing Drupal project
         variable_set('lingotek_vault', $id);
@@ -253,14 +253,6 @@ function lingotek_admin_form() {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
-  );
-
-  $form['defaults']['lingotek_default_workflow_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Default Workflow'),
-    '#description' => t('Use this Workflow as the default when creating new content.'),
-    '#options' => (class_exists('LingotekApi')) ? LingotekApi::instance()->listWorkflows() : array(),
-    '#default_value' => variable_get('lingotek_default_workflow_id', ''),
   );
 
   $form['defaults']['lingotek_sync'] = array(

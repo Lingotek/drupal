@@ -68,7 +68,7 @@ function lingotek_menu() {
     'file' => 'lingotek.dev.inc',
     'page callback' => 'lingotek_dev_page',
   );
-  
+
   $items['admin/config/regional/field-data-cleanup'] = array(
     'title' => 'Lingotek Field Data Cleanup Utility',
     'description' => 'Updates language settings for existing field data.',
@@ -105,10 +105,10 @@ function lingotek_permission() {
       'title' => t('Per-item Project Selection'),
       'description' => t('Access the Lingotek Project selector on content creation forms.')
     ),
-    'access per-item lingotek workflow selection' => array(
-      'title' => t('Per-item Workflow Selection'),
-      'description' => t('Access the Lingotek Workflow selector on content creation forms.')
-    ),    
+    'access per-item lingotek vault selection' => array(
+      'title' => t('Per-item Vault Selection'),
+      'description' => t('Access the Lingotek TM Vault selector on content creation forms.')
+    ),
     'administration' => array('title' => 'Administration Menu', 'description' => t('Access the administrative page for the module.')),
     'pm' => array('title' => 'Project Management', 'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')),
     'translation' => array('title' => 'Translate', 'description' => t('Allow access to the workbench for translation (first) phases')),
@@ -116,7 +116,7 @@ function lingotek_permission() {
     'phase_template' => array('title' => 'Phase Template (Workflow)', 'description' => t('Allow node-level setting of the phase template on node creation.  Can only be set once per node.')),
     'use_source' => array('title' => 'Paste Source', 'description' => t('Allow node-level setting of showing the source when no translation is available yet')),
     'sync_method' => array('title' => 'Synchronization Method', 'description' => t('Allow node-level setting of setting the synchronization method')),
-    'url_alias_translation' => array('title' => 'URL Alias Translation', 'description' => t('Allow node-level setting of setting the URL alias translation')),    
+    'url_alias_translation' => array('title' => 'URL Alias Translation', 'description' => t('Allow node-level setting of setting the URL alias translation')),
     'mt' => array('title' => 'Machine Translation', 'description' => t('Allow node-level setting of machine translation')),
     'dev' => array('title' => 'Developer', 'description' => t('Access useful debugging features')),
   );
@@ -163,11 +163,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#title' => t('Lingotek Translation Settings'),
     '#description' => t('Please select a language for Lingotek to use as the source language.  The source language cannot be language neutral.'),
   );
-  
+
   $form['lingotek']['content'] = array(
     '#type' => 'container',
   );
-  
+
   $form['lingotek']['content']['note'] = array(
     '#type' => 'item',
     '#title' => t('Lingotek Translation Settings'),
@@ -195,16 +195,16 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
         '#access' => user_access('access per-item lingotek project selection'),
       );
     }
-    
-    // Workflows
-    if ($workflows = LingotekApi::instance()->listWorkflows()) {
-      $form['lingotek']['content']['lingotek_workflow_id'] = array(
+
+    // Translation Memory (TM) Vault.
+    if ($vaults = LingotekApi::instance()->listVaults()) {
+      $form['lingotek']['content']['lingotek_tm_vault'] = array(
         '#type' => 'select',
-        '#title' => t('Workflow'),
-        '#default_value' => variable_get('lingotek_default_workflow_id', 2),
-        '#options' => $workflows,
-        '#access' => user_access('access per-item lingotek workflow selection'),
-        '#description' => t("Choose the workflow you want translators to go through in order to finish translation of the page.  Workflows can be customized from Lingotek's dashboard by the drupal administrator. Community phases allow collaborative effort in the form of voting and approving others work.  This can only be set once per node."),
+        '#title' => t('TM Vault'),
+        '#description' => t('Choose the TM vault to associate with this content item.'),
+        '#default_value' => variable_get('lingotek_vault', ''),
+        '#options' => $vaults,
+        '#access' => user_access('access per-item lingotek vault selection'),
       );
     }
   }
@@ -279,7 +279,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check \"Enable Lingotek Translation\" for the Title field."),
     );
   }
-  
+
   $form['lingotek']['developer'] = array(
     '#type' => 'fieldset',
     '#title' => t('Developer Settings (Advanced)'),
@@ -378,25 +378,21 @@ function lingotek_node_update($node) {
 
   // Items that are only accessible on node add forms.
   if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
+    lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));    
+    
     $project_id = variable_get('lingotek_project', 0);
     if (user_access('access per-item lingotek project selection') && !empty($node->lingotek_project_id)) {
       $project_id = $node->lingotek_project_id;
     }
     lingotek_lingonode($node->nid, 'project_id', $project_id);
-    
-    lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));
-    $phase_template = variable_get('lingotek_phase_template', 2);
-    // If user selects a phase template.
-    if (user_access('phase_template') && isset($node->phaseTemplate)) {
-      $phase_template = $node->phaseTemplate;
-    }
-    lingotek_add_document($node);
 
-    $workflow_id = variable_get('lingotek_default_workflow_id', '');
-    if (user_access('access per-item lingotek workflow selection') && !empty($node->lingotek_workflow_id)) {
-      $workflow_id = $node->lingotek_workflow_id;
+    $vault_id = variable_get('lingotek_vault', '');
+    if (user_access('access per-item lingotek vault selection') && !empty($node->lingotek_vault_id)) {
+      $vault_id = $node->lingotek_vault_id;
     }
-    lingotek_lingonode($node->nid, 'workflow_id', $workflow_id);
+    lingotek_lingonode($node->nid, 'vault_id', $vault_id);
+    
+    lingotek_add_document($node);
 
     // Run machine translation for the first time.
     if (user_access('mt')) {
@@ -500,12 +496,12 @@ function lingotek_help($path, $arg) {
  */
 function lingotek_handle_batch_field_language_update($nid, &$context) {
   $process_node = node_load($nid);
-  
+
   if ($process_node->nid) {
     lingotek_update_language_field_data($process_node->nid);
     $context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
   }
-  
+
   $context['finished'] = 1;
 }
 
@@ -520,7 +516,7 @@ function lingotek_handle_batch_field_language_update($nid, &$context) {
  */
 function lingotek_update_language_field_data($nid) {
   $edited = FALSE;
-  
+
   $node = node_load($nid, NULL, TRUE);
   if ($node->nid) {
     if ($node->language != 'und') {
@@ -530,7 +526,7 @@ function lingotek_update_language_field_data($nid) {
           $node->{$field_name}[$node->language] = $node->{$field_name}['und'];
           $edited = TRUE;
         }
-      } 
+      }
     }
 
     if ($edited) {
@@ -541,7 +537,7 @@ function lingotek_update_language_field_data($nid) {
     watchdog('lingotek', 'Attempted to update field data for a non-existent node: @node_id',
       array('@node_id' => $node_id), WATCHDOG_ERROR);
   }
-  
+
   return $edited;
 }
 
@@ -561,7 +557,7 @@ function lingotek_translatable_node_fields() {
       }
     }
   }
-  
+
   return $translatable_fields;
 }
 

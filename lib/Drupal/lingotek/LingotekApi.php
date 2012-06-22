@@ -10,7 +10,7 @@ class LingotekApi {
    * The status string representing a successful API call.
    */
   const RESPONSE_STATUS_SUCCESS = 'success';
-   
+
   /**
    * Holds the static instance of the singleton object.
    *
@@ -32,7 +32,7 @@ class LingotekApi {
 
     return self::$instance;
   }
-  
+
   /**
    * Adds a target language to an existing Lingotek Document.
    *
@@ -46,23 +46,23 @@ class LingotekApi {
    */
   public function addTranslationTarget($lingotek_document_id, $target_language_code) {
     global $_lingotek_client, $_lingotek_locale;
-    
-    lingotek_trace('LingotekApi::addTranslationTarget()', array('document_id' => $document_id, 'target_language' => $target_language));
-    
+
+    lingotek_trace('LingotekApi::addTranslationTarget()', array('document_id' => $lingotek_document_id, 'target_language' => $target_language_code));
+
     $parameters = array(
-      'documentId' => $document_id,
+      'documentId' => $lingotek_document_id,
       'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
-      'targetLanguage' => $_lingotek_locale[$target_language]
+      'targetLanguage' => $_lingotek_locale[$target_language_code]
     );
-    
+
     if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
       return $new_translation_target->id;
     }
     else {
       return FALSE;
-    }    
+    }
   }
-  
+
   /**
    * Gets available Lingotek projects.
    *
@@ -71,16 +71,16 @@ class LingotekApi {
    */
   public function listProjects() {
     $projects = array();
-    
+
     if ($projects_raw = $this->request('listProjects')) {
       foreach ($projects_raw->projects as $project) {
         $projects[$project->id] = $project->name;
-      }      
+      }
     }
 
     return $projects;
   }
-  
+
   /**
    * Gets available Lingotek Workflows.
    *
@@ -89,7 +89,7 @@ class LingotekApi {
    */
   public function listWorkflows() {
     $workflows = array();
-    
+
     if ($workflows_raw = $this->request('listWorkflows')) {
       foreach ($workflows_raw->workflows as $workflow) {
         $workflows[$workflow->id] = $workflow->name;
@@ -98,7 +98,33 @@ class LingotekApi {
 
     return $workflows;
   }
-  
+
+  /**
+   * Gets available Lingotek Translation Memory vaults.
+   *
+   * @return array
+   *   An array of available vaults.
+   */
+  public function listVaults() {
+    $vaults = array();
+
+    if ($vaults_raw = $this->request('listTMVaults')) {
+      if (!empty($vaults_raw->personalVaults)) {
+        foreach ($vaults_raw->personalVaults as $vault) {
+          $vaults['Personal Vaults'][$vault->id] = $vault->name;
+        }
+      }
+      
+      if (!empty($vaults_raw->publicVaults)) {
+        foreach ($vaults_raw->publicVaults as $vault) {
+          $vaults['Public Vaults'][$vault->id] = $vault->name;
+        }
+      }
+    }
+
+    return $vaults;
+  }
+
   /**
    * Calls an API method.
    *
@@ -107,9 +133,9 @@ class LingotekApi {
    */
   private function request($method, $parameters = array()) {
     global $_lingotek_client;
-    
+
     $response_data = FALSE;
-    
+
     if ($_lingotek_client->canLogIn()) {
       $response = $_lingotek_client->request($method, $parameters);
       if ($response->results == self::RESPONSE_STATUS_SUCCESS) {

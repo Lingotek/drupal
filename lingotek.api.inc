@@ -188,7 +188,7 @@ function lingotek_add_document($node) {
     'documentDesc' => $node->title,
     'format' => 'XML',
     'sourceLanguage' => $_lingotek_locale[$node->language],
-    'tmVaultId' => variable_get('lingotek_vault', 1),
+    'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
     'content' => lingotek_xml_node_body($node),
     'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
   );
@@ -196,7 +196,7 @@ function lingotek_add_document($node) {
   $output = $_lingotek_client->request('addContentDocument', $param);
   if ($output->results == 'success') {
     lingotek_lingonode($node->nid, 'document_id_' . $node->language, $output->id);
-    lingotek_trace('lingotek_add_document', array('nid' => $node->nid, 'document_id_' . $node->language => $output->id));
+    lingotek_trace(__FUNCTION__, array('nid' => $node->nid, 'document_id_' . $node->language => $output->id));
   }
 }
 
@@ -463,28 +463,6 @@ function lingotek_get_translation_target($translation_target_id) {
   }
 }
 
-/*
- * Get the Lingotek user's current vaults
- */
-function lingotek_get_vaults() {
-  global $_lingotek_client;
-  $options = array();
-
-  if (!$_lingotek_client->isLoggedIn()) {
-    return $options;
-  }
-
-  $list_TM_vaults = $_lingotek_client->request("listTMVaults");
-  if ($list_TM_vaults->results == "success") {
-    foreach ($list_TM_vaults->personalVaults as $vault) {
-      $options["Personal Vaults"][$vault->id] = t($vault->name);
-    }
-    foreach ($list_TM_vaults->publicVaults as $vault) {
-      $options["Public Vaults"][$vault->id] = t($vault->name);
-    }
-  }
-  return $options;
-}
 
 /*
  * Get the url to open the translation workbench
