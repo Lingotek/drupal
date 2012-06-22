@@ -198,7 +198,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
     // Translation Memory (TM) Vault.
     if ($vaults = LingotekApi::instance()->listVaults()) {
-      $form['lingotek']['content']['lingotek_tm_vault'] = array(
+      $form['lingotek']['content']['lingotek_vault_id'] = array(
         '#type' => 'select',
         '#title' => t('TM Vault'),
         '#description' => t('Choose the TM vault to associate with this content item.'),
