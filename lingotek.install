@@ -169,8 +169,19 @@ function lingotek_update_7201(&$sandbox) {
 }
 
 /**
- * Ensure the Administrator role is automatically granted newly-introduced permissions.
+ * Ensure the Administrator role is granted newly-introduced permissions.
  */
-function lingotek_update_7202(&$sandbox) {
-  
+function lingotek_update_7202(&$sandbox) {      
+  if ($rid = variable_get('user_admin_role', 0)) {
+    $new_permisions = array(
+      'url_alias_translation',
+      'access lingotek utilities',
+      'access per-item lingotek project selection',
+      'access per-item lingotek vault selection'
+    );
+    
+    user_role_grant_permissions($rid, $new_permisions);    
+    
+    return t('Granted new Lingotek permissions to the administrative security role.');
+  }
 }
