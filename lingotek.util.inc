@@ -1,19 +1,28 @@
 <?php
 /**
  * @file
- * Utilities
+ * Utility functions.
  */
 
-/*
- * Get the raw url for the Lingotek Workbench for a given Node and phase (workflow step)
+/**
+ * Get the raw url for the Lingotek Workbench for a given Node and phase (workflow step).
+ *
+ * @param object $node
+ *   A Drupal node object.
+ * @param int $phase_id
+ *   A lingotek workflow phase ID.
+ *
+ * @return string
+ *  The Lingotek Workbench URL.
  */
 function lingotek_workbench_url($node, $phase_id) {
+  global $user;
+  
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
-  $arr = array
-  (
+  $arr = array(
     'community' => variable_get('lingotek_community', ''),
-    'id' => variable_get('lingotek_login_id', ''),
+    'id' => $user->name,
     'time' => time(),
     'document' => $document_id,
     'phase' => $phase_id
