@@ -7,6 +7,8 @@ dependencies[] = translation
 dependencies[] = field_ui
 
 files[] = lib/Drupal/lingotek/LingotekApi.php
+files[] = tests/lingotek.base.test
+files[] = tests/lingotek.access.test
 
 php = "5.2"
 configure = admin/settings/lingotek
