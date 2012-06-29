@@ -158,6 +158,12 @@ function lingotek_signup_form() {
   return $form;
 }
 
+/**
+ * Form constructor for the administration form.
+ *
+ * @return array
+ *   A FAPI form array.
+ */
 function lingotek_admin_form() {
   global $_lingotek_client, $_version;
   $site = variable_get('site_name', 'Drupal Site');
@@ -240,7 +246,7 @@ function lingotek_admin_form() {
       '#default_value' => variable_get('lingotek_vault', 1),
     );
   }
-
+  
   // Options
   $options = array();
   $options[FALSE] = t("Disabled");
@@ -382,6 +388,29 @@ function lingotek_admin_form() {
     '#description' => t('URL pointing to the Lingotek instance to be used.'),
     '#default_value' => variable_get('lingotek_url', 'http://myaccount.lingotek.com'),
   );
+  
+  // Advanced XML configuration.
+  $form['advanced-xml'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced XML'),
+    '#description' => t('Settings to support advanced parsing of translatable content.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['advanced-xml']['lingotek_advanced_xml_config1'] = array(
+    '#type' => 'textarea',
+    '#title' => t('XML Configuration Settings (Primary)'),
+    '#description' => t('Paste in the contents of an advanced configuration file. This will be used as the primary set of advanced settings when sending content to Lingotek.'),
+    '#default_value' => variable_get('lingotek_advanced_xml_config1'),
+  );
+  
+  $form['advanced-xml']['lingotek_advanced_xml_config2'] = array(
+    '#type' => 'textarea',
+    '#title' => t('XML Configuration Settings (Secondary)'),
+    '#description' => t('Paste in the contents of an advanced configuration file. This will be used as the secondary set of advanced settings when sending content to Lingotek.'),
+    '#default_value' => variable_get('lingotek_advanced_xml_config2'),
+  );  
 
   return $form;
 }
