@@ -17,6 +17,13 @@ class LingotekApi {
    * @var LingotekApi
    */
   private static $instance;
+  
+  /**
+   * Debug status for extra logging of API calls.
+   *
+   * @var bool
+   */
+  private $debug;
 
   /**
    * Gets the singleton instance of the API class.
@@ -32,6 +39,36 @@ class LingotekApi {
 
     return self::$instance;
   }
+  
+  /**
+   * Add a document to the Lingotek platform.
+   *
+   * Uploads the node's field content in the node's selected language.
+   *
+   * @param object $node
+   *   A Drupal node object.
+   */
+  public function addContentDocument($node) {
+    global $_lingotek_locale;
+
+    $parameters = array(
+      'projectId' => $node->lingotek_project_id,
+      'documentName' => $node->title,
+      'documentDesc' => $node->title,
+      'format' => $this->xmlFormat(),
+      'sourceLanguage' => $_lingotek_locale[$node->language],
+      'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
+      'content' => lingotek_xml_node_body($node),
+      'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
+    );
+
+    $this->addAdvancedParameters($parameters);
+
+    if ($result = $this->request('addContentDocument', $parameters)) {
+      lingotek_lingonode($node->nid, 'document_id_' . $node->language, $result->id);
+    }
+  }
+  
 
   /**
    * Adds a target language to an existing Lingotek Document.
@@ -46,8 +83,6 @@ class LingotekApi {
    */
   public function addTranslationTarget($lingotek_document_id, $target_language_code) {
     global $_lingotek_client, $_lingotek_locale;
-
-    lingotek_trace('LingotekApi::addTranslationTarget()', array('document_id' => $lingotek_document_id, 'target_language' => $target_language_code));
 
     $parameters = array(
       'documentId' => $lingotek_document_id,
@@ -124,6 +159,34 @@ class LingotekApi {
 
     return $vaults;
   }
+  
+  /**
+   * Updates the content of an existing Lingotek document with the current node contents.
+   *
+   * @param stdClass $node
+   *   A Drupal node object.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on failure.
+   */
+  public function updateContentDocument($node) {
+    $parameters = array(
+      'documentId' => lingotek_lingonode($node->nid, 'document_id_' . $node->language),
+      'content' => lingotek_xml_node_body($node),
+      'format' => $this->xmlFormat(),
+    );
+    
+    $this->addAdvancedParameters($parameters);
+
+    return ($this->request('updateContentDocument', $parameters)) ? TRUE : FALSE;    
+  }
+  
+  /**
+   * Gets the appropriate format code for the current system state
+   */
+  public function xmlFormat() {
+    return (variable_get('lingotek_xml_advanced', FALSE)) ? 'XML_OKAPI' : 'XML';
+  }
 
   /**
    * Calls an API method.
@@ -138,22 +201,47 @@ class LingotekApi {
 
     if ($_lingotek_client->canLogIn()) {
       $response = $_lingotek_client->request($method, $parameters);
+      if ($this->debug) {
+        watchdog('lingotek_debug', '<strong>Called API method</strong>: @method<br /><strong>Params</strong>: @params<br /><strong>Response:</strong> @response',
+        array('@method' => $method, '@params' => print_r($parameters, TRUE), '@response' => print_r($response, TRUE)), WATCHDOG_DEBUG);
+      }
       if ($response->results == self::RESPONSE_STATUS_SUCCESS) {
         $response_data = $response;
       }
       else {
-        watchdog('lingotek', 'Failed API call. Method: @name. Parameters: @params.',
-          array('@name' => $method, '@params' => serialize($parameters)), WATCHDOG_ERROR);
+        watchdog('lingotek', 'Failed API call.<br />Method: @name. <br />Parameters: @params. <br />Response: @response',
+          array('@name' => $method, '@params' => print_r($parameters, TRUE), '@response' => print_r($response, TRUE)), WATCHDOG_ERROR);
       }
     }
 
     return $response_data;
   }
+  
+  /**
+   * Adds advanced parameters for use with addContentDocument and updateContentDocument.
+   *
+   * @param array
+   *   An array of API request parameters,
+   */
+  private function addAdvancedParameters(&$parameters) {
+    // Extra parameters when using advanced XML configuration.
+    if (variable_get('lingotek_xml_advanced', FALSE)) {
+      $advanced_parameters = array(
+        'fprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
+        'secondaryFprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
+        'secondaryFilter' => 'okf_html',
+      );
+      
+      $parameters = array_merge($parameters, $advanced_parameters);
+    }    
+  }
 
   /**
    * Private constructor.
    */
-  private function __construct() {}
+  private function __construct() {
+    $this->debug = variable_get('lingotek_api_debug', FALSE);
+  }
 
   /**
    * Private clone implementation.
