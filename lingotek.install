@@ -1,25 +1,29 @@
 <?php
 /**
  * @file
- * Installation for Lingotek Community Translation Module
+ * Installation for Lingotek Community Translation Module.
  */
 
-/*
- * Install the Lingotek module
+/**
+ * Implements hook_install().
  */
 function lingotek_install() {
   db_update('system')->fields(array('weight' => 3))->condition('name', 'lingotek')->execute();
-
-  //TODO Add documents to Lingotek for all existing nodes
-
+  variable_set('lingotek_xml_advanced', TRUE);
+  lingotek_install_default_advanced_xml();
 }
 
-/*
- * Uninstall the Lingotek module
+/**
+ * Implements hook_uninstall().
  */
 function lingotek_uninstall() {
-  //variable_del('lingotek_community');
-
+  $delete_variables = array(
+    'lingotek_xml_advanced',
+  );
+  
+  foreach ($delete_variables as $variable) {
+    variable_del($variable);
+  }
 }
 
 /*
@@ -124,8 +128,8 @@ function lingotek_update_7200(&$sandbox) {
     $sandbox['nodes'] = $nodes;
   }
 	$node = node_load($sandbox['nodes'][$sandbox['progress']]);
-	if ($node !== False) {
-		lingotek_update_document($node);
+	if ($node !== FALSE) {
+		LingotekApi::instance()->updateContentDocument($node);
 	}
 
 	$sandbox['progress']++;

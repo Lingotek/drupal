@@ -7,26 +7,6 @@
 $GLOBALS['_lingotek_client'] = new LingotekSession();
 
 /*
- * Update the document on the Lingotek platform with changes made on drupal
- *
- * This adds/removes content from the source document in the Lingotek platform.
- *
- * @param $node
- *  Node being updated
- */
-function lingotek_update_document($node) {
-  global $_lingotek_client;
-
-  $param = array
-  (
-    'documentId' => lingotek_lingonode($node->nid, 'document_id_' . $node->language),
-    'content' => lingotek_xml_node_body($node)
-  );
-
-  $_lingotek_client->request('updateContentDocument', $param);
-}
-
-/*
  * Download the translations from the Lingotek platform
  *
  * This updates a node's content with translations for target languages
@@ -170,35 +150,6 @@ function lingotek_save_segment($source_text, $target_text, $target_language, $do
 }
 
 #API ADDERS
-
-/**
- * Add a document to the Lingotek platform.
- *
- * This saves a node's source language to the Lingotek platform.
- *
- * @param object $node
- *   The Drupal node being added to Lingotek.
- */
-function lingotek_add_document($node) {
-  global $_lingotek_client, $_lingotek_locale;
-
-  $param = array(
-    'projectId' => $node->lingotek_project_id,
-    'documentName' => $node->title,
-    'documentDesc' => $node->title,
-    'format' => 'XML',
-    'sourceLanguage' => $_lingotek_locale[$node->language],
-    'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
-    'content' => lingotek_xml_node_body($node),
-    'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
-  );
-
-  $output = $_lingotek_client->request('addContentDocument', $param);
-  if ($output->results == 'success') {
-    lingotek_lingonode($node->nid, 'document_id_' . $node->language, $output->id);
-    lingotek_trace(__FUNCTION__, array('nid' => $node->nid, 'document_id_' . $node->language => $output->id));
-  }
-}
 
 /**
  * Add target languages to the Lingotek document associated with a node.

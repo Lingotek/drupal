@@ -340,6 +340,13 @@ function lingotek_admin_form() {
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
     '#default_value' => variable_get('lingotek_flush_cache', FALSE),
   );
+  
+  $form['developer_settings']['lingotek_api_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable API debugging'),
+    '#description' => t('Logs the details of both successful and failing Lingotek API calls to the Drupal watchdog in category "lingotek_debug"'),
+    '#default_value' => variable_get('lingotek_flush_cache', FALSE),
+  );
 
   // Authentication Settings
   $form['auth'] = array(
@@ -392,7 +399,7 @@ function lingotek_admin_form() {
   // Advanced XML configuration.
   $form['advanced-xml'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Advanced XML'),
+    '#title' => t('Advanced Content Parsing'),
     '#description' => t('Settings to support advanced parsing of translatable content.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -400,17 +407,28 @@ function lingotek_admin_form() {
   
   $form['advanced-xml']['lingotek_advanced_xml_config1'] = array(
     '#type' => 'textarea',
-    '#title' => t('XML Configuration Settings (Primary)'),
+    '#title' => t('Configuration Settings (Primary)'),
     '#description' => t('Paste in the contents of an advanced configuration file. This will be used as the primary set of advanced settings when sending content to Lingotek.'),
     '#default_value' => variable_get('lingotek_advanced_xml_config1'),
   );
   
   $form['advanced-xml']['lingotek_advanced_xml_config2'] = array(
     '#type' => 'textarea',
-    '#title' => t('XML Configuration Settings (Secondary)'),
+    '#title' => t('Configuration Settings (Secondary)'),
     '#description' => t('Paste in the contents of an advanced configuration file. This will be used as the secondary set of advanced settings when sending content to Lingotek.'),
     '#default_value' => variable_get('lingotek_advanced_xml_config2'),
-  );  
+  );
+  
+  if (!variable_get('lingotek_xml_advanced', FALSE)) {
+    $form['advanced-xml']['lingotek_xml_advanced'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Upgrade to Advanced Content processing.'),
+      '#description' => t('This site is currently using Simple content parsing. 
+        Check this box to upgrade your site to advanced content parsing for existing and future content. <strong>Warning:</strong> This will update all current Lingotek-associated content on the site, possibly modifying the state of in-progress translations.'),
+    );
+    
+    $form['#submit'][] = 'lingotek_handle_advanced_xml_upgrade';
+  }
 
   return $form;
 }
@@ -475,11 +493,38 @@ function lingotek_form_field_language_utility_submit($form, $form_state) {
   }
   
   $batch = array(
-    'title' => t('LingoTek Field Language Updater'),
+    'title' => t('Lingotek Field Language Updater'),
     'operations' => $operations,
     'finished' => 'lingotek_field_language_update_finished',
     'file' => 'lingotek.admin.inc',
   );
-  
+
   batch_set($batch);  
+}
+
+/**
+ * Custom form handler for upgrading a site from using Lingotek's simple to advanced XML parsing of content.
+ */
+function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
+  $results = db_select('lingotek', 'l')->fields('l', array('nid'))->distinct()->execute();
+  $operations = array();
+  foreach ($results as $result) {
+    $node = node_load($result->nid, NULL, TRUE);
+    if (!empty($node->nid)) {
+      $operations[] = array('lingotek_xml_update_node', array($node->nid));
+    }
+  }
+
+  $batch = array(
+    'title' => t('Lingotek XML Parsing Updater'),
+    'operations' => $operations,
+    'file' => 'lingotek.admin.inc',
+    'finished' => 'lingotek_xml_update_finished',
+  );
+  
+  // The admin form might not have finished processing yet, but if we're here, we're moving to advanced processing.
+  // Ensure the appropriate variable is already set.
+  variable_set('lingotek_advanced_xml', TRUE);
+  
+  batch_set($batch);
 }

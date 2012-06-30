@@ -392,7 +392,7 @@ function lingotek_node_update($node) {
     }
     lingotek_lingonode($node->nid, 'vault_id', $vault_id);
     
-    lingotek_add_document($node);
+    LingotekApi::instance()->addContentDocument($node);
 
     // Run machine translation for the first time.
     if (user_access('mt')) {
@@ -412,7 +412,7 @@ function lingotek_node_update($node) {
   }
   else {
     // Keep source document up to date.
-    lingotek_update_document($node);
+    LingotekApi::instance()->updateContentDocument($node);
 
     // Run machine translation.
     if (user_access('mt') && isset($node->mtEngine) && $node->mtEngine) {
@@ -566,4 +566,61 @@ function lingotek_translatable_node_fields() {
  */
 function lingotek_field_language_update_finished($success, $results, $operations) {
   drupal_set_message('Updated field data for nodes.') ;
+}
+
+/**
+ * Processing callback for the XML update batch operation.
+ */
+function lingotek_xml_update_node($nid, &$context) {
+  $process_node = node_load($nid);
+
+  if (!empty($process_node->nid)) {
+    $context['message'] = t('Sending advanced parsing data to Lingotek for node @node_id: @node_title',
+      array('@node_id' => $process_node->nid, '@node_title' => $process_node->title));
+    if (LingotekApi::instance()->updateContentDocument($process_node)) {
+      $context['results'][] = t('Updated node: @id', array('@id' => $process_node->nid));      
+    }
+    else {
+      watchdog('lingotek', 'Unable to send advanced XML version of node to Lingotek: @node_id', 
+        array('@node_id' => $process_node->nid), WATCHDOG_ERROR);
+    }
+  }
+}
+
+/**
+ * "Finished" callback for the XML update batch operation.
+ */
+function lingotek_xml_update_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('Advanced parsing updates complete.'));
+  }
+  else {
+    drupal_set_message(t('There were errors updating one or more existing Lingotek documents.'), 'error');
+  }
+}
+
+/**
+ * Installs the default advanced XML configuration that ships with the module.
+ */
+function lingotek_install_default_advanced_xml() {
+  $filepath_stub = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lingotek') . '/fprm/';
+  $config_file_primary = $filepath_stub . 'okf_xmlstream@drupal_filter.fprm';
+  $config_file_secondary = $filepath_stub . 'okf_html@drupal_subfilter.fprm';
+
+  if ($config = file_get_contents($config_file_primary)) {
+    variable_set('lingotek_advanced_xml_config1', $config);
+  }
+  else {
+    watchdog('lingotek', 'Unable to install default primary advanced XML configuration from: @config_file',
+      array('@config_file' => $config_file_primary), WATCHDOG_ERROR);
+  }
+  
+  if ($config2 = file_get_contents($config_file_secondary)) {
+    variable_set('lingotek_advanced_xml_config2', $config2);
+  }
+  else {
+    watchdog('lingotek', 'Unable to install default secondary advanced XML configuration from: @config_file',
+      array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
+  }
+  
 }

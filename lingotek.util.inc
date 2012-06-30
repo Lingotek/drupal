@@ -128,13 +128,13 @@ function lingotek_xml_decode($text) {
   return $text;
 }
 
-/*
+/**
  * Run this on nodes you aren't sure if they've been initialized yet for use with Lingotek.
  */
 function lingotek_node_init_default($node) {
   if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
     lingotek_trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
-    lingotek_add_document($node);
+    LingotekApi::instance()->addContentDocument($node);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
   }
   #Add any missing languages and their phase templates
