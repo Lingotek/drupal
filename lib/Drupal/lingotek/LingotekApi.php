@@ -17,7 +17,7 @@ class LingotekApi {
    * @var LingotekApi
    */
   private static $instance;
-  
+
   /**
    * Debug status for extra logging of API calls.
    *
@@ -39,7 +39,7 @@ class LingotekApi {
 
     return self::$instance;
   }
-  
+
   /**
    * Add a document to the Lingotek platform.
    *
@@ -62,13 +62,13 @@ class LingotekApi {
       'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
     );
 
-    $this->addAdvancedParameters($parameters);
+    $this->addAdvancedParameters($parameters, $node);
 
     if ($result = $this->request('addContentDocument', $parameters)) {
       lingotek_lingonode($node->nid, 'document_id_' . $node->language, $result->id);
     }
   }
-  
+
 
   /**
    * Adds a target language to an existing Lingotek Document.
@@ -149,7 +149,7 @@ class LingotekApi {
           $vaults['Personal Vaults'][$vault->id] = $vault->name;
         }
       }
-      
+
       if (!empty($vaults_raw->publicVaults)) {
         foreach ($vaults_raw->publicVaults as $vault) {
           $vaults['Public Vaults'][$vault->id] = $vault->name;
@@ -159,7 +159,7 @@ class LingotekApi {
 
     return $vaults;
   }
-  
+
   /**
    * Updates the content of an existing Lingotek document with the current node contents.
    *
@@ -175,17 +175,17 @@ class LingotekApi {
       'content' => lingotek_xml_node_body($node),
       'format' => $this->xmlFormat(),
     );
-    
-    $this->addAdvancedParameters($parameters);
 
-    return ($this->request('updateContentDocument', $parameters)) ? TRUE : FALSE;    
+    $this->addAdvancedParameters($parameters, $node);
+
+    return ($this->request('updateContentDocument', $parameters)) ? TRUE : FALSE;
   }
-  
+
   /**
    * Gets the appropriate format code for the current system state
    */
   public function xmlFormat() {
-    return (variable_get('lingotek_xml_advanced', FALSE)) ? 'XML_OKAPI' : 'XML';
+    return (variable_get('lingotek_advanced_parsing', FALSE)) ? 'XML_OKAPI' : 'XML';
   }
 
   /**
@@ -216,24 +216,30 @@ class LingotekApi {
 
     return $response_data;
   }
-  
+
   /**
    * Adds advanced parameters for use with addContentDocument and updateContentDocument.
    *
-   * @param array
-   *   An array of API request parameters,
+   * @param array $parameters
+   *   An array of API request parameters.
+   * @param object $node
+   *   A Drupal node object.
    */
-  private function addAdvancedParameters(&$parameters) {
+  private function addAdvancedParameters(&$parameters, $node) {
     // Extra parameters when using advanced XML configuration.
-    if (variable_get('lingotek_xml_advanced', FALSE)) {
+    $advanced_parsing_enabled = variable_get('lingotek_advanced_parsing', FALSE);
+    $use_advanced_parsing = ($advanced_parsing_enabled ||
+      (!$advanced_parsing_enabled && lingotek_lingonode($node->nid, 'use_advanced_parsing')));
+
+    if ($use_advanced_parsing) {
       $advanced_parameters = array(
         'fprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
         'secondaryFprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
         'secondaryFilter' => 'okf_html',
       );
-      
+
       $parameters = array_merge($parameters, $advanced_parameters);
-    }    
+    }
   }
 
   /**

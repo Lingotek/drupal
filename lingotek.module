@@ -26,7 +26,8 @@ function lingotek_menu() {
     'access arguments' => array('administration'),
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
-    'page callback' => 'lingotek_settings_page',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_administrative_settings_form'),
   );
 
   $items['node/%node/lingotek_pm'] = array(
@@ -378,8 +379,8 @@ function lingotek_node_update($node) {
 
   // Items that are only accessible on node add forms.
   if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
-    lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));    
-    
+    lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));
+
     $project_id = variable_get('lingotek_project', 0);
     if (user_access('access per-item lingotek project selection') && !empty($node->lingotek_project_id)) {
       $project_id = $node->lingotek_project_id;
@@ -391,7 +392,7 @@ function lingotek_node_update($node) {
       $vault_id = $node->lingotek_vault_id;
     }
     lingotek_lingonode($node->nid, 'vault_id', $vault_id);
-    
+
     LingotekApi::instance()->addContentDocument($node);
 
     // Run machine translation for the first time.
@@ -569,19 +570,19 @@ function lingotek_field_language_update_finished($success, $results, $operations
 }
 
 /**
- * Processing callback for the XML update batch operation.
+ * Processing callback for the advanced parsing update batch operation.
  */
-function lingotek_xml_update_node($nid, &$context) {
+function lingotek_advanced_parsing_update_node($nid, &$context) {
   $process_node = node_load($nid);
 
   if (!empty($process_node->nid)) {
     $context['message'] = t('Sending advanced parsing data to Lingotek for node @node_id: @node_title',
       array('@node_id' => $process_node->nid, '@node_title' => $process_node->title));
     if (LingotekApi::instance()->updateContentDocument($process_node)) {
-      $context['results'][] = t('Updated node: @id', array('@id' => $process_node->nid));      
+      $context['results'][] = t('Updated node: @id', array('@id' => $process_node->nid));
     }
     else {
-      watchdog('lingotek', 'Unable to send advanced XML version of node to Lingotek: @node_id', 
+      watchdog('lingotek', 'Unable to send advanced XML version of node to Lingotek: @node_id',
         array('@node_id' => $process_node->nid), WATCHDOG_ERROR);
     }
   }
@@ -590,7 +591,7 @@ function lingotek_xml_update_node($nid, &$context) {
 /**
  * "Finished" callback for the XML update batch operation.
  */
-function lingotek_xml_update_finished($success, $results, $operations) {
+function lingotek_advanced_parsing_update_finished($success, $results, $operations) {
   if ($success) {
     drupal_set_message(t('Advanced parsing updates complete.'));
   }
@@ -614,7 +615,7 @@ function lingotek_install_default_advanced_xml() {
     watchdog('lingotek', 'Unable to install default primary advanced XML configuration from: @config_file',
       array('@config_file' => $config_file_primary), WATCHDOG_ERROR);
   }
-  
+
   if ($config2 = file_get_contents($config_file_secondary)) {
     variable_set('lingotek_advanced_xml_config2', $config2);
   }
@@ -622,5 +623,5 @@ function lingotek_install_default_advanced_xml() {
     watchdog('lingotek', 'Unable to install default secondary advanced XML configuration from: @config_file',
       array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
   }
-  
+
 }

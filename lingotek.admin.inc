@@ -1,25 +1,18 @@
 <?php
 /**
  * @file
- * Administrative Settings for the module
+ * Administrative Settings for the module.
  */
-
 include_once('lingotek.session.inc');
 
 preg_match('.Revision: (\d+) .', '$Revision: 25159 $', $revision);
 $GLOBALS['_version'] = $revision[1];
 
-/*
- * hook_settings_page
- *
- * Get the form for the administration page
- */
-function lingotek_settings_page() {
-  return drupal_get_form('lingotek_administrative_settings_form');
-}
-
-/*
+/**
  * Admistration Form for configuring the Lingotek Module.
+ *
+ * @return array
+ *   A FAPI form array.
  */
 function lingotek_administrative_settings_form() {
   global $_lingotek_client;
@@ -246,7 +239,7 @@ function lingotek_admin_form() {
       '#default_value' => variable_get('lingotek_vault', 1),
     );
   }
-  
+
   // Options
   $options = array();
   $options[FALSE] = t("Disabled");
@@ -340,7 +333,7 @@ function lingotek_admin_form() {
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
     '#default_value' => variable_get('lingotek_flush_cache', FALSE),
   );
-  
+
   $form['developer_settings']['lingotek_api_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable API debugging'),
@@ -395,38 +388,38 @@ function lingotek_admin_form() {
     '#description' => t('URL pointing to the Lingotek instance to be used.'),
     '#default_value' => variable_get('lingotek_url', 'http://myaccount.lingotek.com'),
   );
-  
+
   // Advanced XML configuration.
-  $form['advanced-xml'] = array(
+  $form['advanced-parsing'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced Content Parsing'),
     '#description' => t('Settings to support advanced parsing of translatable content.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
-  $form['advanced-xml']['lingotek_advanced_xml_config1'] = array(
+
+  $form['advanced-parsing']['lingotek_advanced_xml_config1'] = array(
     '#type' => 'textarea',
     '#title' => t('Configuration Settings (Primary)'),
-    '#description' => t('Paste in the contents of an advanced configuration file. This will be used as the primary set of advanced settings when sending content to Lingotek.'),
+    '#description' => t('Paste in the contents of an advanced configuration file (.fprm). This will be used as the primary set of advanced settings when sending content to Lingotek.'),
     '#default_value' => variable_get('lingotek_advanced_xml_config1'),
   );
-  
-  $form['advanced-xml']['lingotek_advanced_xml_config2'] = array(
+
+  $form['advanced-parsing']['lingotek_advanced_xml_config2'] = array(
     '#type' => 'textarea',
     '#title' => t('Configuration Settings (Secondary)'),
-    '#description' => t('Paste in the contents of an advanced configuration file. This will be used as the secondary set of advanced settings when sending content to Lingotek.'),
+    '#description' => t('Paste in the contents of an advanced configuration file (.fprm). This will be used as the secondary set of advanced settings when sending content to Lingotek.'),
     '#default_value' => variable_get('lingotek_advanced_xml_config2'),
   );
-  
-  if (!variable_get('lingotek_xml_advanced', FALSE)) {
-    $form['advanced-xml']['lingotek_xml_advanced'] = array(
+
+  if (!variable_get('lingotek_advanced_parsing', FALSE)) {
+    $form['advanced-parsing']['lingotek_advanced_parsing'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Upgrade to Advanced Content processing.'),
-      '#description' => t('This site is currently using Simple content parsing. 
-        Check this box to upgrade your site to advanced content parsing for existing and future content. <strong>Warning:</strong> This will update all current Lingotek-associated content on the site, possibly modifying the state of in-progress translations.'),
+      '#title' => t('Upgrade to advanced content parsing.'),
+      '#description' => t('This site is currently using Simple content parsing.
+        Check this box to upgrade your site to use advanced content parsing for existing and future content. <strong>Warning:</strong> This will update all current Lingotek-associated content on the site, possibly modifying the state of in-progress translations.'),
     );
-    
+
     $form['#submit'][] = 'lingotek_handle_advanced_xml_upgrade';
   }
 
@@ -444,30 +437,30 @@ function lingotek_admin_form() {
  */
 function lingotek_form_field_language_utility($form_state) {
   $form = array();
-    
+
   $form['description'] = array(
-    '#markup' => '<p class="help">' . t('This tool processes all existing field data for translation-enabled fields on nodes, 
-      ensuring that if data was entered before enabling field translation on a field 
-      that the existing field data is copied over to the parent node\'s current language.') . 
+    '#markup' => '<p class="help">' . t('This tool processes all existing field data for translation-enabled fields on nodes,
+      ensuring that if data was entered before enabling field translation on a field
+      that the existing field data is copied over to the parent node\'s current language.') .
       '</p>',
   );
-  
+
   $form['warning'] = array(
-    '#markup' => '<p class="help">' . t('<strong>WARNING:</strong> This tool makes changes to your site\'s data. We strongly encourage you to back up your database before using this tool.') . 
+    '#markup' => '<p class="help">' . t('<strong>WARNING:</strong> This tool makes changes to your site\'s data. We strongly encourage you to back up your database before using this tool.') .
       '</p>',
-  );  
+  );
 
   $translatable_fields = lingotek_translatable_node_fields();
-  
+
   $form['status'] = array(
     '#markup' => theme('item_list', array('items' => $translatable_fields, 'title' => t('Translation-enabled Fields'), 'type' => 'ul')),
   );
-  
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Update Field Data'),
   );
-  
+
   return $form;
 }
 
@@ -485,13 +478,13 @@ function lingotek_form_field_language_utility_submit($form, $form_state) {
   $nodes = $query->entityCondition('entity_type', $entity_type)
     ->propertyCondition('language', 'und', '<>')
     ->execute();
-  
+
   $operations = array();
   foreach ($nodes[$entity_type] as $node) {
-    $operations[] = array('lingotek_handle_batch_field_language_update', 
+    $operations[] = array('lingotek_handle_batch_field_language_update',
       array($node->nid));
   }
-  
+
   $batch = array(
     'title' => t('Lingotek Field Language Updater'),
     'operations' => $operations,
@@ -499,7 +492,7 @@ function lingotek_form_field_language_utility_submit($form, $form_state) {
     'file' => 'lingotek.admin.inc',
   );
 
-  batch_set($batch);  
+  batch_set($batch);
 }
 
 /**
@@ -511,20 +504,20 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
   foreach ($results as $result) {
     $node = node_load($result->nid, NULL, TRUE);
     if (!empty($node->nid)) {
-      $operations[] = array('lingotek_xml_update_node', array($node->nid));
+      $operations[] = array('lingotek_advanced_parsing_update_node', array($node->nid));
     }
   }
 
   $batch = array(
-    'title' => t('Lingotek XML Parsing Updater'),
+    'title' => t('Lingotek Advanced Parsing Updater'),
     'operations' => $operations,
     'file' => 'lingotek.admin.inc',
-    'finished' => 'lingotek_xml_update_finished',
+    'finished' => 'lingotek_advanced_parsing_update_finished',
   );
-  
+
   // The admin form might not have finished processing yet, but if we're here, we're moving to advanced processing.
   // Ensure the appropriate variable is already set.
-  variable_set('lingotek_advanced_xml', TRUE);
-  
+  variable_set('lingotek_advanced_parsing', TRUE);
+
   batch_set($batch);
 }

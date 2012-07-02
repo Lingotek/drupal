@@ -9,7 +9,7 @@
  */
 function lingotek_install() {
   db_update('system')->fields(array('weight' => 3))->condition('name', 'lingotek')->execute();
-  variable_set('lingotek_xml_advanced', TRUE);
+  variable_set('lingotek_advanced_parsing', TRUE);
   lingotek_install_default_advanced_xml();
 }
 
@@ -18,9 +18,9 @@ function lingotek_install() {
  */
 function lingotek_uninstall() {
   $delete_variables = array(
-    'lingotek_xml_advanced',
+    'lingotek_advanced_parsing',
   );
-  
+
   foreach ($delete_variables as $variable) {
     variable_del($variable);
   }
@@ -152,16 +152,16 @@ function lingotek_update_7201(&$sandbox) {
         ->distinct(TRUE)
         ->fields('l', array('nid'))
         ->execute();
-    
+
       foreach ($result as $row) {
         $lingotek_nodes[] = $row->nid;
       }
-    
+
       $sandbox['progress'] = 0;
       $sandbox['max'] = count($lingotek_nodes);
       $sandbox['nodes'] = $lingotek_nodes;
     }
-    
+
     $process_node = node_load(array_shift($sandbox['nodes']));
     if ($process_node->nid && !lingotek_lingonode($process_node->nid, 'project_id')) {
       lingotek_lingonode($process_node->nid, 'project_id', $default_lingotek_project);
@@ -175,7 +175,7 @@ function lingotek_update_7201(&$sandbox) {
 /**
  * Ensure the Administrator role is granted newly-introduced permissions.
  */
-function lingotek_update_7202(&$sandbox) {      
+function lingotek_update_7202(&$sandbox) {
   if ($rid = variable_get('user_admin_role', 0)) {
     $new_permisions = array(
       'url_alias_translation',
@@ -183,9 +183,9 @@ function lingotek_update_7202(&$sandbox) {
       'access per-item lingotek project selection',
       'access per-item lingotek vault selection'
     );
-    
-    user_role_grant_permissions($rid, $new_permisions);    
-    
+
+    user_role_grant_permissions($rid, $new_permisions);
+
     return t('Granted new Lingotek permissions to the administrative security role.');
   }
 }

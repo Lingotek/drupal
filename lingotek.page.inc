@@ -4,9 +4,14 @@
  * Lingotek Tab for Nodes
  */
 
-/*
+/**
+ * Page callback for the Lingotek local task on node detail pages.
+ *
  * Construct the table summarizing information a Product Manager would want
  * to know about the progress of the translations.
+ *
+ * @return array
+ *   A Drupal render array of the page contents.
  */
 function lingotek_pm($node) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
@@ -33,7 +38,22 @@ function lingotek_pm($node) {
 
   $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
 
-  return $table . $actions . $vars;
+  $output = array(
+    'table' => array(
+      '#markup' => $table,
+    ),
+    'actions' => array(
+      '#markup' => $actions,
+    ),
+    'vars' => array(
+      '#markup' => $vars,
+    ),
+    'upgrade_form' => array(
+      '#markup' => drupal_render(drupal_get_form('lingotek_advanced_parsing_upgrade_form')),
+    )
+  );
+
+  return $output;
 }
 
 /*
@@ -45,4 +65,92 @@ function lingotek_update($nid) {
     lingotek_download_document($node, check_plain($target));
   }
   drupal_json_output(array('status' => 0, 'updated' => $_POST['targets'], 'nid' => $nid));
+}
+
+/**
+ * Form constructor for parsing upgrade of a node.
+ *
+ * @return array
+ *   A FAPI form array.
+ */
+function lingotek_advanced_parsing_upgrade_form($form_state) {
+  $form = array();
+
+  if (!variable_get('lingotek_advanced_parsing', FALSE)) {
+    $router_item = menu_get_item();
+    if (!empty($router_item['page_arguments'][0]->nid)) {
+      $node_id = $router_item['page_arguments'][0]->nid;
+
+      $form['node_id'] = array(
+        '#type' => 'hidden',
+        '#value' => $node_id,
+      );
+
+      $form['advanced_parsing_upgrade'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Advanced Content Parsing'),
+        '#description' => t('Your site is currently set to use legacy ("simple") content parsing. Use the button below to upgrade this node to advanced content parsing.'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+      );
+
+      $advanced_parsing = lingotek_lingonode($node_id, 'use_advanced_parsing');
+      if (empty($advanced_parsing)) {
+        $form['advanced_parsing_upgrade']['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Upgrade node'),
+        );
+      }
+      else {
+        $form['advanced_parsing_upgrade']['already_upgraded'] = array(
+          '#markup' => t('This node has already been upgraded to use advanced parsing.')
+        );
+      }
+    }
+    else {
+      watchdog('lingotek', 'Unable to locate node ID for advanced parsing upgrade form: @path', array('@path' => $_GET['q']), WATCHDOG_ERROR);
+    }
+  }
+
+  return $form;
+}
+
+
+/**
+ * Submit handler for the lingotek_advanced_parsing_upgrade_form form.
+ *
+ * @param array $form
+ *   A FAPI form array.
+ * @param array $form_state
+ *   A FAPI form state array.
+ */
+function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
+  $error = FALSE;
+
+  if (!empty($form_state['values']['node_id'])) {
+    lingotek_lingonode($form_state['values']['node_id'], 'use_advanced_parsing', 1);
+    $target_node = node_load($form_state['values']['node_id']);
+    if ($target_node->nid) {
+      if (LingotekApi::instance()->updateContentDocument($target_node)) {
+        drupal_set_message(t('This node has been upgraded to use advanced content parsing.'));
+      }
+      else {
+        $error = TRUE;
+        watchdog('lingotek', 'Error updating node for advanced content parsing. Lingotek updateContentDocument call failed.', NULL, WATCHDOG_ERROR);
+      }
+    }
+    else {
+      $error = TRUE;
+      watchdog('lingotek', 'Unable to load target node for content parsing upgrade: @node_id',
+        array('@node_id' => $form_state['values']['node_id']), WATCHDOG_ERROR);
+    }
+  }
+  else {
+    $error = TRUE;
+    watchdog('lingotek', 'No target node ID in parsing upgrade form data.', NULL, WATCHDOG_ERROR);
+  }
+
+  if ($error) {
+    drupal_set_message(t('There was an error upgrading this node. It has <strong>not</strong> been updated to use advanced parsing.'), 'error');
+  }
 }
