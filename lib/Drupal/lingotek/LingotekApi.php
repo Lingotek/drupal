@@ -189,7 +189,7 @@ class LingotekApi {
   }
 
   /**
-   * Calls an API method.
+   * Calls a Lingotek API method.
    *
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
@@ -202,19 +202,28 @@ class LingotekApi {
     if ($_lingotek_client->canLogIn()) {
       $response = $_lingotek_client->request($method, $parameters);
       if ($this->debug) {
-        watchdog('lingotek_debug', '<strong>Called API method</strong>: @method<br /><strong>Params</strong>: @params<br /><strong>Response:</strong> @response',
-        array('@method' => $method, '@params' => print_r($parameters, TRUE), '@response' => print_r($response, TRUE)), WATCHDOG_DEBUG);
+        watchdog('lingotek_debug', '<strong>Called API method</strong>: @method<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
+        array('@method' => $method, '!params' => $this->watchdogFormatObject($parameters),
+        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_DEBUG);
       }
       if ($response->results == self::RESPONSE_STATUS_SUCCESS) {
         $response_data = $response;
       }
       else {
-        watchdog('lingotek', 'Failed API call.<br />Method: @name. <br />Parameters: @params. <br />Response: @response',
-          array('@name' => $method, '@params' => print_r($parameters, TRUE), '@response' => print_r($response, TRUE)), WATCHDOG_ERROR);
+        watchdog('lingotek', 'Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response',
+          array('@name' => $method, '!params' => $this->watchdogFormatOjbect($parameters), 
+          '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
       }
     }
 
     return $response_data;
+  }
+  
+  /**
+   * Formats a complex object for presentation in a watchdog message.
+   */
+  private function watchdogFormatObject($object) {
+    return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
   }
 
   /**
