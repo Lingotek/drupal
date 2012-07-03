@@ -243,7 +243,7 @@ class LingotekApi {
     if ($use_advanced_parsing) {
       $advanced_parameters = array(
         'fprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
-        'secondaryFprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
+        'secondaryFprmFileContents' => variable_get('lingotek_advanced_xml_config2',''),
         'secondaryFilter' => 'okf_html',
       );
 
