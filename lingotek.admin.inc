@@ -338,7 +338,7 @@ function lingotek_admin_form() {
     '#type' => 'checkbox',
     '#title' => t('Enable API debugging'),
     '#description' => t('Logs the details of both successful and failing Lingotek API calls to the Drupal watchdog in category "lingotek_debug"'),
-    '#default_value' => variable_get('lingotek_flush_cache', FALSE),
+    '#default_value' => variable_get('lingotek_api_debug', FALSE),
   );
 
   // Authentication Settings

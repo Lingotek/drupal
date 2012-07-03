@@ -51,21 +51,29 @@ class LingotekApi {
   public function addContentDocument($node) {
     global $_lingotek_locale;
 
-    $parameters = array(
-      'projectId' => $node->lingotek_project_id,
-      'documentName' => $node->title,
-      'documentDesc' => $node->title,
-      'format' => $this->xmlFormat(),
-      'sourceLanguage' => $_lingotek_locale[$node->language],
-      'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
-      'content' => lingotek_xml_node_body($node),
-      'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
-    );
+    $project_id = (!empty($node->lingotek_project_id)) ? $node->lingotek_project_id : variable_get('lingotek_project', NULL);
 
-    $this->addAdvancedParameters($parameters, $node);
+    if ($project_id) {
+      $parameters = array(
+        'projectId' => $project_id,
+        'documentName' => $node->title,
+        'documentDesc' => $node->title,
+        'format' => $this->xmlFormat(),
+        'sourceLanguage' => $_lingotek_locale[$node->language],
+        'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
+        'content' => lingotek_xml_node_body($node),
+        'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
+      );
 
-    if ($result = $this->request('addContentDocument', $parameters)) {
-      lingotek_lingonode($node->nid, 'document_id_' . $node->language, $result->id);
+      $this->addAdvancedParameters($parameters, $node);
+
+      if ($result = $this->request('addContentDocument', $parameters)) {
+        lingotek_lingonode($node->nid, 'document_id_' . $node->language, $result->id);
+      }
+    }
+    else {
+      watchdog('lingotek', 'Skipping addContentDocument call for node @node_id. Could not locate Lingotek project ID.',
+        array('@node_id' => $node->nid), WATCHDOG_ERROR);
     }
   }
 
@@ -211,14 +219,14 @@ class LingotekApi {
       }
       else {
         watchdog('lingotek', 'Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-          array('@name' => $method, '!params' => $this->watchdogFormatOjbect($parameters), 
+          array('@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
           '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
       }
     }
 
     return $response_data;
   }
-  
+
   /**
    * Formats a complex object for presentation in a watchdog message.
    */
