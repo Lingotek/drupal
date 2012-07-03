@@ -208,11 +208,24 @@ class LingotekApi {
     $response_data = FALSE;
 
     if ($_lingotek_client->canLogIn()) {
+      $timer_name = $method . '-' . microtime(TRUE);
+      timer_start($timer_name);
+
       $response = $_lingotek_client->request($method, $parameters);
+
+      $timer_results = timer_stop($timer_name);
+
       if ($this->debug) {
-        watchdog('lingotek_debug', '<strong>Called API method</strong>: @method<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
-        array('@method' => $method, '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_DEBUG);
+        $message_params = array(
+          '@method' => $method,
+          '!params' => $this->watchdogFormatObject($parameters),
+          '!response' => $this->watchdogFormatObject($response),
+          '@response_time' => number_format($timer_results['time']) . ' ms',
+        );
+
+        watchdog('lingotek_debug', '<strong>Called API method</strong>: @method
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
+        $message_params, WATCHDOG_DEBUG);
       }
       if ($response->results == self::RESPONSE_STATUS_SUCCESS) {
         $response_data = $response;

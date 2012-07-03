@@ -337,7 +337,8 @@ function lingotek_admin_form() {
   $form['developer_settings']['lingotek_api_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable API debugging'),
-    '#description' => t('Logs the details of both successful and failing Lingotek API calls to the Drupal watchdog in category "lingotek_debug"'),
+    '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
+      calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek_debug".', array('@watchdog_path' => url('admin/reports/dblog'))),
     '#default_value' => variable_get('lingotek_api_debug', FALSE),
   );
 
