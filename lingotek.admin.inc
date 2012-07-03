@@ -499,25 +499,27 @@ function lingotek_form_field_language_utility_submit($form, $form_state) {
  * Custom form handler for upgrading a site from using Lingotek's simple to advanced XML parsing of content.
  */
 function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
-  $results = db_select('lingotek', 'l')->fields('l', array('nid'))->distinct()->execute();
-  $operations = array();
-  foreach ($results as $result) {
-    $node = node_load($result->nid, NULL, TRUE);
-    if (!empty($node->nid)) {
-      $operations[] = array('lingotek_advanced_parsing_update_node', array($node->nid));
+  if ($form_state['values']['lingotek_advanced_parsing']) {
+    $results = db_select('lingotek', 'l')->fields('l', array('nid'))->distinct()->execute();
+    $operations = array();
+    foreach ($results as $result) {
+      $node = node_load($result->nid, NULL, TRUE);
+      if (!empty($node->nid)) {
+        $operations[] = array('lingotek_advanced_parsing_update_node', array($node->nid));
+      }
     }
+
+    $batch = array(
+      'title' => t('Lingotek Advanced Parsing Updater'),
+      'operations' => $operations,
+      'file' => 'lingotek.admin.inc',
+      'finished' => 'lingotek_advanced_parsing_update_finished',
+    );
+
+    // The admin form might not have finished processing yet, but if we're here, we're moving to advanced processing.
+    // Ensure the appropriate variable is already set.
+    variable_set('lingotek_advanced_parsing', TRUE);
+
+    batch_set($batch);
   }
-
-  $batch = array(
-    'title' => t('Lingotek Advanced Parsing Updater'),
-    'operations' => $operations,
-    'file' => 'lingotek.admin.inc',
-    'finished' => 'lingotek_advanced_parsing_update_finished',
-  );
-
-  // The admin form might not have finished processing yet, but if we're here, we're moving to advanced processing.
-  // Ensure the appropriate variable is already set.
-  variable_set('lingotek_advanced_parsing', TRUE);
-
-  batch_set($batch);
 }

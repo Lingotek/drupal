@@ -189,3 +189,16 @@ function lingotek_update_7202(&$sandbox) {
     return t('Granted new Lingotek permissions to the administrative security role.');
   }
 }
+
+/**
+ * Install default FPRM configuration data to support advanced content parsing.
+ */
+function lingotek_update_7203(&$sandbox) {
+  if (!variable_get('lingotek_advanced_xml_config1', FALSE) && !variable_get('lingotek_advanced_xml_config2', FALSE)) {
+    lingotek_install_default_advanced_xml();
+  }
+  else {
+    return t('No action was taken, since your system already has data in the Primary and/or Secondary advanced parsing configuration fields.
+      If you wish to review the default configuration files and compare them to your current settings, the files are in the fprm subfolder of the lingotek module.');
+  }
+}
