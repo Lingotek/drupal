@@ -18,7 +18,7 @@ class LingotekFunctionalTest extends DrupalWebTestCase {
    * @todo: Read this data from some pre-determined place in the file system
    * or some other non-source-controlled location.
    */
-  const LINGOTEK_USERNAME = 'ben@tabsandspaces.com';
+  const LINGOTEK_USERNAME = '';
 
   /**
    * The password for a Lingotek account.
@@ -29,7 +29,7 @@ class LingotekFunctionalTest extends DrupalWebTestCase {
    * @todo: Read this data from some pre-determined place in the file system
    * or some other non-source-controlled location.
    */
-  const LINGOTEK_PASSWORD = 'Shj2vMI7w1009iQ7';
+  const LINGOTEK_PASSWORD = '';
   
   /**
    * The connection URL for a Lingotek account.
@@ -40,7 +40,7 @@ class LingotekFunctionalTest extends DrupalWebTestCase {
    * @todo: Read this data from some pre-determined place in the file system
    * or some other non-source-controlled location.
    */
-  const LINGOTEK_URL = 'http://cms.lingotek.com';
+  const LINGOTEK_URL = '';
 
   /**
    * The user object for an unprivileged Drupal user.
