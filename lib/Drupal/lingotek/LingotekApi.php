@@ -107,6 +107,26 @@ class LingotekApi {
   }
 
   /**
+   * Gets Lingotek Document data for the specified document.
+   *
+   * @param int $document_id
+   *   The ID of the Lingotek Document to retrieve.
+   *
+   * @return mixed
+   *  The API response object with Lingotek Document data, or FALSE on error.   
+   */
+  public function getDocument($document_id) {
+    $params = array('documentId' => $document_id);
+
+    if ($document = $this->request('getDocument', $params)) {
+      return $document;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  /**
    * Gets available Lingotek projects.
    *
    * @return array

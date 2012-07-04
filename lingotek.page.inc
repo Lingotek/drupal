@@ -26,7 +26,7 @@ function lingotek_pm($node) {
       '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
-      lingotek_get_workbench_url($node, $language, TRUE, TRUE),
+      lingotek_get_workbench_url($node, $language, TRUE),
     );
     lingotek_trace("lingotek_pm table row", array('language' => $language));
     $rows[] = $row;

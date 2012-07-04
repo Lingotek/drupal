@@ -182,14 +182,14 @@ function lingotek_add_missing_targets($node) {
   }
 
   foreach (language_list() as $target_language) {
-    if ($target_language->enabled && lingotek_supported_language($target_language->language) && 
-      !in_array($_lingotek_locale[$target_language->language], $languages_already_added) && 
+    if ($target_language->enabled && lingotek_supported_language($target_language->language) &&
+      !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
       $node->language != $target_language->language) {
-      
+
       $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
     }
     else {
-      lingotek_trace("lingotek_add_missing_targets skipping language", 
+      lingotek_trace("lingotek_add_missing_targets skipping language",
         array(
           'language' => $target_language->language,
           'enabled' => $target_language->enabled,
@@ -336,9 +336,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
     $results = $cache->data;
   }
   else {
-    $params = array('documentId' => $document_id);
-    $output = $_lingotek_client->request("getDocument", $params);
-    if ($output->results == "success") {
+    if ($output = LingotekApi::instance()->getDocument($document_id)) {
       foreach ($output->translationTargets as $target) {
         $results[lingotek_drupal_language($target->language)] = $target;
       }
@@ -414,21 +412,23 @@ function lingotek_get_translation_target($translation_target_id) {
   }
 }
 
-
-/*
- * Get the url to open the translation workbench
+/**
+ * Get the url to open the Lingotek Workbench.
  *
- * This fetches a link
+ * This fetches a link.
  *
- * @param $node
- *  Node being translated
+ * @param object $node
+ *   A Drupal node.
  * @param $language
- *  Target language being translated to
- * @param $label
- *  default FALSE
- *  TRUE | FALSE | String used as a label for the link.
- * @return
- *  Either a link pointing the the url, or the url itself if $label is FALSE
+ *   A target language.
+ * @param mixed $label
+ *   The label to use as text for the link. Possible values are
+ *   TRUE, FALSE, or a string to use as a the custom label for the link.
+ * @param bool $force
+ *   Force the link to use the label of the first returned workflow phase for the target Document.
+ *
+ * @return string
+ *   Either a link pointing the the url, or the url itself if $label is FALSE
  */
 function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = FALSE) {
   global $_lingotek_client, $_lingotek_locale;
@@ -500,6 +500,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
     return "";
   }
   lingotek_trace("lingotek_get_workbench_url return", array('language' => $language, 'link' => $link));
+
   return $link[$language]['link'];
 }
 
