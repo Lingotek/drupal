@@ -325,13 +325,32 @@ function lingotek_get_communities() {
   return $options;
 }
 
-/*
- * Get the target language objects for a Lingotek document associated with a node
+/**
+ * Get the target language objects for a Lingotek document associated with a node.
+ *
+ * @param int $document_id
+ *   A Lingotek Document ID.
+ * @param bool $flush_cache
+ *   Whether or not to force a refresh from the server, as opposed to using cached data.
+ *
+ * @return array
+ *   An array of translation target items.
  */
 function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
   global $_lingotek_client;
+  
+  $targets = &drupal_static(__FUNCTION__);
+  
+  // Use static cache to ensure that we don't go to the server more than once per page for targets.
+  if (isset($targets[$document_id])) {
+    return $targets[$document_id];
+  }
+  
   $results = array();
-  if (lingotek_do_cache() && !$flush_cache && ($cache = cache_get('lingotek_targets_' . $document_id)) && !empty($cache->data) && time() < $cache->expire) {
+  
+  $cache_id = 'lingotek_targets_' . $document_id;
+  $cache = cache_get($cache_id);
+  if (lingotek_do_cache() && !$flush_cache && !empty($cache->data)) {
     lingotek_trace("lingotek_get_document_targets USING CACHE", array('document_id' => $document_id, 'flushCache' => $flush_cache));
     $results = $cache->data;
   }
@@ -342,8 +361,12 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
       }
     }
     lingotek_trace("lingotek_get_document_targets GENERATING NEW CACHE DATA getDocument", array('document_id' => $document_id, 'flushCache' => $flush_cache));
-    cache_set('lingotek_targets_' . $document_id, $results, 'cache', time() + 900);
+    $targets[$document_id] = $results;
+    if (!empty($results)) {
+      cache_set($cache_id, $results, 'cache', time() + 900);
+    }
   }
+  
   return $results;
 }
 
@@ -373,6 +396,7 @@ function lingotek_get_phase_name($phase_id) {
 
   $params = array('phaseId' => $phase_id);
   $output = $_lingotek_client->request("getPhase", $params);
+  
   if ($output->results == "success") {
     return $output->name;
   }
@@ -450,15 +474,18 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
       return "";
     }
 
-    //We're getting all links now, and other calls will pull the cached ones:
     foreach ($targets as $lang => $translation_target) {
+      if ($lang != $language) {
+        continue;
+      }
       lingotek_trace("lingotek_get_workbench_url TARGETS", array("lang" => $lang, "translation_target" => $translation_target));
-      $phases = lingotek_get_translation_target($translation_target->id)->phases;
+      $target = LingotekApi::instance()->getTranslationTarget($translation_target->id);
+      $phases = ($target) ? $target->phases : array();
 
       $phase_id = -1;
       $which_phase = 0;
       foreach ($phases as $phase) {
-        if ($phase->percentComplete < 100 || $force) {
+        if (!$phase->isMarkedComplete || $force) {
           $phase_id = $phase->id;
           break;
         }

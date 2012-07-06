@@ -17,15 +17,17 @@ function lingotek_pm($node) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
 
   $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
-  $header = array($checkbox, t('Target Language'), t('Progress'), t('Task'));
+  $header = array($checkbox, t('Target Language'), t('Document Progress'), t('Phase Progress'), t('Phase'));
   $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language), TRUE);
 
   $rows = array();
   foreach ($progress as $language => $target) {
+    $current_phase = LingotekApi::instance()->currentPhase($target->id);
     $row = array(
       '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
+      $current_phase->percentComplete . '%',
       lingotek_get_workbench_url($node, $language, TRUE),
     );
     lingotek_trace("lingotek_pm table row", array('language' => $language));

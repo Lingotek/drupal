@@ -105,6 +105,39 @@ class LingotekApi {
       return FALSE;
     }
   }
+  
+  /**
+   * Gets the phase data for the active phase of the specified translation target.
+   *
+   * @param int $translation_target_id
+   *   The ID of a translation target on the Lingotek system.
+   *
+   * @return mixed
+   *   An object representing data for the current translation phase, or FALSE on error.
+   */
+  public function currentPhase($translation_target_id) {
+    if ($target = $this->getTranslationTarget($translation_target_id)) {
+      if (!empty($target->phases)) {
+        $current_phase = FALSE;
+        foreach ($target->phases as $phase) {
+
+          if (!$phase->isMarkedComplete) {
+            $current_phase = $phase;
+            break;
+          }
+        }
+        
+        // Return either the first uncompleted phase, or the last phase if all phases are complete.
+        return ($current_phase) ? $current_phase : end($target->phases);
+      }
+      else {
+        return FALSE;
+      }
+    }
+    else {
+      return FALSE;
+    }
+  }
 
   /**
    * Gets Lingotek Document data for the specified document.
@@ -120,6 +153,35 @@ class LingotekApi {
 
     if ($document = $this->request('getDocument', $params)) {
       return $document;
+    }
+    else {
+      return FALSE;
+    }
+  }
+  
+  /**
+   * Gets a translation target.
+   *
+   * This fetches an target language object for a specific document.
+   *
+   * @param int $translation_target_id
+   *   ID for the target language object.
+   * @return
+   *   Object representing a target language for a specific document in the Lingotek platform, or FALSE on error.
+   */
+  function getTranslationTarget($translation_target_id) {
+    $targets = &drupal_static(__FUNCTION__);
+
+    $params = array(
+      'translationTargetId' => $translation_target_id
+    );
+
+    if (isset($targets[$translation_target_id])) {
+      return $targets[$translation_target_id];
+    }
+    elseif ($output = $this->request('getTranslationTarget', $params)) {
+      $targets[$translation_target_id] = $output;
+      return $output;
     }
     else {
       return FALSE;
