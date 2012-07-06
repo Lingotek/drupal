@@ -10,7 +10,7 @@
  * @param object $node
  *   A Drupal node object.
  * @param int $phase_id
- *   A lingotek workflow phase ID.
+ *   A Lingotek workflow phase ID.
  *
  * @return string
  *  The Lingotek Workbench URL.
@@ -22,7 +22,7 @@ function lingotek_workbench_url($node, $phase_id) {
 
   $arr = array(
     'community' => variable_get('lingotek_community', ''),
-    'id' => $user->name,
+    'id' => !empty($user->name) ? $user->name: 'anonymous',
     'time' => time(),
     'document' => $document_id,
     'phase' => $phase_id

@@ -35,8 +35,7 @@ function lingotek_pm($node) {
   }
   $table = theme('table', array('header' => $header, 'rows' => $rows));
 
-  $actions = '<input type="button" value="' . t('Update') . '" onclick="lingotek.pm.update();" />';
-
+  $actions = '<input type="button" id="lingotek-update-button" value="' . t('Update') . '"/>';
 
   $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
 
@@ -66,6 +65,7 @@ function lingotek_update($nid) {
   foreach ($_POST['targets'] as $target) {
     lingotek_download_document($node, check_plain($target));
   }
+  drupal_set_message(t('Updated local translations for the selected languages.'));
   drupal_json_output(array('status' => 0, 'updated' => $_POST['targets'], 'nid' => $nid));
 }
 
