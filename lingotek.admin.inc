@@ -269,6 +269,17 @@ function lingotek_admin_form() {
     '#options' => $options,
     '#default_value' => variable_get('lingotek_use_source', TRUE),
   );
+  
+  $form['defaults']['lingotek_create_documents_by_default'] = array(
+    '#type' => 'select',
+    '#title' => t('Push Nodes to Lingotek'),
+    '#description' => t('When a new node is created, should the content automatically be pushed to the Lingotek platform? This setting can be overridden at the node level.'),
+    '#options' => array(
+      1 => 'Yes',
+      0 => 'No',
+    ),
+    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
+  );
 
   $engines = lingotek_get_machine_translation_engines();
   $form['defaults']['lingotek_mt_engine'] = array(

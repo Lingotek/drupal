@@ -19,6 +19,7 @@ function lingotek_install() {
 function lingotek_uninstall() {
   $delete_variables = array(
     'lingotek_advanced_parsing',
+    'lingotek_create_documents_by_default',
   );
 
   foreach ($delete_variables as $variable) {
