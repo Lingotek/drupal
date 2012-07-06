@@ -130,6 +130,11 @@ function lingotek_update_7200(&$sandbox) {
   }
 	$node = node_load($sandbox['nodes'][$sandbox['progress']]);
 	if ($node !== FALSE) {
+	  if (!class_exists('LingotekApi')) {
+	    // The LingotekApi class might not have been introduced when this user last updated the Lingotek module.
+      registry_rebuild();
+      require_once(drupal_get_path('module', 'lingotek') . '/lib/Drupal/lingotek/LingotekApi.php');
+	  }
 		LingotekApi::instance()->updateContentDocument($node);
 	}
 
@@ -202,4 +207,11 @@ function lingotek_update_7203(&$sandbox) {
     return t('No action was taken, since your system already has data in the Primary and/or Secondary advanced parsing configuration fields.
       If you wish to review the default configuration files and compare them to your current settings, the files are in the fprm subfolder of the lingotek module.');
   }
+}
+
+/**
+ * Ensure LingotekApi class is in autoload registry.
+ */
+function lingotek_update_7204(&$sandbox) {
+  cache_clear_all();
 }

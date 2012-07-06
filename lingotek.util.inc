@@ -305,7 +305,7 @@ function lingotek_xml_node_body($node) {
         /*
         $terms = $node->$field;
         foreach ($terms[$language] as $term) {
-          dpm($term->name);
+          // Do something.
         }
         */
         continue;
