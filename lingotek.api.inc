@@ -462,71 +462,70 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
   }
 
   $link = array();
-  if (lingotek_do_cache() && ($cache = cache_get('lingotek_link_' . $node->nid . '-' . $node->language . "-$label")) && !empty($cache->data) && time() < $cache->expire && array_key_exists($language, $cache->data)) {
-    lingotek_trace("lingotek_get_workbench_url USING CACHE", array('nid' => $node->nid, 'source' => $node->language, 'target' => $language, 'label' => $label));
-    $link = $cache->data;
+
+  $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
+  if (count($targets) == 0) {
+    return '';
   }
-  else {
-    lingotek_trace("lingotek_get_workbench_url GENERATING NEW CACHE", array('nid' => $node->nid, 'source' => $node->language, 'target' => $language, 'label' => $label));
-    $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
-    $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
-    if (count($targets) == 0) {
-      return "";
+
+  foreach ($targets as $lang => $translation_target) {
+    if ($lang != $language) {
+      continue;
+    }
+    
+    lingotek_trace('lingotek_get_workbench_url TARGETS', array('lang' => $lang, 'translation_target' => $translation_target));
+    $target = LingotekApi::instance()->getTranslationTarget($translation_target->id);
+    $phases = ($target) ? $target->phases : array();
+
+    $phase_id = -1;
+    $which_phase = 0;
+    foreach ($phases as $phase) {
+      if (!$phase->isMarkedComplete || $force) {
+        $phase_id = $phase->id;
+        break;
+      }
+      $which_phase++;
+    }
+    
+    // All phases are complete, use last phase as current.
+    if (!empty($phases) && $phase_id == -1) {
+      $last_phase = end($phases);
+      $phase_id = $last_phase->id;
     }
 
-    foreach ($targets as $lang => $translation_target) {
-      if ($lang != $language) {
-        continue;
+    $l = '';
+    if ($phase_id != -1) {
+      if ($label === FALSE) {
+        $l = lingotek_workbench_url($node, $phase_id);
       }
-      lingotek_trace("lingotek_get_workbench_url TARGETS", array("lang" => $lang, "translation_target" => $translation_target));
-      $target = LingotekApi::instance()->getTranslationTarget($translation_target->id);
-      $phases = ($target) ? $target->phases : array();
-
-      $phase_id = -1;
-      $which_phase = 0;
-      foreach ($phases as $phase) {
-        if (!$phase->isMarkedComplete || $force) {
-          $phase_id = $phase->id;
-          break;
+      else {
+        $path = lingotek_workbench_url($node, $phase_id);
+        if ($label === TRUE) {
+          $label = lingotek_get_phase_name($phase_id);
         }
-        $which_phase++;
+        $l = l(t($label), '#', array('attributes' => array(
+          'onclick' => 'window.open(\'' . $path . '\'); return false;',
+          'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
+          'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
+        )));
       }
-
-      $l = "";
-      if ($phase_id != -1) {
-        if ($label === FALSE) {
-          $l = lingotek_workbench_url($node, $phase_id);
-        }
-        else {
-          $path = lingotek_workbench_url($node, $phase_id);
-          if ($label === TRUE) {
-            $label = lingotek_get_phase_name($phase_id);
-          }
-          $l = l(t($label), '#', array('attributes' => array(
-            'onclick' => 'window.open(\'' . $path . '\'); return false;',
-            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
-            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
-          )));
-        }
-      }
-
-      $link[$lang] = array(
-        'which_phase' => $which_phase,
-        'link' => $l,
-      );
     }
-    $cache = 'lingotek_link_' . $node->nid . '-' . $node->language . "-$label";
-    lingotek_trace("lingotek_get_workbench_url cache_set", array("links" => $link, "cache" => $cache));
-    cache_set($cache, $link, 'cache', time() + 900);
+
+    $link[$lang] = array(
+      'which_phase' => $which_phase,
+      'link' => $l,
+    );
   }
 
   if ($link[$language]['which_phase'] == 0 && !user_access('translation')) {
-    return "";
+    return '';
   }
+
   if ($link[$language]['which_phase'] > 0 && !user_access('review')) {
-    return "";
+    return '';
   }
-  lingotek_trace("lingotek_get_workbench_url return", array('language' => $language, 'link' => $link));
+  lingotek_trace('lingotek_get_workbench_url return', array('language' => $language, 'link' => $link));
 
   return $link[$language]['link'];
 }
