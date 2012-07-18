@@ -94,6 +94,89 @@ function lingotek_menu() {
 }
 
 /**
+ * Implements hook_menu_alter().
+ */
+function lingotek_menu_alter(&$items) {
+  // If the Entity Translation module is enabled alongside Lingotek,
+  // allow nodes that haven't yet been associated with Lingotek to be
+  // translated using Entity Translation's tools.
+  if (module_exists('entity_translation')) {
+    $translate_path = 'node/%node/translate';
+    $lingotek_access_callback = 'lingotek_entity_translation_node_tab_access';
+    if (isset($items[$translate_path])) {
+      $items[$translate_path]['title'] = 'Translate (Entity Translation)';
+      $items[$translate_path]['access callback'] = $lingotek_access_callback;
+    }
+
+    $menu_targets = array(
+      'node/%node/translate/add/%entity_translation_language/%entity_translation_language',
+      'node/%node/translate/delete/%entity_translation_language',
+    );
+
+    foreach ($menu_targets as $target) {
+      if (isset($items[$target])) {
+        $items[$target]['access callback'] = $lingotek_access_callback;
+      }
+    }
+
+    $edit_target = 'node/%node/translate/edit/%entity_translation_language';
+    if (isset($items[$edit_target])) {
+      $items[$edit_target]['access callback'] = 'lingotek_entity_translation_edit_access';
+      $items[$edit_target]['access arguments'][3] = $lingotek_access_callback;
+    }
+  }
+}
+
+/**
+ * Entity Translation access callback when enabled with Lingotek module.
+ *
+ * @return bool
+ *   TRUE if the user should be able to access the requested resource, FALSE otherwise.
+ *
+ * @see entity_translation_node_tab_access().
+ */
+function lingotek_entity_translation_node_tab_access() {
+  $args = func_get_args();
+  $node = array_shift($args);
+  if ($node->language != LANGUAGE_NONE) {
+    if (lingotek_supported_type($node->type) &&
+      !lingotek_lingonode($node->nid, 'create_lingotek_document') &&
+      !lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
+
+      return TRUE;
+    }
+    elseif (entity_translation_node_supported_type($node->type)) {
+      return entity_translation_tab_access('node');
+    }
+    elseif (entity_translation_node('node', $node)) {
+      $function = array_shift($args);
+      return call_user_func_array($function, $args);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Entity Translation edit access callback when enabled with Lingotek module.
+ *
+ * @return bool
+ *   TRUE if the user should be able to access the requested resource, FALSE otherwise.
+ *
+ * @see entity_translation_edit_access()
+ */
+function lingotek_entity_translation_edit_access($entity_type, $entity, $langcode) {
+  $translations = entity_translation_get_handler($entity_type, $entity)->getTranslations();
+  // If a translations for the given language does not exist we cannot edit it.
+  if (!isset($translations->data[$langcode])) {
+    return FALSE;
+  }
+  // Invoke the actual callback with its arguments.
+  $args = func_get_args();
+  return call_user_func_array($args[3], array_slice($args, 4));
+}
+
+/**
  * Implements hook_permission().
  */
 function lingotek_permission() {
@@ -185,6 +268,10 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Only show these options if the Lingotek document hasn't yet been created.
   if (!$document_id && class_exists('LingotekApi')) {
+    if ($node->nid > 0) {
+      lingotek_check_entity_translations($node);
+    }
+
     // Available projects.
     if ($projects = LingotekApi::instance()->listProjects()) {
       $form['lingotek']['content']['lingotek_project_id'] = array(
@@ -229,7 +316,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#access' => user_access('use_source'),
     '#description' => t("This determines if the target languages will fill untranslated text with the source language or simply leave untranslated text out of the document."),
   );
-  
+
   // Create Lingotek Document?
   if (empty($form['nid']['#value']) || (!empty($form['nid']['#value']) && lingotek_lingonode($form['nid']['#value'], 'document_id_' . $form['#node']->language) === FALSE)) {
     $form['lingotek']['content']['create_lingotek_document'] = array(
@@ -369,13 +456,13 @@ function lingotek_node_insert($node) {
  */
 function lingotek_node_update($node) {
   $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-  
+
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   if (isset($node->create_lingotek_document)) {
     lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
   }
-    
+
   if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language) || !$send_lingotek_document) {
     return;
   }
@@ -396,7 +483,7 @@ function lingotek_node_update($node) {
     lingotek_lingonode($node->nid, 'mt_targets', implode(",", $node->mtTargets));
   }
 
-  // Items that are only accessible on node add forms.
+  // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
   if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
     lingotek_trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));
 
@@ -412,7 +499,15 @@ function lingotek_node_update($node) {
     }
     lingotek_lingonode($node->nid, 'vault_id', $vault_id);
 
-    LingotekApi::instance()->addContentDocument($node);
+    // Removes local translations if this node has been previously translated using Entity Translation.
+    lingotek_remove_local_translations($node);
+
+    if (LingotekApi::instance()->addContentDocument($node)) {
+      drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
+    }
+    else {
+      drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $node->title)), 'error');
+    }
 
     // Run machine translation for the first time.
     if (user_access('mt')) {
@@ -451,7 +546,6 @@ function lingotek_node_update($node) {
   lingotek_add_missing_targets($node);
 }
 
-
 /**
  * Implements hook_form_FORM_ID_alter().
  *
@@ -459,7 +553,9 @@ function lingotek_node_update($node) {
  */
 function lingotek_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
-  $form['workflow']['language_content_type']['#options'][LINGOTEK_ENABLED] = t('Enabled, with Lingotek translation');
+  $lingotek_option_label = (module_exists('entity_translation')) ?
+    t('Enabled, with Lingotek translation or field translation.'): t('Enabled, with Lingotek translation');
+  $form['workflow']['language_content_type']['#options'][LINGOTEK_ENABLED] = $lingotek_option_label;
   $form['workflow']['language_content_type']['#description'] .= ' ' . t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
 }
 
@@ -643,4 +739,65 @@ function lingotek_install_default_advanced_xml() {
       array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
   }
 
+}
+
+/**
+ * Checks for existing local entity_translations and sets JS settings appropriately.
+ */
+function lingotek_check_entity_translations($node) {
+  if (module_exists('entity_translation')) {
+    if ($handler = entity_translation_get_handler('node', $node)) {
+
+      $translations = $handler->getTranslations();
+      if (isset($translations->data[$translations->original])) {
+        unset($translations->data[$translations->original]);
+      }
+
+      $settings = array(
+        'lingotek_no_document' => TRUE,
+        'lingotek_has_entity_translations' => count($translations->data),
+      );
+      drupal_add_js($settings, 'setting');
+    }
+    else {
+      watchdog('lingotek', 'Unable to load entity translation handler', NULL, WATCHDOG_ERROR);
+    }
+  }
+}
+
+/**
+ * Removes any local translations that may have been added via Entity Translation.
+ *
+ * @param object $node
+ *   The Drupal node for which local translations should be removed.
+ *
+ * @return mixed
+ *   The number of removed translations if action was taken, FALSE on error.
+ */
+function lingotek_remove_local_translations($node) {
+  // Sanity check that this item has not already been sent to Lingotek.
+  if (module_exists('entity_translation')) {
+    if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) !== FALSE) {
+      watchdog('lingotek', 'Attempted to remove local translations for a node already sent to Lingotek: @node_id',
+        array('@node_id' => $node->nid), WATCHDOG_ERROR);
+      return FALSE;
+    }
+    else {
+      if ($handler = entity_translation_get_handler('node', $node)) {
+
+        $translations = $handler->getTranslations();
+        $languages = language_list();
+        foreach ($translations->data as $language_code => $data) {
+          if ($language_code != $translations->original) {
+            $handler->removeTranslation($language_code);
+            field_attach_update('node', $node);
+            drupal_set_message(t('Removed local translation for @language.', array('@language' => $languages[$language_code]->name)));
+          }
+        }
+      }
+      else {
+        watchdog('lingotek', 'Unable to load entity translation handler', NULL, WATCHDOG_ERROR);
+      }
+    }
+  }
 }

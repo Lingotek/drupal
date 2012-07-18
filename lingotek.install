@@ -215,3 +215,13 @@ function lingotek_update_7203(&$sandbox) {
 function lingotek_update_7204(&$sandbox) {
   cache_clear_all();
 }
+
+/**
+ * Ensure that the Lingotek module has a weight higher than entity_translation.
+ */
+function lingotek_update_7205(&$sandbox) {
+  db_update('system')
+    ->fields(array('weight' => 12))
+    ->condition('name', 'lingotek')
+    ->execute();
+}
