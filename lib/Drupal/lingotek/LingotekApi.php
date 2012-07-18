@@ -50,6 +50,7 @@ class LingotekApi {
    */
   public function addContentDocument($node) {
     global $_lingotek_locale;
+    $success = TRUE;
 
     $project_id = (!empty($node->lingotek_project_id)) ? $node->lingotek_project_id : variable_get('lingotek_project', NULL);
 
@@ -70,11 +71,18 @@ class LingotekApi {
       if ($result = $this->request('addContentDocument', $parameters)) {
         lingotek_lingonode($node->nid, 'document_id_' . $node->language, $result->id);
       }
+      else {
+        $success = FALSE;
+      }
     }
     else {
       watchdog('lingotek', 'Skipping addContentDocument call for node @node_id. Could not locate Lingotek project ID.',
         array('@node_id' => $node->nid), WATCHDOG_ERROR);
+
+      $success = FALSE;
     }
+
+    return $success;
   }
 
 
@@ -105,7 +113,7 @@ class LingotekApi {
       return FALSE;
     }
   }
-  
+
   /**
    * Gets the phase data for the active phase of the specified translation target.
    *
@@ -126,7 +134,7 @@ class LingotekApi {
             break;
           }
         }
-        
+
         // Return either the first uncompleted phase, or the last phase if all phases are complete.
         return ($current_phase) ? $current_phase : end($target->phases);
       }
@@ -146,7 +154,7 @@ class LingotekApi {
    *   The ID of the Lingotek Document to retrieve.
    *
    * @return mixed
-   *  The API response object with Lingotek Document data, or FALSE on error.   
+   *  The API response object with Lingotek Document data, or FALSE on error.
    */
   public function getDocument($document_id) {
     $params = array('documentId' => $document_id);
@@ -158,7 +166,7 @@ class LingotekApi {
       return FALSE;
     }
   }
-  
+
   /**
    * Gets a translation target.
    *
