@@ -136,7 +136,6 @@ function lingotek_download_document(&$node, $target_language) {
  *  boolean, true if the api call was successful
  */
 function lingotek_save_segment($source_text, $target_text, $target_language, $doc_id) {
-  global $_lingotek_client;
   $param = array
   (
     "sourceText" => $source_text,
@@ -145,7 +144,7 @@ function lingotek_save_segment($source_text, $target_text, $target_language, $do
     "documentId" => $doc_id,
     "overwrite" => 0,
   );
-  $save_segment = $_lingotek_client->request("saveSegment", $param);
+  $save_segment = LingotekApi::instance()->request("saveSegment", $param);
   return ($save_segment->results == "success");
 }
 
@@ -163,7 +162,7 @@ function lingotek_save_segment($source_text, $target_text, $target_language, $do
  *   TRUE on success, FALSE on error.
  */
 function lingotek_add_missing_targets($node) {
-  global $_lingotek_client, $_lingotek_locale;
+  global $_lingotek_locale;
 
   $lingotek_workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
@@ -171,8 +170,8 @@ function lingotek_add_missing_targets($node) {
   $languages_already_added = array();
 
   $params = array('documentId' => $document_id);
-  $output = $_lingotek_client->request('getDocument', $params);
-  if ($output->results == "success") {
+  $output = LingotekApi::instance()->request('getDocument', $params);
+  if ($output && $output->results == "success") {
     foreach ($output->translationTargets as $target) {
       array_push($languages_already_added, $target->language);
     }
@@ -214,10 +213,8 @@ function lingotek_add_missing_targets($node) {
  *  Workflow Id to be added
  */
 function lingotek_add_phase_template($translation_target_id, $phase_template_id) {
-  global $_lingotek_client;
-
   $params = array('translationTargetId' => $translation_target_id, 'phaseTemplateId' => $phase_template_id);
-  $_lingotek_client->request("applyPhaseTemplate", $params);
+  LingotekApi::instance()->request("applyPhaseTemplate", $params);
 }
 
 /*
@@ -226,8 +223,7 @@ function lingotek_add_phase_template($translation_target_id, $phase_template_id)
  *  Project name being created
  */
 function lingotek_add_project($name) {
-  global $_lingotek_client;
-  $output = $_lingotek_client->request('addProject', array('projectName' => $name));
+  $output = LingotekApi::instance()->request('addProject', array('projectName' => $name));
   if ($output->results == "success") {
     variable_set('lingotek_project', $output->id);
     return $output->id;
@@ -240,21 +236,17 @@ function lingotek_add_project($name) {
  *  Vault name being created
  */
 function lingotek_add_vault($name) {
-  global $_lingotek_client;
-
-  $output = $_lingotek_client->request('addTMVault', array('tmVaultName' => $name));
+  $output = LingotekApi::instance()->request('addTMVault', array('tmVaultName' => $name));
   if ($output->results == "success") {
     variable_set('lingotek_vault', $output->id);
     return $output->id;
   }
 }
 
-/*
+/**
  * Add the current vault to the current project.  It doesn't hurt to call this more than once.
  */
 function lingotek_add_vault_to_project() {
-  global $_lingotek_client;
-
   $vault_id = variable_get('lingotek_vault', '');
   $project_id = variable_get('lingotek_project', '');
   if ($vault_id != '' && $project_id != '') {
@@ -262,16 +254,15 @@ function lingotek_add_vault_to_project() {
       'project_id' => $project_id,
       'index_id' => $vault_id
     );
-    $_lingotek_client->request('addProjectTMVault', $param);
+    LingotekApi::instance()->request('addProjectTMVault', $param);
   }
 }
 
-/*
+/**
  * Analyze the Project
  */
 function lingotek_analyze_project() {
-  global $_lingotek_client;
-  $_lingotek_client->request("analyzeProject", array('projectId' => variable_get('lingotek_project', -1)));
+  LingotekApi::instance()->request("analyzeProject", array('projectId' => variable_get('lingotek_project', -1)));
 }
 
 #GETTERS
@@ -293,7 +284,7 @@ function lingotek_get_url_alias_translations() {
 function lingotek_get_cms_key() {
   global $_lingotek_client;
 
-  $output = $_lingotek_client->request("getCMSKey");
+  $output = LingotekApi::instance()->request("getCMSKey");
   if ($output->results == "success") {
     variable_del('lingotek_password');
     return $output->cms;
@@ -307,15 +298,13 @@ function lingotek_get_cms_key() {
  * Get the Lingotek user's current communities
  */
 function lingotek_get_communities() {
-  global $_lingotek_client;
-
   $options = array();
 
   if (!$_lingotek_client->canLogIn()) {
     return $options;
   }
 
-  $list_communities = $_lingotek_client->request("listCommunities", array());
+  $list_communities = LingotekApi::instance()->request("listCommunities", array());
   if ($list_communities->results == "success") {
     foreach ($list_communities->communities as $community) {
       $options[$community->id] = t($community->name);
@@ -338,16 +327,16 @@ function lingotek_get_communities() {
  */
 function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
   global $_lingotek_client;
-  
+
   $targets = &drupal_static(__FUNCTION__);
-  
+
   // Use static cache to ensure that we don't go to the server more than once per page for targets.
   if (isset($targets[$document_id])) {
     return $targets[$document_id];
   }
-  
+
   $results = array();
-  
+
   $cache_id = 'lingotek_targets_' . $document_id;
   $cache = cache_get($cache_id);
   if (lingotek_do_cache() && !$flush_cache && !empty($cache->data)) {
@@ -366,7 +355,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
       cache_set($cache_id, $results, 'cache', time() + 900);
     }
   }
-  
+
   return $results;
 }
 
@@ -392,11 +381,9 @@ function lingotek_get_machine_translation_engines() {
  *  name for the workflow step (phase name)
  */
 function lingotek_get_phase_name($phase_id) {
-  global $_lingotek_client;
-
   $params = array('phaseId' => $phase_id);
-  $output = $_lingotek_client->request("getPhase", $params);
-  
+  $output = LingotekApi::instance()->request("getPhase", $params);
+
   if ($output->results == "success") {
     return $output->name;
   }
@@ -427,10 +414,8 @@ function lingotek_get_sync_methods() {
  *  Object representing a target language for a specific document in the lingotek platform
  */
 function lingotek_get_translation_target($translation_target_id) {
-  global $_lingotek_client;
-
   $params = array('translationTargetId' => $translation_target_id);
-  $output = $_lingotek_client->request("getTranslationTarget", $params);
+  $output = LingotekApi::instance()->request("getTranslationTarget", $params);
   if ($output->results == "success") {
     return $output;
   }
@@ -473,7 +458,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
     if ($lang != $language) {
       continue;
     }
-    
+
     lingotek_trace('lingotek_get_workbench_url TARGETS', array('lang' => $lang, 'translation_target' => $translation_target));
     $target = LingotekApi::instance()->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
@@ -487,7 +472,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
       }
       $which_phase++;
     }
-    
+
     // All phases are complete, use last phase as current.
     if (!empty($phases) && $phase_id == -1) {
       $last_phase = end($phases);

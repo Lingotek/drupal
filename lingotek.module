@@ -27,7 +27,7 @@ function lingotek_menu() {
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_administrative_settings_form'),
+    'page arguments' => array('lingotek_admin_form'),
   );
 
   $items['node/%node/lingotek_pm'] = array(
