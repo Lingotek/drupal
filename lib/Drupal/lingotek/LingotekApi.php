@@ -15,6 +15,11 @@ class LingotekApi {
    * The server name of the Lingotek production instance.
    */
   const LINGOTEK_SERVER_PRODUCTION = 'myaccount.lingotek.com';
+  
+  /**
+   * The faux Lingotek user ID to use for anonymous user operations.
+   */
+  const ANONYMOUS_LINGOTEK_ID = 'anonymous';
 
   /**
    * Holds the static instance of the singleton object.
@@ -317,7 +322,10 @@ class LingotekApi {
   }
 
   /**
-   * Gets the appropriate format code for the current system state
+   * Gets the appropriate format code for the current system state.
+   *
+   * @return string
+   *   A XML format code.
    */
   public function xmlFormat() {
     return (variable_get('lingotek_advanced_parsing', FALSE)) ? 'XML_OKAPI' : 'XML';
@@ -325,6 +333,9 @@ class LingotekApi {
   
   /**
    * Tests the current configuration to ensure that API calls can be made.
+   *
+   * @return bool
+   *   TRUE if the configuration is correct, FALSE otherwise.
    */
   public function testAuthentication() {
     $valid_connection = &drupal_static(__FUNCTION__);
@@ -343,10 +354,14 @@ class LingotekApi {
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
   public function request($method, $parameters = array()) {
+    global $user;
+    
+    $external_id = (user_is_anonymous()) ? self::ANONYMOUS_LINGOTEK_ID : $user->name;
+    
     $response_data = FALSE;
     
-    // Every v4 API request needs to have the externalID (Lingotek ID) parameter present.
-    $parameters += array('externalId' => variable_get('lingotek_login_id', ''));
+    // Every v4 API request needs to have the externalID (Drupal User ID) parameter present.
+    $parameters += array('externalId' => $external_id);
     
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
