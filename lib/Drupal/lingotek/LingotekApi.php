@@ -189,7 +189,7 @@ class LingotekApi {
    * @return
    *   Object representing a target language for a specific document in the Lingotek platform, or FALSE on error.
    */
-  function getTranslationTarget($translation_target_id) {
+  public function getTranslationTarget($translation_target_id) {
     $targets = &drupal_static(__FUNCTION__);
 
     $params = array(
@@ -206,6 +206,31 @@ class LingotekApi {
     else {
       return FALSE;
     }
+  }
+  
+  /**
+   * Gets a workbench URL for the specified document ID and phase.
+   *
+   * @param int $document_id
+   *   A Lingotek Document ID.
+   * @param int $phase_id
+   *   A Lingotek workflow phase ID.
+   *
+   * @return mixed
+   *   A workbench URL string on success, or FALSE on failure.
+   */
+  public function getWorkbenchLink($document_id, $phase_id) {
+    $params = array(
+      'documentId' => $document_id,
+      'phaseId' => $phase_id,
+    );
+    
+    if ($output = $this->request('getWorkbenchLink', $params)) {
+      return $output->url;
+    }
+    else {
+      return FALSE;
+    }    
   }
 
   /**

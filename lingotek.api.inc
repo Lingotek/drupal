@@ -445,6 +445,8 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
   if (!isset($_lingotek_locale[$language])) {
     return "";
   }
+  
+  $api = LingotekApi::instance();
 
   $link = array();
 
@@ -460,7 +462,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
     }
 
     lingotek_trace('lingotek_get_workbench_url TARGETS', array('lang' => $lang, 'translation_target' => $translation_target));
-    $target = LingotekApi::instance()->getTranslationTarget($translation_target->id);
+    $target = $api->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
 
     $phase_id = -1;
@@ -481,19 +483,22 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
 
     $l = '';
     if ($phase_id != -1) {
-      if ($label === FALSE) {
-        $l = lingotek_workbench_url($node, $phase_id);
-      }
-      else {
-        $path = lingotek_workbench_url($node, $phase_id);
-        if ($label === TRUE) {
-          $label = lingotek_get_phase_name($phase_id);
+      $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);      
+      if ($document_id && $workbench_url = $api->getWorkbenchLink($document_id, $phase_id)) {
+        if ($label === FALSE) {
+          $l = $workbench_url;
         }
-        $l = l(t($label), '#', array('attributes' => array(
-          'onclick' => 'window.open(\'' . $path . '\'); return false;',
-          'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
-          'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
-        )));
+        else {
+          $path = $workbench_url;
+          if ($label === TRUE) {
+            $label = lingotek_get_phase_name($phase_id);
+          }
+          $l = l(t($label), '#', array('attributes' => array(
+            'onclick' => 'window.open(\'' . $path . '\'); return false;',
+            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
+            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
+          )));
+        }
       }
     }
 

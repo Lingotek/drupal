@@ -4,38 +4,6 @@
  * Utility functions.
  */
 
-/**
- * Get the raw url for the Lingotek Workbench for a given Node and phase (workflow step).
- *
- * @param object $node
- *   A Drupal node object.
- * @param int $phase_id
- *   A Lingotek workflow phase ID.
- *
- * @return string
- *  The Lingotek Workbench URL.
- */
-function lingotek_workbench_url($node, $phase_id) {
-  global $user;
-  
-  $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
-
-  $arr = array(
-    'community' => variable_get('lingotek_community', ''),
-    'id' => !empty($user->name) ? $user->name: 'anonymous',
-    'time' => time(),
-    'document' => $document_id,
-    'phase' => $phase_id
-  );
-
-  $mode = 'cmsWorkbench.action';
-  $json_str = json_encode($arr);
-
-  lingotek_trace("lingotek_workbench_url", $arr);
-
-  return variable_get('lingotek_url', '') . "/lingopoint/portal/" . $mode . "?auth_json=" . urlencode($json_str) . "&hmac=" . urlencode(LingotekSession::create_mac($json_str));
-}
-
 /*
  * Helper function, for storing additional information with a Node.
  *

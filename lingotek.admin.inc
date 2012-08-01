@@ -43,7 +43,7 @@ function lingotek_admin_form() {
   $form['connection']['lingotek_login_id'] = array(
     '#type' => 'textfield',
     '#title' => t('Lingotek ID'),
-    '#description' => t('Enter the Lingtek ID you use to access the Lingotek Dashboard and Workbench.'),
+    '#description' => t('Enter the Lingotek ID you use to access the Lingotek Dashboard and Workbench.'),
     '#default_value' => variable_get('lingotek_login_id', ''),
   );
 
