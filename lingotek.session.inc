@@ -122,36 +122,29 @@ class LingotekSession {
     }
   }
 
-  /*
-   * Downloads a document from Lingotek
+  /**
+   * Downloads a document from Lingotek.
    *
    * @param $api
-   *  name of the api to call
+   *  Name of the api to call
    * @param $params
-   *  key/value pairs to call as parameters in the api
+   *  Key/value pairs to call as parameters in the api
    *
    * @return
-   *  location of the file
+   *  Location of the file, or FALSE on error.
    */
   public function download($api, $params) {
-    $result = $this->request($api, $params, NULL, FALSE);
+    $result = LingotekApi::instance()->request($api, $params);
 
-    if (!isset($result->data) || ( ($json = json_decode($result->data)) && isset($json->results) )) {
-      lingotek_error(
-        'Error downloading document',
-        array(
-          'params' => $params,
-          'response' => $result,
-        ),
-        1
-      );
-      return "";
+    if (!$result) {
+      watchdog('lingotek', 'Unable to download Lingotek Document.', NULL, WATCHDOG_ERROR);
+      return FALSE;
     }
 
     $tmpFile = tempnam(file_directory_temp(), "lingotek");
     $fp = fopen($tmpFile, 'w');
 
-    fwrite($fp, $result->data);
+    fwrite($fp, $result);
     fclose($fp);
 
     $text = "";

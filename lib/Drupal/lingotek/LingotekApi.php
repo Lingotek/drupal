@@ -341,7 +341,7 @@ class LingotekApi {
       OAuthStore::instance('2Leg', $consumer_options);   
     	$request = new OAuthRequester($this->api_url . '/' . $method, $request_method, $parameters);
     	$result = $request->doRequest();
-    	$response = json_decode($result['body']);
+    	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed OAuth request.
@@ -364,7 +364,8 @@ class LingotekApi {
       <br /><strong>Response Time:</strong> @response_time<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
       $message_params, WATCHDOG_DEBUG);
     }
-    if (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS) {
+    
+    if ($method == 'downloadDocument' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
       $response_data = $response;
     }
     else {
