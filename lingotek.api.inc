@@ -84,18 +84,22 @@ function lingotek_download_document(&$node, $target_language) {
       }
     }
     else {
-      $field = field_info_field($tag);
+      $drupal_field_name = $tag;
+      $target_key = 'value';
+      $subfield_parts = explode('__', $tag);
+      if (count($subfield_parts) == 2) {
+        $drupal_field_name = $subfield_parts[0];
+        $target_key = $subfield_parts[1];
+      }
+      $field = field_info_field($drupal_field_name);
       if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
-        $data = & $node->$tag;
+        $node_field = & $node->$drupal_field_name;
         $index = 0;
         foreach ($content as $text) {
-          $data[$target_language][$index]['value'] = decode_entities(lingotek_xml_decode($text));
-          if (array_key_exists($node->language, $data)) {
-            if(array_key_exists('format', $data[$node->language][0])) {
-              $data[$target_language][$index]['format'] = $data[$node->language][0]['format'];
-            }
-            if(array_key_exists('summary', $data[$node->language][0])) {
-              $data[$target_language][$index]['summary'] = $data[$node->language][0]['summary'];
+          $node_field[$target_language][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
+          if (array_key_exists($node->language, $node_field)) {
+            if (array_key_exists('format', $node_field[$node->language][0])) {
+              $node_field[$target_language][$index]['format'] = $node_field[$node->language][0]['format'];
             }
           }
           $index++;
