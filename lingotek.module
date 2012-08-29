@@ -317,19 +317,17 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#description' => t("This determines if the target languages will fill untranslated text with the source language or simply leave untranslated text out of the document."),
   );
 
-  // Create Lingotek Document?
-  if (empty($form['nid']['#value']) || (!empty($form['nid']['#value']) && lingotek_lingonode($form['nid']['#value'], 'document_id_' . $form['#node']->language) === FALSE)) {
-    $form['lingotek']['content']['create_lingotek_document'] = array(
-      '#type' => 'select',
-      '#title' => t('Push Node to Lingotek'),
-      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 0),
-      '#options' => array(
-        1 => t('Yes'),
-        0 => t('No')
-      ),
-      '#description' => t("This determines if content should be pushed to the Lingotek Platform. Changing the setting to Yes is irreversible."),
-    );
-  }
+  // Enable auto-push to lingotek.
+  $form['lingotek']['content']['create_lingotek_document'] = array(
+    '#type' => 'select',
+    '#title' => t('Automatically Push Node Content to Lingotek'),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 0),
+    '#options' => array(
+      1 => t('Enabled'),
+      0 => t('Disabled')
+    ),
+    '#description' => t("When enabled, this node's content will be pushed to Lingotek when it is created and on every subsequent edit. If you choose not to enable automatic pushes, you can use the 'Push Content' button on this node's Lingotek tab to manually push the contents to Lingotek."),
+  );
 
   // Machine translation settings.
   if (user_access('mt')) {
@@ -455,15 +453,19 @@ function lingotek_node_insert($node) {
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
-  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   if (isset($node->create_lingotek_document)) {
     lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
   }
+  else {
+    lingotek_lingonode($node->nid, 'create_lingotek_document', 0);
+  }
+  
+  // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
+  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document'));  
 
-  if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language) || !$send_lingotek_document) {
+  if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
     return;
   }
 
@@ -502,11 +504,13 @@ function lingotek_node_update($node) {
     // Removes local translations if this node has been previously translated using Entity Translation.
     lingotek_remove_local_translations($node);
 
-    if (LingotekApi::instance()->addContentDocument($node)) {
-      drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
-    }
-    else {
-      drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $node->title)), 'error');
+    if ($send_lingotek_document) {
+      if (LingotekApi::instance()->addContentDocument($node)) {
+        drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
+      }
+      else {
+        drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $node->title)), 'error');
+      }
     }
 
     // Run machine translation for the first time.
@@ -527,7 +531,9 @@ function lingotek_node_update($node) {
   }
   else {
     // Keep source document up to date.
-    LingotekApi::instance()->updateContentDocument($node);
+    if ($send_lingotek_document) {    
+      LingotekApi::instance()->updateContentDocument($node);
+    }
 
     // Run machine translation.
     if (user_access('mt') && isset($node->mtEngine) && $node->mtEngine) {
@@ -800,4 +806,54 @@ function lingotek_remove_local_translations($node) {
       }
     }
   }
+}
+
+/**
+ * Form constructor for the Lingotek Content push form.
+ */
+function lingotek_content_push_form($form, $form_state, $node) {
+  $form = array();
+  
+  $form['content_push'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Push Node Content to Lingotek'),
+    '#description' => t("Manually push this node's content to Lingotek"),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  
+  $form['content_push']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Push Content'),
+  );
+  
+  $form['node_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $node->nid,
+  );
+  
+  return $form;
+}
+
+/**
+ * Submit handler for the lingotek_content_push_form form.
+ */
+function lingotek_content_push_form_submit($form, $form_state) {
+  $node = node_load($form_state['values']['node_id']);
+  
+  $api = LingotekApi::instance();
+  if ($existing_document = lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
+    // Update an existing Lingotek Document.
+    $api->updateContentDocument($node);
+  }
+  else {
+    // Create a new Lingotek Document.
+    // Add project and vault parameters to the node object.
+    $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
+    $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'valut_id');
+    $api->addContentDocument($node);
+    lingotek_add_missing_targets($node);    
+  }
+  
+  drupal_set_message(t('Pushed content for @node_title to Lingotek for translation.', array('@node_title' => $node->title)));
 }

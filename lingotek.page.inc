@@ -38,20 +38,42 @@ function lingotek_pm($node) {
   $actions = '<input type="button" id="lingotek-update-button" value="' . t('Update') . '"/>';
 
   $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
+  
+  $pull_translations = array();
+  
+  $pull_translations['fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Pull translations from Lingotek'),
+    '#description' => t('Pull the latest translations from Lingotek in the selected languages.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  
+  $pull_translations['fieldset']['contents'] = array(
+    '#markup' => $table . $actions . $vars,
+  );
+  
+  $output = array();
+    
+  if (lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
+    $output['content_push'] = array(
+      '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render(drupal_get_form('lingotek_content_push_form', $node)),
+    );
+    
+    if (!empty($rows)) {    
+      $output['content_pull'] = array(
+        '#markup' => drupal_render($pull_translations),
+      );
+    }
+  }
+  else {
+    $output['content_pull'] = array(
+      '#markup' => '<p class="help">' . t('This node is not compatible with Lingotek translation. Either it is not a Lingotek tranlsation-enabled content type. Or the node does not have a defined language.') . '</p>'
+    );
+  }
 
-  $output = array(
-    'table' => array(
-      '#markup' => $table,
-    ),
-    'actions' => array(
-      '#markup' => $actions,
-    ),
-    'vars' => array(
-      '#markup' => $vars,
-    ),
-    'upgrade_form' => array(
-      '#markup' => drupal_render(drupal_get_form('lingotek_advanced_parsing_upgrade_form')),
-    )
+  $output['upgrade_form'] = array(
+    '#markup' => drupal_render(drupal_get_form('lingotek_advanced_parsing_upgrade_form')),
   );
 
   return $output;
