@@ -531,7 +531,8 @@ function lingotek_node_update($node) {
   }
   else {
     // Keep source document up to date.
-    if ($send_lingotek_document) {    
+    $router_item = menu_get_item();
+    if ($send_lingotek_document && $router_item['path'] != 'lingotek/update') {    
       LingotekApi::instance()->updateContentDocument($node);
     }
 
