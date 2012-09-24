@@ -323,7 +323,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       1 => t('Enabled'),
       0 => t('Disabled')
     ),
-    '#description' => t("When enabled, this node's content will be pushed to Lingotek when it is created and on every subsequent edit. If you choose not to enable automatic pushes, you can use the 'Push Content' button on this node's Lingotek tab to manually push the contents to Lingotek."),
+    '#description' => t("When enabled, this node's content will be pushed to Lingotek when it is created and on every subsequent edit. If you choose not to enable automatic pushes, you can use the 'Push Content' button on this node's Lingotek tab to manually push the contents to Lingotek. (Note: only the content of the source node is pushed to Lingotek, not any existing translations. Also, existing translations will be overwritten when you pull a translation from Lingotek for a given language.)"),
   );
 
   // Machine translation settings.
