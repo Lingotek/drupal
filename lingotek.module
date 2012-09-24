@@ -268,9 +268,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Only show these options if the Lingotek document hasn't yet been created.
   if (!$document_id && class_exists('LingotekApi')) {
-    if ($node->nid > 0) {
-      lingotek_check_entity_translations($node);
-    }
 
     // Available projects.
     if ($projects = LingotekApi::instance()->listProjects()) {
@@ -500,9 +497,6 @@ function lingotek_node_update($node) {
       $vault_id = $node->lingotek_vault_id;
     }
     lingotek_lingonode($node->nid, 'vault_id', $vault_id);
-
-    // Removes local translations if this node has been previously translated using Entity Translation.
-    lingotek_remove_local_translations($node);
 
     if ($send_lingotek_document) {
       if (LingotekApi::instance()->addContentDocument($node)) {
@@ -746,67 +740,6 @@ function lingotek_install_default_advanced_xml() {
       array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
   }
 
-}
-
-/**
- * Checks for existing local entity_translations and sets JS settings appropriately.
- */
-function lingotek_check_entity_translations($node) {
-  if (module_exists('entity_translation')) {
-    if ($handler = entity_translation_get_handler('node', $node)) {
-
-      $translations = $handler->getTranslations();
-      if (isset($translations->data[$translations->original])) {
-        unset($translations->data[$translations->original]);
-      }
-
-      $settings = array(
-        'lingotek_no_document' => TRUE,
-        'lingotek_has_entity_translations' => count($translations->data),
-      );
-      drupal_add_js($settings, 'setting');
-    }
-    else {
-      watchdog('lingotek', 'Unable to load entity translation handler', NULL, WATCHDOG_ERROR);
-    }
-  }
-}
-
-/**
- * Removes any local translations that may have been added via Entity Translation.
- *
- * @param object $node
- *   The Drupal node for which local translations should be removed.
- *
- * @return mixed
- *   The number of removed translations if action was taken, FALSE on error.
- */
-function lingotek_remove_local_translations($node) {
-  // Sanity check that this item has not already been sent to Lingotek.
-  if (module_exists('entity_translation')) {
-    if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) !== FALSE) {
-      watchdog('lingotek', 'Attempted to remove local translations for a node already sent to Lingotek: @node_id',
-        array('@node_id' => $node->nid), WATCHDOG_ERROR);
-      return FALSE;
-    }
-    else {
-      if ($handler = entity_translation_get_handler('node', $node)) {
-
-        $translations = $handler->getTranslations();
-        $languages = language_list();
-        foreach ($translations->data as $language_code => $data) {
-          if ($language_code != $translations->original) {
-            $handler->removeTranslation($language_code);
-            field_attach_update('node', $node);
-            drupal_set_message(t('Removed local translation for @language.', array('@language' => $languages[$language_code]->name)));
-          }
-        }
-      }
-      else {
-        watchdog('lingotek', 'Unable to load entity translation handler', NULL, WATCHDOG_ERROR);
-      }
-    }
-  }
 }
 
 /**
