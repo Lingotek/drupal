@@ -172,38 +172,41 @@ function lingotek_add_missing_targets($node) {
   $lingotek_workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
-  $languages_already_added = array();
+  if ($document_id) {
+    $languages_already_added = array();
 
-  $params = array('documentId' => $document_id);
-  $output = $_lingotek_client->request('getDocument', $params);
-  if ($output->results == "success") {
-    foreach ($output->translationTargets as $target) {
-      array_push($languages_already_added, $target->language);
-    }
-  }
-  else {
-    return FALSE;
-  }
-
-  foreach (language_list() as $target_language) {
-    if ($target_language->enabled && lingotek_supported_language($target_language->language) &&
-      !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
-      $node->language != $target_language->language) {
-
-      $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
+    $params = array('documentId' => $document_id);
+    $output = $_lingotek_client->request('getDocument', $params);
+    if ($output->results == "success") {
+      foreach ($output->translationTargets as $target) {
+        array_push($languages_already_added, $target->language);
+      }
     }
     else {
-      lingotek_trace("lingotek_add_missing_targets skipping language",
-        array(
-          'language' => $target_language->language,
-          'enabled' => $target_language->enabled,
-          'supported' => lingotek_supported_language($target_language->language),
-          'added' => lingotek_supported_language($target_language->language) && in_array($_lingotek_locale[$target_language->language], $languages_already_added),
-          'isTarget' => $node->language != $target_language->language
-        )
-      );
+      return FALSE;
+    }
+
+    foreach (language_list() as $target_language) {
+      if ($target_language->enabled && lingotek_supported_language($target_language->language) &&
+        !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
+        $node->language != $target_language->language) {
+
+        $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
+      }
+      else {
+        lingotek_trace("lingotek_add_missing_targets skipping language",
+          array(
+            'language' => $target_language->language,
+            'enabled' => $target_language->enabled,
+            'supported' => lingotek_supported_language($target_language->language),
+            'added' => lingotek_supported_language($target_language->language) && in_array($_lingotek_locale[$target_language->language], $languages_already_added),
+            'isTarget' => $node->language != $target_language->language
+          )
+        );
+      }
     }
   }
+
   return TRUE;
 }
 
@@ -342,16 +345,16 @@ function lingotek_get_communities() {
  */
 function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
   global $_lingotek_client;
-  
+
   $targets = &drupal_static(__FUNCTION__);
-  
+
   // Use static cache to ensure that we don't go to the server more than once per page for targets.
   if (isset($targets[$document_id])) {
     return $targets[$document_id];
   }
-  
+
   $results = array();
-  
+
   $cache_id = 'lingotek_targets_' . $document_id;
   $cache = cache_get($cache_id);
   if (lingotek_do_cache() && !$flush_cache && !empty($cache->data)) {
@@ -370,7 +373,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
       cache_set($cache_id, $results, 'cache', time() + 900);
     }
   }
-  
+
   return $results;
 }
 
@@ -400,7 +403,7 @@ function lingotek_get_phase_name($phase_id) {
 
   $params = array('phaseId' => $phase_id);
   $output = $_lingotek_client->request("getPhase", $params);
-  
+
   if ($output->results == "success") {
     return $output->name;
   }
@@ -477,7 +480,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
     if ($lang != $language) {
       continue;
     }
-    
+
     lingotek_trace('lingotek_get_workbench_url TARGETS', array('lang' => $lang, 'translation_target' => $translation_target));
     $target = LingotekApi::instance()->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
@@ -491,7 +494,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
       }
       $which_phase++;
     }
-    
+
     // All phases are complete, use last phase as current.
     if (!empty($phases) && $phase_id == -1) {
       $last_phase = end($phases);
