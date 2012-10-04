@@ -141,16 +141,20 @@ function lingotek_node_init_default($node) {
   lingotek_add_missing_targets($node);
 }
 
-/*
- * Synchonize the node's content with current translations as stored on the Lingotek platform
+/**
+ * Synchronize the node's content with current translations as stored on the Lingotek platform.
+ *
+ * @param object $node
+ *   A Drupal node object.
  */
 function lingotek_node_sync(&$node) {
-  //Keep syncronized?
+  // Keep synchronized?
   $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 0);
+  $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
   lingotek_trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
-  if ($sync_method != "0") {
+  if ($sync_method != "0" && $lingotek_document_id) {
     $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-    //Check for changes in % complete
+    // Check for changes in % complete.
     foreach ($progress as $lang => $target) {
       $key = 'percent_complete_' . $lang;
       $before = lingotek_lingonode($node->nid, $key);
