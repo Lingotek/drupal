@@ -8,6 +8,7 @@
  * Session handler for api calls and logging in to the Lingotek platform
  */
 class LingotekSession {
+  const DEFAULT_API_TIMEOUT = 90.0;
 
   private $url;
   private $community;
@@ -87,13 +88,23 @@ class LingotekSession {
     }
 
     $this->headers["Content-Type"] = "application/x-www-form-urlencoded;";
+    
+    
+    $timeout = variable_get('lingotek_api_timeout', self::DEFAULT_API_TIMEOUT);
+    if (!is_numeric($timeout)) {
+      // The site is configured with some non-numeric timeout value, go back to the default.
+      watchdog('lingotek', "The current value for the 'lingotek_api_timeout' system variable ('@value') should be a number. Defaulting to @timeout seconds",
+        array('@value' => $timeout, '@timeout' => self::DEFAULT_API_TIMEOUT), WATCHDOG_ERROR);
+      $timeout = self::DEFAULT_API_TIMEOUT;        
+    }
 
     $response = drupal_http_request(
       $this->url . "/" . $api,
       array(
         'headers' => $this->headers,
         'method' => 'POST',
-        'data' => $query
+        'data' => $query,
+        'timeout' => $timeout,
       )
     );
 
