@@ -151,11 +151,11 @@ function lingotek_admin_form() {
 
   $form['defaults']['lingotek_create_documents_by_default'] = array(
     '#type' => 'select',
-    '#title' => t('Push Nodes to Lingotek'),
-    '#description' => t('When a new node is created, should the content automatically be pushed to the Lingotek platform? This setting can be overridden at the node level.'),
+    '#title' => t('Automatically Push Node Content to Lingotek'),
+    '#description' => t('When nodes are created and edited, should the content automatically be pushed to the Lingotek platform? This default can be overridden for each node.'),
     '#options' => array(
-      1 => 'Yes',
-      0 => 'No',
+      1 => t('Enabled'),
+      0 => t('Disabled'),
     ),
     '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
   );

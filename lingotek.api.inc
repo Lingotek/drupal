@@ -84,18 +84,22 @@ function lingotek_download_document(&$node, $target_language) {
       }
     }
     else {
-      $field = field_info_field($tag);
+      $drupal_field_name = $tag;
+      $target_key = 'value';
+      $subfield_parts = explode('__', $tag);
+      if (count($subfield_parts) == 2) {
+        $drupal_field_name = $subfield_parts[0];
+        $target_key = $subfield_parts[1];
+      }
+      $field = field_info_field($drupal_field_name);
       if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
-        $data = & $node->$tag;
+        $node_field = & $node->$drupal_field_name;
         $index = 0;
         foreach ($content as $text) {
-          $data[$target_language][$index]['value'] = decode_entities(lingotek_xml_decode($text));
-          if (array_key_exists($node->language, $data)) {
-            if(array_key_exists('format', $data[$node->language][0])) {
-              $data[$target_language][$index]['format'] = $data[$node->language][0]['format'];
-            }
-            if(array_key_exists('summary', $data[$node->language][0])) {
-              $data[$target_language][$index]['summary'] = $data[$node->language][0]['summary'];
+          $node_field[$target_language][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
+          if (array_key_exists($node->language, $node_field)) {
+            if (array_key_exists('format', $node_field[$node->language][0])) {
+              $node_field[$target_language][$index]['format'] = $node_field[$node->language][0]['format'];
             }
           }
           $index++;
@@ -167,38 +171,41 @@ function lingotek_add_missing_targets($node) {
   $lingotek_workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
-  $languages_already_added = array();
+  if ($document_id) {
+    $languages_already_added = array();
 
-  $params = array('documentId' => $document_id);
-  $output = LingotekApi::instance()->request('getDocument', $params);
-  if ($output && $output->results == "success") {
-    foreach ($output->translationTargets as $target) {
-      array_push($languages_already_added, $target->language);
-    }
-  }
-  else {
-    return FALSE;
-  }
-
-  foreach (language_list() as $target_language) {
-    if ($target_language->enabled && lingotek_supported_language($target_language->language) &&
-      !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
-      $node->language != $target_language->language) {
-
-      $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
+    $params = array('documentId' => $document_id);
+    $output = $_lingotek_client->request('getDocument', $params);
+    if ($output->results == "success") {
+      foreach ($output->translationTargets as $target) {
+        array_push($languages_already_added, $target->language);
+      }
     }
     else {
-      lingotek_trace("lingotek_add_missing_targets skipping language",
-        array(
-          'language' => $target_language->language,
-          'enabled' => $target_language->enabled,
-          'supported' => lingotek_supported_language($target_language->language),
-          'added' => lingotek_supported_language($target_language->language) && in_array($_lingotek_locale[$target_language->language], $languages_already_added),
-          'isTarget' => $node->language != $target_language->language
-        )
-      );
+      return FALSE;
+    }
+
+    foreach (language_list() as $target_language) {
+      if ($target_language->enabled && lingotek_supported_language($target_language->language) &&
+        !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
+        $node->language != $target_language->language) {
+
+        $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
+      }
+      else {
+        lingotek_trace("lingotek_add_missing_targets skipping language",
+          array(
+            'language' => $target_language->language,
+            'enabled' => $target_language->enabled,
+            'supported' => lingotek_supported_language($target_language->language),
+            'added' => lingotek_supported_language($target_language->language) && in_array($_lingotek_locale[$target_language->language], $languages_already_added),
+            'isTarget' => $node->language != $target_language->language
+          )
+        );
+      }
     }
   }
+
   return TRUE;
 }
 

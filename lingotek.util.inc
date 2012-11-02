@@ -109,16 +109,20 @@ function lingotek_node_init_default($node) {
   lingotek_add_missing_targets($node);
 }
 
-/*
- * Synchonize the node's content with current translations as stored on the Lingotek platform
+/**
+ * Synchronize the node's content with current translations as stored on the Lingotek platform.
+ *
+ * @param object $node
+ *   A Drupal node object.
  */
 function lingotek_node_sync(&$node) {
-  //Keep syncronized?
+  // Keep synchronized?
   $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 0);
+  $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
   lingotek_trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
-  if ($sync_method != "0") {
+  if ($sync_method != "0" && $lingotek_document_id) {
     $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-    //Check for changes in % complete
+    // Check for changes in % complete.
     foreach ($progress as $lang => $target) {
       $key = 'percent_complete_' . $lang;
       $before = lingotek_lingonode($node->nid, $key);
@@ -242,46 +246,72 @@ function lingotek_dump($obj) {
   return $string;
 }
 
-/*
+/**
  * Return the xml representation of the source content for a node.
+ *
+ * @param object $node
+ *   A Drupal node.
+ *
+ * @return string
+ *   The XML representation of the node in Lingotek format.
  */
 function lingotek_xml_node_body($node) {
-
   $translatable = array();
-  foreach($node as $key => $value) {
+
+  foreach ($node as $key => $value) {
     $field = field_info_field($key);
     if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
       array_push($translatable, $key);
     }
   }
 
-  $content = "";
-  foreach($translatable as $field) {
+  $content = '';
+  foreach ($translatable as $field) {
     $language = $node->language;
     if (!array_key_exists($language, $node->$field)) {
       $language = LANGUAGE_NONE;
     }
     $text = & $node->$field;
-    //Deal with not being initialized right, such as pre-existing titles.
+    // Deal with not being initialized right, such as pre-existing titles.
     if (!array_key_exists($language, $node->$field) || !array_key_exists(0, $text[$language])) {
       continue;
     }
-    $content = $content . "<$field>";
-    foreach($text[$language] as $key => $value) {
-      if (!array_key_exists('value', $value)) {
-        //TODO add TAGs to be translatable
-        /*
-        $terms = $node->$field;
-        foreach ($terms[$language] as $term) {
-          // Do something.
+
+    // We may split compound Drupal fields into several Lingotek fields.
+    $target_keys = array(
+      'value' => '', // Most text fields
+      'summary' => 'summary' // "Long text with summary" fields have this sub-field value as well.
+    );
+
+    // Create fields from all target keys.
+    foreach ($target_keys as $target_key => $element_suffix) {
+      if (!empty($text[$language][0][$target_key])) {
+        $element_name = $field;        
+        if (!empty($element_suffix)) {
+          $element_name .= '__' . $element_suffix;
         }
-        */
-        continue;
+
+        $current_field = '<' . $element_name . '>';
+
+        foreach ($text[$language] as $key => $value) {
+          if (!array_key_exists('value', $value)) {
+            //TODO add TAGs to be translatable
+            /*
+            $terms = $node->$field;
+            foreach ($terms[$language] as $term) {
+              // Do something.
+            }
+            */
+            continue;
+          }
+
+          $current_field .= '<element><![CDATA[' . $value[$target_key] . ']]></element>' . "\n";
+        }
+
+        $current_field .= '</' . $element_name . '>';
+        $content .= $current_field;
       }
-      $txt = $value['value'];
-      $content = $content . "<element><![CDATA[$txt]]></element>\n";
     }
-    $content = $content . "</$field>\n";
   }
 
   //Menus related to the page:
