@@ -160,22 +160,6 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
   );
 
-  $engines = lingotek_get_machine_translation_engines();
-  $form['defaults']['lingotek_mt_engine'] = array(
-    '#type' => 'select',
-    '#title' => t('Machine Translation Engine'),
-    '#description' => t('Choose which translation engine should be used for the automatically pasted translations.  This setting will be used as the default when creating/editing a page.  If the user creating the page doesn\'t have permissions to choose the engine, this engine will be selected for them.'),
-    '#options' => $engines,
-    '#default_value' => variable_get('lingotek_mt_engine', FALSE),
-  );
-  $form['defaults']['lingotek_available_mt_options'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Available Machine Translation Options'),
-    '#description' => t('Choose which engines are available to the page creator.'),
-    '#options' => $engines,
-    '#default_value' => variable_get('lingotek_available_mt_options', array_keys($engines)),
-  );
-
   // URL Alias Translation.
   $form['defaults']['lingotek_url_alias_translation'] = array(
     '#type' => 'radios',

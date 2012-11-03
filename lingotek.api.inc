@@ -366,24 +366,14 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
   return $results;
 }
 
-/*
- * Get machine translation engines available to this module
- */
-function lingotek_get_machine_translation_engines() {
-  $engines = array();
-  $engines[FALSE] = t("Disabled");
-  $engines['google'] = t("Google MT");
-  $engines['microsoft'] = t("Microsoft MT");
-  return $engines;
-}
-
-/*
+/**
  * Get the phase name
  *
  * This fetches a workflow step's name (known as a Phase in the Lingotek platform)
  *
  * @param $phase_id
  *  Id for the workflow step
+ *
  * @return
  *  name for the workflow step (phase name)
  */

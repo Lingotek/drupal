@@ -13,7 +13,6 @@ include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
 include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
-include_once('lingotek.mt.inc');
 
 /**
  * Implements hook_menu().
@@ -45,20 +44,6 @@ function lingotek_menu() {
     'access arguments' => array('pm'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_update',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['lingotek/mt_all'] = array(
-    'access arguments' => array('administration'),
-    'file' => 'lingotek.pages.inc',
-    'page callback' => 'lingotek_mt_all',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['lingotek/segment'] = array(
-    'access arguments' => array('mt'),
-    'file' => 'lingotek.mt.inc',
-    'page callback' => 'lingotek_mt_save_segment',
     'type' => MENU_CALLBACK,
   );
 
@@ -326,45 +311,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#description' => t("When enabled, this node's content will be pushed to Lingotek when it is created and on every subsequent edit. If you choose not to enable automatic pushes, you can use the 'Push Content' button on this node's Lingotek tab to manually push the contents to Lingotek. (Note: only the content of the source node is pushed to Lingotek, not any existing translations. Also, existing translations will be overwritten when you pull a translation from Lingotek for a given language.)"),
   );
 
-  // Machine translation settings.
-  if (user_access('mt')) {
-    $available_engines = lingotek_get_machine_translation_engines();
-    $enabled_engines = variable_get('lingotek_available_mt_options', array_keys($available_engines));
-    $engines = array();
-    foreach ($enabled_engines as $engine) {
-      $engines[$engine] = $available_engines[$engine];
-    }
-
-    $form['lingotek']['content']['mtEngine'] = array(
-      '#type' => 'select',
-      '#title' => t('Machine Translation Engine'),
-      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'mt_engine'), 'lingotek_mt_engine', FALSE), //Only run MT when specified
-      '#options' => $engines,
-      '#description' => t("Choose an engine to automatically translate the content with. Warning: This will automatically synchronize the content as a manual update would from the Lingotek tab for the page."),
-    );
-
-    $languages = array();
-    $checked = array();
-    foreach (language_list() as $language) {
-      if ($language->enabled && isset($_lingotek_locale[$language->language])) {
-        $languages[$language->language] = $language->native . " (" . $language->name . ")";
-        array_push($checked, $language->language);
-      }
-    }
-    $saved = lingotek_lingonode($node->nid, 'mt_targets');
-    if ($saved !== FALSE) {
-      $checked = explode(",", $saved);
-    }
-
-    $form['lingotek']['content']['mtTargets'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Apply Machine Translation to the following languages'),
-      '#options' => $languages,
-      '#default_value' => $checked,
-      '#description' => t("Choose which languages should be machine translated with the above engine."),
-    );
-  }
-
   // URL Alias Translation.
   if (user_access('url_alias_translation')) {
     $form['lingotek']['content']['urlAliasTranslation'] = array
@@ -506,33 +452,12 @@ function lingotek_node_update($node) {
         drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $node->title)), 'error');
       }
     }
-
-    // Run machine translation for the first time.
-    if (user_access('mt')) {
-      if (isset($node->mtEngine) && $node->mtEngine) {
-        lingotek_mt($node, $node->mtTargets, $node->mtEngine);
-      }
-    }
-    else {
-      $checked = array();
-      foreach (language_list() as $language) {
-        if ($language->enabled) {
-          array_push($checked, $language->language);
-        }
-      }
-      lingotek_mt($node, $checked, variable_get('lingotek_mt_engine', FALSE));
-    }
   }
   else {
     // Keep source document up to date.
     $router_item = menu_get_item();
     if ($send_lingotek_document && $router_item['path'] != 'lingotek/update') {    
       LingotekApi::instance()->updateContentDocument($node);
-    }
-
-    // Run machine translation.
-    if (user_access('mt') && isset($node->mtEngine) && $node->mtEngine) {
-      lingotek_mt($node, $node->mtTargets, $node->mtEngine);
     }
   }
 
@@ -589,14 +514,6 @@ function lingotek_update_field($form, $form_state) {
   db_update('field_config')->fields(array('translatable' => $form['field']['lingotek_translatable']['#value']))->condition('field_name', $field)->execute();
 }
 
-/*
- * hook_preprocess_page
- * flush the queue for machine translation on every page load
- */
-function lingotek_preprocess_page(&$page, $hook) {
-  //Process MT queue once per page load
-  lingotek_dequeue();
-}
 
 /*
  * hook_help
