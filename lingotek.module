@@ -253,9 +253,10 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Only show these options if the Lingotek document hasn't yet been created.
   if (!$document_id && class_exists('LingotekApi')) {
+    $api = LingotekApi::instance();
 
     // Available projects.
-    if ($projects = LingotekApi::instance()->listProjects()) {
+    if ($projects = $api->listProjects()) {
       $form['lingotek']['content']['lingotek_project_id'] = array(
         '#type' => 'select',
         '#title' => 'Project ID',
@@ -267,7 +268,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     }
 
     // Translation Memory (TM) Vault.
-    if ($vaults = LingotekApi::instance()->listVaults()) {
+    if ($vaults = $api->listVaults()) {
       $form['lingotek']['content']['lingotek_vault_id'] = array(
         '#type' => 'select',
         '#title' => t('TM Vault'),
@@ -277,6 +278,18 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
         '#access' => user_access('access per-item lingotek vault selection'),
       );
     }
+    
+    // Workflows.
+    if ($workflows = $api->listWorkflows()) {
+      $form['lingotek']['content']['lingotek_workflow_id'] = array(
+        '#type' => 'select',
+        '#title' => t('Workflow'),
+        '#description' => t('Choose the Workflow to associate with this content item.'),
+        '#options' => $workflows,
+        '#access' => user_access('access per-item lingotek project selection'),
+      );
+    }
+    
   }
 
   // Sync Setting.
@@ -443,6 +456,10 @@ function lingotek_node_update($node) {
       $vault_id = $node->lingotek_vault_id;
     }
     lingotek_lingonode($node->nid, 'vault_id', $vault_id);
+    
+    if (!empty($node->lingotek_workflow_id)) {
+      lingotek_lingonode($node->nid, 'workflow_id', $node->lingotek_workflow_id);
+    }
 
     if ($send_lingotek_document) {
       if (LingotekApi::instance()->addContentDocument($node)) {

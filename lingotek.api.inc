@@ -168,14 +168,15 @@ function lingotek_save_segment($source_text, $target_text, $target_language, $do
 function lingotek_add_missing_targets($node) {
   global $_lingotek_locale;
 
-  $lingotek_workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
+  $api = LingotekApi::instance();
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
   if ($document_id) {
+
     $languages_already_added = array();
 
     $params = array('documentId' => $document_id);
-    $output = $_lingotek_client->request('getDocument', $params);
+    $output = $api->getDocument($params);
     if ($output->results == "success") {
       foreach ($output->translationTargets as $target) {
         array_push($languages_already_added, $target->language);
@@ -190,7 +191,7 @@ function lingotek_add_missing_targets($node) {
         !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
         $node->language != $target_language->language) {
 
-        $translation_target_id = LingotekApi::instance()->addTranslationTarget($document_id, $target_language->language);
+        $translation_target_id = $api->addTranslationTarget($document_id, $target_language->language);
       }
       else {
         lingotek_trace("lingotek_add_missing_targets skipping language",
@@ -204,6 +205,10 @@ function lingotek_add_missing_targets($node) {
         );
       }
     }
+  }
+  else {
+    watchdog('lingotek', 'Unable to find Lingotek Document ID for node @node_id while adding Translation targets.',
+      array('@node_id' => $node->nid), WATCHDOG_ERROR);
   }
 
   return TRUE;
