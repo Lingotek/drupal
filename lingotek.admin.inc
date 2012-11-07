@@ -168,6 +168,18 @@ function lingotek_admin_form() {
     '#options' => lingotek_get_url_alias_translations(),
     '#default_value' => variable_get('lingotek_url_alias_translation', 0),
   );
+  
+  // Community Translation
+  $form['defaults']['lingotek_allow_community_translation'] = array(
+    '#type' => 'select',
+    '#title' => t('Allow Community Translation'),
+    '#description' => t('Sets the default value for Community Translation (translation by site visitors) on node add/edit forms.'),
+    '#options' => array(
+      1 => t('Enabled'),
+      0 => t('Disabled'),
+    ),
+    '#default_value' => variable_get('lingotek_allow_community_translation', 0),
+  );
 
   // Advanced XML configuration.
   $form['advanced-parsing'] = array(
