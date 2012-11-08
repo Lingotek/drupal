@@ -17,7 +17,14 @@ function lingotek_pm($node) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
 
   $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
-  $header = array($checkbox, t('Target Language'), t('Document Progress'), t('Phase Progress'), t('Phase'));
+  $headers = array(
+    $checkbox, 
+    t('Target Language'), 
+    t('Document Progress'), 
+    t('Phase'),
+    t('Phase Progress'),
+    t('Phase Complete'),
+  ); 
   $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language), TRUE);
 
   $rows = array();
@@ -28,17 +35,26 @@ function lingotek_pm($node) {
       '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
-      $phase_complete . '%',
       lingotek_get_workbench_url($node, $language, TRUE),
+      $phase_complete . '%',
+      ($phase_complete) ? '<img src="' . url(drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png') . '" />' : '',
     );
     lingotek_trace("lingotek_pm table row", array('language' => $language));
     $rows[] = $row;
   }
-  $table = theme('table', array('header' => $header, 'rows' => $rows));
+  $table = theme('table', array('header' => $headers, 'rows' => $rows));
 
-  $actions = '<input type="button" id="lingotek-update-button" value="' . t('Update') . '"/>';
+  $actions = '<input type="button" id="lingotek-update-button" value="' . t('Update') . '"/>' . 
+    '<input type="button" id="lingotek-complete-button" value="' . t('Mark Current Phase Complete') . '"/>';
 
   $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
+  
+  $token_element = array(
+    '#type' => 'hidden',
+    '#attributes' => array('id' => 'submit-token'),
+    '#value' => drupal_get_token(),
+  );
+  $vars .= drupal_render($token_element);
   
   $pull_translations = array();
   

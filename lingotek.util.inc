@@ -286,7 +286,7 @@ function lingotek_xml_node_body($node) {
     // Create fields from all target keys.
     foreach ($target_keys as $target_key => $element_suffix) {
       if (!empty($text[$language][0][$target_key])) {
-        $element_name = $field;        
+        $element_name = $field;
         if (!empty($element_suffix)) {
           $element_name .= '__' . $element_suffix;
         }
@@ -401,4 +401,36 @@ function lingotek_supported_language($language) {
  */
 function lingotek_do_cache() {
   return !(variable_get('lingotek_flush_cache', FALSE) && user_access('dev'));
+}
+
+/**
+ * Gets the phase ID of the "current" phase for a translation target.
+ *
+ * @param array $phases
+ *   An array of phase data from the result of a getTranslationTarget Lingotek API call.
+ *
+ * @return int
+ *   The Phase ID of the current phase. Note that if all phases are marked as complete,
+ *   the ID of the last phase will be returned.
+ */
+function lingotek_current_phase($phases) {
+  $phase_id = -1;
+
+  $current_phase = 0;
+
+  foreach ($phases as $phase) {
+    if (!$phase->isMarkedComplete) {
+      $phase_id = $phase->id;
+      break;
+    }
+    $current_phase++;
+  }
+
+  // All phases are complete, use last phase as current.
+  if (!empty($phases) && $phase_id == -1) {
+    $last_phase = end($phases);
+    $phase_id = $last_phase->id;
+  }
+
+  return $phase_id;
 }

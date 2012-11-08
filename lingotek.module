@@ -46,6 +46,14 @@ function lingotek_menu() {
     'page callback' => 'lingotek_update',
     'type' => MENU_CALLBACK,
   );
+  
+  $items['lingotek/mark-phases-complete/%node'] = array(
+    'access arguments' => array('access content'),
+    'file' => 'includes/lingotek.ajax.inc',
+    'page callback' => 'lingotek_page_mark_phases_complete',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+  );
 
   $items['admin/settings/lingotek/dev'] = array(
     'title' => 'Lingotek Developer Tools',

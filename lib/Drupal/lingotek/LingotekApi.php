@@ -299,6 +299,24 @@ class LingotekApi {
 
     return $vaults;
   }
+  
+  /**
+   * Marks a phase as complete.
+   *
+   * @param int $phase_id
+   *   The phase ID to be marked as complete.
+   *
+   * @return bool
+   *   TRUE on success, FALSE on failure.
+   */
+  public function markPhaseComplete($phase_id) {
+    $parameters = array(
+      'phaseId' => $phase_id,
+    );
+    
+    return ($this->request('markPhaseComplete', $parameters)) ? TRUE : FALSE;    
+  }
+  
 
   /**
    * Updates the content of an existing Lingotek document with the current node contents.
@@ -353,7 +371,7 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function request($method, $parameters = array()) {
+  public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
     
     $external_id = (user_is_anonymous()) ? self::ANONYMOUS_LINGOTEK_ID : $user->name;
@@ -370,8 +388,6 @@ class LingotekApi {
       'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
       'consumer_secret' => variable_get('lingotek_oauth_consumer_secret', '')
     );
-
-    $request_method = "POST";
 
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
