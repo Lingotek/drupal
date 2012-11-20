@@ -20,6 +20,11 @@ class LingotekApi {
    * The faux Lingotek user ID to use for anonymous user operations.
    */
   const ANONYMOUS_LINGOTEK_ID = 'anonymous';
+  
+  /**
+   * The endpoint for API version 4
+   */
+  const API_ENDPOINT_V4 = '/lingopoint/api/4';
 
   /**
    * Holds the static instance of the singleton object.
@@ -470,7 +475,7 @@ class LingotekApi {
    */
   private function __construct() {
     $this->debug = variable_get('lingotek_api_debug', FALSE);
-    $this->api_url = variable_get('lingotek_url', 'http://' . self::LINGOTEK_SERVER_PRODUCTION) . '/lingopoint/api';
+    $this->api_url = variable_get('lingotek_url', 'http://' . self::LINGOTEK_SERVER_PRODUCTION) . self::API_ENDPOINT_V4;
   }
 
   /**
