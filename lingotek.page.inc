@@ -30,13 +30,14 @@ function lingotek_pm($node) {
   $rows = array();
   foreach ($progress as $language => $target) {
     $current_phase = LingotekApi::instance()->currentPhase($target->id);
-    $phase_complete = (!empty($current_phase->percentComplete)) ? $current_phase->percentComplete : 0;
+    $phase_complete = (!empty($current_phase->isMarkedComplete)) ? TRUE : FALSE;
+    $phase_percent_complete = (!empty($current_phase->percentComplete)) ? $current_phase->percentComplete : 0;
     $row = array(
       '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
       lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
       $target->percentComplete . '%',
       lingotek_get_workbench_url($node, $language, TRUE),
-      $phase_complete . '%',
+      $phase_percent_complete . '%',
       ($phase_complete) ? '<img src="' . url(drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png') . '" />' : '',
     );
     lingotek_trace("lingotek_pm table row", array('language' => $language));
