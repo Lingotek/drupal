@@ -510,15 +510,6 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
     );
   }
 
-  if ($link[$language]['which_phase'] == 0 && !user_access('translation')) {
-    return '';
-  }
-
-  if ($link[$language]['which_phase'] > 0 && !user_access('review')) {
-    return '';
-  }
-  lingotek_trace('lingotek_get_workbench_url return', array('language' => $language, 'link' => $link));
-
   return $link[$language]['link'];
 }
 

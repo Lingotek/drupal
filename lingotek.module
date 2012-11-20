@@ -403,7 +403,7 @@ function lingotek_node_view($node, $view_mode) {
     if (user_is_anonymous() && $language->language != $node->language) {
       $link = lingotek_get_workbench_url($node, $language->language, t('Help make it better.'));
       if ($link != '') {
-        $message = t('The translation of @title is still being worked on.', array('@title' => $node->title)) . " ";
+        $message = t('The translation of @title is still being worked on.', array('@title' => '"' . $node->title . '"')) . " ";
         $message .= $link . '&nbsp;';
         if (lingotek_access($node, 'pm')) {
           $message .= '<span style="font-size: 80%">[' . l(t('progress'), 'node/' . $node->nid . '/lingotek_pm', array('html' => TRUE)) . ']</span>';
