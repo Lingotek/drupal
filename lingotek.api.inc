@@ -372,26 +372,37 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
 }
 
 /**
- * Get the phase name
+ * Gets the phase name of the specified phase.
  *
- * This fetches a workflow step's name (known as a Phase in the Lingotek platform)
+ * This fetches a workflow step's name (known as a Phase in the Lingotek platform).
  *
- * @param $phase_id
- *  Id for the workflow step
+ * @param int $phase_id
+ *   A Lingotek phase ID.
  *
- * @return
- *  name for the workflow step (phase name)
+ * @return string
+ *   Name for the workflow step (phase name).
+ *
+ * @todo Move the actual call to getPhase onto LingotekApi class.
  */
 function lingotek_get_phase_name($phase_id) {
-  $params = array('phaseId' => $phase_id);
-  $output = LingotekApi::instance()->request("getPhase", $params);
+  $phases = &drupal_static(__FUNCTION__);
 
-  if ($output->results == "success") {
-    return $output->name;
+  $phase_name = '';
+
+  if (!empty($phases[$phase_id])) {
+    $phase_name = $phases[$phase_id]->name;
   }
   else {
-    return "";
+    $params = array('phaseId' => $phase_id);
+    $output = LingotekApi::instance()->request('getPhase', $params);
+
+    if ($output->results == 'success') {
+      $phases[$phase_id] = $output;
+      $phase_name = $output->name;
+    }
   }
+
+  return $phase_name;
 }
 
 /*
@@ -447,7 +458,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
   if (!isset($_lingotek_locale[$language])) {
     return "";
   }
-  
+
   $api = LingotekApi::instance();
 
   $link = array();
@@ -485,7 +496,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
 
     $l = '';
     if ($phase_id != -1) {
-      $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);      
+      $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
       if ($document_id && $workbench_url = $api->getWorkbenchLink($document_id, $phase_id)) {
         if ($label === FALSE) {
           $l = $workbench_url;
