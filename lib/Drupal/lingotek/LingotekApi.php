@@ -10,17 +10,17 @@ class LingotekApi {
    * The status string representing a successful API call.
    */
   const RESPONSE_STATUS_SUCCESS = 'success';
-  
+
   /**
    * The server name of the Lingotek production instance.
    */
   const LINGOTEK_SERVER_PRODUCTION = 'myaccount.lingotek.com';
-  
+
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
    */
   const ANONYMOUS_LINGOTEK_ID = 'anonymous';
-  
+
   /**
    * The endpoint for API version 4
    */
@@ -39,7 +39,7 @@ class LingotekApi {
    * @var bool
    */
   private $debug;
-  
+
   /**
    * The endpoint for API calls.
    *
@@ -179,14 +179,37 @@ class LingotekApi {
    *  The API response object with Lingotek Document data, or FALSE on error.
    */
   public function getDocument($document_id) {
-    $params = array('documentId' => $document_id);
+    $documents = &drupal_static(__FUNCTION__);
 
-    if ($document = $this->request('getDocument', $params)) {
-      return $document;
+    if (!empty($documents[$document_id])) {
+      $document = $documents[$document_id];
     }
     else {
-      return FALSE;
+      $params = array('documentId' => $document_id);
+
+      if ($document = $this->request('getDocument', $params)) {
+        $documents[$document_id] = $document;
+      }
     }
+
+    return $document;
+  }
+  
+  /**
+   * Gets data for a specific Workflow Phase.
+   *
+   * @param int $phase_id
+   *   The ID of the phase to retrieve.
+   *
+   * @return mixed
+   *   The API response object, or FALSE on error.
+   */
+  public function getPhase($phase_id) {
+    $params = array(
+      'phaseId' => $phase_id
+    );
+    
+    return $this->request('getPhase', $params);    
   }
 
   /**
@@ -217,7 +240,7 @@ class LingotekApi {
       return FALSE;
     }
   }
-  
+
   /**
    * Gets a workbench URL for the specified document ID and phase.
    *
@@ -230,17 +253,27 @@ class LingotekApi {
    *   A workbench URL string on success, or FALSE on failure.
    */
   public function getWorkbenchLink($document_id, $phase_id) {
-    $params = array(
-      'documentId' => $document_id,
-      'phaseId' => $phase_id,
-    );
-    
-    if ($output = $this->request('getWorkbenchLink', $params)) {
-      return $output->url;
+    $links = &drupal_static(__FUNCTION__);
+
+    $static_id = $document_id . '-' . $phase_id;
+    if (empty($links[$static_id])) {
+      $params = array(
+        'documentId' => $document_id,
+        'phaseId' => $phase_id,
+      );
+
+      if ($output = $this->request('getWorkbenchLink', $params)) {
+        $links[$static_id] = $url = $output->url;
+      }
+      else {
+        $url = FALSE;
+      }
     }
     else {
-      return FALSE;
-    }    
+      $url = $links[$static_id];
+    }
+
+    return $url;
   }
 
   /**
@@ -304,7 +337,7 @@ class LingotekApi {
 
     return $vaults;
   }
-  
+
   /**
    * Marks a phase as complete.
    *
@@ -318,10 +351,10 @@ class LingotekApi {
     $parameters = array(
       'phaseId' => $phase_id,
     );
-    
-    return ($this->request('markPhaseComplete', $parameters)) ? TRUE : FALSE;    
+
+    return ($this->request('markPhaseComplete', $parameters)) ? TRUE : FALSE;
   }
-  
+
 
   /**
    * Updates the content of an existing Lingotek document with the current node contents.
@@ -353,7 +386,7 @@ class LingotekApi {
   public function xmlFormat() {
     return (variable_get('lingotek_advanced_parsing', FALSE)) ? 'XML_OKAPI' : 'XML';
   }
-  
+
   /**
    * Tests the current configuration to ensure that API calls can be made.
    *
@@ -362,13 +395,13 @@ class LingotekApi {
    */
   public function testAuthentication() {
     $valid_connection = &drupal_static(__FUNCTION__);
-    
+
     if (!isset($valid_connection)) {
       $valid_connection = ($this->listProjects()) ? TRUE : FALSE;
     }
 
-    return $valid_connection; 
-  }  
+    return $valid_connection;
+  }
 
   /**
    * Calls a Lingotek API method.
@@ -378,17 +411,17 @@ class LingotekApi {
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
-    
+
     $external_id = (user_is_anonymous()) ? self::ANONYMOUS_LINGOTEK_ID : $user->name;
-    
+
     $response_data = FALSE;
-    
+
     // Every v4 API request needs to have the externalID (Drupal User ID) parameter present.
     $parameters += array('externalId' => $external_id);
-    
+
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
-    
+
     $consumer_options = array(
       'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
       'consumer_secret' => variable_get('lingotek_oauth_consumer_secret', '')
@@ -399,7 +432,7 @@ class LingotekApi {
 
     $response = NULL;
     try {
-      OAuthStore::instance('2Leg', $consumer_options);   
+      OAuthStore::instance('2Leg', $consumer_options);
     	$request = new OAuthRequester($this->api_url . '/' . $method, $request_method, $parameters);
     	$result = $request->doRequest();
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
@@ -408,7 +441,7 @@ class LingotekApi {
       watchdog('lingotek', 'Failed OAuth request.
       <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
         array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);      
+        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
     }
 
     $timer_results = timer_stop($timer_name);
@@ -425,7 +458,7 @@ class LingotekApi {
       <br /><strong>Response Time:</strong> @response_time<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
       $message_params, WATCHDOG_DEBUG);
     }
-    
+
     if ($method == 'downloadDocument' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
       $response_data = $response;
     }
