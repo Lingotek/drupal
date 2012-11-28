@@ -8,6 +8,7 @@ dependencies[] = field_ui
 
 files[] = lib/Drupal/lingotek/LingotekApi.php
 files[] = lib/Drupal/lingotek/LingotekDocument.php
+files[] = lib/Drupal/lingotek/LingotekPhase.php
 files[] = tests/lingotek.base.test
 files[] = tests/lingotek.access.test
 files[] = tests/lingotek.advanced_parsing.test
