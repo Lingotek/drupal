@@ -17,6 +17,13 @@ class LingotekDocument {
   public $document_id;
   
   /**
+   * A reference to the Lingotek API.
+   *
+   * @var LingotekApi
+   */
+  protected $api = NULL;
+  
+  /**
    * Static store for Documents already loaded in this request.
    */
   public static $documents = array();
@@ -53,6 +60,38 @@ class LingotekDocument {
   }
   
   /**
+   * Determines whether or not the document has Translation Targets in a complete-eligible phase.
+   *
+   * @return bool
+   *   TRUE if complete-eligible phases are present. FALSE otherwise.
+   */
+  public function hasPhasesToComplete() {
+    $result = FALSE;
+    
+    if (class_exists('LingotekPhase')) {
+      foreach ($this->translationTargets() as $target) {
+        $current_phase = LingotekPhase::loadWithData($this->api->currentPhase($target->id));
+        if ($current_phase->canBeMarkedComplete()) {
+          $result = TRUE;
+          break;
+        }
+      }
+    }
+    
+    return $result;
+  }
+  
+  /**
+   * Injects reference to an API object.
+   *
+   * @param LingotekApi $api
+   *   An instantiated Lingotek API object.
+   */
+  public function setApi(LingotekApi $api) {
+    $this->api = $api;
+  }
+  
+  /**
    * Factory method for getting a loaded LingotekDocument object.
    *
    * @param int $document_id
@@ -64,7 +103,9 @@ class LingotekDocument {
   public static function load($document_id) {
     $document_id = intval($document_id);
     if (empty($documents[$document_id])) {
-      $documents[$document_id] = new LingotekDocument($document_id);
+      $document = new LingotekDocument($document_id);
+      $document->setApi(LingotekApi::instance());
+      $documents[$document_id] = $document;
     }
     
     return $documents[$document_id];
