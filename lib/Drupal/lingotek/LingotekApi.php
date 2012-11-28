@@ -82,6 +82,7 @@ class LingotekApi {
         'documentName' => $node->title,
         'documentDesc' => $node->title,
         'format' => $this->xmlFormat(),
+        'workflowId' => lingotek_lingonode($node->nid, 'workflow_id'),
         'sourceLanguage' => $_lingotek_locale[$node->language],
         'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
         'content' => lingotek_xml_node_body($node),
