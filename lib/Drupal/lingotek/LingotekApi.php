@@ -195,7 +195,33 @@ class LingotekApi {
 
     return $document;
   }
-  
+
+  /**
+   * Gets the workflow progress of the specified document.
+   *
+   * @param int $document_id
+   *   The ID of the Lingotek Document to retrieve.
+   *
+   * @return mixed
+   *  The API response object with Lingotek Document data, or FALSE on error.
+   */
+  public function getDocumentProgress($document_id) {
+    $documents = &drupal_static(__FUNCTION__);
+
+    if (!empty($documents[$document_id])) {
+      $document = $documents[$document_id];
+    }
+    else {
+      $params = array('documentId' => $document_id);
+
+      if ($document = $this->request('getDocumentProgress', $params)) {
+        $documents[$document_id] = $document;
+      }
+    }    
+
+    return $document;
+  }
+
   /**
    * Gets data for a specific Workflow Phase.
    *
@@ -209,8 +235,8 @@ class LingotekApi {
     $params = array(
       'phaseId' => $phase_id
     );
-    
-    return $this->request('getPhase', $params);    
+
+    return $this->request('getPhase', $params);
   }
 
   /**
