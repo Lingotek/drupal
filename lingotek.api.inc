@@ -172,6 +172,7 @@ function lingotek_add_missing_targets($node) {
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
 
   if ($document_id) {
+    $workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
 
     $languages_already_added = array();
 
@@ -191,7 +192,7 @@ function lingotek_add_missing_targets($node) {
         !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
         $node->language != $target_language->language) {
 
-        $translation_target_id = $api->addTranslationTarget($document_id, $target_language->language);
+        $translation_target_id = $api->addTranslationTarget($document_id, $target_language->language, $workflow_id);
       }
       else {
         lingotek_trace("lingotek_add_missing_targets skipping language",

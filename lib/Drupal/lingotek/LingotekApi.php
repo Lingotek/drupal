@@ -82,7 +82,6 @@ class LingotekApi {
         'documentName' => $node->title,
         'documentDesc' => $node->title,
         'format' => $this->xmlFormat(),
-        'workflowId' => lingotek_lingonode($node->nid, 'workflow_id'),
         'sourceLanguage' => $_lingotek_locale[$node->language],
         'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
         'content' => lingotek_xml_node_body($node),
@@ -116,11 +115,14 @@ class LingotekApi {
    *   The document to which the new translation target should be added.
    * @param string $target_language_code
    *   The two letter code representing the language which should be added as a translation target.
+   * @param string $workflow_id
+   *   The optional workflow to associate with this target. If omitted, the project's default
+   *   workflow will be applied.
    *
    * @return mixed
    *  The ID of the new translation target in the Lingotek system, or FALSE on error.
    */
-  public function addTranslationTarget($lingotek_document_id, $target_language_code) {
+  public function addTranslationTarget($lingotek_document_id, $target_language_code, $workflow_id = '') {
     global $_lingotek_client, $_lingotek_locale;
 
     $parameters = array(
@@ -128,6 +130,10 @@ class LingotekApi {
       'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
       'targetLanguage' => $_lingotek_locale[$target_language_code]
     );
+
+    if ($workflow_id) {
+      $parameters['workflowId'] = $workflow_id;
+    }
 
     if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
       return $new_translation_target->id;
@@ -217,7 +223,7 @@ class LingotekApi {
       if ($document = $this->request('getDocumentProgress', $params)) {
         $documents[$document_id] = $document;
       }
-    }    
+    }
 
     return $document;
   }
