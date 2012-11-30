@@ -49,15 +49,15 @@ function lingotek_admin_form() {
 
   $form['connection']['lingotek_oauth_consumer_id'] = array(
     '#type' => 'textfield',
-    '#title' => t('OAuth Consumer Key'),
-    '#description' => t('Paste in the key from an OAuth Consumer keypair generated in the Community Maintenance -> OAuth Access section of the Lingotek Dashboard'),
+    '#title' => t('CMS Access Key'),
+    '#description' => t('Paste in the key from a key pair generated in the Community > Maintenance > CMS Access section of the Lingotek Dashboard'),
     '#default_value' => variable_get('lingotek_oauth_consumer_id', ''),
   );
 
   $form['connection']['lingotek_oauth_consumer_secret'] = array(
     '#type' => 'textfield',
-    '#title' => t('OAuth Consumer Key'),
-    '#description' => t('Paste in the secret from an OAuth Consumer keypair generated in the Community Maintenance -> OAuth Access section of the Lingotek Dashboard'),
+    '#title' => t('CMS Access Secret'),
+    '#description' => t('Paste in the secret from a key pair generated in the Community > Maintenance > CMS Access section of the Lingotek Dashboard'),
     '#default_value' => variable_get('lingotek_oauth_consumer_secret', ''),
   );
 
