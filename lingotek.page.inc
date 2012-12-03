@@ -35,15 +35,18 @@ function lingotek_pm($node) {
 
     $rows = array();
     foreach ($progress as $language => $target) {
-      $current_phase = LingotekApi::instance()->currentPhase($target->id);
-      $phase_complete = (!empty($current_phase->isMarkedComplete)) ? TRUE : FALSE;
-      $phase_percent_complete = (!empty($current_phase->percentComplete)) ? $current_phase->percentComplete : 0;
+      $current_phase = $document->currentPhase($target->id);
+      $phase_complete = ($current_phase->isMarkedComplete) ? TRUE : FALSE;
+      $phase_complete_percent = $current_phase->percentComplete;
+      if (empty($phase_complete_percent)) {
+        $phase_complete_percent = 0;
+      }
       $row = array(
         '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
         lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
         $target->percentComplete . '%',
         lingotek_get_workbench_url($node, $language, TRUE),
-        $phase_percent_complete . '%',
+        $phase_complete_percent . '%',
         ($phase_complete) ? '<img src="' . url(drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png') . '" />' : '',
       );
       lingotek_trace("lingotek_pm table row", array('language' => $language));
@@ -226,45 +229,60 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
 
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
   if (class_exists('LingotekDocument') && class_exists('LingotekPhase') && $document_id) {
+    $api = LingotekApi::instance();
 
-    $targets = LingotekDocument::load($document_id)->translationTargets();
+    $document = LingotekDocument::load($document_id);
+    if ($progress = $document->translationProgress()) {
+      $targets = $progress->translationTargets;
 
-    foreach ($targets as $language => $target) {
-      $current_phase = LingotekApi::instance()->currentPhase($target->id);
-      $phase = LingotekPhase::loadWithData($current_phase);
-      if ($phase->canBeMarkedComplete()) {
-        $phase_complete = (!empty($current_phase->isMarkedComplete)) ? TRUE : FALSE;
-        $phase_percent_complete = (!empty($current_phase->percentComplete)) ? $current_phase->percentComplete : 0;
-        $row = array(
-          lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
-          lingotek_get_workbench_url($node, $language, TRUE),
-          $phase_percent_complete . '%',
-        );
+      foreach ($targets as $target) {
+        $language = lingotek_drupal_language($target->language);
+        $current_phase = $document->currentPhase($target->id);
 
-        $options[$current_phase->id] = $row;
+        $phase_complete_percent = $current_phase->percentComplete;
+        if (empty($phase_complete_percent)) {
+          $phase_complete_percent = 0;
+        }        
+        
+        if ($current_phase && $current_phase->canBeMarkedComplete()) {
+          $phase_link = l($current_phase->name, '#', array('attributes' => array(
+            'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return false;')));
+
+          $row = array(
+            lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
+            $phase_link,
+            $phase_complete_percent . '%',
+          );
+
+          $options[$current_phase->id] = $row;
+        }
       }
+
+      $form['mark_complete'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Mark Workflow Phases complete'),
+        '#description' => t('The following Translation Targets have Phases that can be marked as complete.'),
+      );
+
+      $form['mark_complete']['phases'] = array(
+        '#type' => 'tableselect',
+        '#header' => array(
+          t('Target Language'),
+          t('Phase'),
+          t('Phase Progress'),
+        ),
+        '#options' => $options,
+      );
+
+      $form['mark_complete']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Mark Selected Phases as Complete'),
+      );
     }
-
-    $form['mark_complete'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Mark Workflow Phases complete'),
-      '#description' => t('The following Translation Targets have Phases that can be marked as complete.'),
-    );
-
-    $form['mark_complete']['phases'] = array(
-      '#type' => 'tableselect',
-      '#header' => array(
-        t('Target Language'),
-        t('Phase'),
-        t('Phase Progress'),
-      ),
-      '#options' => $options,
-    );
-
-    $form['mark_complete']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Mark Selected Phases as Complete'),
-    );
+    else {
+      watchdog('lingotek', 'Unable to build mark as complete form: could not get progress data from API.',
+        NULL, WATCHDOG_ERROR);
+    }
   }
 
   return $form;

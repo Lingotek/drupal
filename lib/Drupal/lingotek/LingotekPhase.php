@@ -84,16 +84,11 @@ class LingotekPhase {
     // These phase types need to be at 100% complete in order to 
     // be eligible for mark as complete.
     $needs_100_complete_phase_types = array(
-      'Translate',
-      'Review',
+      'TRANSLATION',
+      'REVIEW',
     );
     
-    // TODO: The getPhase Lingotek API call doesn't currently return the machine-readable
-    // type for a given phase, just the (user-editable) label. Currently,
-    // the logic below will break if the user has customized the label
-    // from the defaults of "Translate" or "Review".
-    // Follow up and fix this once the API has been enhanced.
-    if (in_array($this->phase->name, $needs_100_complete_phase_types)) {
+    if (in_array($this->phase->type, $needs_100_complete_phase_types)) {
       if ($this->phase->percentComplete == 100 && !$this->phase->isMarkedComplete) {
         $result = TRUE;
       }
@@ -105,5 +100,18 @@ class LingotekPhase {
     }
     
     return $result;
+  }
+  
+  /**
+   * Magic get for phase property access.
+   */
+  public function __get($property) {
+    $value = NULL;
+    
+    if (!empty($this->phase->$property)) {
+      $value = $this->phase->$property;
+    }
+    
+    return $value;
   }
 }

@@ -60,6 +60,41 @@ class LingotekDocument {
   }
   
   /**
+   * Gets the current workflow phase for the document.
+   *
+   * @param int $translation_target_id
+   *   The ID of the translation target whose current phase should be returned.
+   *
+   * @return mixed
+   *   A LingotekPhase object if the current phase could be found, or FALSE on failure.
+   */
+  public function currentPhase($translation_target_id) {
+    $phase = FALSE;
+    
+    if ($progress = $this->translationProgress()) {
+      foreach ($progress->translationTargets as $target) {
+        if ($target->id == $translation_target_id && !empty($target->phases)) {
+          $current_phase = FALSE;
+          foreach ($target->phases as $phase) {
+
+            if (!$phase->isMarkedComplete) {
+              $current_phase = $phase;
+              break;
+            }
+          }
+
+          // Return either the first uncompleted phase, or the last phase if all phases are complete.
+          $current_phase = ($current_phase) ? $current_phase : end($target->phases);
+          $phase = LingotekPhase::loadWithData($current_phase);
+          break;
+        }
+      }
+    }
+    
+    return $phase;
+  }
+  
+  /**
    * Determines whether or not the document has Translation Targets in a complete-eligible phase.
    *
    * @return bool
@@ -69,8 +104,9 @@ class LingotekDocument {
     $result = FALSE;
     
     if (class_exists('LingotekPhase')) {
-      foreach ($this->translationTargets() as $target) {
-        $current_phase = LingotekPhase::loadWithData($this->api->currentPhase($target->id));
+      $progress = $this->translationProgress();
+      foreach ($progress->translationTargets as $target) {
+        $current_phase = $this->currentPhase($target->id);
         if ($current_phase->canBeMarkedComplete()) {
           $result = TRUE;
           break;
@@ -79,6 +115,22 @@ class LingotekDocument {
     }
     
     return $result;
+  }
+  
+  /**
+   * Gets the translation progress data for the Document.
+   *
+   * @return mixed
+   *   The data object returned by a call to getDocumentProgress on success, FALSE on failure.
+   */
+  public function translationProgress() {
+    $progress = &drupal_static(__FUNCTION__ . '-' . $this->document_id);
+    
+    if (!$progress) {
+      $progress = $this->api->getDocumentProgress($this->document_id);
+    }
+    
+    return $progress;
   }
   
   /**
