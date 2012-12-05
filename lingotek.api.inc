@@ -176,8 +176,7 @@ function lingotek_add_missing_targets($node) {
 
     $languages_already_added = array();
 
-    $params = array('documentId' => $document_id);
-    $output = $api->getDocument($params);
+    $output = $api->getDocument($document_id);
     if ($output->results == "success") {
       foreach ($output->translationTargets as $target) {
         array_push($languages_already_added, $target->language);

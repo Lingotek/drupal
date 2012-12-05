@@ -490,6 +490,7 @@ class LingotekApi {
 
     if ($this->debug) {
       $message_params = array(
+        '@url' => $api_url,
         '@method' => $method,
         '!params' => $this->watchdogFormatObject($parameters),
         '!response' => $this->watchdogFormatObject($response),
@@ -497,6 +498,7 @@ class LingotekApi {
       );
 
       watchdog('lingotek_debug', '<strong>Called API method</strong>: @method
+      <br /><strong>API URL:</strong> @url
       <br /><strong>Response Time:</strong> @response_time<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
       $message_params, WATCHDOG_DEBUG);
     }
