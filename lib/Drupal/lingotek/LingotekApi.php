@@ -430,7 +430,7 @@ class LingotekApi {
     $valid_connection = &drupal_static(__FUNCTION__);
 
     if (!isset($valid_connection)) {
-      $valid_connection = ($this->listProjects()) ? TRUE : FALSE;
+      $valid_connection = ($this->request('listProjects')) ? TRUE : FALSE;
     }
 
     return $valid_connection;
@@ -466,14 +466,23 @@ class LingotekApi {
     $response = NULL;
     try {
       OAuthStore::instance('2Leg', $consumer_options);
-    	$request = new OAuthRequester($this->api_url . '/' . $method, $request_method, $parameters);
+      $api_url = $this->api_url . '/' . $method;
+    	$request = new OAuthRequester($api_url, $request_method, $parameters);
     	$result = $request->doRequest();
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed OAuth request.
-      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
+      <br />API URL: @url
+      <br />Message: @message. 
+      <br />Method: @name. 
+      <br />Parameters: !params.
+      <br />Response: !response',
+        array(
+          '@url' => $api_url,
+          '@message' => $e->getMessage(),
+          '@name' => $method,
+          '!params' => $this->watchdogFormatObject($parameters),
         '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
     }
 
@@ -541,7 +550,12 @@ class LingotekApi {
    */
   private function __construct() {
     $this->debug = variable_get('lingotek_api_debug', FALSE);
-    $this->api_url = variable_get('lingotek_url', 'http://' . self::LINGOTEK_SERVER_PRODUCTION) . self::API_ENDPOINT_V4;
+    $host = variable_get('lingotek_url', 'http://' . self::LINGOTEK_SERVER_PRODUCTION);
+    // Trim trailing slash from user-entered server name, if it exists.
+    if (substr($host, -1) == '/') {
+      $host = substr($host, 0, -1);
+    }    
+    $this->api_url = $host . self::API_ENDPOINT_V4;
   }
 
   /**
