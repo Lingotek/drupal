@@ -10,9 +10,11 @@
 class LingotekSession {
   const DEFAULT_API_TIMEOUT = 90.0;
 
-  private $url;
-  private $community;
-  private $login_id;
+  public $url;
+  public $community;
+  public $login_id;
+  public $key;
+  public $password;
 
   private $logged_in = FALSE;
   private $headers = array();
