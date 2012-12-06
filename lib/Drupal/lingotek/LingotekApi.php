@@ -361,6 +361,12 @@ class LingotekApi {
         }
       }
 
+      if (!empty($vaults_raw->communityVaults)) {
+        foreach ($vaults_raw->communityVaults as $vault) {
+          $vaults['Community Vaults'][$vault->id] = $vault->name;
+        }
+      }
+
       if (!empty($vaults_raw->publicVaults)) {
         foreach ($vaults_raw->publicVaults as $vault) {
           $vaults['Public Vaults'][$vault->id] = $vault->name;
@@ -445,17 +451,15 @@ class LingotekApi {
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
 
-    $external_id = (user_is_anonymous()) ? self::ANONYMOUS_LINGOTEK_ID : $user->name;
-
     $response_data = FALSE;
 
-    // Every v4 API request needs to have the externalID (Drupal User ID) parameter present.
-    $parameters += array('externalId' => $external_id);
+    // Almost every v4 API request needs to have the externalID parameter present.
+    $parameters += array('externalId' => variable_get('lingotek_login_id', ''));
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
 
-    $consumer_options = array(
+    $credentials = array(
       'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
       'consumer_secret' => variable_get('lingotek_oauth_consumer_secret', '')
     );
@@ -465,10 +469,10 @@ class LingotekApi {
 
     $response = NULL;
     try {
-      OAuthStore::instance('2Leg', $consumer_options);
+      OAuthStore::instance('2Leg', $credentials);
       $api_url = $this->api_url . '/' . $method;
     	$request = new OAuthRequester($api_url, $request_method, $parameters);
-    	$result = $request->doRequest();
+    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
     }
     catch (OAuthException2 $e) {
@@ -483,7 +487,7 @@ class LingotekApi {
           '@message' => $e->getMessage(),
           '@name' => $method,
           '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
+          '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
     }
 
     $timer_results = timer_stop($timer_name);
@@ -513,6 +517,62 @@ class LingotekApi {
     }
 
     return $response_data;
+  }
+
+  /**
+   * Calls a Lingotek API to provision a new Community (account).
+   * Modified version of the request() method.
+   *
+   * @return mixed
+   *   On success, a stdClass object of the returned response data, FALSE on error.
+   */
+  public function createCommunity($name = null) {
+
+    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
+    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
+
+    $result = false;
+    $response = null;
+    $method = 'autoProvisionCommunity';
+    $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
+    $parameters = array( 'communityDisplayName' => $name );
+    $lingotek_url = variable_get( 'lingotek_url', 'http://myaccount.lingotek.com' );
+    $timer_name = $method . '-' . microtime(TRUE);
+    timer_start($timer_name);
+
+    try {
+      OAuthStore::instance('2Leg', $credentials);
+    	$request = new OAuthRequester( $lingotek_url . '/lingopoint/api/4/autoProvisionCommunity', 'POST', $parameters);
+    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
+    }
+    catch (OAuthException2 $e) {
+      watchdog('lingotek', 'Failed OAuth request.
+      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
+        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
+        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);      
+    }
+
+    $timer_results = timer_stop($timer_name);
+
+    if ($this->debug) {
+      $message_params = array(
+        '@method' => $method,
+        '!params' => $this->watchdogFormatObject($parameters),
+        '!response' => $this->watchdogFormatObject($response),
+        '@response_time' => number_format($timer_results['time']) . ' ms',
+      );
+      watchdog(
+        'lingotek_debug',
+        '<strong>Called API method</strong>: @method<br />
+        <strong>Response Time:</strong> @response_time<br />
+        <strong>Params</strong>: !params<br />
+        <strong>Response:</strong> !response',
+        $message_params,
+        WATCHDOG_DEBUG
+      );
+    } // END:  if debug
+
+    return $result;
   }
 
   /**
