@@ -20,6 +20,7 @@ include_once('lingotek.api.inc');
 function lingotek_menu() {
   $items = array();
 
+  // Future Settings Tab
   $items['admin/settings/lingotek'] = array(
     'title' => 'Lingotek',
     'access arguments' => array('administration'),
@@ -28,6 +29,79 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
+
+  /*
+  // Lingotek Dashboard and Settings Tabs
+  $items['admin/settings/lingotek'] = array(
+    'title' => 'Lingotek',
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard',
+    'weight' => 1,
+
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('administration')
+  );
+  $items['admin/settings/lingotek/dashboard'] = array(  
+    'title' => 'Dashboard',
+    'type' => MENU_DEFAULT_LOCAL_TASK
+  );
+  // Tab:  Settings
+  $items['admin/settings/lingotek/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+    'access arguments' => array('administration'),
+    'description' => 'Community Translation Settings',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_admin_form'),
+  );
+
+  // Dashboard Ajax Command Processor
+  $items['admin/settings/lingotek/command'] = array(
+    'title' => 'Command Router',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'description' => 'Lingotek Command Router',
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard_command_ajax',
+  );
+  */
+  /*
+  // Tab:  Analytics
+  $items['admin/settings/lingotek/analytics'] = array(
+    'title' => 'Analytics',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_translate',
+
+    'access arguments' => array('administration')
+  );
+  // Tab:  Statistics
+  $items['admin/settings/lingotek/statistics'] = array(
+    'title' => 'Stats',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 15,
+
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_statistics',
+
+    'access arguments' => array('administration')
+  );
+  // Tab:  Development
+  $items['admin/settings/lingotek/development'] = array(
+    'title' => 'Development',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
+
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_development',
+
+    'access arguments' => array('administration')
+  );
+  */
 
   $items['node/%node/lingotek_pm'] = array(
     'title' => 'Lingotek',
@@ -81,6 +155,111 @@ function lingotek_menu() {
     'page callback' => 'lingotek_dev_page',
     'page arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
+  );
+
+  // Easy Install Screens ----------------------------------------
+
+  // Setup Path Router
+  $items[ 'admin/config/lingotek/setup' ] = array(
+    'title' => 'Lingotek Setup Path Router',
+    'description' => 'Figures out the necessary setup path.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  // New Account
+  $items[ 'admin/config/lingotek/new-account' ] = array(
+    'title' => 'Create a Lingotek Account',
+    'description' => 'Setup a new Lingotek account.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup_new_account_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  // Current Users
+  $items[ 'admin/config/lingotek/account-settings' ] = array(
+    'title' => 'Lingotek Account Login',
+    'description' => 'Manage your Lingotek account settings.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup_account_settings_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  $items[ 'admin/config/lingotek/community-select' ] = array(
+    'title' => 'Choose Your Community',
+    'description' => 'Select a community to use with this site.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_community_select_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  $items[ 'admin/config/lingotek/project-select' ] = array(
+    'title' => 'Choose Your Project',
+    'description' => 'Select project to use.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_project_select_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  // Standard Screens
+  $items[ 'admin/config/lingotek/language-settings' ] = array(
+    'title' => 'Choose Your Languages',
+    'description' => 'Manage your Lingotek language settings.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup_language_settings_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  $items[ 'admin/config/lingotek/node-translation-settings' ] = array(
+    'title' => 'Enable Content Types',
+    'description' => 'Select the nodes and fields you want translated.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup_node_translation_settings_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+  $items[ 'admin/config/lingotek/node-settings-ajax/%' ] = array(
+    'title' => 'Content Types Ajax',
+    'description' => 'Ajax functionality for content options.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'lingotek_content_type_ajax_callback',
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  $items[ 'admin/config/lingotek/setup-complete' ] = array(
+    'title' => 'Setup Complete',
+    'description' => 'Your Lingotek module has been configured and is now ready to use.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup_complete_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
+
+  $items[ 'admin/config/lingotek/node-updates' ] = array(
+    'title' => 'Lingotek Node Updates',
+    'description' => 'Updates your nodes to support multiple languages.',
+    'file' => 'lingotek.setup.inc',    
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array( 'lingotek_setup_node_updates_form' ),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
   );
 
   return $items;
