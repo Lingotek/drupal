@@ -5,6 +5,7 @@ core = "7.x"
 dependencies[] = locale
 dependencies[] = translation
 dependencies[] = field_ui
+dependencies[] = title
 
 files[] = lib/Drupal/lingotek/LingotekApi.php
 files[] = lib/Drupal/lingotek/LingotekDocument.php
@@ -14,4 +15,4 @@ files[] = tests/lingotek.access.test
 files[] = tests/lingotek.advanced_parsing.test
 
 php = "5.2"
-configure = admin/settings/lingotek
+configure = admin/config/lingotek/setup
