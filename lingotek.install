@@ -227,3 +227,24 @@ function lingotek_update_7205(&$sandbox) {
     ->condition('name', 'lingotek')
     ->execute();
 }
+
+/**
+ * Change the value for LINGOTEK_ENABLED to a string to avoid collision.
+ */
+function lingotek_update_7206() {
+  $updated = array();
+  foreach (array_keys(node_type_get_names()) as $type) {
+    $name = 'language_content_type_' . $type;
+    if (variable_get($name) == 5) {
+      $updated[] = $type;
+      variable_set($name, LINGOTEK_ENABLED);
+    }
+  }
+  
+  if (count($updated)) {
+    $t_args = array(
+      '@updated' => implode(', ', $updated),
+    );
+    return t("Updated @count content type(s) to use 'lingotek' instead of '5' for the identifier: @updated", $t_args);
+  }
+}
