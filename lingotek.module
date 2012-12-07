@@ -232,12 +232,12 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration')
   );
-  $items[ 'admin/config/lingotek/node-settings-ajax/%' ] = array(
+  $items[ 'admin/config/lingotek/content-type-choose-fields-ajax/%' ] = array(
     'title' => 'Content Types Ajax',
     'description' => 'Ajax functionality for content options.',
     'file' => 'lingotek.setup.inc',    
-    'page callback' => 'lingotek_content_type_ajax_callback',
-    'page arguments' => array(1),
+    'page callback' => 'lingotek_content_type_choose_fields_callback',
+    'page arguments' => array(4),
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration')
   );

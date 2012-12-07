@@ -482,14 +482,14 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     $types[ $value->type ] = t( $value->name );
     $form[ 'type_'.$value->type ] = array(
       '#type' => 'checkbox',
-      '#title' => t( $value->name ) .' (<a href="/admin/config/lingotek/node-settings-ajax/' .$value->type .'" class="use-ajax">choose fields</a>)',
+      '#title' => t( $value->name ) .' (<a id="togglelink_' .$value->type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$value->type .'" class="use-ajax">choose fields</a>)',
       '#return_value' => $value->type,
       '#default_value' => ( array_key_exists( $value->type, $translate ) || ( $use_defaults === true) ) ? true : false,
       '#prefix' => '<div id="content_type_' .$value->type .'">',
       '#suffix' => '</div>' . '',
       '#ajax' => array(
           'event' => 'click',
-          'callback' => 'content_type_pick_callback',
+          'callback' => 'lingotek_content_type_checkbox_callback',
           'wrapper' => 'content_fields_' . $value->type,
       ),
     );
@@ -552,7 +552,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
 /**
  * Node Translation Settings - Ajax Callback 1 (Primary)
  */
-function lingotek_content_type_ajax_callback( $data ) {
+function lingotek_content_type_choose_fields_callback( $data ) {
 
   $selector = '#content_fields_' . $data;
   $commands = array();
@@ -564,18 +564,59 @@ function lingotek_content_type_ajax_callback( $data ) {
 }
 
 /**
- * Node Translation Settings - Ajax Callback 2 
+ * Node Translation Settings - Ajax Callback - Checkbox Check/Uncheck
  */
-function content_type_pick_callback( $form, &$form_state ) {
+function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
 
-  $triggered_by = $form_state[ 'input' ][ '_triggering_element_name' ];
-  $selected_type = substr( $triggered_by, 5 ); // This was the content type that was selected.
-
+  $triggered_by = $form_state[ 'input' ][ '_triggering_element_name' ];  // IE:  type_article
+  $selected_type = substr( $triggered_by, 5 ); // This was the content type that was selected.  IE:  article
   $selector = '#content_fields_' . $selected_type;
+
   $commands = array();
-  $commands[] = ajax_command_invoke( $selector, 'toggle' );
-  //$commands[] = ajax_command_alert( 'Hiding: ' .$selector );
+
+  // A checkbox was just selected.   If it is checked, its value will be its type name.  If it was unchecked, it will be blank.
+  $checkbox_value = $form_state[ 'input' ][ $triggered_by ];
+  
+  // If the checkbox was un-checked, deselect child checkboxes.
+  if ( $checkbox_value == '' ) {
+    // NAME: article_SEPERATOR_body
+    // removeAttr('checked')
+    // 'td[name^=tcol]'
+
+    $checkbox_selector = ':checkbox[name^=' .$selected_type .'_SEPERATOR_]';
+    $link_selector = '#togglelink_' . $selected_type;
+
+    $commands[] = ajax_command_invoke( $checkbox_selector, 'removeAttr', array('checked') );
+    $commands[] = ajax_command_invoke( $selector, 'hide' );
+    $commands[] = ajax_command_invoke( $link_selector, 'text', array( 'choose fields' ) );
+
+  } // END: uncheck
+  else { // If the checkbox was selected, activate the default fields.
+    //$commands[] = ajax_command_invoke( $selector, 'show' );
+
+    // Grab the fields for this Content Type.
+    $fields = field_info_instances( 'node', $selected_type );
+    // Loop the fields, outputting them.
+    foreach ( $fields as $field ) {
+      $field_label = $field[ 'label' ]; //  Label: Body
+      $field_machine_name = $field[ 'field_name' ];
+      $field_type = $field[ 'widget' ][ 'type' ]; // Type: text_textarea_with_summary
+      $field_name = $selected_type . '_SEPERATOR_' . $field_machine_name; // Name: article_SEPERATOR_body
+
+      // If this is a text field, include it by default.
+      if ( strpos($field_type, 'text') !== false ) {
+        $checkbox_selector = ':checkbox[name=' .$field_name .']';
+        $commands[] = ajax_command_invoke( $checkbox_selector, 'attr', array('checked','checked') );
+      }
+    } // END:  foreach  $fields
+
+  } // END:  checked
+
+  //$commands[] = ajax_command_invoke( $selector, 'toggle' );
+  //$commands[] = ajax_command_alert( 'Info: ' . $link_selector );
+
   return array('#type' => 'ajax', '#commands' => $commands);
+
 }
 
 /**
