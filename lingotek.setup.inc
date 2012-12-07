@@ -140,6 +140,7 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
 
   } // END:  Provision new Community
 
+  $_SESSION['lingotek_setup_path'] = array( 'admin/config/lingotek/new-account' );
   drupal_set_message( t( 'Your new Lingotek account has been setup.' ) );
   drupal_goto( 'admin/config/lingotek/language-settings' );
 
@@ -203,6 +204,7 @@ function lingotek_setup_account_settings_form_submit( $form, $form_state ) {
     drupal_set_message( t( 'Invalid login or password.' ), 'error' );
   } else {
     // Login Successful:  Valid Account
+    $_SESSION['lingotek_setup_path'] = array( 'admin/config/lingotek/account-settings' );
     drupal_set_message( t( 'Your account settings have been saved.' ) );
     variable_set( 'lingotek_login_id', $login_id );
     variable_set( 'lingotek_password', $password );
@@ -271,8 +273,10 @@ function lingotek_community_select_form() {
   	'#type' => 'submit', 
   	'#value' => t( 'Next' )
   );
-  $previous_page = $_SERVER['HTTP_REFERER'];
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( 'admin/config/lingotek/account-settings' ) .'">Previous Step</a></span>' );
+
+  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
   return $form;
@@ -286,6 +290,7 @@ function lingotek_community_select_form_submit( $form, $form_state ) {
   $community_identity = $form_state[ 'values' ][ 'lingotek_site_community' ];
   variable_set( 'lingotek_community_identifier', $community_identity );
 
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/community-select';
   drupal_set_message( t( 'Your Lingotek Community Settings have been saved.' ) );
   drupal_goto( 'admin/config/lingotek/project-select' ); // Move to Project Select Step. 
 
@@ -339,7 +344,10 @@ function lingotek_project_select_form() {
   	'#type' => 'submit', 
   	'#value' => t( 'Next' )
   );
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( 'admin/config/lingotek/account-settings' ) .'">Previous Step</a></span>' );
+
+  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
   return $form;
@@ -353,6 +361,7 @@ function lingotek_project_select_form_submit( $form, $form_state ) {
   $project_id = $form_state[ 'values' ][ 'lingotek_site_project' ];
   variable_set( 'lingotek_project', $project_id );
 
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/project-select';
   drupal_set_message( t( 'Your Lingotek project selection has been saved.' ) );
   drupal_goto( 'admin/config/lingotek/language-settings' ); // Move to Source Language Select Step. 
 }
@@ -407,8 +416,9 @@ function lingotek_setup_language_settings_form() {
   	'#type' => 'submit', 
   	'#value' => t( 'Next' )
   );
-  $previous_page = $_SERVER['HTTP_REFERER'];
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( $previous_page ) .'">Previous Step</a></span>' );
+
+  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
 
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
@@ -456,6 +466,7 @@ function lingotek_setup_language_settings_form_submit( $form, $form_state ) {
   variable_set( 'lingotek_source_language', $form_state[ 'values' ][ 'lingotek_install_source_language' ] );
   variable_set( 'lingotek_target_language', $form_state[ 'values' ][ 'lingotek_install_target_language' ] );
 
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/language-settings';
   drupal_set_message( t( 'Your language settings have been saved.' ) );
   drupal_goto( 'admin/config/lingotek/node-translation-settings' );
 
@@ -543,7 +554,9 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
   	'#type' => 'submit', 
   	'#value' => t( 'Next' )
   );
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( 'admin/config/lingotek/language-settings' ) .'">Previous Step</a></span>' );
+
+  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
 
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
@@ -666,6 +679,7 @@ function lingotek_setup_node_translation_settings_form_submit( $form, $form_stat
     }
   } // END: foreach form value
 
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set( 'lingotek_translate_fields', $translate );
   drupal_set_message( t( 'Your content types and fields selections have been saved.' ) );
 
