@@ -274,7 +274,7 @@ function lingotek_community_select_form() {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) ) {
+  if( is_array($_SESSION['lingotek_setup_path']) ) {
     if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
   }
@@ -347,7 +347,7 @@ function lingotek_project_select_form() {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) ) {
+  if( is_array($_SESSION['lingotek_setup_path']) ) {
     if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
   }
@@ -421,7 +421,7 @@ function lingotek_setup_language_settings_form() {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) ) {
+  if( is_array($_SESSION['lingotek_setup_path']) ) {
     if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
   }
@@ -561,7 +561,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) ) {
+  if( is_array($_SESSION['lingotek_setup_path']) ) {
     if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
   }
