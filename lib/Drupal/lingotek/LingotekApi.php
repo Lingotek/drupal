@@ -14,7 +14,8 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  const LINGOTEK_SERVER_PRODUCTION = 'myaccount.lingotek.com';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
@@ -536,13 +537,12 @@ class LingotekApi {
     $method = 'autoProvisionCommunity';
     $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
     $parameters = array( 'communityDisplayName' => $name );
-    $lingotek_url = variable_get( 'lingotek_url', 'http://myaccount.lingotek.com' );
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
 
     try {
       OAuthStore::instance('2Leg', $credentials);
-    	$request = new OAuthRequester( $lingotek_url . '/lingopoint/api/4/autoProvisionCommunity', 'POST', $parameters);
+    	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
     }
     catch (OAuthException2 $e) {
@@ -612,7 +612,7 @@ class LingotekApi {
    */
   private function __construct() {
     $this->debug = variable_get('lingotek_api_debug', FALSE);
-    $host = variable_get('lingotek_url', 'http://' . self::LINGOTEK_SERVER_PRODUCTION);
+    $host = variable_get('lingotek_url', self::LINGOTEK_SERVER_PRODUCTION);
     // Trim trailing slash from user-entered server name, if it exists.
     if (substr($host, -1) == '/') {
       $host = substr($host, 0, -1);

@@ -12,13 +12,28 @@ include_once('lingotek.session.inc');
  *   A FAPI form array.
  */
 function lingotek_admin_form() {
+
+  // Check the current settings
+  $current_community_identifier = variable_get( 'lingotek_community_identifier', '' );
+  $current_oauth_consumer_id = variable_get( 'lingotek_oauth_consumer_id', '' );
+  $current_oauth_consumer_secret = variable_get( 'lingotek_oauth_consumer_secret', '' );
+  $current_login_id = variable_get( 'lingotek_login_id', '' );
+  $current_project = variable_get( 'lingotek_project', '' );
+  $current_vault = variable_get( 'lingotek_vault', '' );
+  $current_workflow = variable_get( 'lingotek_workflow', '' );
+
+  // Does the install already have connection credentials?
+  if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' ) {
+    drupal_goto( 'admin/config/lingotek/new-account' ); // If something is missing - Go though the Setup Process
+  } 
+
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();
   $site = variable_get('site_name', 'Drupal Site');
   
   $connection_group_description = ($connected) ? '' :
     t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.',
-      array('@link_url' => url(variable_get('lingotek_url', 'http://myaccount.lingotek.com') . '/lingopoint/portal/communitySignup.action'))
+      array('@link_url' => url(variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION) . '/lingopoint/portal/communitySignup.action'))
     );
     
 
@@ -65,7 +80,7 @@ function lingotek_admin_form() {
     '#type' => 'textfield',
     '#title' => t('Lingotek Server'),
     '#description' => t('The path to the Lingotek server to which this site should be connected.'),
-    '#default_value' => variable_get('lingotek_url', 'http://myaccount.lingotek.com'),
+    '#default_value' => variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION),
   );
 
   // If the connection isn't yet established, stop here.
