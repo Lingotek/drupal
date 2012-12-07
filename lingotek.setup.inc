@@ -274,8 +274,10 @@ function lingotek_community_select_form() {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  if( end($_SESSION['lingotek_setup_path']) ) {
+    if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  }
 
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
@@ -345,8 +347,10 @@ function lingotek_project_select_form() {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  if( end($_SESSION['lingotek_setup_path']) ) {
+    if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-select' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  }
 
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
@@ -417,8 +421,10 @@ function lingotek_setup_language_settings_form() {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  if( end($_SESSION['lingotek_setup_path']) ) {
+    if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  }
 
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
@@ -494,7 +500,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     $types[ $value->type ] = t( $value->name );
     $form[ 'type_'.$value->type ] = array(
       '#type' => 'checkbox',
-      '#title' => t( $value->name ) .' (<span id="showhidelink_' .$value->type .'"><a id="showlink_' .$value->type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$value->type .'" class="use-ajax">choose fields</a></span>)',
+      '#title' => t( $value->name ) .' (<span id="showhidelink_' .$value->type .'"><a id="showlink_' .$value->type .'" href="' .url('admin/config/lingotek/content-type-choose-fields-ajax/' .$value->type) .'" class="use-ajax">choose fields</a></span>)',
       '#return_value' => $value->type,
       '#default_value' => ( array_key_exists( $value->type, $translate ) || ( $use_defaults === true) ) ? true : false,
       '#prefix' => '<div id="content_type_' .$value->type .'">',
@@ -555,8 +561,10 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
   	'#value' => t( 'Next' )
   );
 
-  if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  if( end($_SESSION['lingotek_setup_path']) ) {
+    if( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings' ) { $null = array_pop($_SESSION['lingotek_setup_path']); } // if the user went back, remove the last element, which is this page.
+    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' .url( end($_SESSION['lingotek_setup_path']) ) .'">Previous Step</a></span>' );
+  }
 
   $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
 
@@ -574,12 +582,12 @@ function lingotek_content_type_choose_fields_callback( $content_type ) {
   // <span id="showhidelink_' .$value->type .'"><a id="showlink_' .$value->type .'" 
   // The CHOOSE FIELDS text is currently shown, switch to HIDE FIELDS
   if ( in_array( 'showlink_' . $content_type, $_REQUEST['ajax_html_ids'] ) ) {
-    $link = '<a id="hidelink_' .$content_type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$content_type .'" class="use-ajax">hide fields</a>';
+    $link = '<a id="hidelink_' .$content_type .'" href="' .url('admin/config/lingotek/content-type-choose-fields-ajax/' .$content_type) .'" class="use-ajax">hide fields</a>';
     $span_selector = '#showhidelink_' . $content_type;
     $commands[] = ajax_command_html( $span_selector, $link );
   }
   if ( in_array( 'hidelink_' . $content_type, $_REQUEST['ajax_html_ids'] ) ) {
-    $link = '<a id="showlink_' .$content_type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$content_type .'" class="use-ajax">choose fields</a>';
+    $link = '<a id="showlink_' .$content_type .'" href="' .url('admin/config/lingotek/content-type-choose-fields-ajax/' .$content_type) .'" class="use-ajax">choose fields</a>';
     $span_selector = '#showhidelink_' . $content_type;
     $commands[] = ajax_command_html( $span_selector, $link );
   }
@@ -616,7 +624,7 @@ function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
     $commands[] = ajax_command_invoke( $checkbox_selector, 'removeAttr', array('checked') );
     $commands[] = ajax_command_invoke( $selector, 'hide' );
 
-    $link = '<a id="showlink_' .$selected_type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$selected_type .'" class="use-ajax">choose fields</a>';
+    $link = '<a id="showlink_' .$selected_type .'" href="' .url('admin/config/lingotek/content-type-choose-fields-ajax/' .$selected_type) .'" class="use-ajax">choose fields</a>';
     $span_selector = '#showhidelink_' . $selected_type;
     $commands[] = ajax_command_html( $span_selector, $link );
 
