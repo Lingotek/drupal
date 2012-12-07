@@ -482,7 +482,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     $types[ $value->type ] = t( $value->name );
     $form[ 'type_'.$value->type ] = array(
       '#type' => 'checkbox',
-      '#title' => t( $value->name ) .' (<a id="togglelink_' .$value->type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$value->type .'" class="use-ajax">choose fields</a>)',
+      '#title' => t( $value->name ) .' (<span id="showhidelink_' .$value->type .'"><a id="showlink_' .$value->type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$value->type .'" class="use-ajax">choose fields</a></span>)',
       '#return_value' => $value->type,
       '#default_value' => ( array_key_exists( $value->type, $translate ) || ( $use_defaults === true) ) ? true : false,
       '#prefix' => '<div id="content_type_' .$value->type .'">',
@@ -552,10 +552,24 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
 /**
  * Node Translation Settings - Ajax Callback 1 (Primary)
  */
-function lingotek_content_type_choose_fields_callback( $data ) {
+function lingotek_content_type_choose_fields_callback( $content_type ) {
 
-  $selector = '#content_fields_' . $data;
+  $selector = '#content_fields_' . $content_type;
   $commands = array();
+
+  // <span id="showhidelink_' .$value->type .'"><a id="showlink_' .$value->type .'" 
+  // The CHOOSE FIELDS text is currently shown, switch to HIDE FIELDS
+  if ( in_array( 'showlink_' . $content_type, $_REQUEST['ajax_html_ids'] ) ) {
+    $link = '<a id="hidelink_' .$content_type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$content_type .'" class="use-ajax">hide fields</a>';
+    $span_selector = '#showhidelink_' . $content_type;
+    $commands[] = ajax_command_html( $span_selector, $link );
+  }
+  if ( in_array( 'hidelink_' . $content_type, $_REQUEST['ajax_html_ids'] ) ) {
+    $link = '<a id="showlink_' .$content_type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$content_type .'" class="use-ajax">choose fields</a>';
+    $span_selector = '#showhidelink_' . $content_type;
+    $commands[] = ajax_command_html( $span_selector, $link );
+  }
+
   $commands[] = ajax_command_invoke( $selector, 'toggle' );
   //$commands[] = ajax_command_alert( 'Hiding: ' .$data  );
 
@@ -582,13 +596,15 @@ function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
     // NAME: article_SEPERATOR_body
     // removeAttr('checked')
     // 'td[name^=tcol]'
-
     $checkbox_selector = ':checkbox[name^=' .$selected_type .'_SEPERATOR_]';
     $link_selector = '#togglelink_' . $selected_type;
 
     $commands[] = ajax_command_invoke( $checkbox_selector, 'removeAttr', array('checked') );
     $commands[] = ajax_command_invoke( $selector, 'hide' );
-    $commands[] = ajax_command_invoke( $link_selector, 'text', array( 'choose fields' ) );
+
+    $link = '<a id="showlink_' .$selected_type .'" href="/admin/config/lingotek/content-type-choose-fields-ajax/' .$selected_type .'" class="use-ajax">choose fields</a>';
+    $span_selector = '#showhidelink_' . $selected_type;
+    $commands[] = ajax_command_html( $span_selector, $link );
 
   } // END: uncheck
   else { // If the checkbox was selected, activate the default fields.
