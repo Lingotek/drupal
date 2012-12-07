@@ -13,18 +13,14 @@ include_once('lingotek.session.inc');
  */
 function lingotek_admin_form() {
 
-  // Check the current settings
+  // Check the current settings -- SKIPS: vault, workflow and the 2 oauth fields, because legacy users will not have those.
   $current_community_identifier = variable_get( 'lingotek_community_identifier', '' );
-  $current_oauth_consumer_id = variable_get( 'lingotek_oauth_consumer_id', '' );
-  $current_oauth_consumer_secret = variable_get( 'lingotek_oauth_consumer_secret', '' );
   $current_login_id = variable_get( 'lingotek_login_id', '' );
   $current_project = variable_get( 'lingotek_project', '' );
-  $current_vault = variable_get( 'lingotek_vault', '' );
-  $current_workflow = variable_get( 'lingotek_workflow', '' );
-
   // Does the install already have connection credentials?
-  if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' ) {
-    drupal_goto( 'admin/config/lingotek/new-account' ); // If something is missing - Go though the Setup Process
+  if ($current_community_identifier == '' || $current_login_id == '' || $current_project == '' ) {
+    // If something is missing - Go though the Setup Process
+    drupal_goto( 'admin/config/lingotek/new-account' );
   } 
 
   $api = LingotekApi::instance();
