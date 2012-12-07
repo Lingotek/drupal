@@ -466,6 +466,7 @@ function lingotek_setup_language_settings_form_submit( $form, $form_state ) {
  * Select the Content Types and Fields to be Translated.
  */
 function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
+
   $raw_types = node_type_get_types();
   $types = array();
   $translate = variable_get( 'lingotek_translate_fields', array() );
@@ -655,7 +656,12 @@ function lingotek_setup_node_translation_settings_form_submit( $form, $form_stat
         // Set this content type to be Lingotek translated.
         variable_set( 'language_content_type_'.$content_type, LINGOTEK_ENABLED );
         // Set this field to 'translatable'.
-        db_update('field_config')->fields(array('translatable' => 1))->condition('field_name', $content_field)->execute();
+        //db_update('field_config')->fields(array('translatable' => 1))->condition('field_name', $content_field)->execute();
+        // Update the field via the Field API (Instead of the direct db_update)
+        $field = field_info_field( $content_field );
+        $field['translatable'] = 1;
+        $field['lingotek_translatable'] = 1;
+        field_update_field( $field );
       }
     }
   } // END: foreach form value
