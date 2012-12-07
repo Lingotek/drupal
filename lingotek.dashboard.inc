@@ -195,7 +195,7 @@ function lingotek_dashboard_command_ajax() {
 
   $index = array(); //indexed by the lingotek language code
 
-  $index['en'] = array( 'drupal_language_code' => 'en', 'lingotek_language_code' => 'en', 'name' => 'English' );
+  $index['en'] = array( 'drupal_language_code' => 'en', 'lingotek_language_code' => 'en_US', 'name' => 'English' );
   $index['de'] = array( 'drupal_language_code' => 'de', 'lingotek_language_code' => 'de', 'name' => 'German' );
   $index['it'] = array( 'drupal_language_code' => 'it', 'lingotek_language_code' => 'it', 'name' => 'Italian' );
   $index['ko'] = array( 'drupal_language_code' => 'ko', 'lingotek_language_code' => 'ko', 'name' => 'Korean' );
