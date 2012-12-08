@@ -149,7 +149,7 @@ function lingotek_admin_form() {
     '#title' => t('Synchronization Method'),
     '#description' => t('Use this synchronization method as the default when creating new pages.'),
     '#options' => lingotek_get_sync_methods(),
-    '#default_value' => variable_get('lingotek_sync', 0),
+    '#default_value' => variable_get('lingotek_sync', 100),
   );
 
   $form['defaults']['lingotek_use_source'] = array(
@@ -168,7 +168,7 @@ function lingotek_admin_form() {
       1 => t('Enabled'),
       0 => t('Disabled'),
     ),
-    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
+    '#default_value' => variable_get('lingotek_create_documents_by_default', 1),
   );
 
   // URL Alias Translation.
@@ -177,7 +177,7 @@ function lingotek_admin_form() {
     '#title' => t('URL Alias Translation'),
     '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check \"Enable Lingotek Translation\" for the Title field."),
     '#options' => lingotek_get_url_alias_translations(),
-    '#default_value' => variable_get('lingotek_url_alias_translation', 0),
+    '#default_value' => variable_get('lingotek_url_alias_translation', 1),
   );
   
   // Community Translation

@@ -26,7 +26,8 @@ class LingotekSession {
    * Constructor
    */
   function __construct() {
-    $this->url = variable_get('lingotek_url', 'http://cms.lingotek.com') . "/lingopoint/api";
+    $this->url = variable_get('lingotek_url', 'http://myaccount.lingotek.com') . "/lingopoint/api";
+    //$this->url = variable_get('lingotek_url', 'http://cms.lingotek.com') . "/lingopoint/api";
     $this->community = variable_get('lingotek_community', '');
     $this->login_id = variable_get('lingotek_login_id', '');
     $this->key = variable_get('lingotek_login_key', '');

@@ -157,7 +157,7 @@ function lingotek_setup_account_settings_form() {
   $form = array();
   $form['lingotek_user_directions_1'] = array( '#markup' => '<p>Login to an existing Lingotek account.</p>' );
 
-  $form['login_id'] = array(
+  $form['lingotek_lid'] = array(
     '#type' => 'textfield',
     '#title' => t('Username'),
     '#default_value' => $current_login_id,
@@ -166,7 +166,7 @@ function lingotek_setup_account_settings_form() {
     '#required' => true,
   );
 
-  $form['login_password'] = array(
+  $form['lingotek_pid'] = array(
     '#type' => 'password',
     '#title' => t('Password'),
     '#default_value' => $current_password,
@@ -191,8 +191,8 @@ function lingotek_setup_account_settings_form() {
  * Account Settings (for Current Users) - Form Processing
  */
 function lingotek_setup_account_settings_form_submit( $form, $form_state ) {
-  $login_id = $form_state[ 'values' ][ 'login_id' ];
-  $password = $form_state[ 'values' ][ 'login_password' ];
+  $login_id = $form_state[ 'values' ][ 'lingotek_lid' ];
+  $password = $form_state[ 'values' ][ 'lingotek_pid' ];
     //debug( $login_id );
     //debug( $password );
 

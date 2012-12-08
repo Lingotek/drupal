@@ -117,7 +117,7 @@ function lingotek_node_init_default($node) {
  */
 function lingotek_node_sync(&$node) {
   // Keep synchronized?
-  $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 0);
+  $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 100);
   $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
   lingotek_trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
   if ($sync_method != "0" && $lingotek_document_id) {
@@ -322,7 +322,7 @@ function lingotek_xml_node_body($node) {
   }
 
   //URL Alias related to the page:
-  $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0);
+  $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
   if ($url_alias_translation == 1) {
     $conditions = array('source' => 'node/' . $node->nid);
     if ($node->language != LANGUAGE_NONE) {

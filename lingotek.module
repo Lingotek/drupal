@@ -483,7 +483,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form['lingotek']['content']['syncMethod'] = array(
     '#type' => 'radios',
     '#title' => t('Synchronization Method'),
-    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 0),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 100),
     '#options' => lingotek_get_sync_methods(),
     '#access' => user_access('sync_method'),
     '#description' => t("How do you want content on this site to be kept in sync with Lingotek?  Do you want translations to be current and the latest (Always), or only downloaded from Lingotek when done (100%)?  \"Never\" requires you to manually synchronize on the page's Lingotek tab by calling update."),
@@ -503,7 +503,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form['lingotek']['content']['create_lingotek_document'] = array(
     '#type' => 'select',
     '#title' => t('Automatically Push Node Content to Lingotek'),
-    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 0),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 1),
     '#options' => array(
       1 => t('Enabled'),
       0 => t('Disabled')
@@ -517,7 +517,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     (
       '#type' => 'radios',
       '#title' => t('URL Alias Translation'),
-      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 0),
+      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1),
       '#options' => lingotek_get_url_alias_translations(),
       '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check \"Enable Lingotek Translation\" for the Title field."),
     );
