@@ -225,7 +225,7 @@ function lingotek_community_select_form() {
   // V3 API Calls for Legacy Users
   $lingotek_url = variable_get( 'lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION );
   $communities = lingotek_get_communities_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
-    //debug( $communities );
+
   if ( $communities === false ) {
 
     drupal_set_message( t( 'Invalid login or password.' ), 'error' );
@@ -385,7 +385,7 @@ function lingotek_setup_language_settings_form() {
   	'it' => t('Italian'), 
   	'ja' => t('Japanese'), 
   	'ko' => t('Korean'), 
-  	'pt' => t('Portuguese'), 
+  	'pt-pt' => t('Portuguese'), 
   	'ru' => t('Russian'), 
   	'es' => t('Spanish')
   );
@@ -487,9 +487,10 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
   $raw_types = node_type_get_types();
   $types = array();
   $translate = variable_get( 'lingotek_translate_fields', array() );
+
   if ( count( $translate ) > 0 ) { $use_defaults = false; } else { $use_defaults = true; }
 
-  $skip = array( 'taxonomy_autocomplete', 'image_image' );
+  $skip = array( 'taxonomy_autocomplete', 'image_image', 'number', 'options_onoff' );
 
   $form['lingotek_instructions'] = array( '#markup' => '<div>Which content do you want translated?</div>' );
   $form['lingotek_top_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
@@ -519,12 +520,15 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     $form['lingotek_' .$value->type .'fieldlist_open'] = array( '#markup' => '<div id="content_fields_' .$value->type .'" style="display: ' .$switch .';">' );
     $form['lingotek_fieldlist_details_'.$value->type] = array( '#markup' => '<div style="padding-left: 25px; padding-bottom: 5px;">Which fields would you like to include:</div>' );
 
+    $titleFound = false; // Is there a title field present?
     // Loop the fields, outputting them.
     foreach ( $fields as $field ) {
       $field_label = $field[ 'label' ];
       $field_machine_name = $field[ 'field_name' ];
       $field_type = $field[ 'widget' ][ 'type' ];
       $field_name = $value->type . '_SEPERATOR_' . $field_machine_name;
+
+      if ( ($field_label == 'Title') && ($field_type == 'text_textfield') ) { $titleFound = true; }
         /*
         $rand = rand();
         $form['lingotek_fieldlist_debug_'.$rand] = array( '#markup' => '<div>' 
@@ -533,6 +537,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
           .'Type: ' .$field_type .'<br>' 
           .'</div>' );
         */
+      // Exclude field types we dont translate.
       if ( false === array_search( $field_type, $skip ) ) {
         $form[ $field_name ] = array(
           '#type' => 'checkbox',
@@ -546,13 +551,25 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
       }
 
     } // END:  foreach field
-    $form['lingotek_' .$value->type .'fieldlist_close'] = array( '#markup' => '</div>' );
 
+    // if we did NOT find a title field for the specified content type, add it manually as an option, and we can do a title swap for the user.
+    if( $titleFound === false ) {
+      $form[ 'title_swap_'.$value->type ] = array(
+        '#type' => 'checkbox',
+        '#title' => t( 'Title (Note: Field Will Be Created.)' ),
+        '#default_value' => true,
+        '#prefix' => '<div style="padding-left: 35px;">',
+        '#suffix' => '</div>',
+      );
+    }
+
+    $form['lingotek_' .$value->type .'fieldlist_close'] = array( '#markup' => '</div>' );
 
     $rand = rand();
     $form['lingotek_after_fields_'.$rand] = array( '#markup' => '<div>&nbsp;</div>' );
 
   } // END:  foreach content type
+
   $form['lingotek_checkboxes_close'] = array( '#markup' => '</div>' );
 
   $form['lingotek_button_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
@@ -620,8 +637,11 @@ function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
     // 'td[name^=tcol]'
     $checkbox_selector = ':checkbox[name^=' .$selected_type .'_SEPERATOR_]';
     $link_selector = '#togglelink_' . $selected_type;
-
     $commands[] = ajax_command_invoke( $checkbox_selector, 'removeAttr', array('checked') );
+
+    $checkbox_selector2 = ':checkbox[name=title_swap_' .$selected_type .']';
+    $commands[] = ajax_command_invoke( $checkbox_selector2, 'removeAttr', array('checked') );
+
     $commands[] = ajax_command_invoke( $selector, 'hide' );
 
     $link = '<a id="showlink_' .$selected_type .'" href="' .url('admin/config/lingotek/content-type-choose-fields-ajax/' .$selected_type) .'" class="use-ajax">choose fields</a>';
@@ -631,6 +651,9 @@ function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
   } // END: uncheck
   else { // If the checkbox was selected, activate the default fields.
     //$commands[] = ajax_command_invoke( $selector, 'show' );
+
+    $checkbox_selector2 = ':checkbox[name=title_swap_' .$selected_type .']';
+    $commands[] = ajax_command_invoke( $checkbox_selector2, 'attr', array('checked','checked') );
 
     // Grab the fields for this Content Type.
     $fields = field_info_instances( 'node', $selected_type );
@@ -663,9 +686,9 @@ function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
 function lingotek_setup_node_translation_settings_form_submit( $form, $form_state ) {
 
   $translate = array();
-
   foreach ( $form_state[ 'values' ] as $key => $value ) {
-    // Only look at fields for content types.
+
+    // Look for Selected Content Types and Fields.
     if( false !== strpos($key, '_SEPERATOR_') ) {
       // And only if set to translate
       if ( $value != 0 ) {
@@ -684,7 +707,32 @@ function lingotek_setup_node_translation_settings_form_submit( $form, $form_stat
         $field['lingotek_translatable'] = 1;
         field_update_field( $field );
       }
-    }
+    } // END:  Selected Content Types and Fields
+
+    // Look for any nodes we need to do the Title swap for.
+    if( false !== strpos($key, 'title_swap_') ) {
+      // And only if set to swap
+      if ( $value != 0 ) {
+        $content_type = substr( $key, strlen( 'title_swap_' ) );
+        //dpm( 'Title Swap: ' . $content_type );
+        // Do the actual title replacement
+        $title_entity = 'node';
+        $title_bundle = $content_type;
+        $title_field = 'title';
+        if (title_field_replacement_toggle( $title_entity, $title_bundle, $title_field)) {
+          title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
+        }
+
+        // Make sure the title field gets flagged for Lingotek translation.
+        $translate[ $content_type ][] = 'title_field';
+        $field = field_info_field( 'title_field' );
+        $field['translatable'] = 1;
+        $field['lingotek_translatable'] = 1;
+        field_update_field( $field );
+
+      }
+    } // END:  Title Swap
+
   } // END: foreach form value
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
@@ -718,7 +766,8 @@ function lingotek_setup_complete_form( $form, $form_state ) {
  * Setup Complete - Form Submit - Redirects to Lingotek dashboard.
  */
 function lingotek_setup_complete_form_submit( $form, $form_state ) {
-  drupal_goto( 'admin/settings/lingotek' );
+  //drupal_goto( 'admin/settings/lingotek' );
+  drupal_goto( );
 }
 
 /**
@@ -836,8 +885,7 @@ function lingotek_get_communities_v3( $login, $passwd, $url ) {
   $list_communities = $_lingotek_client->request("listCommunities", array());
   if ($list_communities->results == "success") {
     foreach ($list_communities->communities as $community) {
-      //$options[$community->id] = t($community->name);
-      $options[$community->id] = t( $community->id );
+      $options[$community->id] = t( $community->name );
     }
   }
 
@@ -932,3 +980,7 @@ function lingotek_mail ($key, &$message, $params) {
   }
 
 } // END:  mail
+
+function watchdogFormatObject($object) {
+  return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
+}
