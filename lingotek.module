@@ -136,6 +136,7 @@ function lingotek_menu() {
     'description' => 'Developer Tools',
     'file' => 'lingotek.dev.inc',
     'page callback' => 'lingotek_dev_page',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   $items['admin/config/regional/field-data-cleanup'] = array(
