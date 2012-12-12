@@ -966,8 +966,8 @@ function lingotek_activation( $first_name, $last_name, $email, $extras = array()
     'last_name'  => $last_name,
     'email'      => $email,
     'oid'        => '00D80000000bjBA',
-    'debug'      => '1',
-    'debugEmail' => 'csessions@q90.com',
+    //'debug'      => '1',
+    //'debugEmail' => '',
   );
 
   $fields = array_merge( $fields, $extras );

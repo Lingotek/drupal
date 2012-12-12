@@ -8,7 +8,7 @@
  * Identifies a content type which has Lingotek translation enabled.
  */
 define('LINGOTEK_ENABLED', 'lingotek');
-define('LINGOTEK_VERSION', '7.x-1.61');
+define('LINGOTEK_VERSION', '7.x-1.62');
 
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
@@ -74,10 +74,8 @@ function lingotek_menu() {
     'title' => 'Analytics',
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
-
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_translate',
-
     'access arguments' => array('administration')
   );
   // Tab:  Statistics
@@ -85,10 +83,8 @@ function lingotek_menu() {
     'title' => 'Stats',
     'type' => MENU_LOCAL_TASK,
     'weight' => 15,
-
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_statistics',
-
     'access arguments' => array('administration')
   );
   // Tab:  Development
@@ -96,10 +92,8 @@ function lingotek_menu() {
     'title' => 'Development',
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
-
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_development',
-
     'access arguments' => array('administration')
   );
   */
@@ -130,14 +124,16 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  /* // Adds a submenu item to the main lingotek menu item (that is only for node level content.).  This should be safe to remove.  Just commenting out for testing.
   $items['admin/settings/lingotek/dev'] = array(
     'title' => 'Lingotek Developer Tools',
     'access arguments' => array('dev'),
     'description' => 'Developer Tools',
     'file' => 'lingotek.dev.inc',
     'page callback' => 'lingotek_dev_page',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'type' => MENU_LOCAL_TASK,
   );
+  */
 
   $items['admin/config/regional/field-data-cleanup'] = array(
     'title' => 'Lingotek Field Data Cleanup Utility',

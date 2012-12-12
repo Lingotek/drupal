@@ -14,8 +14,8 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
-  const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
