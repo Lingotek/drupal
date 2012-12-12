@@ -5,31 +5,175 @@
  */
 
 
+define( 'LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json' );
+
+
 /**
  * Adds elements needed for the Lingotek dashboard.
  */
 function lingotek_dashboard() {
-  $output = '';
-  $dashboard = '';
+  ////////////
+  /*
+  stdClass::__set_state(array(
+     'state' => 'active',
+     'plan' => 
+    stdClass::__set_state(array(
+       'trial_ends_at' => 0,
+       'state' => 'active',
+       'activated_at' => 1355267936,
+       'type' => 'cosmopolitan_monthly',
+       'languages_allowed' => 2,
+       'language_cost_per_period_in_cents' => 14900,
+    )),
+  ))
+  */
+  ////////////////////////////////////////////////////////////
+  //$account_status = lingotek_get_account_status();
+  //dpm( $account_status->plan->languages_allowed );
+  //$account_status
+  //$account_status->state (active)
+  //$account_status->plan->type (cosmopolitan_monthly)
+  //$account_status->plan->languages_allowed  (2)
+  ////////////////////////////////////////////////////////////
 
-  $output = '
-    <div id="dashwrap" style="">
-      <div id="dashboard" style=""></div>
-    </div>
-  ';
+  $output = '';
+  $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
 
   $dashboard = lingotek_get_dashboard();
+
+
+
+  $account_details = '';
+  $account_status = lingotek_get_account_status();
+//dpm( $account_status );
+
+  if( $account_status !== false && is_object( $account_status ) && isset( $account_status->state ) ) {
+    // dpm( 'WE GOT ACCOUNT DETAILS' );
+    // dpm( $account_status );
+    /*
+    $account_details = sprintf(
+        '<div>&nbsp;</div>
+        <h3>Account Details:</h3>
+        <div>Account Status: %s</div>
+        <div>Billing Plan Type: %s</div>
+        <div>Number of Languages: %s</div>',
+      $account_status->state,
+      $account_status->plan->type,
+      $account_status->plan->languages_allowed
+    );
+    */
+  }
 
   // Counts
   $source_language_docs = new EntityFieldQuery();
   $source_language_docs->entityCondition('entity_type', 'node')->propertyCondition('status', 1); // Just Published
   $source_language_doc_count = $source_language_docs->execute();
   // $source_language_doc_count = $source_language_docs->count()->execute();
-  //$output .= '<div>Source Lang Doc Count: </div><pre>' .print_r( $source_language_doc_count) .'</pre><div></div>';
+  // $output .= '<div>Source Lang Doc Count: </div><pre>' .print_r( $source_language_doc_count) .'</pre><div></div>';
 
-  return $output . $dashboard; 
+  return $output . $account_details . $dashboard; 
 
 } // END:  lingotek_dashboard()
+
+
+
+
+
+/**
+ * Counts all the nodes of a specific language.
+ *
+ * Limits the counts to node types included in:  lingotek_translate_fields
+ */
+function lingotek_get_node_count( $language = 'en' ) {
+
+  //dpm( 'Doing Count for ' . $language );
+  /*
+    $query = db_select( 'node', 'n' )->fields( 'n' );
+    $query->condition('deleted', '0');
+    $query->condition('bundle', $bundle);
+    $query->condition('language', $key);
+    $result = $query->countQuery()->execute()->fetchAssoc();
+  */
+
+  return 50;
+}
+
+
+function lingotek_get_source_language_json() {
+
+  $data = array();
+  $data['code'] = variable_get( 'lingotek_source_language' );
+  $data['docs'] = lingotek_get_node_count( $data['code'] );
+
+  return json_encode( $data ); //Format: {'code':'en','docs':'500'}
+
+}
+
+
+function lingotek_get_localization_languages_json() {
+
+  $laguages = language_list('enabled');
+  $laguages = array_shift( $laguages );
+  $laguages = array_keys( $laguages );
+
+  return json_encode( $laguages );
+
+}
+
+
+/**
+ * Get Account Status
+ * Request:  http://cp.lingotek.com:8080/billing/account.json?community=B2MMD3X5&external_id=community_admin&oauth_key=28c279fa-28dc-452e-93af-68d194a2c366&oauth_secret=0e999486-3b4d-47e4-ba9a-d0f3f0bbda73
+ * Response:  {"state":"active","plan":{"trial_ends_at":0,"state":"active","activated_at":1355267936,"type":"cosmopolitan_monthly","languages_allowed":2,"language_cost_per_period_in_cents":14900}}
+ * Will return FALSE or a json decoded object.
+ */
+function lingotek_get_account_status( ) {
+
+  $result = false;
+  $fields = array(
+    'community'    => urlencode( variable_get( 'lingotek_community_identifier', '' ) ),
+    'external_id'  => urlencode( variable_get( 'lingotek_login_id', '' ) ),
+    'oauth_key'    => urlencode( variable_get( 'lingotek_oauth_consumer_id', '' ) ),
+    'oauth_secret' => urlencode( variable_get( 'lingotek_oauth_consumer_secret', '' ) ),
+  );
+  //dpm( $fields );
+
+  if( ( isset($fields['community']) && $fields['community'] != '' ) && ( isset($fields['external_id']) && $fields['external_id'] != '' )  && ( isset($fields['oauth_key']) && $fields['oauth_key'] != '' )  && ( isset($fields['oauth_secret']) && $fields['oauth_secret'] != '') ) {
+
+    $url = LINGOTEK_BILLING_SERVER . '?';
+    foreach( $fields as $key=>$value ) { 
+      $url .= $key . '=' . $value . '&';
+    }
+    $url = substr( $url, 0, -1 );
+
+    $ch = curl_init( $url );
+    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
+    curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
+    //curl_setopt( $ch, CURLINFO_HEADER_OUT, TRUE );
+    $response = curl_exec( $ch );
+    $info = curl_getinfo( $ch );
+    curl_close( $ch );
+
+    $json = json_decode( $response );
+    if ( isset( $json ) ) { // Did we get valid data back?  If not, $json is NULL.
+      
+    }
+
+    dpm( '- - - - - - - - - - - - - - -' );
+    dpm( 'URL: ' . $url );
+    dpm( 'INFO:' );
+    dpm( $info );
+    dpm( 'RESULT (json):' );
+    dpm( $json );
+    dpm( '- - - - - - - - - - - - - - -' );
+  } // END:  has credentials
+
+  return $result;
+
+} // END:  lingotek_get_account_status()
+
+
+////////
 
 
 
@@ -38,27 +182,39 @@ function lingotek_dashboard() {
  */
 function lingotek_get_dashboard() {
 
-  $community = variable_get( 'lingotek_community_identifier', '' );
-  $oauth_key = variable_get( 'lingotek_oauth_consumer_id', '' );
-  $oauth_secret = variable_get( 'lingotek_oauth_consumer_secret', '' );
-  $external = variable_get( 'lingotek_login_id', '' );
-  $project = variable_get( 'lingotek_project', '' );
-  $vault = variable_get( 'lingotek_vault', '' );
-  $workflow = variable_get( 'lingotek_workflow', '' );
+  $guid = variable_get( 'lingotek_guid', '' );
+  if( $guid == '' ) {
+    $guid = substr(hash('sha256', drupal_get_hash_salt()), 0, 16);
+    variable_set( 'lingotek_guid', $guid );
+  }
 
-  $sitename = variable_get( 'site_name', 'Drupal Site' );
-  $guid = _update_manager_unique_identifier();
 
-  $default_language = language_default();
-  $source_language = variable_get( 'lingotek_source_language', $default_language->language );
 
+
+
+
+
+    //$api = LingotekApi::instance();
+    //$result = $api->getBillingStatus();
+
+
+
+
+
+
+//dpm( 'Count: ' . lingotek_get_node_count( 'de' ) );
+//  >>>>  WORKING HERE >>>>>  dpm( lingotek_get_source_language_json() );
+
+
+  //language_default()->language
+  //$default_language = language_default();
+  $source_language = variable_get( 'lingotek_source_language' );
 
 
   $totals = array();
 
-
-
-  if( $community != '' && $oauth_key != '' && $oauth_secret != '' && $external != '' && $project != '' && $vault != '' ) {
+  if( variable_get( 'lingotek_community_identifier', '' ) != '' && variable_get( 'lingotek_oauth_consumer_id', '' ) != '' && variable_get( 'lingotek_oauth_consumer_secret', '' ) != '' && 
+      variable_get( 'lingotek_login_id', '' ) != '' && variable_get( 'lingotek_project', '' ) != '' && variable_get( 'lingotek_vault', '' ) != '' ) {
 
     $translatable_fields = lingotek_translatable_node_field_details();
     //debug( $translatable_fields );
@@ -70,7 +226,8 @@ function lingotek_get_dashboard() {
     $content_types_to_translate = array_keys( $content_types_and_fields_to_translate ); //$content_type_list
     //debug( $content_types_to_translate );
 
-    $active_languages = array_shift( language_list('enabled') );
+    $active_languages = language_list('enabled');
+    $active_languages = array_shift( $active_languages );
     //debug( $active_languages );
 
     $language_count = new EntityFieldQuery();
@@ -121,7 +278,9 @@ function lingotek_get_dashboard() {
 
     $target_language_list = array();
     foreach( $totals as $total ) {
-      $target_language_list[] = $total;
+      if ( $total['code'] != $source_language ) { // Obviously, we dont want to translate out source language, so exclude that.
+        $target_language_list[] = $total;
+      }
     }
     $target_language_list = json_encode( $target_language_list );
 
@@ -132,7 +291,7 @@ function lingotek_get_dashboard() {
         require(["lingotek"],function(lingotek){ 
         var containerId = "dashboard"; 
         var config = { 
-          // lingotek 
+          // lingotek
           "community": "%s",
           "oauth_key": "%s",
           "oauth_secret": "%s",
@@ -140,14 +299,20 @@ function lingotek_get_dashboard() {
           "tm_vault_id": "%s",
           "workflow_id": "%s",
           "project_id": "%s",
-          // cms 
-          "cms_site_id": "%s", // the host name or ip address
+          "first_name": "%s",
+          "last_name": "%s",
+          "email": "%s",
+          // cms
+          "cms_site_id": "%s",
+          "cms_site_key": "%s",
           "cms_site_name": "%s",
-          "cms_type": "drupal",
-          "cms_version": "%s", // ex. drupal version 
-          "endpoint_url": "/admin/settings/lingotek/command",  // (ex. https://mysite.com/admin/lingotek/target)
-          "module_version": "2.0beta", // our drupal module version 
-          "source_language": {"code":"%s","docs":"%s"},   //in Drupal, "docs" refers to the # of "nodes"
+          "cms_type": "%s",
+          "cms_version": "%s",
+          "module_version": "%s",
+          "endpoint_url": "%s",
+          // data
+          "source_language":%s ,
+          "localization_languages": %s,
           "target_languages": %s
         };
          lingotek.dashboard(containerId,config); 
@@ -156,24 +321,34 @@ function lingotek_get_dashboard() {
     ';
 
     $output = sprintf( $script, 
-      $community,
-      $oauth_key,
-      $oauth_secret,
-      $external,
-      $vault,
-      $workflow,
-      $project,
-      $guid,
-      $sitename,
-      VERSION,
-      $source_language,
-      $translatable_nodes,
-      $target_language_list
+      // lingotek 
+      variable_get( 'lingotek_community_identifier', '' ), //community
+      variable_get( 'lingotek_oauth_consumer_id', '' ), //oauth_key
+      variable_get( 'lingotek_oauth_consumer_secret', '' ), //oauth_secret
+      variable_get( 'lingotek_login_id', '' ), //external_id
+      variable_get( 'lingotek_vault', '' ), //tm_vault_id
+      variable_get( 'lingotek_workflow', '' ), //workflow_id
+      variable_get( 'lingotek_project', '' ), //project_id
+      variable_get( 'lingotek_activation_first_name', '' ), //first_name
+      variable_get( 'lingotek_activation_last_name', '' ), //last_name
+      variable_get( 'lingotek_activation_email', '' ), //email
+      // cms
+      $guid, // installation GUID
+      url( '<front>', array( 'absolute' => true ) ), // site url
+      variable_get( 'site_name', 'Unidentified Drupal Site' ), // sitename
+      'Drupal', // cms type
+      VERSION, // drupal version
+      LINGOTEK_VERSION, // module version
+      '/admin/settings/lingotek/command', // endpoint
+      // data
+      lingotek_get_source_language_json(), // source_language
+      lingotek_get_localization_languages_json(), // localization_languages - The languages “localized” on Drupal
+      $target_language_list // The target languages they are using on Lingotek)
     );
 
   } else {
 
-    $output = 'Your Lingotek module is not Properly configured.  Please run the Lingotek <a href="' .url( 'admin/config/lingotek/setup' ) .'">configuration process</a>.';
+    $output = 'Your Lingotek module is not Properly configured.  Please run the Lingotek <a href="' .url( 'admin/config/lingotek/setup' ) .'">Installation Wizard</a>.';
 
   }
 
@@ -321,6 +496,56 @@ function lingotek_dashboard_command_ajax() {
   //drupal_json_output( $response );
 
 } // END:  lingotek_dashboard_command_ajax
+
+
+
+
+
+
+
+
+
+
+
+
+
+function lingotek_development() {
+  $output = '';
+
+
+  $output .= url(drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png');
+
+
+
+  return $output;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -563,17 +788,17 @@ $output .= '
 
 
 /**
- * Developer Test Page
+ * 
  */
 function lingotek_translatable_node_field_details() {
   $fields = field_info_fields();
   $translatable_fields = array();
-/*
-  debug( $fields );
-  echo '<pre>';
-  print_r( $fields );
-  echo '</pre>';
-*/
+  /*
+    debug( $fields );
+    echo '<pre>';
+    print_r( $fields );
+    echo '</pre>';
+  */
   foreach ($fields as $field_id => $field) {
     foreach ($field['bundles'] as $type => $instance) {
       /*
@@ -584,10 +809,12 @@ function lingotek_translatable_node_field_details() {
       */
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
+        $field_db_table = array_keys( $field['storage']['details']['sql']['FIELD_LOAD_CURRENT'] );
+        $field_db_table = array_shift( $field_db_table );
         $translatable_fields[] =  array( 
           'entity_type' => $type,
           'machine_name' => $field['field_name'],
-          'db_table' => array_shift( array_keys( $field['storage']['details']['sql']['FIELD_LOAD_CURRENT'] ) ),
+          'db_table' => $field_db_table ,
           'bundles' => $field['bundles']['node'],
         );
       }
@@ -596,7 +823,9 @@ function lingotek_translatable_node_field_details() {
   }
 
   return $translatable_fields;
+
 }
+
 /*
 array (
   0 => 
@@ -626,7 +855,7 @@ array (
 
 
 
-function lingotek_development() {
+function lingotek_development_OLDSTUFF() {
   $output = '';
   $totals = array();
 

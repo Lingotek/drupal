@@ -8,6 +8,7 @@
  * Identifies a content type which has Lingotek translation enabled.
  */
 define('LINGOTEK_ENABLED', 'lingotek');
+define('LINGOTEK_VERSION', '7.x-1.61');
 
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');

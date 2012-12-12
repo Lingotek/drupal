@@ -14,8 +14,8 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
@@ -577,6 +577,73 @@ class LingotekApi {
 
     return $result;
   }
+
+  /**
+   * Get biling status
+   *
+   * @return mixed
+   *   On success, a stdClass object of the returned response data, FALSE on error.
+   */
+   /*
+  public function getBillingStatus( ) {
+
+    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
+    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
+
+    $result = false;
+    $response = null;
+    $method = 'http://cp.lingotek.com:8080/billing/account.json';
+    $credentials = array(
+      'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
+      'consumer_secret' => variable_get('lingotek_oauth_consumer_secret', '')
+    );
+    $parameters = array(
+      'community' => variable_get( 'lingotek_community_identifier', '' ),
+      'external_id' => variable_get( 'lingotek_login_id', '' )
+    );
+
+
+    $timer_name = $method . '-' . microtime(TRUE);
+    timer_start($timer_name);
+
+    try {
+      OAuthStore::instance('2Leg', $credentials);
+      // GET 
+    	$request = new OAuthRequester( $method, 'GET', $parameters);
+    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
+dpm( $result );
+    }
+    catch (OAuthException2 $e) {
+dpm( $e->getMessage() );
+      watchdog('lingotek', 'Failed OAuth request.
+      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
+        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
+        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);      
+    }
+
+    $timer_results = timer_stop($timer_name);
+
+    if ($this->debug) {
+      $message_params = array(
+        '@method' => $method,
+        '!params' => $this->watchdogFormatObject($parameters),
+        '!response' => $this->watchdogFormatObject($response),
+        '@response_time' => number_format($timer_results['time']) . ' ms',
+      );
+      watchdog(
+        'lingotek_debug',
+        '<strong>Called API method</strong>: @method<br />
+        <strong>Response Time:</strong> @response_time<br />
+        <strong>Params</strong>: !params<br />
+        <strong>Response:</strong> !response',
+        $message_params,
+        WATCHDOG_DEBUG
+      );
+    } // END:  if debug
+
+    return $result;
+  }
+  */
 
   /**
    * Formats a complex object for presentation in a watchdog message.

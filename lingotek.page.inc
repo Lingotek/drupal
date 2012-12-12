@@ -14,6 +14,15 @@
  *   A Drupal render array of the page contents.
  */
 function lingotek_pm($node) {
+
+  // If we have a language prefix, then drupal_get_path will append that to the front of the string it returns.  So lets strip it back off, so it doesn't break the paths.
+  global $language_content;
+  $icon_green_check = url( drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png' );
+  $prefix = $language_content->prefix;
+  if( strlen( $prefix ) > 0 ) {
+    $icon_green_check = substr( $icon_green_check, strlen( $prefix )+1 );    
+  }
+
   $output = array();
 
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
@@ -47,7 +56,7 @@ function lingotek_pm($node) {
         $target->percentComplete . '%',
         lingotek_get_workbench_url($node, $language, TRUE),
         $phase_complete_percent . '%',
-        ($phase_complete) ? '<img src="' . url(drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png') . '" />' : '',
+        ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
       );
       lingotek_trace("lingotek_pm table row", array('language' => $language));
       $rows[] = $row;
@@ -103,8 +112,9 @@ function lingotek_pm($node) {
       );
     }
 
+    $lingotek_advanced_parsing_form = drupal_get_form('lingotek_advanced_parsing_upgrade_form');
     $output['upgrade_form'] = array(
-      '#markup' => drupal_render(drupal_get_form('lingotek_advanced_parsing_upgrade_form')),
+      '#markup' => drupal_render($lingotek_advanced_parsing_form),
     );
   }
 

@@ -84,10 +84,22 @@ function lingotek_setup_new_account_form() {
 } // END:  New Account - Form
 
 /**
+ * New Account - Form Validator
+ */
+function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
+  if ( !valid_email_address( $form_state[ 'values' ][ 'email' ] ) ) {
+    form_set_error( '', t( 'You must enter a valid Email address.' ) );
+  }
+}
+
+/**
  * New Account - Form Processor
  * Provisions a Lingotek account and sends activation notice.
  */
 function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
+
+  global $base_url;
+  $extras = array();
 
   // Store the info so users dont have to retype stuff
     $first_name = $form_state[ 'values' ][ 'first_name' ];
@@ -134,9 +146,13 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_project', $community->project_id );
       variable_set( 'lingotek_vault', $community->tm_vault_id );
       variable_set( 'lingotek_workflow', $community->workflow_id );
+
+      $extras['Company'] = $base_url; // Company
+      $extras['CMS_SBS__c'] = 'Drupal'; // CMS/SBS
+      $extras['Community__c'] = $community->community; // Community
     }
 
-    lingotek_activation( $first_name, $last_name, $email );
+    lingotek_activation( $first_name, $last_name, $email, $extras );
 
   } // END:  Provision new Community
 
@@ -683,7 +699,7 @@ function lingotek_content_type_checkbox_callback( $form, &$form_state ) {
 /**
  * Node Translation Settings - Form Submit
  */
-function lingotek_setup_node_translation_settings_form_submit( $form, $form_state ) {
+function lingotek_setup_node_translation_settings_form_submit( $form, &$form_state ) {
 
   $translate = array();
   foreach ( $form_state[ 'values' ] as $key => $value ) {
@@ -719,6 +735,8 @@ function lingotek_setup_node_translation_settings_form_submit( $form, $form_stat
         $title_entity = 'node';
         $title_bundle = $content_type;
         $title_field = 'title';
+
+        // Use the Title module to migrate the content.
         if (title_field_replacement_toggle( $title_entity, $title_bundle, $title_field)) {
           title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
         }
@@ -739,7 +757,8 @@ function lingotek_setup_node_translation_settings_form_submit( $form, $form_stat
   variable_set( 'lingotek_translate_fields', $translate );
   drupal_set_message( t( 'Your content types and fields selections have been saved.' ) );
 
-  drupal_goto( 'admin/config/lingotek/setup-complete' );
+  $form_state['redirect'] = 'admin/config/lingotek/setup-complete';
+  //drupal_goto( 'admin/config/lingotek/setup-complete' );
 
 } // END:  lingotek_setup_node_translation_settings_form_submit()
 
@@ -763,11 +782,10 @@ function lingotek_setup_complete_form( $form, $form_state ) {
 }
 
 /**
- * Setup Complete - Form Submit - Redirects to Lingotek dashboard.
+ * Setup Complete - Form Submit - Redirects to Lingotek Dashboard.
  */
 function lingotek_setup_complete_form_submit( $form, $form_state ) {
-  //drupal_goto( 'admin/settings/lingotek' );
-  drupal_goto( );
+  drupal_goto( 'admin/settings/lingotek' );
 }
 
 /**
@@ -836,11 +854,11 @@ function lingotek_setup_node_updates_form_submit( $form, $form_state ) {
   $update_node_language = $form_state[ 'values' ][ 'update_node_language' ];
 
   if ( $transition_node_titles == 1 ) {
-    dpm( 'Do the Node Titles' );
+    //dpm( 'Do the Node Titles' );
   }
 
   if ( $update_node_language == 1 ) {
-    dpm( 'Update The Node Languages' );
+    //dpm( 'Update The Node Languages' );
   }
 
   //drupal_goto( 'admin/config/lingotek/setup-complete' );
@@ -940,26 +958,30 @@ function lingotek_get_projects_v3( $login, $passwd, $url ) {
 /**
  * Activation
  */
-function lingotek_activation( $first_name, $last_name, $email ) {
+function lingotek_activation( $first_name, $last_name, $email, $extras = array() ) {
+
   $url = 'https://www.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
   $fields = array(
-    'last_name'=>urlencode( $last_name ),
-    'first_name'=>urlencode( $first_name ),
-    'email'=>urlencode( $email ),
-    'oid' => '00D80000000bjBA',
+    'first_name' => $first_name,
+    'last_name'  => $last_name,
+    'email'      => $email,
+    'oid'        => '00D80000000bjBA',
+    'debug'      => '1',
+    'debugEmail' => 'csessions@q90.com',
   );
-  $data = '';
-  foreach( $fields as $key=>$value ) { $data .= $key.'='.$value.'&'; }
-  rtrim($data,'&');
+
+  $fields = array_merge( $fields, $extras );
+
   $ch = curl_init();
   curl_setopt( $ch, CURLOPT_URL, $url );
   curl_setopt( $ch, CURLOPT_POST, count( $fields ) );
-  curl_setopt( $ch, CURLOPT_POSTFIELDS, $data );
+  curl_setopt( $ch, CURLOPT_POSTFIELDS, $fields );
   curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
   curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
   curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, TRUE );
   $result = curl_exec($ch);
   curl_close($ch);
+
 } // END:  activation
 
 /**
