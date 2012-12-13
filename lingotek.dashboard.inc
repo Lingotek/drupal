@@ -143,11 +143,7 @@ function lingotek_dashboard_command_ajax() {
   $response = array();
   $message = 'Not doing anything.';
 
-  $index = lingotek_get_dashboard_language_mappings();
-
   $method = $_SERVER['REQUEST_METHOD'];
-
-
 
   if ( $_POST ) { // Insert a new Target Language
 
@@ -184,18 +180,18 @@ function lingotek_dashboard_command_ajax() {
         // Retrieve the Target Languages and Status
         $message = 'GET: Retrieve the Target Languages and Status';
         $data = $_GET;
-        $dashboard_language_code = $_GET[ 'code' ];
-        $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
+        //$dashboard_language_code = $_GET[ 'code' ];
+        //$drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
 
-        $cnt_docs = lingotek_get_node_count( $drupal_language_code ); // How many docuents are in this language?
-        $cnt_mt = $cnt_docs; // How many docs were machine translated?
-        $cnt_pr = 0; // How many docs were human translated?
-        $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
-
-        $active_languages = language_list('enabled');
         $response = array();
-    
+        $active_languages = language_list('enabled');
         foreach( $active_languages[1] as $language ) {
+
+          $cnt_docs = lingotek_get_node_count( $language->language ); // How many docuents are in this language?
+          $cnt_mt = $cnt_docs; // How many docs were machine translated?
+          $cnt_pr = 0; // How many docs were human translated?
+          $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
+
           $set = array(
             'code' => lingotek_drupal_to_lingotek_language_code( $language->language ), // Return this language code as the Lingotek language code.
             'active' => true,
@@ -206,7 +202,7 @@ function lingotek_dashboard_command_ajax() {
           );
 
           $response[] = $set;
-    
+
         } // END:  Language Loop
 
     } // END: Real Get
