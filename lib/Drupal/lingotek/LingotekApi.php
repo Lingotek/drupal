@@ -14,8 +14,8 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
@@ -584,8 +584,14 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
+
+  public function getBillingStatus() {
+
+    return LINGOTEK_BILLING_SERVER ;
+
+  }
+
    /*
-  public function getBillingStatus( ) {
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');

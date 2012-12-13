@@ -8,7 +8,8 @@
  * Identifies a content type which has Lingotek translation enabled.
  */
 define('LINGOTEK_ENABLED', 'lingotek');
-define('LINGOTEK_VERSION', '7.x-1.62');
+define('LINGOTEK_VERSION', '7.x-1.63');
+define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
 
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
@@ -21,17 +22,6 @@ include_once('lingotek.api.inc');
 function lingotek_menu() {
   $items = array();
 
-  // Future Settings Tab
-  $items['admin/settings/lingotek'] = array(
-    'title' => 'Lingotek',
-    'access arguments' => array('administration'),
-    'description' => 'Community Translation Settings',
-    'file' => 'lingotek.admin.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_admin_form'),
-  );
-
-  /*
   // Lingotek Dashboard and Settings Tabs
   $items['admin/settings/lingotek'] = array(
     'title' => 'Lingotek',
@@ -46,6 +36,7 @@ function lingotek_menu() {
     'title' => 'Dashboard',
     'type' => MENU_DEFAULT_LOCAL_TASK
   );
+
   // Tab:  Settings
   $items['admin/settings/lingotek/settings'] = array(
     'title' => 'Settings',
@@ -57,36 +48,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
-
-  // Dashboard Ajax Command Processor
-  $items['admin/settings/lingotek/command'] = array(
-    'title' => 'Command Router',
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
-    'description' => 'Lingotek Command Router',
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_dashboard_command_ajax',
-  );
-  */
   /*
-  // Tab:  Analytics
-  $items['admin/settings/lingotek/analytics'] = array(
-    'title' => 'Analytics',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_translate',
-    'access arguments' => array('administration')
-  );
-  // Tab:  Statistics
-  $items['admin/settings/lingotek/statistics'] = array(
-    'title' => 'Stats',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 15,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_statistics',
-    'access arguments' => array('administration')
-  );
   // Tab:  Development
   $items['admin/settings/lingotek/development'] = array(
     'title' => 'Development',
@@ -97,6 +59,16 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
   */
+
+  // Dashboard Ajax Command Processor
+  $items['admin/settings/lingotek/command'] = array(
+    'title' => 'Command Router',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'description' => 'Lingotek Command Router',
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard_command_ajax',
+  );
 
   $items['node/%node/lingotek_pm'] = array(
     'title' => 'Lingotek',
@@ -123,17 +95,6 @@ function lingotek_menu() {
     'page arguments' => array(2),
     'type' => MENU_CALLBACK,
   );
-
-  /* // Adds a submenu item to the main lingotek menu item (that is only for node level content.).  This should be safe to remove.  Just commenting out for testing.
-  $items['admin/settings/lingotek/dev'] = array(
-    'title' => 'Lingotek Developer Tools',
-    'access arguments' => array('dev'),
-    'description' => 'Developer Tools',
-    'file' => 'lingotek.dev.inc',
-    'page callback' => 'lingotek_dev_page',
-    'type' => MENU_LOCAL_TASK,
-  );
-  */
 
   $items['admin/config/regional/field-data-cleanup'] = array(
     'title' => 'Lingotek Field Data Cleanup Utility',
