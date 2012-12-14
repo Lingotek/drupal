@@ -4,28 +4,21 @@
  * Lingotek Dashboard.
  */
 
+
 /**
  * Tab:  Dashboard - The main Lingotek dashboard page.
  */
 function lingotek_dashboard() {
 
+  lingotek_is_module_setup();
+  lingotek_account_check_enterprise_status();
+
   $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
   $output .= lingotek_get_dashboard_code(); // Generates the dashboard javascript.
+
   return $output; 
 
 } // END:  lingotek_dashboard()
-
-
-/**
- * Tab:  Development - Test area.
- */
-function lingotek_development() {
-
-  $output = '';
-  $output .= '';
-  return $output;
-
-}
 
 
 /**
@@ -41,24 +34,27 @@ function lingotek_get_dashboard_code() {
   if( variable_get( 'lingotek_community_identifier', '' ) != '' && variable_get( 'lingotek_oauth_consumer_id', '' ) != '' && variable_get( 'lingotek_oauth_consumer_secret', '' ) != '' && 
       variable_get( 'lingotek_login_id', '' ) != '' && variable_get( 'lingotek_project', '' ) != '' && variable_get( 'lingotek_vault', '' ) != '' ) {
 
-    // Loop though each active language, and initialize the data.  Add the language code for each language, setting the counts to 0.  Skip the source language
-    foreach ( $active_languages as $language_code ) {
-      if( $language_code != $source_language ) { // Skip the source language.
+    // Loop though each active target language, and initialize the data.  Add the language code for each language, setting the counts to 0.  Skip the source language
+    $target_languages = lingotek_get_target_languages( );
 
-        $cnt_docs = lingotek_get_node_count( $language_code ); // How many docuents are in this language?
+    foreach( $target_languages as $language ) {
+      if( $language[ 'active' ] === true && $language[ 'code' ] != $source_language ) { // Only active languages.
+        $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
         $cnt_mt = $cnt_docs; // How many docs were machine translated?
         $cnt_pr = 0; // How many docs were human translated?
-        $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ;  // Err..  not this -> Percent completed.  ( total docs / (mt docs + pr docs) ) * 100
+        $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
 
-        $totals[ ] = array(
-          'code'    => lingotek_drupal_to_lingotek_language_code( $language_code ),
-          'docs'    => $cnt_docs, // Number of Docs in this language.
-          'mt'      => $cnt_mt, // Translated
-          'pr'      => $cnt_pr, // Reviewed
-          'synced'  => $cnt_sync  // In Sync
+        $totals[] = array(
+          'code' => lingotek_drupal_to_lingotek_language_code( $language[ 'code' ] ), // Return this language code as the Lingotek language code.
+          'active' => $language[ 'active' ],
+          'docs' => $cnt_docs,
+          'mt' => $cnt_mt,
+          'pr' => $cnt_pr,
+          'synced' => $cnt_sync
         );
-      }
-    } // END: Foreach Active Language - Initialize Totals Array
+
+      } // END:  if active
+    } // END:  foreach target language
 
     //debug( 'TOTALS: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ' );
     //debug( $totals );
@@ -131,6 +127,7 @@ function lingotek_get_dashboard_code() {
   }
 
   return $output;
+
 } // END:  lingotek_get_dashboard_code()
 
 
@@ -144,12 +141,39 @@ function lingotek_dashboard_command_ajax() {
   $message = 'Not doing anything.';
 
   $method = $_SERVER['REQUEST_METHOD'];
+  // https://docs.google.com/document/d/1_uFxeaGcIIke1YqRj6bNm42VvwzEyEO9YqureyJy5to/edit
 
-  if ( $_POST ) { // Insert a new Target Language
+
+  // 1. Update a Target Language (Initiate a Machine Translation Batch)
+  if ( $method == 'PUT' ) {
+
+    // Initiate Machine Translation
+    $message = 'PUT: Initiate Machine Translation';
+    parse_str( file_get_contents("php://input"), $put_vars );
+    $type = $put_vars['type'];
+    $dashboard_language_code = $put_vars['code'];
+    $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
+
+    $response = array(
+      'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
+      'active' => true,
+      'docs' => '0',
+      'mt' => '0',
+      'pr' => '0',
+      'synced' => '0'
+    );
+
+    // Launch the machine translation process!
+    lingotek_bulk_mt_batch_create( );
+
+  } // END:  PUT
+
+
+  // 2. Add/Insert Target Language
+  if ( $_POST ) { 
 
     $message = 'POST: Insert a new Target Language';
     $dashboard_language_code = $_POST[ 'code' ];
-    $data = $_POST;
 
     if( strlen( $dashboard_language_code ) > 1 ) {
 
@@ -161,9 +185,11 @@ function lingotek_dashboard_command_ajax() {
       if ( !array_key_exists( $drupal_language_code, $active_languages[1] ) ) {
         locale_add_language( $drupal_language_code );  // Function from the Locale module.
       }
+      $add = lingotek_add_target_language( $drupal_language_code );
 
       $response = array(
         'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
+        'active' => true,
         'docs' => '0',
         'mt' => '0',
         'pr' => '0',
@@ -174,85 +200,85 @@ function lingotek_dashboard_command_ajax() {
   } // END:  POST
 
 
-  if ( $_GET ) { 
+  // 3. Remove/Delete Target Language
+  if ( $method == 'DELETE' ) {
 
-    if ( $method == 'GET' ) {
-        // Retrieve the Target Languages and Status
-        $message = 'GET: Retrieve the Target Languages and Status';
-        $data = $_GET;
-        //$dashboard_language_code = $_GET[ 'code' ];
-        //$drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
+    // Initiate Language Delete
+    $message = 'DELETE: Remove a language ABC';
+    parse_str( file_get_contents("php://input"), $delete_vars );
 
-        $response = array();
-        $active_languages = language_list('enabled');
-        foreach( $active_languages[1] as $language ) {
+    $dashboard_language_code = $delete_vars[ 'code' ];
+    $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.      
+    $delete = lingotek_delete_target_language( $drupal_language_code ); // Mark this language as Active => False
 
-          $cnt_docs = lingotek_get_node_count( $language->language ); // How many docuents are in this language?
+    $response = array(
+      'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
+      'active' => false,
+      'success' => $delete
+    ); // Format:  {'code':'es','active':'false','success':true}
+
+  } // END:  DELETE
+
+
+  // 4. Retrieve the Target Languages and Status
+  if ( $method == 'GET' ) {
+
+      // Retrieve the Target Languages and Status
+      $message = 'GET: Retrieve the Target Languages and Status';
+      $data = $_GET;
+
+      $response = array();
+      $target_languages = lingotek_get_target_languages( );
+
+      // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
+      if ( isset( $_GET[ 'code' ] ) ) {
+
+        $dashboard_language_code = $_GET[ 'code' ];
+        $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
+
+        //$response = print_r( $target_languages[ $drupal_language_code ][ 'active' ] );
+        if( isset( $target_languages[ $drupal_language_code ] ) ) {
+
+          $cnt_docs = lingotek_get_node_count( $drupal_language_code ); // How many docuents are in this language?
           $cnt_mt = $cnt_docs; // How many docs were machine translated?
           $cnt_pr = 0; // How many docs were human translated?
           $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
-
-          $set = array(
-            'code' => lingotek_drupal_to_lingotek_language_code( $language->language ), // Return this language code as the Lingotek language code.
-            'active' => true,
+  
+          $response = array(
+            'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
+            'active' => $target_languages[ $drupal_language_code ][ 'active' ],
             'docs' => $cnt_docs,
             'mt' => $cnt_mt,
             'pr' => $cnt_pr,
             'synced' => $cnt_sync
           );
 
-          $response[] = $set;
+        }
 
-        } // END:  Language Loop
+      } else { // Otherwise Return a List of all the Active Languages
 
-    } // END: Real Get
+        foreach( $target_languages as $language ) {
 
+          $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
+          $cnt_mt = $cnt_docs; // How many docs were machine translated?
+          $cnt_pr = 0; // How many docs were human translated?
+          $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
+  
+          $response[] = array(
+            'code' => lingotek_drupal_to_lingotek_language_code( $language[ 'code' ] ), // Return this language code as the Lingotek language code.
+            'active' => $language[ 'active' ],
+            'docs' => $cnt_docs,
+            'mt' => $cnt_mt,
+            'pr' => $cnt_pr,
+            'synced' => $cnt_sync
+          );
+ 
+        } // END:  foreach target language
 
-    if ( $method == 'PUT' ) {
-
-      // Initiate Machine Translation
-      $message = 'PUT: Initiate Machine Translation';
-      parse_str( file_get_contents("php://input"), $put_vars );
-      $type = $put_vars['type'];
-      $dashboard_language_code = $put_vars['code'];
-      $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
-
-      $response = array(
-        'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
-        'active' => true,
-        'docs' => '0',
-        'mt' => '0',
-        'pr' => '0',
-        'synced' => '0'
-      );
-
-      // Launch the machine translation process!
-
-
-    } // END:  PUT
-
-
-    if ( $method == 'DELETE' ) {
-
-      // Initiate Language Delete
-      $message = 'DELETE: Remove a language ABC';
-      $dashboard_language_code = $_GET[ 'code' ];
-      $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
-
-      $response = array(
-        'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
-        'active' => false,
-        'success' => true
-      ); // Format:  {'code':'es','active':'false','success':true}
-
-      // Language delete logic.
-
-    } // END:  DELETE
+      } // END:  Language List
 
   } // END:  GET
 
-
-  $message .= print_r( $_lingotek_locale, true );
 
   // Debugging
   //drupal_json_output(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
@@ -560,6 +586,70 @@ function lingotek_get_active_languages( $get_details = false ) {
 
 
 /**
+ * Flags a target language as active:false in the Target Language tracking.
+ */
+function lingotek_delete_target_language( $drupal_language_code = null ) {
+
+  $result = false;
+
+  if( isset( $drupal_language_code ) ) {
+
+    $target_languages = lingotek_get_target_languages();
+    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => false );
+    lingotek_save_target_languages( $target_languages );
+    $result = true;  // Hrm... variable_set isnt really into returning values.
+  }
+
+  return $result;
+
+} // END:  lingotek_get_target_languages()
+
+
+/**
+ * Adds a target language to the Target Language tracking.
+ */
+function lingotek_add_target_language( $drupal_language_code = null ) {
+
+  $result = false;
+
+  if( isset( $drupal_language_code ) ) {
+
+    $target_languages = lingotek_get_target_languages();
+    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => true );
+    lingotek_save_target_languages( $target_languages );
+    $result = true;  // Hrm... variable_set isnt really into returning values.
+  }
+
+  return $result;
+
+} // END:  lingotek_get_target_languages()
+
+
+/**
+ * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
+ * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
+ */
+function lingotek_get_target_languages( ) {
+
+  $target_languages = variable_get( 'lingotek_target_languages', array() );
+  return $target_languages;
+
+} // END:  lingotek_get_target_languages()
+
+
+/**
+ * Save the Targeted Languages data.
+ */
+function lingotek_save_target_languages( $target_languages = null ) {
+
+  if ( isset( $target_languages ) ) {
+    variable_set( 'lingotek_target_languages', $target_languages );
+  }
+
+} // END:  lingotek_save_target_languages()
+
+
+/**
  * Outputs the language code with page count in json format.  Supplied to the dashboard.
  * Output Format: {'code':'en','docs':'500'}
  */
@@ -627,59 +717,183 @@ function lingotek_get_guid() {
 
 
 
-//////// THIS NEEDS TO MOVE TO THE LingotekApi.php
+
+
+
+
+
+
+function S_______P_______A_______C_______E_______R() {}
+
+
+
+
+
+function lingotek_test() {
+
+  $output = '';
+
+  return $output;
+
+}
+
+
+/*
+lingotek_account_get_status()
+lingotek_account_check_enterprise_status()
+lingotek_account_is_enterprise()
+lingotek_account_max_languages()
+*/
+
 
 
 /**
- * Get Account Status
- * Request:  http://cp.lingotek.com:8080/billing/account.json?community=B2MMD3X5&external_id=community_admin&oauth_key=28c279fa-28dc-452e-93af-68d194a2c366&oauth_secret=0e999486-3b4d-47e4-ba9a-d0f3f0bbda73
- * Response:  {"state":"active","plan":{"trial_ends_at":0,"state":"active","activated_at":1355267936,"type":"cosmopolitan_monthly","languages_allowed":2,"language_cost_per_period_in_cents":14900}}
- * Will return FALSE or a json decoded object.
+ * Tab:  Development - Test area.
  */
-function lingotek_get_account_status( ) {
+function lingotek_development() {
 
-  $result = false;
-  $fields = array(
-    'community'    => urlencode( variable_get( 'lingotek_community_identifier', '' ) ),
-    'external_id'  => urlencode( variable_get( 'lingotek_login_id', '' ) ),
-    'oauth_key'    => urlencode( variable_get( 'lingotek_oauth_consumer_id', '' ) ),
-    'oauth_secret' => urlencode( variable_get( 'lingotek_oauth_consumer_secret', '' ) ),
+  $output = '';
+
+  $account_state = '';
+  $account_plan = '';
+  $account_max_languages = '';
+
+  $account = lingotek_account_get_status();
+  dpm($account);
+  if( is_object( $account ) ) {
+    $account_state = $account->state;
+    $account_plan = $account->plan->type;
+    $account_max_languages = $account->plan->languages_allowed;
+  }
+
+  $max_languages = lingotek_account_max_languages();
+  $enterprise_account = lingotek_account_check_enterprise_status();
+  $enterprise_account_text = ( $enterprise_account ) ? '<span style="color: green;">Yes</span>' : '<span style="color: red;">No</span>';
+
+
+  // Left Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  $output .= '<div style="border: 0px solid red; width: 50%; float: left;">';
+  $output .= '<h1> Account Status </h1>';
+
+  $output .= '<p><strong>Enterprise Account:</strong> ' . $enterprise_account_text . '</p>';
+
+  $output .= '<p>
+                <div><strong>State:</strong> ' . $account_state . '</div>
+                <div><strong>Plan:</strong> ' . $account_plan . '</div>
+              </p>';
+
+  $output .= '<p>';
+  $output .= '<div><strong>Max Languages:</strong> ' . $max_languages . '</div>';
+  $output .= '</p>';
+  $output .= '</div>';
+
+
+  // Right Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  $output .= '<div style="border: 0px solid red; width: 40%; float: left;">';
+  $output .= '<h1> Installation Credentials </h1>';
+
+  $output .= '<p><strong>Credentials:</strong> (Live) Enterprise User from Matt</p>';
+  $output .= '<p>';
+  $output .= '<div><strong>community:</strong> ' . variable_get( 'lingotek_community_identifier', '' ) . '</div>';
+  $output .= '<div><strong>oauth_key:</strong> ' . variable_get( 'lingotek_oauth_consumer_id', '' ) . '</div>';
+  $output .= '<div><strong>oauth_secret:</strong> ' . variable_get( 'lingotek_oauth_consumer_secret', '' ) . '</div>';
+  $output .= '<div><strong>external_id:</strong> ' . variable_get( 'lingotek_login_id', '' ) . '</div>';
+  $output .= '<div><strong>tm_vault_id:</strong> ' . variable_get( 'lingotek_vault', '' ) . '</div>';
+  $output .= '<div><strong>workflow_id:</strong> ' . variable_get( 'lingotek_workflow', '' ) . '</div>';
+  $output .= '<div><strong>project_id:</strong> ' . variable_get( 'lingotek_project', '' ) . '</div>';
+  $output .= '</p>';
+  $output .= '</div>';
+
+
+
+/*
+// (Live) Enterprise User from Matt
+variable_set( 'lingotek_community_identifier', 'AAYEUF9G' );
+variable_set( 'lingotek_oauth_consumer_id', '1e1245a2-94b5-40e0-965c-5eaca006f009' );
+variable_set( 'lingotek_oauth_consumer_secret', 'bde071f7-c366-443a-bae8-d85b4a73c240' );
+variable_set( 'lingotek_login_id', 'community_admin' );
+variable_set( 'lingotek_vault', '8678' );
+variable_set( 'lingotek_workflow', '2ad91992-e639-471b-b8af-c533d71f5497' );
+variable_set( 'lingotek_project', '20058' );
+
+
+
+// (Live) My Auto Provisioned Community
+
+
+// Blank Credentials
+variable_get( 'lingotek_community_identifier', '' );
+variable_get( 'lingotek_oauth_consumer_id', '' );
+variable_get( 'lingotek_oauth_consumer_secret', '' );
+variable_get( 'lingotek_login_id', '' );
+variable_get( 'lingotek_vault', '' );
+variable_get( 'lingotek_workflow', '' );
+variable_get( 'lingotek_project', '' );
+
+/**/
+
+  $output .= '<div>&nbsp;</div>';
+  $output .= '<div>&nbsp;</div>';
+  $output .= '<div>&nbsp;</div>';
+
+  // launch the batch translate process.
+  // lingotek_bulk_mt_batch_create( ); 
+ 
+  //$api = LingotekApi::instance();
+  //$status = $api->getAccountStatus( );
+  //dpm( $status );
+
+
+
+  return $output;
+
+} // END:  lingotek_development()
+
+
+
+/**
+ * Batch Create: Bulk Machine Translate Batch.
+ */
+function lingotek_bulk_mt_batch_create( ) {
+
+  $operations = array();
+  $bundles = lingotek_translatable_node_types();
+
+  $query = new EntityFieldQuery();
+  $query->entityCondition( 'entity_type', 'node' )->entityCondition( 'bundle', $bundles )->propertyCondition('status', 1); // Published Nodes of the correct Content Types that we want Translated.
+  //$query->propertyCondition('language', array('','und') ); // The Language to search for.
+  $nodes = $query->execute();
+
+  foreach( array_shift( $nodes ) as $node ) {
+    $operations[] = array( 'lingotek_machine_translate_node', array( $node->nid ) );
+  }
+
+  watchdog( 'lingotek_batch_mt', 'CREATE: batch has: @node_count nodes', array( '@node_count' => count( $operations ) ), WATCHDOG_DEBUG );
+
+  $batch = array(
+    'title' => t('Sending Content for Translation'),
+    'operations' => $operations,
+    'finished' => 'lingotek_bulk_mt_batch_finished',
+    'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.inc',
   );
-  //dpm( $fields );
 
-  if( ( isset($fields['community']) && $fields['community'] != '' ) && ( isset($fields['external_id']) && $fields['external_id'] != '' )  && ( isset($fields['oauth_key']) && $fields['oauth_key'] != '' )  && ( isset($fields['oauth_secret']) && $fields['oauth_secret'] != '') ) {
+  batch_set($batch);
+  batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
 
-    $url = LINGOTEK_BILLING_SERVER . '?';
-    foreach( $fields as $key=>$value ) { 
-      $url .= $key . '=' . $value . '&';
-    }
-    $url = substr( $url, 0, -1 );
+} // END:  lingotek_bulk_mt_batch_create(
 
-    $ch = curl_init( $url );
-    curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
-    curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
-    //curl_setopt( $ch, CURLINFO_HEADER_OUT, TRUE );
-    $response = curl_exec( $ch );
-    $info = curl_getinfo( $ch );
-    curl_close( $ch );
 
-    $json = json_decode( $response );
-    if ( isset( $json ) ) { // Did we get valid data back?  If not, $json is NULL.
-      
-    }
 
-    dpm( '- - - - - - - - - - - - - - -' );
-    dpm( 'URL: ' . $url );
-    dpm( 'INFO:' );
-    dpm( $info );
-    dpm( 'RESULT (json):' );
-    dpm( $json );
-    dpm( '- - - - - - - - - - - - - - -' );
-  } // END:  has credentials
 
-  return $result;
 
-} // END:  lingotek_get_account_status()
+
+
+
+
+
+
+
+
 
 
 
