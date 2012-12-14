@@ -4,6 +4,7 @@
  * Lingotek Easy Install Process.
  */
 
+
 /**
  * Routing:  Returning User, New Account or Already Setup
  */
@@ -180,6 +181,7 @@ function lingotek_setup_account_settings_form() {
     '#size' => 40,
     '#maxlength' => 128,
     '#required' => true,
+    '#attributes' => array( 'autocomplete' => array( 'off' ) ),
   );
 
   $form['lingotek_pid'] = array(
@@ -189,6 +191,7 @@ function lingotek_setup_account_settings_form() {
     '#size' => 40,
     '#maxlength' => 128,
     '#required' => true,
+    '#attributes' => array( 'autocomplete' => array( 'off' ) ),
   );
 
   $form['lingotek_button_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
@@ -378,18 +381,21 @@ function lingotek_project_select_form() {
  * Project Select Screen - Form Submit
  */
 function lingotek_project_select_form_submit( $form, $form_state ) {
+
   $project_id = $form_state[ 'values' ][ 'lingotek_site_project' ];
   variable_set( 'lingotek_project', $project_id );
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/project-select';
   drupal_set_message( t( 'Your Lingotek project selection has been saved.' ) );
   drupal_goto( 'admin/config/lingotek/language-settings' ); // Move to Source Language Select Step. 
+
 }
 
 /**
  * Language Selection - Form Layout
  */
 function lingotek_setup_language_settings_form() {
+
   $languages = array(
   	'0' => t('Select a Language...'), 
   	'ar' => t('Arabic'), 
@@ -407,7 +413,6 @@ function lingotek_setup_language_settings_form() {
   );
   $default_language = language_default();
   $source_language = variable_get( 'lingotek_source_language', $default_language->language );
-  $target_language = variable_get( 'lingotek_target_language' );
 
   $form['lingotek_current_language_1'] = array( '#markup' => '<p>To get started, select the source language of your website.</p>' );
   $form['lingotek_current_language_2'] = array( '#markup' => '<p>The current site default language is: ' .$default_language->name .' ( ' .$default_language->language .' )</p>' );
@@ -419,15 +424,6 @@ function lingotek_setup_language_settings_form() {
     '#options' => $languages,
     '#default_value' => $source_language,
     '#description' => t( 'The current language your site is written in.' ),
-    '#required' => true,
-  );
-
-  $form['lingotek_install_target_language'] = array(
-    '#title' => t( 'Target Language' ),
-    '#type' => 'select',
-    '#options' => $languages,
-    '#default_value' => $target_language,
-    '#description' => t( 'The language your site will be translated into.  You can add more languages later.' ),
     '#required' => true,
   );
 
@@ -448,18 +444,16 @@ function lingotek_setup_language_settings_form() {
 
 } // END:  lingotek_install_language_settings_form()
 
-
 /**
  * Language Selection - Form Validation
  * Requires a source and target language to be selected.
  */
 function lingotek_setup_language_settings_form_validate( $form, &$form_state ) {
+
   if ( $form_state[ 'values' ][ 'lingotek_install_source_language' ] == '0' ) {
     form_set_error( '', t( 'You must select a valid source language.' ) );
   }
-  if ( $form_state[ 'values' ][ 'lingotek_install_target_language' ] == '0' ) {
-    form_set_error( '', t( 'You must select a valid target language.' ) );
-  }
+
 } // END:  lingotek_install_language_settings_form_validate
 
 /**
@@ -472,21 +466,14 @@ function lingotek_setup_language_settings_form_submit( $form, $form_state ) {
   // These are the languages that are currently active in this Drupal installation.
   $active_languages = language_list('enabled');
   $source_language = $form_state[ 'values' ][ 'lingotek_install_source_language' ];
-  $target_language = $form_state[ 'values' ][ 'lingotek_install_target_language' ];
 
   // if the Source language is not active, activate it.
   if ( !array_key_exists( $source_language, $active_languages[1] ) ) {
     locale_add_language( $source_language );  // Function from the Locale module.
     //drupal_set_message( t ('The source language activated.' ) );
   }
-  // if the Source language is not active, activate it.
-  if ( !array_key_exists( $target_language, $active_languages[1] ) ) {
-    locale_add_language( $target_language );  // Function from the Locale module.
-    //drupal_set_message( t ('The source language activated.' ) );
-  }
 
   variable_set( 'lingotek_source_language', $form_state[ 'values' ][ 'lingotek_install_source_language' ] );
-  variable_set( 'lingotek_target_language', $form_state[ 'values' ][ 'lingotek_install_target_language' ] );
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/language-settings';
   drupal_set_message( t( 'Your language settings have been saved.' ) );
