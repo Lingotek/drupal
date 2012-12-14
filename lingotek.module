@@ -48,7 +48,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
-  /*
+
+  /**/
   // Tab:  Development
   $items['admin/settings/lingotek/development'] = array(
     'title' => 'Development',
@@ -58,9 +59,29 @@ function lingotek_menu() {
     'page callback' => 'lingotek_development',
     'access arguments' => array('administration')
   );
-  */
+  // Tab:  Testing
+  $items['admin/settings/lingotek/test'] = array(
+    'title' => 'Test',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 30,
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_test',
+    'access arguments' => array('administration')
+  );
+  /**/
 
-  // Dashboard Ajax Command Processor
+  // Dashboard:  Machine Translation Upload Complete
+  $items['admin/settings/lingotek/mt-content-queued'] = array(
+    'title' => 'Content Queued for Translation',
+    'type' => MENU_CALLBACK,
+    'file' => 'lib/Drupal/batch/lingotek.mt.batch.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_bulk_mt_batch_complete'),
+
+    'access arguments' => array('administration')
+  );
+
+  // Dashboard:  Ajax Command Processor
   $items['admin/settings/lingotek/command'] = array(
     'title' => 'Command Router',
     'type' => MENU_CALLBACK,
@@ -70,16 +91,7 @@ function lingotek_menu() {
     'page callback' => 'lingotek_dashboard_command_ajax',
   );
 
-  $items['node/%node/lingotek_pm'] = array(
-    'title' => 'Lingotek',
-    'access arguments' => array(1, 'pm'),
-    'access callback' => 'lingotek_access',
-    'file' => 'lingotek.page.inc',
-    'page arguments' => array(1),
-    'page callback' => 'lingotek_pm',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 3,
-  );
+
 
   $items['lingotek/update'] = array(
     'access arguments' => array('pm'),
@@ -106,15 +118,34 @@ function lingotek_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items['node/%node/lingotek_dev'] = array(
-    'title' => 'Lingotek Developer Tools',
-    'access arguments' => array('dev'),
-    'description' => 'Developer Tools',
-    'file' => 'lingotek.dev.inc',
-    'page callback' => 'lingotek_dev_page',
-    'page arguments' => array(1),
-    'type' => MENU_LOCAL_TASK,
-  );
+
+  // The 2 Node level Lingotek Tabs.
+  $enterprise_account = lingotek_account_is_enterprise();
+  if ( $enterprise_account === true ) {
+
+    $items['node/%node/lingotek_pm'] = array(
+      'title' => 'Lingotek',
+      'access arguments' => array(1, 'pm'),
+      'access callback' => 'lingotek_access',
+      'file' => 'lingotek.page.inc',
+      'page arguments' => array(1),
+      'page callback' => 'lingotek_pm',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 3,
+    );
+
+    $items['node/%node/lingotek_dev'] = array(
+      'title' => 'Lingotek Developer Tools',
+      'access arguments' => array('dev'),
+      'description' => 'Developer Tools',
+      'file' => 'lingotek.dev.inc',
+      'page callback' => 'lingotek_dev_page',
+      'page arguments' => array(1),
+      'type' => MENU_LOCAL_TASK,
+    );
+
+  } // END:  Lingotek Node Level Enterprise Tabs
+
 
   // Easy Install Screens ----------------------------------------
 
@@ -353,6 +384,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   if (!lingotek_supported_type($form['#node']->type)) {
     return;
   }
+  if ( lingotek_is_enterprise_account() === false ) {
+    return; // Only enterprise users need to see this screen.
+  }
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
@@ -424,18 +458,21 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
         '#access' => user_access('access per-item lingotek vault selection'),
       );
     }
-    
+
     // Workflows.
     if ($workflows = $api->listWorkflows()) {
+      // Try to default to: 'Machine Translation - Drupal Integration'
+      $default = array_search ( 'Machine Translation - Drupal Integration', $workflows );
       $form['lingotek']['content']['lingotek_workflow_id'] = array(
         '#type' => 'select',
         '#title' => t('Workflow'),
         '#description' => t('Choose the Workflow to associate with this content item.'),
+        '#default_value' => $default,
         '#options' => $workflows,
         '#access' => user_access('access per-item lingotek project selection'),
       );
     }
-    
+
   }
 
   // Sync Setting.
@@ -889,4 +926,20 @@ function lingotek_content_push_form_submit($form, $form_state) {
   }
   
   drupal_set_message(t('Pushed content for @node_title to Lingotek for translation.', array('@node_title' => $node->title)));
+}
+
+/**
+ * Checks to make sure the Lingotek module is setup correctly.  If its not, the user is directed to the setup wizard.
+ */
+function lingotek_is_module_setup() {
+
+  // Check the current settings -- SKIPS: vault, workflow and the 2 oauth fields, because legacy users will not have those.
+  $current_community_identifier = variable_get( 'lingotek_community_identifier', '' );
+  $current_login_id = variable_get( 'lingotek_login_id', '' );
+  $current_project = variable_get( 'lingotek_project', '' );
+  // Does the install already have all the needed connection credentials?
+  if ($current_community_identifier == '' || $current_login_id == '' || $current_project == '' ) {
+    drupal_goto( 'admin/config/lingotek/new-account' ); // If something is missing - Go to the Setup Process
+  }
+
 }
