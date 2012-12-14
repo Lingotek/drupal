@@ -434,3 +434,99 @@ function lingotek_current_phase($phases) {
 
   return $phase_id;
 }
+
+/**
+ * Get the Current Lingotek Account Status object (Direct object conversion from the returned json).
+ * Account details are cached, due to the large delay to pull them down.
+
+    -->> This is Without Signing Up:
+    stdClass::__set_state(array(
+       'state' => 'active',
+       'plan' => NULL,
+    ))
+
+    -->> Full/Populated Account Object
+    stdClass::__set_state(array(
+       'state' => 'active',
+       'plan' => 
+      stdClass::__set_state(array(
+         'trial_ends_at' => 0,
+         'state' => 'active',
+         'activated_at' => 1355247763,
+         'type' => 'enterprise',
+         'languages_allowed' => 'unlimted',
+         'language_cost_per_period_in_cents' => 0,
+      )),
+    ))
+ */
+function lingotek_account_get_status() {
+
+  $account = &drupal_static(__FUNCTION__);
+
+  if ( !isset( $account ) ) {
+    $api = LingotekApi::instance();
+    $status = $api->getAccountStatus( );
+
+    // If we got valid json back, we should have an object, with an account state of some type.
+    if( is_object( $status ) && isset( $status->state ) ) {
+      $account = $status;
+    }
+  }
+
+  return $account;
+
+} // END:  lingotek_account_get_status()
+
+/**
+ * Is this an Enterprise Account?  Returns true / false.
+ * Gets the current account status from the Lingotek servers, and saves that status locally.
+ */
+function lingotek_account_check_enterprise_status() {
+
+  $result = false;
+  $account = lingotek_account_get_status();
+
+  // Do we have a defined Plan?
+  if( isset( $account->plan->type ) ) {
+    // Is it an Enterprise account?
+    if( $account->plan->type == 'enterprise' ) {
+      $result = true;
+      variable_set( 'lingotek_enterprise_account', 1 );
+    } else {
+      $result = false;
+      variable_set( 'lingotek_enterprise_account', 0 );
+    }
+  }
+
+  menu_rebuild();
+  return $result;
+
+} // END:  lingotek_account_check_enterprise_status()
+
+/**
+ * Is this an Enterprise Account?  Returns true / false.
+ * Checks against the locally stored variable.
+ */
+function lingotek_account_is_enterprise() {
+
+  $status = variable_get( 'lingotek_enterprise_account', 0 );
+  return ( $status == 1 ) ? true : false ;
+
+} // END:  lingotek_account_is_enterprise()
+
+/**
+ * Get the max number of languages enabled for this account.
+ */
+function lingotek_account_max_languages() {
+
+  $result = false;
+  $account = lingotek_account_get_status();
+
+  // Do we have a max languages
+  if( isset( $account->plan->languages_allowed ) ) {
+    $result = $account->plan->languages_allowed;
+  }
+
+  return $result;
+
+} // END:  lingotek_account_max_languages()
