@@ -14,8 +14,8 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
-  const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
@@ -578,78 +578,61 @@ class LingotekApi {
     return $result;
   }
 
+
   /**
-   * Get biling status
-   *
-   * @return mixed
-   *   On success, a stdClass object of the returned response data, FALSE on error.
+   * Get Account Status
+   * Request:  http://cp.lingotek.com:8080/billing/account.json?community=B2MMD3X5&external_id=community_admin&oauth_key=28c279fa-28dc-452e-93af-68d194a2c366&oauth_secret=0e999486-3b4d-47e4-ba9a-d0f3f0bbda73
+   * Response:  {"state":"active","plan":{"trial_ends_at":0,"state":"active","activated_at":1355267936,"type":"cosmopolitan_monthly","languages_allowed":2,"language_cost_per_period_in_cents":14900}}
+   * Will return FALSE or a json decoded object.
    */
-
-  public function getBillingStatus() {
-
-    return LINGOTEK_BILLING_SERVER ;
-
-  }
-
-   /*
-
-    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
-    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
+  function getAccountStatus( ) {
 
     $result = false;
-    $response = null;
-    $method = 'http://cp.lingotek.com:8080/billing/account.json';
-    $credentials = array(
-      'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
-      'consumer_secret' => variable_get('lingotek_oauth_consumer_secret', '')
+    $fields = array(
+      'community'    => urlencode( variable_get( 'lingotek_community_identifier', '' ) ),
+      'external_id'  => urlencode( variable_get( 'lingotek_login_id', '' ) ),
+      'oauth_key'    => urlencode( variable_get( 'lingotek_oauth_consumer_id', '' ) ),
+      'oauth_secret' => urlencode( variable_get( 'lingotek_oauth_consumer_secret', '' ) ),
     );
-    $parameters = array(
-      'community' => variable_get( 'lingotek_community_identifier', '' ),
-      'external_id' => variable_get( 'lingotek_login_id', '' )
-    );
+    //dpm( $fields );
 
+    if( ( isset($fields['community']) && $fields['community'] != '' ) && ( isset($fields['external_id']) && $fields['external_id'] != '' )  && ( isset($fields['oauth_key']) && $fields['oauth_key'] != '' )  && ( isset($fields['oauth_secret']) && $fields['oauth_secret'] != '') ) {
 
-    $timer_name = $method . '-' . microtime(TRUE);
-    timer_start($timer_name);
+      $url = LINGOTEK_BILLING_SERVER . '?';
+      foreach( $fields as $key=>$value ) { 
+        $url .= $key . '=' . $value . '&';
+      }
+      $url = substr( $url, 0, -1 );
 
-    try {
-      OAuthStore::instance('2Leg', $credentials);
-      // GET 
-    	$request = new OAuthRequester( $method, 'GET', $parameters);
-    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
-dpm( $result );
-    }
-    catch (OAuthException2 $e) {
-dpm( $e->getMessage() );
-      watchdog('lingotek', 'Failed OAuth request.
-      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);      
-    }
+      $ch = curl_init( $url );
+      curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
+      curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
+      //curl_setopt( $ch, CURLINFO_HEADER_OUT, TRUE );
+      $response = curl_exec( $ch );
+      $info = curl_getinfo( $ch );
+      curl_close( $ch );
 
-    $timer_results = timer_stop($timer_name);
+      $json = json_decode( $response );
+      if ( isset( $json ) ) { // Did we get valid data back?  If not, $json is NULL.
 
-    if ($this->debug) {
-      $message_params = array(
-        '@method' => $method,
-        '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response),
-        '@response_time' => number_format($timer_results['time']) . ' ms',
-      );
-      watchdog(
-        'lingotek_debug',
-        '<strong>Called API method</strong>: @method<br />
-        <strong>Response Time:</strong> @response_time<br />
-        <strong>Params</strong>: !params<br />
-        <strong>Response:</strong> !response',
-        $message_params,
-        WATCHDOG_DEBUG
-      );
-    } // END:  if debug
+        //dpm( '- - - - - - - - - - - - - - -' );
+        //dpm( 'URL: ' . $url );
+        //dpm( 'INFO:' );
+        //dpm( $info );
+        //dpm( 'RESULT (json):' );
+        //debug( $json );
+        //dpm( '- - - - - - - - - - - - - - -' );
+
+        $result = $json;
+
+      }
+
+    } // END:  has credentials
 
     return $result;
-  }
-  */
+
+  } // END:  lingotek_get_account_status()
+
 
   /**
    * Formats a complex object for presentation in a watchdog message.
