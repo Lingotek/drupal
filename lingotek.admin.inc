@@ -13,15 +13,7 @@ include_once('lingotek.session.inc');
  */
 function lingotek_admin_form() {
 
-  // Check the current settings -- SKIPS: vault, workflow and the 2 oauth fields, because legacy users will not have those.
-  $current_community_identifier = variable_get( 'lingotek_community_identifier', '' );
-  $current_login_id = variable_get( 'lingotek_login_id', '' );
-  $current_project = variable_get( 'lingotek_project', '' );
-  // Does the install already have connection credentials?
-  if ($current_community_identifier == '' || $current_login_id == '' || $current_project == '' ) {
-    // If something is missing - Go though the Setup Process
-    drupal_goto( 'admin/config/lingotek/new-account' );
-  } 
+  lingotek_is_module_setup();
 
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();
@@ -31,7 +23,16 @@ function lingotek_admin_form() {
     t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.',
       array('@link_url' => url(variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION) . '/lingopoint/portal/communitySignup.action'))
     );
-    
+
+  // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
+  if( !lingotek_account_is_enterprise() ) {
+    $collapse_settigns = false;
+  } else if ( $connected ) { // If enterprise users connected successfully, it can be closed.
+    $collapse_settigns = true;
+  } else { // Default to open.
+    $collapse_settigns = false;    
+  }
+
 
   // Lingotek connection settings.
   $form['connection'] = array(
@@ -39,7 +40,7 @@ function lingotek_admin_form() {
     '#title' => t('Connection Settings'),
     '#description' => $connection_group_description,
     '#collapsible' => TRUE,
-    '#collapsed' => $connected,
+    '#collapsed' => $collapse_settigns,
     '#group' => 'administrative_settings',
   );
   
@@ -80,7 +81,8 @@ function lingotek_admin_form() {
   );
 
   // If the connection isn't yet established, stop here.
-  if (!$api->testAuthentication()) {
+  // Also stop here if this isn't an enterprise account.
+  if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
     return system_settings_form($form);
   }
 
