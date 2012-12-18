@@ -530,3 +530,141 @@ function lingotek_account_max_languages() {
   return $result;
 
 } // END:  lingotek_account_max_languages()
+
+
+
+// --- Active and Target Language management Functions
+
+/**
+ * Get the currently active languages for this Drupal installation.
+ */
+function lingotek_get_active_languages( $get_details = false ) {
+  $active_languages = language_list('enabled');
+  $active_languages = array_shift( $active_languages );
+
+  if( $get_details === false ) {
+    $active_languages = array_keys( $active_languages );
+  }
+  /*
+  Get_Details -> false
+  array (
+    0 => 'en',
+    1 => 'es',
+  )
+  
+  Get_Details -> true
+  array (
+    'en' => 
+    stdClass::__set_state(array(
+       'language' => 'en',
+       'name' => 'English',
+       'native' => 'English',
+       'direction' => '0',
+       'enabled' => '1',
+       'plurals' => '0',
+       'formula' => '',
+       'domain' => '',
+       'prefix' => '',
+       'weight' => '0',
+       'javascript' => '',
+    )),
+  */
+
+  return $active_languages;
+
+} // END:  lingotek_get_active_languages()
+
+
+/**
+ * Flags a target language as active:false in the Target Language tracking.
+ */
+function lingotek_delete_target_language( $drupal_language_code = null ) {
+
+  $result = false;
+
+  if( isset( $drupal_language_code ) ) {
+
+    $target_languages = lingotek_get_target_languages();
+    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => false );
+    lingotek_save_target_languages( $target_languages );
+    $result = true;  // Hrm... variable_set isnt really into returning values.
+  }
+
+  return $result;
+
+} // END:  lingotek_get_target_languages()
+
+
+/**
+ * Adds a target language to the Target Language tracking.
+ */
+function lingotek_add_target_language( $drupal_language_code = null ) {
+
+  $result = false;
+
+  if( isset( $drupal_language_code ) ) {
+
+    $target_languages = lingotek_get_target_languages();
+    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => true );
+    lingotek_save_target_languages( $target_languages );
+    $result = true;  // Hrm... variable_set isnt really into returning values.
+  }
+
+  return $result;
+
+} // END:  lingotek_get_target_languages()
+
+
+/**
+ * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
+ * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
+ * pass in active == true, to get ONLY the active languages.
+ */
+function lingotek_get_target_languages( $active_only = false ) {
+
+  $target_languages = variable_get( 'lingotek_target_languages', array() );
+
+  // If $active_only == true, return only the active ones.
+  if( $active_only ) {
+    $active_languages = array();
+    foreach( $target_languages as $target ) {
+      if ( $target['active'] == true ) {
+        $active_languages[] = $target['code'];
+      }
+    }
+    $target_languages = $active_languages;
+  }
+
+  return $target_languages;
+
+} // END:  lingotek_get_target_languages()
+
+
+/*
+ * Uses lingotek_get_target_languages to build a Drupal style format language_list()
+ * So this list ONLY includes languages listed in the dashboard.
+ */ 
+function lingotek_get_target_language_list() {
+
+  $paid_targets = array();
+
+  $active_languages = lingotek_get_active_languages( true );
+  $clean_list = lingotek_get_target_languages( true ); // Simple language list of Paid Target Languages
+  foreach ( $clean_list as $clean ) {
+    $paid_targets[ $clean ] = $active_languages[ $clean ];
+  }
+
+  return $paid_targets;
+}
+
+
+/**
+ * Save the Targeted Languages data.
+ */
+function lingotek_save_target_languages( $target_languages = null ) {
+
+  if ( isset( $target_languages ) ) {
+    variable_set( 'lingotek_target_languages', $target_languages );
+  }
+
+} // END:  lingotek_save_target_languages()
