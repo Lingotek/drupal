@@ -8,7 +8,7 @@
  * Identifies a content type which has Lingotek translation enabled.
  */
 define('LINGOTEK_ENABLED', 'lingotek');
-define('LINGOTEK_VERSION', '7.x-1.63');
+define('LINGOTEK_VERSION', '7.x-1.65');
 define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
 
 include_once('lingotek.session.inc');
@@ -49,41 +49,9 @@ function lingotek_menu() {
     'page arguments' => array('lingotek_admin_form'),
   );
 
-  /**/
-  // Tab:  Development
-  $items['admin/settings/lingotek/development'] = array(
-    'title' => 'Development',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_development',
-    'access arguments' => array('administration')
-  );
-  // Tab:  Testing
-  $items['admin/settings/lingotek/test'] = array(
-    'title' => 'Test',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 30,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_test',
-    'access arguments' => array('administration')
-  );
-  /**/
-
-  // Dashboard:  Machine Translation Upload Complete
-  $items['admin/settings/lingotek/mt-content-queued'] = array(
-    'title' => 'Content Queued for Translation',
-    'type' => MENU_CALLBACK,
-    'file' => 'lib/Drupal/batch/lingotek.mt.batch.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_bulk_mt_batch_complete'),
-
-    'access arguments' => array('administration')
-  );
-
   // Dashboard:  Ajax Command Processor
   $items['admin/settings/lingotek/command'] = array(
-    'title' => 'Command Router',
+    'title' => 'Upload Documents for Translation',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
     'description' => 'Lingotek Command Router',
@@ -91,15 +59,13 @@ function lingotek_menu() {
     'page callback' => 'lingotek_dashboard_command_ajax',
   );
 
-
-
   $items['lingotek/update'] = array(
     'access arguments' => array('pm'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_update',
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['lingotek/mark-phases-complete/%node'] = array(
     'access arguments' => array('access content'),
     'file' => 'includes/lingotek.ajax.inc',
@@ -118,8 +84,7 @@ function lingotek_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-
-  // The 2 Node level Lingotek Tabs.
+  // The 2 Node Level Lingotek Tabs for Enterprise users.
   $enterprise_account = lingotek_account_is_enterprise();
   if ( $enterprise_account === true ) {
 
@@ -146,6 +111,45 @@ function lingotek_menu() {
 
   } // END:  Lingotek Node Level Enterprise Tabs
 
+  // Batch Process Pages ----------------------------------------
+
+  // START UPLOAD:  Upload documents for the Machine Translation process.
+  $items['admin/settings/lingotek/mt-upload'] = array(
+    'title' => 'Upload Documents For Machine Translation',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard_mt_upload',
+  );
+
+  // UPLOAD COMPLETE:  Machine Translation Upload Complete Screen
+  $items['admin/settings/lingotek/mt-content-queued'] = array(
+    'title' => 'Content Queued for Translation',
+    'type' => MENU_CALLBACK,
+    'file' => 'lib/Drupal/batch/lingotek.mt.batch.upload.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_bulk_mt_upload_batch_complete'),
+    'access arguments' => array('administration')
+  );
+
+  // START DOWNLOAD: Download documents that have been Machine Translated.
+  $items['admin/settings/lingotek/mt-download'] = array(
+    'title' => 'Download Machine Translated Documents',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard_mt_download',
+  );
+
+  // DOWNLOAD COMPLETE: Machine Translation Download Complete Screen
+  $items['admin/settings/lingotek/mt-content-downloaded'] = array(
+    'title' => 'Download Translated Content',
+    'type' => MENU_CALLBACK,
+    'file' => 'lib/Drupal/batch/lingotek.mt.batch.download.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_bulk_mt_download_batch_complete'),
+    'access arguments' => array('administration')
+  );
 
   // Easy Install Screens ----------------------------------------
 
@@ -251,6 +255,27 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration')
   );
+
+  /*
+  // Tab:  Development
+  $items['admin/settings/lingotek/development'] = array(
+    'title' => 'Development',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_development',
+    'access arguments' => array('administration')
+  );
+  // Tab:  Testing
+  $items['admin/settings/lingotek/test'] = array(
+    'title' => 'Test',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 30,
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_test',
+    'access arguments' => array('administration')
+  );
+  /**/
 
   return $items;
 }
@@ -359,7 +384,8 @@ function lingotek_permission() {
     'pm' => array('title' => 'Project Management', 'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')),
     'translation' => array('title' => 'Translate', 'description' => t('Allow access to the workbench for translation (first) phases')),
     'review' => array('title' => 'Review', 'description' => t('Allow access to the workbench for review (following) phases.')),
-    'phase_template' => array('title' => 'Phase Template (Workflow)', 'description' => t('Allow node-level setting of the phase template on node creation.  Can only be set once per node.')),
+    'phase_template' => array('title' => 'Phase Template (
+)', 'description' => t('Allow node-level setting of the phase template on node creation.  Can only be set once per node.')),
     'use_source' => array('title' => 'Paste Source', 'description' => t('Allow node-level setting of showing the source when no translation is available yet')),
     'sync_method' => array('title' => 'Synchronization Method', 'description' => t('Allow node-level setting of setting the synchronization method')),
     'url_alias_translation' => array('title' => 'URL Alias Translation', 'description' => t('Allow node-level setting of setting the URL alias translation')),
@@ -384,7 +410,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   if (!lingotek_supported_type($form['#node']->type)) {
     return;
   }
-  if ( lingotek_is_enterprise_account() === false ) {
+  if ( lingotek_account_is_enterprise() === false ) {
     return; // Only enterprise users need to see this screen.
   }
 
@@ -461,13 +487,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
     // Workflows.
     if ($workflows = $api->listWorkflows()) {
-      // Try to default to: 'Machine Translation - Drupal Integration'
-      $default = array_search ( 'Machine Translation - Drupal Integration', $workflows );
       $form['lingotek']['content']['lingotek_workflow_id'] = array(
         '#type' => 'select',
         '#title' => t('Workflow'),
         '#description' => t('Choose the Workflow to associate with this content item.'),
-        '#default_value' => $default,
+        '#default_value' => variable_get('lingotek_workflow', ''),
         '#options' => $workflows,
         '#access' => user_access('access per-item lingotek project selection'),
       );
@@ -499,7 +523,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form['lingotek']['content']['create_lingotek_document'] = array(
     '#type' => 'select',
     '#title' => t('Automatically Push Node Content to Lingotek'),
-    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 1),
+    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 0),
     '#options' => array(
       1 => t('Enabled'),
       0 => t('Disabled')

@@ -39,9 +39,9 @@ function lingotek_pm($node) {
     );
 
     $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-
+//dpm( $document );
     $progress = lingotek_get_document_targets($document->document_id, TRUE);
-
+//dpm( $progress );
     $rows = array();
     foreach ($progress as $language => $target) {
       $current_phase = $document->currentPhase($target->id);
@@ -89,8 +89,9 @@ function lingotek_pm($node) {
     );
 
     if (lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
+      $content_push_form = drupal_get_form('lingotek_content_push_form', $node);
       $output['content_push'] = array(
-        '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render(drupal_get_form('lingotek_content_push_form', $node)),
+        '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render( $content_push_form ),
       );
 
       if (!empty($rows)) {
@@ -107,8 +108,9 @@ function lingotek_pm($node) {
 
     // Add the mark as complete table if there are complete-eligible phrases.
     if ($document->hasPhasesToComplete()) {
+      $drupal_phase_complete_from = drupal_get_form('lingotek_mark_phases_complete', $node);
       $output['mark_complete'] = array(
-        '#markup' => drupal_render(drupal_get_form('lingotek_mark_phases_complete', $node)),
+        '#markup' => drupal_render($drupal_phase_complete_from),
       );
     }
 

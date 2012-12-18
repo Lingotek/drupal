@@ -170,7 +170,7 @@ function lingotek_admin_form() {
       1 => t('Enabled'),
       0 => t('Disabled'),
     ),
-    '#default_value' => variable_get('lingotek_create_documents_by_default', 1),
+    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
   );
 
   // URL Alias Translation.
