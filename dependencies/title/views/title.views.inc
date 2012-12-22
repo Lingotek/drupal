@@ -1,5 +1,6 @@
 <?php
 /**
+ * @file
  * Implements hook_views_data_alter().
  *
  * Replace field default handler (views_handler_field_field).

@@ -22,7 +22,7 @@ function lingotek_download_document(&$node, $target_language) {
   $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
   lingotek_trace('lingotek_download_document', array("document_id_" . $node->language => $document_id, "language" => $target_language));
 
-  //CAREFUL of alternate values for $use_source, must be string 'true' for api, not boolean
+  //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = lingotek_lingonode($node->nid, 'use_source');
   if ($use_source === FALSE) {
     $use_source = variable_get('lingotek_use_source', TRUE);
@@ -59,7 +59,7 @@ function lingotek_download_document(&$node, $target_language) {
     if ($tag == 'menu_title') {
       //TODO handle menu translation
     }
-    else if ($tag == 'url_alias' && $url_alias_translation == 1) {
+    elseif ($tag == 'url_alias' && $url_alias_translation == 1) {
       $target = check_plain($content);
 
       //URL Alias related to the page:
@@ -137,7 +137,7 @@ function lingotek_download_document(&$node, $target_language) {
  * @param $doc_id
  *  Document Id
  * @return
- *  boolean, true if the api call was successful
+ *  boolean, TRUE if the api call was successful
  */
 function lingotek_save_segment($source_text, $target_text, $target_language, $doc_id) {
   $param = array
@@ -509,7 +509,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
             $label = lingotek_get_phase_name($phase_id);
           }
           $l = l(t($label), '#', array('attributes' => array(
-            'onclick' => 'window.open(\'' . $path . '\'); return false;',
+            'onclick' => 'window.open(\'' . $path . '\'); return FALSE;',
             'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
             'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
           )));

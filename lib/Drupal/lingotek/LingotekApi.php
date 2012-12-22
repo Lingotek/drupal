@@ -476,7 +476,7 @@ class LingotekApi {
     	  // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in OAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/OAuthRequest.php).
     	  // The thing is, if you encode the params, they just get translated back to an array by the object.  They have some type of error internal to the object code that is handling things wrong.
     	  // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
-    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
+    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
     }
     catch (OAuthException2 $e) {
@@ -490,8 +490,8 @@ class LingotekApi {
           '@url' => $api_url,
           '@message' => $e->getMessage(),
           '@name' => $method,
-          '!params' => $this->watchdogFormatObject($parameters),
-          '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
+          '!params' => $this->watchdog_format_object($parameters),
+          '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);
     }
 
     $timer_results = timer_stop($timer_name);
@@ -500,8 +500,8 @@ class LingotekApi {
       $message_params = array(
         '@url' => $api_url,
         '@method' => $method,
-        '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response),
+        '!params' => $this->watchdog_format_object($parameters),
+        '!response' => $this->watchdog_format_object($response),
         '@response_time' => number_format($timer_results['time']) . ' ms',
       );
 
@@ -516,8 +516,8 @@ class LingotekApi {
     }
     else {
       watchdog('lingotek', 'Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);
+        array('@name' => $method, '!params' => $this->watchdog_format_object($parameters),
+        '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);
     }
 
     return $response_data;
@@ -535,7 +535,7 @@ class LingotekApi {
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
 
-    $result = false;
+    $result = FALSE;
     $response = null;
     $method = 'autoProvisionCommunity';
     $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
@@ -546,13 +546,13 @@ class LingotekApi {
     try {
       OAuthStore::instance('2Leg', $credentials);
     	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
-    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => false ) );
+    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed OAuth request.
       <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response)), WATCHDOG_ERROR);      
+        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdog_format_object($parameters),
+        '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);      
     }
 
     $timer_results = timer_stop($timer_name);
@@ -560,8 +560,8 @@ class LingotekApi {
     if ($this->debug) {
       $message_params = array(
         '@method' => $method,
-        '!params' => $this->watchdogFormatObject($parameters),
-        '!response' => $this->watchdogFormatObject($response),
+        '!params' => $this->watchdog_format_object($parameters),
+        '!response' => $this->watchdog_format_object($response),
         '@response_time' => number_format($timer_results['time']) . ' ms',
       );
       watchdog(
@@ -587,7 +587,7 @@ class LingotekApi {
    */
   function getAccountStatus( ) {
 
-    $result = false;
+    $result = FALSE;
     $fields = array(
       'community'    => urlencode( variable_get( 'lingotek_community_identifier', '' ) ),
       'external_id'  => urlencode( variable_get( 'lingotek_login_id', '' ) ),
@@ -637,7 +637,7 @@ class LingotekApi {
   /**
    * Formats a complex object for presentation in a watchdog message.
    */
-  private function watchdogFormatObject($object) {
+  private function watchdog_format_object($object) {
     return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
   }
 

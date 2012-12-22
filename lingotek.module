@@ -86,7 +86,7 @@ function lingotek_menu() {
 
   // The 2 Node Level Lingotek Tabs for Enterprise users.
   $enterprise_account = lingotek_account_is_enterprise();
-  if ( $enterprise_account === true ) {
+  if ( $enterprise_account === TRUE ) {
 
     $items['node/%node/lingotek_pm'] = array(
       'title' => 'Lingotek',
@@ -410,7 +410,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   if (!lingotek_supported_type($form['#node']->type)) {
     return;
   }
-  if ( lingotek_account_is_enterprise() === false ) {
+  if ( lingotek_account_is_enterprise() === FALSE ) {
     return; // Only enterprise users need to see this screen.
   }
 
@@ -580,7 +580,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form['lingotek']['developer']['current_lingonode'] = array(
     '#type' => 'item',
     '#title' => t('Node Variables'),
-    '#description' => $values,
+    '#description' => check_plain($values),
   );
 
 }
@@ -842,7 +842,7 @@ function lingotek_translatable_node_fields() {
  * "Finished" callback for language update batch operations.
  */
 function lingotek_field_language_update_finished($success, $results, $operations) {
-  drupal_set_message('Updated field data for nodes.') ;
+  drupal_set_message(t('Updated field data for nodes.'));
 }
 
 /**

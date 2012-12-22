@@ -19,7 +19,7 @@ function lingotek_pm($node) {
   global $language_content;
   $icon_green_check = url( drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png' );
   $prefix = $language_content->prefix;
-  if( strlen( $prefix ) > 0 ) {
+  if ( strlen( $prefix ) > 0 ) {
     $icon_green_check = substr( $icon_green_check, strlen( $prefix )+1 );    
   }
 
@@ -39,9 +39,7 @@ function lingotek_pm($node) {
     );
 
     $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-//dpm( $document );
     $progress = lingotek_get_document_targets($document->document_id, TRUE);
-//dpm( $progress );
     $rows = array();
     foreach ($progress as $language => $target) {
       $current_phase = $document->currentPhase($target->id);
@@ -258,7 +256,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
         
         if ($current_phase && $current_phase->canBeMarkedComplete()) {
           $phase_link = l($current_phase->name, '#', array('attributes' => array(
-            'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return false;')));
+            'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return FALSE;')));
 
           $row = array(
             lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',

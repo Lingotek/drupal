@@ -1,5 +1,6 @@
 <?php
 /**
+ * @file
  * Field handler to present field title with link to the entity.
  *
  * @ingroup views_field_handlers

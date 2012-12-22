@@ -11,18 +11,11 @@
 function lingotek_download_node_machine_translation( $nid, $language_code, &$context ) {
 
   $node = node_load($nid);
-
-  lingotek_download_document ($node, $language_code );
-
+  lingotek_download_document($node, $language_code);
   $context['results'][] = 'Download Translated Node Content: ' . $nid;
   watchdog( 'lingotek_batch_mt', 'WORK: DL Node: @node_id (@lang)  -->> ', array( '@node_id' => $nid, '@lang' => $language_code ), WATCHDOG_DEBUG );
 
 } // END:  lingotek_machine_translate_node();
-
-
-
-
-
 
 
 /**
@@ -33,16 +26,17 @@ function lingotek_bulk_mt_download_batch_finished( $success, $results, $operatio
   $messages = array();
   $result_count = count( $results );
 
-  if ( $success ) { // The 'success' (true/false) means no fatal PHP errors were detected. All other error management should be handled using 'results'.
+  if ( $success ) { // The 'success' (TRUE/FALSE) means no fatal PHP errors were detected. All other error management should be handled using 'results'.
     $messages[] = t( 'The process finished successfully.' );
     $messages[] = format_plural( $result_count, 'One translated node has been downloaded.', '@count translated nodes have been downloaded.' );
-  } else {
+  }
+  else {
     $messages[] = t( 'The process finished with an errors.  Some content may have been missed.' );
     $messages[] = format_plural( $result_count, 'One translated node has been downloaded.', '@count translated nodes have been downloaded.' );
   }
 
   $_SESSION['bulk_mt_batch_download_results'] = $messages; // Save data before redirect.
-  watchdog( 'lingotek_batch_mt', 'FINISHED DL Batch: @message', array( '@message' => print_r( $messages, true ) ), WATCHDOG_DEBUG );
+  watchdog( 'lingotek_batch_mt', 'FINISHED DL Batch: @message', array( '@message' => print_r( $messages, TRUE ) ), WATCHDOG_DEBUG );
 
   drupal_goto('admin/settings/lingotek/mt-content-downloaded');
 
@@ -65,8 +59,8 @@ function lingotek_bulk_mt_download_batch_complete() {
   $form['lingotek_message_4'] = array( '#markup' => '<blockquote>' );
 
   $cnt = 1;
-  foreach( $messages as $message ) {
-    $form['lingotek_message_details_'.$cnt] = array( '#markup' => '<div>' .$message .'</div>' );
+  foreach ( $messages as $message ) {
+    $form['lingotek_message_details_' . $cnt] = array( '#markup' => '<div>' . $message . '</div>' );
     $cnt++;
   }
 
@@ -74,8 +68,8 @@ function lingotek_bulk_mt_download_batch_complete() {
 
   $form['lingotek_button_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
   $form[ 'submit' ] = array(
-  	'#type' => 'submit', 
-  	'#value' => t( 'Continue' )
+    '#type' => 'submit', 
+    '#value' => t( 'Continue' )
   );
 
   return $form;

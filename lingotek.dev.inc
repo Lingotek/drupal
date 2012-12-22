@@ -87,7 +87,7 @@ function lingotek_dev_form($ignore, $param) {
   $form['data']['value'] = array
   (
     '#type' => 'item',
-    '#description' => $table,
+    '#description' => check_plain($table),
   );
 
   return $form;
@@ -98,5 +98,5 @@ function lingotek_dev_submit($form) {
   $nid = intval($form['dev']['nid']['#value']);
   $key = $form['dev']['key']['#value'];
   $value = $form['dev']['value']['#value'];
-  drupal_set_message(t('Results:') . ' ' . lingotek_dump(lingotek_lingonode($nid, $key, $value)));
+  drupal_set_message( t('Results: @dump', array( '@dump' => lingotek_dump(lingotek_lingonode($nid, $key, $value)) ) ) );
 }

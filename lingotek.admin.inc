@@ -25,12 +25,14 @@ function lingotek_admin_form() {
     );
 
   // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
-  if( !lingotek_account_is_enterprise() ) {
-    $collapse_settigns = false;
-  } else if ( $connected ) { // If enterprise users connected successfully, it can be closed.
-    $collapse_settigns = true;
-  } else { // Default to open.
-    $collapse_settigns = false;    
+  if ( !lingotek_account_is_enterprise() ) {
+    $collapse_settigns = FALSE;
+  }
+  elseif ( $connected ) { // If enterprise users connected successfully, it can be closed.
+    $collapse_settigns = TRUE;
+  }
+  else { // Default to open.
+    $collapse_settigns = FALSE;    
   }
 
 
@@ -38,7 +40,7 @@ function lingotek_admin_form() {
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection Settings'),
-    '#description' => $connection_group_description,
+    '#description' => check_plain($connection_group_description),
     '#collapsible' => TRUE,
     '#collapsed' => $collapse_settigns,
     '#group' => 'administrative_settings',

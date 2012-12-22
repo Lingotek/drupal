@@ -85,7 +85,7 @@ function title_admin_settings_form() {
     }
 
     foreach (array_keys($entity['field replacement']) as $replacement) {
-      $options[$entity_type . ':' . $replacement] = $entity['label'] ." - ". ucfirst($replacement);
+      $options[$entity_type . ':' . $replacement] = $entity['label'] . " - " . ucfirst($replacement);
     }
   }
 

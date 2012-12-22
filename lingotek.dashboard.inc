@@ -31,14 +31,14 @@ function lingotek_get_dashboard_code() {
   $source_language = lingotek_get_source_language(); // ie:  en - Drupal Language Code
   $active_languages = lingotek_get_active_languages( );  // array of Drupal language codes.  ie:  en.
 
-  if( variable_get( 'lingotek_community_identifier', '' ) != '' && variable_get( 'lingotek_oauth_consumer_id', '' ) != '' && variable_get( 'lingotek_oauth_consumer_secret', '' ) != '' && 
+  if ( variable_get( 'lingotek_community_identifier', '' ) != '' && variable_get( 'lingotek_oauth_consumer_id', '' ) != '' && variable_get( 'lingotek_oauth_consumer_secret', '' ) != '' && 
       variable_get( 'lingotek_login_id', '' ) != '' && variable_get( 'lingotek_project', '' ) != '' && variable_get( 'lingotek_vault', '' ) != '' ) {
 
     // Loop though each active target language, and initialize the data.  Add the language code for each language, setting the counts to 0.  Skip the source language
     $target_languages = lingotek_get_target_languages( );
 
-    foreach( $target_languages as $language ) {
-      if( $language[ 'active' ] === true && $language[ 'code' ] != $source_language ) { // Only active languages.
+    foreach ( $target_languages as $language ) {
+      if ( $language[ 'active' ] === TRUE && $language[ 'code' ] != $source_language ) { // Only active languages.
         $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
         $cnt_mt = $cnt_docs; // How many docs were machine translated?
         $cnt_pr = 0; // How many docs were human translated?
@@ -108,7 +108,7 @@ function lingotek_get_dashboard_code() {
       variable_get( 'lingotek_activation_email', '' ), //email
       // cms
       $guid, // installation GUID
-      url( '<front>', array( 'absolute' => true ) ), // site url
+      url( '<front>', array( 'absolute' => TRUE ) ), // site url
       variable_get( 'site_name', 'Unidentified Drupal Site' ), // sitename
       'Drupal', // cms type
       VERSION, // drupal version
@@ -120,10 +120,9 @@ function lingotek_get_dashboard_code() {
       json_encode( $totals ) // The target languages they are using on Lingotek
     );
 
-  } else {
-
-    $output = 'Your Lingotek module is not Properly configured.  Please run the Lingotek <a href="' .url( 'admin/config/lingotek/setup' ) .'">Installation Wizard</a>.';
-
+  }
+  else {
+    $output = 'Your Lingotek module is not Properly configured.  Please run the Lingotek <a href="' . url( 'admin/config/lingotek/setup' ) . '">Installation Wizard</a>.';
   }
 
   return $output;
@@ -156,7 +155,7 @@ function lingotek_dashboard_command_ajax() {
 
     $response = array(
       'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
-      'active' => true,
+      'active' => TRUE,
       'docs' => '0',
       'mt' => '0',
       'pr' => '0',
@@ -174,7 +173,7 @@ function lingotek_dashboard_command_ajax() {
     $message = 'POST: Insert a new Target Language';
     $dashboard_language_code = $_POST[ 'code' ];
 
-    if( strlen( $dashboard_language_code ) > 1 ) {
+    if ( strlen( $dashboard_language_code ) > 1 ) {
 
       // These are the languages that are currently active in this Drupal installation.
       $active_languages = language_list('enabled');
@@ -191,7 +190,7 @@ function lingotek_dashboard_command_ajax() {
 
       $response = array(
         'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
-        'active' => true,
+        'active' => TRUE,
         'docs' => '0',
         'mt' => '0',
         'pr' => '0',
@@ -215,9 +214,9 @@ function lingotek_dashboard_command_ajax() {
 
     $response = array(
       'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
-      'active' => false,
+      'active' => FALSE,
       'success' => $delete
-    ); // Format:  {'code':'es','active':'false','success':true}
+    ); // Format:  {'code':'es','active':'FALSE','success':TRUE}
 
   } // END:  DELETE
 
@@ -239,7 +238,7 @@ function lingotek_dashboard_command_ajax() {
         $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
 
         //$response = print_r( $target_languages[ $drupal_language_code ][ 'active' ] );
-        if( isset( $target_languages[ $drupal_language_code ] ) ) {
+        if ( isset( $target_languages[ $drupal_language_code ] ) ) {
 
           $cnt_docs = lingotek_get_node_count( $drupal_language_code ); // How many docuents are in this language?
           $cnt_mt = $cnt_docs; // How many docs were machine translated?
@@ -257,9 +256,10 @@ function lingotek_dashboard_command_ajax() {
 
         }
 
-      } else { // Otherwise Return a List of all the Active Languages
+      }
+      else { // Otherwise Return a List of all the Active Languages
 
-        foreach( $target_languages as $language ) {
+        foreach ( $target_languages as $language ) {
 
           $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
           $cnt_mt = $cnt_docs; // How many docs were machine translated?
@@ -281,25 +281,17 @@ function lingotek_dashboard_command_ajax() {
 
   } // END:  GET
 
-
-
-
- if ( $method == 'PUT' ) {
-
-     $commands = array();
-     $commands[] = ajax_command_alert( 'Booger.  Does this work!? '  );
-
-    ajax_deliver ( array('#type' => 'ajax', '#commands' => $commands) );
-
- } else {
+  if ( $method == 'PUT' ) {
+    $commands = array();
+    $commands[] = ajax_command_alert( 'Booger.  Does this work!? '  );
+    ajax_deliver( array('#type' => 'ajax', '#commands' => $commands) );
+  }
+  else {
     // Debugging
-    //drupal_json_output(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
-    
+    // drupal_json_output(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     // Regular
     drupal_json_output( $response );   
- }
-
-
+  }
 
 } // END:  lingotek_dashboard_command_ajax
 
@@ -310,7 +302,7 @@ function lingotek_dashboard_command_ajax() {
  * Due to sunspots, this list does not match the standard language mappings list.
  * Returns a Drupal language code.
  */
-function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = null ) {
+function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = NULL ) {
 
   // Dashboard Language Code ->  Drupal Language Code
   $index = array( 
@@ -357,9 +349,9 @@ function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = 
     'vi' => 'vi'
   );
 
-  $result = false;
+  $result = FALSE;
 
-  if( isset( $dashboard_language_code ) && isset( $index[ $dashboard_language_code ] ) ) {
+  if ( isset( $dashboard_language_code ) && isset( $index[ $dashboard_language_code ] ) ) {
     $result = $index[ $dashboard_language_code ];
   }
 
@@ -371,12 +363,12 @@ function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = 
 /**
  * Given a Drupal language code, Lookup the Lingotek equivalent.  (Uses the core lingotek.reference.inc file.)
  */
-function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = null ) {
+function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = NULL ) {
 
   global $_lingotek_locale;
 
-  $result = false;
-  if( isset( $drupal_language_code ) && isset( $_lingotek_locale[ $drupal_language_code ] ) ) {
+  $result = FALSE;
+  if ( isset( $drupal_language_code ) && isset( $_lingotek_locale[ $drupal_language_code ] ) ) {
     $result = $_lingotek_locale[ $drupal_language_code ];
   }
 
@@ -389,16 +381,16 @@ function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = null
  *
  * Limits the counts to node / fields that are marked translatable.
  */
-function lingotek_get_node_count( $language = null ) {
+function lingotek_get_node_count( $language = NULL ) {
 
   $result = 0;
 
-  if( isset( $language ) ) {
+  if ( isset( $language ) ) {
 
     $source_language = lingotek_get_source_language();
 
     // if the language count we are requested to do, IS the source language.  Do a direct query against the nodes, using EntityFieldQuery.
-    if( $language == $source_language ) {
+    if ( $language == $source_language ) {
 
       $bundles = lingotek_translatable_node_types(); // $bundles -- array ( 0 => 'page', 1 => 'article', )
       $query = new EntityFieldQuery();
@@ -407,14 +399,15 @@ function lingotek_get_node_count( $language = null ) {
       $query->propertyCondition('language', $language, '=' ); // The Language to search for
       $result = $query->count()->execute();
 
-    } else { // Otherwise, do a regular count, where we count field languages.
+    }
+    else { // Otherwise, do a regular count, where we count field languages.
 
       $sum = 0;
       $type_field_mapping = lingotek_get_type_field_mapping();
       //debug( $type_field_mapping );
 
       // Loop though the type_field_mapping, and count this language for EACH node type and get a sum.
-      foreach( $type_field_mapping as $type => $db_table ) {
+      foreach ( $type_field_mapping as $type => $db_table ) {
 
         $count = 0;
 
@@ -441,7 +434,7 @@ function lingotek_get_node_count( $language = null ) {
  * Returns an array that maps a content_type to one (and just 1) of its translated fields.
  * We can then use that array to track how many nodes have been translated.
  */
-function lingotek_get_type_field_mapping( $node_type = null ) {
+function lingotek_get_type_field_mapping( $node_type = NULL ) {
 
   $type_field_mapping = array(); // Keep as an array, cause you have to loop it for each content type time you do a count.
   $node_types = lingotek_translatable_node_types(); // These are the node types marked for translation.  I need 1 field from each to count off of.
@@ -450,13 +443,13 @@ function lingotek_get_type_field_mapping( $node_type = null ) {
   //debug( $node_fields );
 
   // Match a translated node_type up with a translated node_field, and grab the db_table where its data is stored so we can query off of it.
-  foreach( $node_types as $type ) {
+  foreach ( $node_types as $type ) {
     //debug( $type );
     // Look for that type in one of the field bundles.
-    foreach( $node_fields as $field ) {
+    foreach ( $node_fields as $field ) {
       //debug( $field );
       // Is this type, listed in the bundles for this field?  ie:  does this type, use this field?
-      if( in_array( $type, $field['bundles'] ) ) {
+      if ( in_array( $type, $field['bundles'] ) ) {
         //debug( 'The Type: ' . $type . ' Uses the field: ' . $field['machine_name'] );
         $type_field_mapping[ $type ] = $field['db_table']; // Get a db table for this field that we can do a language count off of it.
         break; // Only need one field, bail on this loop.
@@ -477,14 +470,13 @@ function lingotek_translatable_node_types() {
   $types = array();
 
   $fields = lingotek_translatable_node_field_details();
-  foreach( $fields as $field ) {
-    //debug( $field['bundles'] );
-    foreach( $field['bundles'] as $bundle ) {
+  foreach ( $fields as $field ) {
+    foreach ( $field['bundles'] as $bundle ) {
       $types[$bundle] = $bundle;
     }
   }
 
-  if( count( $types ) > 0 ) {
+  if ( count( $types ) > 0 ) {
     $types = array_keys( $types );
   }
 
@@ -588,7 +580,7 @@ function lingotek_get_localization_languages_json() {
   $laguages = array_keys( $laguages );
 
   $result = array();
-  foreach( $laguages as $language ) {
+  foreach ( $laguages as $language ) {
     $result[] = lingotek_drupal_to_lingotek_language_code( $language );
   }
 
@@ -614,7 +606,7 @@ function lingotek_get_source_language() {
 function lingotek_get_guid() {
 
   $guid = variable_get( 'lingotek_guid', '' );
-  if( $guid == '' ) {
+  if ( $guid == '' ) {
     $guid = substr(hash('sha256', drupal_get_hash_salt()), 0, 16);
     variable_set( 'lingotek_guid', $guid );
   }
@@ -650,7 +642,7 @@ function lingotek_development() {
 
   $account = lingotek_account_get_status();
   //dpm($account);
-  if( is_object( $account ) ) {
+  if ( is_object( $account ) ) {
     $account_state = $account->state;
     $account_plan = $account->plan->type;
     $account_max_languages = $account->plan->languages_allowed;
@@ -736,14 +728,11 @@ function lingotek_bulk_mt_upload_batch_create( ) {
 
   $query = new EntityFieldQuery();
   $query->entityCondition( 'entity_type', 'node' )->entityCondition( 'bundle', $bundles )->propertyCondition('status', 1); // Published Nodes of the correct Content Types that we want Translated.
-  //$query->propertyCondition('language', array('','und') ); // The Language to search for.
   $nodes = $query->execute();
 
-  foreach( array_shift( $nodes ) as $node ) {
-
+  foreach ( array_shift( $nodes ) as $node ) {
     // Saftey Checks.  Could start with them here.
     // Does this node ALREADY have a forign language translation?
-
     $operations[] = array( 'lingotek_machine_translate_node', array( $node->nid ) );
   }
 
@@ -769,7 +758,7 @@ function lingotek_bulk_mt_download_batch_create( $language_code ) {
 
   $operations = array();
 
-  if( $language_code ) {
+  if ( $language_code ) {
 
     $dashboard_language_code = $language_code;
     $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
@@ -785,10 +774,8 @@ function lingotek_bulk_mt_download_batch_create( $language_code ) {
     $query->condition( 'lingokey', $document_lookup );
 
     $result = $query->execute();
-    while($record = $result->fetchAssoc()) {
-
+    while ($record = $result->fetchAssoc()) {
       $operations[] = array( 'lingotek_download_node_machine_translation', array( $record['nid'], $drupal_language_code ) );
-
     }
 
     watchdog( 'lingotek_batch_mt', 'CREATE DL BATCH: batch has: @node_count nodes', array( '@node_count' => count( $operations ) ), WATCHDOG_DEBUG );

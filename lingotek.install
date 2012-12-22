@@ -21,9 +21,9 @@ function lingotek_uninstall() {
     'lingotek_advanced_parsing',
     'lingotek_create_documents_by_default',
   );
-
+  
   foreach ($delete_variables as $variable) {
-    variable_del($variable);
+  variable_del($variable);
   }
 }
 
@@ -115,33 +115,33 @@ function lingotek_schema() {
  * 2. delete the reference variable that was stored in lingotek_languages
  */
 function lingotek_update_7200(&$sandbox) {
-	drupal_load('module', 'lingotek');
+  drupal_load('module', 'lingotek');
 
-  if (!isset($sandbox['progress'])){
-		$result = db_select('lingotek', 'n')->distinct(True)->fields('n', array(db_escape_field('nid')))->execute();
-		$nodes = array();
-		foreach ($result as $row) {
-			array_push($nodes, $row->nid);
-		}
+  if (!isset($sandbox['progress'])) {
+    $result = db_select('lingotek', 'n')->distinct(TRUE)->fields('n', array(db_escape_field('nid')))->execute();
+    $nodes = array();
+    foreach ($result as $row) {
+      array_push($nodes, $row->nid);
+    }
 
     $sandbox['progress'] = 0;
     $sandbox['max'] = count($nodes);
     $sandbox['nodes'] = $nodes;
   }
-	$node = node_load($sandbox['nodes'][$sandbox['progress']]);
-	if ($node !== FALSE) {
-	  if (!class_exists('LingotekApi')) {
-	    // The LingotekApi class might not have been introduced when this user last updated the Lingotek module.
+  $node = node_load($sandbox['nodes'][$sandbox['progress']]);
+  if ($node !== FALSE) {
+    if (!class_exists('LingotekApi')) {
+      // The LingotekApi class might not have been introduced when this user last updated the Lingotek module.
       registry_rebuild();
       require_once(drupal_get_path('module', 'lingotek') . '/lib/Drupal/lingotek/LingotekApi.php');
-	  }
-		LingotekApi::instance()->updateContentDocument($node);
-	}
+    }
+    LingotekApi::instance()->updateContentDocument($node);
+  }
 
-	$sandbox['progress']++;
+  $sandbox['progress']++;
   $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
   if ($sandbox['#finished'] == 1) {
-  	lingotek_analyze_project();
+    lingotek_analyze_project();
   }
 }
 

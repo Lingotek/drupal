@@ -317,7 +317,7 @@ function lingotek_xml_node_body($node) {
   //Menus related to the page:
   $menu = menu_link_get_preferred('node/' . $node->nid);
   $txt = $menu['link_title'];
-  if($txt != "") {
+  if ($txt != "") {
     $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
   }
 
@@ -468,7 +468,7 @@ function lingotek_account_get_status() {
     $status = $api->getAccountStatus( );
 
     // If we got valid json back, we should have an object, with an account state of some type.
-    if( is_object( $status ) && isset( $status->state ) ) {
+    if ( is_object( $status ) && isset( $status->state ) ) {
       $account = $status;
     }
   }
@@ -478,22 +478,23 @@ function lingotek_account_get_status() {
 } // END:  lingotek_account_get_status()
 
 /**
- * Is this an Enterprise Account?  Returns true / false.
+ * Is this an Enterprise Account?  Returns TRUE / FALSE.
  * Gets the current account status from the Lingotek servers, and saves that status locally.
  */
 function lingotek_account_check_enterprise_status() {
 
-  $result = false;
+  $result = FALSE;
   $account = lingotek_account_get_status();
 
   // Do we have a defined Plan?
-  if( isset( $account->plan->type ) ) {
+  if ( isset( $account->plan->type ) ) {
     // Is it an Enterprise account?
-    if( $account->plan->type == 'enterprise' ) {
-      $result = true;
+    if ( $account->plan->type == 'enterprise' ) {
+      $result = TRUE;
       variable_set( 'lingotek_enterprise_account', 1 );
-    } else {
-      $result = false;
+    }
+    else {
+      $result = FALSE;
       variable_set( 'lingotek_enterprise_account', 0 );
     }
   }
@@ -504,13 +505,13 @@ function lingotek_account_check_enterprise_status() {
 } // END:  lingotek_account_check_enterprise_status()
 
 /**
- * Is this an Enterprise Account?  Returns true / false.
+ * Is this an Enterprise Account?  Returns TRUE / FALSE.
  * Checks against the locally stored variable.
  */
 function lingotek_account_is_enterprise() {
 
   $status = variable_get( 'lingotek_enterprise_account', 0 );
-  return ( $status == 1 ) ? true : false ;
+  return ( $status == 1 ) ? TRUE : FALSE ;
 
 } // END:  lingotek_account_is_enterprise()
 
@@ -519,11 +520,11 @@ function lingotek_account_is_enterprise() {
  */
 function lingotek_account_max_languages() {
 
-  $result = false;
+  $result = FALSE;
   $account = lingotek_account_get_status();
 
   // Do we have a max languages
-  if( isset( $account->plan->languages_allowed ) ) {
+  if ( isset( $account->plan->languages_allowed ) ) {
     $result = $account->plan->languages_allowed;
   }
 
@@ -538,21 +539,21 @@ function lingotek_account_max_languages() {
 /**
  * Get the currently active languages for this Drupal installation.
  */
-function lingotek_get_active_languages( $get_details = false ) {
+function lingotek_get_active_languages( $get_details = FALSE ) {
   $active_languages = language_list('enabled');
   $active_languages = array_shift( $active_languages );
 
-  if( $get_details === false ) {
+  if ( $get_details === FALSE ) {
     $active_languages = array_keys( $active_languages );
   }
   /*
-  Get_Details -> false
+  Get_Details -> FALSE
   array (
     0 => 'en',
     1 => 'es',
   )
   
-  Get_Details -> true
+  Get_Details -> TRUE
   array (
     'en' => 
     stdClass::__set_state(array(
@@ -576,18 +577,18 @@ function lingotek_get_active_languages( $get_details = false ) {
 
 
 /**
- * Flags a target language as active:false in the Target Language tracking.
+ * Flags a target language as active:FALSE in the Target Language tracking.
  */
-function lingotek_delete_target_language( $drupal_language_code = null ) {
+function lingotek_delete_target_language( $drupal_language_code = NULL ) {
 
-  $result = false;
+  $result = FALSE;
 
-  if( isset( $drupal_language_code ) ) {
+  if ( isset( $drupal_language_code ) ) {
 
     $target_languages = lingotek_get_target_languages();
-    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => false );
+    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => FALSE );
     lingotek_save_target_languages( $target_languages );
-    $result = true;  // Hrm... variable_set isnt really into returning values.
+    $result = TRUE;  // Hrm... variable_set isnt really into returning values.
   }
 
   return $result;
@@ -598,16 +599,16 @@ function lingotek_delete_target_language( $drupal_language_code = null ) {
 /**
  * Adds a target language to the Target Language tracking.
  */
-function lingotek_add_target_language( $drupal_language_code = null ) {
+function lingotek_add_target_language( $drupal_language_code = NULL ) {
 
-  $result = false;
+  $result = FALSE;
 
-  if( isset( $drupal_language_code ) ) {
+  if ( isset( $drupal_language_code ) ) {
 
     $target_languages = lingotek_get_target_languages();
-    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => true );
+    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => TRUE );
     lingotek_save_target_languages( $target_languages );
-    $result = true;  // Hrm... variable_set isnt really into returning values.
+    $result = TRUE;  // Hrm... variable_set isnt really into returning values.
   }
 
   return $result;
@@ -618,17 +619,17 @@ function lingotek_add_target_language( $drupal_language_code = null ) {
 /**
  * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
  * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
- * pass in active == true, to get ONLY the active languages.
+ * pass in active == TRUE, to get ONLY the active languages.
  */
-function lingotek_get_target_languages( $active_only = false ) {
+function lingotek_get_target_languages( $active_only = FALSE ) {
 
   $target_languages = variable_get( 'lingotek_target_languages', array() );
 
-  // If $active_only == true, return only the active ones.
-  if( $active_only ) {
+  // If $active_only == TRUE, return only the active ones.
+  if ( $active_only ) {
     $active_languages = array();
-    foreach( $target_languages as $target ) {
-      if ( $target['active'] == true ) {
+    foreach ( $target_languages as $target ) {
+      if ( $target['active'] == TRUE ) {
         $active_languages[] = $target['code'];
       }
     }
@@ -648,8 +649,8 @@ function lingotek_get_target_language_list() {
 
   $paid_targets = array();
 
-  $active_languages = lingotek_get_active_languages( true );
-  $clean_list = lingotek_get_target_languages( true ); // Simple language list of Paid Target Languages
+  $active_languages = lingotek_get_active_languages( TRUE );
+  $clean_list = lingotek_get_target_languages( TRUE ); // Simple language list of Paid Target Languages
   foreach ( $clean_list as $clean ) {
     $paid_targets[ $clean ] = $active_languages[ $clean ];
   }
@@ -661,7 +662,7 @@ function lingotek_get_target_language_list() {
 /**
  * Save the Targeted Languages data.
  */
-function lingotek_save_target_languages( $target_languages = null ) {
+function lingotek_save_target_languages( $target_languages = NULL ) {
 
   if ( isset( $target_languages ) ) {
     variable_set( 'lingotek_target_languages', $target_languages );

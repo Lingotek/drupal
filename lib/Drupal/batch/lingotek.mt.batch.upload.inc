@@ -22,10 +22,11 @@ function lingotek_machine_translate_node( $nid, &$context ) {
 
     // If set, we need to sync the nodes translation targets.
     $resync_targets = variable_get( 'lingotek_resync_node_language_targets', 0 );
-    if( $resync_targets ) {
+    if ( $resync_targets ) {
       lingotek_add_missing_targets($node);
       //watchdog( 'lingotek_batch_mt', 'RESYNC Translation Targets -- We needed to resync the translation targets for this node.', array( ), WATCHDOG_DEBUG );
-    } else {
+    }
+    else {
       //watchdog( 'lingotek_batch_mt', 'NO RESYNC Translation Targets -- We did NOT resync this nodes translation targets.', array( ), WATCHDOG_DEBUG );
     }
 
@@ -52,16 +53,17 @@ function lingotek_bulk_mt_upload_batch_finished( $success, $results, $operations
   $messages = array();
   $result_count = count( $results );
 
-  if ( $success ) { // The 'success' (true/false) means no fatal PHP errors were detected. All other error management should be handled using 'results'.
+  if ( $success ) { // The 'success' (TRUE/FALSE) means no fatal PHP errors were detected. All other error management should be handled using 'results'.
     $messages[] = t( 'The process finished successfully.' );
     $messages[] = format_plural( $result_count, 'One node has been queued for translation.', '@count nodes have been queued for translation.' );
-  } else {
+  }
+  else {
     $messages[] = t( 'The process finished with an errors.  Some content may have been missed.' );
     $messages[] = format_plural( $result_count, 'One node queued for translation.', '@count nodes queued for translation.' );
   }
 
   $_SESSION['bulk_mt_batch_results'] = $messages; // Save data before redirect.
-  watchdog( 'lingotek_batch_mt', 'FINISHED: @message', array( '@message' => print_r( $messages, true ) ), WATCHDOG_DEBUG );
+  watchdog( 'lingotek_batch_mt', 'FINISHED: @message', array( '@message' => print_r( $messages, TRUE ) ), WATCHDOG_DEBUG );
 
   drupal_goto('admin/settings/lingotek/mt-content-queued');
 
@@ -88,8 +90,8 @@ function lingotek_bulk_mt_upload_batch_complete() {
   $form['lingotek_message_4'] = array( '#markup' => '<blockquote>' );
 
   $cnt = 1;
-  foreach( $messages as $message ) {
-    $form['lingotek_message_details_'.$cnt] = array( '#markup' => '<div>' .$message .'</div>' );
+  foreach ( $messages as $message ) {
+    $form['lingotek_message_details_' . $cnt] = array( '#markup' => '<div>' . $message . '</div>' );
     $cnt++;
   }
 
@@ -97,8 +99,8 @@ function lingotek_bulk_mt_upload_batch_complete() {
 
   $form['lingotek_button_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
   $form[ 'submit' ] = array(
-  	'#type' => 'submit', 
-  	'#value' => t( 'Continue' )
+    '#type' => 'submit', 
+    '#value' => t( 'Continue' )
   );
 
   return $form;
