@@ -533,6 +533,17 @@ function lingotek_account_max_languages() {
 } // END:  lingotek_account_max_languages()
 
 
+/**
+ * Gets the Lingotek Source Language ( Drupal variable: lingotek_source_language).
+ * Returns a language code (ie:  en / es / de)
+ */
+function lingotek_get_source_language() {
+
+  $source_language = variable_get( 'lingotek_source_language' );
+  return $source_language;
+
+} // END:  lingotek_get_source_language()
+
 
 // --- Active and Target Language management Functions
 
