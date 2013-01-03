@@ -644,8 +644,10 @@ function lingotek_development() {
   //dpm($account);
   if ( is_object( $account ) ) {
     $account_state = $account->state;
-    $account_plan = $account->plan->type;
-    $account_max_languages = $account->plan->languages_allowed;
+    if ( is_object( $account->plan ) ) {
+      $account_plan = $account->plan->type;
+      $account_max_languages = $account->plan->languages_allowed;
+    }
   }
 
   $max_languages = lingotek_account_max_languages();
