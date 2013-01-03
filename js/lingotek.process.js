@@ -27,7 +27,7 @@ lingotek.ProcessManager = function() {
     if(active == 0) { //All processes complete
       delete processes;
       this.unmask();
-      location.reload(true);
+      location.reload(TRUE);
     }
     else {
       lingotek.mt.dequeue();
@@ -40,7 +40,7 @@ lingotek.ProcessManager = function() {
 
   this.isDone = function(nid) {
     if(processes[nid].current >= processes[nid].count) {
-      return true;
+      return TRUE;
     }
   };
 
@@ -93,7 +93,7 @@ lingotek.ProcessManager = function() {
         '<div id="lingotek-contents" id="lingotek-contents" class="lingotekContents">' +
           '<div id="lingotek-process" class="lingotekProgress"></div>' +
           '<table id="lingotek-process-table" style="display: none;"></table>' +
-          '<input type="button" value="' + Drupal.t('Stop') + '" onclick="location.reload(true);" />' +
+          '<input type="button" value="' + Drupal.t('Stop') + '" onclick="location.reload(TRUE);" />' +
         '</div>' +
       '</div>'
     ).scrollTop(0);
