@@ -545,6 +545,97 @@ function lingotek_get_source_language() {
 } // END:  lingotek_get_source_language()
 
 
+/**
+ * Content node types linked to 'translatable' fields.
+ */
+function lingotek_translatable_node_types() {
+
+  $types = array();
+
+  $fields = lingotek_translatable_node_field_details();
+  foreach ( $fields as $field ) {
+    foreach ( $field['bundles'] as $bundle ) {
+      $types[$bundle] = $bundle;
+    }
+  }
+
+  if ( count( $types ) > 0 ) {
+    $types = array_keys( $types );
+  }
+
+  return $types;
+
+}
+
+
+/**
+ * Goes though ALL the fields in the system and gets the details about the ones that are marked 'translatable'.
+ */
+function lingotek_translatable_node_field_details() {
+
+  $fields = field_info_fields();
+  $translatable_fields = array();
+  /*
+    debug( $fields );
+    echo '<pre>';
+    print_r( $fields );
+    echo '</pre>';
+  */
+  foreach ($fields as $field_id => $field) {
+    foreach ($field['bundles'] as $type => $instance) {
+      /*
+      echo '<br>FieldID: ' . $field_id;
+      echo '<br>Field: ' . $field;
+      echo '<br>Type: ' . $type;
+      echo '<br>Instance: ' . $instance;
+      */
+      if (field_is_translatable($type, $field)) {
+        //echo '<br>Translatable: YES!' ;
+        $field_db_table = array_keys( $field['storage']['details']['sql']['FIELD_LOAD_CURRENT'] );
+        $field_db_table = array_shift( $field_db_table );
+        $translatable_fields[] =  array( 
+          'entity_type' => $type,
+          'machine_name' => $field['field_name'],
+          'db_table' => $field_db_table ,
+          'bundles' => $field['bundles']['node'],
+        );
+      }
+      //echo '<br>';
+    }
+  }
+
+  /* Return data format
+    array (
+      0 => 
+      array (
+        'entity_type' => 'node',
+        'machine_name' => 'body',
+        'db_table' => 'field_data_body',
+        'bundles' => 
+        array (
+          0 => 'page',
+          1 => 'article',
+        ),
+      ),
+      1 => 
+      array (
+        'entity_type' => 'node',
+        'machine_name' => 'title_field',
+        'db_table' => 'field_data_title_field',
+        'bundles' => 
+        array (
+          0 => 'article',
+          1 => 'page',
+        ),
+      ),
+    )
+  */
+  return $translatable_fields;
+
+} // END:  lingotek_translatable_node_field_details()
+
+
+
 // --- Active and Target Language management Functions
 
 /**

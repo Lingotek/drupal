@@ -84,7 +84,8 @@ function lingotek_admin_form() {
 
   // If the connection isn't yet established, stop here.
   // Also stop here if this isn't an enterprise account.
-  if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
+  //if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
+  if ( !$api->testAuthentication() ) {
     return system_settings_form($form);
   }
 
@@ -320,6 +321,7 @@ function lingotek_form_field_language_utility($form_state) {
 
 /**
  * Submit handler for the lingotek_form_field_language_utility form.
+ * Calls the function that creates a batch job to do the field migration.
  *
  * @param array $form
  *   The FAPI form array.
@@ -327,26 +329,7 @@ function lingotek_form_field_language_utility($form_state) {
  *   The FAPI form state array.
  */
 function lingotek_form_field_language_utility_submit($form, $form_state) {
-  $query = new EntityFieldQuery();
-  $entity_type = 'node';
-  $nodes = $query->entityCondition('entity_type', $entity_type)
-    ->propertyCondition('language', 'und', '<>')
-    ->execute();
-
-  $operations = array();
-  foreach ($nodes[$entity_type] as $node) {
-    $operations[] = array('lingotek_handle_batch_field_language_update',
-      array($node->nid));
-  }
-
-  $batch = array(
-    'title' => t('Lingotek Field Language Updater'),
-    'operations' => $operations,
-    'finished' => 'lingotek_field_language_update_finished',
-    'file' => 'lingotek.admin.inc',
-  );
-
-  batch_set($batch);
+  lingotek_field_language_data_cleanup_batch_create();
 }
 
 /**

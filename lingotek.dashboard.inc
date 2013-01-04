@@ -56,9 +56,6 @@ function lingotek_get_dashboard_code() {
       } // END:  if active
     } // END:  foreach target language
 
-    //debug( 'TOTALS: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ' );
-    //debug( $totals );
-
     $script = '
       <script src="http://demo-gmc-01.aws.lingotek.com:8080/cc/lingotek.min.js"></script> 
       <script> 
@@ -84,6 +81,7 @@ function lingotek_get_dashboard_code() {
           "cms_version": "%s",
           "module_version": "%s",
           "endpoint_url": "%s",
+          "base_url": "%s",
           // data
           "source_language":%s ,
           "localization_languages": %s,
@@ -93,6 +91,13 @@ function lingotek_get_dashboard_code() {
         });
       </script>
     ';
+
+// download_url
+// upload_url
+
+
+    $base_url = base_path() . current_path();
+    $endpoint = $base_url . '/command';
 
     $output = sprintf( $script, 
       // lingotek 
@@ -113,7 +118,8 @@ function lingotek_get_dashboard_code() {
       'Drupal', // cms type
       VERSION, // drupal version
       LINGOTEK_VERSION, // module version
-      '/admin/settings/lingotek/command', // endpoint
+      $endpoint, // endpoint url
+      $base_url, // module base url
       // data
       lingotek_get_source_language_json(), // source_language
       lingotek_get_localization_languages_json(), // localization_languages - The languages “localized” on Drupal
@@ -463,96 +469,6 @@ function lingotek_get_type_field_mapping( $node_type = NULL ) {
 
 
 /**
- * Content node types linked to 'translatable' fields.
- */
-function lingotek_translatable_node_types() {
-
-  $types = array();
-
-  $fields = lingotek_translatable_node_field_details();
-  foreach ( $fields as $field ) {
-    foreach ( $field['bundles'] as $bundle ) {
-      $types[$bundle] = $bundle;
-    }
-  }
-
-  if ( count( $types ) > 0 ) {
-    $types = array_keys( $types );
-  }
-
-  return $types;
-
-}
-
-
-/**
- * Goes though ALL the fields in the system and gets the details about the ones that are marked 'translatable'.
- */
-function lingotek_translatable_node_field_details() {
-
-  $fields = field_info_fields();
-  $translatable_fields = array();
-  /*
-    debug( $fields );
-    echo '<pre>';
-    print_r( $fields );
-    echo '</pre>';
-  */
-  foreach ($fields as $field_id => $field) {
-    foreach ($field['bundles'] as $type => $instance) {
-      /*
-      echo '<br>FieldID: ' . $field_id;
-      echo '<br>Field: ' . $field;
-      echo '<br>Type: ' . $type;
-      echo '<br>Instance: ' . $instance;
-      */
-      if (field_is_translatable($type, $field)) {
-        //echo '<br>Translatable: YES!' ;
-        $field_db_table = array_keys( $field['storage']['details']['sql']['FIELD_LOAD_CURRENT'] );
-        $field_db_table = array_shift( $field_db_table );
-        $translatable_fields[] =  array( 
-          'entity_type' => $type,
-          'machine_name' => $field['field_name'],
-          'db_table' => $field_db_table ,
-          'bundles' => $field['bundles']['node'],
-        );
-      }
-      //echo '<br>';
-    }
-  }
-
-  /* Return data format
-    array (
-      0 => 
-      array (
-        'entity_type' => 'node',
-        'machine_name' => 'body',
-        'db_table' => 'field_data_body',
-        'bundles' => 
-        array (
-          0 => 'page',
-          1 => 'article',
-        ),
-      ),
-      1 => 
-      array (
-        'entity_type' => 'node',
-        'machine_name' => 'title_field',
-        'db_table' => 'field_data_title_field',
-        'bundles' => 
-        array (
-          0 => 'article',
-          1 => 'page',
-        ),
-      ),
-    )
-  */
-  return $translatable_fields;
-
-} // END:  lingotek_translatable_node_field_details()
-
-
-/**
  * Outputs the language code with page count in json format.  Supplied to the dashboard.
  * Output Format: {'code':'en','docs':'500'}
  */
@@ -587,17 +503,6 @@ function lingotek_get_localization_languages_json() {
   return json_encode( $result );
 
 } // END:  lingotek_get_localization_languages_json()
-
-
-/**
- * Gets the Lingotek Source Language ( Drupal variable: lingotek_source_language IE:  en).
- */
-function lingotek_get_source_language() {
-
-  $source_language = variable_get( 'lingotek_source_language' );
-  return $source_language;
-
-} // END:  lingotek_get_source_language()
 
 
 /**
@@ -706,7 +611,6 @@ function lingotek_development() {
   return $output;
 
 } // END:  lingotek_development()
-
 
 
 /**

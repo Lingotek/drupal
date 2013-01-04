@@ -15,6 +15,7 @@ include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
 include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
+include_once('lib/Drupal/batch/lingotek.batch.inc');
 
 /**
  * Implements hook_menu().
@@ -22,6 +23,16 @@ include_once('lingotek.api.inc');
 function lingotek_menu() {
   $items = array();
 
+  $items['admin/settings/lingotek'] = array(
+    'title' => 'Lingotek',
+    'access arguments' => array('administration'),
+    'description' => 'Community Translation Settings',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_admin_form'),
+  );
+
+  /* ------ 
   // Lingotek Dashboard and Settings Tabs
   $items['admin/settings/lingotek'] = array(
     'title' => 'Lingotek',
@@ -48,6 +59,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
+  /* ------ */
 
   // Dashboard:  Ajax Command Processor
   $items['admin/settings/lingotek/command'] = array(
@@ -85,8 +97,8 @@ function lingotek_menu() {
   );
 
   // The 2 Node Level Lingotek Tabs for Enterprise users.
-  $enterprise_account = lingotek_account_is_enterprise();
-  if ( $enterprise_account === TRUE ) {
+  //$enterprise_account = lingotek_account_is_enterprise();
+  //if ( $enterprise_account === TRUE ) {
 
     $items['node/%node/lingotek_pm'] = array(
       'title' => 'Lingotek',
@@ -109,7 +121,7 @@ function lingotek_menu() {
       'type' => MENU_LOCAL_TASK,
     );
 
-  } // END:  Lingotek Node Level Enterprise Tabs
+  //} // END:  Lingotek Node Level Enterprise Tabs
 
   // Batch Process Pages ----------------------------------------
 
@@ -407,11 +419,18 @@ function lingotek_permission() {
 function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   global $_lingotek_locale;
 
+  // On node create, set the language select box to our source language, if this is a node content type that we translate for, if the form is in Add mode.
+  if (!isset($form['nid']['#value'])) { // add mode (no node id set)
+    if (lingotek_supported_type($form['type']['#value'])) { // lingotek translated content type
+      $form['language']['#default_value'] = lingotek_get_source_language();
+    }
+  }
+
   if (!lingotek_supported_type($form['#node']->type)) {
     return;
   }
   if ( lingotek_account_is_enterprise() === FALSE ) {
-    return; // Only enterprise users need to see this screen.
+    //return; // Only enterprise users need to see this screen.
   }
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
@@ -616,7 +635,9 @@ function lingotek_node_view($node, $view_mode) {
 function lingotek_node_presave($node) {
   // Make sure the title isn't overwritten with the translation when using the title module.
   if (module_exists('title') && array_key_exists('title_field', $node)) {
-    $node->title = $node->title_field[$node->language][0]['value'];
+    if ( isset( $node->title_field[$node->language][0]['value'] ) ) {
+      $node->title = $node->title_field[$node->language][0]['value'];
+    }
   }
 }
 
@@ -757,7 +778,6 @@ function lingotek_update_field($form, $form_state) {
   db_update('field_config')->fields(array('translatable' => $form['field']['lingotek_translatable']['#value']))->condition('field_name', $field)->execute();
 }
 
-
 /*
  * hook_help
  */
@@ -766,56 +786,6 @@ function lingotek_help($path, $arg) {
     case 'admin/help#lingotek':
       return t('Please see our DevZone:') . ' ' . l(t('Drupal Integration'), 'http://lingotek.com/support/devzone/drupal-integration');
   }
-}
-
-/**
- * Batch API processor for field data language updates.
- */
-function lingotek_handle_batch_field_language_update($nid, &$context) {
-  $process_node = node_load($nid);
-
-  if ($process_node->nid) {
-    lingotek_update_language_field_data($process_node->nid);
-    $context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
-  }
-
-  $context['finished'] = 1;
-}
-
-/**
- * Ensures correct language-specific field data for the specified item.
- *
- * @param int $nid
- *   The node ID of the item to be updated.
- *
- * @return bool
- *   TRUE if the specified node's field data was updated. FALSE if no changes were made.
- */
-function lingotek_update_language_field_data($nid) {
-  $edited = FALSE;
-
-  $node = node_load($nid, NULL, TRUE);
-  if ($node->nid) {
-    if ($node->language != 'und') {
-      $translatable_fields = lingotek_translatable_node_fields();
-      foreach ($translatable_fields as $field_name) {
-        if (!empty($node->{$field_name}['und']) && empty($node->{$field_name}[$node->language])) {
-          $node->{$field_name}[$node->language] = $node->{$field_name}['und'];
-          $edited = TRUE;
-        }
-      }
-    }
-
-    if ($edited) {
-      node_save($node);
-    }
-  }
-  else {
-    watchdog('lingotek', 'Attempted to update field data for a non-existent node: @node_id',
-      array('@node_id' => $node_id), WATCHDOG_ERROR);
-  }
-
-  return $edited;
 }
 
 /**
@@ -836,13 +806,6 @@ function lingotek_translatable_node_fields() {
   }
 
   return $translatable_fields;
-}
-
-/**
- * "Finished" callback for language update batch operations.
- */
-function lingotek_field_language_update_finished($success, $results, $operations) {
-  drupal_set_message(t('Updated field data for nodes.'));
 }
 
 /**

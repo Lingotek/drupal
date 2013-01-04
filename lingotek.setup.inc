@@ -149,9 +149,10 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_vault', $community->tm_vault_id );
       variable_set( 'lingotek_workflow', $community->workflow_id );
 
-      $extras['Company'] = $base_url; // Company
-      $extras['CMS_SBS__c'] = 'Drupal'; // CMS/SBS
-      $extras['Community__c'] = $community->community; // Community
+      $extras['company'] = $base_url; // Company
+      $extras['lead_source'] = 'Module'; // Source
+      $extras['CMS_SBS__c'] = 'Drupal'; // CMS/SBS (custom field)
+      $extras['Community__c'] = $community->community; // Community (custom field)
     }
 
     lingotek_activation( $first_name, $last_name, $email, $extras );
@@ -790,8 +791,11 @@ function lingotek_setup_complete_form( $form, $form_state ) {
 /**
  * Setup Complete - Form Submit - Redirects to Lingotek Dashboard.
  */
-function lingotek_setup_complete_form_submit( $form, $form_state ) {
-  drupal_goto( 'admin/settings/lingotek' );
+function lingotek_setup_complete_form_submit( $form, &$form_state ) {
+
+  lingotek_field_language_data_cleanup_batch_create();
+  $form_state['redirect'] = 'admin/settings/lingotek';
+
 }
 
 /**
