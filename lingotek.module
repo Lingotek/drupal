@@ -8,7 +8,7 @@
  * Identifies a content type which has Lingotek translation enabled.
  */
 define('LINGOTEK_ENABLED', 'lingotek');
-define('LINGOTEK_VERSION', '7.x-1.65');
+define('LINGOTEK_VERSION', '7.x-1.62');
 define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
 
 include_once('lingotek.session.inc');
