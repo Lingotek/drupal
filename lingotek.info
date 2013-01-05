@@ -15,5 +15,4 @@ files[] = tests/lingotek.access.test
 files[] = tests/lingotek.advanced_parsing.test
 
 php = "5.2"
-configure = admin/settings/lingotek
-;configure = admin/config/lingotek/setup
+configure = admin/config/lingotek/setup

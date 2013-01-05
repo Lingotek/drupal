@@ -8,7 +8,7 @@
  * Identifies a content type which has Lingotek translation enabled.
  */
 define('LINGOTEK_ENABLED', 'lingotek');
-define('LINGOTEK_VERSION', '7.x-1.62');
+define('LINGOTEK_VERSION', '7.x-2.1');
 define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
 
 include_once('lingotek.session.inc');
@@ -23,16 +23,6 @@ include_once('lib/Drupal/batch/lingotek.batch.inc');
 function lingotek_menu() {
   $items = array();
 
-  $items['admin/settings/lingotek'] = array(
-    'title' => 'Lingotek',
-    'access arguments' => array('administration'),
-    'description' => 'Community Translation Settings',
-    'file' => 'lingotek.admin.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_admin_form'),
-  );
-
-  /* ------ 
   // Lingotek Dashboard and Settings Tabs
   $items['admin/settings/lingotek'] = array(
     'title' => 'Lingotek',
@@ -59,7 +49,6 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
-  /* ------ */
 
   // Dashboard:  Ajax Command Processor
   $items['admin/settings/lingotek/command'] = array(
@@ -97,8 +86,8 @@ function lingotek_menu() {
   );
 
   // The 2 Node Level Lingotek Tabs for Enterprise users.
-  //$enterprise_account = lingotek_account_is_enterprise();
-  //if ( $enterprise_account === TRUE ) {
+  $enterprise_account = lingotek_account_is_enterprise();
+  if ( $enterprise_account === TRUE ) {
 
     $items['node/%node/lingotek_pm'] = array(
       'title' => 'Lingotek',
@@ -121,7 +110,7 @@ function lingotek_menu() {
       'type' => MENU_LOCAL_TASK,
     );
 
-  //} // END:  Lingotek Node Level Enterprise Tabs
+  } // END:  Lingotek Node Level Enterprise Tabs
 
   // Batch Process Pages ----------------------------------------
 
@@ -430,7 +419,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     return;
   }
   if ( lingotek_account_is_enterprise() === FALSE ) {
-    //return; // Only enterprise users need to see this screen.
+    return; // Only enterprise users need to see this screen.
   }
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
