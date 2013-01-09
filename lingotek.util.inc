@@ -79,6 +79,16 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
 }
 
 /*
+ * When a node is deleted, this is called to clean out the extra data from that node in the Lingotek table.
+ *
+ * @param $nid
+ *  NodeId.
+ */
+function lingotek_lingonode_delete( $nid ) {
+  db_delete('lingotek')->condition('nid', $nid)->execute();
+}
+
+/*
  * Revert from having been embedded in XML
  *
  * @param $text
@@ -244,6 +254,13 @@ function lingotek_dump($obj) {
   $string = ob_get_contents();
   ob_end_clean();
   return $string;
+}
+
+/**
+ * Formats a complex object for presentation in a watchdog message.
+ */
+function watchdog_format_object($object) {
+  return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
 }
 
 /**
@@ -575,6 +592,9 @@ function lingotek_translatable_node_field_details() {
 
   $fields = field_info_fields();
   $translatable_fields = array();
+
+//watchdog( 'lingotek_fields', 'Fields: !status', array( '!status' => watchdog_format_object( $fields ) ), WATCHDOG_DEBUG );
+
   /*
     debug( $fields );
     echo '<pre>';
@@ -582,6 +602,7 @@ function lingotek_translatable_node_field_details() {
     echo '</pre>';
   */
   foreach ($fields as $field_id => $field) {
+//watchdog( 'lingotek_field', 'Field: !status', array( '!status' => watchdog_format_object( $field ) ), WATCHDOG_DEBUG );
     foreach ($field['bundles'] as $type => $instance) {
       /*
       echo '<br>FieldID: ' . $field_id;
@@ -589,6 +610,11 @@ function lingotek_translatable_node_field_details() {
       echo '<br>Type: ' . $type;
       echo '<br>Instance: ' . $instance;
       */
+
+//if ( $type != 'node' ) {
+//watchdog( 'AHHHH!', 'This isnt a NODE!  @type', array( '@type' => $type ), WATCHDOG_DEBUG );
+//}
+
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
         $field_db_table = array_keys( $field['storage']['details']['sql']['FIELD_LOAD_CURRENT'] );
@@ -597,7 +623,7 @@ function lingotek_translatable_node_field_details() {
           'entity_type' => $type,
           'machine_name' => $field['field_name'],
           'db_table' => $field_db_table ,
-          'bundles' => $field['bundles']['node'],
+          'bundles' => $field['bundles'][ $type ],
         );
       }
       //echo '<br>';

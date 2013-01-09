@@ -125,8 +125,9 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
   if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' ) {
 
     // Provision a new Community & Save the Credentials
+    $callback_url = lingotek_get_notifications_url();
     $api = LingotekApi::instance();
-    $community = $api->createCommunity($name = NULL);
+    $community = $api->createCommunity( NULL, $callback_url );
     if ( $community['code'] == 200 ) {
       $community = json_decode( $community['body'] );
       /*
@@ -148,6 +149,7 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_project', $community->project_id );
       variable_set( 'lingotek_vault', $community->tm_vault_id );
       variable_set( 'lingotek_workflow', $community->workflow_id );
+      variable_set( 'lingotek_notifications_callback', $callback_url );
 
       $extras['company'] = $base_url; // Company
       $extras['lead_source'] = 'Module'; // Source

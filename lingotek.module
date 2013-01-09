@@ -10,11 +10,14 @@
 define('LINGOTEK_ENABLED', 'lingotek');
 define('LINGOTEK_VERSION', '7.x-2.1');
 define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
+define('LINGOTEK_NOTIFICATIONS_URL', 'admin/settings/lingotek/notifications');
+
 
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
 include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
+include_once('lingotek.sync.inc');
 include_once('lib/Drupal/batch/lingotek.batch.inc');
 
 /**
@@ -58,6 +61,16 @@ function lingotek_menu() {
     'description' => 'Lingotek Command Router',
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard_command_ajax',
+  );
+
+  // Content Update Notifications Callback
+  $items[ LINGOTEK_NOTIFICATIONS_URL ] = array(
+    'title' => 'Content Translation Notifications',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'description' => 'When content translations are ready, this receives the notifications.',
+    'file' => 'lingotek.sync.inc',
+    'page callback' => 'lingotek_notifications',
   );
 
   $items['lingotek/update'] = array(
@@ -257,7 +270,7 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  /*
+  /**/
   // Tab:  Development
   $items['admin/settings/lingotek/development'] = array(
     'title' => 'Development',
@@ -638,6 +651,13 @@ function lingotek_node_insert($node) {
 }
 
 /**
+ * Implements hook_node_delete().
+ */
+function lingotek_node_delete($node) {
+  lingotek_lingonode_delete( $node->nid );
+}
+
+/**
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
@@ -656,6 +676,11 @@ function lingotek_node_update($node) {
   if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
     return;
   }
+
+  // On node create or edit,  set the node sync status to 'edited' and all the targets to edited.
+  lingotek_set_node_and_targets_sync_status( $node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED );
+/// WORKING HERE ------------------------------------
+
 
   // Overwrite document ID.
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {

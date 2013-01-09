@@ -18,10 +18,10 @@ function lingotek_admin_form() {
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();
   $site = variable_get('site_name', 'Drupal Site');
-  
+
   $connection_group_description = ($connected) ? '' :
     t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.',
-      array('@link_url' => url(variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION) . '/lingopoint/portal/communitySignup.action'))
+      array('@signup_url' => url(variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION) . '/lingopoint/portal/communitySignup.action'))
     );
 
   // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
@@ -35,12 +35,11 @@ function lingotek_admin_form() {
     $collapse_settigns = FALSE;    
   }
 
-
   // Lingotek connection settings.
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection Settings'),
-    '#description' => check_plain($connection_group_description),
+    '#description' => filter_xss($connection_group_description),
     '#collapsible' => TRUE,
     '#collapsed' => $collapse_settigns,
     '#group' => 'administrative_settings',

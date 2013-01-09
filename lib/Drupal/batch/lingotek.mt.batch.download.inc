@@ -10,10 +10,49 @@
  */
 function lingotek_download_node_machine_translation( $nid, $language_code, &$context ) {
 
+
+
+  // CRITICAL:  Updating the note w/ the new language translation will cause the document to be flagged edited.
+  // Now, right here, Look at this node, have all targets been set to CURRENT?  If so, mark the node as current.
+
+  // CRITICAL:  lingotek_download_document() WILL EDIT THE DOCUMENT.
+  // Get the Current Document and Target Sync Statuses
+
   $node = node_load($nid);
+
+  $node_status_array = lingotek_get_node_and_target_sync_status( $nid );
+  watchdog( 'lingotek_batch_mt', 'SYNC STATUS PRE: !status', array( '!status' => print_r( $node_status_array, true ) ), WATCHDOG_DEBUG );
+
+
   lingotek_download_document($node, $language_code);
   $context['results'][] = 'Download Translated Node Content: ' . $nid;
   watchdog( 'lingotek_batch_mt', 'WORK: DL Node: @node_id (@lang)  -->> ', array( '@node_id' => $nid, '@lang' => $language_code ), WATCHDOG_DEBUG );
+
+  // Set this Target status to CURRENT.
+  $node_status_array[ 'targets' ][ $language_code ] = LINGOTEK_TARGET_SYNC_STATUS_CURRENT;
+
+  // Check:  Are all targets CURRENT?  If so, mark the Node CURRENT.
+  $all_targets_current = TRUE;
+  foreach( $node_status_array[ 'targets' ] AS $language => $status ) {
+    if ( $status != LINGOTEK_TARGET_SYNC_STATUS_CURRENT ) {
+      $all_targets_current = FALSE;
+      break;
+    }
+  }
+  // If, after the check, $all_targets_current is still TRUE, mark the Node status CURRENT.
+  if ( $all_targets_current === TRUE ) {
+    $node_status_array[ 'node_sync_status' ] = LINGOTEK_NODE_SYNC_STATUS_CURRENT;
+  }
+  // Save the $node_status_array
+  lingotek_set_node_and_targets_sync_status_by_array( $nid, $node_status_array );
+
+  $check_node_status_array = lingotek_get_node_and_target_sync_status( $nid );
+  watchdog( 'lingotek_batch_mt', 'SYNC STATUS POST CORRECT: !status', array( '!status' => print_r( $check_node_status_array, true ) ), WATCHDOG_DEBUG );
+
+
+
+
+
 
 } // END:  lingotek_machine_translate_node();
 

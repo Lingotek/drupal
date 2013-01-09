@@ -10,7 +10,7 @@
  */
 function lingotek_machine_translate_node( $nid, &$context ) {
 
-  watchdog( 'lingotek_batch_mt', 'WORK: Translate Node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
+  watchdog( 'lingotek_batch_mt', 'WORK: Upload Node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
 
   $api = LingotekApi::instance();
   $node = node_load( $nid );
@@ -32,6 +32,10 @@ function lingotek_machine_translate_node( $nid, &$context ) {
 
   }
   else {
+
+  watchdog( 'lingotek_batch_mt', 'Hitting Create for Node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
+
+
     // Create a new Lingotek Document.
     // Add project and vault parameters to the node object.
     $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
@@ -39,6 +43,12 @@ function lingotek_machine_translate_node( $nid, &$context ) {
     $api->addContentDocument($node);
     lingotek_add_missing_targets($node);    
   }
+
+  // Set this Node and its targets to PENDING status. (meaning the content has been uploaded, but not downloaded)
+watchdog( 'lingotek_batch_mt', 'SYNC FLAGS 0', array(), WATCHDOG_DEBUG );
+  lingotek_set_node_and_targets_sync_status( $nid, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_TARGET_SYNC_STATUS_PENDING );
+  watchdog( 'lingotek_batch_mt', 'SYNC: Node: @node_id - Setting Node/Targets to PENDING', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
+
 
   $context['results'][] = 'Upload Node: ' . $nid;
 
