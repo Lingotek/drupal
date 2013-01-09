@@ -26,6 +26,8 @@ function lingotek_dashboard() {
  */
 function lingotek_get_dashboard_code() {
 
+  global $base_url;
+
   $totals = array();
   $guid = lingotek_get_guid(); // 16 char string
   $source_language = lingotek_get_source_language(); // ie:  en - Drupal Language Code
@@ -56,8 +58,9 @@ function lingotek_get_dashboard_code() {
       } // END:  if active
     } // END:  foreach target language
 
+    //       <script src="https://gmc.lingotek.com/js/lingotek.min.js"></script>
     $script = '
-      <script src="https://gmc.lingotek.com/js/lingotek.min.js"></script>
+      <script src="http://10.0.11.173:3000/js/lingotek.min.js"></script>
       <script> 
         require(["lingotek"],function(lingotek){ 
         var containerId = "dashboard"; 
@@ -81,7 +84,8 @@ function lingotek_get_dashboard_code() {
           "cms_version": "%s",
           "module_version": "%s",
           "endpoint_url": "%s",
-          "base_url": "%s",
+          "upload_url": "%s",
+          "download_url": "%s",
           // data
           "source_language":%s ,
           "localization_languages": %s,
@@ -92,12 +96,10 @@ function lingotek_get_dashboard_code() {
       </script>
     ';
 
-// download_url
-// upload_url
-
-
-    $base_url = base_path() . current_path();
-    $endpoint = $base_url . '/command';
+    $lingotek_url = $base_url . '/' . current_path();
+    $endpoint = $lingotek_url . '/command';
+    $upload_url = $lingotek_url . '/mt-upload';
+    $download_url = $lingotek_url . '/mt-download';
 
     $output = sprintf( $script, 
       // lingotek 
@@ -119,7 +121,8 @@ function lingotek_get_dashboard_code() {
       VERSION, // drupal version
       LINGOTEK_VERSION, // module version
       $endpoint, // endpoint url
-      $base_url, // module base url
+      $upload_url,
+      $download_url,
       // data
       lingotek_get_source_language_json(), // source_language
       lingotek_get_localization_languages_json(), // localization_languages - The languages “localized” on Drupal
