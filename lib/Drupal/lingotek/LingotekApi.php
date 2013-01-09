@@ -540,21 +540,19 @@ class LingotekApi {
     $result = FALSE;
     $response = null;
     $method = 'autoProvisionCommunity';
-    $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 
+    // Live Credentials
+    $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
+    // Test Credentials
+    $credentials = array('consumer_key' => '5e6fb433-7a36-4401-8408-413f6592c40d','consumer_secret' => 'f25ec093-e241-4cae-8a78-429cf1248631');
 
     $parameters = array( );
+    //$parameters = array( 'communityDisplayName' => $name );
     if( isset( $callback_url ) ) {
-      $parameters[ 'callbackUrl' ] = $callback_url;
+      $parameters[ 'callbackUrl' ] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
     }
 
-    //$parameters = array( 'communityDisplayName' => $name );
-    /*
-    if( isset( $callback_url ) ) {
-      $parameters[ 'callbackUrl' ] = $callback_url;
-    }
-    watchdog( 'lingotek_batch_mt', 'PARAMS: !status', array( '!status' => print_r( $parameters, true ) ), WATCHDOG_DEBUG );
-    */
+
 
 watchdog( 'lingotek_PARAMS', 'Request: !params', array( '!params' => $this->watchdog_format_object($parameters) ), WATCHDOG_DEBUG );
 

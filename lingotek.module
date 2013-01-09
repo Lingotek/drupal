@@ -9,9 +9,9 @@
  */
 define('LINGOTEK_ENABLED', 'lingotek');
 define('LINGOTEK_VERSION', '7.x-2.1');
-define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
 define('LINGOTEK_NOTIFICATIONS_URL', 'admin/settings/lingotek/notifications');
-
+//define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
+define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.197:8080/billing/account.json');
 
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
