@@ -14,8 +14,9 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
   //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
@@ -76,6 +77,7 @@ class LingotekApi {
     $success = TRUE;
 
     $project_id = (!empty($node->lingotek_project_id)) ? $node->lingotek_project_id : variable_get('lingotek_project', NULL);
+    $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[variable_get( 'lingotek_source_language' )];
 
     if ($project_id) {
       $parameters = array(
@@ -83,7 +85,7 @@ class LingotekApi {
         'documentName' => $node->title,
         'documentDesc' => $node->title,
         'format' => $this->xmlFormat(),
-        'sourceLanguage' => $_lingotek_locale[$node->language],
+        'sourceLanguage' => $source_language,
         'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
         'content' => lingotek_xml_node_body($node),
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
@@ -530,7 +532,7 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function createCommunity($name = null) {
+  public function createCommunity( $name = null, $callback_url = null ) {
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
@@ -539,14 +541,32 @@ class LingotekApi {
     $response = null;
     $method = 'autoProvisionCommunity';
     $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
-    $parameters = array( 'communityDisplayName' => $name );
+
+
+    $parameters = array( );
+    if( isset( $callback_url ) ) {
+      $parameters[ 'callbackUrl' ] = $callback_url;
+    }
+
+    //$parameters = array( 'communityDisplayName' => $name );
+    /*
+    if( isset( $callback_url ) ) {
+      $parameters[ 'callbackUrl' ] = $callback_url;
+    }
+    watchdog( 'lingotek_batch_mt', 'PARAMS: !status', array( '!status' => print_r( $parameters, true ) ), WATCHDOG_DEBUG );
+    */
+
+watchdog( 'lingotek_PARAMS', 'Request: !params', array( '!params' => $this->watchdog_format_object($parameters) ), WATCHDOG_DEBUG );
+
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
 
     try {
       OAuthStore::instance('2Leg', $credentials);
     	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
+watchdog( 'lingotek_REQUEST', 'Request: !request', array( '!request' => $this->watchdog_format_object($request) ), WATCHDOG_DEBUG );
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
+watchdog( 'lingotek_RESULT', 'Result:  !request', array( '!request' => $this->watchdog_format_object($result) ), WATCHDOG_DEBUG );
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed OAuth request.
