@@ -22,6 +22,25 @@ function lingotek_dashboard() {
 
 
 /**
+ * Drupal JSON Output - CORS - allows cross domain requests
+ * (adapted from: drupal_json_output)
+ * @param type $var
+ */
+
+function drupal_json_output_cors($var = NULL) {
+  // We are returning JSON, so tell the browser.
+  drupal_add_http_header('Content-Type', 'application/json');
+  drupal_add_http_header('Access-Control-Allow-Origin', "*");
+  drupal_add_http_header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+  drupal_add_http_header('Access-Control-Allow-Headers', 'Content-Type');
+  drupal_add_http_header('X-Powered-By', 'Lingotek');
+  if (isset($var)) {
+    echo drupal_json_encode($var);
+  }
+}
+
+
+/**
  * Generates the code for the embedded Javascript dashboard.
  */
 function lingotek_get_dashboard_code() {
@@ -82,6 +101,7 @@ function lingotek_get_dashboard_code() {
           "cms_site_name": "%s",
           "cms_type": "%s",
           "cms_version": "%s",
+          "cms_distribution": "%s",
           "module_version": "%s",
           "endpoint_url": "%s",
           "upload_url": "%s",
@@ -119,6 +139,7 @@ function lingotek_get_dashboard_code() {
       variable_get( 'site_name', 'Unidentified Drupal Site' ), // sitename
       'Drupal', // cms type
       VERSION, // drupal version
+      variable_get( 'drupal_distro', 'standard'), // drupal commons identifier     
       LINGOTEK_VERSION, // module version
       $endpoint, // endpoint url
       $upload_url,
@@ -303,7 +324,7 @@ function lingotek_dashboard_command_ajax() {
     // Debugging
     // drupal_json_output(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     // Regular
-    drupal_json_output( $response );   
+    drupal_json_output_cors( $response );   
   }
 
 } // END:  lingotek_dashboard_command_ajax
