@@ -428,7 +428,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     }
   }
 
-  if (!lingotek_supported_type($form['#node']->type)) {
+  if (!lingotek_supported_type($form['#node']->type) || !user_access('pm')) {
     return;
   }
   if ( lingotek_account_is_enterprise() === FALSE ) {
