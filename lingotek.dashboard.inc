@@ -26,7 +26,6 @@ function lingotek_dashboard() {
  * (adapted from: drupal_json_output)
  * @param type $var
  */
-
 function drupal_json_output_cors($var = NULL) {
   // We are returning JSON, so tell the browser.
   drupal_add_http_header('Content-Type', 'application/json');
@@ -101,7 +100,7 @@ function lingotek_get_dashboard_code() {
           "cms_site_name": "%s",
           "cms_type": "%s",
           "cms_version": "%s",
-          "cms_distribution": "%s",
+          "cms_tag": "%s",
           "module_version": "%s",
           "endpoint_url": "%s",
           "upload_url": "%s",
@@ -139,7 +138,7 @@ function lingotek_get_dashboard_code() {
       variable_get( 'site_name', 'Unidentified Drupal Site' ), // sitename
       'Drupal', // cms type
       VERSION, // drupal version
-      variable_get( 'drupal_distro', 'standard'), // drupal commons identifier     
+      variable_get( 'lingotek_cms_tag', ''), // CMS tag     
       LINGOTEK_VERSION, // module version
       $endpoint, // endpoint url
       $upload_url,
@@ -322,7 +321,7 @@ function lingotek_dashboard_command_ajax() {
   }
   else {
     // Debugging
-    // drupal_json_output(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
+    // drupal_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     // Regular
     drupal_json_output_cors( $response );   
   }

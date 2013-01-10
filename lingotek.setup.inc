@@ -95,6 +95,22 @@ function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
 }
 
 /**
+ * Identify CMS distribution channel with a tag
+ */
+function lingotek_identify_tag() {
+    $tag = 'Standard';
+    //Tags:  'Commerce', 'Acquia', 'Standard'
+    
+    if(strlen(variable_get('acquia_spi_boot_last',''))){ //acquia_identifier
+        $tag = 'Acquia';//TO-DO: Detect Acquia Gardens and Commons
+    } else if (module_exists('commerce')) {
+        $tag = 'Commerce';
+    }
+    
+    return $tag;
+}
+
+/**
  * New Account - Form Processor
  * Provisions a Lingotek account and sends activation notice.
  */
@@ -120,14 +136,16 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
     $current_project = variable_get( 'lingotek_project', '' );
     $current_vault = variable_get( 'lingotek_vault', '' );
     $current_workflow = variable_get( 'lingotek_workflow', '' );
+    
 
   // Provision a new community if any critical data is missing.
   if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' ) {
 
     // Provision a new Community & Save the Credentials
+    $tag = lingotek_identify_tag();
     $callback_url = lingotek_get_notifications_url();
     $api = LingotekApi::instance();
-    $community = $api->createCommunity( NULL, $callback_url );
+    $community = $api->createCommunity( $tag, $callback_url );
     if ( $community['code'] == 200 ) {
       $community = json_decode( $community['body'] );
       /*
@@ -150,6 +168,8 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_vault', $community->tm_vault_id );
       variable_set( 'lingotek_workflow', $community->workflow_id );
       variable_set( 'lingotek_notifications_callback', $callback_url );
+      variable_set( 'lingotek_cms_tag', $tag);
+      
 
       $extras['company'] = $base_url; // Company
       $extras['lead_source'] = 'Module'; // Source

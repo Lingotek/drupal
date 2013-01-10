@@ -532,7 +532,7 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function createCommunity( $name = null, $callback_url = null ) {
+  public function createCommunity( $tag = null, $callback_url = null ) {
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
@@ -548,6 +548,9 @@ class LingotekApi {
 
     $parameters = array( );
     //$parameters = array( 'communityDisplayName' => $name );
+    if( isset( $tag) ){
+        $parameters[ 'distribution' ] = $tag;
+    }
     if( isset( $callback_url ) ) {
       $parameters[ 'callbackUrl' ] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
     }
