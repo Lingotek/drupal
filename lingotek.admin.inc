@@ -14,6 +14,7 @@ include_once('lingotek.session.inc');
 function lingotek_admin_form() {
 
   lingotek_is_module_setup();
+  lingotek_account_check_enterprise_status();
 
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();

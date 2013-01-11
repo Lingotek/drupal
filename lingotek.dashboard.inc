@@ -11,7 +11,10 @@
 function lingotek_dashboard() {
 
   lingotek_is_module_setup();
-  lingotek_account_check_enterprise_status();
+  // If we havent already, check the account status.
+  if ( variable_get( 'lingotek_enterprise_account', "ACCOUNT STATUS NOT SET" ) === "ACCOUNT STATUS NOT SET" ) {
+    lingotek_account_check_enterprise_status();
+  }
 
   $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
   $output .= lingotek_get_dashboard_code(); // Generates the dashboard javascript.
