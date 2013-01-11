@@ -112,10 +112,12 @@ class LingotekApi {
 
 
   /**
-   * Adds a target language to an existing Lingotek Document.
+   * Adds a target language to an existing Lingotek Document or Project.
    *
    * @param int $lingotek_document_id
-   *   The document to which the new translation target should be added.
+   *   The document to which the new translation target should be added.  Or null if the target will be added to the project.
+   * @param int $lingotek_project_id
+   *   The project to which the new translation target should be added.  Or null if the target will be added to a document instead.
    * @param string $target_language_code
    *   The two letter code representing the language which should be added as a translation target.
    * @param string $workflow_id

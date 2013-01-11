@@ -83,8 +83,7 @@ function lingotek_admin_form() {
 
   // If the connection isn't yet established, stop here.
   // Also stop here if this isn't an enterprise account.
-  //if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
-  if ( !$api->testAuthentication() ) {
+  if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
     return system_settings_form($form);
   }
 
