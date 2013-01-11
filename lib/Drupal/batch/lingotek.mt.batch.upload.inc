@@ -17,39 +17,22 @@ function lingotek_machine_translate_node( $nid, &$context ) {
 
   // Push this node for translation.
   if ($existing_document = lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
+
     // Update an existing Lingotek Document.
     $api->updateContentDocument($node);
 
-    // If set, we need to sync the nodes translation targets.
-    $resync_targets = variable_get( 'lingotek_resync_node_language_targets', 0 );
-    if ( $resync_targets ) {
-      lingotek_add_missing_targets($node);
-      //watchdog( 'lingotek_batch_mt', 'RESYNC Translation Targets -- We needed to resync the translation targets for this node.', array( ), WATCHDOG_DEBUG );
-    }
-    else {
-      //watchdog( 'lingotek_batch_mt', 'NO RESYNC Translation Targets -- We did NOT resync this nodes translation targets.', array( ), WATCHDOG_DEBUG );
-    }
-
   }
   else {
-
-  watchdog( 'lingotek_batch_mt', 'Hitting Create for Node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
-
-
     // Create a new Lingotek Document.
     // Add project and vault parameters to the node object.
     $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
     $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'valut_id');
     $api->addContentDocument($node);
-    lingotek_add_missing_targets($node);    
+    lingotek_add_missing_targets($node); 
   }
 
   // Set this Node and its targets to PENDING status. (meaning the content has been uploaded, but not downloaded)
-watchdog( 'lingotek_batch_mt', 'SYNC FLAGS 0', array(), WATCHDOG_DEBUG );
   lingotek_set_node_and_targets_sync_status( $nid, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_TARGET_SYNC_STATUS_PENDING );
-  watchdog( 'lingotek_batch_mt', 'SYNC: Node: @node_id - Setting Node/Targets to PENDING', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
-
-
   $context['results'][] = 'Upload Node: ' . $nid;
 
 } // END:  lingotek_machine_translate_node();
@@ -73,7 +56,6 @@ function lingotek_bulk_mt_upload_batch_finished( $success, $results, $operations
   }
 
   $_SESSION['bulk_mt_batch_results'] = $messages; // Save data before redirect.
-  watchdog( 'lingotek_batch_mt', 'FINISHED: @message', array( '@message' => print_r( $messages, TRUE ) ), WATCHDOG_DEBUG );
 
   drupal_goto('admin/settings/lingotek/mt-content-queued');
 
@@ -87,9 +69,6 @@ function lingotek_bulk_mt_upload_batch_finished( $success, $results, $operations
 function lingotek_bulk_mt_upload_batch_complete() {
 
   $form = array();
-
-  // If we were supposed to resync the language translation targets, turn that off now that the process is complete.
-  variable_set( 'lingotek_resync_node_language_targets', 0 );
 
   $messages = $_SESSION['bulk_mt_batch_results'];
 

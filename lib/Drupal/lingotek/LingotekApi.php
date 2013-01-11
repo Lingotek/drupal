@@ -101,9 +101,6 @@ class LingotekApi {
       }
     }
     else {
-      watchdog('lingotek', 'Skipping addContentDocument call for node @node_id. Could not locate Lingotek project ID.',
-        array('@node_id' => $node->nid), WATCHDOG_ERROR);
-
       $success = FALSE;
     }
 
@@ -127,25 +124,88 @@ class LingotekApi {
    * @return mixed
    *  The ID of the new translation target in the Lingotek system, or FALSE on error.
    */
-  public function addTranslationTarget($lingotek_document_id, $target_language_code, $workflow_id = '') {
+  public function addTranslationTarget($lingotek_document_id, $lingotek_project_id, $target_language_code, $workflow_id = '') {
     global $_lingotek_client, $_lingotek_locale;
 
-    $parameters = array(
-      'documentId' => $lingotek_document_id,
-      'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
-      'targetLanguage' => $_lingotek_locale[$target_language_code]
-    );
+    if( isset( $_lingotek_locale[$target_language_code] ) ) {
 
-    if ($workflow_id) {
-      $parameters['workflowId'] = $workflow_id;
-    }
+      $parameters = array(
+        'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
+        'targetLanguage' => $_lingotek_locale[$target_language_code]
+      );
 
-    if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
-      return $new_translation_target->id;
+      if ( isset( $lingotek_document_id ) && !isset( $lingotek_project_id ) ) {
+        $parameters['documentId'] = $lingotek_document_id;
+      }
+      else if ( isset( $lingotek_project_id ) && !isset( $lingotek_document_id ) ) {
+        $parameters['projectId'] = $lingotek_project_id;
+      }
+
+      if ($workflow_id) {
+        $parameters['workflowId'] = $workflow_id;
+      }
+
+      if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
+        return ( $new_translation_target->results == 'success' ) ? TRUE : FALSE ;
+      }
+      else {
+        return FALSE;
+      }
     }
     else {
       return FALSE;
     }
+
+  }
+
+  /**
+   * Removes a target language to an existing Lingotek Document or Project.
+   *
+   * @param int $lingotek_document_id
+   *   The document to which the new translation target should be added.  Or null if the target will be added to the project.
+   * @param int $lingotek_project_id
+   *   The project to which the new translation target should be added.  Or null if the target will be added to a document instead.
+   * @param string $target_language_code
+   *   The two letter code representing the language which should be added as a translation target.
+   * @param string $workflow_id
+   *   The optional workflow to associate with this target. If omitted, the project's default
+   *   workflow will be applied.
+   *
+   * @return bool
+   *  TRUE on success, or FALSE on error.
+   */
+  public function removeTranslationTarget($lingotek_document_id, $lingotek_project_id, $target_language_code, $workflow_id = '') {
+    global $_lingotek_client, $_lingotek_locale;
+
+    if( isset( $_lingotek_locale[$target_language_code] ) ) {
+
+      $parameters = array(
+        'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
+        'targetLanguage' => $_lingotek_locale[$target_language_code]
+      );
+
+      if ( isset( $lingotek_document_id ) && !isset( $lingotek_project_id ) ) {
+        $parameters['documentId'] = $lingotek_document_id;
+      }
+      else if ( isset( $lingotek_project_id ) && !isset( $lingotek_document_id ) ) {
+        $parameters['projectId'] = $lingotek_project_id;
+      }
+
+      if ($workflow_id) {
+        $parameters['workflowId'] = $workflow_id;
+      }
+
+      if ($old_translation_target = $this->request('removeTranslationTarget', $parameters)) {
+        return ( $old_translation_target->results == 'success' ) ? TRUE : FALSE ;
+      }
+      else {
+        return FALSE;
+      }
+    }
+    else {
+      return FALSE;
+    }
+
   }
 
   /**

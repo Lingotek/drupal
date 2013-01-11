@@ -10,8 +10,6 @@
  */
 function lingotek_download_node_machine_translation( $nid, $language_code, &$context ) {
 
-
-
   // CRITICAL:  Updating the note w/ the new language translation will cause the document to be flagged edited.
   // Now, right here, Look at this node, have all targets been set to CURRENT?  If so, mark the node as current.
 
@@ -19,14 +17,10 @@ function lingotek_download_node_machine_translation( $nid, $language_code, &$con
   // Get the Current Document and Target Sync Statuses
 
   $node = node_load($nid);
-
   $node_status_array = lingotek_get_node_and_target_sync_status( $nid );
-  watchdog( 'lingotek_batch_mt', 'SYNC STATUS PRE: !status', array( '!status' => print_r( $node_status_array, true ) ), WATCHDOG_DEBUG );
-
 
   lingotek_download_document($node, $language_code);
   $context['results'][] = 'Download Translated Node Content: ' . $nid;
-  watchdog( 'lingotek_batch_mt', 'WORK: DL Node: @node_id (@lang)  -->> ', array( '@node_id' => $nid, '@lang' => $language_code ), WATCHDOG_DEBUG );
 
   // Set this Target status to CURRENT.
   $node_status_array[ 'targets' ][ $language_code ] = LINGOTEK_TARGET_SYNC_STATUS_CURRENT;
@@ -43,16 +37,11 @@ function lingotek_download_node_machine_translation( $nid, $language_code, &$con
   if ( $all_targets_current === TRUE ) {
     $node_status_array[ 'node_sync_status' ] = LINGOTEK_NODE_SYNC_STATUS_CURRENT;
   }
+
   // Save the $node_status_array
   lingotek_set_node_and_targets_sync_status_by_array( $nid, $node_status_array );
 
   $check_node_status_array = lingotek_get_node_and_target_sync_status( $nid );
-  watchdog( 'lingotek_batch_mt', 'SYNC STATUS POST CORRECT: !status', array( '!status' => print_r( $check_node_status_array, true ) ), WATCHDOG_DEBUG );
-
-
-
-
-
 
 } // END:  lingotek_machine_translate_node();
 
@@ -75,7 +64,6 @@ function lingotek_bulk_mt_download_batch_finished( $success, $results, $operatio
   }
 
   $_SESSION['bulk_mt_batch_download_results'] = $messages; // Save data before redirect.
-  watchdog( 'lingotek_batch_mt', 'FINISHED DL Batch: @message', array( '@message' => print_r( $messages, TRUE ) ), WATCHDOG_DEBUG );
 
   drupal_goto('admin/settings/lingotek/mt-content-downloaded');
 

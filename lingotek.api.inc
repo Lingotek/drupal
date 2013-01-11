@@ -155,6 +155,7 @@ function lingotek_save_segment($source_text, $target_text, $target_language, $do
 #API ADDERS
 
 /**
+ * UPDATE:  This is now done when a language is added, and at the project level, instead of the document level.
  * Add target languages to the Lingotek document associated with a node.
  *
  * This saves any missing target languages to the Lingotek platform.
@@ -193,7 +194,7 @@ function lingotek_add_missing_targets($node) {
         !in_array($_lingotek_locale[$target_language->language], $languages_already_added) &&
         $node->language != $target_language->language) {
 
-        $translation_target_id = $api->addTranslationTarget($document_id, $target_language->language, $workflow_id);
+        $translation_target_id = $api->addTranslationTarget($document_id, NULL, $target_language->language, $workflow_id);
       }
       else {
         lingotek_trace("lingotek_add_missing_targets skipping language",

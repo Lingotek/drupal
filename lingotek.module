@@ -270,7 +270,7 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  /**/
+  /*
   // Tab:  Development
   $items['admin/settings/lingotek/development'] = array(
     'title' => 'Development',
@@ -720,6 +720,7 @@ function lingotek_node_update($node) {
 
     if ($send_lingotek_document) {
       if (LingotekApi::instance()->addContentDocument($node)) {
+        lingotek_add_missing_targets($node); 
         drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
       }
       else {
@@ -746,8 +747,10 @@ function lingotek_node_update($node) {
     lingotek_lingonode($node->nid, 'use_source', $node->useSource);
   }
 
+  // UPDATE:  This is now done when a language is added, at the project level.
   // Add any missing languages and their phase templates.
-  lingotek_add_missing_targets($node);
+  //lingotek_add_missing_targets($node);
+
 }
 
 /**

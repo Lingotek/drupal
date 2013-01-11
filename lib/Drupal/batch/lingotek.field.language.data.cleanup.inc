@@ -12,13 +12,9 @@
  */
 function lingotek_node_source_language_cleanup_batch_worker( $nid, $source_language ) {
 
-  watchdog( 'lingotek_node_language_utility', 'WORKER 1a - Node Utility Worker: Setting Language for Node @node_id (@source_language)', array( '@node_id' => $nid, '@source_language' => $source_language ), WATCHDOG_DEBUG );
-
   $loaded_node = node_load( $nid );
   $loaded_node->language = $source_language;
   node_save( $loaded_node );
-
-  watchdog( 'lingotek_node_language_utility', 'WORKER 1b - Node Utility Worker Done', array(), WATCHDOG_DEBUG );
 
 }
 
@@ -34,14 +30,10 @@ function lingotek_node_source_language_cleanup_batch_worker( $nid, $source_langu
  */
 function lingotek_field_language_data_cleanup_batch_worker( $nid, &$context ) {
 
-  watchdog( 'lingotek_field_utility', 'WORKER 2a - Field Utility Worker: Fixing Field Languages for Node @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
-
   $process_node = node_load($nid);
   if ($process_node->nid) {
     lingotek_field_language_data_cleanup_update_node($process_node->nid);
     $context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
-
-    watchdog( 'lingotek_field_utility', 'WORKER 2b - Field Utility Worker Done', array(), WATCHDOG_DEBUG );
   }
 
   $context['finished'] = 1;
@@ -72,7 +64,6 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
         if (!empty($node->{$field_name}['und']) && empty($node->{$field_name}[$node->language])) {
           $node->{$field_name}[$node->language] = $node->{$field_name}['und'];
           $edited = TRUE;
-          watchdog( 'lingotek_field_utility', 'WORKER DATA CHANGE - Utility Batch: node @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
         }
       }
     }
@@ -96,8 +87,5 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
 
   drupal_set_message('Lingotek Field Data Cleanup Utility finished.') ;
-  watchdog( 'lingotek_field_utility', 'Batch Utility Finished', array( ), WATCHDOG_DEBUG );
-
-  // drupal_goto('???');
 
 }

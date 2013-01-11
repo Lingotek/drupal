@@ -169,8 +169,6 @@ function lingotek_dashboard_command_ajax() {
   $message = 'Not doing anything.';
 
   $method = $_SERVER['REQUEST_METHOD'];
-  // https://docs.google.com/document/d/1_uFxeaGcIIke1YqRj6bNm42VvwzEyEO9YqureyJy5to/edit
-
 
   // 1. Update a Target Language (Initiate a Machine Translation Batch)
   if ( $method == 'PUT' ) {
@@ -212,10 +210,9 @@ function lingotek_dashboard_command_ajax() {
       if ( !array_key_exists( $drupal_language_code, $active_languages[1] ) ) {
         locale_add_language( $drupal_language_code );  // Function from the Locale module.
       }
-      $add = lingotek_add_target_language( $drupal_language_code );
 
-      // Flag the MT Upload process, noting that nodes need to sync their translation targets on next run.
-      variable_set( 'lingotek_resync_node_language_targets', 1 );
+      // Adds the language to the local list of languages we do translation for, and to the Lingotek project.
+      $add = lingotek_add_target_language( $drupal_language_code );
 
       // Add the node sync target language entries to the lingotek table.
       lingotek_add_target_sync_status_to_all_nodes( $drupal_language_code );
@@ -242,8 +239,11 @@ function lingotek_dashboard_command_ajax() {
 
     $dashboard_language_code = $delete_vars[ 'code' ];
     $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.      
+
+    // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
     $delete = lingotek_delete_target_language( $drupal_language_code ); // Mark this language as Active => False
 
+    // Removes the node sync target language entries from the lingotek table.
     lingotek_delete_target_sync_status_for_all_nodes( $drupal_language_code );
 
     $response = array(
@@ -626,15 +626,6 @@ function lingotek_development() {
   $output .= '<div>&nbsp;</div>';
   $output .= '<div>&nbsp;</div>';
 
-  // launch the batch translate process.
-  // lingotek_bulk_mt_batch_create( ); 
- 
-  //$api = LingotekApi::instance();
-  //$status = $api->getAccountStatus( );
-  //dpm( $status );
-
-
-
   return $output;
 
 } // END:  lingotek_development()
@@ -646,37 +637,6 @@ function lingotek_development() {
 function lingotek_test() {
 
   $output = '<h1>Test</h1>';
-/*
-  $drupal_language_code = lingotek_drupal_language( 'en_US' );
-  $output .= '<br>Drupal Language Code: ' . $drupal_language_code;
-
-  $nid = lingotek_get_node_id_from_document_id( 111609 );
-
-  $output .= '<br>NodeID: ' . $nid;
-*/
-
-
-$string = 'a:12:{s:4:"sets";a:1:{i:0;a:15:{s:7:"sandbox";a:0:{}s:7:"results";a:1:{i:0;s:14:"Upload Node: 7";}s:7:"success";b:0;s:5:"start";d:1357688924.3271820545196533203125;s:7:"elapsed";d:6562.6099999999996725819073617458343505859375;s:5:"title";s:44:"Sending Content to Lingotek for Translation.";s:8:"finished";s:38:"lingotek_bulk_mt_upload_batch_finished";s:4:"file";s:72:"sites/all/modules/lingotek/lib/Drupal/batch/lingotek.mt.batch.upload.inc";s:12:"init_message";s:24:"Initializing.<br/>&nbsp;";s:16:"progress_message";s:29:"Completed @current of @total.";s:13:"error_message";s:22:"An error has occurred.";s:3:"css";a:0:{}s:5:"total";i:2;s:5:"count";i:1;s:5:"queue";a:2:{s:4:"name";s:17:"drupal_batch:12:0";s:5:"class";s:10:"BatchQueue";}}}s:16:"has_form_submits";b:0;s:11:"current_set";i:0;s:11:"progressive";b:1;s:3:"url";s:5:"batch";s:11:"url_options";a:0:{}s:10:"source_url";s:33:"admin/settings/lingotek/mt-upload";s:8:"redirect";s:7:"<front>";s:5:"theme";s:5:"seven";s:17:"redirect_callback";s:11:"drupal_goto";s:2:"id";s:2:"12";s:13:"error_message";s:76:"Please continue to <a href="/batch?id=12&amp;op=finished">the error page</a>";}';
-
-dpm( unserialize( $string ) );
-
-
-/*
-4	document_id_en	111611
-4	node_sync_status	CURRENT
-4	project_id	20342
-4	target_sync_status_es	CURRENT
-4	target_sync_status_it	CURRENT
-4	vault_id	8787
-
-
-6	document_id_en	111615
-6	node_sync_status	PENDING
-6	project_id	20342
-6	target_sync_status_es	PENDING
-6	target_sync_status_it	PENDING
-6	vault_id	8787
-*/
 
   return $output;
 
@@ -697,38 +657,16 @@ function lingotek_bulk_mt_upload_batch_create( ) {
   $operations = array();
   $bundles = lingotek_translatable_node_types(); // The nodes we translate.
 
-
-/*
-  // This will actually grab all nodes, of the type we have marked for translation.
-  $query = new EntityFieldQuery();
-  $query->entityCondition( 'entity_type', 'node' )->entityCondition( 'bundle', $bundles )->propertyCondition('status', 1); // Published Nodes of the correct Content Types that we want Translated.
-  $nodes = $query->execute();
-
-  foreach ( array_shift( $nodes ) as $node ) {
-    // Saftey Checks.  Could start with them here.
-    // Does this node ALREADY have a forign language translation?
-    $operations[] = array( 'lingotek_machine_translate_node', array( $node->nid ) );
-  }
-*/
-
   // Grab nodes that are currently marked 'EDITED'
   $query = db_select( 'lingotek', 'l' )->fields( 'l' );
   $query->condition( 'lingokey', 'node_sync_status' );
   $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_EDITED );
 
   $result = $query->execute();
-  watchdog( 'lingotek_batch_mt', 'Query: !nodes', array( '!nodes' => watchdog_format_object( $query ) ), WATCHDOG_DEBUG );
-  watchdog( 'lingotek_batch_mt', 'Query Results: !nodes', array( '!nodes' => watchdog_format_object( $result ) ), WATCHDOG_DEBUG );
-
 
   while ($record = $result->fetchAssoc()) {
     $operations[] = array( 'lingotek_machine_translate_node', array( $record['nid'] ) );
-    watchdog( 'lingotek_batch_mt', 'BATCH ITEM NODE: @node_id', array( '@node_id' => $record['nid'] ), WATCHDOG_DEBUG );
   }
-
-
-  watchdog( 'lingotek_batch_mt', 'CREATE UPLOAD BATCH: batch has: @node_count nodes', array( '@node_count' => count( $operations ) ), WATCHDOG_DEBUG );
-  watchdog( 'lingotek_batch_mt', 'BATCH DETAILS: !nodes', array( '!nodes' => watchdog_format_object( $operations ) ), WATCHDOG_DEBUG );
 
   $batch = array(
     'title' => t('Sending Content to Lingotek for Translation.'),
@@ -756,20 +694,6 @@ function lingotek_bulk_mt_download_batch_create( $language_code ) {
     $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
     $lingotek_language_code = lingotek_drupal_to_lingotek_language_code( $drupal_language_code );
     // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
-    // watchdog( 'lingotek_batch_mt', 'LANG CODE FORMAT: Dash: @dash - Drupal: @drupal -- Lingotek: @lingotek', array( '@dash' => $dashboard_language_code, '@drupal' => $drupal_language_code,'@lingotek' => $lingotek_language_code, ), WATCHDOG_DEBUG );
-/*
-    $source_language = lingotek_get_source_language();
-    $document_lookup = 'document_id_' . $source_language;
-
-    // Only pull back nodes included in the Lingotek table (a node with a Lingotek managed translation)
-    $query = db_select( 'lingotek', 'l' )->fields( 'l' );
-    $query->condition( 'lingokey', $document_lookup );
-
-    $result = $query->execute();
-    while ($record = $result->fetchAssoc()) {
-      $operations[] = array( 'lingotek_download_node_machine_translation', array( $record['nid'], $drupal_language_code ) );
-    }
-*/
 
     // Grab nodes that are currently marked 'PENDING'
     $query = db_select( 'lingotek', 'l' )->fields( 'l' );
@@ -777,21 +701,11 @@ function lingotek_bulk_mt_download_batch_create( $language_code ) {
     $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING );
   
     $result = $query->execute();
-    watchdog( 'lingotek_batch_mt', 'Query: !nodes', array( '!nodes' => watchdog_format_object( $query ) ), WATCHDOG_DEBUG );
-    watchdog( 'lingotek_batch_mt', 'Query Results: !nodes', array( '!nodes' => watchdog_format_object( $result ) ), WATCHDOG_DEBUG );
-  
-  
+
     while ($record = $result->fetchAssoc()) {
       $operations[] = array( 'lingotek_download_node_machine_translation', array( $record['nid'], $drupal_language_code ) );
-      watchdog( 'lingotek_batch_mt', 'BATCH DL ITEM NODE: @node_id', array( '@node_id' => $record['nid'] ), WATCHDOG_DEBUG );
     }
 
-
-
-
-    watchdog( 'lingotek_batch_mt', 'CREATE DOWNLOAD BATCH: batch has: @node_count nodes', array( '@node_count' => count( $operations ) ), WATCHDOG_DEBUG );
-  watchdog( 'lingotek_batch_mt', 'BATCH DETAILS: !nodes', array( '!nodes' => watchdog_format_object( $operations ) ), WATCHDOG_DEBUG );
-  
     $batch = array(
       'title' => t('Downloading Lingotek Translated Content'),
       'operations' => $operations,
@@ -827,8 +741,5 @@ function lingotek_dashboard_mt_download() {
     lingotek_bulk_mt_download_batch_create( $_GET['code'] );
 
   } // If Language Code
-  else {
-      watchdog( 'lingotek_batch_mt', 'BATCH DL Error: Language Code Not Specified.  Unable to start translated content download.', array( ), WATCHDOG_DEBUG );
-  }
 
 }

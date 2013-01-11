@@ -115,7 +115,7 @@ function lingotek_node_init_default($node) {
     LingotekApi::instance()->addContentDocument($node);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
   }
-  #Add any missing languages and their phase templates
+  // Add any missing languages and their phase templates
   lingotek_add_missing_targets($node);
 }
 
@@ -593,16 +593,7 @@ function lingotek_translatable_node_field_details() {
   $fields = field_info_fields();
   $translatable_fields = array();
 
-//watchdog( 'lingotek_fields', 'Fields: !status', array( '!status' => watchdog_format_object( $fields ) ), WATCHDOG_DEBUG );
-
-  /*
-    debug( $fields );
-    echo '<pre>';
-    print_r( $fields );
-    echo '</pre>';
-  */
   foreach ($fields as $field_id => $field) {
-//watchdog( 'lingotek_field', 'Field: !status', array( '!status' => watchdog_format_object( $field ) ), WATCHDOG_DEBUG );
     foreach ($field['bundles'] as $type => $instance) {
       /*
       echo '<br>FieldID: ' . $field_id;
@@ -610,10 +601,6 @@ function lingotek_translatable_node_field_details() {
       echo '<br>Type: ' . $type;
       echo '<br>Instance: ' . $instance;
       */
-
-//if ( $type != 'node' ) {
-//watchdog( 'AHHHH!', 'This isnt a NODE!  @type', array( '@type' => $type ), WATCHDOG_DEBUG );
-//}
 
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
@@ -716,7 +703,11 @@ function lingotek_delete_target_language( $drupal_language_code = NULL ) {
     $target_languages = lingotek_get_target_languages();
     $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => FALSE );
     lingotek_save_target_languages( $target_languages );
-    $result = TRUE;  // Hrm... variable_set isnt really into returning values.
+
+    // Remove the Target Language from the Lingotek Project.
+    $project_id = variable_get( 'lingotek_project', '' );
+    $api = LingotekApi::instance();
+    $result = $api->removeTranslationTarget( NULL, $project_id, $drupal_language_code );
   }
 
   return $result;
@@ -725,7 +716,7 @@ function lingotek_delete_target_language( $drupal_language_code = NULL ) {
 
 
 /**
- * Adds a target language to the Target Language tracking.
+ * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
  */
 function lingotek_add_target_language( $drupal_language_code = NULL ) {
 
@@ -736,7 +727,11 @@ function lingotek_add_target_language( $drupal_language_code = NULL ) {
     $target_languages = lingotek_get_target_languages();
     $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => TRUE );
     lingotek_save_target_languages( $target_languages );
-    $result = TRUE;  // Hrm... variable_set isnt really into returning values.
+
+    // Add the Target Language to the Lingotek Project.
+    $project_id = variable_get( 'lingotek_project', '' );
+    $api = LingotekApi::instance();
+    $result = $api->addTranslationTarget( NULL, $project_id, $drupal_language_code );
   }
 
   return $result;

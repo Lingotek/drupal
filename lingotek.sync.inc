@@ -16,8 +16,6 @@ define('LINGOTEK_TARGET_SYNC_STATUS_PENDING', 'PENDING'); // Node target languag
 define('LINGOTEK_TARGET_SYNC_STATUS_LOCKED',  'LOCKED');  // Node target language is locked, and will NOT be replaced.
 
 
-
-
 /**
  *  Gets the Node sync status.
 **/
@@ -35,10 +33,6 @@ function lingotek_set_node_sync_status( $node_id, $node_status ) {
   lingotek_lingonode( $node_id, 'node_sync_status', $node_status );
 
 }
-
-
-
-
 
 /**
  *  Gets the Node Target language status.
@@ -61,7 +55,6 @@ function lingotek_set_target_sync_status( $node_id, $target_language, $node_stat
 }
 
 
-
 // ----  Combo Functions
 
 /**
@@ -70,25 +63,16 @@ function lingotek_set_target_sync_status( $node_id, $target_language, $node_stat
 **/
 function lingotek_set_node_and_targets_sync_status( $node_id, $node_status, $targets_status ) {
 
-watchdog( 'lingotek_batch_mt', 'SYNC FLAGS 1', array(), WATCHDOG_DEBUG );
-
   // Set the Node to EDITED.
   lingotek_set_node_sync_status( $node_id, $node_status );
-
-watchdog( 'lingotek_batch_mt', 'SYNC FLAGS 2', array(), WATCHDOG_DEBUG );
 
   // Loop though each target language, and set that target to EDITED.
   $languages = lingotek_get_target_languages( TRUE );
   foreach( $languages as $language ) {
     lingotek_set_target_sync_status( $node_id, $language, $targets_status );
-watchdog( 'lingotek_batch_mt', 'SYNC FLAGS 3 - @lang', array( '@lang' => $language ), WATCHDOG_DEBUG );
   }
-watchdog( 'lingotek_batch_mt', 'SYNC FLAGS 4', array(), WATCHDOG_DEBUG );
 
 }
-
-
-
 
 /**
  *  Gets the nodes current sync status array.
@@ -120,7 +104,6 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
 
 }
 
-
 /**
  *  Sets the Node and its Target languages to a given value.
  *  Note:  Works off a node status array, so the Node and Targets may have different values.
@@ -138,8 +121,6 @@ function lingotek_set_node_and_targets_sync_status_by_array( $node_id, array $no
 
 }
 
-
-
 /**
  *  When a new MT language is added, add a Target status tag to every node.
 **/
@@ -150,11 +131,13 @@ function lingotek_add_target_sync_status_to_all_nodes( $drupal_language_code ) {
   $result = $query->execute();
 
   while ( $record = $result->fetchAssoc() ) {
-    // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Target to PENDING.
+    // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Node and Target to PENDING.
     if( ($record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_CURRENT ) || ( $record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_PENDING ) ) {
+      lingotek_set_node_sync_status( $record[ 'nid' ], LINGOTEK_NODE_SYNC_STATUS_PENDING );
       lingotek_set_target_sync_status( $record[ 'nid' ], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_PENDING );
     }
     else { // Otherwise, set it to EDITED
+      lingotek_set_node_sync_status( $record[ 'nid' ], LINGOTEK_NODE_SYNC_STATUS_EDITED );
       lingotek_set_target_sync_status( $record[ 'nid' ], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_EDITED );
     }
   }
@@ -171,13 +154,6 @@ function lingotek_delete_target_sync_status_for_all_nodes( $drupal_language_code
 
 }
 
-
-
-
-
-
-
-
 /**
  * Returns the site callback url.
 **/
@@ -185,7 +161,6 @@ function lingotek_get_notifications_url() {
   global $base_url;
   return $base_url . '/' . LINGOTEK_NOTIFICATIONS_URL;
 }
-
 
 /**
  *
@@ -223,17 +198,6 @@ function lingotek_notifications() {
 
 }
 
-/*
-6	document_id_en	111615
-6	node_sync_status	PENDING
-6	project_id	20342
-6	target_sync_status_es	PENDING
-6	target_sync_status_it	PENDING
-6	vault_id	8787
-*/
-
-
-
 /**
  * Finds the Node ID when given a Document ID.
  * Returns FALSE if not found.
@@ -256,6 +220,3 @@ function lingotek_get_node_id_from_document_id( $document_id ) {
   return $found;
 
 }
-
-
-
