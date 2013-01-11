@@ -57,28 +57,24 @@ function lingotek_get_dashboard_code() {
     // Loop though each active target language, and initialize the data.  Add the language code for each language, setting the counts to 0.  Skip the source language
     $target_languages = lingotek_get_target_languages( );
 
-    foreach ( $target_languages as $language ) {
-      if ( $language[ 'active' ] === TRUE && $language[ 'code' ] != $source_language ) { // Only active languages.
-        $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
+    foreach ($target_languages as $language) {
+        $cnt_docs = lingotek_get_node_count($language['code']); // How many docuents are in this language?
         $cnt_mt = $cnt_docs; // How many docs were machine translated?
         $cnt_pr = 0; // How many docs were human translated?
-        $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
+        $cnt_sync = ( ( $cnt_mt + $cnt_pr ) );
 
         $totals[] = array(
-          'code' => lingotek_drupal_to_lingotek_language_code( $language[ 'code' ] ), // Return this language code as the Lingotek language code.
-          'active' => $language[ 'active' ],
-          'docs' => $cnt_docs,
-          'mt' => $cnt_mt,
-          'pr' => $cnt_pr,
-          'synced' => $cnt_sync
+            'code' => lingotek_drupal_to_lingotek_language_code($language['code']), // Return this language code as the Lingotek language code.
+            'active' => $language['active'],
+            'docs' => $cnt_docs,
+            'mt' => $cnt_mt,
+            'pr' => $cnt_pr,
+            'synced' => $cnt_sync
         );
-
-      } // END:  if active
     } // END:  foreach target language
 
-    //       <script src="https://gmc.lingotek.com/js/lingotek.min.js"></script>
     $script = '
-      <script src="http://10.0.11.173:3000/js/lingotek.min.js"></script>
+      <script src="'.LINGOTEK_GMC_SERVER.'/js/lingotek.min.js"></script>
       <script> 
         require(["lingotek"],function(lingotek){ 
         var containerId = "dashboard"; 
