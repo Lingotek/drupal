@@ -11,7 +11,10 @@
 function lingotek_dashboard() {
 
   lingotek_is_module_setup();
-  lingotek_account_check_enterprise_status();
+  // If we havent already, check the account status.
+  if ( variable_get( 'lingotek_enterprise_account', "ACCOUNT STATUS NOT SET" ) === "ACCOUNT STATUS NOT SET" ) {
+    lingotek_account_check_enterprise_status();
+  }
 
   $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
   $output .= lingotek_get_dashboard_code(); // Generates the dashboard javascript.
@@ -58,7 +61,7 @@ function lingotek_get_dashboard_code() {
     $target_languages = lingotek_get_target_languages( );
 
     foreach ( $target_languages as $language ) {
-      if ( $language[ 'active' ] === TRUE && $language[ 'code' ] != $source_language ) { // Only active languages.
+      if ( $language[ 'code' ] != $source_language ) { // Only active languages.
         $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
         $cnt_mt = $cnt_docs; // How many docs were machine translated?
         $cnt_pr = 0; // How many docs were human translated?
