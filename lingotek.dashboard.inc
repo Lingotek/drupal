@@ -58,23 +58,27 @@ function lingotek_get_dashboard_code() {
       variable_get( 'lingotek_login_id', '' ) != '' && variable_get( 'lingotek_project', '' ) != '' && variable_get( 'lingotek_vault', '' ) != '' ) {
 
     // Loop though each active target language, and initialize the data.  Add the language code for each language, setting the counts to 0.  Skip the source language
-    $target_languages = lingotek_get_target_languages( );
+    $target_languages = lingotek_get_target_languages( FALSE );
+    $totals = array();
 
     foreach ($target_languages as $language) {
-        $cnt_docs = lingotek_get_node_count($language['code']); // How many docuents are in this language?
-        $cnt_mt = $cnt_docs; // How many docs were machine translated?
-        $cnt_pr = 0; // How many docs were human translated?
-        $cnt_sync = ( ( $cnt_mt + $cnt_pr ) );
-
+      if ( $language[ 'active' ] ) {
+        $edited  = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_EDITED,  $language[ 'code' ] );
+        $pending = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_PENDING, $language[ 'code' ] );
+        $current = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language[ 'code' ] );
+  
+        // Format:  [{"code":"fr_FR","active":true,"docs":100,"pending":20,"current":80},
         $totals[] = array(
-            'code' => lingotek_drupal_to_lingotek_language_code($language['code']), // Return this language code as the Lingotek language code.
-            'active' => $language['active'],
-            'docs' => $cnt_docs,
-            'mt' => $cnt_mt,
-            'pr' => $cnt_pr,
-            'synced' => $cnt_sync
+          'code' => lingotek_drupal_to_lingotek_language_code( $language[ 'code' ] ),
+          'active' => TRUE,
+          'docs' => 0,
+          //'edited' => $edited,
+          //'pending' => $pending,
+          'pending' => $edited + $pending,
+          'current' => $current
         );
-    } // END:  foreach target language
+      }
+    } // END:  foreach language counts
 
     $script = '
       <script src="'.LINGOTEK_GMC_SERVER.'/js/lingotek.min.js"></script>
@@ -409,7 +413,38 @@ function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = NULL
 
 
 /**
+ * Gets the current sync counts from the lingotek table for the LANGUAGE TARGETS.
+ *
+ * Detaults to CURRENT.
+**/
+function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code ) {
+
+  $node_language_target_key = 'target_sync_status_' . $drupal_language_code;
+  $lingotek_language_code = lingotek_drupal_to_lingotek_language_code( $drupal_language_code );
+
+  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+  $query->condition( 'lingokey', $node_language_target_key );
+  $query->condition( 'lingovalue', $status );
+
+  $result = $query->countQuery()->execute()->fetchAssoc();
+
+  if ( is_array( $result ) ) {
+    $count = array_shift( $result );
+  }
+  else {
+    $count = 0;
+  }
+
+  return $count;
+
+} // END:  lingotek_count_nodes()
+
+
+/**
  * Counts all the nodes of a specific language.
+ * 
+ * OLD METHOD.   Replaced by:  lingotek_count_node_targets() (for reporting node target counts)
+ * Not removed yet, because its still used in other places for reporting other counts.
  *
  * Limits the counts to node / fields that are marked translatable.
  */
@@ -640,12 +675,6 @@ function lingotek_test() {
   return $output;
 
 }
-
-
-
-
-
-
 
 
 /**
