@@ -187,9 +187,8 @@ function lingotek_dashboard_command_ajax() {
       'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
       'active' => TRUE,
       'docs' => '0',
-      'mt' => '0',
-      'pr' => '0',
-      'synced' => '0'
+      'pending' => '0',
+      'current' => '0'
     );
 
     // Launch the machine translation process!
@@ -224,9 +223,8 @@ function lingotek_dashboard_command_ajax() {
         'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
         'active' => TRUE,
         'docs' => '0',
-        'mt' => '0',
-        'pr' => '0',
-        'synced' => '0'
+        'pending' => '0',
+        'current' => '0'
       );
 
     }
@@ -278,17 +276,16 @@ function lingotek_dashboard_command_ajax() {
         if ( isset( $target_languages[ $drupal_language_code ] ) ) {
 
           $cnt_docs = lingotek_get_node_count( $drupal_language_code ); // How many docuents are in this language?
-          $cnt_mt = $cnt_docs; // How many docs were machine translated?
-          $cnt_pr = 0; // How many docs were human translated?
-          $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
-  
+          $edited  = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_EDITED,  $drupal_language_code );
+          $pending = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_PENDING, $drupal_language_code );
+          $current = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code );
+
           $response = array(
             'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
             'active' => $target_languages[ $drupal_language_code ][ 'active' ],
             'docs' => $cnt_docs,
-            'mt' => $cnt_mt,
-            'pr' => $cnt_pr,
-            'synced' => $cnt_sync
+            'pending' => $edited + $pending,
+            'current' => $current
           );
 
         }
@@ -299,17 +296,16 @@ function lingotek_dashboard_command_ajax() {
         foreach ( $target_languages as $language ) {
 
           $cnt_docs = lingotek_get_node_count( $language[ 'code' ] ); // How many docuents are in this language?
-          $cnt_mt = $cnt_docs; // How many docs were machine translated?
-          $cnt_pr = 0; // How many docs were human translated?
-          $cnt_sync = ( ( $cnt_mt + $cnt_pr ) ) ; 
+          $edited  = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_EDITED,  $language[ 'code' ] );
+          $pending = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_PENDING, $language[ 'code' ] );
+          $current = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language[ 'code' ] );
   
           $response[] = array(
             'code' => lingotek_drupal_to_lingotek_language_code( $language[ 'code' ] ), // Return this language code as the Lingotek language code.
             'active' => $language[ 'active' ],
             'docs' => $cnt_docs,
-            'mt' => $cnt_mt,
-            'pr' => $cnt_pr,
-            'synced' => $cnt_sync
+            'pending' => $edited + $pending,
+            'current' => $current
           );
  
         } // END:  foreach target language
