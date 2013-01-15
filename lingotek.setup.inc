@@ -530,7 +530,8 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     $use_defaults = TRUE;
   }
 
-  $skip = array( 'taxonomy_autocomplete', 'image_image', 'number', 'options_onoff' );
+  // What types of fields DO we translate?
+  $included_fields = array( 'text', 'text_long', 'text_textfield', 'text_textarea_with_summary' );
 
   $form['lingotek_instructions'] = array( '#markup' => '<div>Which content do you want translated?</div>' );
   $form['lingotek_top_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
@@ -580,7 +581,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
           .'</div>' );
         */
       // Exclude field types we dont translate.
-      if ( FALSE === array_search( $field_type, $skip ) ) {
+      if ( TRUE == array_search( $field_type, $included_fields ) ) {
         $form[ $field_name ] = array(
           '#type' => 'checkbox',
           '#title' => t( '@fieldlabel [@fieldtype]', array( '@fieldlabel' => $field_label, '@fieldtype' => $field_type ) ),
