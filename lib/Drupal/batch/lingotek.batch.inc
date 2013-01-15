@@ -130,9 +130,8 @@ function lingotek_get_sync_download_batch_elements( ) {
   foreach ($target_languages as $language) {
     if ( $language[ 'active' ] ) {
 
-      $dashboard_language_code = $language[ 'code' ];
-      $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
       // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
+      $drupal_language_code = $language[ 'code' ];
 
       // Grab node targets that are currently marked 'PENDING'.
       // There can be one operation for each node target that is pending.
