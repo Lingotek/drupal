@@ -67,3 +67,193 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = true, $
   }
 
 }
+
+
+/**
+ * Batch Create - Sync:  Uploads new and changed documents for translation and Downloads translated documents.
+ *
+ * Creates the batch operations array.  Downloads first, then uploads.
+ */
+function lingotek_sync_batch_create( ) {
+
+  // Grab the Nodes that need to be Downloaded & Uploaded.  These are batch operation arrays.
+  $download_commands = lingotek_get_sync_download_batch_elements();
+  $upload_commands = lingotek_get_sync_upload_batch_elements();
+
+  // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
+  $operations = array_merge( $download_commands, $upload_commands );
+
+  $batch = array(
+    'title' => t('Syncing Content Translations with Lingotek'),
+    'operations' => $operations,
+    'finished' => 'lingotek_mt_batch_sync_finished',
+    'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.sync.inc',
+  );
+
+  batch_set($batch);
+  batch_process( 'admin/settings/lingotek' ); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+
+}
+
+
+/**
+ * Sync - Upload Batch Elements:  Creates the batch elements for nodes/documents that need to be uploaded.
+ */
+function lingotek_get_sync_upload_batch_elements( ) {
+
+  $operations = array();
+
+  // Grab nodes that are currently marked 'EDITED'
+  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+  $query->condition( 'lingokey', 'node_sync_status' );
+  $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_EDITED );
+
+  $result = $query->execute();
+
+  while ($record = $result->fetchAssoc()) {
+    $operations[] = array( 'lingotek_mt_sync_upload_node', array( $record['nid'] ) );
+  }
+
+  return $operations;
+
+}
+
+
+/**
+ * Sync - Download Batch Elements:  Creates the batch elements for nodes/documents that need to be downloaded.
+ */
+function lingotek_get_sync_download_batch_elements( ) {
+
+  $operations = array();
+
+  $target_languages = lingotek_get_target_languages( );
+  foreach ($target_languages as $language) {
+    if ( $language[ 'active' ] ) {
+
+      $dashboard_language_code = $language[ 'code' ];
+      $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
+      // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
+
+      // Grab node targets that are currently marked 'PENDING'.
+      // There can be one operation for each node target that is pending.
+      $key = 'target_sync_status_' . $drupal_language_code;
+      $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+      $query->condition( 'lingokey', $key );
+      $query->condition( 'lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING );
+    
+      $result = $query->execute();
+      while ( $record = $result->fetchAssoc() ) {
+        $operations[] = array( 'lingotek_mt_sync_download_node_target', array( $record['nid'], $drupal_language_code ) );
+      }
+
+    }
+  } // END:  Target Languages Loop
+
+  return $operations;
+
+}
+
+
+
+
+/**
+ *
+ * Old Upload / Download Batch Functions -- Replaced with the combined Sync batch methods.
+ *
+ */
+
+
+/**
+ * Batch Create - Upload:  Create a Bulk Machine Translate UPLOAD Batch.
+ */
+function lingotek_bulk_mt_upload_batch_create( ) {
+
+  $operations = array();
+  $bundles = lingotek_translatable_node_types(); // The nodes we translate.
+
+  // Grab nodes that are currently marked 'EDITED'
+  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+  $query->condition( 'lingokey', 'node_sync_status' );
+  $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_EDITED );
+
+  $result = $query->execute();
+
+  while ($record = $result->fetchAssoc()) {
+    $operations[] = array( 'lingotek_machine_translate_node', array( $record['nid'] ) );
+  }
+
+  $batch = array(
+    'title' => t('Sending Content to Lingotek for Translation.'),
+    'operations' => $operations,
+    'finished' => 'lingotek_bulk_mt_upload_batch_finished',
+    'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.upload.inc',
+  );
+
+  batch_set($batch);
+  batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+
+} // END:  lingotek_bulk_mt_upload_batch_create()
+
+
+/**
+ * Batch Create - Download:  Create a Bulk Machine Translate DOWNLOAD Batch.
+ */
+function lingotek_bulk_mt_download_batch_create( $language_code ) {
+
+  $operations = array();
+
+  if ( $language_code ) {
+
+    $dashboard_language_code = $language_code;
+    $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
+    $lingotek_language_code = lingotek_drupal_to_lingotek_language_code( $drupal_language_code );
+    // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
+
+    // Grab nodes that are currently marked 'PENDING'
+    $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+    $query->condition( 'lingokey', 'node_sync_status' );
+    $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING );
+  
+    $result = $query->execute();
+
+    while ($record = $result->fetchAssoc()) {
+      $operations[] = array( 'lingotek_download_node_machine_translation', array( $record['nid'], $drupal_language_code ) );
+    }
+
+    $batch = array(
+      'title' => t('Downloading Lingotek Translated Content'),
+      'operations' => $operations,
+      'finished' => 'lingotek_bulk_mt_download_batch_finished',
+      'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.download.inc',
+    );
+
+    batch_set($batch);
+    batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+
+  } // END:  if language_code
+
+}
+
+
+/**
+ * Batch Create:  Bulk Machine Translate Upload.
+ */
+function lingotek_dashboard_mt_upload( ) {
+
+  lingotek_bulk_mt_upload_batch_create( );
+
+}
+
+
+/**
+ * Batch Create:  Bulk Machine Translate Download.
+ */
+function lingotek_dashboard_mt_download() {
+
+  if ( isset( $_GET['code'] ) ) {
+
+    lingotek_bulk_mt_download_batch_create( $_GET['code'] );
+
+  } // If Language Code
+
+}

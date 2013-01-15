@@ -604,22 +604,18 @@ class LingotekApi {
     $method = 'autoProvisionCommunity';
 
     // Live Credentials
-    $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
+    // $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
     // Test Credentials
     $credentials = array('consumer_key' => '5e6fb433-7a36-4401-8408-413f6592c40d','consumer_secret' => 'f25ec093-e241-4cae-8a78-429cf1248631');
 
     $parameters = array( );
     //$parameters = array( 'communityDisplayName' => $name );
     if( isset( $tag) ){
-        $parameters[ 'distribution' ] = $tag;
+      $parameters[ 'distribution' ] = $tag;
     }
     if( isset( $callback_url ) ) {
       $parameters[ 'callbackUrl' ] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
     }
-
-
-
-watchdog( 'lingotek_PARAMS', 'Request: !params', array( '!params' => $this->watchdog_format_object($parameters) ), WATCHDOG_DEBUG );
 
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
@@ -627,9 +623,7 @@ watchdog( 'lingotek_PARAMS', 'Request: !params', array( '!params' => $this->watc
     try {
       OAuthStore::instance('2Leg', $credentials);
     	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
-watchdog( 'lingotek_REQUEST', 'Request: !request', array( '!request' => $this->watchdog_format_object($request) ), WATCHDOG_DEBUG );
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
-watchdog( 'lingotek_RESULT', 'Result:  !request', array( '!request' => $this->watchdog_format_object($result) ), WATCHDOG_DEBUG );
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed OAuth request.

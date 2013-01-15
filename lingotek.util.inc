@@ -792,3 +792,83 @@ function lingotek_save_target_languages( $target_languages = NULL ) {
   }
 
 } // END:  lingotek_save_target_languages()
+
+
+/**
+ * Gets the language mappings used in the dashboard.  These are the code that get sent to the endpoints.
+ * They must be mapped from the dashboard language code back to a Drupal language code.
+ * Due to sunspots, this list does not match the standard language mappings list.
+ * Returns a Drupal language code.
+ */
+function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = NULL ) {
+
+  // Dashboard Language Code ->  Drupal Language Code
+  $index = array( 
+    'en' => 'en',
+    'ja' => 'ja',
+    'de' => 'de',
+    'es' => 'es',
+    'fr' => 'fr',
+    'zh' => 'zh-hans',
+    'it' => 'it',
+    'pt' => 'pt',
+    'nl' => 'nl',
+    'ko' => 'ko',
+    'ar' => 'ar',
+    'ru' => 'ru',
+    'sv' => 'sv',
+    'no' => 'fa',
+    'pl' => 'pl',
+    'tr' => 'tr',
+    'da' => 'da',
+    'fi' => 'fi',
+    'iw' => 'he',
+    'el' => 'el',
+    'cs' => 'cs',
+    'id' => 'id',
+    'lt' => 'lt',
+    'hu' => 'hu',
+    'ca' => 'ca',
+    'th' => 'th',
+    'sk' => 'sk',
+    'bs' => 'bs',
+    'hr' => 'hr',
+    'sr' => 'sr',
+    'bg' => 'bg',
+    'et' => 'et',
+    'tl' => 'fil',
+    'hi' => 'hi',
+    'is' => 'is',
+    'lv' => 'lv',
+    'ro' => 'ro',
+    'sl' => 'sl',
+    'uk' => 'uk',
+    'ur' => 'ur',
+    'vi' => 'vi'
+  );
+
+  $result = FALSE;
+
+  if ( isset( $dashboard_language_code ) && isset( $index[ $dashboard_language_code ] ) ) {
+    $result = $index[ $dashboard_language_code ];
+  }
+
+  return $result;
+
+} // END:  lingotek_dashboard_to_drupal_language_code()
+
+
+/**
+ * Given a Drupal language code, Lookup the Lingotek equivalent.  (Uses the core lingotek.reference.inc file.)
+ */
+function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = NULL ) {
+
+  global $_lingotek_locale;
+
+  $result = FALSE;
+  if ( isset( $drupal_language_code ) && isset( $_lingotek_locale[ $drupal_language_code ] ) ) {
+    $result = $_lingotek_locale[ $drupal_language_code ];
+  }
+
+  return $result;
+}

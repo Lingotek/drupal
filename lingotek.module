@@ -17,7 +17,7 @@ define('LINGOTEK_NOTIFICATIONS_URL', 'admin/settings/lingotek/notifications');
 
 //TESTING
 define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.197:8080/billing/account.json');
-define('LINGOTEK_GMC_SERVER', 'http://10.0.11.173:3000');
+define('LINGOTEK_GMC_SERVER', 'http://10.0.11.171:3000');
 //define('LINGOTEK_GMC_SERVER', 'http://localhost:3000');
 
 
@@ -40,7 +40,6 @@ function lingotek_menu() {
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard',
     'weight' => 1,
-
     'type' => MENU_NORMAL_ITEM,
     'access arguments' => array('administration')
   );
@@ -135,7 +134,16 @@ function lingotek_menu() {
 
   // Batch Process Pages ----------------------------------------
 
-  // START UPLOAD:  Upload documents for the Machine Translation process.
+  // Sync Process:  Upload documents & Download the Translations
+  $items['admin/settings/lingotek/sync'] = array(
+    'title' => 'Sync Document Translations',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'file' => 'lingotek.sync.inc',
+    'page callback' => 'lingotek_sync',
+  );
+
+  // START UPLOAD:  Upload documents for the Machine Translation process
   $items['admin/settings/lingotek/mt-upload'] = array(
     'title' => 'Upload Documents For Machine Translation',
     'type' => MENU_CALLBACK,
@@ -154,7 +162,7 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  // START DOWNLOAD: Download documents that have been Machine Translated.
+  // START DOWNLOAD: Download documents that have been Machine Translated
   $items['admin/settings/lingotek/mt-download'] = array(
     'title' => 'Download Machine Translated Documents',
     'type' => MENU_CALLBACK,
@@ -278,7 +286,7 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  /*
+  /**/
   // Tab:  Development
   $items['admin/settings/lingotek/development'] = array(
     'title' => 'Development',

@@ -57,10 +57,9 @@ function lingotek_get_dashboard_code() {
   if ( variable_get( 'lingotek_community_identifier', '' ) != '' && variable_get( 'lingotek_oauth_consumer_id', '' ) != '' && variable_get( 'lingotek_oauth_consumer_secret', '' ) != '' && 
       variable_get( 'lingotek_login_id', '' ) != '' && variable_get( 'lingotek_project', '' ) != '' && variable_get( 'lingotek_vault', '' ) != '' ) {
 
-    // Loop though each active target language, and initialize the data.  Add the language code for each language, setting the counts to 0.  Skip the source language
+    // Loop though each active target languages, and get sync status counts.
     $target_languages = lingotek_get_target_languages( FALSE );
     $totals = array();
-
     foreach ($target_languages as $language) {
       if ( $language[ 'active' ] ) {
         $edited  = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_EDITED,  $language[ 'code' ] );
@@ -108,6 +107,7 @@ function lingotek_get_dashboard_code() {
           "endpoint_url": "%s",
           "upload_url": "%s",
           "download_url": "%s",
+          "sync_url": "%s",
           // data
           "source_language":%s ,
           "localization_languages": %s,
@@ -122,6 +122,7 @@ function lingotek_get_dashboard_code() {
     $endpoint = $lingotek_url . '/command';
     $upload_url = $lingotek_url . '/mt-upload';
     $download_url = $lingotek_url . '/mt-download';
+    $sync_url = $lingotek_url . '/sync';
 
     $output = sprintf( $script, 
       // lingotek 
@@ -146,6 +147,7 @@ function lingotek_get_dashboard_code() {
       $endpoint, // endpoint url
       $upload_url,
       $download_url,
+      $sync_url,
       // data
       lingotek_get_source_language_json(), // source_language
       lingotek_get_localization_languages_json(), // localization_languages - The languages “localized” on Drupal
@@ -326,86 +328,6 @@ function lingotek_dashboard_command_ajax() {
   }
 
 } // END:  lingotek_dashboard_command_ajax
-
-
-/**
- * Gets the language mappings used in the dashboard.  These are the code that get sent to the endpoints.
- * They must be mapped from the dashboard language code back to a Drupal language code.
- * Due to sunspots, this list does not match the standard language mappings list.
- * Returns a Drupal language code.
- */
-function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = NULL ) {
-
-  // Dashboard Language Code ->  Drupal Language Code
-  $index = array( 
-    'en' => 'en',
-    'ja' => 'ja',
-    'de' => 'de',
-    'es' => 'es',
-    'fr' => 'fr',
-    'zh' => 'zh-hans',
-    'it' => 'it',
-    'pt' => 'pt',
-    'nl' => 'nl',
-    'ko' => 'ko',
-    'ar' => 'ar',
-    'ru' => 'ru',
-    'sv' => 'sv',
-    'no' => 'fa',
-    'pl' => 'pl',
-    'tr' => 'tr',
-    'da' => 'da',
-    'fi' => 'fi',
-    'iw' => 'he',
-    'el' => 'el',
-    'cs' => 'cs',
-    'id' => 'id',
-    'lt' => 'lt',
-    'hu' => 'hu',
-    'ca' => 'ca',
-    'th' => 'th',
-    'sk' => 'sk',
-    'bs' => 'bs',
-    'hr' => 'hr',
-    'sr' => 'sr',
-    'bg' => 'bg',
-    'et' => 'et',
-    'tl' => 'fil',
-    'hi' => 'hi',
-    'is' => 'is',
-    'lv' => 'lv',
-    'ro' => 'ro',
-    'sl' => 'sl',
-    'uk' => 'uk',
-    'ur' => 'ur',
-    'vi' => 'vi'
-  );
-
-  $result = FALSE;
-
-  if ( isset( $dashboard_language_code ) && isset( $index[ $dashboard_language_code ] ) ) {
-    $result = $index[ $dashboard_language_code ];
-  }
-
-  return $result;
-
-} // END:  lingotek_dashboard_to_drupal_language_code()
-
-
-/**
- * Given a Drupal language code, Lookup the Lingotek equivalent.  (Uses the core lingotek.reference.inc file.)
- */
-function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = NULL ) {
-
-  global $_lingotek_locale;
-
-  $result = FALSE;
-  if ( isset( $drupal_language_code ) && isset( $_lingotek_locale[ $drupal_language_code ] ) ) {
-    $result = $_lingotek_locale[ $drupal_language_code ];
-  }
-
-  return $result;
-}
 
 
 /**
@@ -669,101 +591,5 @@ function lingotek_test() {
   $output = '<h1>Test</h1>';
 
   return $output;
-
-}
-
-
-/**
- * Batch Create - Upload:  Create a Bulk Machine Translate UPLOAD Batch.
- */
-function lingotek_bulk_mt_upload_batch_create( ) {
-
-  $operations = array();
-  $bundles = lingotek_translatable_node_types(); // The nodes we translate.
-
-  // Grab nodes that are currently marked 'EDITED'
-  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
-  $query->condition( 'lingokey', 'node_sync_status' );
-  $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_EDITED );
-
-  $result = $query->execute();
-
-  while ($record = $result->fetchAssoc()) {
-    $operations[] = array( 'lingotek_machine_translate_node', array( $record['nid'] ) );
-  }
-
-  $batch = array(
-    'title' => t('Sending Content to Lingotek for Translation.'),
-    'operations' => $operations,
-    'finished' => 'lingotek_bulk_mt_upload_batch_finished',
-    'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.upload.inc',
-  );
-
-  batch_set($batch);
-  batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-
-} // END:  lingotek_bulk_mt_upload_batch_create()
-
-
-/**
- * Batch Create - Download:  Create a Bulk Machine Translate DOWNLOAD Batch.
- */
-function lingotek_bulk_mt_download_batch_create( $language_code ) {
-
-  $operations = array();
-
-  if ( $language_code ) {
-
-    $dashboard_language_code = $language_code;
-    $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
-    $lingotek_language_code = lingotek_drupal_to_lingotek_language_code( $drupal_language_code );
-    // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
-
-    // Grab nodes that are currently marked 'PENDING'
-    $query = db_select( 'lingotek', 'l' )->fields( 'l' );
-    $query->condition( 'lingokey', 'node_sync_status' );
-    $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING );
-  
-    $result = $query->execute();
-
-    while ($record = $result->fetchAssoc()) {
-      $operations[] = array( 'lingotek_download_node_machine_translation', array( $record['nid'], $drupal_language_code ) );
-    }
-
-    $batch = array(
-      'title' => t('Downloading Lingotek Translated Content'),
-      'operations' => $operations,
-      'finished' => 'lingotek_bulk_mt_download_batch_finished',
-      'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.download.inc',
-    );
-
-    batch_set($batch);
-    batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-
-  } // END:  if language_code
-
-}
-
-
-/**
- * Batch Create:  Bulk Machine Translate Upload.
- */
-function lingotek_dashboard_mt_upload( ) {
-
-  lingotek_bulk_mt_upload_batch_create( );
-
-}
-
-
-/**
- * Batch Create:  Bulk Machine Translate Download.
- */
-function lingotek_dashboard_mt_download() {
-
-  if ( isset( $_GET['code'] ) ) {
-
-    lingotek_bulk_mt_download_batch_create( $_GET['code'] );
-
-  } // If Language Code
 
 }

@@ -25,6 +25,7 @@ function lingotek_get_node_sync_status( $node_id ) {
 
 }
 
+
 /**
  *  Sets the Node sync status.
 **/
@@ -33,6 +34,7 @@ function lingotek_set_node_sync_status( $node_id, $node_status ) {
   lingotek_lingonode( $node_id, 'node_sync_status', $node_status );
 
 }
+
 
 /**
  *  Gets the Node Target language status.
@@ -43,6 +45,7 @@ function lingotek_get_target_sync_status( $node_id, $target_language ) {
   return lingotek_lingonode( $node_id, $key );
 
 }
+
 
 /**
  *  Sets the Node Target language to the specified value.
@@ -74,6 +77,7 @@ function lingotek_set_node_and_targets_sync_status( $node_id, $node_status, $tar
 
 }
 
+
 /**
  *  Gets the nodes current sync status array.
 **/
@@ -104,6 +108,7 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
 
 }
 
+
 /**
  *  Sets the Node and its Target languages to a given value.
  *  Note:  Works off a node status array, so the Node and Targets may have different values.
@@ -113,13 +118,13 @@ function lingotek_set_node_and_targets_sync_status_by_array( $node_id, array $no
   // Set the Node to EDITED.
   lingotek_set_node_sync_status( $node_id, $node_status_array[ 'node_sync_status' ] );
 
-
   // Loop though each target language, and set that target.
   foreach( $node_status_array[ 'targets' ] as $language_code => $status ) {
     lingotek_set_target_sync_status( $node_id, $language_code, $status );
   }
 
 }
+
 
 /**
  *  When a new MT language is added, add a Target status tag to every node.
@@ -144,6 +149,7 @@ function lingotek_add_target_sync_status_to_all_nodes( $drupal_language_code ) {
 
 }
 
+
 /**
  *  When a new MT language is added, add a Target status tag to every node.
 **/
@@ -154,6 +160,7 @@ function lingotek_delete_target_sync_status_for_all_nodes( $drupal_language_code
 
 }
 
+
 /**
  * Returns the site callback url.
 **/
@@ -162,7 +169,10 @@ function lingotek_get_notifications_url() {
   return $base_url . '/' . LINGOTEK_NOTIFICATIONS_URL;
 }
 
+
 /**
+ * Registers the site translation notfication callback.
+ * This URL will be called when a document translation is complete, and can be downloaded.
  *
  * Format:  ?doc_id={document_id}&target_code={target_language}&project_id={project_id}
 **/
@@ -198,6 +208,7 @@ function lingotek_notifications() {
 
 }
 
+
 /**
  * Finds the Node ID when given a Document ID.
  * Returns FALSE if not found.
@@ -218,5 +229,16 @@ function lingotek_get_node_id_from_document_id( $document_id ) {
   }
 
   return $found;
+
+}
+
+
+/**
+ * The main function responsible for syncing node/document translation.
+ * 
+**/
+function lingotek_sync() {
+
+  lingotek_sync_batch_create();
 
 }
