@@ -86,7 +86,6 @@ function lingotek_sync_batch_create( ) {
   $batch = array(
     'title' => t('Syncing Content Translations with Lingotek'),
     'operations' => $operations,
-    'finished' => 'lingotek_mt_batch_sync_finished',
     'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.sync.inc',
   );
 
