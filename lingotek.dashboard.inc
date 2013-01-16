@@ -186,7 +186,7 @@ function lingotek_dashboard_command_ajax() {
     $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code ); // Map the code from a dashboard language code, to a drupal one.
 
     $response = array(
-      'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
+      'code' => lingotek_drupal_to_dashboard_language_code( $drupal_language_code ),
       'active' => TRUE,
       'docs' => '0',
       'pending' => '0',
@@ -222,7 +222,7 @@ function lingotek_dashboard_command_ajax() {
       lingotek_add_target_sync_status_to_all_nodes( $drupal_language_code );
 
       $response = array(
-        'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
+        'code' => lingotek_drupal_to_dashboard_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
         'active' => TRUE,
         'docs' => '0',
         'pending' => '0',
@@ -250,7 +250,7 @@ function lingotek_dashboard_command_ajax() {
     lingotek_delete_target_sync_status_for_all_nodes( $drupal_language_code );
 
     $response = array(
-      'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ),
+      'code' => lingotek_drupal_to_dashboard_language_code( $drupal_language_code ),
       'active' => FALSE,
       'success' => $delete
     ); // Format:  {'code':'es','active':'FALSE','success':TRUE}
@@ -283,7 +283,7 @@ function lingotek_dashboard_command_ajax() {
           $current = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code );
 
           $response = array(
-            'code' => lingotek_drupal_to_lingotek_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
+            'code' => lingotek_drupal_to_dashboard_language_code( $drupal_language_code ), // Return this language code as the Lingotek language code.
             'active' => $target_languages[ $drupal_language_code ][ 'active' ],
             'docs' => $cnt_docs,
             'pending' => $edited + $pending,
@@ -303,7 +303,7 @@ function lingotek_dashboard_command_ajax() {
           $current = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language[ 'code' ] );
   
           $response[] = array(
-            'code' => lingotek_drupal_to_lingotek_language_code( $language[ 'code' ] ), // Return this language code as the Lingotek language code.
+            'code' => lingotek_drupal_to_dashboard_language_code( $language[ 'code' ] ), // Return this language code as the Lingotek language code.
             'active' => $language[ 'active' ],
             'docs' => $cnt_docs,
             'pending' => $edited + $pending,
@@ -338,7 +338,7 @@ function lingotek_dashboard_command_ajax() {
 function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code ) {
 
   $node_language_target_key = 'target_sync_status_' . $drupal_language_code;
-  $lingotek_language_code = lingotek_drupal_to_lingotek_language_code( $drupal_language_code );
+  $lingotek_language_code = lingotek_drupal_to_dashboard_language_code( $drupal_language_code );
 
   $query = db_select( 'lingotek', 'l' )->fields( 'l' );
   $query->condition( 'lingokey', $node_language_target_key );
@@ -456,7 +456,7 @@ function lingotek_get_source_language_json() {
   $data = array();
   $source_language = lingotek_get_source_language();
 
-  $data['code'] = lingotek_drupal_to_lingotek_language_code( $source_language );
+  $data['code'] = lingotek_drupal_to_dashboard_language_code( $source_language );
   $data['docs'] = lingotek_get_node_count( $source_language );
 
   return json_encode( $data );
@@ -476,7 +476,7 @@ function lingotek_get_localization_languages_json() {
 
   $result = array();
   foreach ( $laguages as $language ) {
-    $result[] = lingotek_drupal_to_lingotek_language_code( $language );
+    $result[] = lingotek_drupal_to_dashboard_language_code( $language );
   }
 
   return json_encode( $result );
