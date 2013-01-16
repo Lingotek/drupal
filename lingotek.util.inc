@@ -800,7 +800,7 @@ function lingotek_save_target_languages( $target_languages = NULL ) {
  * Due to sunspots, this list does not match the standard language mappings list.
  * Returns a Drupal language code.
  */
-function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = NULL ) {
+function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $flip = false ) {
 
   // Dashboard Language Code ->  Drupal Language Code
   $index = array( 
@@ -846,16 +846,28 @@ function lingotek_dashboard_to_drupal_language_code( $dashboard_language_code = 
     'ur' => 'ur',
     'vi' => 'vi'
   );
+  
+  $index = $flip ? array_flip($index) : $index;
 
   $result = FALSE;
 
-  if ( isset( $dashboard_language_code ) && isset( $index[ $dashboard_language_code ] ) ) {
-    $result = $index[ $dashboard_language_code ];
+  if ( isset( $language_code ) && isset( $index[ $language_code ] ) ) {
+    $result = $index[ $language_code ];
   }
 
   return $result;
 
 } // END:  lingotek_dashboard_to_drupal_language_code()
+
+/**
+ * The reverse of lingotek_dashboard_to_drupal_language_code()
+ * Returns a Drupal language code.
+ */
+function lingotek_drupal_to_dashboard_language_code( $drupal_language_code = NULL ) {
+
+  return lingotek_dashboard_to_drupal_language_code( $drupal_language_code , true);
+
+} // END:  lingotek_drupal_to_dashboard_language_code()
 
 
 /**
