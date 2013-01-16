@@ -186,11 +186,11 @@ function lingotek_notifications() {
 
   if ( isset( $document_id ) ) {
 
-    include_once('lib/Drupal/batch/lingotek.mt.batch.download.inc');
+    include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
     $context = '';
 
     $nid = lingotek_get_node_id_from_document_id( $document_id );
-    lingotek_download_node_machine_translation( $nid, $drupal_language_code, $context );
+    lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, $context );
 
     watchdog( 'lingotek_callback', '
       <strong>NID:</strong> @node_id
