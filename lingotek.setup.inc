@@ -896,25 +896,6 @@ function lingotek_setup_node_updates_form_submit( $form, $form_state ) {
   //drupal_goto( 'admin/config/lingotek/setup-complete' );
 }
 
-/**
- * Outputs the support footer html.
- */
-function lingotek_support_footer() {
-  $html = '
-    <div style="margin-top: 20px; width: 500px;">
-      <table class="table table-bordered tab">
-        <tbody>
-          <tr>
-            <td><strong>Support Hours:</strong><br>9am - 6pm MDT</td>
-            <td><strong>Phone:</strong><br> (801) 331-7777</td>
-            <td><strong>Email:</strong><br> <a href="mailto:support@lingotek.com">support@lingotek.com</a></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  ';
-  return $html;
-}
 
 /*
  * Get the Lingotek user's current Communities.  Use the V3 API.
