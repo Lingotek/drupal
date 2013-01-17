@@ -14,9 +14,9 @@ class LingotekApi {
   /**
    * The server name of the Lingotek production instance.
    */
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
   //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
-  const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
 
   /**
    * The faux Lingotek user ID to use for anonymous user operations.
@@ -604,9 +604,9 @@ class LingotekApi {
     $method = 'autoProvisionCommunity';
 
     // Live Credentials
-    // $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
+     $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
     // Test Credentials
-    $credentials = array('consumer_key' => '5e6fb433-7a36-4401-8408-413f6592c40d','consumer_secret' => 'f25ec093-e241-4cae-8a78-429cf1248631');
+    //$credentials = array('consumer_key' => '5e6fb433-7a36-4401-8408-413f6592c40d','consumer_secret' => 'f25ec093-e241-4cae-8a78-429cf1248631');
 
     $parameters = array( );
     //$parameters = array( 'communityDisplayName' => $name );

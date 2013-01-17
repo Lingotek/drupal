@@ -12,12 +12,12 @@ define('LINGOTEK_VERSION', '7.x-2.1');
 define('LINGOTEK_NOTIFICATIONS_URL', 'admin/settings/lingotek/notifications');
 
 //PRODUCTION
-//define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
-//define('LINGOTEK_GMC_SERVER', 'https://gmc.lingotek.com');
+define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
+define('LINGOTEK_GMC_SERVER', 'https://gmc.lingotek.com');
 
 //TESTING
-define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.197:8080/billing/account.json');
-define('LINGOTEK_GMC_SERVER', 'http://10.0.11.171:3000');
+//define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.197:8080/billing/account.json');
+//define('LINGOTEK_GMC_SERVER', 'http://10.0.11.171:3000');
 //define('LINGOTEK_GMC_SERVER', 'http://localhost:3000');
 
 

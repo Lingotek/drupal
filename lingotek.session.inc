@@ -10,9 +10,9 @@
 class LingotekSession {
 
   const DEFAULT_API_TIMEOUT = 90.0;
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
+  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
   //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
-  const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
+  //const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
 
   public $url;
   public $community;
