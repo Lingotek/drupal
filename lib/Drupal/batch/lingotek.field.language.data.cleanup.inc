@@ -19,12 +19,6 @@ function lingotek_node_source_language_cleanup_batch_worker( $nid, $source_langu
 }
 
 
-
-
-
-/////////////////////////////
-
-
 /**
  * Batch API processor for field data language updates.
  */
@@ -86,6 +80,6 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
 
-  drupal_set_message('Lingotek Field Data Cleanup Utility finished.') ;
+  drupal_set_message(t('Lingotek Field Data Cleanup Utility finished.'));
 
 }

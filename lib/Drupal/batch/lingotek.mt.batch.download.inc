@@ -27,7 +27,7 @@ function lingotek_download_node_machine_translation( $nid, $language_code, &$con
 
   // Check:  Are all targets CURRENT?  If so, mark the Node CURRENT.
   $all_targets_current = TRUE;
-  foreach( $node_status_array[ 'targets' ] AS $language => $status ) {
+  foreach ( $node_status_array[ 'targets' ] AS $language => $status ) {
     if ( $status != LINGOTEK_TARGET_SYNC_STATUS_CURRENT ) {
       $all_targets_current = FALSE;
       break;

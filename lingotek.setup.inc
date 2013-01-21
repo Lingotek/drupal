@@ -101,9 +101,10 @@ function lingotek_identify_tag() {
     $tag = 'Standard';
     //Tags:  'Commerce', 'Acquia', 'Standard'
     
-    if(strlen(variable_get('acquia_spi_boot_last',''))){ //acquia_identifier
+    if (strlen(variable_get('acquia_spi_boot_last', ''))) { //acquia_identifier
         $tag = 'Acquia';//TO-DO: Detect Acquia Gardens and Commons
-    } else if (module_exists('commerce')) {
+    }
+    elseif (module_exists('commerce')) {
         $tag = 'Commerce';
     }
     
