@@ -12,13 +12,6 @@ class LingotekApi {
   const RESPONSE_STATUS_SUCCESS = 'success';
 
   /**
-   * The server name of the Lingotek production instance.
-   */
-  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
-
-  /**
    * The faux Lingotek user ID to use for anonymous user operations.
    */
   const ANONYMOUS_LINGOTEK_ID = 'anonymous';
@@ -602,13 +595,9 @@ class LingotekApi {
     $result = FALSE;
     $response = null;
     $method = 'autoProvisionCommunity';
+    $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
 
-    // Live Credentials
-    $credentials = array('consumer_key' => 'd944c2ae-b66e-4322-b37e-40ba0a495eb7','consumer_secret' => 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
-    // Test Credentials
-    // $credentials = array('consumer_key' => '5e6fb433-7a36-4401-8408-413f6592c40d','consumer_secret' => 'f25ec093-e241-4cae-8a78-429cf1248631');
-
-    $parameters = array( );
+    $parameters = array();
     //$parameters = array( 'communityDisplayName' => $name );
     if ( isset( $tag ) ) {
       $parameters[ 'distribution' ] = $tag;
@@ -749,7 +738,7 @@ class LingotekApi {
    */
   private function __construct() {
     $this->debug = variable_get('lingotek_api_debug', FALSE);
-    $host = variable_get('lingotek_url', self::LINGOTEK_SERVER_PRODUCTION);
+    $host = variable_get('lingotek_url', LINGOTEK_API_SERVER);
     // Trim trailing slash from user-entered server name, if it exists.
     if (substr($host, -1) == '/') {
       $host = substr($host, 0, -1);

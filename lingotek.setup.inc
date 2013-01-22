@@ -746,7 +746,6 @@ function lingotek_setup_node_translation_settings_form_submit( $form, &$form_sta
         // Set this content type to be Lingotek translated.
         variable_set( 'language_content_type_' . $content_type, LINGOTEK_ENABLED );
         // Set this field to 'translatable'.
-        //db_update('field_config')->fields(array('translatable' => 1))->condition('field_name', $content_field)->execute();
         // Update the field via the Field API (Instead of the direct db_update)
         $field = field_info_field( $content_field );
         $field['translatable'] = 1;
