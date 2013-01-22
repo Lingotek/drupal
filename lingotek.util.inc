@@ -822,7 +822,7 @@ function lingotek_save_target_languages( $target_languages = NULL ) {
  * Due to sunspots, this list does not match the standard language mappings list.
  * Returns a Drupal language code.
  */
-function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $flip = false ) {
+function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $flip = FALSE ) {
 
   // Dashboard Language Code ->  Drupal Language Code
   $index = array( 
@@ -887,7 +887,7 @@ function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $fli
  */
 function lingotek_drupal_to_dashboard_language_code( $drupal_language_code = NULL ) {
 
-  return lingotek_dashboard_to_drupal_language_code( $drupal_language_code , true);
+  return lingotek_dashboard_to_drupal_language_code( $drupal_language_code, TRUE );
 
 } // END:  lingotek_drupal_to_dashboard_language_code()
 

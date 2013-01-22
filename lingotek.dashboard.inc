@@ -80,7 +80,7 @@ function lingotek_get_dashboard_code() {
     } // END:  foreach language counts
 
     $script = '
-      <script src="'.LINGOTEK_GMC_SERVER.'/js/lingotek.min.js"></script>
+      <script src="' . LINGOTEK_GMC_SERVER . '/js/lingotek.min.js"></script>
       <script> 
         require(["lingotek"],function(lingotek){ 
         var containerId = "dashboard"; 

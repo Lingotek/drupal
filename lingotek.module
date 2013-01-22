@@ -20,7 +20,6 @@ define('LINGOTEK_GMC_SERVER', 'https://gmc.lingotek.com');
 //define('LINGOTEK_GMC_SERVER', 'http://10.0.11.171:3000');
 //define('LINGOTEK_GMC_SERVER', 'http://localhost:3000');
 
-
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
 include_once('lingotek.util.inc');

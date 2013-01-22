@@ -71,7 +71,7 @@ function lingotek_set_node_and_targets_sync_status( $node_id, $node_status, $tar
 
   // Loop though each target language, and set that target to EDITED.
   $languages = lingotek_get_target_languages( TRUE );
-  foreach( $languages as $language ) {
+  foreach ( $languages as $language ) {
     lingotek_set_target_sync_status( $node_id, $language, $targets_status );
   }
 
@@ -89,7 +89,7 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
 
   // Loop though each target language, and set that target to EDITED.
   $languages = lingotek_get_target_languages( TRUE );
-  foreach( $languages as $language ) {
+  foreach ( $languages as $language ) {
     $result[ 'targets' ][ $language ] = lingotek_get_target_sync_status( $node_id, $language );
   }
 
@@ -119,7 +119,7 @@ function lingotek_set_node_and_targets_sync_status_by_array( $node_id, array $no
   lingotek_set_node_sync_status( $node_id, $node_status_array[ 'node_sync_status' ] );
 
   // Loop though each target language, and set that target.
-  foreach( $node_status_array[ 'targets' ] as $language_code => $status ) {
+  foreach ( $node_status_array[ 'targets' ] as $language_code => $status ) {
     lingotek_set_target_sync_status( $node_id, $language_code, $status );
   }
 
@@ -137,7 +137,7 @@ function lingotek_add_target_sync_status_to_all_nodes( $drupal_language_code ) {
 
   while ( $record = $result->fetchAssoc() ) {
     // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Node and Target to PENDING.
-    if( ($record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_CURRENT ) || ( $record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_PENDING ) ) {
+    if ( ($record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_CURRENT ) || ( $record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_PENDING ) ) {
       lingotek_set_node_sync_status( $record[ 'nid' ], LINGOTEK_NODE_SYNC_STATUS_PENDING );
       lingotek_set_target_sync_status( $record[ 'nid' ], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_PENDING );
     }

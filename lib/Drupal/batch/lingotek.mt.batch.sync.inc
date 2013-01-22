@@ -63,7 +63,7 @@ function lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, &$c
 
   // Check:  Are all targets CURRENT?  If so, mark the Node CURRENT.
   $all_targets_current = TRUE;
-  foreach( $node_status_array[ 'targets' ] AS $language => $status ) {
+  foreach ( $node_status_array[ 'targets' ] AS $language => $status ) {
     if ( $status != LINGOTEK_TARGET_SYNC_STATUS_CURRENT ) {
       $all_targets_current = FALSE;
       break;

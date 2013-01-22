@@ -14,7 +14,7 @@
  *   If the batch create was NOT called from a Drupal form handler, pass in false,
  *   so that the extra call is made that will start the batch processing.
  */
-function lingotek_field_language_data_cleanup_batch_create( $from_post = true, $goto = '<front>' ) {
+function lingotek_field_language_data_cleanup_batch_create( $from_post = TRUE, $goto = '<front>' ) {
 
   $operations = array();
   $entity_type = 'node';
@@ -30,7 +30,7 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = true, $
     ->propertyCondition('language', 'und', '=')
     ->execute();
 
-  if( isset( $nodes1[$entity_type] ) ) {
+  if ( isset( $nodes1[$entity_type] ) ) {
     foreach ($nodes1[$entity_type] as $node1) {
       $operations[] = array('lingotek_node_source_language_cleanup_batch_worker', array($node1->nid, $source_language));
       $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($node1->nid));
@@ -45,7 +45,7 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = true, $
     ->propertyCondition('language', 'und', '<>')
     ->execute();
 
-  if( isset( $nodes2[$entity_type] ) ) {
+  if ( isset( $nodes2[$entity_type] ) ) {
     foreach ($nodes2[$entity_type] as $node2) {
       $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($node2->nid));
     }
@@ -62,7 +62,7 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = true, $
   batch_set($batch);
 
   // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
-  if( $from_post === false ) {
+  if ( $from_post === FALSE ) {
     batch_process($goto); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   }
 
