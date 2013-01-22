@@ -4,6 +4,26 @@
  * Installation for Lingotek Community Translation Module.
  */
 
+
+/*
+ * Implements hook_requirements()
+ */
+function lingotek_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+  // Check for the PHP Zip library during install
+  if ($phase == 'install') {
+    if (!extension_loaded('zip')) {
+      $requirements['zip'] = array(
+        'title' => t('Zip allows PHP to work with ZIP compressed archives.'), 
+        'description' => t('Lingotek requires the PHP module \'Zip\', but it is missing or not enabled on your server.  <br>For more information visit: http://php.net/manual/en/book.zip.php'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
+}
+
 /**
  * Implements hook_install().
  */

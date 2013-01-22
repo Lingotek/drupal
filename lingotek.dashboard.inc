@@ -49,6 +49,7 @@ function lingotek_get_dashboard_code() {
 
   global $base_url;
 
+  $output = '';
   $totals = array();
   $guid = lingotek_get_guid(); // 16 char string
   $source_language = lingotek_get_source_language(); // ie:  en - Drupal Language Code
@@ -156,8 +157,31 @@ function lingotek_get_dashboard_code() {
 
   }
   else {
-    $output = 'Your Lingotek module is not properly configured.  Please run the Lingotek <a href="' . url( 'admin/config/lingotek/setup' ) . '">Installation Wizard</a>.';
+    // Check the login ID to see if this is a Lingopoint user, if so, provide information about setting up their oauth keys.
+    $login_id = variable_get( 'lingotek_login_id', 'community_admin' );
+    if ( $login_id != 'community_admin' ) {
+      $output .= '<p>Your Lingotek module still needs some configuration.</p>';
+      $output .= '<p>Please login to your <a href="' . url( 'http://myaccount.lingotek.com/' ) . '">Lingotek account dashboard</a> to configure the integration of your Drupal site with your Lingotek account and setup an OAuth Key and Secret.</p>';
+
+      $output .= '<p><strong>How to Setup your OAuth Key and Secret</strong></p>';
+      $output .= '<p>While logged into your Lingotek account, select the Community > Integrations menu item.</p>';
+      $output .= '<p>From there you can setup an Inbound OAuth integration method to create a OAuth Key and OAuth Secret.   That OAuth Key and OAuth Secret need to be entered in the Lingotek Drupal module settings to connect your module to your Lingotek account.</p>';
+      $output .= '<p>&nbsp;</p>';
+
+      $output .= lingotek_support_footer();
+
+    }
+    else {
+      // Show the standard misconfiguration message.
+      $output .= '<p>&nbsp;</p>';
+      $output .= '<p>Your Lingotek module is not properly configured.</p>';
+      $output .= '<p>Please run the Lingotek <a href="' . url( 'admin/config/lingotek/setup' ) . '">Installation Wizard</a>.</p>';
+      $output .= '<p>&nbsp;</p>';
+      $output .= lingotek_support_footer();
+    }
   }
+
+
 
   return $output;
 

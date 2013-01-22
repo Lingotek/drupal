@@ -10,9 +10,6 @@
 class LingotekSession {
 
   const DEFAULT_API_TIMEOUT = 90.0;
-  const LINGOTEK_SERVER_PRODUCTION = 'http://myaccount.lingotek.com';
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://cms.lingotek.com';
-  //const LINGOTEK_SERVER_PRODUCTION = 'http://10.0.11.220:8080';
 
   public $url;
   public $community;
@@ -30,7 +27,7 @@ class LingotekSession {
    * Constructor
    */
   function __construct() {
-    $this->url = self::LINGOTEK_SERVER_PRODUCTION . "/lingopoint/api";
+    $this->url = LINGOTEK_API_SERVER . "/lingopoint/api";
     $this->community = variable_get('lingotek_community', '');
     $this->login_id = variable_get('lingotek_login_id', '');
     $this->key = variable_get('lingotek_login_key', '');

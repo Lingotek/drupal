@@ -53,7 +53,7 @@ function lingotek_download_document(&$node, $target_language) {
     return;
   }
 
-   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
+  $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
 
   foreach ($xml as $tag => $content) {
     if ($tag == 'menu_title') {
