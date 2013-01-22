@@ -898,56 +898,6 @@ function lingotek_install_default_advanced_xml() {
 }
 
 /**
- * Form constructor for the Lingotek Content push form.
- */
-function lingotek_content_push_form($form, $form_state, $node) {
-  $form = array();
-  
-  $form['content_push'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Push Node Content to Lingotek'),
-    '#description' => t("Manually push this node's content to Lingotek"),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-  
-  $form['content_push']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Push Content'),
-  );
-  
-  $form['node_id'] = array(
-    '#type' => 'hidden',
-    '#value' => $node->nid,
-  );
-  
-  return $form;
-}
-
-/**
- * Submit handler for the lingotek_content_push_form form.
- */
-function lingotek_content_push_form_submit($form, $form_state) {
-  $node = node_load($form_state['values']['node_id']);
-  
-  $api = LingotekApi::instance();
-  if ($existing_document = lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
-    // Update an existing Lingotek Document.
-    $api->updateContentDocument($node);
-  }
-  else {
-    // Create a new Lingotek Document.
-    // Add project and vault parameters to the node object.
-    $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
-    $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'valut_id');
-    $api->addContentDocument($node);
-    lingotek_add_missing_targets($node);    
-  }
-  
-  drupal_set_message(t('Pushed content for @node_title to Lingotek for translation.', array('@node_title' => $node->title)));
-}
-
-/**
  * Checks to make sure the Lingotek module is setup correctly.  If its not, the user is directed to the setup wizard.
  */
 function lingotek_is_module_setup() {

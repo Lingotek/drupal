@@ -1,8 +1,159 @@
 <?php
+
 /**
  * @file
  * Lingotek Tab for Nodes
  */
+
+/**
+ * Form constructor for the Lingotek Content push form. (Upload to Lingotek)
+ */
+function lingotek_push_form($form, $form_state, $node) {
+  $form = array();
+
+  $form['content_push'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Upload'),
+    '#description' => t("Upload this node's content to Lingotek for translation."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['content_push']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Upload'),
+  );
+
+  $form['node_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $node->nid,
+  );
+
+  return $form;
+}
+
+/**
+ * Submit handler for the lingotek_push_form form.
+ */
+function lingotek_push_form_submit($form, $form_state) {
+  $node = node_load($form_state['values']['node_id']);
+
+  $api = LingotekApi::instance();
+  if ($existing_document = lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
+    // Update an existing Lingotek Document.
+    $api->updateContentDocument($node);
+  }
+  else {
+    // Create a new Lingotek Document.
+    // Add project and vault parameters to the node object.
+    $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
+    $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'valut_id');
+    $api->addContentDocument($node);
+    lingotek_add_missing_targets($node);
+  }
+
+  drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));
+}
+
+/**
+ * Form constructor for the Lingotek Publish form (functionality dependent on entity_translation module installed and enabled).
+ */
+function lingotek_publish_form($form, $form_state, $node) {
+  $form = array();
+  if (module_exists('entity_translation')) {
+
+    $handler = entity_translation_get_handler('node', $node); //dvm($handler);
+    $translations = $handler->getTranslations();
+
+    $form['publish'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Publish'),
+      '#description' => t("Manage content visibility to your site's visitors for the selected languages."),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    $options = array();
+
+    foreach ($translations->data as $code => $translation) {
+      //dvm($translation);
+      $subtext = !strlen($translation['source']) ? 'source' : lingotek_language_name($code);
+      $row = array(
+        '<a href="' . lingotek_get_workbench_url($node, lingotek_language_native($code)) . '">' . lingotek_language_native($code) . '</a> (' . $subtext . ')',
+        $translation['status'] ? t('Published') : t('Unpublished')
+      );
+      $options[$code] = $row;
+    }
+
+    $form['publish']['languages'] = array(
+      '#type' => 'tableselect',
+      '#header' => array(
+        t('Language'),
+        t('Status')
+      ),
+      '#options' => $options,
+    );
+
+    $form['publish']['submit_publish'] = array(
+      '#type' => 'submit',
+      '#id' => 'publish',
+      '#value' => t('Publish'),
+    );
+
+    $form['publish']['submit_unpublish'] = array(
+      '#type' => 'submit',
+      '#id' => 'unpublish',
+      '#value' => t('Unpublish'),
+    );
+
+    $form['node_id'] = array(
+      '#type' => 'hidden',
+      '#value' => $node->nid,
+    );
+  }
+  return $form;
+}
+
+/**
+ * Submit handler for the lingotek_publish_form form.
+ * Update the entity_translation module publishing fields
+ */
+function lingotek_publish_form_submit($form, $form_state) {
+  if (module_exists('entity_translation')) {
+    //dvm($form); dpm($form_state); dvm($form_state['triggering_element']['#id']);
+    $node = node_load($form_state['values']['node_id']);
+
+    $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0; //dvm($status_request);
+    $handler = entity_translation_get_handler('node', $node);
+    //$translations = $handler->getTranslations();
+
+    $language_codes = $form_state['values']['languages'];
+    $languages_updated = array();
+    $updates = 0;
+    foreach ($language_codes as $code) {
+      if ($code !== 0) {
+        // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
+        $handler->setTranslation(array(
+          'language' => $code,
+          'status' => $status_request
+        ));
+        $languages_updated[$code] = lingotek_language_name($code);
+        $updates++;
+      }
+    }
+    $handler->saveTranslations();
+
+    $publish_status_text = $status_request ? 'published' : 'unpublished';
+    $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";
+
+    if ($updates > 0) {
+      drupal_set_message(t('The following languages have been <b><i>@publish_status_text</i></b>: ' . $languages_updated_html, array('@publish_status_text' => $publish_status_text))); //'@node_title' => $node->title, 
+    }
+    else {
+      drupal_set_message(t('Nothing was changed, since no languages were selected'));
+    }
+  }
+}
 
 /**
  * Page callback for the Lingotek local task on node detail pages.
@@ -14,13 +165,14 @@
  *   A Drupal render array of the page contents.
  */
 function lingotek_pm($node) {
-
+  // Display all of the appropriate node management sections (e.g., Upload, Download, Publish)
   // If we have a language prefix, then drupal_get_path will append that to the front of the string it returns.  So lets strip it back off, so it doesn't break the paths.
   global $language_content;
-  $icon_green_check = url( drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png' );
+  $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
+
   $prefix = $language_content->prefix;
-  if ( strlen( $prefix ) > 0 ) {
-    $icon_green_check = substr( $icon_green_check, strlen( $prefix )+1 );    
+  if (strlen($prefix) > 0) {
+    $icon_green_check = substr($icon_green_check, strlen($prefix) + 1);
   }
 
   $output = array();
@@ -31,7 +183,7 @@ function lingotek_pm($node) {
     $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
     $headers = array(
       $checkbox,
-      t('Target Language'),
+      t('Language'),
       t('Document Progress'),
       t('Phase'),
       t('Phase Progress'),
@@ -39,20 +191,21 @@ function lingotek_pm($node) {
     );
 
     $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
-    $progress = lingotek_get_document_targets($document->document_id, TRUE);
+    $targets = lingotek_get_document_targets($document->document_id, TRUE);
     $rows = array();
-    foreach ($progress as $language => $target) {
+    foreach ($targets as $language => $target) {
       $current_phase = $document->currentPhase($target->id);
       $phase_complete = ($current_phase->isMarkedComplete) ? TRUE : FALSE;
+
       $phase_complete_percent = $current_phase->percentComplete;
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
       $row = array(
         '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
-        lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
+        '<a href="' . lingotek_get_workbench_url($node, $language) . '">' . lingotek_language_native($language) . '</a> (' . lingotek_language_name($language) . ')',
         $target->percentComplete . '%',
-        lingotek_get_workbench_url($node, $language, TRUE),
+        $current_phase->name,
         $phase_complete_percent . '%',
         ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
       );
@@ -61,7 +214,7 @@ function lingotek_pm($node) {
     }
     $table = theme('table', array('header' => $headers, 'rows' => $rows));
 
-    $actions = '<input type="button" id="lingotek-update-button" value="' . t('Update') . '"/>';
+    $actions = '<input type="button" id="lingotek-update-button" value="' . t('Download') . '" class="form-submit"/>';
 
     $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
 
@@ -76,8 +229,8 @@ function lingotek_pm($node) {
 
     $pull_translations['fieldset'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Pull translations from Lingotek'),
-      '#description' => t('Pull the latest translations from Lingotek in the selected languages.'),
+      '#title' => t('Download Translations'),
+      '#description' => t('Download the latest translations from Lingotek in the selected languages.'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
@@ -87,9 +240,9 @@ function lingotek_pm($node) {
     );
 
     if (lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
-      $content_push_form = drupal_get_form('lingotek_content_push_form', $node);
+      $content_push_form = drupal_get_form('lingotek_push_form', $node);
       $output['content_push'] = array(
-        '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render( $content_push_form ),
+        '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render($content_push_form),
       );
 
       if (!empty($rows)) {
@@ -100,7 +253,7 @@ function lingotek_pm($node) {
     }
     else {
       $output['content_pull'] = array(
-        '#markup' => '<p class="help">' . t('This node is not compatible with Lingotek translation. Either it is not a Lingotek tranlsation-enabled content type. Or the node does not have a defined language.') . '</p>'
+        '#markup' => '<p class="help">' . t('This node is not compatible with Lingotek translation. Either it is not a Lingotek tranlsation-enabled content type or the node does not have a defined language.') . '</p>'
       );
     }
 
@@ -116,6 +269,9 @@ function lingotek_pm($node) {
     $output['upgrade_form'] = array(
       '#markup' => drupal_render($lingotek_advanced_parsing_form),
     );
+
+    // Publish form
+    $output['publish_form'] = drupal_get_form('lingotek_publish_form', $node);
   }
 
   return $output;
@@ -124,6 +280,7 @@ function lingotek_pm($node) {
 /*
  * Synchonize translations with what is available on the Lingotek platform (current translations)
  */
+
 function lingotek_update($nid) {
   $node = node_load($nid);
   foreach ($_POST['targets'] as $target) {
@@ -181,7 +338,6 @@ function lingotek_advanced_parsing_upgrade_form($form_state) {
   return $form;
 }
 
-
 /**
  * Submit handler for the lingotek_advanced_parsing_upgrade_form form.
  *
@@ -207,8 +363,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
     }
     else {
       $error = TRUE;
-      watchdog('lingotek', 'Unable to load target node for content parsing upgrade: @node_id',
-        array('@node_id' => $form_state['values']['node_id']), WATCHDOG_ERROR);
+      watchdog('lingotek', 'Unable to load target node for content parsing upgrade: @node_id', array('@node_id' => $form_state['values']['node_id']), WATCHDOG_ERROR);
     }
   }
   else {
@@ -252,11 +407,11 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
         $phase_complete_percent = $current_phase->percentComplete;
         if (empty($phase_complete_percent)) {
           $phase_complete_percent = 0;
-        }        
-        
+        }
+
         if ($current_phase && $current_phase->canBeMarkedComplete()) {
           $phase_link = l($current_phase->name, '#', array('attributes' => array(
-            'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return FALSE;')));
+              'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return FALSE;')));
 
           $row = array(
             lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
@@ -290,8 +445,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
       );
     }
     else {
-      watchdog('lingotek', 'Unable to build mark as complete form: could not get progress data from API.',
-        NULL, WATCHDOG_ERROR);
+      watchdog('lingotek', 'Unable to build mark as complete form: could not get progress data from API.', NULL, WATCHDOG_ERROR);
     }
   }
 
