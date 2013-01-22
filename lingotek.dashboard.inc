@@ -614,10 +614,6 @@ function lingotek_test() {
 
   $output = '<h1>Test</h1>';
 
-$output .= LingotekApi::instance()->cory();
-
-
-
   return $output;
 
 }

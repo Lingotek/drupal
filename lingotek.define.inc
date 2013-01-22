@@ -18,7 +18,7 @@ define('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 /**
  * Staging Servers
  */
-/**/
+/*
 define('LINGOTEK_GMC_SERVER', 'https://gmc.lingotek.com');
 define('LINGOTEK_API_SERVER', 'http://cms.lingotek.com');
 define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
@@ -29,12 +29,12 @@ define('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 /**
  * Development Servers
  */
-/*
-define('LINGOTEK_GMC_SERVER', 'http://10.0.11.171:3000');
-define('LINGOTEK_API_SERVER', 'http://10.0.11.220:8080');
-define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.197:8080/billing/account.json');
-define('LINGOTEK_AP_OAUTH_KEY', '5e6fb433-7a36-4401-8408-413f6592c40d');
-define('LINGOTEK_AP_OAUTH_SECRET', 'f25ec093-e241-4cae-8a78-429cf1248631');
+/**/
+define('LINGOTEK_GMC_SERVER', 'http://10.0.11.220:3000');
+define('LINGOTEK_API_SERVER', 'http://10.0.11.136:8080');
+define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.136:8080/billing_api/account.json');
+define('LINGOTEK_AP_OAUTH_KEY', '61225fa9-215e-4762-853c-951c176fb938');
+define('LINGOTEK_AP_OAUTH_SECRET', '8dcbf1eb-44d9-4e38-b770-263deab63b8f');
 /**/
 
 

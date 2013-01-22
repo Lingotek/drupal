@@ -616,7 +616,7 @@ class LingotekApi {
     	watchdog( 'lingotek_community', 'Provision Community: !result', array( '!result' => watchdog_format_object( $result ) ), WATCHDOG_DEBUG );
     }
     catch (OAuthException2 $e) {
-      watchdog('lingotek', 'Failed OAuth request.
+      watchdog('lingotek', 'Failed to Provision Community Account.
       <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
         array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdog_format_object($parameters),
         '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);      

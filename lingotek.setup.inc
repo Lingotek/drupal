@@ -147,6 +147,7 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
     $callback_url = lingotek_get_notifications_url();
     $api = LingotekApi::instance();
     $community = $api->createCommunity( $tag, $callback_url );
+
     if ( $community['code'] == 200 ) {
       $community = json_decode( $community['body'] );
       /*
@@ -170,21 +171,27 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_workflow', $community->workflow_id );
       variable_set( 'lingotek_notifications_callback', $callback_url );
       variable_set( 'lingotek_cms_tag', $tag);
-      
 
       $extras['company'] = $base_url; // Company
       $extras['lead_source'] = 'Module'; // Source
       $extras['CMS_SBS__c'] = 'Drupal'; // CMS/SBS (custom field)
       $extras['Community__c'] = $community->community; // Community (custom field)
-    }
 
-    lingotek_activation( $first_name, $last_name, $email, $extras );
+      lingotek_activation( $first_name, $last_name, $email, $extras );
+
+      $_SESSION['lingotek_setup_path'] = array( 'admin/config/lingotek/new-account' );
+      drupal_set_message( t( 'Your new Lingotek account has been setup.' ) );
+      drupal_goto( 'admin/config/lingotek/language-settings' );
+
+    } // END:  if 200: Success
+    else {
+
+      // If there were any setup or communication problems.
+      drupal_set_message( t( 'There was an error contacting the Lingotek servers to create your account.  Please try again later.' ), 'error' );
+
+    } // END:  if error.
 
   } // END:  Provision new Community
-
-  $_SESSION['lingotek_setup_path'] = array( 'admin/config/lingotek/new-account' );
-  drupal_set_message( t( 'Your new Lingotek account has been setup.' ) );
-  drupal_goto( 'admin/config/lingotek/language-settings' );
 
 } // END:  New Account - Form Processor
 
@@ -242,7 +249,7 @@ function lingotek_setup_account_settings_form_submit( $form, $form_state ) {
 
   // Validate the Account - Can we Login?
   // These are V3 API Calls for Legacy Users
-  $lingotek_url = variable_get( 'lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION );
+  $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
   $communities = lingotek_get_communities_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
   if ( $communities === FALSE ) {
     drupal_set_message( t( 'Invalid login or password.' ), 'error' );
@@ -268,7 +275,7 @@ function lingotek_community_select_form() {
   $form = array();
 
   // V3 API Calls for Legacy Users
-  $lingotek_url = variable_get( 'lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION );
+  $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
   $communities = lingotek_get_communities_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
 
   if ( $communities === FALSE ) {
@@ -355,7 +362,7 @@ function lingotek_project_select_form() {
   $form = array();
 
   // V3 API Call for Legacy Users
-  $lingotek_url = variable_get( 'lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION );
+  $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
   $projects = lingotek_get_projects_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
 
   if ( $projects === FALSE ) {

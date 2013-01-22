@@ -22,7 +22,7 @@ function lingotek_admin_form() {
 
   $connection_group_description = ($connected) ? '' :
     t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.',
-      array('@signup_url' => url(variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION) . '/lingopoint/portal/communitySignup.action'))
+      array('@signup_url' => url(variable_get('lingotek_url', LINGOTEK_API_SERVER) . '/lingopoint/portal/communitySignup.action'))
     );
 
   // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
@@ -79,7 +79,7 @@ function lingotek_admin_form() {
     '#type' => 'textfield',
     '#title' => t('Lingotek Server'),
     '#description' => t('The path to the Lingotek server to which this site should be connected.'),
-    '#default_value' => variable_get('lingotek_url', LingotekApi::LINGOTEK_SERVER_PRODUCTION),
+    '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
   );
 
   // If the connection isn't yet established, stop here.
