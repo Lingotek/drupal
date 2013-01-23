@@ -62,8 +62,9 @@ function lingotek_publish_form($form, $form_state, $node) {
   $form = array();
   if (module_exists('entity_translation')) {
 
-    $handler = entity_translation_get_handler('node', $node); //dvm($handler);
-    $translations = $handler->getTranslations();
+    $handler = entity_translation_get_handler('node', $node); 
+    $languages = entity_translation_languages(); 
+    $translations = $handler->getTranslations(); 
 
     $form['publish'] = array(
       '#type' => 'fieldset',
@@ -75,16 +76,20 @@ function lingotek_publish_form($form, $form_state, $node) {
 
     $options = array();
 
-    foreach ($translations->data as $code => $translation) {
-      //dvm($translation);
-      $subtext = !strlen($translation['source']) ? 'source' : lingotek_language_name($code);
-      $row = array(
-        '<a href="' . lingotek_get_workbench_url($node, lingotek_language_native($code)) . '">' . lingotek_language_native($code) . '</a> (' . $subtext . ')',
-        $translation['status'] ? t('Published') : t('Unpublished')
-      );
-      $options[$code] = $row;
-    }
+    foreach ($languages as $language) {
+      $language_name = $language->name;
+      $langcode = $language->language;
+      $is_original = $langcode == $node->language;
+      $translation = isset($translations->data[$langcode]) ? $translations->data[$langcode] : array();
+      $translation_status = isset($translation['status']) ? $translation['status'] : 1; // default to published
 
+      $subtext = $is_original ? '<i>source</i>' : $language_name; 
+      $row = array(
+        '<a href="' . lingotek_get_workbench_url($node, lingotek_language_native($langcode)) . '">' . lingotek_language_native($langcode) . '</a> (' . $subtext . ')',
+        $translation_status ? t('Published') : t('Unpublished')
+      );
+      $options[$langcode] = $row;
+    }
     $form['publish']['languages'] = array(
       '#type' => 'tableselect',
       '#header' => array(
@@ -120,24 +125,22 @@ function lingotek_publish_form($form, $form_state, $node) {
  */
 function lingotek_publish_form_submit($form, $form_state) {
   if (module_exists('entity_translation')) {
-    //dvm($form); dpm($form_state); dvm($form_state['triggering_element']['#id']);
     $node = node_load($form_state['values']['node_id']);
 
-    $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0; //dvm($status_request);
+    $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0; 
     $handler = entity_translation_get_handler('node', $node);
-    //$translations = $handler->getTranslations();
 
     $language_codes = $form_state['values']['languages'];
     $languages_updated = array();
     $updates = 0;
-    foreach ($language_codes as $code) {
-      if ($code !== 0) {
+    foreach ($language_codes as $langcode) {
+      if ($langcode !== 0) {
         // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
         $handler->setTranslation(array(
-          'language' => $code,
+          'language' => $langcode,
           'status' => $status_request
         ));
-        $languages_updated[$code] = lingotek_language_name($code);
+        $languages_updated[$langcode] = lingotek_language_name($langcode);
         $updates++;
       }
     }
@@ -167,13 +170,7 @@ function lingotek_publish_form_submit($form, $form_state) {
 function lingotek_pm($node) {
   // Display all of the appropriate node management sections (e.g., Upload, Download, Publish)
   // If we have a language prefix, then drupal_get_path will append that to the front of the string it returns.  So lets strip it back off, so it doesn't break the paths.
-  global $language_content;
   $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
-
-  $prefix = $language_content->prefix;
-  if (strlen($prefix) > 0) {
-    $icon_green_check = substr($icon_green_check, strlen($prefix) + 1);
-  }
 
   $output = array();
 
