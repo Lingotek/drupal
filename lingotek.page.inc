@@ -60,11 +60,12 @@ function lingotek_push_form_submit($form, $form_state) {
  */
 function lingotek_publish_form($form, $form_state, $node) {
   $form = array();
+
   if (module_exists('entity_translation')) {
 
-    $handler = entity_translation_get_handler('node', $node); 
-    $languages = entity_translation_languages(); 
-    $translations = $handler->getTranslations(); 
+    $handler = entity_translation_get_handler('node', $node);
+    $languages = entity_translation_languages();
+    $translations = $handler->getTranslations();
 
     $form['publish'] = array(
       '#type' => 'fieldset',
@@ -76,6 +77,11 @@ function lingotek_publish_form($form, $form_state, $node) {
 
     $options = array();
 
+    $path = $handler->getViewPath();
+    if ($path) {
+      $links = EntityTranslationDefaultHandler::languageSwitchLinks($path);
+    }
+
     foreach ($languages as $language) {
       $language_name = $language->name;
       $langcode = $language->language;
@@ -83,9 +89,12 @@ function lingotek_publish_form($form, $form_state, $node) {
       $translation = isset($translations->data[$langcode]) ? $translations->data[$langcode] : array();
       $translation_status = isset($translation['status']) ? $translation['status'] : 1; // default to published
 
-      $subtext = $is_original ? '<i>source</i>' : $language_name; 
+      $link_label = lingotek_language_native($langcode);
+      $language_link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
+      $subtext = $is_original ? '<i>source</i>' : $language_name;
+
       $row = array(
-        '<a href="' . lingotek_get_workbench_url($node, lingotek_language_native($langcode)) . '">' . lingotek_language_native($langcode) . '</a> (' . $subtext . ')',
+        l($link_label, $language_link['href'], $language_link) . ' (' . $subtext . ')',
         $translation_status ? t('Published') : t('Unpublished')
       );
       $options[$langcode] = $row;
@@ -127,7 +136,7 @@ function lingotek_publish_form_submit($form, $form_state) {
   if (module_exists('entity_translation')) {
     $node = node_load($form_state['values']['node_id']);
 
-    $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0; 
+    $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0;
     $handler = entity_translation_get_handler('node', $node);
 
     $language_codes = $form_state['values']['languages'];
