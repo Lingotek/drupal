@@ -7,7 +7,7 @@
 /**
  * Production Servers
  */
-/*
+/**/
 define('LINGOTEK_GMC_SERVER', 'https://gmc.lingotek.com');
 define('LINGOTEK_API_SERVER', 'http://myaccount.lingotek.com');
 define('LINGOTEK_BILLING_SERVER', 'http://cp.lingotek.com:8080/billing/account.json');
@@ -29,7 +29,7 @@ define('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 /**
  * Development Servers
  */
-/**/
+/*
 define('LINGOTEK_GMC_SERVER', 'http://10.0.11.220:3000');
 define('LINGOTEK_API_SERVER', 'http://10.0.11.136:8080');
 define('LINGOTEK_BILLING_SERVER', 'http://10.0.11.136:8080/billing_api/account.json');
