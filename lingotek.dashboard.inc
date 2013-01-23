@@ -383,6 +383,28 @@ function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURR
 
 
 /**
+ * Gets the curret count from the lingotek table for the nodes that Lingotek manages the translation for.
+ * IE:  A count of the distinct Node IDs.
+ * NOTE:  This WILL include nodes that are NOT published.  (Because we will still track, translate and manage them.)
+**/
+function lingotek_count_translation_managed_source_language_nodes( $drupal_language_code ) {
+
+  $query = db_select( 'lingotek', 'l' )->fields( 'l', array('nid') )->distinct();
+  $result = $query->countQuery()->execute()->fetchAssoc();
+
+  if ( is_array( $result ) ) {
+    $count = array_shift( $result );
+  }
+  else {
+    $count = 0;
+  }
+
+  return $count;
+
+} // END:  lingotek_count_nodes()
+
+
+/**
  * Counts all the nodes of a specific language.
  * 
  * OLD METHOD.   Replaced by:  lingotek_count_node_targets() (for reporting node target counts)
@@ -481,7 +503,7 @@ function lingotek_get_source_language_json() {
   $source_language = lingotek_get_source_language();
 
   $data['code'] = lingotek_drupal_to_dashboard_language_code( $source_language );
-  $data['docs'] = lingotek_get_node_count( $source_language );
+  $data['docs'] = lingotek_count_translation_managed_source_language_nodes( $source_language );
 
   return json_encode( $data );
 
