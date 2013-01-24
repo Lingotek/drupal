@@ -98,12 +98,12 @@ function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
  * Identify CMS distribution channel with a tag
  */
 function lingotek_identify_tag() {
-    // This should identify the distribution including:  standard, acquia, commons
-    $tag = variable_get('install_profile', 'standard');
+    
+    $tag = variable_get('install_profile', 'standard');// This should identify the distribution including:  'standard', 'acquia', 'commons'
     
     if (module_exists('commerce')) {
         $tag .= '-commerce';
-    }    
+    }
     return $tag;
 }
 
@@ -169,7 +169,7 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_cms_tag', $tag);
 
       $extras['company'] = $base_url; // Company
-      $extras['lead_source'] = 'Module'; // Source
+      $extras['lead_source'] = $tag; // Source
       $extras['CMS_SBS__c'] = 'Drupal'; // CMS/SBS (custom field)
       $extras['Community__c'] = $community->community; // Community (custom field)
 
