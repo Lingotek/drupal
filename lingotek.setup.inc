@@ -98,16 +98,12 @@ function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
  * Identify CMS distribution channel with a tag
  */
 function lingotek_identify_tag() {
-    $tag = 'Standard';
-    //Tags:  'Commerce', 'Acquia', 'Standard'
+    // This should identify the distribution including:  standard, acquia, commons
+    $tag = variable_get('install_profile', 'standard');
     
-    if (strlen(variable_get('acquia_spi_boot_last', ''))) { //acquia_identifier
-        $tag = 'Acquia';//TO-DO: Detect Acquia Gardens and Commons
-    }
-    elseif (module_exists('commerce')) {
-        $tag = 'Commerce';
-    }
-    
+    if (module_exists('commerce')) {
+        $tag .= '-commerce';
+    }    
     return $tag;
 }
 
