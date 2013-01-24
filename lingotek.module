@@ -266,7 +266,7 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  /**/
+  /*
   // Tab:  Development
   $items['admin/settings/lingotek/development'] = array(
     'title' => 'Development',
