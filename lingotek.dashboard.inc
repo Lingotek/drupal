@@ -4,7 +4,6 @@
  * Lingotek Dashboard.
  */
 
-
 /**
  * Tab:  Dashboard - The main Lingotek dashboard page.
  */
@@ -161,7 +160,7 @@ function lingotek_get_dashboard_code() {
     $login_id = variable_get( 'lingotek_login_id', 'community_admin' );
     if ( $login_id != 'community_admin' ) {
       $output .= '<p>Your Lingotek module still needs some configuration.</p>';
-      $output .= '<p>Please login to your <a href="' . url( 'http://myaccount.lingotek.com/' ) . '">Lingotek account dashboard</a> to configure the integration of your Drupal site with your Lingotek account and setup an OAuth Key and Secret.</p>';
+      $output .= '<p>Please login to your <a href="' . url( LINGOTEK_API_SERVER ) . '">Lingotek account dashboard</a> to configure the integration of your Drupal site with your Lingotek account and setup an OAuth Key and Secret.</p>';
 
       $output .= '<p><strong>How to Setup your OAuth Key and Secret</strong></p>';
       $output .= '<p>While logged into your Lingotek account, select the Community > Integrations menu item.</p>';

@@ -231,9 +231,9 @@ function lingotek_pm($node) {
     );
     $vars .= drupal_render($token_element);
 
-    $pull_translations = array();
+    $download_translations = array();
 
-    $pull_translations['fieldset'] = array(
+    $download_translations['fieldset'] = array(
       '#type' => 'fieldset',
       '#title' => t('Download Translations'),
       '#description' => t('Download the latest translations from Lingotek in the selected languages.'),
@@ -241,19 +241,20 @@ function lingotek_pm($node) {
       '#collapsed' => FALSE,
     );
 
-    $pull_translations['fieldset']['contents'] = array(
+    $download_translations['fieldset']['contents'] = array(
       '#markup' => $table . $actions . $vars,
     );
 
     if (lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);
+
       $output['content_push'] = array(
         '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render($content_push_form),
       );
 
       if (!empty($rows)) {
         $output['content_pull'] = array(
-          '#markup' => drupal_render($pull_translations),
+          '#markup' => drupal_render($download_translations),
         );
       }
     }
@@ -438,7 +439,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
       $form['mark_complete']['phases'] = array(
         '#type' => 'tableselect',
         '#header' => array(
-          t('Target Language'),
+          t('Language'),
           t('Phase'),
           t('Phase Progress'),
         ),

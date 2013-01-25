@@ -36,7 +36,113 @@ function lingotek_admin_form() {
     $collapse_settigns = FALSE;    
   }
 
-  // Lingotek connection settings.
+  
+  /*
+   * Default Settings
+   */
+  $form['defaults'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content Default Settings'),
+    '#description' => t('Translation management defaults used when creating new nodes. At the node level, these settings can be adjusted.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+  );
+  
+  // Upload
+  $form['defaults']['lingotek_create_documents_by_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Upload Content Automatically'),
+    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
+    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
+  );
+  
+  // Download  
+  $form['defaults']['lingotek_sync'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Download Translations Automatically'),
+    '#default_value' => (variable_get('lingotek_sync', 1) !== 0) ? 1 : 0,
+    '#description' => t('When enabled (checked), completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled (unchecked), you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
+  );
+  
+  // Community Translation
+  $form['defaults']['lingotek_allow_community_translation'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow Community Translation'),
+    '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
+    '#default_value' => variable_get('lingotek_allow_community_translation', 0),
+  );
+
+  // Paste Source Setting.
+  /* $form['defaults']['lingotek_use_source'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include source text in synchronization.'),
+    '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
+    '#options' => $options,
+    '#default_value' => variable_get('lingotek_use_source', TRUE),
+  );*/
+
+  // URL Alias Translation.
+  $form['defaults']['lingotek_url_alias_translation'] = array(
+    '#type' => 'select',
+    '#title' => t('URL Alias Translation'),
+    '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check \"Enable Lingotek Translation\" for the Title field."),
+    '#options' => lingotek_get_url_alias_translations(),
+    '#default_value' => variable_get('lingotek_url_alias_translation', 1),
+  );
+  
+  
+  // Projects
+  $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
+  $id = variable_get('lingotek_project', '');
+
+  if ($id == '' || !array_key_exists($id, $projects)) { //No project id set, project deleted, or community changed to one without that project.  Try to find the Drupal project
+    $id = array_search($site, $projects);
+    if ($id === False) { //Setup a default Drupal project
+      $id = lingotek_add_project($site);
+      $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
+    }
+    else { //Assign to an existing Drupal project
+      variable_set('lingotek_project', $id);
+    }
+  }
+
+  $form['defaults']['lingotek_project'] = array(
+    '#type' => 'select',
+    '#title' => t('Default Project ID'),
+    '#options' => $projects,
+    '#description' => t('The default Lingotek Project ID with which translations will be associated.'),
+    '#default_value' => $id,
+  );
+  
+  // Vaults
+  $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
+  $id = variable_get('lingotek_vault', '');
+
+  if ($id == '') { //No vault id set. (Vaults are not community specific, so we don't have to test this like we did the project)  Try to find the Drupal vault
+    $id = array_search($site, $vaults);
+    if ($id === FALSE) { //Setup a default Drupal vault
+      $id = lingotek_add_vault($site);
+      $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
+    }
+    else { //Assign to an existing Drupal project
+      variable_set('lingotek_vault', $id);
+    }
+  }
+  lingotek_add_vault_to_project();
+
+  $form['defaults']['lingotek_vault'] = array(
+    '#type' => 'select',
+    '#title' => t('Vault'),
+    '#options' => $vaults,
+    '#description' => t('The Translation Memory Vault where translations are saved.'),
+    '#default_value' => $id,
+  );
+  
+  
+  /*
+   * Lingotek connection settings.
+   */
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection Settings'),
@@ -87,116 +193,11 @@ function lingotek_admin_form() {
   if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
     return system_settings_form($form);
   }
-
-  // Options
-  $options = array();
-  $options[FALSE] = t("Disabled");
-  $options[TRUE] = t("Enabled");
-
-  // Default Settings
-  $form['defaults'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Content Default Settings'),
-    '#description' => t('Set defaults for use when creating new nodes and sending them to Lingotek for translation.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'administrative_settings',
-  );
-
-  $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
-  $id = variable_get('lingotek_project', '');
-
-  if ($id == '' || !array_key_exists($id, $projects)) { //No project id set, project deleted, or community changed to one without that project.  Try to find the Drupal project
-    $id = array_search($site, $projects);
-    if ($id === False) { //Setup a default Drupal project
-      $id = lingotek_add_project($site);
-      $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
-    }
-    else { //Assign to an existing Drupal project
-      variable_set('lingotek_project', $id);
-    }
-  }
-
-  $form['defaults']['lingotek_project'] = array(
-    '#type' => 'select',
-    '#title' => t('Default Project ID'),
-    '#options' => $projects,
-    '#description' => t('The default Lingotek Project ID with which translations will be associated.'),
-    '#default_value' => $id,
-  );
-
-  $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
-  $id = variable_get('lingotek_vault', '');
-
-  if ($id == '') { //No vault id set. (Vaults are not community specific, so we don't have to test this like we did the project)  Try to find the Drupal vault
-    $id = array_search($site, $vaults);
-    if ($id === FALSE) { //Setup a default Drupal vault
-      $id = lingotek_add_vault($site);
-      $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
-    }
-    else { //Assign to an existing Drupal project
-      variable_set('lingotek_vault', $id);
-    }
-  }
-  lingotek_add_vault_to_project();
-
-  $form['defaults']['lingotek_vault'] = array(
-    '#type' => 'select',
-    '#title' => t('Vault'),
-    '#options' => $vaults,
-    '#description' => t('The Translation Memory Vault where translations are saved.'),
-    '#default_value' => $id,
-  );
-
-  $form['defaults']['lingotek_sync'] = array(
-    '#type' => 'radios',
-    '#title' => t('Synchronization Method'),
-    '#description' => t('Use this synchronization method as the default when creating new pages.'),
-    '#options' => lingotek_get_sync_methods(),
-    '#default_value' => variable_get('lingotek_sync', 100),
-  );
-
-  $form['defaults']['lingotek_use_source'] = array(
-    '#type' => 'select',
-    '#title' => t('Include source text in synchronization.'),
-    '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
-    '#options' => $options,
-    '#default_value' => variable_get('lingotek_use_source', TRUE),
-  );
-
-  $form['defaults']['lingotek_create_documents_by_default'] = array(
-    '#type' => 'select',
-    '#title' => t('Automatically Push Node Content to Lingotek'),
-    '#description' => t('When nodes are created and edited, should the content automatically be pushed to the Lingotek platform? This default can be overridden for each node.'),
-    '#options' => array(
-      1 => t('Enabled'),
-      0 => t('Disabled'),
-    ),
-    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
-  );
-
-  // URL Alias Translation.
-  $form['defaults']['lingotek_url_alias_translation'] = array(
-    '#type' => 'radios',
-    '#title' => t('URL Alias Translation'),
-    '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern, and check \"Enable Lingotek Translation\" for the Title field."),
-    '#options' => lingotek_get_url_alias_translations(),
-    '#default_value' => variable_get('lingotek_url_alias_translation', 1),
-  );
   
-  // Community Translation
-  $form['defaults']['lingotek_allow_community_translation'] = array(
-    '#type' => 'select',
-    '#title' => t('Allow Community Translation'),
-    '#description' => t('Sets the default value for Community Translation (translation by site visitors) on node add/edit forms.'),
-    '#options' => array(
-      1 => t('Enabled'),
-      0 => t('Disabled'),
-    ),
-    '#default_value' => variable_get('lingotek_allow_community_translation', 0),
-  );
-
-  // Advanced XML configuration.
+  
+  /*
+   * Advanced XML configuration
+   */
   $form['advanced-parsing'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced Content Parsing'),
