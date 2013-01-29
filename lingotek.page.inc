@@ -91,7 +91,7 @@ function lingotek_publish_form($form, $form_state, $node) {
 
       $link_label = lingotek_language_native($langcode);
       $language_link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
-      $subtext = $is_original ? '<i>source</i>' : $language_name;
+      $subtext = $is_original ? '<i title="'.$langcode.'">source</i>' : '<span title="'.$langcode.'">'.lingotek_language_name($langcode).'</span>';//$language_name;
 
       $row = array(
         l($link_label, $language_link['href'], $language_link) . ' (' . $subtext . ')',
