@@ -13,6 +13,7 @@ function def($key, $val) {
     }
 }
 
+
 /**
  * Local Override - a local override config file may be used by either: 
  * (1) setting the environment var 'LINGOTEK_CONFIG_PATH' to a file, or by
@@ -33,6 +34,7 @@ def('LINGOTEK_API_SERVER', 'https://myaccount.lingotek.com');
 def('LINGOTEK_BILLING_SERVER', 'https://billing-service.lingotek.com/billing/account.json');
 def('LINGOTEK_AP_OAUTH_KEY', 'd944c2ae-b66e-4322-b37e-40ba0a495eb7');
 def('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
+
 
 /**
  * Defines the current module release version.

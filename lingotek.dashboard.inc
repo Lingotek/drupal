@@ -10,10 +10,6 @@
 function lingotek_dashboard() {
 
   lingotek_is_module_setup();
-  // If we havent already, check the account status.
-  if ( variable_get( 'lingotek_enterprise_account', "ACCOUNT STATUS NOT SET" ) === "ACCOUNT STATUS NOT SET" ) {
-    lingotek_account_check_enterprise_status();
-  }
 
   $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
   $output .= lingotek_get_dashboard_code(); // Generates the dashboard javascript.
@@ -563,65 +559,10 @@ function S_______P_______A_______C_______E_______R() {}
  */
 function lingotek_development() {
 
-  $output = '';
-
-  $account_state = '';
-  $account_plan = '';
-  $account_max_languages = '';
-
-  $account = lingotek_account_get_status();
-  //dpm($account);
-  if ( is_object( $account ) ) {
-    $account_state = $account->state;
-    if ( is_object( $account->plan ) ) {
-      $account_plan = $account->plan->type;
-      $account_max_languages = $account->plan->languages_allowed;
-    }
-  }
-
-  $max_languages = lingotek_account_max_languages();
-  $enterprise_account = lingotek_account_check_enterprise_status();
-  $enterprise_account_text = ( $enterprise_account ) ? '<span style="color: green;">Yes</span>' : '<span style="color: red;">No</span>';
+  $output = '<h1>Development</h1>';
 
 
-  // Left Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  $output .= '<div style="border: 0px solid red; width: 50%; float: left;">';
-  $output .= '<h1> Account Status </h1>';
 
-  $output .= '<p><strong>Enterprise Account:</strong> ' . $enterprise_account_text . '</p>';
-
-  $output .= '<p>
-                <div><strong>State:</strong> ' . $account_state . '</div>
-                <div><strong>Plan:</strong> ' . $account_plan . '</div>
-              </p>';
-
-  $output .= '<p>';
-  $output .= '<div><strong>Max Languages:</strong> ' . $max_languages . '</div>';
-  $output .= '</p>';
-  $output .= '</div>';
-
-
-  // Right Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  $output .= '<div style="border: 0px solid red; width: 40%; float: left;">';
-  $output .= '<h1> Installation Credentials </h1>';
-
-  $output .= '<p><strong>Credentials:</strong> (Live) NON-ENTERPRISE</p>';
-  $output .= '<p>';
-  $output .= '<div><strong>community:</strong> ' . variable_get( 'lingotek_community_identifier', '' ) . '</div>';
-  $output .= '<div><strong>oauth_key:</strong> ' . variable_get( 'lingotek_oauth_consumer_id', '' ) . '</div>';
-  $output .= '<div><strong>oauth_secret:</strong> ' . variable_get( 'lingotek_oauth_consumer_secret', '' ) . '</div>';
-  $output .= '<div><strong>external_id:</strong> ' . variable_get( 'lingotek_login_id', '' ) . '</div>';
-  $output .= '<div><strong>tm_vault_id:</strong> ' . variable_get( 'lingotek_vault', '' ) . '</div>';
-  $output .= '<div><strong>workflow_id:</strong> ' . variable_get( 'lingotek_workflow', '' ) . '</div>';
-  $output .= '<div><strong>project_id:</strong> ' . variable_get( 'lingotek_project', '' ) . '</div>';
-  $output .= '</p>';
-  $output .= '</div>';
-
-  /* Credential Sets */
-
-  $output .= '<div>&nbsp;</div>';
-  $output .= '<div>&nbsp;</div>';
-  $output .= '<div>&nbsp;</div>';
 
   return $output;
 
@@ -634,6 +575,42 @@ function lingotek_development() {
 function lingotek_test() {
 
   $output = '<h1>Test</h1>';
+
+  $account = LingotekAccount::instance();
+  //$account->getAccountStatus();
+
+  debug( $account );
+
+
+
+  //$account->setStatus( 'awesome' );
+  //$account->setPlan( 'super_power_user' );
+  //$account->setEnterpriseStatus( TRUE );
+  //$account->setAllowedLanguages( 10 );
+
+
+  $output .= '<br><br>Status: ' . $account->getStatus();
+  $output .= '<br>Status Text: ' . $account->getStatusText();
+
+  $output .= '<br><br>Plan: ' . $account->getPlan();
+  $output .= '<br>Plan Text: ' . $account->getPlanText();
+
+  $output .= '<br><br>Enterprise: ' . $account->getEnterpriseStatus();
+  $output .= '<br>Enterprise Text: ' . $account->getEnterpriseStatusText();
+
+  $output .= '<br><br>Languages: ' . $account->getAllowedLanguages();
+
+  $output .= '<br><br>Is Enterprise? ';
+  debug( LingotekAccount::instance()->isEnterprise() );
+
+
+
+
+  //dpm($account);
+  //debug($account);
+
+
+
 
   return $output;
 

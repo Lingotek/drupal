@@ -661,7 +661,7 @@ class LingotekApi {
       'oauth_key'    => urlencode( variable_get( 'lingotek_oauth_consumer_id', '' ) ),
       'oauth_secret' => urlencode( variable_get( 'lingotek_oauth_consumer_secret', '' ) ),
     );
-    //dpm( $fields );
+    dpm( $fields );
 
     if( ( isset($fields['community']) && $fields['community'] != '' ) && ( isset($fields['external_id']) && $fields['external_id'] != '' )  && ( isset($fields['oauth_key']) && $fields['oauth_key'] != '' )  && ( isset($fields['oauth_secret']) && $fields['oauth_secret'] != '') ) {
 
@@ -676,6 +676,8 @@ class LingotekApi {
       curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
       //curl_setopt( $ch, CURLINFO_HEADER_OUT, TRUE );
       $response = curl_exec( $ch );
+debug( $url );
+debug( $response );
       $info = curl_getinfo( $ch );
       curl_close( $ch );
 
@@ -688,6 +690,20 @@ class LingotekApi {
         //dpm( $info );
         //dpm( 'RESULT (json):' );
         //debug( $json );
+        /*
+        stdClass::__set_state(array(
+           'state' => 'active',
+           'plan' => 
+          stdClass::__set_state(array(
+             'trial_ends_at' => 1360864548,
+             'state' => 'active',
+             'activated_at' => 1358272548,
+             'type' => 'cosmopolitan_monthly',
+             'languages_allowed' => 1,
+             'language_cost_per_period_in_cents' => 14900,
+          )),
+        ))
+        */
         //dpm( '- - - - - - - - - - - - - - -' );
 
         $result = $json;

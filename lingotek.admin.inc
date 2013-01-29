@@ -13,9 +13,6 @@ include_once('lingotek.session.inc');
  */
 function lingotek_admin_form() {
 
-  lingotek_is_module_setup();
-  lingotek_account_check_enterprise_status();
-
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();
   $site = variable_get('site_name', 'Drupal Site');
@@ -26,7 +23,7 @@ function lingotek_admin_form() {
     );
 
   // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
-  if ( !lingotek_account_is_enterprise() ) {
+  if ( !LingotekAccount::instance()->isEnterprise() ) {
     $collapse_settigns = FALSE;
   }
   elseif ( $connected ) { // If enterprise users connected successfully, it can be closed.
@@ -81,6 +78,75 @@ function lingotek_admin_form() {
     '#options' => $options,
     '#default_value' => variable_get('lingotek_use_source', TRUE),
   );*/
+
+  // Account Information
+  $form['information'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Account Information'),
+    '#description' => t('Account information and connection settings.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+  );
+
+  $output = '';
+
+  $account = LingotekAccount::instance();
+
+  // Left Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  $output .= '<div style="border: 0px solid red; width: 50%; float: left;">';
+  $output .= '<h1> Account Status </h1>';
+  $output .= '<p>';
+  $output .= '<div><strong>Status:</strong> ' . $account->getStatusText() . '</div>';
+  $output .= '<div><strong>Plan:</strong> ' . $account->getPlanText() . '</div>';
+  $output .= '<div><strong>Enterprise:</strong> ' . $account->getEnterpriseStatusText() . '</div>';
+  $output .= '</p>';
+  $output .= '<p><strong>Max Languages:</strong> ' . $account->getAllowedLanguages() . '</p>';
+  $output .= '</div>';
+
+  // Right Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  $output .= '<div style="border: 0px solid red; width: 40%; float: left;">';
+  $output .= '<h1> Installation Credentials </h1>';
+  $output .= '<p>';
+  $output .= '<div><strong>Community Identifier:</strong> ' . variable_get( 'lingotek_community_identifier', '' ) . '</div>';
+  $output .= '<div><strong>OAuth Key:</strong> ' . variable_get( 'lingotek_oauth_consumer_id', '' ) . '</div>';
+  $output .= '<div><strong>OAuth Secret:</strong> ' . variable_get( 'lingotek_oauth_consumer_secret', '' ) . '</div>';
+  $output .= '<div><strong>Workflow ID:</strong> ' . variable_get( 'lingotek_workflow', '' ) . '</div>';
+  $output .= '<div><strong>External ID:</strong> ' . variable_get( 'lingotek_login_id', '' ) . '</div>';
+  $output .= '<div><strong>Project ID:</strong> ' . variable_get( 'lingotek_project', '' ) . '</div>';
+  $output .= '<div><strong>Vault ID:</strong> ' . variable_get( 'lingotek_vault', '' ) . '</div>';
+  $output .= '</p>';
+  $output .= '</div>';
+
+  $config_path = getenv( 'LINGOTEK_CONFIG_PATH' );
+  if ( !empty( $config_path ) ) {
+    $output .= '<div style="clear:both;"></div>';
+    $output .= '<div style="border: 0px solid red; width: 50%; float: left;">';
+    $output .= '<h1> Server Information </h1>';
+    $output .= '<div><span style="display: inline-block; width: 60px;">API:</span> ' . LINGOTEK_API_SERVER . '</div>';
+    $output .= '<div><span style="display: inline-block; width: 60px;">GMC:</span> ' . LINGOTEK_GMC_SERVER . '</div>';
+    $output .= '<div><span style="display: inline-block; width: 60px;">Billing:</span> ' . LINGOTEK_BILLING_SERVER . '</div>';
+    $output .= '<div>&nbsp;</div>';
+    $output .= '<div><span style="display: inline-block; width: 60px;">Key:</span> ' . LINGOTEK_AP_OAUTH_KEY . '</div>';
+    $output .= '<div><span style="display: inline-block; width: 60px;">Secret:</span> ' . LINGOTEK_AP_OAUTH_SECRET . '</div>';
+    $output .= '</div>';
+    $output .= '<div style="clear:both;"></div>';
+  }
+
+  $form['information']['information_block'] = array( '#markup' => $output );
+
+
+  // If the connection isn't yet established, stop here.
+  // Also stop here if this isn't an enterprise account.
+  if ( !$api->testAuthentication() || !LingotekAccount::instance()->isEnterprise() ) {
+    return system_settings_form($form);
+  }
+
+  // Options
+  $options = array();
+  $options[FALSE] = t("Disabled");
+  $options[TRUE] = t("Enabled");
+
 
   // URL Alias Translation.
   $form['defaults']['lingotek_url_alias_translation'] = array(
@@ -190,7 +256,7 @@ function lingotek_admin_form() {
 
   // If the connection isn't yet established, stop here.
   // Also stop here if this isn't an enterprise account.
-  if ( !$api->testAuthentication() || !lingotek_account_is_enterprise() ) {
+  if ( !$api->testAuthentication() || !LingotekAccount::instance()->isEnterprise() ) {
     return system_settings_form($form);
   }
   
