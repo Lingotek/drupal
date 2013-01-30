@@ -207,14 +207,17 @@ function lingotek_pm($node) {
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
+      $language_link  = l( lingotek_language_native($language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $language) . '\'); return false;')) );
+      $language_link .= t( ' (' . lingotek_language_name($language) . ')' );
       $row = array(
         '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
-        '<a href="' . lingotek_get_workbench_url($node, $language) . '">' . lingotek_language_native($language) . '</a> (' . lingotek_language_name($language) . ')',
+        $language_link,
         $target->percentComplete . '%',
         $current_phase->name,
         $phase_complete_percent . '%',
         ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
       );
+
       lingotek_trace("lingotek_pm table row", array('language' => $language));
       $rows[] = $row;
     }
@@ -417,7 +420,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
         }
 
         if ($current_phase && $current_phase->canBeMarkedComplete()) {
-          $phase_link = l($current_phase->name, '#', array('attributes' => array(
+          $phase_link = l($current_phase->name, '', array('attributes' => array(
               'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return false;')));
 
           $row = array(
