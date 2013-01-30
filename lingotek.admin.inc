@@ -36,95 +36,53 @@ function lingotek_admin_form() {
     $collapse_settigns = FALSE;    
   }
 
+
   /*
-   * Default Settings
+   * Lingotek connection settings.
    */
-  $form['defaults'] = array(
+  $form['connection'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Content Default Settings'),
-    '#description' => t('Translation management defaults used when creating new nodes. At the node level, these settings can be adjusted.'),
+    '#title' => t('Connection Settings'),
+    '#description' => filter_xss($connection_group_description),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => $collapse_settigns,
     '#group' => 'administrative_settings',
   );
   
-  // Upload
-  $form['defaults']['lingotek_create_documents_by_default'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Upload Content Automatically'),
-    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
-    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
-  );
-  
-  // Download  
-  $form['defaults']['lingotek_sync'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Download Translations Automatically'),
-    '#default_value' => (variable_get('lingotek_sync', 1) !== 0) ? 1 : 0,
-    '#description' => t('When enabled, completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
-  );
-  
-  // Community Translation
-  $form['defaults']['lingotek_allow_community_translation'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow Community Translation'),
-    '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
-    '#default_value' => variable_get('lingotek_allow_community_translation', 0),
+  $status_message = ($connected) ? 
+    t('<strong>Connection Status</strong>: OK.') : 
+    t('<strong>Connection Status</strong>: Not Connected.');
+    
+  $form['connection']['status'] = array(
+    '#markup' => '<h4 class="connection-status">' . $status_message . '</h4>',
   );
 
-  // Paste Source Setting.
-  /* $form['defaults']['lingotek_use_source'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Include source text in synchronization.'),
-    '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
-    '#options' => $options,
-    '#default_value' => variable_get('lingotek_use_source', TRUE),
-  );*/
-
-
-  /*
-   * Comment translation
-   */
-  $form['comments'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Comment Translation'),
-    '#description' => t('Enable/disable and set defaults for comment translation.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+  $form['connection']['lingotek_login_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Lingotek ID'),
+    '#description' => t('Enter the Lingotek ID you use to access the Lingotek Dashboard and Workbench.'),
+    '#default_value' => variable_get('lingotek_login_id', ''),
   );
-  
-  $form['comments']['lingotek_translate_comments'] = array(
-    '#type' => 'select',
-    '#title' => t('Translate comments'),
-    '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
-    '#options' => array(
-      1 => t('Enabled'),
-      0 => t('Disabled'),
-    ),
-    '#default_value' => variable_get('lingotek_translate_comments', 0),
+
+  $form['connection']['lingotek_oauth_consumer_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OAuth Key'),
+    '#description' => t('The OAuth Key used to connect with the Lingotek server.'),
+    '#default_value' => variable_get('lingotek_oauth_consumer_id', ''),
   );
-  
-  $type_options = array();
-  foreach (node_type_get_types() as $type => $type_data) {
-    $type_options[$type] = $type_data->name;
-  }
-  $form['comments']['lingotek_translate_comments_node_types'] = array(
-    '#type' => 'select',
-    '#title' => t('Comment translation node types'),
-    '#description' => t('When comment translation is enabled, only automatically translate comments on the selected node types.'),
-    '#options' => $type_options,
-    '#multiple' => TRUE,
-    '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
-  );  
-  
-  $form['comments']['lingotek_translate_comments_workflow_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Comment translation Workflow'),
-    '#description' => t('When comment translation is enabled, use this workflow for translating 
-      comments. Since there is no Drupal UI for managing workflow phases for comments, it is 
-      recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
-    '#options' => $api->listWorkflows(),
-    '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
+
+  $form['connection']['lingotek_oauth_consumer_secret'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OAuth Secret'),
+    '#description' => t('The OAuth Secret used to connect with the Lingotek server.'),
+    '#default_value' => variable_get('lingotek_oauth_consumer_secret', ''),
+  );
+
+  $form['connection']['lingotek_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Lingotek Server'),
+    '#description' => t('The path to the Lingotek server to which this site should be connected.'),
+    '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
   );
 
 
@@ -186,11 +144,65 @@ function lingotek_admin_form() {
   $form['information']['information_block'] = array( '#markup' => $output );
 
 
-  // If the connection isn't yet established, stop here.
-  // Also stop here if this isn't an enterprise account.
+
+  // STOP HERE IF:
+  // If the connection isn't yet established.
+  // If this isn't an enterprise account.
   if ( !$api->testAuthentication() || !LingotekAccount::instance()->isEnterprise() ) {
     return system_settings_form($form);
   }
+
+
+
+  /*
+   * Default Settings
+   */
+  $form['defaults'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Content Default Settings'),
+    '#description' => t('Translation management defaults used when creating new nodes. At the node level, these settings can be adjusted.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+  );
+  
+  // Upload
+  $form['defaults']['lingotek_create_documents_by_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Upload Content Automatically'),
+    '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
+    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
+  );
+  
+  // Download  
+  $form['defaults']['lingotek_sync'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Download Translations Automatically'),
+    '#default_value' => (variable_get('lingotek_sync', 1) !== 0) ? 1 : 0,
+    '#description' => t('When enabled, completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
+  );
+  
+  // Community Translation
+  $form['defaults']['lingotek_allow_community_translation'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow Community Translation'),
+    '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
+    '#default_value' => variable_get('lingotek_allow_community_translation', 0),
+  );
+
+  // Paste Source Setting.
+  /* $form['defaults']['lingotek_use_source'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include source text in synchronization.'),
+    '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
+    '#options' => $options,
+    '#default_value' => variable_get('lingotek_use_source', TRUE),
+  );*/
+
+
+  /*
+   * Misc. Options
+   */
 
   // Options
   $options = array();
@@ -254,65 +266,56 @@ function lingotek_admin_form() {
     '#description' => t('The Translation Memory Vault where translations are saved.'),
     '#default_value' => $id,
   );
-  
-  
+
+
   /*
-   * Lingotek connection settings.
+   * Comment translation
    */
-  $form['connection'] = array(
+  $form['comments'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Connection Settings'),
-    '#description' => filter_xss($connection_group_description),
+    '#title' => t('Comment Translation'),
+    '#description' => t('Enable/disable and set defaults for comment translation.'),
     '#collapsible' => TRUE,
-    '#collapsed' => $collapse_settigns,
-    '#group' => 'administrative_settings',
+    '#collapsed' => TRUE,
   );
   
-  $status_message = ($connected) ? 
-    t('<strong>Connection Status</strong>: OK.') : 
-    t('<strong>Connection Status</strong>: Not Connected.');
-    
-  $form['connection']['status'] = array(
-    '#markup' => '<h4 class="connection-status">' . $status_message . '</h4>',
+  $form['comments']['lingotek_translate_comments'] = array(
+    '#type' => 'select',
+    '#title' => t('Translate comments'),
+    '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
+    '#options' => array(
+      1 => t('Enabled'),
+      0 => t('Disabled'),
+    ),
+    '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
-
-  $form['connection']['lingotek_login_id'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Lingotek ID'),
-    '#description' => t('Enter the Lingotek ID you use to access the Lingotek Dashboard and Workbench.'),
-    '#default_value' => variable_get('lingotek_login_id', ''),
-  );
-
-  $form['connection']['lingotek_oauth_consumer_id'] = array(
-    '#type' => 'textfield',
-    '#title' => t('OAuth Key'),
-    '#description' => t('The OAuth Key used to connect with the Lingotek server.'),
-    '#default_value' => variable_get('lingotek_oauth_consumer_id', ''),
-  );
-
-  $form['connection']['lingotek_oauth_consumer_secret'] = array(
-    '#type' => 'textfield',
-    '#title' => t('OAuth Secret'),
-    '#description' => t('The OAuth Secret used to connect with the Lingotek server.'),
-    '#default_value' => variable_get('lingotek_oauth_consumer_secret', ''),
-  );
-
-  $form['connection']['lingotek_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Lingotek Server'),
-    '#description' => t('The path to the Lingotek server to which this site should be connected.'),
-    '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
-  );
-
-  // If the connection isn't yet established, stop here.
-  // Also stop here if this isn't an enterprise account.
-  if ( !$api->testAuthentication() || !LingotekAccount::instance()->isEnterprise() ) {
-    return system_settings_form($form);
+  
+  $type_options = array();
+  foreach (node_type_get_types() as $type => $type_data) {
+    $type_options[$type] = $type_data->name;
   }
+  $form['comments']['lingotek_translate_comments_node_types'] = array(
+    '#type' => 'select',
+    '#title' => t('Comment translation node types'),
+    '#description' => t('When comment translation is enabled, only automatically translate comments on the selected node types.'),
+    '#options' => $type_options,
+    '#multiple' => TRUE,
+    '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
+  );  
+  
+  $form['comments']['lingotek_translate_comments_workflow_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Comment translation Workflow'),
+    '#description' => t('When comment translation is enabled, use this workflow for translating 
+      comments. Since there is no Drupal UI for managing workflow phases for comments, it is 
+      recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
+    '#options' => $api->listWorkflows(),
+    '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
+  );
 
 
   /*
-   * Advanced XML configuration
+   * Advanced XML Configuration
    */
   $form['advanced-parsing'] = array(
     '#type' => 'fieldset',
@@ -347,7 +350,10 @@ function lingotek_admin_form() {
     $form['#submit'][] = 'lingotek_handle_advanced_xml_upgrade';
   }
 
-  // Developer settings.
+
+  /*
+   * Developer Settings
+   */
   $form['developer_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Developer Settings'),
