@@ -188,13 +188,13 @@ function lingotek_add_missing_targets($node) {
     }
 
     // Instead of using language_list(), that looks at all languages active for this Drupal installation, 
-    // Use lingotek_get_target_language_list(), which returns data in the same format, but ONLY languages activated in the Dashboard
+    // Use lingotek_get_active_languages(TRUE), which returns data in the same format, but ONLY languages activated in the Dashboard
     // Enterprise language list
     if ( LingotekAccount::instance()->isEnterprise() == TRUE ) {
       $managed_languages = language_list();
     }
     else { // Dashboard, works off the seperate list
-      $managed_languages = lingotek_get_target_language_list();
+      $managed_languages = lingotek_get_active_languages(TRUE);//lingotek_get_target_language_list();
     }
 
     foreach ($managed_languages as $target_language) {

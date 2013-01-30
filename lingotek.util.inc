@@ -693,7 +693,7 @@ function lingotek_get_target_languages( $active_only = FALSE ) {
  * Uses lingotek_get_target_languages to build a Drupal style format language_list()
  * So this list ONLY includes languages listed in the dashboard.
  */ 
-function lingotek_get_target_language_list() {
+function lingotek_get_target_language_list() { // REMOVE THIS FUNCTION -ms
 
   $paid_targets = array();
 
