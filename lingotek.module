@@ -102,6 +102,16 @@ function lingotek_menu() {
     'page callback' => 'lingotek_notifications',
   );
 
+  // Gets the Users Current Account Status.
+  $items['admin/settings/lingotek/get-account-status'] = array(
+    'title' => 'Check the Users Account Status',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'description' => 'Check Account Status',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'lingotek_get_account_status',
+  );
+
   $items['lingotek/update'] = array(
     'access arguments' => array('pm'),
     'file' => 'lingotek.page.inc',
