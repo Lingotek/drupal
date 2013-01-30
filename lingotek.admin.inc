@@ -61,7 +61,7 @@ function lingotek_admin_form() {
     '#type' => 'checkbox',
     '#title' => t('Download Translations Automatically'),
     '#default_value' => (variable_get('lingotek_sync', 1) !== 0) ? 1 : 0,
-    '#description' => t('When enabled (checked), completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled (unchecked), you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
+    '#description' => t('When enabled, completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
   );
   
   // Community Translation
