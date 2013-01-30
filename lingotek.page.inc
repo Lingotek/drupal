@@ -360,7 +360,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
     lingotek_lingonode($form_state['values']['node_id'], 'use_advanced_parsing', 1);
     $target_node = node_load($form_state['values']['node_id']);
     if ($target_node->nid) {
-      if (LingotekApi::instance()->updateContentDocument($target_node)) {
+      if (LingotekApi::instance()->updateContentDocument(LingotekNode::load($target_node))) {
         drupal_set_message(t('This node has been upgraded to use advanced content parsing.'));
       }
       else {
@@ -418,7 +418,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
 
         if ($current_phase && $current_phase->canBeMarkedComplete()) {
           $phase_link = l($current_phase->name, '#', array('attributes' => array(
-              'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return FALSE;')));
+              'onclick' => 'window.open(\'' . $api->getWorkbenchLink($document_id, $current_phase->id) . '\'); return false;')));
 
           $row = array(
             lingotek_language_native($language) . ' (' . lingotek_language_name($language) . ')',
@@ -484,4 +484,60 @@ function lingotek_mark_phases_complete_submit($form, $form_state) {
   else {
     drupal_set_message(t('No phases were selected.'), 'error');
   }
+}
+
+/**
+ * Page handler for manually refreshing the local translations of a Lingotek-assciated comment.
+ *
+ * @param int $comment_id
+ *   The ID of a Drupal comment.
+ */
+function page_sync_comment_translations($comment_id) {
+debug( 'Comment Sync 0' );
+  if (!empty($_GET['token']) && drupal_valid_token($_GET['token'])) {
+debug( 'Comment Sync 1' );
+    if (class_exists('LingotekComment') && class_exists('LingotekApi')) {
+debug( 'Comment Sync 2 - LOAD ID: ' . $comment_id );
+      $comment = LingotekComment::loadById($comment_id);
+debug( 'Comment Sync 3' );
+      if ($lingotek_document_id = $comment->getMetadataValue('document_id_' . $comment->language)) {
+debug( 'Comment Sync 4' );
+        if ($document = LingotekApi::instance()->getDocument($lingotek_document_id)) {
+debug( 'Comment Sync 5' );
+          if ($document->percentComplete == 100) {
+debug( 'Comment Sync 6' );
+            if ($comment->updateLocalContent()) {
+debug( 'Comment Sync 7 DONE' );
+              drupal_set_message('Local translations for the comment have been updated.');              
+            }
+            else {
+              watchdog('lingotek', 'Unable to update local translations for comment @id',
+                array('@id' => $comment_id), WATCHDOG_ERROR);
+              drupal_set_message('An error occurred. Local translations for the comment were not updated.', 'error');                
+            }
+          }
+          else {
+            drupal_set_message('The translation of this comment is not yet complete. Please try again later.', 'warning');
+          }
+        }
+        else {
+          watchdog('lingotek', 'Unable to retrieve the status of the lingotek document: @id while updating
+            comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $commment_id),
+            WATCHDOG_ERROR);
+            
+          drupal_set_message('An error occurred. Local translations for the comment were not updated.', 'error');
+        }
+      }
+      else {
+        watchdog('lingotek', 'Attempt to refresh local translations for comment @id, but the comment
+          is not associated with a Lingotek document.', array('@id' => $comment_id), WATCHDOG_ERROR);
+      }
+    }
+  }
+  else {
+    watchdog('lingotek', 'Attempt to refresh local translations for comment @id without a valid security token.',
+      array('@id' => $comment_id), WATCHDOG_ERROR);
+  }
+  
+  drupal_goto();  
 }

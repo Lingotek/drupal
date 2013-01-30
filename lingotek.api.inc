@@ -421,8 +421,8 @@ function lingotek_get_phase_name($phase_id) {
  */
 function lingotek_get_sync_methods() {
   $methods = array();
-  $methods[0] = t("Never");
-  $methods[1] = t("Always");
+  $methods[0] = t("Never"); // Manual
+  $methods[1] = t("Always"); // Automatic
   $methods[100] = t("100%");
   return $methods;
 }
@@ -517,8 +517,8 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
           if ($label === TRUE) {
             $label = lingotek_get_phase_name($phase_id);
           }
-          $l = l(t($label), '#', array('attributes' => array(
-            'onclick' => 'window.open(\'' . $path . '\'); return FALSE;',
+          $l = l(t($label), '', array('attributes' => array(
+            'onclick' => 'window.open(\'' . $path . '\'); return false;',
             'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
             'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
           )));

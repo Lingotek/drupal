@@ -190,7 +190,42 @@ function lingotek_notifications() {
     $context = '';
 
     $nid = lingotek_get_node_id_from_document_id( $document_id );
-    lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, $context );
+
+    if (!$nid) {
+      // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
+      if (class_exists('LingotekComment')) {
+        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $language_code, $project_id)) {
+          $replacements = array(
+            '@id' => $comment->id,
+            '@document' => $document_id,
+            '@language_code' => $language_code,
+            '@project_id' => $project_id,
+          );          
+          
+          if ($comment->updateLocalContent()) {
+            if (variable_get('lingotek_api_debug', FALSE)) {
+              watchdog('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
+                from external API for document: @document, language code @language_code, project ID: @project_id',
+                $replacements, WATCHDOG_DEBUG);
+            }
+          }
+          else {
+            if (variable_get('lingotek_api_debug', FALSE)) {
+              watchdog('lingotek_debug', 'Unable to update local content for <strong>comment</strong> @id based on hit
+                from external API for document: @document, language code @language_code, project ID: @project_id',
+                $replacements, WATCHDOG_ERROR);
+            }            
+          }
+        }
+      }
+      else {
+        watchdog('lingotek', 'LingotkComment class not found.
+          Please clear the Drupal cache to refresh the autoload registry', NULL, WATCHDOG_ERROR);
+      }
+    }
+    else {
+      lingotek_mt_sync_download_node_target($nid, $drupal_language_code, $context);      
+    }
 
     watchdog( 'lingotek_callback', '
       <strong>NID:</strong> @node_id

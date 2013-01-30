@@ -13,6 +13,9 @@ include_once('lingotek.session.inc');
  */
 function lingotek_admin_form() {
 
+  lingotek_is_module_setup();
+  $account = LingotekAccount::instance();
+
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();
   $site = variable_get('site_name', 'Drupal Site');
@@ -33,7 +36,6 @@ function lingotek_admin_form() {
     $collapse_settigns = FALSE;    
   }
 
-  
   /*
    * Default Settings
    */
@@ -79,7 +81,56 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_use_source', TRUE),
   );*/
 
-  // Account Information
+
+  /*
+   * Comment translation
+   */
+  $form['comments'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Comment Translation'),
+    '#description' => t('Enable/disable and set defaults for comment translation.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  
+  $form['comments']['lingotek_translate_comments'] = array(
+    '#type' => 'select',
+    '#title' => t('Translate comments'),
+    '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
+    '#options' => array(
+      1 => t('Enabled'),
+      0 => t('Disabled'),
+    ),
+    '#default_value' => variable_get('lingotek_translate_comments', 0),
+  );
+  
+  $type_options = array();
+  foreach (node_type_get_types() as $type => $type_data) {
+    $type_options[$type] = $type_data->name;
+  }
+  $form['comments']['lingotek_translate_comments_node_types'] = array(
+    '#type' => 'select',
+    '#title' => t('Comment translation node types'),
+    '#description' => t('When comment translation is enabled, only automatically translate comments on the selected node types.'),
+    '#options' => $type_options,
+    '#multiple' => TRUE,
+    '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
+  );  
+  
+  $form['comments']['lingotek_translate_comments_workflow_id'] = array(
+    '#type' => 'select',
+    '#title' => t('Comment translation Workflow'),
+    '#description' => t('When comment translation is enabled, use this workflow for translating 
+      comments. Since there is no Drupal UI for managing workflow phases for comments, it is 
+      recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
+    '#options' => $api->listWorkflows(),
+    '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
+  );
+
+
+  /*
+   * Account Information
+   */
   $form['information'] = array(
     '#type' => 'fieldset',
     '#title' => t('Account Information'),
@@ -90,8 +141,6 @@ function lingotek_admin_form() {
   );
 
   $output = '';
-
-  $account = LingotekAccount::instance();
 
   // Left Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   $output .= '<div style="border: 0px solid red; width: 50%; float: left;">';
@@ -259,8 +308,8 @@ function lingotek_admin_form() {
   if ( !$api->testAuthentication() || !LingotekAccount::instance()->isEnterprise() ) {
     return system_settings_form($form);
   }
-  
-  
+
+
   /*
    * Advanced XML configuration
    */
@@ -344,7 +393,21 @@ function lingotek_admin_form() {
   );
 
 
-  return system_settings_form($form);
+  $form = system_settings_form($form);
+  
+  $form['#submit'][] = 'lingotek_admin_form_submit';
+
+  return $form;
+}
+
+/**
+ * Submit handler for the admin form.
+ */
+function lingotek_admin_form_submit($form, $form_state) {
+  // Enabling/disabling Lingotek comment translation will have an effect
+  // on the comment entity.
+  entity_info_cache_clear();
+  entity_get_info('comment');
 }
 
 /**

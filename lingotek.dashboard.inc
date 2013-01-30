@@ -10,6 +10,7 @@
 function lingotek_dashboard() {
 
   lingotek_is_module_setup();
+  $account = LingotekAccount::instance();
 
   $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
   $output .= lingotek_get_dashboard_code(); // Generates the dashboard javascript.
@@ -151,23 +152,18 @@ function lingotek_get_dashboard_code() {
     );
 
   }
-  else {
-    // Check the login ID to see if this is a Lingopoint user, if so, provide information about setting up their oauth keys.
+  else { // Check the login ID to see if this is a Lingopoint user, if so, provide information about setting up their oauth keys.
     $login_id = variable_get( 'lingotek_login_id', 'community_admin' );
     if ( $login_id != 'community_admin' ) {
       $output .= '<p>Your Lingotek module still needs some configuration.</p>';
       $output .= '<p>Please login to your <a href="' . url( LINGOTEK_API_SERVER ) . '">Lingotek account dashboard</a> to configure the integration of your Drupal site with your Lingotek account and setup an OAuth Key and Secret.</p>';
-
       $output .= '<p><strong>How to Setup your OAuth Key and Secret</strong></p>';
       $output .= '<p>While logged into your Lingotek account, select the Community > Integrations menu item.</p>';
       $output .= '<p>From there you can setup an Inbound OAuth integration method to create a OAuth Key and OAuth Secret.   That OAuth Key and OAuth Secret need to be entered in the Lingotek Drupal module settings to connect your module to your Lingotek account.</p>';
       $output .= '<p>&nbsp;</p>';
-
       $output .= lingotek_support_footer();
-
     }
-    else {
-      // Show the standard misconfiguration message.
+    else { // Show the standard misconfiguration message.
       $output .= '<p>&nbsp;</p>';
       $output .= '<p>Your Lingotek module is not properly configured.</p>';
       $output .= '<p>Please run the Lingotek <a href="' . url( 'admin/config/lingotek/setup' ) . '">Installation Wizard</a>.</p>';
@@ -175,8 +171,6 @@ function lingotek_get_dashboard_code() {
       $output .= lingotek_support_footer();
     }
   }
-
-
 
   return $output;
 
@@ -560,9 +554,6 @@ function S_______P_______A_______C_______E_______R() {}
 function lingotek_development() {
 
   $output = '<h1>Development</h1>';
-
-
-
 
   return $output;
 

@@ -102,6 +102,101 @@ class LingotekApi {
 
 
   /**
+   * Adds a Document and one or more Translation Targets to the Lingotek platform.
+   *
+   * @param LingotekTranslatableEntity $entity
+   *   A Drupal entity.
+   */
+  public function addContentDocumentWithTargets(LingotekTranslatableEntity $entity) {
+    global $_lingotek_locale;
+    $success = TRUE;
+
+    $parameters = $this->getCreateWithTargetsParams($entity);
+
+    if ($result = $this->request('addContentDocumentWithTargets', $parameters)) {
+      $entity->setMetadataValue('document_id_' . $entity->language, $result->id);
+      
+      // Comments are all associated with the configured "default" Lingotek project.
+      // Nodes can have their projects selected on a per-node basis, and will need
+      // separate consideration if addContentDocumentWithTargets is used for them
+      // in the future.
+      if (get_class($entity) == 'LingotekComment') {
+        $entity->setMetadataValue('project_id', variable_get('lingotek_project'));
+      }
+    }
+    else {
+      $success = FALSE;
+    }
+
+    return $success;
+  }
+
+
+  /**
+   * Collects the entity-specific parameter values for a document create API call.
+   *
+   * @param LingotekTranslatableEntity
+   *   A Drupal entity.
+   *
+   * @return array
+   *   An array of parameters ready to send to a createContentDocumentWithTargets API call.
+   */
+  protected function getCreateWithTargetsParams(LingotekTranslatableEntity $entity) {
+    $parameters = array();
+
+    switch (get_class($entity)) {
+      case 'LingotekComment':
+        $parameters = $this->getCommentCreateWithTargetsParams($entity);
+        break;
+      case 'LingotekNode':
+      default:
+        throw new Exception("Not implemented: Only comments can currently use createContentDocumentWithTargets.");
+        break;
+    };
+
+    return $parameters;
+  }
+
+
+  /**
+   * Gets the comment-specific parameters for use in a createContentDocumentWithTargets API call.
+   *
+   * @param LingotekComment
+   *   The comment entity to be translated.
+   *
+   * @return array
+   *   An array of API parameter values.
+   */
+  protected function getCommentCreateWithTargetsParams(LingotekComment $comment) {
+    $targets = Lingotek::availableLanguageTargets();
+    foreach ($targets as $index => $target) {
+      if ($target == Lingotek::getLingotekLanguage($comment->language)) {
+        unset($targets[$index]);
+        break;
+      }
+    }
+
+    $parameters = array(
+      'projectId' => variable_get('lingotek_project', NULL),
+      'documentName' => 'comment - ' . $comment->cid,
+      'documentDesc' => 'comment ' . $comment->cid . ' on node ' . $comment->nid,
+      'format' => $this->xmlFormat(),
+      'applyWorkflow' => 'true',
+      'workflowId' => variable_get('lingotek_translate_comments_workflow_id', NULL),
+      'sourceLanguage' => Lingotek::getLingotekLanguage($comment->language),
+      'tmVaultId' => variable_get('lingotek_vault', 1),
+      'content' => $comment->documentLingotekXML(),
+      'targetAsJSON' => drupal_json_encode(array_values($targets)),
+      'note' => url('node/' . $comment->nid, array('absolute' => TRUE, 'alias' => TRUE))
+    );
+
+    $this->addAdvancedParameters($parameters, $comment);
+
+    return $parameters;
+  }
+
+
+  /**
    * Adds a target language to an existing Lingotek Document or Project.
    *
    * @param int $lingotek_document_id
@@ -233,6 +328,67 @@ class LingotekApi {
       return FALSE;
     }
   }
+
+
+  /**
+   * Downloads the translated document for the specified document and language.
+   *
+   * @param int $document_id
+   *   The Lingotek document ID that should be downloaded.
+   * @param string $language_lingotek
+   *   A Lingotek language/locale code.
+   *
+   * @return mixed
+   *   On success, a SimpleXMLElement object representing the translated document. FALSE on failure.
+   *
+   */
+  public function downloadDocument($document_id, $language_lingotek) {
+    $document = FALSE;
+
+    $params = array(
+      'documentId' => $document_id,
+      'targetLanguage' => $language_lingotek,
+    );
+
+    if ($results = $this->request('downloadDocument', $params)) {
+      try {
+        // TODO: This is borrowed from the now-deprecated LingotekSession::download()
+        // and could use refactoring.
+        $tmpFile = tempnam(file_directory_temp(), 'lingotek');
+        $fp = fopen($tmpFile, 'w');
+        fwrite($fp, $results);
+        fclose($fp);
+
+        $text = '';
+        $file = FALSE;
+
+        // downloadDocument returns zip-encoded data.
+        $zip = new ZipArchive;
+        $zip->open($tmpFile);
+        $name = $zip->getNameIndex(0);
+        $file = $zip->getStream($name);
+
+        if ($file) {
+          while (!feof($file)) {
+            $text .= fread($file, 2);
+          }
+
+          fclose($file);
+        }
+
+        unlink($tmpFile);
+
+        $document = new SimpleXMLElement($text);
+      }
+      catch (Exception $e) {
+        watchdog('lingotek', 'Unable to parse downloaded document. Error: @error. Text: !xml.',
+          array('!xml' => $text, '@error' => $e->getMessage()), WATCHDOG_ERROR);
+      }
+    }
+
+    return $document;
+  }
+
 
   /**
    * Gets Lingotek Document data for the specified document.

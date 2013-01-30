@@ -51,29 +51,24 @@ function lingotek_uninstall() {
  * Install the database schema for the Lingotek module
  */
 function lingotek_schema() {
-  $schema['lingotek'] = array
-  (
+  $schema['lingotek'] = array(
     'description' => 'Table for storing node related data.',
-    'fields' => array
-    (
-      'nid' => array
-      (
+    'fields' => array(
+      'nid' => array(
         'description' => 'The primary identifier for a node',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
-      'lingokey' => array
-      (
+      'lingokey' => array(
         'description' => 'Key in key/value pairs',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
-      'lingovalue' => array
-      (
+      'lingovalue' => array(
         'description' => 'Value of the specified key',
         'type' => 'varchar',
         'length' => 255,
@@ -81,51 +76,51 @@ function lingotek_schema() {
         'default' => '',
       ),
     ),
-    'primary key' => array
-    (
+    'primary key' => array(
       'nid',
       'lingokey',
     ),
   );
-  $schema['lingotek_mt_queue'] = array
-  (
-    'description' => 'Table for storing a Machine Translation queue.',
-    'fields' => array
-    (
-      'uid' => array
-      (
-        'description' => 'The primary identifier for a user.',
+  
+  $schema['lingotek_entity_metadata'] = array(
+    'description' => 'Stores Lingotek-related metadata about Drupal entities.',
+    'fields' => array(
+      'entity_id' => array(
+        'description' => 'The primary identifier for the entity.',
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
       ),
-      'nid' => array
-      (
-        'description' => 'The primary identifier for a node.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'language' => array
-      (
-        'description' => 'Language to machine translate',
+      'entity_type' => array(
+        'description' => 'The entity type (node, comment, etc.).',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
-      'engine' => array
-      (
-        'description' => 'Engine used to machine translate',
+      'entity_key' => array(
+        'description' => 'The ID for the Lingotek-associated value.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'value' => array(
+        'description' => 'Value for the specified key.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ),
     ),
+    'primary key' => array(
+      'entity_id',
+      'entity_type',
+      'entity_key',
+    ),
   );
+  
   return $schema;
 }
 
@@ -154,9 +149,14 @@ function lingotek_update_7200(&$sandbox) {
       // The LingotekApi class might not have been introduced when this user last updated the Lingotek module.
       registry_rebuild();
       require_once(drupal_get_path('module', 'lingotek') . '/lib/Drupal/lingotek/LingotekApi.php');
+	  }
+	  if (class_exists('LingotekNode')) {
+	    LingotekApi::instance()->updateContentDocument(LingotekNode::load($node));
     }
-    LingotekApi::instance()->updateContentDocument($node);
-  }
+    else {
+      throw new Exception('LingotekNode class missing. Please clear the Drupal cache and then run update.php again.');
+    }
+	}
 
   $sandbox['progress']++;
   $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
@@ -247,9 +247,27 @@ function lingotek_update_7205(&$sandbox) {
 }
 
 /**
+ * Adds the lingotek_entity_metadata table.
+ */
+function lingotek_update_7206(&$sandbox) {
+  $module = 'lingotek';
+  $table = 'lingotek_entity_metadata';
+  if (!db_table_exists($table)) {
+    $schema = drupal_get_schema_unprocessed($module, $table);
+    db_create_table($table, $schema);
+    $output = t('Table @table was created.', array('@table' => $table));
+  }
+  else {
+    $output = t('The @table table already exists. No action taken.', array('@table' => $table));
+  }
+  
+  return $otuput;
+}
+
+/**
  * Change the value for LINGOTEK_ENABLED to a string to avoid collision.
  */
-function lingotek_update_7206() {
+function lingotek_update_7207() {
   $updated = array();
   foreach (array_keys(node_type_get_names()) as $type) {
     $name = 'language_content_type_' . $type;
