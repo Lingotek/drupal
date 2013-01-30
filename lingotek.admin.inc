@@ -109,7 +109,7 @@ function lingotek_admin_form() {
   $output .= '<div><strong>Enterprise:</strong> ' . $account->getEnterpriseStatusText() . '</div>';
   $output .= '</p>';
   $output .= '<p><strong>Max Languages:</strong> ' . $account->getAllowedLanguages() . '</p>';
-  $output .= '<p><a href="' .url( 'admin/settings/lingotek/get-account-status' ) .'">Update Account Status</a></p>';
+  $output .= '<p><a href="' .url( 'admin/settings/lingotek/get-account-status', array( 'query' => array( 'token' => md5(time()) ) ) ) .'">Update Account Status</a></p>';
   $output .= '</div>';
 
   // Right Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -500,16 +500,12 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
 /**
  * Manually Triggered Account Status Check
  */
-function lingotek_get_account_status() {
+function lingotek_get_account_status( ) {
 
   $account = LingotekAccount::instance();
   $account->getAccountStatus();
 
-  // Flush cache
-  cache_clear_all();
-  // Flush client-side cache hashes.
-  //drupal_static_reset('admin_menu_cache_get');
-
+  drupal_flush_all_caches();
   drupal_set_message( t( 'Your account status has been updated.' ) );
 
   // Send the user back to the Lingotek settings page.
