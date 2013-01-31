@@ -107,12 +107,12 @@ class LingotekComment implements LingotekTranslatableEntity {
     $comment = FALSE;
 
     // Get all Comments in the system associated with the document ID.
-    $results = db_select('lingotek_entity_metadata', 'meta')
+    $query = db_select('lingotek_entity_metadata', 'meta')
       ->fields('meta', array('entity_id'))
       ->condition('entity_key', 'document_id_' . $source_language_code)
       ->condition('entity_type', 'comment')
-      ->condition('value', $lingotek_document_id)
-      ->execute();
+      ->condition('value', $lingotek_document_id);
+    $results = $query->execute();
 
     $target_entity_ids = array();
     foreach ($results as $result) {
@@ -135,7 +135,6 @@ class LingotekComment implements LingotekTranslatableEntity {
         $comment = self::loadById($in_project_results[0]->entity_id);
       }
     }
-
     return $comment;
   }
 
