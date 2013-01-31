@@ -290,6 +290,17 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
   
+  /*
+   
+     $form['comments']['lingotek_translate_comments'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Translate comments'),
+    '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
+    '#default_value' => variable_get('lingotek_translate_comments', 0),
+  ); 
+   
+   */
+  
   $type_options = array();
   foreach (node_type_get_types() as $type => $type_data) {
     $type_options[$type] = $type_data->name;

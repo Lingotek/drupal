@@ -685,9 +685,6 @@ function lingotek_node_update($node) {
   if (isset($node->create_lingotek_document)) {
     lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
   }
-  else {
-    lingotek_lingonode($node->nid, 'create_lingotek_document', 0);
-  }
 
   // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
   $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document'));
@@ -709,6 +706,7 @@ function lingotek_node_update($node) {
   if (user_access('url_alias_translation') && isset($node->urlAliasTranslation)) {
     lingotek_lingonode($node->nid, 'url_alias_translation', $node->urlAliasTranslation);
   }
+  
 
   if (isset($node->mtTargets)) {
     $node->mtTargets = array_filter($node->mtTargets, "lingotek_unselected");
@@ -749,7 +747,7 @@ function lingotek_node_update($node) {
     // Keep source document up to date.
     $router_item = menu_get_item();
     if ($send_lingotek_document && $router_item['path'] != 'lingotek/update') {
-      LingotekApi::instance()->updateContentDocument(LingotekNode::load($node));
+      LingotekApi::instance()->updateContentDocument($node);//LingotekNode::load($node));
     }
   }
   if (isset($node->lingotek_allow_community_translation)) {
