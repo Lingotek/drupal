@@ -183,6 +183,8 @@ function lingotek_notifications() {
   $project_id = $_GET[ 'project_id' ];
 
   $drupal_language_code = lingotek_drupal_language( $language_code );
+  $source_language = lingotek_get_source_language();
+
 
   if ( isset( $document_id ) ) {
 
@@ -194,7 +196,7 @@ function lingotek_notifications() {
     if (!$nid) {
       // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
       if (class_exists('LingotekComment')) {
-        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $drupal_language_code, $project_id)) {
+        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
           $replacements = array(
             '@id' => $comment->id,
             '@document' => $document_id,
