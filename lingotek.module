@@ -724,15 +724,6 @@ function lingotek_node_presave($node) {
   }
 }
 
-
-/**
- * Implements hook_node_delete().
- */
-function lingotek_node_delete($node) {
-  lingotek_lingonode_delete($node->nid);
-}
-
-
 /**
  * Implements hook_node_insert().
  */
@@ -740,6 +731,12 @@ function lingotek_node_insert($node) {
   lingotek_node_update($node);
 }
 
+/**
+ * Implements hook_node_delete().
+ */
+function lingotek_node_delete($node) {
+  lingotek_lingonode_delete($node->nid);
+}
 
 /**
  * Implements hook_node_update().
@@ -756,7 +753,7 @@ function lingotek_node_update($node) {
 
   // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
   $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document'));
-debug( 'SendLingotekDocument: ' . $send_lingotek_document );
+
   if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
     return;
   }
@@ -814,7 +811,6 @@ debug( 'SendLingotekDocument: ' . $send_lingotek_document );
     // Keep source document up to date.
     $router_item = menu_get_item();
     if ($send_lingotek_document && $router_item['path'] != 'lingotek/update') {
-debug( 'Got it!  Sending Document to Lingotek' );
       LingotekApi::instance()->updateContentDocument(LingotekNode::load($node));
     }
   }
