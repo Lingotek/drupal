@@ -194,7 +194,7 @@ function lingotek_notifications() {
     if (!$nid) {
       // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
       if (class_exists('LingotekComment')) {
-        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $language_code, $project_id)) {
+        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $drupal_language_code, $project_id)) {
           $replacements = array(
             '@id' => $comment->id,
             '@document' => $document_id,
