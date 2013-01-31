@@ -103,13 +103,15 @@ class LingotekComment implements LingotekTranslatableEntity {
    * @return mixed
    *   A LingotekComment object on success, FALSE on failure.
    */
-  public static function loadByLingotekDocumentId($lingotek_document_id, $lingotek_language_code, $lingotek_project_id) {
+  public static function loadByLingotekDocumentId($lingotek_document_id, $drupal_language_code, $lingotek_project_id) {
     $comment = FALSE;
+
+    $source_language = lingotek_get_source_language();
 
     // Get all Comments in the system associated with the document ID.
     $results = db_select('lingotek_entity_metadata', 'meta')
       ->fields('meta', array('entity_id'))
-      ->condition('entity_key', 'document_id_' . $lingotek_language_code)
+      ->condition('entity_key', 'document_id_' . $source_language)
       ->condition('entity_type', 'comment')
       ->condition('value', $lingotek_document_id)
       ->execute();

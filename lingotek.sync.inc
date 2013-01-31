@@ -182,9 +182,9 @@ function lingotek_notifications() {
   $language_code = $_GET[ 'target_code' ];
   $project_id = $_GET[ 'project_id' ];
 
-  $drupal_language_code = lingotek_drupal_language( $language_code );
-
   if ( isset( $document_id ) ) {
+
+    $drupal_language_code = lingotek_drupal_language( $language_code );
 
     include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
     $context = '';
@@ -194,17 +194,16 @@ function lingotek_notifications() {
     if (!$nid) {
       // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
       if (class_exists('LingotekComment')) {
-        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $language_code, $project_id)) {
+        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $drupal_language_code, $project_id)) {
           $replacements = array(
             '@id' => $comment->id,
             '@document' => $document_id,
             '@language_code' => $language_code,
             '@project_id' => $project_id,
           );          
-          
           if ($comment->updateLocalContent()) {
             if (variable_get('lingotek_api_debug', FALSE)) {
-              watchdog('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
+              watchdog('lingotek_callback', 'Updated local content for <strong>comment</strong> @id based on hit
                 from external API for document: @document, language code @language_code, project ID: @project_id',
                 $replacements, WATCHDOG_DEBUG);
             }
