@@ -488,6 +488,14 @@ class LingotekApi {
     }
   }
 
+
+  /**
+   * Get a User Profile Attributes
+   */
+  public function getProfileAttributes() {
+  }
+
+
   /**
    * Gets a workbench URL for the specified document ID and phase.
    *
