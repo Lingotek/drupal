@@ -496,21 +496,13 @@ function lingotek_mark_phases_complete_submit($form, $form_state) {
  *   The ID of a Drupal comment.
  */
 function page_sync_comment_translations($comment_id) {
-debug( 'Comment Sync 0' );
   if (!empty($_GET['token']) && drupal_valid_token($_GET['token'])) {
-debug( 'Comment Sync 1' );
     if (class_exists('LingotekComment') && class_exists('LingotekApi')) {
-debug( 'Comment Sync 2 - LOAD ID: ' . $comment_id );
       $comment = LingotekComment::loadById($comment_id);
-debug( 'Comment Sync 3' );
       if ($lingotek_document_id = $comment->getMetadataValue('document_id_' . $comment->language)) {
-debug( 'Comment Sync 4' );
         if ($document = LingotekApi::instance()->getDocument($lingotek_document_id)) {
-debug( 'Comment Sync 5' );
           if ($document->percentComplete == 100) {
-debug( 'Comment Sync 6' );
             if ($comment->updateLocalContent()) {
-debug( 'Comment Sync 7 DONE' );
               drupal_set_message('Local translations for the comment have been updated.');              
             }
             else {

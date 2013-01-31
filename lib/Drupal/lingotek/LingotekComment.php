@@ -82,7 +82,6 @@ class LingotekComment implements LingotekTranslatableEntity {
    */
   public static function loadById($comment_id) {
     $comment = FALSE;
-debug( 'Comment:  LOAD BY ID' . $comment_id );
     if ($comment = comment_load($comment_id)) {
       $comment = new LingotekComment($comment);
       $comment->setApi(LingotekApi::instance());
@@ -352,15 +351,10 @@ debug( 'Comment:  LOAD BY ID' . $comment_id );
       $document_id = $metadata['document_id_' . $this->comment->language];
       $api = LingotekApi::instance();
       $document = $api->getDocument($document_id);
-debug( $this->comment );
-debug( $document );
       foreach ($document->translationTargets as $target) {
         $document_xml = $api->downloadDocument($metadata['document_id_' . $this->comment->language], $target->language);
 
         $target_language = lingotek_drupal_language($target->language);
-debug( $document_xml );
-debug( '-- Target Lang: ' . $target_language );
-
         foreach ($document_xml as $drupal_field_name => $content) {
 
           // Figure out which subkey of the field data we're targeting.
@@ -373,11 +367,7 @@ debug( '-- Target Lang: ' . $target_language );
             $target_key = $subfield_parts[1];
           }
 
-debug( '--- Drupal Field Name: ' . $drupal_field_name );
-debug( '--- Target Key: ' . $target_key );
-
           $field = field_info_field($drupal_field_name);
-debug( $field );
           if (!empty($field['lingotek_translatable'])) {
             $comment_field = &$this->comment->$drupal_field_name;
             $index = 0;
@@ -412,8 +402,6 @@ debug( $field );
 
       // This avoids an infitinite loop when hooks resulting from comment_save() are invoked.
       self::$content_update_in_progress = TRUE;
-debug( '--- Final Before Save --- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ' );
-debug( $this->comment );
       comment_save($this->comment);
       self::$content_update_in_progress = FALSE;
       $this->comment = comment_load($this->comment->cid);
