@@ -43,7 +43,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
       return $lingo_node;
     }
     //Get value for the specified key, only returns the first match
-    elseif ($value == "") {
+    elseif ($value === "") {
       $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('lingovalue')))->condition(db_escape_field('nid'), $nid)->condition(db_escape_field('lingokey'), $key)->execute();
       $row = $result->fetchObject();
 
