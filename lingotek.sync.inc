@@ -185,7 +185,6 @@ function lingotek_notifications() {
   $drupal_language_code = lingotek_drupal_language( $language_code );
   $source_language = lingotek_get_source_language();
 
-
   if ( isset( $document_id ) ) {
 
     include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
@@ -242,7 +241,16 @@ function lingotek_notifications() {
     ), WATCHDOG_DEBUG );
 
   }
-
+  
+  //Response
+  
+  $response = array_merge($_GET, array(
+    'drupal_language_code' => $drupal_language_code,
+    'source_language' => $source_language,
+    'nid' => $nid
+  ));
+  
+  drupal_json_output($response);
 }
 
 

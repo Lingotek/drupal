@@ -118,6 +118,7 @@ function lingotek_download_document(&$node, $target_language) {
 
   //Fix for pathauto expecting the form:
   $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
+  $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
   $node->path['pathauto'] = 0;
   node_save($node);
 }
