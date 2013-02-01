@@ -177,85 +177,85 @@ function lingotek_get_notifications_url() {
  * Format:  ?doc_id={document_id}&target_code={target_language}&project_id={project_id}
 **/
 function lingotek_notifications() {
+  
+  $document_id = $_GET['doc_id'];
+  $target_code = $_GET['target_code'];
+  $project_id = $_GET['project_id'];
 
-  $document_id = $_GET[ 'doc_id' ];
-  $language_code = $_GET[ 'target_code' ];
-  $project_id = $_GET[ 'project_id' ];
+  if (!isset($document_id) || !isset($target_code)) {
+    return drupal_json_output(array("message" => "Missing parameters. Required: doc_id, target_code"));
+  }
 
-  $drupal_language_code = lingotek_drupal_language( $language_code );
-  $source_language = lingotek_get_source_language();
+  include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
+  $context = '';
 
-  if ( isset( $document_id ) ) {
+  $node = LingotekNode::loadByLingotekDocumentId($document_id); 
+  $target_drupal_language_code = lingotek_drupal_language($target_code);
+  $source_language = $node->language;
+  $nid = $node->nid; //$nid = lingotek_get_node_id_from_document_id( $document_id );
 
-    include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
-    $context = '';
+  if (!$nid) {
+    // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
+    if (class_exists('LingotekComment')) {
+      if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+        $replacements = array(
+          '@id' => $comment->id,
+          '@document' => $document_id,
+          '@language_code' => $target_code,
+          '@project_id' => $project_id,
+        );
 
-    $nid = lingotek_get_node_id_from_document_id( $document_id );
-
-    if (!$nid) {
-      // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
-      if (class_exists('LingotekComment')) {
-        if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-          $replacements = array(
-            '@id' => $comment->id,
-            '@document' => $document_id,
-            '@language_code' => $language_code,
-            '@project_id' => $project_id,
-          );          
-          
-          if ($comment->updateLocalContent()) {
-            if (variable_get('lingotek_api_debug', FALSE)) {
-              watchdog('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
-                from external API for document: @document, language code @language_code, project ID: @project_id',
-                $replacements, WATCHDOG_DEBUG);
-            }
+        if ($comment->updateLocalContent()) {
+          if (variable_get('lingotek_api_debug', FALSE)) {
+            watchdog('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
+                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, WATCHDOG_DEBUG);
           }
-          else {
-            if (variable_get('lingotek_api_debug', FALSE)) {
-              watchdog('lingotek_debug', 'Unable to update local content for <strong>comment</strong> @id based on hit
-                from external API for document: @document, language code @language_code, project ID: @project_id',
-                $replacements, WATCHDOG_ERROR);
-            }            
+        }
+        else {
+          if (variable_get('lingotek_api_debug', FALSE)) {
+            watchdog('lingotek_debug', 'Unable to update local content for <strong>comment</strong> @id based on hit
+                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, WATCHDOG_ERROR);
           }
         }
       }
-      else {
-        watchdog('lingotek', 'LingotkComment class not found.
-          Please clear the Drupal cache to refresh the autoload registry', NULL, WATCHDOG_ERROR);
-      }
     }
     else {
-      lingotek_mt_sync_download_node_target($nid, $drupal_language_code, $context);      
+      watchdog('lingotek', 'LingotkComment class not found.
+          Please clear the Drupal cache to refresh the autoload registry', NULL, WATCHDOG_ERROR);
     }
+  }
+  else {
+    if ($node->auto_download) { // download only when automatic download is enabled
+      lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
+    }
+  }
 
-    watchdog( 'lingotek_callback', '
+  watchdog('lingotek_callback', '
       <strong>NID:</strong> @node_id
       <br /><strong>DocumentID:</strong> @document_id
       <br /><strong>LanguageCode:</strong> @language_code
-      <br /><strong>ProjectID:</strong> @project_id', 
-      array(
-        '@node_id' => $nid,
-        '@document_id' => $document_id,
-        '@language_code' => $drupal_language_code,
-        '@project_id' => $project_id
-    ), WATCHDOG_DEBUG );
+      <br /><strong>ProjectID:</strong> @project_id', array(
+    '@node_id' => $nid,
+    '@document_id' => $document_id,
+    '@language_code' => $target_drupal_language_code,
+    '@project_id' => $project_id
+      ), WATCHDOG_DEBUG);
 
-  }
-  
+
   //Response
-  
   $response = array_merge($_GET, array(
-    'drupal_language_code' => $drupal_language_code,
+    'target_drupal_language_code' => $target_drupal_language_code,
     'source_language' => $source_language,
-    'nid' => $nid
-  ));
-  
+    'nid' => $nid,
+    'download' => ($node->auto_download == TRUE)
+      ));
+
   drupal_json_output($response);
 }
 
 
 /**
- * Finds the Node ID when given a Document ID.
+ * Finds the Node ID when given a Document ID.  (Deprecate)
  * Returns FALSE if not found.
 **/
 function lingotek_get_node_id_from_document_id( $document_id ) {
