@@ -191,12 +191,14 @@ function lingotek_notifications() {
 
   $node = LingotekNode::loadByLingotekDocumentId($document_id); 
   $target_drupal_language_code = lingotek_drupal_language($target_code);
-  $source_language = $node->language;
-  $nid = $node->nid; //$nid = lingotek_get_node_id_from_document_id( $document_id );
+  $nid = $node->nid; 
+  //$nid = lingotek_get_node_id_from_document_id( $document_id );
 
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
     if (class_exists('LingotekComment')) {
+      
+      $source_language = lingotek_get_source_language();//TO-DO:  use the source_language of the comment
       if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements = array(
           '@id' => $comment->id,
@@ -225,6 +227,7 @@ function lingotek_notifications() {
     }
   }
   else {
+    $source_language = $node->language;
     if ($node->auto_download) { // download only when automatic download is enabled
       lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
     }
@@ -246,7 +249,8 @@ function lingotek_notifications() {
   $response = array_merge($_GET, array(
     'target_drupal_language_code' => $target_drupal_language_code,
     'source_language' => $source_language,
-    'nid' => $nid,
+    'type' => $comment ? 'comment' : 'node',
+    'nid' => $comment ? 'none' : $nid,    
     'download' => ($node->auto_download == TRUE)
       ));
 
