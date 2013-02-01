@@ -16,13 +16,21 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   protected $node;
   
+  
+  /**
+   * Lingotek Lingonode properties.
+   *
+   * @var object
+   */
+  protected $lingonode;
+  
   /**
    * A reference to the Lingotek API.
    *
    * @var LingotekApi
    */
   protected $api = NULL;
-    
+  
   /**
    * Constructor.
    *
@@ -57,8 +65,30 @@ class LingotekNode implements LingotekTranslatableEntity {
   public static function load($node) {
     $node = new LingotekNode($node);
     $node->setApi(LingotekApi::instance());
-    
+    $node->loadLingonode();
     return $node;
+  }
+  
+  
+  /**
+   * Method for loading the values for the lingonode
+   * 
+   * @param none
+   * 
+   * @return boolean
+   * 
+   */
+  private function loadLingonode(){
+    if($this->nid){
+    // add in all values from the lingonode table (when missing set use global defaults)
+      $lingonode = (object)lingotek_lingonode($this->nid);
+      if($lingonode){
+        $lingonode->auto_download = $lingonode->sync_method === FALSE ? variable_get('lingotek_sync') : $lingonode->sync_method;
+        $this->lingonode = $lingonode;
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
   
   /**
@@ -74,6 +104,30 @@ class LingotekNode implements LingotekTranslatableEntity {
     $node = FALSE;
     if ($drupal_node = node_load($node_id)) {
       $node = self::load($drupal_node);
+    }
+    return $node;
+  }
+  
+  
+  /**
+   * Loads a LingotekNode by Lingotek Document ID.
+   *
+   * @param string $lingotek_document_id
+   *   The Document ID whose corresponding node should be loaded.
+   *
+   * @return mixed
+   *   A LingotekNode object on success, FALSE on failure.
+   */
+  public static function loadByLingotekDocumentId($lingotek_document_id) {
+    $node = FALSE;
+    $key = 'document_id';
+    $query = db_select('lingotek', 'l')->fields('l');
+    $query->condition('lingokey', $key.'%', 'LIKE');
+    $query->condition('lingovalue', $lingotek_document_id);
+    $result = $query->execute();
+
+    if ($record = $result->fetchAssoc()) {
+      $node = self::loadById($record['nid']);
     }
 
     return $node;
@@ -112,7 +166,9 @@ class LingotekNode implements LingotekTranslatableEntity {
     }
     elseif (isset($this->node->$property_name)) {
       $property = $this->node->$property_name;
-    }
+    } elseif (isset($this->lingonode->$property_name)) {
+      $property = $this->lingonode->$property_name;
+    } 
     
     return $property;
   }

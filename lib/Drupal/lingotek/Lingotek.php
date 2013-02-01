@@ -218,7 +218,7 @@ class Lingotek {
    */
   public static function getLingotekLanguage($language_code) {
     
-    $lingotek_languge = FALSE;
+    $lingotek_language = FALSE;
     
     if (isset(self::$language_map[$language_code])) {
       $lingotek_language = self::$language_map[$language_code];

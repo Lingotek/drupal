@@ -6,6 +6,12 @@
 
 /*
  * Helper function, for storing additional information with a Node.
+ * Example usage (GET):
+ *    lingotek_lingonode('all') - returns all nodes and properties
+ *    lingotek_lingonode(5) - returns all properties for the specified NodeId (i.e., 5)
+ *    lingotek_lingonode(5,'node_sync_status') - returns the value for the specified property (i.e., node_sync_status) for the specified NodeId (i.e., 5)
+ * Example usage (SET):
+ *     lingotek_lingonode(5,'node_sync_status','CURRENT') - sets the value to 'CURRENT' for the property 'node_sync_status' of NodeId 5
  *
  * @param $nid
  *  NodeId.
@@ -32,7 +38,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
   }
   if (is_numeric($nid) && $nid) {
     //Return an array with all of the keys and values.
-    if ($key == "") {
+    if ($key === "") {
       $lingo_node = array();
 
       $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('lingokey'), db_escape_field('lingovalue')))->condition(db_escape_field('nid'), $nid)->execute();
