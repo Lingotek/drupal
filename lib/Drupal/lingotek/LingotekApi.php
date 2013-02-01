@@ -488,13 +488,95 @@ class LingotekApi {
     }
   }
 
-
   /**
    * Get a User Profile Attributes
+   *
+   * Note:  the Request() method will switch the ExternalID to whatever is passed in, instead of the regular ExternalID.
    */
-  public function getProfileAttributes() {
+  public function getProfileAttributes( $externalId = NULL ) {
+    $result = FALSE;
+
+    $parameters = array();
+    if ( isset( $externalId ) ) {
+      $parameters['externalId'] = $externalId;
+    }
+
+    if ($output = $this->request('getProfileAttributes', $parameters)) {
+      if ( $output->results == 'success' && is_object( $output->attributes ) ) {
+        $result = $output->attributes;
+      }
+    }
+
+    /*
+      stdClass::__set_state(array(
+         'results' => 'success',
+         'attributes' => 
+        stdClass::__set_state(array(
+           'id' => 26,
+           'name' => 'Community Admin',
+           'login_id' => 'community_admin@S8NFUBG8',
+           'on_leaderboard' => false,
+           'language_skills' => 
+          array (
+          ),
+        )),
+      ))
+    */
+
+    return $result;
   }
 
+  /**
+   * Uses getProfileAttributes to Get the User Profile Attributes, and return the ID.
+   */
+  public function getProfileId( $externalId = NULL ) {
+    $result = FALSE;
+    if ( $profile = $this->getProfileAttributes( $externalId ) ) {
+      $result = $profile->id;
+    }
+    return $result;
+  }
+
+  /**
+   * Assigns a role to a user.  (Must be done by an community admin)
+   * Returns TRUE or FALSE
+   */
+  public function addRoleAssignment ( $role, $userId ) {
+    $result = FALSE;
+    if ( isset( $role ) && isset( $userId ) ) {
+      $parameters = array(
+        'role' => $role,
+        'clientId' => $userId
+      );
+      if ($output = $this->request('addRoleAssignment', $parameters)) {
+        if ( $output->results == 'success' ) {
+          $result = TRUE;
+        }
+      }      
+    }
+    return $result;
+  }
+
+  /**
+   * Assigns a user to a project.  (Must be done by an community admin)
+   * Returns TRUE or FALSE
+   */
+  public function assignProjectManager( $projectId, $userId ) {
+    $result = FALSE;
+    if ( isset( $projectId ) && isset( $userId ) ) {
+      $parameters = array(
+        'projectId' => $projectId,
+        'managerUserId' => $userId
+      );
+      $output = $this->request('assignProjectManager', $parameters);
+      if ($output) {
+        if ( $output->results == 'success' ) {
+          $result = TRUE;
+        }
+      }      
+    }
+    return $result;
+  }
 
   /**
    * Gets a workbench URL for the specified document ID and phase.
@@ -507,7 +589,7 @@ class LingotekApi {
    * @return mixed
    *   A workbench URL string on success, or FALSE on failure.
    */
-  public function getWorkbenchLink($document_id, $phase_id) {
+  public function getWorkbenchLink($document_id, $phase_id, $externalId = null) {
     $links = &drupal_static(__FUNCTION__);
 
     $static_id = $document_id . '-' . $phase_id;
@@ -515,6 +597,7 @@ class LingotekApi {
       $params = array(
         'documentId' => $document_id,
         'phaseId' => $phase_id,
+        'externalId' => $externalId
       );
 
       if ($output = $this->request('getWorkbenchLink', $params)) {
@@ -674,8 +757,11 @@ class LingotekApi {
     global $user;
     $response_data = FALSE;
 
-    // Almost every v4 API request needs to have the externalID parameter present.
-    $parameters += array('externalId' => variable_get('lingotek_login_id', ''));
+    // Every v4 API request needs to have the externalID parameter present.
+    // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
+    if ( !isset( $parameters[ 'externalId' ] ) ) {
+      $parameters['externalId'] = variable_get( 'lingotek_login_id', '' );
+    }
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
