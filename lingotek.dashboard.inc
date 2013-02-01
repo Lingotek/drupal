@@ -567,42 +567,6 @@ function lingotek_test() {
 
   $output = '<h1>Test</h1>';
 
-  $account = LingotekAccount::instance();
-  //$account->getAccountStatus();
-
-  debug( $account );
-
-
-
-  //$account->setStatus( 'awesome' );
-  //$account->setPlan( 'super_power_user' );
-  //$account->setEnterpriseStatus( TRUE );
-  //$account->setAllowedLanguages( 10 );
-
-
-  $output .= '<br><br>Status: ' . $account->getStatus();
-  $output .= '<br>Status Text: ' . $account->getStatusText();
-
-  $output .= '<br><br>Plan: ' . $account->getPlan();
-  $output .= '<br>Plan Text: ' . $account->getPlanText();
-
-  $output .= '<br><br>Enterprise: ' . $account->getEnterpriseStatus();
-  $output .= '<br>Enterprise Text: ' . $account->getEnterpriseStatusText();
-
-  $output .= '<br><br>Languages: ' . $account->getAllowedLanguages();
-
-  $output .= '<br><br>Is Enterprise? ';
-  debug( LingotekAccount::instance()->isEnterprise() );
-
-
-
-
-  //dpm($account);
-  //debug($account);
-
-
-
-
   return $output;
 
 }
