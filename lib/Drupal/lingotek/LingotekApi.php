@@ -560,6 +560,7 @@ class LingotekApi {
   /**
    * Assigns a user to a project.  (Must be done by an community admin)
    * Returns TRUE or FALSE
+   * This will only return TRUE the first time.
    */
   public function assignProjectManager( $projectId, $userId ) {
     $result = FALSE;
@@ -579,6 +580,33 @@ class LingotekApi {
   }
 
   /**
+   * Configures the Lingotek community to allow the local Drupal user to use the Workbench.
+   *
+   * @param str $username
+   *   A Drupal username.
+   */ 
+  private function checkUserWorkbenchLinkPermissions( $username = self::ANONYMOUS_LINGOTEK_ID ) {
+    // To use the workbench, users need to be tagged.  Check to see if the current user has already been tagged.
+    $workbench_list = variable_get( 'lingotek_workbench_tagged_users', array() );
+    $found = array_search( $username, $workbench_list );
+
+    // If not, update his account to allow  him to use the workbench.
+    if ( $found === false ) {
+      $profileId = $this->getProfileId( $username );
+      if ( $profileId ) {
+        $projectId = variable_get( 'lingotek_project', NULL );
+        $role = $this->addRoleAssignment( "project_manager", $profileId );
+        if ( $role && isset( $projectId ) ) {
+          $manager = $this->assignProjectManager( $projectId, $profileId ); // This call will only return true the FIRST time.
+          $workbench_list[] = $username;
+          variable_set( 'lingotek_workbench_tagged_users', $workbench_list );
+        }
+      }
+    }
+  }
+
+
+  /**
    * Gets a workbench URL for the specified document ID and phase.
    *
    * @param int $document_id
@@ -589,8 +617,12 @@ class LingotekApi {
    * @return mixed
    *   A workbench URL string on success, or FALSE on failure.
    */
-  public function getWorkbenchLink($document_id, $phase_id, $externalId = null) {
+  public function getWorkbenchLink($document_id, $phase_id) {
     $links = &drupal_static(__FUNCTION__);
+
+    global $user;
+    $externalId = $user->name;
+    self::checkUserWorkbenchLinkPermissions( $externalId );
 
     $static_id = $document_id . '-' . $phase_id;
     if (empty($links[$static_id])) {
@@ -610,7 +642,6 @@ class LingotekApi {
     else {
       $url = $links[$static_id];
     }
-
     return $url;
   }
 
@@ -894,78 +925,6 @@ class LingotekApi {
 
     return $result;
   }
-
-
-  /**
-   * Get Account Status
-   * Request:  http://cp.lingotek.com:8080/billing/account.json?community=B2MMD3X5&external_id=community_admin&oauth_key=28c279fa-28dc-452e-93af-68d194a2c366&oauth_secret=0e999486-3b4d-47e4-ba9a-d0f3f0bbda73
-   * Response:  {"state":"active","plan":{"trial_ends_at":0,"state":"active","activated_at":1355267936,"type":"cosmopolitan_monthly","languages_allowed":2,"language_cost_per_period_in_cents":14900}}
-   * Will return FALSE or a json decoded object.
-   */
-  function getAccountStatus( ) {
-
-    $result = FALSE;
-    $fields = array(
-      'community'    => urlencode( variable_get( 'lingotek_community_identifier', '' ) ),
-      'external_id'  => urlencode( variable_get( 'lingotek_login_id', '' ) ),
-      'oauth_key'    => urlencode( variable_get( 'lingotek_oauth_consumer_id', '' ) ),
-      'oauth_secret' => urlencode( variable_get( 'lingotek_oauth_consumer_secret', '' ) ),
-    );
-    dpm( $fields );
-
-    if( ( isset($fields['community']) && $fields['community'] != '' ) && ( isset($fields['external_id']) && $fields['external_id'] != '' )  && ( isset($fields['oauth_key']) && $fields['oauth_key'] != '' )  && ( isset($fields['oauth_secret']) && $fields['oauth_secret'] != '') ) {
-
-      $url = LINGOTEK_BILLING_SERVER . '?';
-      foreach( $fields as $key=>$value ) { 
-        $url .= $key . '=' . $value . '&';
-      }
-      $url = substr( $url, 0, -1 );
-
-      $ch = curl_init( $url );
-      curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
-      curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
-      //curl_setopt( $ch, CURLINFO_HEADER_OUT, TRUE );
-      $response = curl_exec( $ch );
-debug( $url );
-debug( $response );
-      $info = curl_getinfo( $ch );
-      curl_close( $ch );
-
-      $json = json_decode( $response );
-      if ( isset( $json ) ) { // Did we get valid data back?  If not, $json is NULL.
-
-        //dpm( '- - - - - - - - - - - - - - -' );
-        //dpm( 'URL: ' . $url );
-        //dpm( 'INFO:' );
-        //dpm( $info );
-        //dpm( 'RESULT (json):' );
-        //debug( $json );
-        /*
-        stdClass::__set_state(array(
-           'state' => 'active',
-           'plan' => 
-          stdClass::__set_state(array(
-             'trial_ends_at' => 1360864548,
-             'state' => 'active',
-             'activated_at' => 1358272548,
-             'type' => 'cosmopolitan_monthly',
-             'languages_allowed' => 1,
-             'language_cost_per_period_in_cents' => 14900,
-          )),
-        ))
-        */
-        //dpm( '- - - - - - - - - - - - - - -' );
-
-        $result = $json;
-
-      }
-
-    } // END:  has credentials
-
-    return $result;
-
-  } // END:  lingotek_get_account_status()
-
 
   /**
    * Formats a complex object for presentation in a watchdog message.
