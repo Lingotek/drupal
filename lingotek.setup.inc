@@ -283,13 +283,19 @@ function lingotek_community_select_form() {
   else {
     /*
       debug( $communities );
+      OLD STRUCTURE:
       array (
         0 => 'YGBHNR3Q',
       )
+      NEW STRUCTURE:
+      array (
+        'S8NFUBG8' => 'Integration',
+      )
+      Or did this change because I have a name with the community now?
     */
     $count = count( $communities );
     if ( $count == 1 ) { // Just one community, use that.
-      $community_id = array_shift( $communities );
+      $community_id = array_pop( array_keys( $communities ) );
       variable_set( 'lingotek_community_identifier', $community_id );
       drupal_goto( 'admin/config/lingotek/project-select' ); // Default path, if they only have 1 community. 
     }
@@ -298,7 +304,7 @@ function lingotek_community_select_form() {
     }
     else {
       // 0 Results, we have an error.  Or, we should create a community for them.
-      drupal_set_message( t( 'Error Accessing Account. Please try again.' ), 'error' );
+      drupal_set_message( t( 'Error Accessing Account. Please contact customer service.' ), 'error' );
       drupal_goto( 'admin/config/lingotek/account-settings' ); // Shouldnt be here.  So something messed up.  Go back.
     }
     
@@ -364,14 +370,12 @@ function lingotek_project_select_form() {
   if ( $projects === FALSE ) {
     drupal_set_message( t( 'Error Retrieving Account Information.' ), 'error' );
     drupal_goto( 'admin/config/lingotek/account-settings' ); // Error geting projects.  Go back.
-
   }
   else {
-
     $count = count( $projects );
     if ( $count == 1 ) {
       // Just 1 Project, use that.  Then move on to the next step.
-      $project_id = array_shift( $projects );
+      $project_id = array_pop( array_keys( $projects ) );
       variable_set( 'lingotek_project', $project_id );
       drupal_goto( 'admin/config/lingotek/language-settings' ); // Default path, if they only have 1 project. 
     }
