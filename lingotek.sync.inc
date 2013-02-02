@@ -189,16 +189,14 @@ function lingotek_notifications() {
   include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
   $context = '';
 
-  $node = LingotekNode::loadByLingotekDocumentId($document_id); 
   $target_drupal_language_code = lingotek_drupal_language($target_code);
-  $nid = $node->nid; 
-  //$nid = lingotek_get_node_id_from_document_id( $document_id );
+  $nid = lingotek_get_node_id_from_document_id( $document_id );
 
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
     if (class_exists('LingotekComment')) {
       
-      $source_language = lingotek_get_source_language();//TO-DO:  use the source_language of the comment
+      $source_language = lingotek_get_source_language();//TO-DO: use the source_language of the comment?
       if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements = array(
           '@id' => $comment->id,
@@ -227,8 +225,10 @@ function lingotek_notifications() {
     }
   }
   else {
+    $node = LingotekNode::loadByLingotekDocumentId($document_id); 
     $source_language = $node->language;
-    if ($node->auto_download) { // download only when automatic download is enabled
+    $auto_download = $node->sync_method;
+    if ($auto_download) { // download only when automatic download is enabled
       lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
     }
   }
@@ -244,14 +244,19 @@ function lingotek_notifications() {
     '@project_id' => $project_id
       ), WATCHDOG_DEBUG);
 
+  $found = $nid || (isset($comment) && $comment) ? TRUE : FALSE;
 
+  //print_r($comment);
   //Response
-  $response = array_merge($_GET, array(
+  $response = $found ? array_merge($_GET, array(
     'target_drupal_language_code' => $target_drupal_language_code,
     'source_language' => $source_language,
-    'type' => $comment ? 'comment' : 'node',
-    'nid' => $comment ? 'none' : $nid,    
-    'download' => ($node->auto_download == TRUE)
+    'type' => isset($comment) ? 'comment' : 'node',
+    'id' => isset($comment) ? $comment->cid : $nid,
+    'found'=> $found,
+    'download' => $found && isset($comment)? TRUE : (isset($auto_download) && $auto_download == TRUE)
+      )) : array_merge($_GET, array(
+        'found'=> $found
       ));
 
   drupal_json_output($response);

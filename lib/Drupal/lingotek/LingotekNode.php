@@ -65,7 +65,6 @@ class LingotekNode implements LingotekTranslatableEntity {
   public static function load($node) {
     $node = new LingotekNode($node);
     $node->setApi(LingotekApi::instance());
-    $node->loadLingonode();
     return $node;
   }
   
@@ -166,8 +165,9 @@ class LingotekNode implements LingotekTranslatableEntity {
     }
     elseif (isset($this->node->$property_name)) {
       $property = $this->node->$property_name;
-    } elseif (isset($this->lingonode->$property_name)) {
-      $property = $this->lingonode->$property_name;
+    } else { // attempt to lookup the value in the lingonode table
+      $val = lingotek_lingonode($this->node->nid,$property_name); 
+      $property = ($val !== FALSE) ? $val : $property;
     } 
     
     return $property;
