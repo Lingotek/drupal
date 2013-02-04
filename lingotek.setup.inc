@@ -281,21 +281,10 @@ function lingotek_community_select_form() {
 
   }
   else {
-    /*
-      debug( $communities );
-      OLD STRUCTURE:
-      array (
-        0 => 'YGBHNR3Q',
-      )
-      NEW STRUCTURE:
-      array (
-        'S8NFUBG8' => 'Integration',
-      )
-      Or did this change because I have a name with the community now?
-    */
     $count = count( $communities );
     if ( $count == 1 ) { // Just one community, use that.
-      $community_id = array_pop( array_keys( $communities ) );
+      $community_keys = array_keys( $communities );
+      $community_id = array_pop( $community_keys );
       variable_set( 'lingotek_community_identifier', $community_id );
       drupal_goto( 'admin/config/lingotek/project-select' ); // Default path, if they only have 1 community. 
     }
@@ -375,7 +364,8 @@ function lingotek_project_select_form() {
     $count = count( $projects );
     if ( $count == 1 ) {
       // Just 1 Project, use that.  Then move on to the next step.
-      $project_id = array_pop( array_keys( $projects ) );
+      $project_keys = array_keys( $projects );
+      $project_id = array_pop( $project_keys );
       variable_set( 'lingotek_project', $project_id );
       drupal_goto( 'admin/config/lingotek/language-settings' ); // Default path, if they only have 1 project. 
     }
