@@ -221,6 +221,7 @@ class LingotekAccount {
 
         } // END  Active
 
+        menu_rebuild();
 
       } // END:  Got 200 Response
 
@@ -229,7 +230,5 @@ class LingotekAccount {
     return $result;
 
   } // END:  lingotek_get_account_status()
-
-
 
 }

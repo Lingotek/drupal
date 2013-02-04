@@ -516,10 +516,18 @@ function lingotek_get_account_status( ) {
   $account = LingotekAccount::instance();
   $account->getAccountStatus();
 
-  drupal_flush_all_caches();
+  // Send the user back to the Lingotek settings page, via the second cache clearer.
   drupal_set_message( t( 'Your account status has been updated.' ) );
+  drupal_goto( 'admin/settings/lingotek/flush-cache' );
 
-  // Send the user back to the Lingotek settings page.
-  drupal_goto( 'admin/settings/lingotek/settings' );
+}
+
+/**
+ * Clean out the Drupal Cache so menus will rebuild.
+ */
+function lingotek_flush_cache() {
+
+  drupal_flush_all_caches();
+  drupal_goto( 'admin/settings/lingotek' );
 
 }
