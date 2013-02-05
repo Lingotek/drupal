@@ -338,7 +338,7 @@ function lingotek_menu_alter(&$items) {
     $translate_path = 'node/%node/translate';
     $lingotek_access_callback = 'lingotek_entity_translation_node_tab_access';
     if (isset($items[$translate_path])) {
-      $items[$translate_path]['title'] = 'Translate X';
+      $items[$translate_path]['title'] = 'Translate';
       $items[$translate_path]['access callback'] = $lingotek_access_callback;
     }
 
