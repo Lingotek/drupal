@@ -219,9 +219,9 @@ class LingotekAccount {
 
           } // END:  Plan
 
-        } // END  Active
+          menu_rebuild();
 
-        menu_rebuild();
+        } // END  Active
 
       } // END:  Got 200 Response
 
