@@ -514,12 +514,24 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
 function lingotek_get_account_status( ) {
 
   $account = LingotekAccount::instance();
-  $account->getAccountStatus();
+  $result = $account->getAccountStatus(); // Returns false on fail.
+
+  if ( $result === FALSE ) { // There was a problem retrieving the account status.
+    drupal_set_message( t( 'There was an error retrieving your account status.  Please try again later.' ), 'error' );
+    drupal_goto( 'admin/settings/lingotek/settings' );
+  } else { // We got a valid account status.  Send the user back to the Lingotek settings page, via the second cache clearer.
+    drupal_set_message( t( 'Your account status has been updated.' ) );
+    drupal_goto( 'admin/settings/lingotek/flush-cache' );
+  }
+
+}
+
+/**
+ * Clean out the Drupal Cache so menus will rebuild.
+ */
+function lingotek_flush_cache() {
 
   drupal_flush_all_caches();
-  drupal_set_message( t( 'Your account status has been updated.' ) );
-
-  // Send the user back to the Lingotek settings page.
-  drupal_goto( 'admin/settings/lingotek/settings' );
+  drupal_goto( 'admin/settings/lingotek' );
 
 }
