@@ -244,9 +244,9 @@ function lingotek_setup_account_settings_form_submit( $form, $form_state ) {
     //debug( $password );
 
   // Validate the Account - Can we Login?
-  // These are V3 API Calls for Legacy Users
+  // These are V4 Basic Auth API Calls for Legacy Users
   $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
-  $communities = lingotek_get_communities_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
+  $communities = lingotek_get_communities_v4( $login_id, $password, $lingotek_url . '/lingopoint/api/4' );
   if ( $communities === FALSE ) {
     drupal_set_message( t( 'Invalid login or password.' ), 'error' );
   }
@@ -272,7 +272,7 @@ function lingotek_community_select_form() {
 
   // V3 API Calls for Legacy Users
   $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
-  $communities = lingotek_get_communities_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
+  $communities = lingotek_get_communities_v4( $login_id, $password, $lingotek_url . '/lingopoint/api/4' );
 
   if ( $communities === FALSE ) {
 
@@ -354,7 +354,8 @@ function lingotek_project_select_form() {
 
   // V3 API Call for Legacy Users
   $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
-  $projects = lingotek_get_projects_v3( $login_id, $password, $lingotek_url . '/lingopoint/api' );
+  $community_identity = variable_get( 'lingotek_community_identifier', NULL );
+  $projects = lingotek_get_projects_v4( $login_id, $password, $community_identity, $lingotek_url . '/lingopoint/api/4' );
 
   if ( $projects === FALSE ) {
     drupal_set_message( t( 'Error Retrieving Account Information.' ), 'error' );
@@ -363,10 +364,27 @@ function lingotek_project_select_form() {
   else {
     $count = count( $projects );
     if ( $count == 1 ) {
-      // Just 1 Project, use that.  Then move on to the next step.
+
+      // If there is just 1 Project, Auto-Select it.  Then move on to the next step.
+      $project_id = '';
+      $workflow_id = '';
+
       $project_keys = array_keys( $projects );
-      $project_id = array_pop( $project_keys );
+      $project_string = array_pop( $project_keys );
+
+      // This can come back as just the ProjectID, OR the ProjectID ||| WorkflowID jammed together, so check the string.
+      if ( strpos( $project_string, '|||' ) ) { // Returns a position or false if not found.
+        $parts = explode( '|||', $project_string );
+        $project_id = $parts[ 0 ];
+        $workflow_id = $parts[ 1 ];
+      }
+      else {
+        $project_id = $project_string;
+      }
+
       variable_set( 'lingotek_project', $project_id );
+      variable_set( 'lingotek_workflow', $workflow_id );
+
       drupal_goto( 'admin/config/lingotek/language-settings' ); // Default path, if they only have 1 project. 
     }
     else {
@@ -411,8 +429,23 @@ function lingotek_project_select_form() {
  */
 function lingotek_project_select_form_submit( $form, $form_state ) {
 
-  $project_id = $form_state[ 'values' ][ 'lingotek_site_project' ];
+  $project_id = '';
+  $workflow_id = '';
+
+  $project_string = $form_state[ 'values' ][ 'lingotek_site_project' ];  
+
+  // This can come back as just the ProjectID, OR the ProjectID ||| WorkflowID jammed together, so check the string.
+  if ( strpos( $project_string, '|||' ) ) { // Returns a position or false if not found.
+    $parts = explode( '|||', $project_string );
+    $project_id = $parts[ 0 ];
+    $workflow_id = $parts[ 1 ];
+  }
+  else {
+    $project_id = $project_string;
+  }
+
   variable_set( 'lingotek_project', $project_id );
+  variable_set( 'lingotek_workflow', $workflow_id );
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/project-select';
   drupal_set_message( t( 'Your Lingotek project selection has been saved.' ) );
@@ -897,20 +930,22 @@ function lingotek_setup_node_updates_form_submit( $form, $form_state ) {
 /*
  * Get the Lingotek user's current Communities.  Use the V3 API.
  */
-function lingotek_get_communities_v3( $login, $passwd, $url ) {
-  global $_lingotek_client;
+function lingotek_get_communities_v4( $login, $passwd, $url ) {
 
-  $_lingotek_client->login_id = $login;
-  $_lingotek_client->password = $passwd;
-  $_lingotek_client->url = $url;
+  // API V4 Connection
+  $client = new LingotekSession();
+
+  $client->login_id = $login;
+  $client->password = $passwd;
+  $client->url = $url;
 
   $options = array();
 
-  if (!$_lingotek_client->canLogIn()) {
+  if (!$client->canLogIn()) {
     return FALSE;
   }
 
-  $list_communities = $_lingotek_client->request("listCommunities", array());
+  $list_communities = $client->request("listCommunities", array());
   if ($list_communities->results == "success") {
     foreach ($list_communities->communities as $community) {
       $options[$community->id] = t( $community->name );
@@ -921,44 +956,35 @@ function lingotek_get_communities_v3( $login, $passwd, $url ) {
 }
 
 /*
- * Get the Lingotek user's current Projects.  Use the V3 API.
+ * Get the Lingotek user's current Projects.  Uses the V4 API with Basic Auth.
  */
-function lingotek_get_projects_v3( $login, $passwd, $url ) {
-  global $_lingotek_client;
+function lingotek_get_projects_v4( $login, $passwd, $community_identity, $url ) {
 
-  $_lingotek_client->login_id = $login;
-  $_lingotek_client->password = $passwd;
-  $_lingotek_client->url = $url;
+  // API V4 Connection
+  $client = new LingotekSession();
 
-  $options = array();
+  $client->login_id = $login;
+  $client->password = $passwd;
+  $client->url = $url;
+  $client->community = $community_identity;
 
-  if (!$_lingotek_client->canLogIn()) {
+  if (!$client->canLogIn()) {
     return FALSE;
   }
 
-  /*
-    stdClass::__set_state(array(
-       'results' => 'success',
-       'projects' => 
-      array (
-        0 => 
-        stdClass::__set_state(array(
-           'id' => 391,
-           'name' => 'D1 Local',
-           'state' => 'Active',
-           'companyId' => 0,
-           'percentComplete' => 0,
-           'createdDate' => '2012-11-15',
-           'documents' => 
-          array (
-          ),
-        )),
-  */
-
-  $list_projects = $_lingotek_client->request("listProjects", array());
+  $options = array();
+  $list_projects = $client->request("listProjects", array( 'community' => $community_identity ));
   if ($list_projects->results == "success") {
     foreach ($list_projects->projects as $project) {
-      $options[$project->id] = t( $project->name );
+      if ( $project->state == 'Active' ) {
+        if ( !empty( $project->workflowId ) ) { // Send back the ProjectID AND WorkflowID.  Joined by |||
+          $options[$project->id . '|||' . $project->workflowId ] = t( $project->name );
+        }
+        else { // Just send back the Project ID
+          $options[$project->id] = t( $project->name );
+        }
+
+      }
     }
   }
 

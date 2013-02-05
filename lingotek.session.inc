@@ -6,6 +6,11 @@
 
 /*
  * Session handler for api calls and logging in to the Lingotek platform
+ *
+ * Note:
+ *  This was origionally designed to do API Version 3 calls.  And it should proably merge with the V4 API object at some point.
+`*  With the addition of Basic Auth to the Version 4 API, it can now also be used to make API V4 calls.
+ *  This is done by creating a new LingotekSession object and manually setting the URL property to a V4 address.
  */
 class LingotekSession {
 
@@ -255,7 +260,7 @@ class LingotekSession {
   /*
    * logout from the lingotek platform
    */
-  private function logout() {
+  public function logout() {
     $json = $this->request('logout');
     if ($json->results == "success") {
       $this->logged_in = FALSE;
