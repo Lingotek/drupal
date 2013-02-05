@@ -518,7 +518,7 @@ function lingotek_get_account_status( ) {
 
   // Send the user back to the Lingotek settings page, via the second cache clearer.
   drupal_set_message( t( 'Your account status has been updated.' ) );
-  drupal_goto( 'admin/settings/lingotek/flush-cache' );
+  //drupal_goto( 'admin/settings/lingotek/flush-cache' );
 
 }
 
