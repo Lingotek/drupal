@@ -391,7 +391,11 @@ function lingotek_support_footer() {
  * all languages).
  */
 function lingotek_access($node, $permission) {
+  
   if (lingotek_supported_language($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
+    if(lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)){
+       return FALSE;
+    }
     return user_access($permission);
   }
   return FALSE;
@@ -405,7 +409,31 @@ function lingotek_access($node, $permission) {
  *   Boolean value.
  */
 function lingotek_supported_type($type) {
-  return variable_get('language_content_type_' . $type, 0) == LINGOTEK_ENABLED;
+  $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, 0) == LINGOTEK_ENABLED;
+  $entity_translation_managed = lingotek_managed_by_entity_translation($type);
+  return $lingotek_supported_explicitly || $entity_translation_managed;//we also support entity_translation managed content
+}
+
+/**
+ * Returns if the node type an entity_translation managed node
+ *
+ * @return
+ *   Boolean value.
+ */
+function lingotek_managed_by_entity_translation($type){
+  return module_exists('entity_translation') ? entity_translation_node_supported_type($type) : FALSE;
+}
+
+/**
+ * Returns whether the given node type is an entity_translation node and has been pushed to lingotek.
+ *
+ * @return
+ *   Boolean value.
+ */
+function lingotek_node_pushed($node) {
+  $lingonode = lingotek_lingonode($node->nid);
+  $pushed_to_lingotek = !empty($lingonode);
+  return $pushed_to_lingotek;
 }
 
 /**
