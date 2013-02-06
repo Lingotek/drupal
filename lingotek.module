@@ -334,10 +334,11 @@ function lingotek_menu_alter(&$items) {
   // allow nodes that haven't yet been associated with Lingotek to be
   // translated using Entity Translation's tools.
   if (module_exists('entity_translation')) {
+
     $translate_path = 'node/%node/translate';
     $lingotek_access_callback = 'lingotek_entity_translation_node_tab_access';
     if (isset($items[$translate_path])) {
-      $items[$translate_path]['title'] = 'Translate (Entity Translation)';
+      $items[$translate_path]['title'] = 'Translate';
       $items[$translate_path]['access callback'] = $lingotek_access_callback;
     }
 
@@ -357,6 +358,22 @@ function lingotek_menu_alter(&$items) {
       $items[$edit_target]['access callback'] = 'lingotek_entity_translation_edit_access';
       $items[$edit_target]['access arguments'][3] = $lingotek_access_callback;
     }
+    
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function lingotek_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    case 'menu_alter':
+      //case 'entity_info_alter':
+      // Move some of our hook implementations to the end of the list.
+      $group = $implementations['lingotek'];
+      unset($implementations['lingotek']);
+      $implementations['lingotek'] = $group;
+      break;
   }
 }
 
@@ -369,21 +386,25 @@ function lingotek_menu_alter(&$items) {
  * @see entity_translation_node_tab_access().
  */
 function lingotek_entity_translation_node_tab_access() {
+  //dvm("lingotek_entity_translation_node_tab_access");
   $args = func_get_args();
   $node = array_shift($args);
-  if ($node->language != LANGUAGE_NONE) {
-    if (lingotek_supported_type($node->type) &&
-        !lingotek_lingonode($node->nid, 'create_lingotek_document') &&
-        !lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
-      // This is a Lingotek-eligible node
-      // that has not yet had it's Lingotek Document created.
-      return TRUE;
+  //dvm($node->language);
+  if ($node->language !== LANGUAGE_NONE) {
+    //dvm($node->type);
+    //dvm("linkotek supported? ".lingotek_supported_type($node->type));
+    //dvm("lingotek pushed? ".lingotek_node_pushed($node));
+    if (lingotek_supported_type($node->type)){
+      // If the node has been pushed then return FALSE (don't show the "Translate" tab)
+      // Otherwise, return TRUE (show the "Translate" tab)
+      $translate_tab_access = !lingotek_node_pushed($node);
+      return $translate_tab_access;
     }
     elseif (entity_translation_node_supported_type($node->type)) {
       // This is not a Lingotek-supported type, but is a type
       // that is set up for Entity Translation.
       // Fall back to the Entity Translation module's access callback.
-      return entity_translation_tab_access('node');
+      return entity_translation_tab_access('node', $node);
     }
     elseif (entity_translation_node('node', $node) && module_exists('translation')) {
       // This node is set up to use the Translation module's
@@ -391,7 +412,6 @@ function lingotek_entity_translation_node_tab_access() {
       return _translation_tab_access($node);
     }
   }
-
   return FALSE;
 }
 
@@ -714,7 +734,7 @@ function lingotek_node_update($node) {
   if (user_access('url_alias_translation') && isset($node->urlAliasTranslation)) {
     lingotek_lingonode($node->nid, 'url_alias_translation', $node->urlAliasTranslation);
   }
-  
+
 
   if (isset($node->mtTargets)) {
     $node->mtTargets = array_filter($node->mtTargets, "lingotek_unselected");
@@ -780,10 +800,14 @@ function lingotek_node_update($node) {
  */
 function lingotek_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
-  $lingotek_option_label = (module_exists('entity_translation')) ?
-      t('Enabled, with Lingotek translation or field translation.') : t('Enabled, with Lingotek translation');
+  $lingotek_option_label = t('Enabled, with Lingotek translation');
+  /*$lingotek_option_label = (module_exists('entity_translation')) ?
+      t('Enabled, with Lingotek translation or field translation.') : t('Enabled, with Lingotek translation');*/
+  $lingotek_details = (module_exists('entity_translation')) ? 
+    t('If Lingotek translation (or field translation) is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.')
+  : t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
   $form['workflow']['language_content_type']['#options'][LINGOTEK_ENABLED] = $lingotek_option_label;
-  $form['workflow']['language_content_type']['#description'] .= ' ' . t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
+  $form['workflow']['language_content_type']['#description'] .= ' '.$lingotek_details;
 }
 
 /**
