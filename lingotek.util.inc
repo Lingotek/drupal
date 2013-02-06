@@ -761,6 +761,10 @@ function lingotek_save_target_languages( $target_languages = NULL ) {
  */
 function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $flip = FALSE ) {
 
+  $code = $flip ? lingotek_drupal_to_lingotek_language_code( $language_code ) : lingotek_drupal_language($language_code);
+  //echo "lingotek_dashboard_to_drupal_language_code: <h1>".$language_code." => ".$code."</h1>";
+  return $code;
+  
   // Dashboard Language Code ->  Drupal Language Code
   $index = array( 
     'en' => 'en',
@@ -768,7 +772,7 @@ function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $fli
     'de' => 'de',
     'es' => 'es',
     'fr' => 'fr',
-    'zh' => 'zh-hans',
+    'zh' => 'zh-hans',//
     'it' => 'it',
     'pt' => 'pt',
     'nl' => 'nl',
@@ -776,12 +780,12 @@ function lingotek_dashboard_to_drupal_language_code( $language_code = NULL, $fli
     'ar' => 'ar',
     'ru' => 'ru',
     'sv' => 'sv',
-    'no' => 'fa',
+    'no' => 'fa',//
     'pl' => 'pl',
     'tr' => 'tr',
     'da' => 'da',
     'fi' => 'fi',
-    'iw' => 'he',
+    'iw' => 'he',//
     'el' => 'el',
     'cs' => 'cs',
     'id' => 'id',

@@ -183,10 +183,10 @@ function lingotek_get_dashboard_code() {
 function lingotek_dashboard_command_ajax() {
 
   $data = array();
-  $response = array();
   $message = 'Not doing anything.';
-
   $method = $_SERVER['REQUEST_METHOD'];
+  
+  $response = array('a'=>'b');
 
   // 1. Update a Target Language (Initiate a Machine Translation Batch)
   if ( $method == 'PUT' ) {
@@ -278,7 +278,6 @@ function lingotek_dashboard_command_ajax() {
       $message = 'GET: Retrieve the Target Languages and Status';
       $data = $_GET;
 
-      $response = array();
       $target_languages = lingotek_get_target_languages( );
 
       // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
@@ -303,7 +302,7 @@ function lingotek_dashboard_command_ajax() {
             'current' => $current
           );
 
-        }
+        } 
 
       }
       else { // Otherwise Return a List of all the Active Languages
@@ -335,9 +334,10 @@ function lingotek_dashboard_command_ajax() {
   }
   else {
     // Debugging
-    // drupal_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
+    //drupal_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     // Regular
-    drupal_json_output_cors( $response );   
+    $general = array('message' => $message);
+    drupal_json_output_cors(array_merge($general, $response));
   }
 
 } // END:  lingotek_dashboard_command_ajax
