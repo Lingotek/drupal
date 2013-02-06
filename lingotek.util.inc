@@ -431,8 +431,8 @@ function lingotek_managed_by_entity_translation($type){
  *   Boolean value.
  */
 function lingotek_node_pushed($node) {
-  $lingonode = lingotek_lingonode($node->nid);
-  $pushed_to_lingotek = !empty($lingonode);
+  $lingonode = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $pushed_to_lingotek = $lingonode !== FALSE;//!empty($lingonode);
   return $pushed_to_lingotek;
 }
 
