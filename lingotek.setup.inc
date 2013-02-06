@@ -188,6 +188,13 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
     } // END:  if error.
 
   } // END:  Provision new Community
+  else { // If the user already has all the required community credentials, just direct them to the next step.
+
+    $_SESSION['lingotek_setup_path'] = array( 'admin/config/lingotek/new-account' );
+    drupal_set_message( t( 'Your Lingotek account settings have been saved.' ) );
+    drupal_goto( 'admin/config/lingotek/language-settings' );
+
+  }
 
 } // END:  New Account - Form Processor
 
