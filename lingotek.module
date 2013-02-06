@@ -899,16 +899,12 @@ function lingotek_install_default_advanced_xml() {
 }
 
 /**
- * Checks to make sure the Lingotek module is setup correctly.  If its not, the user is directed to the setup wizard.
+ * Checks to make sure the Lingotek module setup completed successfully.  If its not, the user is directed to the setup wizard.
  */
 function lingotek_is_module_setup() {
 
-  // Check the current settings -- SKIPS: vault, workflow and the 2 oauth fields, because legacy users will not have those.
-  $current_community_identifier = variable_get('lingotek_community_identifier', '');
-  $current_login_id = variable_get('lingotek_login_id', '');
-  $current_project = variable_get('lingotek_project', '');
-  // Does the install already have all the needed connection credentials?
-  if ($current_community_identifier == '' || $current_login_id == '' || $current_project == '') {
+  $setup_complete = variable_get( 'lingotek_setup_complete', 0 );
+  if ( $setup_complete != 1 ) {
     drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go to the Setup Process
   }
 }

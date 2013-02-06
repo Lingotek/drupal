@@ -586,6 +586,12 @@ class LingotekApi {
    *   A Drupal username.
    */ 
   private function checkUserWorkbenchLinkPermissions( $username = self::ANONYMOUS_LINGOTEK_ID ) {
+
+    // Don't do anything with the community_admin user.
+    if ( $username == 'community_admin' ) {
+      return true;
+    }
+
     // To use the workbench, users need to be tagged.  Check to see if the current user has already been tagged.
     $workbench_list = variable_get( 'lingotek_workbench_tagged_users', array() );
     $found = array_search( $username, $workbench_list );
