@@ -1006,8 +1006,7 @@ function lingotek_comment_update($comment) {
   $target_types = variable_get('lingotek_translate_comments_node_types', array());
   $comment_node = node_load($comment->nid);
   $valid_translation_target = (!empty($comment_node->type) && isset($target_types[$comment_node->type]));
-  if (class_exists('LingotekComment')
-      && variable_get('lingotek_translate_comments', FALSE) && $valid_translation_target) {
+  if (class_exists('LingotekComment') && variable_get('lingotek_translate_comments', FALSE) && $valid_translation_target) {
     $lingotek_comment = LingotekComment::load($comment)->contentUpdated();
   }
 }
