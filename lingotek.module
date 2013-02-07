@@ -397,7 +397,8 @@ function lingotek_entity_translation_node_tab_access() {
     if (lingotek_supported_type($node->type)){
       // If the node has been pushed then return FALSE (don't show the "Translate" tab)
       // Otherwise, return TRUE (show the "Translate" tab)
-      $translate_tab_access = !lingotek_node_pushed($node);
+      $user_access = (drupal_multilingual() && (user_access('translate any entity') || user_access("translate node entities")));
+      $translate_tab_access = !lingotek_node_pushed($node) && $user_access;
       return $translate_tab_access;
     }
     elseif (entity_translation_node_supported_type($node->type)) {
@@ -502,7 +503,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Vertical Tab.
   $form['lingotek'] = array(
-    '#title' => t('Translation settings'),
+    '#title' => t('Lingotek Translation Settings'),
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
