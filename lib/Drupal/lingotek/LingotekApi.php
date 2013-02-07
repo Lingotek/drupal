@@ -747,15 +747,31 @@ class LingotekApi {
    *   TRUE on success, FALSE on failure.
    */
   public function updateContentDocument($node) {
+
+    switch (get_class($node)) {
+      case 'LingotekComment':
+        // Comments have their own way to format the content.
+        $document_id = $node->getMetadataValue('document_id_' . $node->language);
+        $content = $node->documentLingotekXML();
+        break;
+      default:
+        // Normal content do the regular formating.
+        $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+        $content = lingotek_xml_node_body($node);
+        break;
+    };
+
     $parameters = array(
-      'documentId' => lingotek_lingonode($node->nid, 'document_id_' . $node->language),
-      'content' => lingotek_xml_node_body($node),
+      'documentId' => $document_id,
+      'content' => $content,
       'format' => $this->xmlFormat(),
     );
 
     $this->addAdvancedParameters($parameters, $node);
 
-    return ($this->request('updateContentDocument', $parameters)) ? TRUE : FALSE;
+    $result = $this->request('updateContentDocument', $parameters);
+
+    return ( $result ) ? TRUE : FALSE;
   }
 
   /**
@@ -822,6 +838,24 @@ class LingotekApi {
     	  // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
+
+
+      watchdog( 'API_CALL', '
+      <h1>Method: @method</h1>
+      <br><hr><br>
+      <h1>Response:</h1><br>
+      !response
+      <br><hr><br>
+      <h1>Parameters:</h1><br>
+      !params
+      ', 
+      array( 
+        '@method' => $method,
+        '!params' => watchdog_format_object($parameters),
+        '!response' => watchdog_format_object($response)
+      ), WATCHDOG_NOTICE );
+
+
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed OAuth request.

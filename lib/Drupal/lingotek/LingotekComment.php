@@ -143,12 +143,13 @@ class LingotekComment implements LingotekTranslatableEntity {
    * Event handler for updates to the comment's data.
    */
   public function contentUpdated() {
+
     $metadata = $this->metadata();
     if (empty($metadata['document_id_' . $this->comment->language])) {
       $this->createLingotekDocument();
     }
     else {
-      $this->updateLingotekDocument();
+      $update_result = $this->updateLingotekDocument();
     }
 
     // Synchronize the local content with the translations from Lingotek.
@@ -160,7 +161,7 @@ class LingotekComment implements LingotekTranslatableEntity {
     if (!self::$content_update_in_progress) {
       // Only update the local content if the Document is 100% complete
       // according to Lingotek.
-      
+
       $document_id = $this->getMetadataValue('document_id_' . $this->comment->language);
       if ($document_id) {
         $document = $this->api->getDocument($document_id);
@@ -192,11 +193,8 @@ class LingotekComment implements LingotekTranslatableEntity {
    *   TRUE if the document create operation was successful, FALSE on error.
    */
   protected function updateLingotekDocument() {
-    $success = TRUE;
-
-    return ($this->api->updateContentDocument($this)) ? TRUE : FALSE;
-
-    return $success;
+    $result = $this->api->updateContentDocument($this);
+    return ($result) ? TRUE : FALSE;
   }
 
   /**
