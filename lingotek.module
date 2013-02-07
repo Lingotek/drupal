@@ -37,8 +37,7 @@ function lingotek_menu() {
       'file' => 'lingotek.page.inc',
       'page arguments' => array(1),
       'page callback' => 'lingotek_pm',
-      'type' => MENU_LOCAL_TASK,
-      'weight' => 3,
+      'type' => MENU_LOCAL_TASK
     );
 
     $items['node/%node/lingotek_dev'] = array(
@@ -49,7 +48,7 @@ function lingotek_menu() {
       'file' => 'lingotek.dev.inc',
       'page callback' => 'lingotek_dev_page',
       'page arguments' => array(1),
-      'type' => MENU_LOCAL_TASK,
+      'type' => MENU_LOCAL_TASK
     );
   }
   else { // Use the Standard Dashboard Interface
