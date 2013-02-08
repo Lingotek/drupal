@@ -159,7 +159,7 @@ function lingotek_admin_form() {
    */
   $form['defaults'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Content Default Settings'),
+    '#title' => t('Default Content Settings'),
     '#description' => t('Translation management defaults used when creating new nodes. At the node level, these settings can be adjusted.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -237,13 +237,26 @@ function lingotek_admin_form() {
 
   $form['defaults']['lingotek_project'] = array(
     '#type' => 'select',
-    '#title' => t('Default Project ID'),
+    '#title' => t('Default Project'),
     '#options' => $projects,
-    '#description' => t('The default Lingotek Project ID with which translations will be associated.'),
+    '#description' => t('The default Lingotek Project with which translations will be associated.'),
     '#default_value' => $id,
   );
-  
-  // Vaults
+
+
+  // Workflows
+  if ($workflows = $api->listWorkflows()) {
+    $form['defaults']['lingotek_workflow'] = array(
+      '#type' => 'select',
+      '#title' => t('Default Workflow'),
+      '#description' => t('The default Workflow to use when translating content.'),
+      '#default_value' => variable_get('lingotek_workflow', ''),
+      '#options' => $workflows,
+    );
+  }
+
+
+  // Vault
   $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
   $id = variable_get('lingotek_vault', '');
 
@@ -261,9 +274,9 @@ function lingotek_admin_form() {
 
   $form['defaults']['lingotek_vault'] = array(
     '#type' => 'select',
-    '#title' => t('Vault'),
+    '#title' => t('Default Vault'),
     '#options' => $vaults,
-    '#description' => t('The Translation Memory Vault where translations are saved.'),
+    '#description' => t('The default Translation Memory Vault where translations are saved.'),
     '#default_value' => $id,
   );
 
