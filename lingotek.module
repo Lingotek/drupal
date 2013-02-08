@@ -781,7 +781,12 @@ function lingotek_node_update($node) {
   else {
     // Keep source document up to date.
     $router_item = menu_get_item();
-    if ($send_lingotek_document && $router_item['path'] != 'lingotek/update') {
+
+    // These are the URLs that should NOT send updates
+    $skip_list = array( 'lingotek/update', 'admin/settings/lingotek/notifications' );
+    $path_match = array_search( $router_item['path'], $skip_list );
+
+    if ( $send_lingotek_document && $path_match == FALSE ) {
       LingotekApi::instance()->updateContentDocument($node);//LingotekNode::load($node));
     }
   }
