@@ -590,18 +590,32 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     );
   }
 
+
   // Only show these options if the Lingotek document hasn't yet been created.
   if (!$document_id && class_exists('LingotekApi')) {
+
     $api = LingotekApi::instance();
 
     // Available projects.
     if ($projects = $api->listProjects()) {
       $form['lingotek']['content']['lingotek_project_id'] = array(
         '#type' => 'select',
-        '#title' => 'Project ID',
+        '#title' => 'Project',
         '#description' => t('Select the translation project with which this item should be associated.'),
         '#default_value' => variable_get('lingotek_project', ''),
         '#options' => $projects,
+        '#access' => user_access('access per-item lingotek project selection'),
+      );
+    }
+
+    // Workflows.
+    if ($workflows = $api->listWorkflows()) {
+      $form['lingotek']['content']['lingotek_workflow_id'] = array(
+        '#type' => 'select',
+        '#title' => t('Workflow'),
+        '#description' => t('Choose the Workflow to associate with this content item.'),
+        '#default_value' => variable_get('lingotek_workflow', ''),
+        '#options' => $workflows,
         '#access' => user_access('access per-item lingotek project selection'),
       );
     }
@@ -618,18 +632,8 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       );
     }
 
-    // Workflows.
-    if ($workflows = $api->listWorkflows()) {
-      $form['lingotek']['content']['lingotek_workflow_id'] = array(
-        '#type' => 'select',
-        '#title' => t('Workflow'),
-        '#description' => t('Choose the Workflow to associate with this content item.'),
-        '#default_value' => variable_get('lingotek_workflow', ''),
-        '#options' => $workflows,
-        '#access' => user_access('access per-item lingotek project selection'),
-      );
-    }
-  }
+  } // END:  Document not created yet
+
 
   $form['lingotek']['developer'] = array(
     '#type' => 'fieldset',
@@ -781,7 +785,12 @@ function lingotek_node_update($node) {
   else {
     // Keep source document up to date.
     $router_item = menu_get_item();
-    if ($send_lingotek_document && $router_item['path'] != 'lingotek/update') {
+
+    // These are the URLs that should NOT send updates
+    $skip_list = array( 'lingotek/update', 'admin/settings/lingotek/notifications' );
+    $path_match = array_search( $router_item['path'], $skip_list );
+
+    if ( $send_lingotek_document && $path_match == FALSE ) {
       LingotekApi::instance()->updateContentDocument($node);//LingotekNode::load($node));
     }
   }
