@@ -152,7 +152,7 @@ class LingotekAccount {
   /**
    * Get Account Status
    * NOTE:  You shouldnt need to call this directly.  Its called in the constructor.
-   * Request:  http://cp.lingotek.com:8080/billing/account.json?community=B2MMD3X5&external_id=community_admin&oauth_key=28c279fa-28dc-452e-93af-68d194a2c366&oauth_secret=0e999486-3b4d-47e4-ba9a-d0f3f0bbda73
+   * Request:  https://LINGOTEK_BILLING_SERVER/billing/account.json?community=B2MMD3X5&external_id=community_admin&oauth_key=28c279fa-28dc-452e-93af-68d194a2c366&oauth_secret=0e999486-3b4d-47e4-ba9a-d0f3f0bbda73
    * Response:  {"state":"active","plan":{"trial_ends_at":0,"state":"active","activated_at":1355267936,"type":"cosmopolitan_monthly","languages_allowed":2,"language_cost_per_period_in_cents":14900}}
    * Will return FALSE or a json decoded object.
    */

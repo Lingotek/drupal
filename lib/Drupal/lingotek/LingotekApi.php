@@ -627,7 +627,7 @@ class LingotekApi {
     $links = &drupal_static(__FUNCTION__);
 
     global $user;
-    $externalId = $user->name;
+    $externalId = isset($user->name)? $user->name : NULL;
     self::checkUserWorkbenchLinkPermissions( $externalId );
 
     $static_id = $document_id . '-' . $phase_id;

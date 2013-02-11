@@ -99,11 +99,8 @@ function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
  */
 function lingotek_identify_tag() {
     
-    $tag = variable_get('install_profile', 'standard');// This should identify the distribution including:  'standard', 'acquia', 'commons'
+    $tag = variable_get('install_profile', 'standard');// This should identify the distribution including:  'standard', 'acquia', 'commons', 'commerce_kickstart'
     
-    if (module_exists('commerce')) {
-        $tag .= '-commerce';
-    }
     return $tag;
 }
 
