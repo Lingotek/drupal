@@ -177,7 +177,7 @@ function lingotek_get_notifications_url() {
  * Format:  ?doc_id={document_id}&target_code={target_language}&project_id={project_id}
 **/
 function lingotek_notifications() {
-  
+
   $document_id = ( isset( $_GET['doc_id'] ) ) ? $_GET['doc_id'] : NULL ; // 
   $target_code = ( isset( $_GET['target_code'] ) ) ? $_GET['target_code'] : NULL ; // $_GET['target_code'];
   $project_id = ( isset( $_GET['project_id'] ) ) ? $_GET['project_id'] : NULL ; // $_GET['project_id'];
@@ -185,6 +185,12 @@ function lingotek_notifications() {
   if (!isset($document_id) || !isset($target_code)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
   }
+
+  // Adding a delay in the update.  Without the delay all the different language updates hit at once, causing node lock issues as multiple languages try to update the same node at once.
+  $min = 5;
+  $max = 30;
+  $sleep = rand ( $min, $max );
+  sleep( $sleep );
 
   include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
   $context = '';
@@ -195,7 +201,7 @@ function lingotek_notifications() {
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
     if (class_exists('LingotekComment')) {
-      
+
       $source_language = lingotek_get_source_language();//TO-DO: use the source_language of the comment?
       if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements = array(
@@ -260,6 +266,7 @@ function lingotek_notifications() {
       ));
 
   drupal_json_output($response);
+
 }
 
 
