@@ -612,6 +612,8 @@ class LingotekApi {
   }
 
 
+
+
   /**
    * Gets a workbench URL for the specified document ID and phase.
    *
@@ -627,7 +629,7 @@ class LingotekApi {
     $links = &drupal_static(__FUNCTION__);
 
     global $user;
-    $externalId = isset($user->name)? $user->name : NULL;
+    $externalId = isset($user->name)? $user->name : '';// send a blank string for anonymous users (community translation)
     self::checkUserWorkbenchLinkPermissions( $externalId );
 
     $static_id = $document_id . '-' . $phase_id;
@@ -637,7 +639,7 @@ class LingotekApi {
         'phaseId' => $phase_id,
         'externalId' => $externalId
       );
-
+      
       if ($output = $this->request('getWorkbenchLink', $params)) {
         $links[$static_id] = $url = $output->url;
       }
@@ -809,13 +811,11 @@ class LingotekApi {
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
     $response_data = FALSE;
-
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
     if ( !isset( $parameters[ 'externalId' ] ) ) {
       $parameters['externalId'] = variable_get( 'lingotek_login_id', '' );
     }
-
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
 
@@ -841,17 +841,23 @@ class LingotekApi {
 
 
       watchdog( 'API_CALL', '
-      <h1>Method: @method</h1>
-      <br><hr><br>
-      <h1>Response:</h1><br>
+      <h1>API Method: @method</h1>
+      !parameters
+      
+      <h1>Request:</h1>
+      <div>
+      !request
+      </div>
+
+      <h1>Response:</h1>
+      <div>
       !response
-      <br><hr><br>
-      <h1>Parameters:</h1><br>
-      !params
+      <div>
       ', 
       array( 
         '@method' => $method,
-        '!params' => watchdog_format_object($parameters),
+        '!parameters' => watchdog_format_object($parameters),
+        '!request' => watchdog_format_object($request),
         '!response' => watchdog_format_object($response)
       ), WATCHDOG_NOTICE );
 
