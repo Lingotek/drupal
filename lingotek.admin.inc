@@ -256,28 +256,26 @@ function lingotek_admin_form() {
   }
 
 
-  // Vault
-  $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
-  $id = variable_get('lingotek_vault', '');
+  $vaults = $api->listVaults();
+  $current_vault_id = variable_get('lingotek_vault', '');
+  $personal_vault_count = count( $vaults['Personal Vaults'] );
 
-  if ($id == '') { //No vault id set. (Vaults are not community specific, so we don't have to test this like we did the project)  Try to find the Drupal vault
-    $id = array_search($site, $vaults);
-    if ($id === FALSE) { //Setup a default Drupal vault
-      $id = lingotek_add_vault($site);
-      $vaults = (class_exists('LingotekApi')) ? $api->listVaults() : array();
-    }
-    else { //Assign to an existing Drupal project
-      variable_set('lingotek_vault', $id);
+  // If no vault id is set, and we don't have any personal vaults, then create one and add it to our project.
+  if ( ($current_vault_id == '') && ( $personal_vault_count == 0 ) ) {
+    $current_project_id = variable_get('lingotek_project', '');
+    // But only if we have a ProjectID.
+    if ( $current_project_id != '' ) {
+      $current_vault_id = lingotek_add_vault($site);
+      lingotek_add_vault_to_project();
     }
   }
-  lingotek_add_vault_to_project();
 
   $form['defaults']['lingotek_vault'] = array(
     '#type' => 'select',
     '#title' => t('Default Vault'),
     '#options' => $vaults,
     '#description' => t('The default Translation Memory Vault where translations are saved.'),
-    '#default_value' => $id,
+    '#default_value' => $current_vault_id,
   );
 
 
