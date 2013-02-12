@@ -16,7 +16,7 @@ function lingotek_machine_translate_node( $nid, &$context ) {
   $node = node_load( $nid );
 
   // Push this node for translation.
-  if ($existing_document = lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
+  if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
 
     // Update an existing Lingotek Document.
     $api->updateContentDocument($node);

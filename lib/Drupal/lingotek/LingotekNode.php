@@ -141,7 +141,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    *   Lingotek document. FALSE otherwise.
    */
   public function lingotekDocumentId() {
-    return lingotek_lingonode($this->node->nid, 'document_id_' . $this->node->language);
+    return lingotek_lingonode($this->node->nid, 'document_id');
   }
   
   /**

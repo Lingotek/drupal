@@ -19,8 +19,8 @@ $GLOBALS['_lingotek_client'] = new LingotekSession();
 function lingotek_download_document(&$node, $target_language) {
   global $_lingotek_client, $_lingotek_locale;
 
-  $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
-  lingotek_trace('lingotek_download_document', array("document_id_" . $node->language => $document_id, "language" => $target_language));
+  $document_id = lingotek_lingonode($node->nid, 'document_id');
+  lingotek_trace('lingotek_download_document', array('document_id' => $document_id, "language" => $target_language));
 
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = lingotek_lingonode($node->nid, 'use_source');
@@ -171,7 +171,7 @@ function lingotek_add_missing_targets($node) {
   global $_lingotek_locale;
 
   $api = LingotekApi::instance();
-  $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $document_id = lingotek_lingonode($node->nid, 'document_id');
 
   if ($document_id) {
     $workflow_id = lingotek_lingonode($node->nid, 'workflow_id');
@@ -475,7 +475,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
 
   $link = array();
 
-  $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $document_id = lingotek_lingonode($node->nid, 'document_id');
   $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
   if (count($targets) == 0) {
     return '';
@@ -508,7 +508,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
 
     $l = '';
     if ($phase_id != -1) {
-      $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+      $document_id = lingotek_lingonode($node->nid, 'document_id');
       if ($document_id && $workbench_url = $api->getWorkbenchLink($document_id, $phase_id)) {
         if ($label === FALSE) {
           $l = $workbench_url;

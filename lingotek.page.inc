@@ -39,7 +39,7 @@ function lingotek_push_form_submit($form, $form_state) {
   $node = node_load($form_state['values']['node_id']);
 
   $api = LingotekApi::instance();
-  if ($existing_document = lingotek_lingonode($node->nid, 'document_id_' . $node->language)) {
+  if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
     // Update an existing Lingotek Document.
     $api->updateContentDocument($node);
   }
@@ -196,7 +196,7 @@ function lingotek_pm($node) {
       t('Phase Complete'),
     );
 
-    $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
+    $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id'));
     $targets = lingotek_get_document_targets($document->document_id, TRUE);
     $rows = array();
     foreach ($targets as $language => $target) {
@@ -402,7 +402,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
 function lingotek_mark_phases_complete($form, $form_state, $node) {
   $form = array();
 
-  $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $document_id = lingotek_lingonode($node->nid, 'document_id');
   if (class_exists('LingotekDocument') && class_exists('LingotekPhase') && $document_id) {
     $api = LingotekApi::instance();
 
@@ -499,7 +499,7 @@ function page_sync_comment_translations($comment_id) {
   if (!empty($_GET['token']) && drupal_valid_token($_GET['token'])) {
     if (class_exists('LingotekComment') && class_exists('LingotekApi')) {
       $comment = LingotekComment::loadById($comment_id);
-      if ($lingotek_document_id = $comment->getMetadataValue('document_id_' . $comment->language)) {
+      if ($lingotek_document_id = $comment->getMetadataValue('document_id')) {
         if ($document = LingotekApi::instance()->getDocument($lingotek_document_id)) {
           if ($document->percentComplete == 100) {
             if ($comment->updateLocalContent()) {

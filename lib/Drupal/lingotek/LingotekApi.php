@@ -87,7 +87,7 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $node);
 
       if ($result = $this->request('addContentDocument', $parameters)) {
-        lingotek_lingonode($node->nid, 'document_id_' . $node->language, $result->id);
+        lingotek_lingonode($node->nid, 'document_id', $result->id);
       }
       else {
         $success = FALSE;
@@ -114,7 +114,7 @@ class LingotekApi {
     $parameters = $this->getCreateWithTargetsParams($entity);
 
     if ($result = $this->request('addContentDocumentWithTargets', $parameters)) {
-      $entity->setMetadataValue('document_id_' . $entity->language, $result->id);
+      $entity->setMetadataValue('document_id', $result->id);
       
       // Comments are all associated with the configured "default" Lingotek project.
       // Nodes can have their projects selected on a per-node basis, and will need
@@ -753,12 +753,12 @@ class LingotekApi {
     switch (get_class($node)) {
       case 'LingotekComment':
         // Comments have their own way to format the content.
-        $document_id = $node->getMetadataValue('document_id_' . $node->language);
+        $document_id = $node->getMetadataValue('document_id');
         $content = $node->documentLingotekXML();
         break;
       default:
         // Normal content do the regular formating.
-        $document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+        $document_id = lingotek_lingonode($node->nid, 'document_id');
         $content = lingotek_xml_node_body($node);
         break;
     };

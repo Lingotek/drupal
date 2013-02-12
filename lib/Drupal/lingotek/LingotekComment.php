@@ -109,7 +109,7 @@ class LingotekComment implements LingotekTranslatableEntity {
     // Get all Comments in the system associated with the document ID.
     $query = db_select('lingotek_entity_metadata', 'meta')
       ->fields('meta', array('entity_id'))
-      ->condition('entity_key', 'document_id_' . $source_language_code)
+      ->condition('entity_key', 'document_id')
       ->condition('entity_type', 'comment')
       ->condition('value', $lingotek_document_id);
     $results = $query->execute();
@@ -145,7 +145,7 @@ class LingotekComment implements LingotekTranslatableEntity {
   public function contentUpdated() {
 
     $metadata = $this->metadata();
-    if (empty($metadata['document_id_' . $this->comment->language])) {
+    if (empty($metadata['document_id'])) {
       $this->createLingotekDocument();
     }
     else {
@@ -162,7 +162,7 @@ class LingotekComment implements LingotekTranslatableEntity {
       // Only update the local content if the Document is 100% complete
       // according to Lingotek.
 
-      $document_id = $this->getMetadataValue('document_id_' . $this->comment->language);
+      $document_id = $this->getMetadataValue('document_id');
       if ($document_id) {
         $document = $this->api->getDocument($document_id);
         if (!empty($document->percentComplete) && $document->percentComplete == 100) {
@@ -344,12 +344,12 @@ class LingotekComment implements LingotekTranslatableEntity {
     $success = TRUE;
     $metadata = $this->metadata();
 
-    if (!empty($metadata['document_id_' . $this->comment->language])) {
-      $document_id = $metadata['document_id_' . $this->comment->language];
+    if (!empty($metadata['document_id'])) {
+      $document_id = $metadata['document_id'];
       $api = LingotekApi::instance();
       $document = $api->getDocument($document_id);
       foreach ($document->translationTargets as $target) {
-        $document_xml = $api->downloadDocument($metadata['document_id_' . $this->comment->language], $target->language);
+        $document_xml = $api->downloadDocument($metadata['document_id'], $target->language);
 
         $target_language = lingotek_drupal_language($target->language);
         foreach ($document_xml as $drupal_field_name => $content) {
@@ -420,7 +420,7 @@ class LingotekComment implements LingotekTranslatableEntity {
    *   Lingotek document. FALSE otherwise.
    */
   public function lingotekDocumentId() {
-    return $this->getMetadataValue('document_id_' . $this->comment->language);
+    return $this->getMetadataValue('document_id');
   }
 
 

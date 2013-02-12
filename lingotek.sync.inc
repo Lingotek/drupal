@@ -278,7 +278,7 @@ function lingotek_get_node_id_from_document_id( $document_id ) {
 
   $found = FALSE;
   $source_language = lingotek_get_source_language();
-  $key = 'document_id_' . $source_language;
+  $key = 'document_id';
 
   $query = db_select( 'lingotek', 'l' )->fields( 'l' );
   $query->condition( 'lingokey', $key );

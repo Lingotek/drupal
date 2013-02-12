@@ -116,7 +116,7 @@ function lingotek_xml_decode($text) {
  * Run this on nodes you aren't sure if they've been initialized yet for use with Lingotek.
  */
 function lingotek_node_init_default($node) {
-  if (lingotek_lingonode($node->nid, 'document_id_' . $node->language) === FALSE) {
+  if (lingotek_lingonode($node->nid, 'document_id') === FALSE) {
     lingotek_trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
     LingotekApi::instance()->addContentDocument($node);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
@@ -134,10 +134,10 @@ function lingotek_node_init_default($node) {
 function lingotek_node_sync(&$node) {
   // Keep synchronized?
   $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 100);
-  $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id');
   lingotek_trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
   if ($sync_method != "0" && $lingotek_document_id) {
-    $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id_' . $node->language));
+    $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id'));
     // Check for changes in % complete.
     foreach ($progress as $lang => $target) {
       $key = 'percent_complete_' . $lang;
@@ -431,7 +431,7 @@ function lingotek_managed_by_entity_translation($type){
  *   Boolean value.
  */
 function lingotek_node_pushed($node) {
-  $lingonode = lingotek_lingonode($node->nid, 'document_id_' . $node->language);
+  $lingonode = lingotek_lingonode($node->nid, 'document_id');
   $pushed_to_lingotek = $lingonode !== FALSE;//!empty($lingonode);
   return $pushed_to_lingotek;
 }
