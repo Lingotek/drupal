@@ -258,10 +258,11 @@ function lingotek_admin_form() {
 
   $vaults = $api->listVaults();
   $current_vault_id = variable_get('lingotek_vault', '');
-  $personal_vault_count = count( $vaults['Personal Vaults'] );
+  $personal_vault_count = ( isset( $vaults['Personal Vaults'] ) ) ? count( $vaults['Personal Vaults'] ) : 0 ;
+  $community_vault_count = ( isset( $vaults['Community Vaults'] ) ) ? count( $vaults['Community Vaults'] ) : 0 ;
 
   // If no vault id is set, and we don't have any personal vaults, then create one and add it to our project.
-  if ( ($current_vault_id == '') && ( $personal_vault_count == 0 ) ) {
+  if ( ( $current_vault_id == '' ) && ( $personal_vault_count == 0 ) && ( $community_vault_count == 0 ) ) {
     $current_project_id = variable_get('lingotek_project', '');
     // But only if we have a ProjectID.
     if ( $current_project_id != '' ) {
