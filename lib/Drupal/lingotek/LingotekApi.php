@@ -531,7 +531,8 @@ class LingotekApi {
    */
   public function getProfileId( $externalId = NULL ) {
     $result = FALSE;
-    if ( $profile = $this->getProfileAttributes( $externalId ) ) {
+    $profile = $this->getProfileAttributes( $externalId );
+    if ( $profile ) {
       $result = $profile->id;
     }
     return $result;
