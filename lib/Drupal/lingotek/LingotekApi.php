@@ -797,7 +797,15 @@ class LingotekApi {
     $valid_connection = &drupal_static(__FUNCTION__);
 
     if (!isset($valid_connection)) {
-      $valid_connection = ($this->request('listProjects')) ? TRUE : FALSE;
+      // Only test the connection if the oauth keys have been setup.
+      $consumer_key = variable_get('lingotek_oauth_consumer_id', '');
+      $consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
+      if ( !empty( $consumer_key ) && !empty( $consumer_secret ) ) {
+        $valid_connection = ($this->request('listProjects')) ? TRUE : FALSE;
+      }
+      else {
+        $valid_connection = FALSE;
+      }
     }
 
     return $valid_connection;
