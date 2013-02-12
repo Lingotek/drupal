@@ -850,15 +850,26 @@ function lingotek_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   return $form;
 }
 
+/*
+ * Saves data for lingotek_form_field_ui_field_edit_form_alter()
+ */
 function lingotek_update_field($form, $form_state) {
-  $field = $form['#field']['field_name'];
-  db_update('field_config')->fields(array('translatable' => $form['field']['lingotek_translatable']['#value']))->condition('field_name', $field)->execute();
+  $field_name = $form['#field']['field_name']; // ie:  body
+  $field = field_info_field($field_name);
+  $value = (int) $form['field']['lingotek_translatable']['#value'];
+  if ( $value == 1 ) {
+    // This will only ever set translatable to true.  On purpose.  So that we can work alongside other translation modules.
+    // If we turn it off, we can mess up other modules, and there is no harm in leaving it on.
+    $field['translatable'] = TRUE;
+    field_update_field($field);
+    // This is needed for versions of Drupal core 7.10 and lower. See http://drupal.org/node/1380660 for details.
+    drupal_static_reset('field_available_languages');
+  }
 }
 
 /*
  * hook_help
  */
-
 function lingotek_help($path, $arg) {
   switch ($path) {
     case 'admin/help#lingotek':
