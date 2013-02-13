@@ -863,6 +863,15 @@ function lingotek_update_field($form, $form_state) {
     field_update_field($field);
     // This is needed for versions of Drupal core 7.10 and lower. See http://drupal.org/node/1380660 for details.
     drupal_static_reset('field_available_languages');
+
+    /*
+    // Working here to integrate the field cleanup process when the user selects the field to be managed by Lingotek
+    // Create a Drupal Field Cleanup Batch
+    debug( 'Maybe we should start a cleanup batch here.' );
+    debug( $field_name );
+    debug( $field );
+    */
+
   }
 }
 
@@ -1010,6 +1019,29 @@ function lingotek_content_push_form_submit($form, $form_state) {
 }
 
 /**
+ * Implements hook_comment_presave();
+ *
+ * IMPORTANT:
+ *   This is a hack.  It corrects a bug with comments/title.
+ *   The bug: 
+ *     If you've done the title replace, then the subject_field always has its data in $comment->subject_field[ <SITE DEFAULT LANGUAGE> ],
+ *     instead of the language field matching the language the comment was submitted in.  So this is just a quick way to correct that behavior.
+ */
+function lingotek_comment_presave($comment) {
+  if ( empty( $comment->subject ) || $comment->subject == '(No subject)' ) {
+    if ( isset( $comment->subject_field ) ) {
+      // The array_shift actually changes the subject_field data, so only do it if you have one item.  (as a backup check that this only runs where it wont mess up translations)
+      if ( count( $comment->subject_field ) == 1 ) {
+        $subject_data = array_shift( $comment->subject_field );
+        if( !empty( $subject_data[0]['value'] ) ) {
+          $comment->subject = t( $subject_data[0]['value'] );
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_comment_insert().
  */
 function lingotek_comment_insert($comment) {
@@ -1021,7 +1053,6 @@ function lingotek_comment_insert($comment) {
  * Implements hook_comment_update().
  */
 function lingotek_comment_update($comment) {
-
   $target_types = variable_get('lingotek_translate_comments_node_types', array());
   $comment_node = node_load($comment->nid);
   $valid_translation_target = (!empty($comment_node->type) && isset($target_types[$comment_node->type]));
