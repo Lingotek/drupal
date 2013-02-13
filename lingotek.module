@@ -1019,29 +1019,6 @@ function lingotek_content_push_form_submit($form, $form_state) {
 }
 
 /**
- * Implements hook_comment_presave();
- *
- * IMPORTANT:
- *   This is a hack.  It corrects a bug with comments/title.
- *   The bug: 
- *     If you've done the title replace, then the subject_field always has its data in $comment->subject_field[ <SITE DEFAULT LANGUAGE> ],
- *     instead of the language field matching the language the comment was submitted in.  So this is just a quick way to correct that behavior.
- */
-function lingotek_comment_presave($comment) {
-  if ( empty( $comment->subject ) || $comment->subject == '(No subject)' ) {
-    if ( isset( $comment->subject_field ) ) {
-      // The array_shift actually changes the subject_field data, so only do it if you have one item.  (as a backup check that this only runs where it wont mess up translations)
-      if ( count( $comment->subject_field ) == 1 ) {
-        $subject_data = array_shift( $comment->subject_field );
-        if( !empty( $subject_data[0]['value'] ) ) {
-          $comment->subject = t( $subject_data[0]['value'] );
-        }
-      }
-    }
-  }
-}
-
-/**
  * Implements hook_comment_insert().
  */
 function lingotek_comment_insert($comment) {
@@ -1096,15 +1073,17 @@ function lingotek_entity_info_alter(&$entity_info) {
  */
 function lingotek_form_comment_form_alter(&$form, $form_state) {
   if (variable_get('lingotek_translate_comments', FALSE)) {
+
     // The locale module is going to set the comment's language to the user's browsing language
     // but the form_attach_fields call in comment_form() will have already run
     // setting all field language contents to the site's default.
     // Copy the fields to match the language of the comment.
-    //$form['language']['#value'] = language_default('language');
 
-    $comment_fields = array_keys(field_info_instances('comment', 'comment_node_page'));
-    $default_language = language_default('language');
+    $default_language = language_default('language'); // 'es', 'de', 'en', etc.
     $comment_language = $form['language']['#value'];
+    $comment_bundle = $form['#bundle'];
+    $comment_fields = array_keys(field_info_instances('comment', $comment_bundle));
+
     if ($comment_language != $default_language) {
       foreach ($comment_fields as $comment_field) {
         if (!empty($form[$comment_field][$default_language])) {
@@ -1113,6 +1092,7 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
         }
       }
     }
+
   }
 }
 
