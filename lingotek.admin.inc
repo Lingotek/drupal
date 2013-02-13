@@ -108,7 +108,6 @@ function lingotek_admin_form() {
   $output .= '<div><strong>Plan:</strong> ' . $account->getPlanText() . '</div>';
   $output .= '<div><strong>Enterprise:</strong> ' . $account->getEnterpriseStatusText() . '</div>';
   $output .= '</p>';
-  $output .= '<p><strong>Max Languages:</strong> ' . $account->getAllowedLanguages() . '</p>';
   $output .= '<p><a href="' .url( 'admin/settings/lingotek/get-account-status', array( 'query' => array( 'token' => md5(time()) ) ) ) .'">Update Account Status</a></p>';
   $output .= '</div>';
 

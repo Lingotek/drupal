@@ -33,10 +33,6 @@ class LingotekAccount {
   private $status;
   private $plan;
   private $enterprise;
-  private $allowed_languages;
-
-
-
 
   /**
    * Constructor.
@@ -49,17 +45,14 @@ class LingotekAccount {
     $this->status = self::LINGOTEK_ACCOUNT_STATUS_UNKNOWN;
     $this->plan   = self::LINGOTEK_ACCOUNT_PLAN_UNKNOWN;
     $this->enterprise = FALSE;
-    $this->allowed_languages = 0;
 
     // Load the Current Account Status from Cached local Drupal information.
     $current_status = variable_get( 'lingotek_account_status', NULL );
     $current_plan = variable_get( 'lingotek_account_plan', NULL );
     $current_enterprise = variable_get( 'lingotek_account_enterprise', NULL ); // Stored as 0/1
-    $current_languages = variable_get( 'lingotek_account_languages', NULL );
-    if ( isset( $current_status ) && isset( $current_plan ) && isset( $current_enterprise ) && isset( $current_languages ) ) {
+    if ( isset( $current_status ) && isset( $current_plan ) && isset( $current_enterprise ) ) {
       $this->setStatus( $current_status );
       $this->setPlan( $current_plan );
-      $this->setAllowedLanguages( $current_languages );
 
       if ( $current_enterprise == 1 ) {
         $this->setEnterpriseStatus( TRUE );
@@ -137,18 +130,6 @@ class LingotekAccount {
   }
 
 
-
-  public function setAllowedLanguages( $value ) {
-    $this->allowed_languages = $value;
-  }
-
-  public function getAllowedLanguages() {
-    return $this->allowed_languages;
-  }
-
-
-
-
   /**
    * Get Account Status
    * NOTE:  You shouldnt need to call this directly.  Its called in the constructor.
@@ -204,10 +185,6 @@ class LingotekAccount {
 
             $this->setPlan( $json->plan->type );
             variable_set( 'lingotek_account_plan', $json->plan->type );
-
-            $this->setAllowedLanguages( $json->plan->languages_allowed );
-            variable_set( 'lingotek_account_languages', $json->plan->languages_allowed );
-
 
             if ( $json->plan->type == self::LINGOTEK_ACCOUNT_ENTERPRISE ) {
               $this->setEnterpriseStatus( TRUE );
