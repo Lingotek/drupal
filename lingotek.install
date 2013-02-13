@@ -28,7 +28,6 @@ function lingotek_requirements($phase) {
  * Implements hook_install().
  */
 function lingotek_install() {
-  db_update('system')->fields(array('weight' => 3))->condition('name', 'lingotek')->execute();
   variable_set('lingotek_advanced_parsing', TRUE);
   lingotek_install_default_advanced_xml();
 }
@@ -45,6 +44,20 @@ function lingotek_uninstall() {
   foreach ($delete_variables as $variable) {
   variable_del($variable);
   }
+}
+
+/**
+ * Implements hook_enable().
+ */
+function lingotek_enable() {
+  lingotek_set_priority();
+}
+
+/*
+ * Sets the priority of the Lingotek module
+ */
+function lingotek_set_priority() {
+  db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
 }
 
 /*
@@ -240,10 +253,7 @@ function lingotek_update_7204(&$sandbox) {
  * Ensure that the Lingotek module has a weight higher than entity_translation.
  */
 function lingotek_update_7205(&$sandbox) {
-  db_update('system')
-    ->fields(array('weight' => 12))
-    ->condition('name', 'lingotek')
-    ->execute();
+  lingotek_set_priority();
 }
 
 /**
