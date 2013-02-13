@@ -388,13 +388,12 @@ function lingotek_module_implements_alter(&$implementations, $hook) {
 function lingotek_entity_translation_node_tab_access() {
   $args = func_get_args();
   $node = array_shift($args);
-  //dvm($node->language);
   if ($node->language !== LANGUAGE_NONE) {
     if (lingotek_supported_type($node->type)){
       // If the node has been pushed then return FALSE (don't show the "Translate" tab)
       // Otherwise, return TRUE (show the "Translate" tab)
       $user_access = (drupal_multilingual() && (user_access('translate any entity') || user_access("translate node entities")));
-      $translate_tab_access = !lingotek_node_pushed($node) && $user_access;
+      $translate_tab_access = lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node) && $user_access;
       return $translate_tab_access;
     }
     elseif (entity_translation_node_supported_type($node->type)) {
