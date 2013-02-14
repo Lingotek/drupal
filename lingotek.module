@@ -686,7 +686,7 @@ function lingotek_node_view($node, $view_mode) {
     // TODO: Is sync on view ever desired behavior?
     lingotek_node_sync($node);
 
-    if (user_is_anonymous() && $language->language != $node->language) {
+    if ( $language->language != $node->language) {
       $link = lingotek_get_workbench_url($node, $language->language, t('Help make it better.'));
       if ($link != '') {
         $message = t('The translation of @title is still being worked on.', array('@title' => '"' . $node->title . '"')) . " ";
