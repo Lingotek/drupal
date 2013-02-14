@@ -1074,6 +1074,7 @@ function lingotek_entity_info_alter(&$entity_info) {
 function lingotek_form_comment_form_alter(&$form, $form_state) {
   if (variable_get('lingotek_translate_comments', FALSE)) {
 
+    // Caution.  There be some wackey voodoo in here.
     // The locale module is going to set the comment's language to the user's browsing language
     // but the form_attach_fields call in comment_form() will have already run
     // setting all field language contents to the site's default.
@@ -1085,13 +1086,47 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
     $comment_fields = array_keys(field_info_instances('comment', $comment_bundle));
 
     if ($comment_language != $default_language) {
-      foreach ($comment_fields as $comment_field) {
-        if (!empty($form[$comment_field][$default_language])) {
-          $form[$comment_field][$comment_language] = $form[$comment_field][$default_language];
-          unset($form[$comment_field][$default_language]);
+      // Loop through each comment field
+      foreach ($comment_fields as $comment_field) { // IE:  'comment_body', 'subject_field'
+
+        if ( isset( $form['cid']['#value'] ) ) { // Comment Edit
+
+          $form['lingotek_language_notes'] = array( '#weight' => -15, '#markup' => '<div style="padding: 5px 0px;"><strong>Note:</strong>  When editing a comment you are only allowed to edit the original.</div>' );
+
+          // Make sure the comment form is setup so that the form uses the source comment language.
+          if (!empty($form[$comment_field][$default_language])) {
+            // You have to do this (even for an empty form), or your comment form disappears, because you have no language content to edit.  So its important before the unset.
+            $form[$comment_field][$comment_language] = $form[$comment_field][$default_language];
+            unset($form[$comment_field][$default_language]);
+          }
+
+          // Now, set the field #default_value as our source language comment
+          $original_field_text = $form[$comment_field][$comment_language][0]['#entity']->{$comment_field}[$comment_language][0]['value'];
+          // The default field value could be set in 1 of 2 places.  So check both.
+          if ( isset( $form[$comment_field][$comment_language][0]['value'] ) ) {
+            $form[$comment_field][$comment_language][0]['value']['#default_value'] = $original_field_text;
+          }
+          else {
+            $form[$comment_field][$comment_language][0]['#default_value'] = $original_field_text;
+          }
+
+        // These may not be needed.   They just set the langauge to match the comment language everywhere they can.
+        $form[$comment_field]['#language'] = $comment_language;
+        $form[$comment_field][$comment_language]['#language'] = $comment_language;
+        $form[$comment_field][$comment_language][0]['#language'] = $comment_language;
+
         }
-      }
-    }
+        else { // Comment Add
+          // This changes the form, from being submitted in the default language, to being submitted in the language of the page you are viewing.
+          if (!empty($form[$comment_field][$default_language])) {
+            // You have to do this (even for an empty form), or your comment form disappears, because you have no language content to edit.  So its important before the unset.
+            $form[$comment_field][$comment_language] = $form[$comment_field][$default_language];
+            unset($form[$comment_field][$default_language]);
+          }
+        }
+
+      } // END:  foreach $comment_fields
+    } // END:  if $comment_language != $default_language
 
   }
 }
