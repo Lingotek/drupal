@@ -409,7 +409,7 @@ function lingotek_access($node, $permission) {
  *   Boolean value.
  */
 function lingotek_supported_type($type) {
-  $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, 0) == LINGOTEK_ENABLED;
+  $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) == LINGOTEK_ENABLED;
   $entity_translation_managed = lingotek_managed_by_entity_translation($type);
   return $lingotek_supported_explicitly || $entity_translation_managed;//we also support entity_translation managed content
 }
@@ -846,4 +846,25 @@ function lingotek_drupal_to_lingotek_language_code( $drupal_language_code = NULL
   }
 
   return $result;
+}
+
+
+/*
+ * Get the Lingotek Content Types - returns the content types OR ids only
+ *
+ * @param $ids_only
+ *  Boolean - return ids only rather than associative array of content type definitions
+ * @return
+ *  Mixed - associative array (or an array of keys when ids_only is TRUE)
+ */
+function lingotek_get_content_types($ids_only = FALSE) {
+  $raw_types = node_type_get_types();
+  $types = array();
+  foreach ($raw_types as $raw_type_id => $raw_type) {
+    $lingotek_supported_explicitly = variable_get('language_content_type_' . $raw_type_id, NULL) == LINGOTEK_ENABLED;
+    if ($lingotek_supported_explicitly) {
+      $types[$raw_type_id] = $raw_type;
+    }
+  }
+  return $ids_only ? array_keys($types) : $types;
 }

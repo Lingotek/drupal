@@ -816,10 +816,13 @@ function lingotek_setup_node_translation_settings_form_submit( $form, &$form_sta
 
   } // END: foreach form value
 
+  // Identify pre-existing content (based on these new content-type settings)
+  lingotek_batch_identify_content();
+  
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set( 'lingotek_translate_fields', $translate );
   drupal_set_message( t( 'Your content types and fields selections have been saved.' ) );
-
+  
   $form_state['redirect'] = 'admin/config/lingotek/setup-complete';
   //drupal_goto( 'admin/config/lingotek/setup-complete' );
 
@@ -850,6 +853,7 @@ function lingotek_setup_complete_form( $form, $form_state ) {
 function lingotek_setup_complete_form_submit( $form, &$form_state ) {
 
   lingotek_field_language_data_cleanup_batch_create();
+  
   $form_state['redirect'] = 'admin/settings/lingotek';
 
 }
