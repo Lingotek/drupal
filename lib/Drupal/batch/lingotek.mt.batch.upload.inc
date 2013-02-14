@@ -23,12 +23,11 @@ function lingotek_machine_translate_node( $nid, &$context ) {
 
   }
   else {
+    
     // Create a new Lingotek Document.
-    // Add project and vault parameters to the node object.
-    $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
-    $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'valut_id');
     $api->addContentDocument($node);
     lingotek_add_missing_targets($node); 
+    
   }
 
   // Set this Node and its targets to PENDING status. (meaning the content has been uploaded, but not downloaded)

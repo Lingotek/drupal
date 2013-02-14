@@ -17,7 +17,7 @@ include_once('lib/Drupal/batch/lingotek.batch.inc');
  */
 function lingotek_menu() {
   $items = array();
-
+  
   // Enterprise User Interface
   if (TRUE === LingotekAccount::instance()->isEnterprise()) {
 
@@ -195,6 +195,15 @@ function lingotek_menu() {
     'file' => 'lib/Drupal/batch/lingotek.mt.batch.download.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_bulk_mt_download_batch_complete'),
+    'access arguments' => array('administration')
+  );
+  
+  $items['admin/settings/lingotek/identify-content'] = array(
+    'title' => 'Test',
+    'type' => MENU_CALLBACK,
+    'weight' => 30,
+    'file' => 'lib/Drupal/batch/lingotek.batch.inc',
+    'page callback' => 'lingotek_batch_identify_content',
     'access arguments' => array('administration')
   );
 
