@@ -187,8 +187,8 @@ function lingotek_notifications() {
   }
 
   // Adding a delay in the update.  Without the delay all the different language updates hit at once, causing node lock issues as multiple languages try to update the same node at once.
-  $min = 5;
-  $max = 30;
+  $min = 0;
+  $max = 3;
   $sleep = rand ( $min, $max );
   sleep( $sleep );
 
@@ -231,9 +231,11 @@ function lingotek_notifications() {
     }
   }
   else {
-    $node = LingotekNode::loadByLingotekDocumentId($document_id); 
+    $node = node_load($nid);
     $source_language = $node->language;
-    $auto_download = $node->sync_method;
+    $node_setting = lingotek_lingonode($nid, 'sync_method');
+    $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync',TRUE);
+
     if ($auto_download) { // download only when automatic download is enabled
       lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
     }
