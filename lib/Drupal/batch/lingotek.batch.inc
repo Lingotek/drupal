@@ -151,6 +151,53 @@ function lingotek_get_sync_download_batch_elements( ) {
 
 }
 
+/**
+ * Batch Create: Lingotek Identify Content - create informative lingonode data (in lingotek table) for pre-existing content 
+ */
+function lingotek_batch_identify_content($front=false) {
+
+  $result = db_query('SELECT DISTINCT nid FROM lingotek');
+  $existing_nids = $result->fetchCol();
+  $operations = array();
+
+  foreach (lingotek_get_content_types(TRUE) as $type) {
+
+    $nodes = node_load_multiple(array(), array('type' => $type));
+
+    foreach ($nodes as $node) {
+      if (!in_array($node->nid, $existing_nids)) {
+        // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
+        $operations[] = array('lingotek_set_node_sync_status', array($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED));
+      };
+    }
+  }
+
+  $batch = array(
+    'title' => t('Identifying Translatable Content'),
+    'operations' => $operations,
+    //'finished' => 'lingotek_batch_identify_content_finished'
+  );
+
+  batch_set($batch);
+  if($front){
+    batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+  }
+}
+
+/**
+ * Batch Finished: Identify Content Complete.
+ */
+function lingotek_batch_identify_content_finished( $success, $results, $operations ) {
+
+} // END:  lingotek_batch_identify_content_finished()
+
+
+
+
+
+
+
+
 
 
 
@@ -196,26 +243,25 @@ function lingotek_bulk_mt_upload_batch_create( ) {
 /**
  * Batch Create - Download:  Create a Bulk Machine Translate DOWNLOAD Batch.
  */
-function lingotek_bulk_mt_download_batch_create( $language_code ) {
+function lingotek_bulk_mt_download_batch_create($language_code) {
 
   $operations = array();
 
-  if ( $language_code ) {
+  if ($language_code) {
 
     $dashboard_language_code = $language_code;
-    $drupal_language_code = lingotek_dashboard_to_drupal_language_code( $dashboard_language_code );
-    $lingotek_language_code = lingotek_drupal_to_lingotek_language_code( $drupal_language_code );
+    $drupal_language_code = lingotek_dashboard_to_drupal_language_code($dashboard_language_code);
+    $lingotek_language_code = lingotek_drupal_to_lingotek_language_code($drupal_language_code);
     // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
-
     // Grab nodes that are currently marked 'PENDING'
-    $query = db_select( 'lingotek', 'l' )->fields( 'l' );
-    $query->condition( 'lingokey', 'node_sync_status' );
-    $query->condition( 'lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING );
-  
+    $query = db_select('lingotek', 'l')->fields('l');
+    $query->condition('lingokey', 'node_sync_status');
+    $query->condition('lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING);
+
     $result = $query->execute();
 
     while ($record = $result->fetchAssoc()) {
-      $operations[] = array( 'lingotek_download_node_machine_translation', array( $record['nid'], $drupal_language_code ) );
+      $operations[] = array('lingotek_download_node_machine_translation', array($record['nid'], $drupal_language_code));
     }
 
     $batch = array(
@@ -227,19 +273,16 @@ function lingotek_bulk_mt_download_batch_create( $language_code ) {
 
     batch_set($batch);
     batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-
   } // END:  if language_code
-
 }
 
 
 /**
  * Batch Create:  Bulk Machine Translate Upload.
  */
-function lingotek_dashboard_mt_upload( ) {
+function lingotek_dashboard_mt_upload() {
 
-  lingotek_bulk_mt_upload_batch_create( );
-
+  lingotek_bulk_mt_upload_batch_create();
 }
 
 
@@ -248,10 +291,8 @@ function lingotek_dashboard_mt_upload( ) {
  */
 function lingotek_dashboard_mt_download() {
 
-  if ( isset( $_GET['code'] ) ) {
+  if (isset($_GET['code'])) {
 
-    lingotek_bulk_mt_download_batch_create( $_GET['code'] );
-
+    lingotek_bulk_mt_download_batch_create($_GET['code']);
   } // If Language Code
-
 }
