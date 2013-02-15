@@ -7,11 +7,11 @@
 include_once(DRUPAL_ROOT . '/includes/iso.inc');
 
 /*
- * Language code conversion: drupal => lingotek
+ * Language code conversion: drupal => lingotek  (this mapping should be 1-to-1)
  */
 static $_lingotek_locale = array
 (
-'aa' => 'aa_DJ',
+ 'aa' => 'aa_DJ',
  'ab' => 'ab_GE',
  'af' => 'af_ZA',
  'ak' => 'ak_GH',
@@ -148,7 +148,7 @@ static $_lingotek_locale = array
  'pau' => 'pau_PW',
  'pl' => 'pl_PL',
  'ps' => 'ps_AF',
- 'pt' => 'pt_PT',
+ //'pt' => 'pt_PT',
  'pt-pt' => 'pt_PT',
  'pt-br' => 'pt_BR',
  'qu' => 'qu_BO',
@@ -182,7 +182,7 @@ static $_lingotek_locale = array
  'tk' => 'tk_TM',
  'fil' => 'tl_PH',
  //'tl' => 'tl_PH', // philipines
-'tn' => 'tn_BW',
+ 'tn' => 'tn_BW',
  'to' => 'to_TO',
  'tpi' => 'tpi_PG',
  'tr' => 'tr_TR',
@@ -204,13 +204,31 @@ static $_lingotek_locale = array
  'yap' => 'yap_FM',
  'yi' => 'yi_IL',
  'yo' => 'yo_NG',
- 'zh' => 'zh_TW',
+ //'zh' => 'zh_TW',
  'zh-hans' => 'zh_CN',
  'zh-hant' => 'zh_TW',
  'zu' => 'zu_ZA',
 );
 
 $GLOBALS['_lingotek_locale'] = $_lingotek_locale;
+
+
+function lingotek_test_locale_duplicates($locales) {
+  $duplicatesExist = count($locales) !== count(array_flip($locales));
+  
+  if ($duplicatesExist) {
+    $dups = array();
+    foreach ($locales as $k => $v) {
+      if (key_exists($v, $dups)) {
+        echo "duplicate :: ". $v;
+      }
+      $dups[$v] = $k;
+    }
+  }
+  
+  return $duplicatesExist;
+}
+//lingotek_test_locale_duplicates($_lingotek_locale);
 
 /*
  * Language code conversion: lingotek => drupal
