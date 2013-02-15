@@ -863,7 +863,7 @@ function lingotek_setup_complete_form_submit( $form, &$form_state ) {
  */
 function lingotek_setup_node_updates_form( $form, $form_state ) {
 
-  $source_language = variable_get( 'lingotek_source_language', '' );
+  $source_language = lingotek_get_source_language();
 
   $form['lingotek_header'] = array( '#markup' => '<h1>Node Updates</h1>' );
   //$form['lingotek_instructions'] = array( '#markup' => '<div>The Lingotek module has be</div>' );

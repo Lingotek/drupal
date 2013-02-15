@@ -73,7 +73,7 @@ class LingotekApi {
     $project_id = empty($project_id) ? lingotek_lingonode($node->nid, 'project_id') : $project_id;
     $project_id = empty($project_id) ? variable_get('lingotek_project', NULL) : $project_id;
 
-    $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[variable_get( 'lingotek_source_language' )];
+    $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
     if ($project_id) {
       $parameters = array(

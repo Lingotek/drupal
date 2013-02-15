@@ -512,10 +512,16 @@ function lingotek_current_phase($phases) {
 /**
  * Gets the Lingotek Source Language ( Drupal variable: lingotek_source_language).
  * Returns a language code (ie:  en / es / de)
+ * Uses the Drupal default language as a fallback.
  */
 function lingotek_get_source_language() {
 
-  $source_language = variable_get( 'lingotek_source_language' );
+  $source_language = variable_get( 'lingotek_source_language', NULL );
+  if ( empty( $source_language ) ) {
+    $drupal_default_language = language_default();
+    $source_language = $drupal_default_language->language;
+  }
+
   return $source_language;
 
 } // END:  lingotek_get_source_language()
