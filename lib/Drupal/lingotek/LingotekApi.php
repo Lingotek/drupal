@@ -926,7 +926,7 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function createCommunity( $tag = null, $callback_url = null ) {
+  public function createCommunity( $tag = NULL, $callback_url = NULL, $community_name = NULL ) {
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
@@ -937,12 +937,14 @@ class LingotekApi {
     $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
 
     $parameters = array();
-    //$parameters = array( 'communityDisplayName' => $name );
     if ( isset( $tag ) ) {
       $parameters[ 'distribution' ] = $tag;
     }
     if ( isset( $callback_url ) ) {
       $parameters[ 'callbackUrl' ] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
+    }
+    if ( isset( $community_name ) ) {
+      $parameters[ 'communityDisplayName' ] = $community_name;
     }
 
     $timer_name = $method . '-' . microtime(TRUE);

@@ -874,3 +874,16 @@ function lingotek_get_content_types($ids_only = FALSE) {
   }
   return $ids_only ? array_keys($types) : $types;
 }
+
+/**
+ * Returns the site name, or base url if that isn't set.
+**/
+function lingotek_get_site_name() {
+  $site_name = variable_get( 'site_name', NULL );
+  if ( empty( $site_name ) ) {
+    global $base_root;
+    $site_url = parse_url( $base_root );
+    $site_name = $site_url['host'];
+  }
+  return $site_name;
+}

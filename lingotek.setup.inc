@@ -138,8 +138,9 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
     // Provision a new Community & Save the Credentials
     $tag = lingotek_identify_tag();
     $callback_url = lingotek_get_notifications_url();
+    $site_name = lingotek_get_site_name();
     $api = LingotekApi::instance();
-    $community = $api->createCommunity( $tag, $callback_url );
+    $community = $api->createCommunity( $tag, $callback_url, $site_name );
 
     if ( $community['code'] == 200 ) {
       $community = json_decode( $community['body'] );
