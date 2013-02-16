@@ -615,9 +615,6 @@ class LingotekApi {
     }
   }
 
-
-
-
   /**
    * Gets a workbench URL for the specified document ID and phase.
    *
@@ -907,7 +904,13 @@ class LingotekApi {
       $message_params, WATCHDOG_DEBUG);
     }
 
-    if ($method == 'downloadDocument' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
+
+    /*
+      Exceptions:
+      downloadDocument - Returns misc data (no $response->results), and should always be sent back.
+      assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
+    */
+    if ($method == 'downloadDocument' || $method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
       $response_data = $response;
     }
     else {
