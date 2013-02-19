@@ -83,14 +83,23 @@ function lingotek_sync_batch_create( ) {
   // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
   $operations = array_merge( $download_commands, $upload_commands );
 
-  $batch = array(
-    'title' => t('Syncing Content Translations with Lingotek'),
-    'operations' => $operations,
-    'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.sync.inc',
-  );
+  $redirect = 'admin/settings/lingotek'; // Where to send the user after the batch has processed.
 
-  batch_set($batch);
-  batch_process( 'admin/settings/lingotek' ); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+  if ( count( $operations ) > 0 ) {
+
+    $batch = array(
+      'title' => t('Syncing Content Translations with Lingotek'),
+      'operations' => $operations,
+      'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.mt.batch.sync.inc',
+    );
+
+    batch_set($batch);
+    batch_process($redirect); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+
+  }
+  else {
+    drupal_goto($redirect);
+  }
 
 }
 
