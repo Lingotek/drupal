@@ -262,7 +262,7 @@ function lingotek_language_name($langcode) {
   }
   else {
     $languages = _locale_get_predefined_list();
-    if (array_key_exists($langcode, $languages)) {
+    if (array_key_exists($langcode, $languages) && array_key_exists(0,$languages[$langcode])) {
       return $languages[$langcode][0];
     }
     else {
@@ -283,7 +283,7 @@ function lingotek_language_native($langcode) {
   }
   else {
     $languages = _locale_get_predefined_list();
-    if (array_key_exists($langcode, $languages)) {
+    if (array_key_exists($langcode, $languages) && array_key_exists(1,$languages[$langcode])) {
       return $languages[$langcode][1];
     }
     else {
