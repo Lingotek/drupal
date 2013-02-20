@@ -54,6 +54,19 @@ function lingotek_enable() {
   lingotek_set_priority();
 }
 
+/**
+ * Implements hook_disable().
+ */
+function lingotek_disable() {
+  $delete_variables = array(
+    'lingotek_setup_complete'
+  );
+
+  foreach ($delete_variables as $variable) {
+    variable_del($variable);
+  }
+}
+
 /*
  * Sets the priority of the Lingotek module
  */
