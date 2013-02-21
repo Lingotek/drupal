@@ -195,7 +195,7 @@ function lingotek_add_missing_targets($node) {
       $managed_languages = language_list();
     }
     else { // Dashboard, works off the seperate list
-      $managed_languages = lingotek_get_active_languages(TRUE);//lingotek_get_target_language_list();
+      $managed_languages = lingotek_get_target_languages(TRUE);
     }
 
     foreach ($managed_languages as $target_language) {
