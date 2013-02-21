@@ -867,7 +867,7 @@ class LingotekApi {
         '@method' => $method,
         '!parameters' => watchdog_format_object($parameters),
         '!request' => watchdog_format_object($request),
-        '!response' => watchdog_format_object($response)
+        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : watchdog_format_object($response)
       ), WATCHDOG_NOTICE );
 
 
