@@ -368,7 +368,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
       }
       else {
         $error = TRUE;
-        watchdog('lingotek', 'Error updating node for advanced content parsing. Lingotek updateContentDocument call failed.', NULL, WATCHDOG_ERROR);
+        watchdog('lingotek', 'Error updating node for advanced content parsing. Lingotek updateContentDocument call failed.', array(), WATCHDOG_ERROR);
       }
     }
     else {
@@ -378,7 +378,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
   }
   else {
     $error = TRUE;
-    watchdog('lingotek', 'No target node ID in parsing upgrade form data.', NULL, WATCHDOG_ERROR);
+    watchdog('lingotek', 'No target node ID in parsing upgrade form data.', array(), WATCHDOG_ERROR);
   }
 
   if ($error) {
@@ -455,7 +455,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
       );
     }
     else {
-      watchdog('lingotek', 'Unable to build mark as complete form: could not get progress data from API.', NULL, WATCHDOG_ERROR);
+      watchdog('lingotek', 'Unable to build mark as complete form: could not get progress data from API.', array(), WATCHDOG_ERROR);
     }
   }
 

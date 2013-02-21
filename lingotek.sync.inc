@@ -227,7 +227,7 @@ function lingotek_notifications() {
     }
     else {
       watchdog('lingotek', 'LingotkComment class not found.
-          Please clear the Drupal cache to refresh the autoload registry', NULL, WATCHDOG_ERROR);
+          Please clear the Drupal cache to refresh the autoload registry', array(), WATCHDOG_ERROR);
     }
   }
   else {
