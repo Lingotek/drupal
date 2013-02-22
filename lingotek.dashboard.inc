@@ -99,14 +99,13 @@ function lingotek_get_dashboard_code() {
       $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $language['code']);
       $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language['code']);
 
-      // Format:  [{"code":"fr","active":true,"docs":100,"pending":20,"current":80},
+      // Format:  [{"code":"fr_FR","active":true,"docs":100,"edited":10,"pending":20,"current":80},
       $totals[] = array(
         'code' => lingotek_drupal_to_dashboard_language_code($language['code']),
         'active' => TRUE,
         'docs' => 0,
-        //'edited' => $edited,
-        //'pending' => $pending,
-        'pending' => $edited + $pending,
+        'edited' => $edited,
+        'pending' => $pending,
         'current' => $current
       );
     }

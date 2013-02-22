@@ -103,8 +103,8 @@ function lingotek_admin_form() {
     '#title' => t("Account Status") .' - '. l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array('Status:', $account->getStatusText()),
-        array('OAuth Key:', $account->getPlanText()),
-        array('OAuth Secret:', $account->getEnterpriseStatusText())
+        array('Plan:', $account->getPlanText()),
+        array('Enterprise:', $account->getEnterpriseStatusText())
         )))
   );
   
@@ -534,8 +534,6 @@ function lingotek_get_account_status( ) {
  * Clean out the Drupal Cache so menus will rebuild.
  */
 function lingotek_flush_cache() {
-
-  drupal_flush_all_caches();
+  menu_rebuild();
   drupal_goto( 'admin/settings/lingotek' );
-
 }
