@@ -104,7 +104,7 @@ function lingotek_admin_form() {
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array('Status:', $account->getStatusText()),
         array('OAuth Key:', $account->getPlanText()),
-        array('OAuth Secret:', $account->getEnterpriseStatusText()),
+        array('OAuth Secret:', $account->getEnterpriseStatusText())
         )))
   );
   

@@ -363,23 +363,21 @@ function lingotek_xml_node_body($node) {
 
 
 /**
- * Outputs the support footer html.
+ * Outputs the support footer renderable array.
  */
 function lingotek_support_footer() {
-  $html = '
-    <div style="margin-top: 20px; width: 500px;">
-      <table class="table table-bordered tab">
-        <tbody>
-          <tr>
-            <td><strong>Support Hours:</strong><br>9am - 6pm MDT</td>
-            <td><strong>Phone:</strong><br> (801) 331-7777</td>
-            <td><strong>Email:</strong><br> <a href="mailto:support@lingotek.com">support@lingotek.com</a></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  ';
-  return $html;
+  return array(
+    '#type' => 'markup',
+    '#markup' => theme('table', array('header' => array(), 'rows' => array(
+        array(t('<strong>Support Hours:</strong><br>9am - 6pm MDT'),
+          t('<strong>Phone:</strong><br> (801) 331-7777'),
+          t('<strong>Email:</strong><br> <a href="mailto:support@lingotek.com">support@lingotek.com</a>')
+      )),
+      'attributes' => array(
+        'style' => 'width:500px; margin-top: 20px;'
+      )
+    ))
+  );
 }
 
 
