@@ -849,7 +849,8 @@ class LingotekApi {
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
 
       watchdog( 'API_CALL', '
-      <h1>API Method: @method</h1>
+      <h1>Method: @method</h1>
+      <h1>Parameters:</h1>
       <div>!parameters</div>
       <h1>Request:</h1>
       <div>!request</div>

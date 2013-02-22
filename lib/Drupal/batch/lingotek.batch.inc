@@ -84,12 +84,19 @@ function lingotek_sync_batch_create( ) {
   $upload_commands = lingotek_get_sync_upload_batch_elements();
 
   // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
-  $operations = array_merge( $download_commands, $upload_commands );
+  $operations = array();
+  $operations[] = array( 'lingotek_mt_sync_set_status', array( 'set' ) );
+  $operations = array_merge( $operations, $download_commands, $upload_commands );
+  $operations[] = array( 'lingotek_mt_sync_set_status', array( 'clear' ) );
 
   $redirect = 'admin/settings/lingotek'; // Where to send the user after the batch has processed.
 
   if ( count( $operations ) > 0 ) {
 
+    // Note, the first step of the batch process sets a session variable that tracks that we are in a sync state.
+    // The Node update hook uses that so it knows NOT to reupload the content we just recieved.
+    // The last step of the sync process clears the sync flag.   $_SESSION['lingotek_sync_in_progress']
+    // As a backup (in case there is an error and the batch doesnt complete successfully) there is a backup on the lingotek_dashboard() that clears the sync status flag.
     $batch = array(
       'title' => t('Syncing Content Translations with Lingotek'),
       'operations' => $operations,

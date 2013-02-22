@@ -36,8 +36,6 @@ function lingotek_mt_sync_upload_node( $nid, &$context ) {
 } // END:  lingotek_machine_translate_node();
 
 
-
-
 /**
  * Download Batch Worker Function: Download Translated Node Content
  *
@@ -76,5 +74,24 @@ function lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, &$c
 
   // Save the $node_status_array
   lingotek_set_node_and_targets_sync_status_by_array( $nid, $node_status_array );
+
+}
+
+
+/**
+ * Sets and clears session sync flags.
+ */
+function lingotek_mt_sync_set_status( $status, &$context ) {
+
+  switch ($status) {
+    case 'set':
+      $_SESSION['lingotek_sync_in_progress'] = 'syncing';
+      break;
+    case 'clear':
+      if ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) {
+        unset($_SESSION['lingotek_sync_in_progress']);
+      }
+      break;
+  }
 
 }
