@@ -854,7 +854,12 @@ function lingotek_setup_complete_form( $form, $form_state ) {
 function lingotek_setup_complete_form_submit( $form, &$form_state ) {
 
   lingotek_field_language_data_cleanup_batch_create();
-  
+
+  // Clear wizard progress tracking.  
+  if( isset( $_SESSION['lingotek_setup_path'] ) ) {
+    unset($_SESSION['lingotek_setup_path']);
+  }
+
   $form_state['redirect'] = 'admin/settings/lingotek';
 
 }

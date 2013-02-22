@@ -727,6 +727,24 @@ function lingotek_get_target_languages( $active_only = FALSE ) {
 } // END:  lingotek_get_target_languages()
 
 
+/*
+ * Uses lingotek_get_target_languages to build a Drupal style format language_list()
+ * So this list ONLY includes languages listed in the dashboard.
+ */ 
+function lingotek_get_target_language_list() {
+
+  $paid_targets = array();
+
+  $active_languages = lingotek_get_active_languages( TRUE );
+  $clean_list = lingotek_get_target_languages( TRUE ); // Simple language list of Paid Target Languages
+  foreach ( $clean_list as $clean ) {
+    $paid_targets[ $clean ] = $active_languages[ $clean ];
+  }
+
+  return $paid_targets;
+}
+
+
 /**
  * Save the Targeted Languages data.
  */

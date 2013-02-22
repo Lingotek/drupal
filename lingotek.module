@@ -720,7 +720,11 @@ function lingotek_node_update($node) {
   }
 
   // On node create or edit,  set the node sync status to 'edited' and all the targets to edited.
-  lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
+    $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
+
+  if ( $is_syncing === FALSE) {
+    lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
+  }
 
   // Overwrite document ID.
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
@@ -776,8 +780,10 @@ function lingotek_node_update($node) {
     // These are the URLs that should NOT send updates
     $skip_list = array( 'lingotek/update', 'admin/settings/lingotek/notifications' );
     $path_match = array_search( $router_item['path'], $skip_list );
+    // Also, dont upload if this node update was caused by the sync
+    $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
 
-    if ( $send_lingotek_document && $path_match == FALSE ) {
+    if ( $send_lingotek_document && $path_match === FALSE && $is_syncing === FALSE) {
       LingotekApi::instance()->updateContentDocument($node);//LingotekNode::load($node));
     }
   }
