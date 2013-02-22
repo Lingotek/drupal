@@ -853,6 +853,9 @@ function lingotek_setup_complete_form( $form, $form_state ) {
  */
 function lingotek_setup_complete_form_submit( $form, &$form_state ) {
 
+  // Mark Lingotek Setup Wizard as Complete
+  variable_set( 'lingotek_setup_complete', 1 );
+
   lingotek_field_language_data_cleanup_batch_create();
 
   // Clear wizard progress tracking.  
