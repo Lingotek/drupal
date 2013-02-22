@@ -156,7 +156,7 @@ class LingotekSession {
     $result = LingotekApi::instance()->request($api, $params);
 
     if (!$result) {
-      watchdog('lingotek', 'Unable to download Lingotek Document.', NULL, WATCHDOG_ERROR);
+      watchdog('lingotek', 'Unable to download Lingotek Document.', array(), WATCHDOG_ERROR);
       return FALSE;
     }
 

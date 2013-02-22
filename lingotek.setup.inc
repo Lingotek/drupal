@@ -79,7 +79,7 @@ function lingotek_setup_new_account_form() {
     '#value' => t( 'Next' ) // Create Account
   );
   $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( 'admin/config/lingotek/account-settings' ) . '">Already have an account?</a></span>' );
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 
@@ -233,7 +233,7 @@ function lingotek_setup_account_settings_form() {
     '#value' => t( 'Next' ), // Login
   );
   $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( 'admin/config/lingotek/new-account' ) . '">Need to create an account?</a></span>' );
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 
@@ -329,7 +329,7 @@ function lingotek_community_select_form() {
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
   }
 
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 
@@ -423,7 +423,7 @@ function lingotek_project_select_form() {
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
   }
 
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 
@@ -507,7 +507,7 @@ function lingotek_setup_language_settings_form() {
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
   }
 
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 
@@ -664,7 +664,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
   }
 
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 } // END:  lingotek_setup_node_translation_settings_form
@@ -842,7 +842,7 @@ function lingotek_setup_complete_form( $form, $form_state ) {
     '#value' => t( 'Start Using Lingotek' )
   );
 
-  $form['lingotek_support_footer'] = array( '#markup' => lingotek_support_footer() );
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 

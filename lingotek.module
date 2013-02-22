@@ -957,6 +957,26 @@ function lingotek_is_module_setup() {
 }
 
 /**
+ * Checks any required configuration parameters are missing. (more detailed check than lingotek_is_module_setup())
+ */
+function lingotek_is_config_missing() {
+  $required_variables = array(
+    'lingotek_community_identifier',
+    'lingotek_oauth_consumer_id',
+    'lingotek_oauth_consumer_secret',
+    'lingotek_login_id',
+    'lingotek_project',
+    'lingotek_vault'
+  );
+  foreach ($required_variables as $required_variable) {
+    $val = variable_get($required_variable, NULL);
+    if (empty($val))
+      return TRUE;
+  }
+  return FALSE;// all required configuration variables are set
+}
+
+/**
  * Form constructor for the Lingotek Content push form.
  */
 function lingotek_content_push_form($form, $form_state, $node) {
