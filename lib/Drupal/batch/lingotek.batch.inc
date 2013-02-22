@@ -51,20 +51,23 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = TRUE, $
     }
   }
 
+  if ( count( $operations ) > 0 ) {
 
-  $batch = array(
-    'title' => t('Lingotek Field Language Updater'),
-    'operations' => $operations,
-    'finished' => 'lingotek_field_language_data_cleanup_batch_finished',
-    'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.field.language.data.cleanup.inc',
-  );
+    $batch = array(
+      'title' => t('Lingotek Field Language Updater'),
+      'operations' => $operations,
+      'finished' => 'lingotek_field_language_data_cleanup_batch_finished',
+      'file' => drupal_get_path('module', 'lingotek') . '/lib/Drupal/batch/lingotek.field.language.data.cleanup.inc',
+    );
 
-  batch_set($batch);
+    batch_set($batch);
 
-  // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
-  if ( $from_post === FALSE ) {
-    batch_process($goto); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-  }
+    // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+    if ( $from_post === FALSE ) {
+      batch_process($goto); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+    }
+
+  } // END:  if operations
 
 }
 

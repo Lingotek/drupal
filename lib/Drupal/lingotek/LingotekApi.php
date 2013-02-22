@@ -848,28 +848,20 @@ class LingotekApi {
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
 
-
       watchdog( 'API_CALL', '
       <h1>API Method: @method</h1>
-      !parameters
-      
+      <div>!parameters</div>
       <h1>Request:</h1>
-      <div>
-      !request
-      </div>
-
+      <div>!request</div>
       <h1>Response:</h1>
-      <div>
-      !response
-      <div>
+      <div>!response</div>
       ', 
       array( 
         '@method' => $method,
         '!parameters' => watchdog_format_object($parameters),
         '!request' => watchdog_format_object($request),
-        '!response' => watchdog_format_object($response)
+        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : watchdog_format_object($response)
       ), WATCHDOG_NOTICE );
-
 
     }
     catch (OAuthException2 $e) {

@@ -311,27 +311,6 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  /*
-    // Tab:  Development
-    $items['admin/settings/lingotek/development'] = array(
-    'title' => 'Development',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_development',
-    'access arguments' => array('administration')
-    );
-    // Tab:  Testing
-    $items['admin/settings/lingotek/test'] = array(
-    'title' => 'Test',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 30,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_test',
-    'access arguments' => array('administration')
-    );
-    /* */
-
   return $items;
 }
 
@@ -734,7 +713,7 @@ function lingotek_node_update($node) {
   }
 
   // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
-  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document'));
+  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document') || variable_get('lingotek_create_documents_by_default') );
 
   if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
     return;
@@ -742,7 +721,7 @@ function lingotek_node_update($node) {
 
   // On node create or edit,  set the node sync status to 'edited' and all the targets to edited.
   lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
-/// WORKING HERE ------------------------------------
+
   // Overwrite document ID.
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
     lingotek_lingonode($node->nid, 'document_id', $node->document_id);
