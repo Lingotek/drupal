@@ -10,12 +10,52 @@
 function lingotek_dashboard() {
 
   lingotek_is_module_setup();
-  $account = LingotekAccount::instance();
+  $account = LingotekAccount::instance();//remove?
 
-  $output = '<div id="dashwrap" style=""><div id="dashboard" style=""></div></div>';
-  $output .= lingotek_get_dashboard_code(); // Generates the dashboard javascript.
+  if (lingotek_is_config_missing()) {
+    $output = array();
+    // Check the login ID to see if this is a Lingopoint user, if so, provide information about setting up their oauth keys.
+    $login_id = variable_get('lingotek_login_id', 'community_admin');
 
-  return $output; 
+    if ($login_id != 'community_admin') {
+      drupal_set_message(t('Your Lingotek module is not fully configured.'), 'warning');
+      $output['instructions'] = array(
+        '#type' => 'markup',
+        '#markup' => theme('item_list', array(
+          'title' => 'Complete configuration by performing the following:',
+          'type' => 'ol',
+          'items' => array(
+            array(
+              'data' => 'Login to the ' . l('Lingotek account dashboard', LINGOTEK_API_SERVER, array('attributes' => array('target'=>'_blank'))) . ''),
+            array('data' => 'Select the <i>Community &gt; Integrations</i> menu item'),
+            array('data' => 'Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>'),
+            array('data' => 'Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the '.l('Lingotek Drupal module settings', '/admin/settings/lingotek/settings'))
+          )
+        ))
+      );
+    }
+    else { // Show the standard misconfiguration message.
+      drupal_set_message(t('Your Lingotek module is not fully configured. To complete setup, run the ') . l('Lingotek Configuration Wizard', 'admin/config/lingotek/setup'), 'warning');
+    }
+    $output[] = lingotek_support_footer();
+    return $output;
+  }
+
+  // As a backup fail safe, the dashboard loading should clear the sync flag if its still set.
+  if ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) {
+    unset($_SESSION['lingotek_sync_in_progress']);
+  }
+
+  return array(
+    'dashboard' => array(
+      '#type' => 'markup',
+      '#markup' => '<div id="dashboard"></div>'
+    ),
+    'script' => array(
+      '#type' => 'markup',
+      '#markup' => lingotek_get_dashboard_code() // Generates the dashboard javascript.
+    )
+  );
 
 } // END:  lingotek_dashboard()
 
@@ -42,41 +82,36 @@ function drupal_json_output_cors($var = NULL) {
  * Generates the code for the embedded Javascript dashboard.
  */
 function lingotek_get_dashboard_code() {
-
   global $base_url;
 
   $output = '';
   $totals = array();
   $guid = lingotek_get_guid(); // 16 char string
   $source_language = lingotek_get_source_language(); // ie:  en - Drupal Language Code
-  $active_languages = lingotek_get_active_languages( );  // array of Drupal language codes.  ie:  en.
-
-  if ( variable_get( 'lingotek_community_identifier', '' ) != '' && variable_get( 'lingotek_oauth_consumer_id', '' ) != '' && variable_get( 'lingotek_oauth_consumer_secret', '' ) != '' && 
-      variable_get( 'lingotek_login_id', '' ) != '' && variable_get( 'lingotek_project', '' ) != '' && variable_get( 'lingotek_vault', '' ) != '' ) {
-
-    // Loop though each active target languages, and get sync status counts.
-    $target_languages = lingotek_get_target_languages( FALSE );
-    $totals = array();
-    foreach ($target_languages as $language) {
-      if ( $language[ 'active' ] ) {
-        $edited  = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_EDITED,  $language[ 'code' ] );
-        $pending = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_PENDING, $language[ 'code' ] );
-        $current = lingotek_count_node_targets( LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language[ 'code' ] );
+  $active_languages = lingotek_get_active_languages();  // array of Drupal language codes.  ie:  en.
   
-        // Format:  [{"code":"fr","active":true,"docs":100,"pending":20,"current":80},
-        $totals[] = array(
-          'code' => lingotek_drupal_to_dashboard_language_code( $language['code'] ),
-          'active' => TRUE,
-          'docs' => 0,
-          //'edited' => $edited,
-          //'pending' => $pending,
-          'pending' => $edited + $pending,
-          'current' => $current
-        );
-      }
-    } // END:  foreach language counts
+  // Loop though each active target languages, and get sync status counts.
+  $target_languages = lingotek_get_target_languages(FALSE);
+  $totals = array();
+  foreach ($target_languages as $language) {
+    if ($language['active']) {
+      $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $language['code']);
+      $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $language['code']);
+      $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language['code']);
 
-    $script = '
+      // Format:  [{"code":"fr_FR","active":true,"docs":100,"edited":10,"pending":20,"current":80},
+      $totals[] = array(
+        'code' => lingotek_drupal_to_dashboard_language_code($language['code']),
+        'active' => TRUE,
+        'docs' => 0,
+        'edited' => $edited,
+        'pending' => $pending,
+        'current' => $current
+      );
+    }
+  } // END:  foreach language counts
+
+  $script = '
       <script src="' . LINGOTEK_GMC_SERVER . '/js/lingotek.min.js"></script>
       <script> 
         require(["lingotek"],function(lingotek){ 
@@ -115,65 +150,41 @@ function lingotek_get_dashboard_code() {
       </script>
     ';
 
-    $lingotek_url = $base_url . '/' . current_path();
-    $endpoint = $lingotek_url . '/command';
-    $upload_url = $lingotek_url . '/mt-upload';
-    $download_url = $lingotek_url . '/mt-download';
-    $sync_url = $lingotek_url . '/sync';
+  $lingotek_url = $base_url . '/' . current_path();
+  $endpoint = $lingotek_url . '/command';
+  $upload_url = $lingotek_url . '/mt-upload';
+  $download_url = $lingotek_url . '/mt-download';
+  $sync_url = $lingotek_url . '/sync';
 
-    $output = sprintf( $script, 
+  $output = sprintf($script,
       // lingotek 
-      variable_get( 'lingotek_community_identifier', '' ), //community
-      variable_get( 'lingotek_oauth_consumer_id', '' ), //oauth_key
-      variable_get( 'lingotek_oauth_consumer_secret', '' ), //oauth_secret
-      variable_get( 'lingotek_login_id', '' ), //external_id
-      variable_get( 'lingotek_vault', '' ), //tm_vault_id
-      variable_get( 'lingotek_workflow', '' ), //workflow_id
-      variable_get( 'lingotek_project', '' ), //project_id
-      variable_get( 'lingotek_activation_first_name', '' ), //first_name
-      variable_get( 'lingotek_activation_last_name', '' ), //last_name
-      variable_get( 'lingotek_activation_email', '' ), //email
+      variable_get('lingotek_community_identifier', ''), //community
+      variable_get('lingotek_oauth_consumer_id', ''), //oauth_key
+      variable_get('lingotek_oauth_consumer_secret', ''), //oauth_secret
+      variable_get('lingotek_login_id', ''), //external_id
+      variable_get('lingotek_vault', ''), //tm_vault_id
+      variable_get('lingotek_workflow', ''), //workflow_id
+      variable_get('lingotek_project', ''), //project_id
+      variable_get('lingotek_activation_first_name', ''), //first_name
+      variable_get('lingotek_activation_last_name', ''), //last_name
+      variable_get('lingotek_activation_email', ''), //email
       // cms
       $guid, // installation GUID
-      url( '<front>', array( 'absolute' => TRUE ) ), // site url
-      variable_get( 'site_name', 'Unidentified Drupal Site' ), // sitename
+      url('<front>', array('absolute' => TRUE)), // site url
+      variable_get('site_name', 'Unidentified Drupal Site'), // sitename
       'Drupal', // cms type
       VERSION, // drupal version
-      variable_get( 'lingotek_cms_tag', ''), // CMS tag     
+      variable_get('lingotek_cms_tag', ''), // CMS tag     
       LINGOTEK_VERSION, // module version
       $endpoint, // endpoint url
-      $upload_url,
-      $download_url,
-      $sync_url,
+      $upload_url, $download_url, $sync_url,
       // data
       lingotek_get_source_language_json(), // source_language
       lingotek_get_localization_languages_json(), // localization_languages - The languages “localized” on Drupal
-      json_encode( $totals ) // The target languages they are using on Lingotek
-    );
-
-  }
-  else { // Check the login ID to see if this is a Lingopoint user, if so, provide information about setting up their oauth keys.
-    $login_id = variable_get( 'lingotek_login_id', 'community_admin' );
-    if ( $login_id != 'community_admin' ) {
-      $output .= '<p>Your Lingotek module still needs some configuration.</p>';
-      $output .= '<p>Please login to your <a href="' . url( LINGOTEK_API_SERVER ) . '">Lingotek account dashboard</a> to configure the integration of your Drupal site with your Lingotek account and setup an OAuth Key and Secret.</p>';
-      $output .= '<p><strong>How to Setup your OAuth Key and Secret</strong></p>';
-      $output .= '<p>While logged into your Lingotek account, select the Community > Integrations menu item.</p>';
-      $output .= '<p>From there you can setup an Inbound OAuth integration method to create a OAuth Key and OAuth Secret.   That OAuth Key and OAuth Secret need to be entered in the Lingotek Drupal module settings to connect your module to your Lingotek account.</p>';
-      $output .= '<p>&nbsp;</p>';
-      $output .= lingotek_support_footer();
-    }
-    else { // Show the standard misconfiguration message.
-      $output .= '<p>&nbsp;</p>';
-      $output .= '<p>Your Lingotek module is not properly configured.</p>';
-      $output .= '<p>Please run the Lingotek <a href="' . url( 'admin/config/lingotek/setup' ) . '">Installation Wizard</a>.</p>';
-      $output .= '<p>&nbsp;</p>';
-      $output .= lingotek_support_footer();
-    }
-  }
+      json_encode($totals) // The target languages they are using on Lingotek
+  );
 
   return $output;
-
 } // END:  lingotek_get_dashboard_code()
 
 
@@ -344,9 +355,24 @@ function lingotek_dashboard_command_ajax() {
 
 
 /**
+ * The number of nodes with the status sync counts from the lingotek table for the LANGUAGE TARGETS.
+**/
+function lingotek_count_nodes( $status ) { //LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_NODE_SYNC_STATUS_CURRENT
+
+  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+  $query->condition( 'lingokey', 'node_sync_status' );
+  $query->condition( 'lingovalue', $status );
+
+  $result = $query->countQuery()->execute()->fetchField();
+
+  return $result;
+
+} // END:  lingotek_count_nodes()
+
+/**
  * Gets the current sync counts from the lingotek table for the LANGUAGE TARGETS.
  *
- * Detaults to CURRENT.
+ * Defaults to CURRENT.
 **/
 function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code ) {
 
@@ -368,7 +394,7 @@ function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURR
 
   return $count;
 
-} // END:  lingotek_count_nodes()
+} // END:  lingotek_count_node_targets()
 
 
 /**
@@ -490,9 +516,13 @@ function lingotek_get_source_language_json() {
 
   $data = array();
   $source_language = lingotek_get_source_language();
-
   $data['code'] = lingotek_drupal_to_dashboard_language_code( $source_language );
-  $data['docs'] = lingotek_count_translation_managed_source_language_nodes( $source_language );
+
+  $data['edited'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_EDITED);
+  $data['pending'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_PENDING);
+  $data['current'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_CURRENT);
+
+  $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];//lingotek_count_translation_managed_source_language_nodes( $source_language );
 
   return json_encode( $data );
 
@@ -533,40 +563,3 @@ function lingotek_get_guid() {
   return $guid;
 
 } // END:  lingotek_get_guid()
-
-
-
-
-
-
-
-
-
-
-
-
-function S_______P_______A_______C_______E_______R() {}
-
-
-/**
- * Tab:  Development - Test area.
- */
-function lingotek_development() {
-
-  $output = '<h1>Development</h1>';
-
-  return $output;
-
-} // END:  lingotek_development()
-
-
-/**
- * Just a development page.
- */
-function lingotek_test() {
-
-  $output = '<h1>Test</h1>';
-
-  return $output;
-
-}

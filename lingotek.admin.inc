@@ -98,51 +98,44 @@ function lingotek_admin_form() {
     '#group' => 'administrative_settings',
   );
 
-  $output = '';
-
-  // Left Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  $output .= t('<div style="border: 0px solid red; width: 50%; float: left;">');
-  $output .= t('<h1> Account Status </h1>');
-  $output .= t('<p>');
-  $output .= t('<div><strong>Status:</strong> ' . $account->getStatusText() . '</div>');
-  $output .= t('<div><strong>Plan:</strong> ' . $account->getPlanText() . '</div>');
-  $output .= t('<div><strong>Enterprise:</strong> ' . $account->getEnterpriseStatusText() . '</div>');
-  $output .= t('</p>');
-  $output .= t('<p><a href="' .url( 'admin/settings/lingotek/get-account-status', array( 'query' => array( 'token' => md5(time()) ) ) ) .'">Update Account Status</a></p>');
-  $output .= t('</div>');
-
-  // Right Column - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-  $output .= t('<div style="border: 0px solid red; width: 40%; float: left;">');
-  $output .= t('<h1> Installation Credentials </h1>');
-  $output .= t('<p>');
-  $output .= t('<div><strong>Community Identifier:</strong> ' . variable_get( 'lingotek_community_identifier', '' ) . '</div>');
-  $output .= t('<div><strong>OAuth Key:</strong> ' . variable_get( 'lingotek_oauth_consumer_id', '' ) . '</div>');
-  $output .= t('<div><strong>OAuth Secret:</strong> ' . variable_get( 'lingotek_oauth_consumer_secret', '' ) . '</div>');
-  $output .= t('<div><strong>Workflow ID:</strong> ' . variable_get( 'lingotek_workflow', '' ) . '</div>');
-  $output .= t('<div><strong>External ID:</strong> ' . variable_get( 'lingotek_login_id', '' ) . '</div>');
-  $output .= t('<div><strong>Project ID:</strong> ' . variable_get( 'lingotek_project', '' ) . '</div>');
-  $output .= t('<div><strong>Vault ID:</strong> ' . variable_get( 'lingotek_vault', '' ) . '</div>');
-  $output .= t('</p>');
-  $output .= t('</div>');
+  $form['information'][] = array(
+    '#type' => 'item',
+    '#title' => t("Account Status") .' - '. l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
+    '#markup' => theme('table', array('header' => array(), 'rows' => array(
+        array('Status:', $account->getStatusText()),
+        array('Plan:', $account->getPlanText()),
+        array('Enterprise:', $account->getEnterpriseStatusText())
+        )))
+  );
+  
+  $form['information'][] = array(
+    '#type' => 'item',
+    '#title' => t("Lingotek Identifiers"),
+    '#markup' => theme('table', array('header' => array(), 'rows' => array(
+        array('Community Identifier:', variable_get('lingotek_community_identifier', '')),
+        array('OAuth Key:', variable_get('lingotek_oauth_consumer_id', '')),
+        array('OAuth Secret:', variable_get('lingotek_oauth_consumer_secret', '')),
+        array('Workflow ID:', variable_get('lingotek_workflow', '')),
+        array('External ID:', variable_get('lingotek_login_id', '')),
+        array('Project ID:', variable_get('lingotek_project', '')),
+        array('Vault ID:', variable_get('lingotek_vault', '')),
+        )))
+  );
 
   $config_path = getenv( 'LINGOTEK_CONFIG_PATH' );
-  if ( !empty( $config_path ) ) {
-    $output .= t('<div style="clear:both;"></div>');
-    $output .= t('<div style="border: 0px solid red; width: 50%; float: left;">');
-    $output .= t('<h1> Server Information </h1>');
-    $output .= t('<div><span style="display: inline-block; width: 60px;">API:</span> ' . LINGOTEK_API_SERVER . '</div>');
-    $output .= t('<div><span style="display: inline-block; width: 60px;">GMC:</span> ' . LINGOTEK_GMC_SERVER . '</div>');
-    $output .= t('<div><span style="display: inline-block; width: 60px;">Billing:</span> ' . LINGOTEK_BILLING_SERVER . '</div>');
-    $output .= t('<div>&nbsp;</div>');
-    $output .= t('<div><span style="display: inline-block; width: 60px;">Key:</span> ' . LINGOTEK_AP_OAUTH_KEY . '</div>');
-    $output .= t('<div><span style="display: inline-block; width: 60px;">Secret:</span> ' . LINGOTEK_AP_OAUTH_SECRET . '</div>');
-    $output .= t('</div>');
-    $output .= t('<div style="clear:both;"></div>');
+  if (!empty( $config_path ) ) {
+    $form['information'][] = array(
+      '#type' => 'item',
+      '#title' => t('Connection Details'),
+      '#markup' => theme('table', array('header' => array(), 'rows' => array(
+          array('API:', LINGOTEK_API_SERVER),
+          array('GMC:', LINGOTEK_GMC_SERVER),
+          array('Billing:', LINGOTEK_BILLING_SERVER),
+          array('Key:', LINGOTEK_AP_OAUTH_KEY),
+          array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
+          )))
+    );
   }
-
-  $form['information']['information_block'] = array( '#markup' => $output );
-
-
 
   // STOP HERE IF:
   // If the connection isn't yet established.
@@ -541,8 +534,6 @@ function lingotek_get_account_status( ) {
  * Clean out the Drupal Cache so menus will rebuild.
  */
 function lingotek_flush_cache() {
-
-  drupal_flush_all_caches();
+  menu_rebuild();
   drupal_goto( 'admin/settings/lingotek' );
-
 }

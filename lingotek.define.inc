@@ -39,7 +39,7 @@ def('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 /**
  * Defines the current module release version.
  */
-define('LINGOTEK_VERSION', '7.x-2.2');
+define('LINGOTEK_VERSION', '7.x-2.4');
 
 /**
  * Identifies a content type which has Lingotek translation enabled.

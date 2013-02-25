@@ -311,27 +311,6 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
 
-  /*
-    // Tab:  Development
-    $items['admin/settings/lingotek/development'] = array(
-    'title' => 'Development',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_development',
-    'access arguments' => array('administration')
-    );
-    // Tab:  Testing
-    $items['admin/settings/lingotek/test'] = array(
-    'title' => 'Test',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 30,
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_test',
-    'access arguments' => array('administration')
-    );
-    /* */
-
   return $items;
 }
 
@@ -734,15 +713,19 @@ function lingotek_node_update($node) {
   }
 
   // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
-  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document'));
+  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document') || variable_get('lingotek_create_documents_by_default') );
 
   if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
     return;
   }
 
   // On node create or edit,  set the node sync status to 'edited' and all the targets to edited.
-  lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
-/// WORKING HERE ------------------------------------
+    $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
+
+  if ( $is_syncing === FALSE) {
+    lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
+  }
+
   // Overwrite document ID.
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
     lingotek_lingonode($node->nid, 'document_id', $node->document_id);
@@ -797,8 +780,10 @@ function lingotek_node_update($node) {
     // These are the URLs that should NOT send updates
     $skip_list = array( 'lingotek/update', 'admin/settings/lingotek/notifications' );
     $path_match = array_search( $router_item['path'], $skip_list );
+    // Also, dont upload if this node update was caused by the sync
+    $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
 
-    if ( $send_lingotek_document && $path_match == FALSE ) {
+    if ( $send_lingotek_document && $path_match === FALSE && $is_syncing === FALSE) {
       LingotekApi::instance()->updateContentDocument($node);//LingotekNode::load($node));
     }
   }
@@ -975,6 +960,26 @@ function lingotek_is_module_setup() {
   if ( $setup_complete != 1 ) {
     drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go to the Setup Process
   }
+}
+
+/**
+ * Checks any required configuration parameters are missing. (more detailed check than lingotek_is_module_setup())
+ */
+function lingotek_is_config_missing() {
+  $required_variables = array(
+    'lingotek_community_identifier',
+    'lingotek_oauth_consumer_id',
+    'lingotek_oauth_consumer_secret',
+    'lingotek_login_id',
+    'lingotek_project',
+    'lingotek_vault'
+  );
+  foreach ($required_variables as $required_variable) {
+    $val = variable_get($required_variable, NULL);
+    if (empty($val))
+      return TRUE;
+  }
+  return FALSE;// all required configuration variables are set
 }
 
 /**
