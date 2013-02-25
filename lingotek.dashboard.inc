@@ -355,9 +355,24 @@ function lingotek_dashboard_command_ajax() {
 
 
 /**
+ * The number of nodes with the status sync counts from the lingotek table for the LANGUAGE TARGETS.
+**/
+function lingotek_count_nodes( $status ) { //LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_NODE_SYNC_STATUS_CURRENT
+
+  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
+  $query->condition( 'lingokey', 'node_sync_status' );
+  $query->condition( 'lingovalue', $status );
+
+  $result = $query->countQuery()->execute()->fetchField();
+
+  return $result;
+
+} // END:  lingotek_count_nodes()
+
+/**
  * Gets the current sync counts from the lingotek table for the LANGUAGE TARGETS.
  *
- * Detaults to CURRENT.
+ * Defaults to CURRENT.
 **/
 function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code ) {
 
@@ -379,7 +394,7 @@ function lingotek_count_node_targets( $status = LINGOTEK_TARGET_SYNC_STATUS_CURR
 
   return $count;
 
-} // END:  lingotek_count_nodes()
+} // END:  lingotek_count_node_targets()
 
 
 /**
@@ -501,9 +516,13 @@ function lingotek_get_source_language_json() {
 
   $data = array();
   $source_language = lingotek_get_source_language();
-
   $data['code'] = lingotek_drupal_to_dashboard_language_code( $source_language );
-  $data['docs'] = lingotek_count_translation_managed_source_language_nodes( $source_language );
+
+  $data['edited'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_EDITED);
+  $data['pending'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_PENDING);
+  $data['current'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_CURRENT);
+
+  $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];//lingotek_count_translation_managed_source_language_nodes( $source_language );
 
   return json_encode( $data );
 
