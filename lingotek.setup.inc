@@ -78,9 +78,9 @@ function lingotek_setup_new_account_form() {
     '#type' => 'submit', 
     '#value' => t( 'Next' ) // Create Account
   );
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( 'admin/config/lingotek/account-settings' ) . '">Already have an account?</a></span>' );
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/account-settings', 'Already have an account?');
   $form['lingotek_support_footer'] = lingotek_support_footer();
-
+  
   return $form;
 
 } // END:  New Account - Form
@@ -232,7 +232,7 @@ function lingotek_setup_account_settings_form() {
     '#type' => 'submit',
     '#value' => t( 'Next' ), // Login
   );
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( 'admin/config/lingotek/new-account' ) . '">Need to create an account?</a></span>' );
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/new-account', 'Need to create an account?');
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -326,7 +326,7 @@ function lingotek_community_select_form() {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -420,7 +420,7 @@ function lingotek_project_select_form() {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-select' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -504,7 +504,7 @@ function lingotek_setup_language_settings_form() {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -661,7 +661,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( end($_SESSION['lingotek_setup_path']) ) . '">Previous Step</a></span>' );
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -912,16 +912,23 @@ function lingotek_setup_node_updates_form( $form, $form_state ) {
 
   $form['lingotek_middle_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
 
-
   $form['lingotek_button_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
   $form[ 'submit' ] = array(
     '#type' => 'submit', 
     '#value' => t( 'Next' )
   );
-  $form['lingotek_back_button'] = array( '#markup' => '<span style="padding-left: 20px;"><a href="' . url( 'admin/config/lingotek/language-settings' ) . '">Previous Step</a></span>' );
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings','Previous Step');
 
   return $form;
+}
 
+/**
+ * Setup Button
+ */
+function lingotek_setup_link($path = 'admin/config/lingotek/language-settings', $text = 'Previous Step') {
+  return array(
+    '#markup' => l($text, $path, array('#attributes'=>'margin-left: 20px;'))
+  );
 }
 
 /**
