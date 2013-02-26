@@ -110,7 +110,7 @@ function lingotek_sync_batch_create( ) {
 
   }
   else {
-    $options = strpos($redirect,'//') !== FALSE ? array('external' => TRUE) : array();
+    $options = strpos($redirect, '//') !== FALSE ? array('external' => TRUE) : array();
     drupal_goto($redirect, $options);
   }
 }
@@ -175,9 +175,9 @@ function lingotek_get_sync_download_batch_elements( ) {
 /**
  * Batch Create: Lingotek Identify Content - create informative lingonode data (in lingotek table) for pre-existing content 
  */
-function lingotek_batch_identify_content($front=false) {
+function lingotek_batch_identify_content($front = FALSE) {
 
-  $result = db_query('SELECT DISTINCT nid FROM lingotek');
+  $result = db_query('SELECT DISTINCT nid FROM {lingotek}');
   $existing_nids = $result->fetchCol();
   $operations = array();
 
@@ -196,11 +196,11 @@ function lingotek_batch_identify_content($front=false) {
   $batch = array(
     'title' => t('Identifying Translatable Content'),
     'operations' => $operations,
-    //'finished' => 'lingotek_batch_identify_content_finished'
+      //'finished' => 'lingotek_batch_identify_content_finished'
   );
 
   batch_set($batch);
-  if($front){
+  if ($front) {
     batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   }
 }

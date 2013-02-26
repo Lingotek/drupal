@@ -389,10 +389,10 @@ function lingotek_support_footer() {
  * all languages).
  */
 function lingotek_access($node, $permission) {
-  
+
   if (lingotek_supported_language($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
-    if(lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)){
-       return FALSE;
+    if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
+      return FALSE;
     }
     return user_access($permission);
   }
@@ -418,7 +418,7 @@ function lingotek_supported_type($type) {
  * @return
  *   Boolean value.
  */
-function lingotek_managed_by_entity_translation($type){
+function lingotek_managed_by_entity_translation($type) {
   return module_exists('entity_translation') ? entity_translation_node_supported_type($type) : FALSE;
 }
 
