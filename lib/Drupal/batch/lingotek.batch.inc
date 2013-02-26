@@ -91,8 +91,8 @@ function lingotek_sync_batch_create( ) {
 
   
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : 'admin/settings/lingotek'; 
-  
+  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : 'admin/settings/lingotek';
+
   if ( count( $operations ) > 0 ) {
 
     // Note, the first step of the batch process sets a session variable that tracks that we are in a sync state.
@@ -110,9 +110,9 @@ function lingotek_sync_batch_create( ) {
 
   }
   else {
-    drupal_goto($redirect);
+    $options = strpos($redirect,'//') !== FALSE ? array('external' => TRUE) : array();
+    drupal_goto($redirect, $options);
   }
-
 }
 
 
