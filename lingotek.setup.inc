@@ -859,7 +859,7 @@ function lingotek_setup_complete_form_submit( $form, &$form_state ) {
   lingotek_field_language_data_cleanup_batch_create();
 
   // Clear wizard progress tracking.  
-  if( isset( $_SESSION['lingotek_setup_path'] ) ) {
+  if (isset($_SESSION['lingotek_setup_path'])) {
     unset($_SESSION['lingotek_setup_path']);
   }
 
@@ -917,7 +917,7 @@ function lingotek_setup_node_updates_form( $form, $form_state ) {
     '#type' => 'submit', 
     '#value' => t( 'Next' )
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings','Previous Step');
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', 'Previous Step');
 
   return $form;
 }
@@ -927,7 +927,7 @@ function lingotek_setup_node_updates_form( $form, $form_state ) {
  */
 function lingotek_setup_link($path = 'admin/config/lingotek/language-settings', $text = 'Previous Step') {
   return array(
-    '#markup' => l($text, $path, array('#attributes'=>'margin-left: 20px;'))
+    '#markup' => l(t($text), $path, array('#attributes' => 'margin-left: 20px;'))
   );
 }
 

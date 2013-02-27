@@ -91,7 +91,7 @@ function lingotek_publish_form($form, $form_state, $node) {
 
       $link_label = lingotek_language_native($langcode);
       $language_link = isset($links->links[$langcode]['href']) ? $links->links[$langcode] : array('href' => $path, 'language' => $language);
-      $subtext = $is_original ? '<i title="'.$langcode.'">source</i>' : '<span title="'.$langcode.'">'.lingotek_language_name($langcode).'</span>';//$language_name;
+      $subtext = $is_original ? '<i title="' . $langcode . '">source</i>' : '<span title="' . $langcode . '">' . lingotek_language_name($langcode) . '</span>'; //$language_name;
 
       $row = array(
         l($link_label, $language_link['href'], $language_link) . ' (' . $subtext . ')',
@@ -208,7 +208,7 @@ function lingotek_pm($node) {
         $phase_complete_percent = 0;
       }
       $language_link  = l( lingotek_language_native($language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $language) . '\'); return false;')) );
-      $language_link .= t( ' (' . lingotek_language_name($language) . ')' );
+      $language_link .= ' ' . t('(' . lingotek_language_name($language) . ')');
       $row = array(
         '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
         $language_link,
@@ -503,16 +503,16 @@ function page_sync_comment_translations($comment_id) {
         if ($document = LingotekApi::instance()->getDocument($lingotek_document_id)) {
           if ($document->percentComplete == 100) {
             if ($comment->updateLocalContent()) {
-              drupal_set_message('Local translations for the comment have been updated.');              
+              drupal_set_message(t('Local translations for the comment have been updated.'));
             }
             else {
               watchdog('lingotek', 'Unable to update local translations for comment @id',
                 array('@id' => $comment_id), WATCHDOG_ERROR);
-              drupal_set_message('An error occurred. Local translations for the comment were not updated.', 'error');                
+              drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
             }
           }
           else {
-            drupal_set_message('The translation of this comment is not yet complete. Please try again later.', 'warning');
+            drupal_set_message(t('The translation of this comment is not yet complete. Please try again later.'), 'warning');
           }
         }
         else {
@@ -520,7 +520,7 @@ function page_sync_comment_translations($comment_id) {
             comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $commment_id),
             WATCHDOG_ERROR);
             
-          drupal_set_message('An error occurred. Local translations for the comment were not updated.', 'error');
+          drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
         }
       }
       else {

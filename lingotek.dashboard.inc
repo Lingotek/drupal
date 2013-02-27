@@ -10,7 +10,7 @@
 function lingotek_dashboard() {
 
   lingotek_is_module_setup();
-  $account = LingotekAccount::instance();//remove?
+  $account = LingotekAccount::instance(); //remove?
 
   if (lingotek_is_config_missing()) {
     $output = array();
@@ -25,24 +25,23 @@ function lingotek_dashboard() {
           'title' => 'Complete configuration by performing the following:',
           'type' => 'ol',
           'items' => array(
-            array(
-              'data' => 'Login to the ' . l('Lingotek account dashboard', LINGOTEK_API_SERVER, array('attributes' => array('target'=>'_blank'))) . ''),
-            array('data' => 'Select the <i>Community &gt; Integrations</i> menu item'),
-            array('data' => 'Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>'),
-            array('data' => 'Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the '.l('Lingotek Drupal module settings', '/admin/settings/lingotek/settings'))
+            array('data' => t('Login to the ' . l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank'))) . '')),
+            array('data' => t('Select the <i>Community &gt; Integrations</i> menu item')),
+            array('data' => t('Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>')),
+            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ' . l(t('Lingotek Drupal module settings'), 'admin/settings/lingotek/settings')))
           )
         ))
       );
     }
     else { // Show the standard misconfiguration message.
-      drupal_set_message(t('Your Lingotek module is not fully configured. To complete setup, run the ') . l('Lingotek Configuration Wizard', 'admin/config/lingotek/setup'), 'warning');
+      drupal_set_message(t('Your Lingotek module is not fully configured. To complete setup, run the') . ' ' . l(t('Lingotek Configuration Wizard'), 'admin/config/lingotek/setup'), 'warning');
     }
     $output[] = lingotek_support_footer();
     return $output;
   }
 
   // As a backup fail safe, the dashboard loading should clear the sync flag if its still set.
-  if ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) {
+  if (isset($_SESSION['lingotek_sync_in_progress'])) {
     unset($_SESSION['lingotek_sync_in_progress']);
   }
 
@@ -56,8 +55,9 @@ function lingotek_dashboard() {
       '#markup' => lingotek_get_dashboard_code() // Generates the dashboard javascript.
     )
   );
+}
 
-} // END:  lingotek_dashboard()
+// END:  lingotek_dashboard()
 
 
 /**
@@ -197,7 +197,7 @@ function lingotek_dashboard_command_ajax() {
   $message = 'Not doing anything.';
   $method = $_SERVER['REQUEST_METHOD'];
   
-  $response = array('a'=>'b');
+  $response = array();
 
   // 1. Update a Target Language (Initiate a Machine Translation Batch)
   if ( $method == 'PUT' ) {

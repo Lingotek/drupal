@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Custom javascript.
+ */
 var lingotek = lingotek || {};
 lingotek.forms = lingotek.forms || {};
 

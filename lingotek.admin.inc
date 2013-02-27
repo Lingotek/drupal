@@ -100,7 +100,7 @@ function lingotek_admin_form() {
 
   $form['information'][] = array(
     '#type' => 'item',
-    '#title' => t("Account Status") .' - '. l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
+    '#title' => t("Account Status") . ' - ' . l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array('Status:', $account->getStatusText()),
         array('Plan:', $account->getPlanText()),
@@ -515,19 +515,19 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
 /**
  * Manually Triggered Account Status Check
  */
-function lingotek_get_account_status( ) {
+function lingotek_get_account_status() {
 
   $account = LingotekAccount::instance();
   $result = $account->getAccountStatus(); // Returns false on fail.
 
-  if ( $result === FALSE ) { // There was a problem retrieving the account status.
-    drupal_set_message( t( 'There was an error retrieving your account status.  Please try again later.' ), 'error' );
-    drupal_goto( 'admin/settings/lingotek/settings' );
-  } else { // We got a valid account status.  Send the user back to the Lingotek settings page, via the second cache clearer.
-    drupal_set_message( t( 'Your account status has been updated.' ) );
-    drupal_goto( 'admin/settings/lingotek/flush-cache' );
+  if ($result === FALSE) { // There was a problem retrieving the account status.
+    drupal_set_message(t('There was an error retrieving your account status.  Please try again later.'), 'error');
+    drupal_goto('admin/settings/lingotek/settings');
   }
-
+  else { // We got a valid account status.  Send the user back to the Lingotek settings page, via the second cache clearer.
+    drupal_set_message(t('Your account status has been updated.'));
+    drupal_goto('admin/settings/lingotek/flush-cache');
+  }
 }
 
 /**

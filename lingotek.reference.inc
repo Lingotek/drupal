@@ -214,19 +214,19 @@ $GLOBALS['_lingotek_locale'] = $_lingotek_locale;
 
 
 function lingotek_test_locale_duplicates($locales) {
-  $duplicatesExist = count($locales) !== count(array_flip($locales));
+  $duplicates_exist = count($locales) !== count(array_flip($locales));
   
-  if ($duplicatesExist) {
+  if ($duplicates_exist) {
     $dups = array();
     foreach ($locales as $k => $v) {
       if (key_exists($v, $dups)) {
-        echo "duplicate :: ". $v;
+        echo "duplicate :: " . $v;
       }
       $dups[$v] = $k;
     }
   }
   
-  return $duplicatesExist;
+  return $duplicates_exist;
 }
 //lingotek_test_locale_duplicates($_lingotek_locale);
 
@@ -262,7 +262,7 @@ function lingotek_language_name($langcode) {
   }
   else {
     $languages = _locale_get_predefined_list();
-    if (array_key_exists($langcode, $languages) && array_key_exists(0,$languages[$langcode])) {
+    if (array_key_exists($langcode, $languages) && array_key_exists(0, $languages[$langcode])) {
       return $languages[$langcode][0];
     }
     else {
@@ -283,7 +283,7 @@ function lingotek_language_native($langcode) {
   }
   else {
     $languages = _locale_get_predefined_list();
-    if (array_key_exists($langcode, $languages) && array_key_exists(1,$languages[$langcode])) {
+    if (array_key_exists($langcode, $languages) && array_key_exists(1, $languages[$langcode])) {
       return $languages[$langcode][1];
     }
     else {

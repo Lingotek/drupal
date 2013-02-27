@@ -189,7 +189,7 @@ function lingotek_notifications() {
   // Adding a delay in the update.  Without the delay all the different language updates hit at once, causing node lock issues as multiple languages try to update the same node at once.
   $min = 0;
   $max = 3;
-  $sleep = rand ( $min, $max );
+  $sleep = rand($min, $max);
   sleep( $sleep );
 
   include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
@@ -234,7 +234,7 @@ function lingotek_notifications() {
     $node = node_load($nid);
     $source_language = $node->language;
     $node_setting = lingotek_lingonode($nid, 'sync_method');
-    $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync',TRUE);
+    $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
 
     if ($auto_download) { // download only when automatic download is enabled
       lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
@@ -261,10 +261,10 @@ function lingotek_notifications() {
     'source_language' => $source_language,
     'type' => isset($comment) ? 'comment' : 'node',
     'id' => isset($comment) ? $comment->cid : $nid,
-    'found'=> $found,
+    'found' => $found,
     'download' => $found && isset($comment)? TRUE : (isset($auto_download) && $auto_download == TRUE)
       )) : array_merge($_GET, array(
-        'found'=> $found
+        'found' => $found
       ));
 
   drupal_json_output($response);

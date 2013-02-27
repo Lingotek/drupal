@@ -19,11 +19,11 @@ function def($key, $val) {
  * (1) setting the environment var 'LINGOTEK_CONFIG_PATH' to a file, or by
  * (2) having a "config.php" file in your lingotek module folder 
  */
-$localEnvConfigFilepath = getenv('LINGOTEK_CONFIG_PATH');
-$localConfigFile = $localEnvConfigFilepath !== FALSE ? $localEnvConfigFilepath : getcwd() . '/' . drupal_get_path('module', 'lingotek') . '/config.php';
-$useLocalOverride = file_exists($localConfigFile);
-if ($useLocalOverride) {
-    include_once $localConfigFile;
+$local_env_config_filepath = getenv('LINGOTEK_CONFIG_PATH');
+$local_config_file = $local_env_config_filepath !== FALSE ? $local_env_config_filepath : getcwd() . '/' . drupal_get_path('module', 'lingotek') . '/config.php';
+$use_local_override = file_exists($local_config_file);
+if ($use_local_override) {
+  include_once $local_config_file;
 }
 
 /**

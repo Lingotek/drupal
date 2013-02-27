@@ -97,8 +97,8 @@ function lingotek_set_defaults() {
   );
 
   // Check if vars are set.  If so, use what is already set.  If not, set them using the defaults provided above.
-  foreach($defaults as $k => $defaultValue){
-    variable_set($k,variable_get($k,$defaultValue));
+  foreach ($defaults as $k => $default_value) {
+    variable_set($k, variable_get($k, $default_value));
   }
 }
 
@@ -204,14 +204,14 @@ function lingotek_update_7200(&$sandbox) {
       // The LingotekApi class might not have been introduced when this user last updated the Lingotek module.
       registry_rebuild();
       require_once(drupal_get_path('module', 'lingotek') . '/lib/Drupal/lingotek/LingotekApi.php');
-	  }
-	  if (class_exists('LingotekNode')) {
-	    LingotekApi::instance()->updateContentDocument(LingotekNode::load($node));
+    }
+    if (class_exists('LingotekNode')) {
+      LingotekApi::instance()->updateContentDocument(LingotekNode::load($node));
     }
     else {
       throw new Exception('LingotekNode class missing. Please clear the Drupal cache and then run update.php again.');
     }
-	}
+  }
 
   $sandbox['progress']++;
   $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
@@ -313,7 +313,7 @@ function lingotek_update_7206(&$sandbox) {
     $output = t('The @table table already exists. No action taken.', array('@table' => $table));
   }
   
-  return $otuput;
+  return $output;
 }
 
 /**
@@ -335,4 +335,13 @@ function lingotek_update_7207() {
     );
     return t("Updated @count content type(s) to use 'lingotek' instead of '5' for the identifier: @updated", $t_args);
   }
+}
+
+/**
+ * Update lingokey name from 'document_id_xx' to 'document_id'
+ */
+function lingotek_update_7208() {
+  $ret = array();
+  db_query("UPDATE {lingotek} SET lingokey = 'document_id' WHERE lingokey LIKE 'document_id_%'");
+  return $ret;
 }

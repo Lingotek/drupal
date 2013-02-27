@@ -89,7 +89,9 @@ function lingotek_sync_batch_create( ) {
   $operations = array_merge( $operations, $download_commands, $upload_commands );
   $operations[] = array( 'lingotek_mt_sync_set_status', array( 'clear' ) );
 
-  $redirect = 'admin/settings/lingotek'; // Where to send the user after the batch has processed.
+  
+  // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
+  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : 'admin/settings/lingotek';
 
   if ( count( $operations ) > 0 ) {
 
@@ -108,9 +110,9 @@ function lingotek_sync_batch_create( ) {
 
   }
   else {
-    drupal_goto($redirect);
+    $options = strpos($redirect, '//') !== FALSE ? array('external' => TRUE) : array();
+    drupal_goto($redirect, $options);
   }
-
 }
 
 
@@ -173,9 +175,9 @@ function lingotek_get_sync_download_batch_elements( ) {
 /**
  * Batch Create: Lingotek Identify Content - create informative lingonode data (in lingotek table) for pre-existing content 
  */
-function lingotek_batch_identify_content($front=false) {
+function lingotek_batch_identify_content($front = FALSE) {
 
-  $result = db_query('SELECT DISTINCT nid FROM lingotek');
+  $result = db_query('SELECT DISTINCT nid FROM {lingotek}');
   $existing_nids = $result->fetchCol();
   $operations = array();
 
@@ -194,11 +196,11 @@ function lingotek_batch_identify_content($front=false) {
   $batch = array(
     'title' => t('Identifying Translatable Content'),
     'operations' => $operations,
-    //'finished' => 'lingotek_batch_identify_content_finished'
+      //'finished' => 'lingotek_batch_identify_content_finished'
   );
 
   batch_set($batch);
-  if($front){
+  if ($front) {
     batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   }
 }

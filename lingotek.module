@@ -42,7 +42,7 @@ function lingotek_menu() {
 
     $items['node/%node/lingotek_dev'] = array(
       'title' => 'Lingotek Developer Tools',
-      'access arguments' => array(1,'dev'),
+      'access arguments' => array(1, 'dev'),
       'access callback' => 'lingotek_access_dev_tools',
       'description' => 'Developer Tools',
       'file' => 'lingotek.dev.inc',
@@ -377,7 +377,7 @@ function lingotek_entity_translation_node_tab_access() {
   $args = func_get_args();
   $node = array_shift($args);
   if ($node->language !== LANGUAGE_NONE) {
-    if (lingotek_supported_type($node->type)){
+    if (lingotek_supported_type($node->type)) {
       // If the node has been pushed then return FALSE (don't show the "Translate" tab)
       // Otherwise, return TRUE (show the "Translate" tab)
       $user_access = (drupal_multilingual() && (user_access('translate any entity') || user_access("translate node entities")));
@@ -399,10 +399,10 @@ function lingotek_entity_translation_node_tab_access() {
   return FALSE;
 }
 
-function lingotek_access_dev_tools($node, $permission){
+function lingotek_access_dev_tools($node, $permission) {
   // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
   $user_access = user_access($permission);
-  if(module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && $user_access && !lingotek_node_pushed($node)){
+  if (module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && $user_access && !lingotek_node_pushed($node)) {
     return FALSE;
   }
   // Default: Standard user access
@@ -816,7 +816,7 @@ function lingotek_form_node_type_form_alter(&$form, &$form_state) {
     t('If Lingotek translation (or field translation) is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.')
   : t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
   $form['workflow']['language_content_type']['#options'][LINGOTEK_ENABLED] = $lingotek_option_label;
-  $form['workflow']['language_content_type']['#description'] .= ' '.$lingotek_details;
+  $form['workflow']['language_content_type']['#description'] .= ' ' . $lingotek_details;
 }
 
 /**
