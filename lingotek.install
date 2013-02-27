@@ -342,6 +342,6 @@ function lingotek_update_7207() {
  */
 function lingotek_update_7208() {
   $ret = array();
-  $ret[] = update_sql("UPDATE {lingotek} SET lingokey = 'document_id' WHERE lingokey LIKE 'document_id_%'");
+  $ret[] = db_query("UPDATE {lingotek} SET lingokey = 'document_id' WHERE lingokey LIKE 'document_id_%'");
   return $ret;
 }
