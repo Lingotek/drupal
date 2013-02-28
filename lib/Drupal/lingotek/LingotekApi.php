@@ -112,7 +112,7 @@ class LingotekApi {
    */
   public function addContentDocumentWithTargets(LingotekTranslatableEntity $entity) {
     global $_lingotek_locale;
-    $success = TRUE;
+    $success = FALSE;
 
     $parameters = $this->getCreateWithTargetsParams($entity);
 
@@ -126,9 +126,7 @@ class LingotekApi {
       if (get_class($entity) == 'LingotekComment') {
         $entity->setMetadataValue('project_id', variable_get('lingotek_project'));
       }
-    }
-    else {
-      $success = FALSE;
+      $success = TRUE;
     }
 
     return $success;

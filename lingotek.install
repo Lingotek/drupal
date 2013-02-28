@@ -36,17 +36,21 @@ function lingotek_install() {
  * Implements hook_uninstall().
  */
 function lingotek_uninstall() {
-  $delete_variables = array(    
+  $delete_variables = array(
     'lingotek_account_enterprise',
     'lingotek_account_plan',
     'lingotek_account_status',
     'lingotek_activation_email',
     'lingotek_activation_first_name',
     'lingotek_activation_last_name',
+    'lingotek_advanced_parsing',
+    'lingotek_advanced_xml_config1',
+    'lingotek_advanced_xml_config2',
     'lingotek_cms_tag',
     'lingotek_community_identifier',
     'lingotek_guid',
     'lingotek_login_id',
+    'lingotek_password',
     'lingotek_notifications_callback',
     'lingotek_oauth_consumer_id',
     'lingotek_oauth_consumer_secret',
