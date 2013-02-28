@@ -361,7 +361,8 @@ function lingotek_project_select_form() {
   $lingotek_url = variable_get( 'lingotek_url', LINGOTEK_API_SERVER );
   $community_identity = variable_get( 'lingotek_community_identifier', NULL );
   $projects = lingotek_get_projects_v4( $login_id, $password, $community_identity, $lingotek_url . '/lingopoint/api/4' );
-
+  //To-do: $vaults = lingotek_get_vaults_v4( $login_id, $password, $community_identity, $lingotek_url . '/lingopoint/api/4' );
+  
   if ( $projects === FALSE ) {
     drupal_set_message( t( 'Error Retrieving Account Information.' ), 'error' );
     drupal_goto( 'admin/config/lingotek/account-settings' ); // Error geting projects.  Go back.

@@ -972,7 +972,7 @@ function lingotek_is_config_missing() {
     'lingotek_oauth_consumer_secret',
     'lingotek_login_id',
     'lingotek_project',
-    'lingotek_vault'
+    //'lingotek_vault'  //TO-DO: ensure that the project vault is actually set
   );
   foreach ($required_variables as $required_variable) {
     $val = variable_get($required_variable, NULL);
