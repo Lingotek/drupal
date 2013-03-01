@@ -764,8 +764,8 @@ function lingotek_node_update($node) {
     }
 
     if ($send_lingotek_document) {
-      if (LingotekApi::instance()->addContentDocument($node)) {
-        lingotek_add_missing_targets($node);
+      if (LingotekApi::instance()->addContentDocument($node,TRUE)) {
+        //lingotek_add_missing_targets($node);
         drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
       }
       else {

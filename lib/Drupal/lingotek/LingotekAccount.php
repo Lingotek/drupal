@@ -96,6 +96,26 @@ class LingotekAccount {
   public function getStatusText() {
     return ( $this->status == 'active' ) ? '<span style="color: green;">Active</span>' : '<span style="color: red;">Inactive</span>';
   }
+  
+  public function getManagedTargets( $return_lingotek_codes = TRUE ){
+    if ( $this->isEnterprise() === TRUE ) {
+      $targets_drupal = language_list(); // drupal function
+    }
+    else { // Dashboard, works off the seperate list
+      $targets_drupal = lingotek_get_target_language_list();
+    }
+    
+    if($return_lingotek_codes === FALSE) return $targets_drupal;
+      
+    $targets = array();
+    foreach($targets_drupal as $target_code_drupal){
+      $lingotek_language = Lingotek::getLingotekLanguage($target_code_drupal->language);
+      if($lingotek_language !== FALSE){
+        $targets[] = $lingotek_language;
+      }
+    }
+    return $targets;
+  }
 
 
 

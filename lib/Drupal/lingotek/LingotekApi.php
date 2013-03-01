@@ -65,9 +65,9 @@ class LingotekApi {
    * @param object $node
    *   A Drupal node object.
    */
-  public function addContentDocument($node) {
+  public function addContentDocument($node, $with_targets = FALSE) {
     global $_lingotek_locale;
-    $success = TRUE;
+    $success = FALSE;
 
     $project_id = empty($node->lingotek_project_id) ? NULL : $node->lingotek_project_id;
     $project_id = empty($project_id) ? lingotek_lingonode($node->nid, 'project_id') : $project_id;
@@ -86,26 +86,30 @@ class LingotekApi {
         'content' => lingotek_xml_node_body($node),
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
-
+      
       $this->addAdvancedParameters($parameters, $node);
 
-      if ($result = $this->request('addContentDocument', $parameters)) {
-        lingotek_lingonode($node->nid, 'document_id', $result->id);
-      }
+      if($with_targets){
+        $targets = LingotekAccount::instance()->getManagedTargets();
+        $parameters['targetAsJSON'] = drupal_json_encode(array_values($targets));
+        $parameters['applyWorkflow'] = TRUE;
+        $result = $this->request('addContentDocumentWithTargets', $parameters);
+      } 
       else {
-        $success = FALSE;
+        $result = $this->request('addContentDocument', $parameters);
+      }
+      
+      if ($result) {
+        lingotek_lingonode($node->nid, 'document_id', $result->id);
+        $success = TRUE;
       }
     }
-    else {
-      $success = FALSE;
-    }
-
     return $success;
   }
 
 
   /**
-   * Adds a Document and one or more Translation Targets to the Lingotek platform.
+   * Adds a Document and one or more Translation Targets to the Lingotek platform. (only used by comments currently)
    *
    * @param LingotekTranslatableEntity $entity
    *   A Drupal entity.
