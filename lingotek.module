@@ -764,8 +764,7 @@ function lingotek_node_update($node) {
     }
 
     if ($send_lingotek_document) {
-      if (LingotekApi::instance()->addContentDocument($node,TRUE)) {
-        //lingotek_add_missing_targets($node);
+      if (LingotekApi::instance()->addContentDocument($node, TRUE)) {
         drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
       }
       else {
@@ -1025,8 +1024,7 @@ function lingotek_content_push_form_submit($form, $form_state) {
     // Add project and vault parameters to the node object.
     $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
     $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'vault_id');
-    $api->addContentDocument($node);
-    lingotek_add_missing_targets($node);
+    $api->addContentDocument($node, TRUE);
   }
 
   drupal_set_message(t('Pushed content for @node_title to Lingotek for translation.', array('@node_title' => $node->title)));

@@ -101,6 +101,7 @@ class LingotekApi {
       
       if ($result) {
         lingotek_lingonode($node->nid, 'document_id', $result->id);
+        lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
         $success = TRUE;
       }
     }
