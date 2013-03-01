@@ -92,7 +92,7 @@ class LingotekApi {
       if($with_targets){
         $targets = LingotekAccount::instance()->getManagedTargets();
         $parameters['targetAsJSON'] = drupal_json_encode(array_values($targets));
-        $parameters['applyWorkflow'] = TRUE;
+        $parameters['applyWorkflow'] = 'true';// API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
       } 
       else {

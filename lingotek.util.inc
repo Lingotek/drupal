@@ -118,11 +118,9 @@ function lingotek_xml_decode($text) {
 function lingotek_node_init_default($node) {
   if (lingotek_lingonode($node->nid, 'document_id') === FALSE) {
     lingotek_trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
-    LingotekApi::instance()->addContentDocument($node);
+    LingotekApi::instance()->addContentDocument($node, TRUE);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
   }
-  // Add any missing languages and their phase templates
-  lingotek_add_missing_targets($node);
 }
 
 /**

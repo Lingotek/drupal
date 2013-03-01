@@ -48,8 +48,7 @@ function lingotek_push_form_submit($form, $form_state) {
     // Add project and vault parameters to the node object.
     $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
     $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'vault_id');
-    $api->addContentDocument($node);
-    lingotek_add_missing_targets($node);
+    $api->addContentDocument($node, TRUE);
   }
 
   drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));

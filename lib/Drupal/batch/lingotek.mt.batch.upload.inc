@@ -25,8 +25,7 @@ function lingotek_machine_translate_node( $nid, &$context ) {
   else {
     
     // Create a new Lingotek Document.
-    $api->addContentDocument($node);
-    lingotek_add_missing_targets($node); 
+    $api->addContentDocument($node, TRUE);
     
   }
 
