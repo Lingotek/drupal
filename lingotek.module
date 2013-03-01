@@ -708,12 +708,18 @@ function lingotek_node_delete($node) {
 function lingotek_node_update($node) {
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
+  $send_lingotek_document = NULL;
   if (isset($node->create_lingotek_document)) {
+    $send_lingotek_document = $node->create_lingotek_document;
     lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+  } 
+  else {
+    // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
+    $send_lingotek_document = lingotek_lingonode($node->nid, 'create_lingotek_document');
+    if($send_lingotek_document === FALSE) {
+      $send_lingotek_document = variable_get('lingotek_create_documents_by_default', $send_lingotek_document);
+    }
   }
-
-  // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
-  $send_lingotek_document = (!empty($node->create_lingotek_document) || lingotek_lingonode($node->nid, 'create_lingotek_document') || variable_get('lingotek_create_documents_by_default') );
 
   if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
     return;
