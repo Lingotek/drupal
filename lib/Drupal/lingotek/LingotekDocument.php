@@ -51,7 +51,7 @@ class LingotekDocument {
     if ($document = LingotekApi::instance()->getDocument($this->document_id)) {
       if (!empty($document->translationTargets)) {
         foreach ($document->translationTargets as $target) {
-          $targets[lingotek_drupal_language($target->language)] = $target;
+          $targets[Lingotek::convertLingotek2Drupal($target->language)] = $target;
         }        
       }
     }

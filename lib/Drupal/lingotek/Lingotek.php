@@ -12,7 +12,7 @@ class Lingotek {
   /**
    * A map of Drupal language codes to Lingotek language codes.
    */
-  private static $language_map = array(
+  public static $language_map = array(
     'aa' => 'aa_DJ',
     'ab' => 'ab_GE',
     'af' => 'af_ZA',
@@ -176,7 +176,8 @@ class Lingotek {
     'th' => 'th_TH',
     'ti' => 'ti_ER',
     'tk' => 'tk_TM',
-    'tl' => 'tl_PH',
+    'fil' => 'tl_PH',
+    //'tl' => 'tl_PH',
     'tn' => 'tn_BW',
     'to' => 'to_TO',
     'tpi' => 'tpi_PG',
@@ -199,7 +200,7 @@ class Lingotek {
     'yap' => 'yap_FM',
     'yi' => 'yi_IL',
     'yo' => 'yo_NG',
-    'zh' => 'zh_TW',
+    //'zh' => 'zh_TW',
     'zh-hans' => 'zh_CN',
     'zh-hant' => 'zh_TW',
     'zu' => 'zu_ZA',
@@ -207,7 +208,7 @@ class Lingotek {
    
   
   /**
-   * Gets the Lingotek language code for the specified Drupal language code.
+   * Converts the Lingotek language code for the specified Drupal language code.
    *
    * @param string $language_code
    *   A Drupal language code.
@@ -216,16 +217,62 @@ class Lingotek {
    *   The Lingotek language code if there is a match for the passed language code,
    *   FALSE otherwise.
    */
-  public static function getLingotekLanguage($language_code) {
-    
-    $lingotek_language = FALSE;
-    
-    if (isset(self::$language_map[$language_code])) {
-      $lingotek_language = self::$language_map[$language_code];
+  public static function convertDrupal2Lingotek($language_code) {
+
+    $lingotek_locale = FALSE;
+
+    // If the code contains a dash then, keep it specific
+    $dash_pos = strpos($language_code, "-");
+    if ($dash_pos !== FALSE) {
+      $lang = substr($language_code, 0, $dash_pos);
+      $loc = strtoupper(substr($language_code, $dash_pos + 1));
+      $lingotek_locale = $lang . '_' . $loc;
+    } // If it is generic then use the mapping to pick a specific 
+    else if (isset(self::$language_map[$language_code])) {
+      $lingotek_locale = self::$language_map[$language_code];
     }
-    
-    return $lingotek_language;
+
+    return $lingotek_locale;
   }
+  
+  /**
+   * Gets the Drupal language code for the specified Lingotek language code.
+   *
+   * @param string $lingotek_locale
+   *   A Lingotek language code. (e.g., 'de_DE', 'pt_BR', 'fr_FR')
+   *
+   * @return mixed
+   *   The Drupal language code if there is a match for the passed language code, (e.g., 'de-de', 'pt-br',' fr-fr')
+   *   FALSE otherwise.
+   */
+  public static function convertLingotek2Drupal($lingotek_locale, $enabled_check = TRUE) {
+
+    $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale));
+    if (!$enabled_check) {
+      return $drupal_language_code;
+    }
+
+    $ret = FALSE;
+    // if it doesn't exist, then try a general code using the mapping
+    $languages = current(language_list('enabled')); // enabled drupal languages as associative array
+    $exists = array_key_exists($drupal_language_code, $languages);
+    if ($exists) {
+      $ret = $drupal_language_code;
+    }
+    else { //general lookup (degraded)
+      $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
+      $exists = array_key_exists($drupal_general_code, $languages);
+      if ($exists) {
+        $ret = $drupal_general_code;
+      }
+    } //echo "\n\n convertLingotek2Drupal: ".$lingotek_locale." => ".$ret." \n\n";
+    return $ret;
+  }
+  
+  public static function testConvertFunctions(){
+    
+  }
+  
   
   /**
    * Gets the site's available target languages for Lingotek translation.

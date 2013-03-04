@@ -212,7 +212,7 @@ static $_lingotek_locale = array
 
 $GLOBALS['_lingotek_locale'] = $_lingotek_locale;
 
-
+/*
 function lingotek_test_locale_duplicates($locales) {
   $duplicates_exist = count($locales) !== count(array_flip($locales));
   
@@ -229,12 +229,14 @@ function lingotek_test_locale_duplicates($locales) {
   return $duplicates_exist;
 }
 //lingotek_test_locale_duplicates($_lingotek_locale);
+//lingotek_test_locale_duplicates(Lingotek::$language_map);
+*/
 
 /*
  * Language code conversion: lingotek => drupal
  */
 
-function lingotek_drupal_language($locale) {
+/*function lingotek_drupal_language($locale) {
   global $_lingotek_locale;
   $locale = strtolower(str_replace("_", "-", $locale));
   if (array_key_exists($locale, $_lingotek_locale)) {
@@ -247,9 +249,9 @@ function lingotek_drupal_language($locale) {
     elseif ($locale == "zh-tw") {
       return "zh-hant";
     }
-    return substr($locale, 0, strpos($locale, '-'));
+    return substr($locale, 0, strpos($locale, '-'));//$locale
   }
-}
+}*/
 
 /*
  * Language formal name

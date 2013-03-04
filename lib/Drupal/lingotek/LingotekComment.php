@@ -351,7 +351,7 @@ class LingotekComment implements LingotekTranslatableEntity {
       foreach ($document->translationTargets as $target) {
         $document_xml = $api->downloadDocument($metadata['document_id'], $target->language);
 
-        $target_language = lingotek_drupal_language($target->language);
+        $target_language = Lingotek::convertLingotek2Drupal($target->language);
         foreach ($document_xml as $drupal_field_name => $content) {
 
           // Figure out which subkey of the field data we're targeting.

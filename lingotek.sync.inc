@@ -195,7 +195,7 @@ function lingotek_notifications() {
   include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
   $context = '';
 
-  $target_drupal_language_code = lingotek_drupal_language($target_code);
+  $target_drupal_language_code = Lingotek::convertLingotek2Drupal($target_code);
   $nid = lingotek_get_node_id_from_document_id( $document_id );
 
   if (!$nid) {

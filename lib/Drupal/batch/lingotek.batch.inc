@@ -264,15 +264,13 @@ function lingotek_bulk_mt_upload_batch_create( ) {
 /**
  * Batch Create - Download:  Create a Bulk Machine Translate DOWNLOAD Batch.
  */
-function lingotek_bulk_mt_download_batch_create($language_code) {
+function lingotek_bulk_mt_download_batch_create($lingotek_locale) {
 
   $operations = array();
 
-  if ($language_code) {
+  if ($lingotek_locale) {
 
-    $dashboard_language_code = $language_code;
-    $drupal_language_code = lingotek_dashboard_to_drupal_language_code($dashboard_language_code);
-    $lingotek_language_code = lingotek_drupal_to_lingotek_language_code($drupal_language_code);
+    $drupal_language_code =  Lingotek::convertLingotek2Drupal($lingotek_locale);
     // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
     // Grab nodes that are currently marked 'PENDING'
     $query = db_select('lingotek', 'l')->fields('l');

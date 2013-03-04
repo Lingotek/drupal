@@ -109,7 +109,7 @@ class LingotekAccount {
       
     $targets = array();
     foreach($targets_drupal as $target_code_drupal){
-      $lingotek_language = Lingotek::getLingotekLanguage($target_code_drupal->language);
+      $lingotek_language = Lingotek::convertDrupal2Lingotek($target_code_drupal->language);
       if($lingotek_language !== FALSE){
         $targets[] = $lingotek_language;
       }

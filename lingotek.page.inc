@@ -410,7 +410,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
       $targets = $progress->translationTargets;
 
       foreach ($targets as $target) {
-        $language = lingotek_drupal_language($target->language);
+        $language = Lingotek::convertLingotek2Drupal($target->language);
         $current_phase = $document->currentPhase($target->id);
 
         $phase_complete_percent = $current_phase->percentComplete;

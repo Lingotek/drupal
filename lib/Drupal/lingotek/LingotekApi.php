@@ -176,7 +176,7 @@ class LingotekApi {
   protected function getCommentCreateWithTargetsParams(LingotekComment $comment) {
     $targets = Lingotek::availableLanguageTargets();
     foreach ($targets as $index => $target) {
-      if ($target == Lingotek::getLingotekLanguage($comment->language)) {
+      if ($target == Lingotek::convertDrupal2Lingotek($comment->language)) {
         unset($targets[$index]);
         break;
       }
@@ -189,7 +189,7 @@ class LingotekApi {
       'format' => $this->xmlFormat(),
       'applyWorkflow' => 'true',
       'workflowId' => variable_get('lingotek_translate_comments_workflow_id', NULL),
-      'sourceLanguage' => Lingotek::getLingotekLanguage($comment->language),
+      'sourceLanguage' => Lingotek::convertDrupal2Lingotek($comment->language),
       'tmVaultId' => variable_get('lingotek_vault', 1),
       'content' => $comment->documentLingotekXML(),
       'targetAsJSON' => drupal_json_encode(array_values($targets)),
