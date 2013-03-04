@@ -231,12 +231,11 @@ function lingotek_dashboard_command_ajax() {
       $active_languages = current(language_list('enabled'));
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
 
-      die($drupal_language_code);
       // if the Source language is not active, activate it.
       if (!array_key_exists($drupal_language_code, $active_languages)) {
-        $name = isset($_POST['name']) ? $_POST['name'] : NULL;
+        $name = isset($_POST['language']) ? $_POST['language'] : NULL;
         $native = isset($_POST['native']) ? $_POST['native'] : NULL;
-        $direction = isset($_POST['direction']) ? $_POST['direction'] : LANGUAGE_LTR;
+        $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? $_POST['direction'] : LANGUAGE_LTR;
         locale_add_language($drupal_language_code, $name, $native, $direction); // Function from the Locale module.
       }
 
