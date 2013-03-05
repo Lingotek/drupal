@@ -80,7 +80,6 @@ function lingotek_menu() {
 
   // Dashboard:  Ajax Command Processor
   $items['admin/settings/lingotek/command'] = array(
-    'title' => 'Upload Documents for Translation',
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration'),
     'description' => 'Lingotek Command Router',

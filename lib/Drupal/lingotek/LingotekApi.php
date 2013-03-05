@@ -807,7 +807,6 @@ class LingotekApi {
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
-    watchdog("api_call", "@request_method @method", array("@request_method" => $request_method, "@method" => $method));
     global $user;
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.

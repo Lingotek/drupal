@@ -651,76 +651,60 @@ function lingotek_get_active_languages( $get_details = FALSE ) {
 } // END:  lingotek_get_active_languages()
 
 
-/**
+ /**
  * Flags a target language as active:FALSE in the Target Language tracking.
  */
-function lingotek_delete_target_language( $drupal_language_code = NULL ) {
+function lingotek_delete_target_language($drupal_language_code = NULL) {
 
-  if ( isset( $drupal_language_code ) ) {
+  if (isset($drupal_language_code)) {
 
     $target_languages = lingotek_get_target_languages();
-    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => FALSE );
-    lingotek_save_target_languages( $target_languages );
+    $target_languages[$drupal_language_code] = array('code' => $drupal_language_code, 'active' => FALSE);
+    lingotek_save_target_languages($target_languages);
 
     // Remove the Target Language from the Lingotek Project.
-    $project_id = variable_get( 'lingotek_project', '' );
+    $project_id = variable_get('lingotek_project', '');
     $api = LingotekApi::instance();
-    $result = $api->removeTranslationTarget( NULL, $project_id, $drupal_language_code );
+    $result = $api->removeTranslationTarget(NULL, $project_id, $drupal_language_code);
   }
 
-  watchdog('lingotek_delete_target_language', '@drupal_language_code => @result', array(
-    '@drupal_language_code' => $drupal_language_code,
-    '@result' => $result
-      ), WATCHDOG_NOTICE);
-  $result = FALSE;
-  
   return $result;
-
-} // END:  lingotek_get_target_languages()
-
+}
 
 /**
  * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
  */
-function lingotek_add_target_language( $drupal_language_code = NULL ) {
+function lingotek_add_target_language($drupal_language_code = NULL) {
 
-  if ( isset( $drupal_language_code ) ) {
+  if (isset($drupal_language_code)) {
 
     $target_languages = lingotek_get_target_languages();
-    $target_languages[ $drupal_language_code ] = array( 'code' => $drupal_language_code, 'active' => TRUE );
-    lingotek_save_target_languages( $target_languages );
+    $target_languages[$drupal_language_code] = array('code' => $drupal_language_code, 'active' => TRUE);
+    lingotek_save_target_languages($target_languages);
 
     // Add the Target Language to the Lingotek Project.
-    $project_id = variable_get( 'lingotek_project', '' );
+    $project_id = variable_get('lingotek_project', '');
     $api = LingotekApi::instance();
-    $result = $api->addTranslationTarget( NULL, $project_id, $drupal_language_code );
+    $result = $api->addTranslationTarget(NULL, $project_id, $drupal_language_code);
   }
-  
-  watchdog('lingotek_add_target_language', '@drupal_language_code => @result', array(
-    '@drupal_language_code' => $drupal_language_code,
-    '@result' => $result
-      ), WATCHDOG_NOTICE);
-  $result = FALSE;
 
   return $result;
-
-} // END:  lingotek_get_target_languages()
-
+}
 
 /**
  * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
  * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
  * pass in active == TRUE, to get ONLY the active languages.
  */
-function lingotek_get_target_languages( $active_only = FALSE ) {
+function lingotek_get_target_languages($active_only = FALSE) {
 
-  $target_languages = variable_get( 'lingotek_target_languages', array() );
+  $target_languages = variable_get('lingotek_target_languages', array());
 
   // If $active_only == TRUE, return only the active ones.
-  if ( $active_only ) {
+  if ($active_only) {
     $active_languages = array();
-    foreach ( $target_languages as $target ) {
-      if ( $target['active'] == TRUE ) {
+    foreach ($target_languages as $target) {
+      if ($target['active'] == TRUE) {
         $active_languages[] = $target['code'];
       }
     }
@@ -728,9 +712,7 @@ function lingotek_get_target_languages( $active_only = FALSE ) {
   }
 
   return $target_languages;
-
-} // END:  lingotek_get_target_languages()
-
+}
 
 /*
  * Uses lingotek_get_target_languages to build a Drupal style format language_list()
