@@ -616,8 +616,7 @@ function lingotek_translatable_node_field_details() {
  * Get the currently active languages for this Drupal installation.
  */
 function lingotek_get_active_languages( $get_details = FALSE ) {
-  $active_languages = language_list('enabled');
-  $active_languages = array_shift( $active_languages );
+  $active_languages = current(language_list('enabled'));
 
   if ( $get_details === FALSE ) {
     $active_languages = array_keys( $active_languages );
@@ -733,12 +732,14 @@ function lingotek_get_target_language_list() {
 
   $paid_targets = array();
 
-  $active_languages = lingotek_get_active_languages( TRUE );
-  $clean_list = lingotek_get_target_languages( TRUE ); // Simple language list of Paid Target Languages
-  foreach ( $clean_list as $clean ) {
-    $paid_targets[ $clean ] = $active_languages[ $clean ];
+  $active_languages = lingotek_get_active_languages( TRUE );// Languages activated with Drupal locale
+  $managed_languages = lingotek_get_target_languages( TRUE ); // Simple language list of Paid Target Languages
+  foreach ( $managed_languages as $code ) {
+    if(isset($active_languages[ $code ])) {
+      $paid_targets[ $code ] = $active_languages[ $code ];
+    }
   }
-
+  
   return $paid_targets;
 }
 

@@ -206,8 +206,8 @@ function lingotek_pm($node) {
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
-      $language_link  = l( lingotek_language_native($language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $language) . '\'); return false;')) );
-      $language_link .= ' ' . t('(' . lingotek_language_name($language) . ')');
+      $language_link = l(lingotek_language_native($language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $language) . '\'); return false;')));
+      $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_name($language)));
       $row = array(
         '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
         $language_link,

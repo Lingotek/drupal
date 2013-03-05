@@ -193,7 +193,7 @@ function lingotek_get_dashboard_code() {
  */
 function lingotek_dashboard_command_ajax() {
 
-  $data = array();
+  $parameters = array();
   $message = 'Not doing anything.';
   $method = $_SERVER['REQUEST_METHOD'];
 
@@ -204,9 +204,10 @@ function lingotek_dashboard_command_ajax() {
 
     // Initiate Machine Translation
     $message = 'PUT: Initiate Machine Translation';
-    parse_str(file_get_contents("php://input"), $put_vars);
-    $type = $put_vars['type'];
-    $lingotek_locale = $put_vars['code'];
+    parse_str(file_get_contents("php://input"), $parameters);
+    
+    $type = $parameters['type'];
+    $lingotek_locale = $parameters['code'];
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
 
     $response = array(
@@ -224,6 +225,7 @@ function lingotek_dashboard_command_ajax() {
 
     $message = 'POST: Insert a new Target Language';
     $lingotek_locale = $_POST['code'];
+    $parameters = $_POST;
 
     if (strlen($lingotek_locale) > 1) {
 
@@ -235,7 +237,7 @@ function lingotek_dashboard_command_ajax() {
       if (!array_key_exists($drupal_language_code, $active_languages)) {
         $name = isset($_POST['language']) ? $_POST['language'] : NULL;
         $native = isset($_POST['native']) ? $_POST['native'] : NULL;
-        $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? $_POST['direction'] : LANGUAGE_LTR;
+        $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
         locale_add_language($drupal_language_code, $name, $native, $direction); // Function from the Locale module.
       }
 
@@ -259,9 +261,9 @@ function lingotek_dashboard_command_ajax() {
 
     // Initiate Language Delete
     $message = 'DELETE: Remove a language ABC';
-    parse_str(file_get_contents("php://input"), $delete_vars);
+    parse_str(file_get_contents("php://input"), $parameters);
 
-    $lingotek_locale = $delete_vars['code'];
+    $lingotek_locale = $parameters['code'];
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
 
     // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
@@ -280,7 +282,7 @@ function lingotek_dashboard_command_ajax() {
 
     // Retrieve the Target Languages and Status
     $message = 'GET: Retrieve the Target Languages and Status';
-    $data = $_GET;
+    $parameters = $_GET;
 
     $target_languages = lingotek_get_target_languages();
 
@@ -332,11 +334,22 @@ function lingotek_dashboard_command_ajax() {
     ajax_deliver(array('#type' => 'ajax', '#commands' => $commands));
   }
   else {
-    // Debugging
     //drupal_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
-    // Regular
     $general = array('message' => $message);
-    drupal_json_output_cors(array_merge($general, $response));
+    $full_response = array_merge($general, $response);
+    watchdog( 'endpoint_api', '
+      <h1>@method</h1>
+      <h2>Parameters:</h2>
+      <div>!parameters</div>
+      <h2>Response:</h2>
+      <div>!response</div>
+      ', 
+      array( 
+        '@method' => $method,
+        '!parameters' => watchdog_format_object($parameters),
+        '!response' => watchdog_format_object($response)
+      ), WATCHDOG_NOTICE );
+    return drupal_json_output_cors($full_response);
   }
 }
 

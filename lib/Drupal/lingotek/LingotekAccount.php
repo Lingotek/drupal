@@ -101,8 +101,8 @@ class LingotekAccount {
     if ( $this->isEnterprise() === TRUE ) {
       $targets_drupal = language_list(); // drupal function
     }
-    else { // Dashboard, works off the seperate list
-      $targets_drupal = lingotek_get_target_language_list();
+    else { 
+      $targets_drupal = lingotek_get_target_language_list( );
     }
     
     if($return_lingotek_codes === FALSE) return $targets_drupal;

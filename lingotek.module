@@ -82,7 +82,7 @@ function lingotek_menu() {
   $items['admin/settings/lingotek/command'] = array(
     'title' => 'Upload Documents for Translation',
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
+    'access arguments' => array('administration'),
     'description' => 'Lingotek Command Router',
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard_command_ajax',
@@ -111,7 +111,7 @@ function lingotek_menu() {
   // Flushes the Cache
   $items['admin/settings/lingotek/flush-cache'] = array(
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
+    'access arguments' => array('administration'),
     'file' => 'lingotek.admin.inc',
     'page callback' => 'lingotek_flush_cache',
   );
@@ -800,10 +800,6 @@ function lingotek_node_update($node) {
   if (user_access('use_source') && isset($node->useSource)) {
     lingotek_lingonode($node->nid, 'use_source', $node->useSource);
   }
-
-  // UPDATE:  This is now done when a language is added, at the project level.
-  // Add any missing languages and their phase templates.
-  //lingotek_add_missing_targets($node);
 }
 
 /**
