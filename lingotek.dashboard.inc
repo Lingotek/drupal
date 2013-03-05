@@ -234,6 +234,9 @@ function lingotek_dashboard_command_ajax() {
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
 
       // if the Source language is not active, activate it.
+      //dvz($drupal_language_code);
+      //dvz($active_languages);
+      
       if (!array_key_exists($drupal_language_code, $active_languages)) {
         $name = isset($_POST['language']) ? $_POST['language'] : NULL;
         $native = isset($_POST['native']) ? $_POST['native'] : NULL;
@@ -243,7 +246,7 @@ function lingotek_dashboard_command_ajax() {
 
       // Adds the language to the local list of languages we do translation for, and to the Lingotek project.
       $add = lingotek_add_target_language($drupal_language_code);
-
+      
       // Add the node sync target language entries to the lingotek table.
       lingotek_add_target_sync_status_to_all_nodes($drupal_language_code);
 
@@ -253,6 +256,7 @@ function lingotek_dashboard_command_ajax() {
         'docs' => '0',
         'pending' => '0',
         'current' => '0'
+        ,'add' => $add //TEMP
       );
     }
   } // END:  POST
@@ -337,18 +341,19 @@ function lingotek_dashboard_command_ajax() {
     //drupal_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     $general = array('message' => $message);
     $full_response = array_merge($general, $response);
-    watchdog( 'endpoint_api', '
+    if ($method !== 'GET') { //skip GETS (since they occur lots)
+      watchdog('endpoint_api', '
       <h1>@method</h1>
       <h2>Parameters:</h2>
       <div>!parameters</div>
       <h2>Response:</h2>
       <div>!response</div>
-      ', 
-      array( 
+      ', array(
         '@method' => $method,
         '!parameters' => watchdog_format_object($parameters),
         '!response' => watchdog_format_object($response)
-      ), WATCHDOG_NOTICE );
+          ), WATCHDOG_NOTICE);
+    }
     return drupal_json_output_cors($full_response);
   }
 }

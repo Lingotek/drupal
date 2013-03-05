@@ -656,8 +656,6 @@ function lingotek_get_active_languages( $get_details = FALSE ) {
  */
 function lingotek_delete_target_language( $drupal_language_code = NULL ) {
 
-  $result = FALSE;
-
   if ( isset( $drupal_language_code ) ) {
 
     $target_languages = lingotek_get_target_languages();
@@ -670,6 +668,12 @@ function lingotek_delete_target_language( $drupal_language_code = NULL ) {
     $result = $api->removeTranslationTarget( NULL, $project_id, $drupal_language_code );
   }
 
+  watchdog('lingotek_delete_target_language', '@drupal_language_code => @result', array(
+    '@drupal_language_code' => $drupal_language_code,
+    '@result' => $result
+      ), WATCHDOG_NOTICE);
+  $result = FALSE;
+  
   return $result;
 
 } // END:  lingotek_get_target_languages()
@@ -679,8 +683,6 @@ function lingotek_delete_target_language( $drupal_language_code = NULL ) {
  * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
  */
 function lingotek_add_target_language( $drupal_language_code = NULL ) {
-
-  $result = FALSE;
 
   if ( isset( $drupal_language_code ) ) {
 
@@ -693,6 +695,12 @@ function lingotek_add_target_language( $drupal_language_code = NULL ) {
     $api = LingotekApi::instance();
     $result = $api->addTranslationTarget( NULL, $project_id, $drupal_language_code );
   }
+  
+  watchdog('lingotek_add_target_language', '@drupal_language_code => @result', array(
+    '@drupal_language_code' => $drupal_language_code,
+    '@result' => $result
+      ), WATCHDOG_NOTICE);
+  $result = FALSE;
 
   return $result;
 

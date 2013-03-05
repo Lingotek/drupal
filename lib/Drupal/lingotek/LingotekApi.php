@@ -221,35 +221,28 @@ class LingotekApi {
   public function addTranslationTarget($lingotek_document_id, $lingotek_project_id, $target_language_code, $workflow_id = '') {
     global $_lingotek_client, $_lingotek_locale;
 
-    if( isset( $_lingotek_locale[$target_language_code] ) ) {
+    $parameters = array(
+      'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
+      'targetLanguage' => Lingotek::convertDrupal2Lingotek($target_language_code)
+    );
 
-      $parameters = array(
-        'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
-        'targetLanguage' => $_lingotek_locale[$target_language_code]
-      );
+    if (isset($lingotek_document_id) && !isset($lingotek_project_id)) {
+      $parameters['documentId'] = $lingotek_document_id;
+    }
+    else if (isset($lingotek_project_id) && !isset($lingotek_document_id)) {
+      $parameters['projectId'] = $lingotek_project_id;
+    }
 
-      if ( isset( $lingotek_document_id ) && !isset( $lingotek_project_id ) ) {
-        $parameters['documentId'] = $lingotek_document_id;
-      }
-      else if ( isset( $lingotek_project_id ) && !isset( $lingotek_document_id ) ) {
-        $parameters['projectId'] = $lingotek_project_id;
-      }
+    if ($workflow_id) {
+      $parameters['workflowId'] = $workflow_id;
+    }
 
-      if ($workflow_id) {
-        $parameters['workflowId'] = $workflow_id;
-      }
-
-      if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
-        return ( $new_translation_target->results == 'success' ) ? TRUE : FALSE ;
-      }
-      else {
-        return FALSE;
-      }
+    if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
+      return ( $new_translation_target->results == 'success' ) ? TRUE : FALSE;
     }
     else {
       return FALSE;
     }
-
   }
 
   /**
@@ -271,35 +264,28 @@ class LingotekApi {
   public function removeTranslationTarget($lingotek_document_id, $lingotek_project_id, $target_language_code, $workflow_id = '') {
     global $_lingotek_client, $_lingotek_locale;
 
-    if( isset( $_lingotek_locale[$target_language_code] ) ) {
+    $parameters = array(
+      'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
+      'targetLanguage' => Lingotek::convertDrupal2Lingotek($target_language_code)
+    );
 
-      $parameters = array(
-        'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
-        'targetLanguage' => $_lingotek_locale[$target_language_code]
-      );
+    if (isset($lingotek_document_id) && !isset($lingotek_project_id)) {
+      $parameters['documentId'] = $lingotek_document_id;
+    }
+    else if (isset($lingotek_project_id) && !isset($lingotek_document_id)) {
+      $parameters['projectId'] = $lingotek_project_id;
+    }
 
-      if ( isset( $lingotek_document_id ) && !isset( $lingotek_project_id ) ) {
-        $parameters['documentId'] = $lingotek_document_id;
-      }
-      else if ( isset( $lingotek_project_id ) && !isset( $lingotek_document_id ) ) {
-        $parameters['projectId'] = $lingotek_project_id;
-      }
+    if ($workflow_id) {
+      $parameters['workflowId'] = $workflow_id;
+    }
 
-      if ($workflow_id) {
-        $parameters['workflowId'] = $workflow_id;
-      }
-
-      if ($old_translation_target = $this->request('removeTranslationTarget', $parameters)) {
-        return ( $old_translation_target->results == 'success' ) ? TRUE : FALSE ;
-      }
-      else {
-        return FALSE;
-      }
+    if ($old_translation_target = $this->request('removeTranslationTarget', $parameters)) {
+      return ( $old_translation_target->results == 'success' ) ? TRUE : FALSE;
     }
     else {
       return FALSE;
     }
-
   }
 
   /**
@@ -821,6 +807,7 @@ class LingotekApi {
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
+    watchdog("api_call", "@request_method @method", array("@request_method" => $request_method, "@method" => $method));
     global $user;
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
