@@ -16,11 +16,11 @@ $GLOBALS['_lingotek_client'] = new LingotekSession();
  * @param $target_language
  *  Target language to be updated/synchronized
  */
-function lingotek_download_document(&$node, $target_lingotek_locale) {
+function lingotek_download_document(&$node, $drupal_language_code) {
   global $_lingotek_client, $_lingotek_locale;
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
-  lingotek_trace('lingotek_download_document', array('document_id' => $document_id, "language" => $target_lingotek_locale));
+  lingotek_trace('lingotek_download_document', array('document_id' => $document_id, "language" => $drupal_language_code));
 
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = lingotek_lingonode($node->nid, 'use_source');
@@ -31,15 +31,10 @@ function lingotek_download_document(&$node, $target_lingotek_locale) {
     $use_source = 'TRUE';
   }
 
-  //Handle the language being passed as the value lingotek uses already:
-  if (!array_key_exists($target_lingotek_locale, $_lingotek_locale)) {
-    $target_lingotek_locale = Lingotek::convertLingotek2Drupal($target_lingotek_locale);
-  }
-
   $params = array
   (
     'documentId' => $document_id,
-    'targetLanguage' => $_lingotek_locale[$target_lingotek_locale],
+    'targetLanguage' => Lingotek::convertDrupal2Lingotek($drupal_language_code),
     'useSource' => $use_source,
   );
 
@@ -69,7 +64,7 @@ function lingotek_download_document(&$node, $target_lingotek_locale) {
       }
       $path = path_load($conditions);
       if ($path !== FALSE) {
-        $conditions['language'] = $target_lingotek_locale;
+        $conditions['language'] = $drupal_language_code;
         if ($path['alias'] != $target) {
           $original = path_load($conditions);
           $conditions['alias'] = $target;
@@ -96,10 +91,10 @@ function lingotek_download_document(&$node, $target_lingotek_locale) {
         $node_field = & $node->$drupal_field_name;
         $index = 0;
         foreach ($content as $text) {
-          $node_field[$target_lingotek_locale][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
+          $node_field[$drupal_language_code][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
           if (array_key_exists($node->language, $node_field)) {
             if (array_key_exists('format', $node_field[$node->language][0])) {
-              $node_field[$target_lingotek_locale][$index]['format'] = $node_field[$node->language][0]['format'];
+              $node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
             }
           }
           $index++;
@@ -111,7 +106,7 @@ function lingotek_download_document(&$node, $target_lingotek_locale) {
       if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $node->language != LANGUAGE_NONE) {
         module_load_include('inc', 'pathauto');
         $uri = entity_uri('node', $node);
-        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node), $node->type, $target_lingotek_locale);
+        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node), $node->type, $drupal_language_code);
       }
     }
   }
