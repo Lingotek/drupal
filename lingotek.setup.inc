@@ -475,7 +475,7 @@ function lingotek_setup_language_settings_form() {
     'it' => t('Italian'), 
     'ja' => t('Japanese'), 
     'ko' => t('Korean'), 
-    'pt-pt' => t('Portuguese'), 
+    'pt-br' => t('Portuguese'), 
     'ru' => t('Russian'), 
     'es' => t('Spanish')
   );
@@ -818,8 +818,7 @@ function lingotek_setup_node_translation_settings_form_submit( $form, &$form_sta
 
   } // END: foreach form value
 
-  // Identify pre-existing content (based on these new content-type settings)
-  lingotek_batch_identify_content();
+  lingotek_cleanup_utility();
   
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set( 'lingotek_translate_fields', $translate );
@@ -833,14 +832,14 @@ function lingotek_setup_node_translation_settings_form_submit( $form, &$form_sta
 /**
  * Setup Complete - Form Layout
  */
-function lingotek_setup_complete_form( $form, $form_state ) {
+function lingotek_setup_complete_form($form, $form_state) {
 
-  $form['lingotek_message_1'] = array( '#markup' => '<p>The Lingotek configuration module has been setup and configured and is now ready to use.</p>' );
+  $form['lingotek_message_1'] = array('#markup' => '<p>The Lingotek configuration module has been setup and configured and is now ready to use.</p>');
 
-  $form['lingotek_button_spacer'] = array( '#markup' => '<div>&nbsp;</div>' );
-  $form[ 'submit' ] = array(
-    '#type' => 'submit', 
-    '#value' => t( 'Start Using Lingotek' )
+  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Start Using Lingotek')
   );
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -857,7 +856,7 @@ function lingotek_setup_complete_form_submit( $form, &$form_state ) {
   // Mark Lingotek Setup Wizard as Complete
   variable_set( 'lingotek_setup_complete', 1 );
 
-  lingotek_field_language_data_cleanup_batch_create();
+  
 
   // Clear wizard progress tracking.  
   if (isset($_SESSION['lingotek_setup_path'])) {

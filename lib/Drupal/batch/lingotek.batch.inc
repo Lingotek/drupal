@@ -5,6 +5,13 @@
  */
 
 
+function lingotek_cleanup_utility(){
+  
+  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
+  lingotek_field_language_data_cleanup_batch_create();
+  
+}
+
 /**
  * Field Language Data Cleanup Utility
  * 
@@ -14,7 +21,7 @@
  *   If the batch create was NOT called from a Drupal form handler, pass in false,
  *   so that the extra call is made that will start the batch processing.
  */
-function lingotek_field_language_data_cleanup_batch_create( $from_post = TRUE, $goto = '<front>' ) {
+function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
 
   $operations = array();
   $entity_type = 'node';
@@ -51,7 +58,7 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = TRUE, $
     }
   }
 
-  if ( count( $operations ) > 0 ) {
+  if (count($operations) > 0) {
 
     $batch = array(
       'title' => t('Lingotek Field Language Updater'),
@@ -61,12 +68,9 @@ function lingotek_field_language_data_cleanup_batch_create( $from_post = TRUE, $
     );
 
     batch_set($batch);
-
-    // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
-    if ( $from_post === FALSE ) {
-      batch_process($goto); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+    if ($front) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+      batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
     }
-
   } // END:  if operations
 
 }
@@ -196,7 +200,7 @@ function lingotek_batch_identify_content($front = FALSE) {
   $batch = array(
     'title' => t('Identifying Translatable Content'),
     'operations' => $operations,
-      //'finished' => 'lingotek_batch_identify_content_finished'
+    'finished' => 'lingotek_batch_identify_content_finished'
   );
 
   batch_set($batch);
@@ -209,7 +213,7 @@ function lingotek_batch_identify_content($front = FALSE) {
  * Batch Finished: Identify Content Complete.
  */
 function lingotek_batch_identify_content_finished( $success, $results, $operations ) {
-
+  drupal_set_message(t('Translatable content has been identified.'));
 } // END:  lingotek_batch_identify_content_finished()
 
 

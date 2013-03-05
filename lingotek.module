@@ -139,12 +139,12 @@ function lingotek_menu() {
   );
 
   $items['admin/config/regional/field-data-cleanup'] = array(
-    'title' => 'Lingotek Field Data Cleanup Utility',
+    'title' => 'Lingotek cleanup utility',
     'description' => 'Updates language settings for existing field data.',
     'access arguments' => array('access lingotek utilities'),
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_form_field_language_utility'),
+    'page arguments' => array('lingotek_form_cleanup_utility'),
     'type' => MENU_NORMAL_ITEM,
   );
 

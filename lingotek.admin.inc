@@ -441,13 +441,13 @@ function lingotek_admin_form_submit($form, $form_state) {
  * @return array
  *   A FAPI form array.
  */
-function lingotek_form_field_language_utility($form_state) {
+function lingotek_form_cleanup_utility($form_state) {
   $form = array();
 
   $form['description'] = array(
     '#markup' => '<p class="help">' . t('This tool processes all existing field data for translation-enabled fields on nodes,
       ensuring that if data was entered before enabling field translation on a field
-      that the existing field data is copied over to the parent node\'s current language.') .
+      that the existing field data is copied over to the parent node\'s current language. Additionally, translatable content is identified.') .
       '</p>',
   );
 
@@ -461,10 +461,14 @@ function lingotek_form_field_language_utility($form_state) {
   $form['status'] = array(
     '#markup' => theme('item_list', array('items' => $translatable_fields, 'title' => t('Translation-enabled Fields'), 'type' => 'ul')),
   );
+  
+  $form[] = array(
+    '#markup' => '<br/>'
+  );
 
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Update Field Data'),
+    '#value' => t('Run Cleanup Utility'),
   );
 
   return $form;
@@ -479,8 +483,8 @@ function lingotek_form_field_language_utility($form_state) {
  * @param array $form_state
  *   The FAPI form state array.
  */
-function lingotek_form_field_language_utility_submit($form, $form_state) {
-  lingotek_field_language_data_cleanup_batch_create();
+function lingotek_form_cleanup_utility_submit($form, $form_state) {
+  lingotek_cleanup_utility();
 }
 
 /**

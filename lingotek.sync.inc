@@ -30,9 +30,7 @@ function lingotek_get_node_sync_status( $node_id ) {
  *  Sets the Node sync status.
 **/
 function lingotek_set_node_sync_status( $node_id, $node_status ) {
-
   lingotek_lingonode( $node_id, 'node_sync_status', $node_status );
-
 }
 
 
@@ -40,21 +38,17 @@ function lingotek_set_node_sync_status( $node_id, $node_status ) {
  *  Gets the Node Target language status.
 **/
 function lingotek_get_target_sync_status( $node_id, $target_language ) {
-
   $key = 'target_sync_status_' . $target_language;
   return lingotek_lingonode( $node_id, $key );
-
 }
 
 
 /**
  *  Sets the Node Target language to the specified value.
 **/
-function lingotek_set_target_sync_status( $node_id, $target_language, $node_status ) {
-
+function lingotek_set_target_sync_status($node_id, $target_language, $node_status) {
   $key = 'target_sync_status_' . $target_language;
-  lingotek_lingonode( $node_id, $key, $node_status );
-
+  lingotek_lingonode($node_id, $key, $node_status);
 }
 
 
