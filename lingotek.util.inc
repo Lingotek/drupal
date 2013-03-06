@@ -657,7 +657,7 @@ function lingotek_get_active_languages( $get_details = FALSE ) {
 function lingotek_delete_target_language($drupal_language_code) {
   $result = FALSE;
 
-  if (is_string($drupal_language_code)) {
+  if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
 
     //remove drupal_language_code from target_languages system variable
     $target_languages = lingotek_get_target_languages();
@@ -682,11 +682,11 @@ function lingotek_delete_target_language($drupal_language_code) {
 function lingotek_add_target_language($drupal_language_code) {
   $result = FALSE;
 
-  if (is_string($drupal_language_code)) {
+  if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
 
     $target_languages = lingotek_get_target_languages();
     $target_languages[] = $drupal_language_code;
-    lingotek_set_target_languages($target_languages);
+    lingotek_set_target_languages(array_unique($target_languages));
 
     // Add the Target Language to the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
