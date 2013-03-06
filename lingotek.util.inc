@@ -701,7 +701,7 @@ function lingotek_add_target_language($drupal_language_code) {
  * Save the Targeted Languages data.
  */
 function lingotek_set_target_languages($target_languages) {
-  if (isset($target_languages) && is_array($target_languages)) {
+  if (is_array($target_languages)) {
     variable_set('lingotek_target_languages', implode('|',$target_languages));
   } 
 }
