@@ -658,9 +658,13 @@ function lingotek_delete_target_language($drupal_language_code = NULL) {
 
   if (isset($drupal_language_code)) {
 
+    //remove drupal_language_code from target_languages system variable
     $target_languages = lingotek_get_target_languages();
-    $target_languages[$drupal_language_code] = array('code' => $drupal_language_code, 'active' => FALSE);
-    lingotek_save_target_languages($target_languages);
+    if (($key = array_search($drupal_language_code, $target_languages)) !== false) {
+      unset($target_languages[$key]);
+      watchdog("lingotek", "Target language removed: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    }
+    lingotek_set_target_languages($target_languages);
 
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -680,7 +684,7 @@ function lingotek_add_target_language($drupal_language_code = NULL) {
 
     $target_languages = lingotek_get_target_languages();
     $target_languages[$drupal_language_code] = array('code' => $drupal_language_code, 'active' => TRUE);
-    lingotek_save_target_languages($target_languages);
+    lingotek_set_target_languages($target_languages);
 
     // Add the Target Language to the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -692,25 +696,23 @@ function lingotek_add_target_language($drupal_language_code = NULL) {
 }
 
 /**
+ * Save the Targeted Languages data.
+ */
+function lingotek_set_target_languages($target_languages) {
+  if (isset($target_languages) && is_array($target_languages)) {
+    variable_set('lingotek_target_languages', implode('|',$target_languages));
+  } 
+}
+
+// END:  lingotek_set_target_languages()
+
+/**
  * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
  * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
  * pass in active == TRUE, to get ONLY the active languages.
  */
 function lingotek_get_target_languages($active_only = FALSE) {
-
-  $target_languages = variable_get('lingotek_target_languages', array());
-
-  // If $active_only == TRUE, return only the active ones.
-  if ($active_only) {
-    $active_languages = array();
-    foreach ($target_languages as $target) {
-      if ($target['active'] == TRUE) {
-        $active_languages[] = $target['code'];
-      }
-    }
-    $target_languages = $active_languages;
-  }
-
+  $target_languages = explode('|',variable_get('lingotek_target_languages', ''));
   return $target_languages;
 }
 
@@ -732,18 +734,6 @@ function lingotek_get_target_language_list() {
   
   return $paid_targets;
 }
-
-
-/**
- * Save the Targeted Languages data.
- */
-function lingotek_save_target_languages( $target_languages = NULL ) {
-
-  if ( isset( $target_languages ) ) {
-    variable_set( 'lingotek_target_languages', $target_languages );
-  }
-
-} // END:  lingotek_save_target_languages()
 
 /*
  * Get the Lingotek Content Types - returns the content types OR ids only

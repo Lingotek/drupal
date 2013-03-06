@@ -64,9 +64,9 @@ function lingotek_set_node_and_targets_sync_status( $node_id, $node_status, $tar
   lingotek_set_node_sync_status( $node_id, $node_status );
 
   // Loop though each target language, and set that target to EDITED.
-  $languages = lingotek_get_target_languages( TRUE );
-  foreach ( $languages as $language ) {
-    lingotek_set_target_sync_status( $node_id, $language, $targets_status );
+  $languages = lingotek_get_target_languages();
+  foreach ( $languages as $drupal_language_code ) {
+    lingotek_set_target_sync_status( $node_id, $drupal_language_code, $targets_status );
   }
 
 }
@@ -82,9 +82,9 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
   $result[ 'node_sync_status' ] = lingotek_get_node_sync_status( $node_id );
 
   // Loop though each target language, and set that target to EDITED.
-  $languages = lingotek_get_target_languages( TRUE );
-  foreach ( $languages as $language ) {
-    $result[ 'targets' ][ $language ] = lingotek_get_target_sync_status( $node_id, $language );
+  $languages = lingotek_get_target_languages();
+  foreach ( $languages as $drupal_language_code ) {
+    $result[ 'targets' ][ $drupal_language_code ] = lingotek_get_target_sync_status( $node_id, $drupal_language_code );
   }
 
   /* -- This will be the sync status array format
