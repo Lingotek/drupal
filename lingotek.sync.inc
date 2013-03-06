@@ -192,6 +192,17 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($target_code);
   $nid = lingotek_get_node_id_from_document_id( $document_id );
 
+  watchdog('lingotek_callback', '
+      <strong>NID:</strong> @node_id
+      <br /><strong>DocumentID:</strong> @document_id
+      <br /><strong>LanguageCode:</strong> @language_code
+      <br /><strong>ProjectID:</strong> @project_id', array(
+    '@node_id' => $nid,
+    '@document_id' => $document_id,
+    '@language_code' => $target_drupal_language_code,
+    '@project_id' => $project_id
+      ), WATCHDOG_DEBUG);
+  
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
     if (class_exists('LingotekComment')) {
@@ -220,7 +231,7 @@ function lingotek_notifications() {
       }
     }
     else {
-      watchdog('lingotek', 'LingotkComment class not found.
+      watchdog('lingotek', 'LingotekComment class not found.
           Please clear the Drupal cache to refresh the autoload registry', array(), WATCHDOG_ERROR);
     }
   }
@@ -234,17 +245,6 @@ function lingotek_notifications() {
       lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
     }
   }
-
-  watchdog('lingotek_callback', '
-      <strong>NID:</strong> @node_id
-      <br /><strong>DocumentID:</strong> @document_id
-      <br /><strong>LanguageCode:</strong> @language_code
-      <br /><strong>ProjectID:</strong> @project_id', array(
-    '@node_id' => $nid,
-    '@document_id' => $document_id,
-    '@language_code' => $target_drupal_language_code,
-    '@project_id' => $project_id
-      ), WATCHDOG_DEBUG);
 
   $found = $nid || (isset($comment) && $comment) ? TRUE : FALSE;
 
