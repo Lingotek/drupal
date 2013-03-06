@@ -654,9 +654,10 @@ function lingotek_get_active_languages( $get_details = FALSE ) {
  /**
  * Flags a target language as active:FALSE in the Target Language tracking.
  */
-function lingotek_delete_target_language($drupal_language_code = NULL) {
+function lingotek_delete_target_language($drupal_language_code) {
+  $result = FALSE;
 
-  if (isset($drupal_language_code)) {
+  if (is_string($drupal_language_code)) {
 
     //remove drupal_language_code from target_languages system variable
     $target_languages = lingotek_get_target_languages();
@@ -678,9 +679,10 @@ function lingotek_delete_target_language($drupal_language_code = NULL) {
 /**
  * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
  */
-function lingotek_add_target_language($drupal_language_code = NULL) {
+function lingotek_add_target_language($drupal_language_code) {
+  $result = FALSE;
 
-  if (isset($drupal_language_code)) {
+  if (is_string($drupal_language_code)) {
 
     $target_languages = lingotek_get_target_languages();
     $target_languages[] = $drupal_language_code;
