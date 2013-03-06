@@ -683,7 +683,7 @@ function lingotek_add_target_language($drupal_language_code = NULL) {
   if (isset($drupal_language_code)) {
 
     $target_languages = lingotek_get_target_languages();
-    $target_languages[$drupal_language_code] = array('code' => $drupal_language_code, 'active' => TRUE);
+    $target_languages[] = $drupal_language_code;
     lingotek_set_target_languages($target_languages);
 
     // Add the Target Language to the Lingotek Project.
