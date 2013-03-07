@@ -6,16 +6,8 @@
 
 
 function lingotek_cleanup_utility(){
-  // PRE: temporarily disable auto-upload (if set)
-  $auto_upload_setting = variable_get('lingotek_create_documents_by_default', NULL);
-  $auto_upload_setting = ($auto_upload_setting === NULL) ? 1 : $auto_upload_setting;
-  variable_set('lingotek_create_documents_by_default', 0);
-  
-  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
   lingotek_field_language_data_cleanup_batch_create();
-  
-  // POST: set auto-upload to the regular setting
-  variable_set('lingotek_create_documents_by_default', $auto_upload_setting);
+  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
 }
 
 /**
@@ -23,9 +15,8 @@ function lingotek_cleanup_utility(){
  * 
  * Creates a batch to cleanup nodes with data in an 'und' language field.
  *
- * @param bool $from_post
- *   If the batch create was NOT called from a Drupal form handler, pass in false,
- *   so that the extra call is made that will start the batch processing.
+ * @param bool $front
+ * If this batch was NOT created from a form_submit() handler, then pass in TRUE
  */
 function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
 

@@ -14,7 +14,7 @@ function lingotek_node_source_language_cleanup_batch_worker( $nid, $source_langu
 
   $loaded_node = node_load( $nid );
   $loaded_node->language = $source_language;
-  
+  $loaded_node->skip_upload = 1;
   node_save($loaded_node);
 }
 
@@ -63,6 +63,7 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
     }
 
     if ($edited) {
+      $node->skip_upload = 1;
       node_save($node);
     }
   }
