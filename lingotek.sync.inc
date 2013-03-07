@@ -109,6 +109,10 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
 **/
 function lingotek_set_node_and_targets_sync_status_by_array( $node_id, array $node_status_array ) {
 
+  watchdog('lingotek_set_node_and_targets_sync_status_by_array', "!data", array(
+    '!data' => watchdog_format_object($node_status_array)
+  ));
+  
   // Set the Node to EDITED.
   lingotek_set_node_sync_status( $node_id, $node_status_array[ 'node_sync_status' ] );
 
@@ -193,10 +197,10 @@ function lingotek_notifications() {
   $nid = lingotek_get_node_id_from_document_id( $document_id );
 
   watchdog('lingotek_callback', '
-      <strong>NID:</strong> @node_id
-      <br /><strong>DocumentID:</strong> @document_id
-      <br /><strong>LanguageCode:</strong> @language_code
-      <br /><strong>ProjectID:</strong> @project_id', array(
+      node: @node_id
+      <br /><strong>doc:</strong> @document_id
+      <br /><strong>code:</strong> @language_code
+      <br /><strong>project:</strong> @project_id', array(
     '@node_id' => $nid,
     '@document_id' => $document_id,
     '@language_code' => $target_drupal_language_code,

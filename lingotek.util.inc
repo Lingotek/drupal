@@ -702,7 +702,7 @@ function lingotek_add_target_language($drupal_language_code) {
  */
 function lingotek_set_target_languages($target_languages) {
   if (is_array($target_languages)) {
-    variable_set('lingotek_target_languages', implode('|',$target_languages));
+    variable_set('lingotek_target_languages', implode('|',array_filter($target_languages)));
   } 
 }
 
