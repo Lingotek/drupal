@@ -714,7 +714,7 @@ function lingotek_set_target_languages($target_languages) {
  * pass in active == TRUE, to get ONLY the active languages.
  */
 function lingotek_get_target_languages($active_only = FALSE) {
-  $target_languages = explode('|',variable_get('lingotek_target_languages', ''));
+  $target_languages = array_filter(explode('|',variable_get('lingotek_target_languages', '')));
   return $target_languages;
 }
 

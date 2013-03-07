@@ -107,20 +107,20 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
  *  Sets the Node and its Target languages to a given value.
  *  Note:  Works off a node status array, so the Node and Targets may have different values.
 **/
-function lingotek_set_node_and_targets_sync_status_by_array( $node_id, array $node_status_array ) {
+function lingotek_set_node_and_targets_sync_status_by_array($node_id, array $node_status_array) {
 
-  watchdog('lingotek_set_node_and_targets_sync_status_by_array', "!data", array(
+  watchdog('lingotek_set_node_and_targets_sync_status_by_array', "node: @nid !data", array(
+    '@nid' => $node_id,
     '!data' => watchdog_format_object($node_status_array)
   ));
-  
+
   // Set the Node to EDITED.
-  lingotek_set_node_sync_status( $node_id, $node_status_array[ 'node_sync_status' ] );
+  lingotek_set_node_sync_status($node_id, $node_status_array['node_sync_status']);
 
   // Loop though each target language, and set that target.
-  foreach ( $node_status_array[ 'targets' ] as $language_code => $status ) {
-    lingotek_set_target_sync_status( $node_id, $language_code, $status );
+  foreach ($node_status_array['targets'] as $language_code => $status) {
+    lingotek_set_target_sync_status($node_id, $language_code, $status);
   }
-
 }
 
 
