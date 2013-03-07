@@ -6,10 +6,21 @@
 
 
 function lingotek_cleanup_utility(){
+  // PRE: temporarily disable auto-upload (if set)
+  $auto_upload_setting = variable_get('lingotek_create_documents_by_default', NULL);
+  if ($auto_upload_setting !== NULL) {
+    variable_set('lingotek_create_documents_by_default', 0);
+  }// PRE: end
+
   
   lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
   lingotek_field_language_data_cleanup_batch_create();
   
+  
+  // POST: set auto-upload to the regular setting
+  if ($auto_upload_setting !== NULL) {
+    variable_set('lingotek_create_documents_by_default', $auto_upload_setting);
+  }// POST: end
 }
 
 /**
