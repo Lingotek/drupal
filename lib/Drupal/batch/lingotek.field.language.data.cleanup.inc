@@ -14,8 +14,19 @@ function lingotek_node_source_language_cleanup_batch_worker( $nid, $source_langu
 
   $loaded_node = node_load( $nid );
   $loaded_node->language = $source_language;
-  node_save( $loaded_node );
+  
+  //temporarily disable auto-upload (if set)
+  $auto_upload_setting = variable_get('lingotek_create_documents_by_default', NULL);
+  if ($auto_upload_setting !== NULL) {
+    variable_set('lingotek_create_documents_by_default', 0);
+  }
 
+  node_save($loaded_node);
+
+  // set auto-upload to the regular setting
+  if ($auto_upload_setting !== NULL) {
+    variable_set('lingotek_create_documents_by_default', $auto_upload_setting);
+  }
 }
 
 
