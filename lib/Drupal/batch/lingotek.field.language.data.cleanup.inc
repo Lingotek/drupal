@@ -14,8 +14,8 @@ function lingotek_node_source_language_cleanup_batch_worker( $nid, $source_langu
 
   $loaded_node = node_load( $nid );
   $loaded_node->language = $source_language;
-  node_save( $loaded_node );
-
+  $loaded_node->lingotek_upload_override = 0;// Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
+  node_save($loaded_node);
 }
 
 
@@ -63,6 +63,7 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
     }
 
     if ($edited) {
+      $node->lingotek_upload_override = 0;
       node_save($node);
     }
   }

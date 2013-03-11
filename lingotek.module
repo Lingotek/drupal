@@ -707,15 +707,21 @@ function lingotek_node_update($node) {
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
-  if (isset($node->create_lingotek_document)) {
-    $send_lingotek_document = $node->create_lingotek_document;
-    lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
-  } 
+  
+  if (isset($node->lingotek_upload_override)) {
+    $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
+  }
   else {
-    // Only send the node content to Lingotek on edit if Automatic pushes are enabled.
-    $send_lingotek_document = lingotek_lingonode($node->nid, 'create_lingotek_document');
-    if($send_lingotek_document === FALSE) {
-      $send_lingotek_document = variable_get('lingotek_create_documents_by_default', $send_lingotek_document);
+    if (isset($node->create_lingotek_document)) {
+      $send_lingotek_document = $node->create_lingotek_document;
+      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+    }
+    else {
+      // Only send the node content to Lingotek on edit if auto-upload is enabled.
+      $send_lingotek_document = lingotek_lingonode($node->nid, 'create_lingotek_document');
+      if ($send_lingotek_document === FALSE) {
+        $send_lingotek_document = variable_get('lingotek_create_documents_by_default', $send_lingotek_document);
+      }
     }
   }
 

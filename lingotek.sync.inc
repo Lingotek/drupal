@@ -64,9 +64,9 @@ function lingotek_set_node_and_targets_sync_status( $node_id, $node_status, $tar
   lingotek_set_node_sync_status( $node_id, $node_status );
 
   // Loop though each target language, and set that target to EDITED.
-  $languages = lingotek_get_target_languages( TRUE );
-  foreach ( $languages as $language ) {
-    lingotek_set_target_sync_status( $node_id, $language, $targets_status );
+  $languages = lingotek_get_target_languages();
+  foreach ( $languages as $drupal_language_code ) {
+    lingotek_set_target_sync_status( $node_id, $drupal_language_code, $targets_status );
   }
 
 }
@@ -82,9 +82,9 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
   $result[ 'node_sync_status' ] = lingotek_get_node_sync_status( $node_id );
 
   // Loop though each target language, and set that target to EDITED.
-  $languages = lingotek_get_target_languages( TRUE );
-  foreach ( $languages as $language ) {
-    $result[ 'targets' ][ $language ] = lingotek_get_target_sync_status( $node_id, $language );
+  $languages = lingotek_get_target_languages();
+  foreach ( $languages as $drupal_language_code ) {
+    $result[ 'targets' ][ $drupal_language_code ] = lingotek_get_target_sync_status( $node_id, $drupal_language_code );
   }
 
   /* -- This will be the sync status array format
@@ -107,16 +107,20 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
  *  Sets the Node and its Target languages to a given value.
  *  Note:  Works off a node status array, so the Node and Targets may have different values.
 **/
-function lingotek_set_node_and_targets_sync_status_by_array( $node_id, array $node_status_array ) {
+function lingotek_set_node_and_targets_sync_status_by_array($node_id, array $node_status_array) {
+
+  /*watchdog('lingotek_set_node_and_targets_sync_status_by_array', "node: @nid !data", array(
+    '@nid' => $node_id,
+    '!data' => watchdog_format_object($node_status_array)
+  ));*/
 
   // Set the Node to EDITED.
-  lingotek_set_node_sync_status( $node_id, $node_status_array[ 'node_sync_status' ] );
+  lingotek_set_node_sync_status($node_id, $node_status_array['node_sync_status']);
 
   // Loop though each target language, and set that target.
-  foreach ( $node_status_array[ 'targets' ] as $language_code => $status ) {
-    lingotek_set_target_sync_status( $node_id, $language_code, $status );
+  foreach ($node_status_array['targets'] as $language_code => $status) {
+    lingotek_set_target_sync_status($node_id, $language_code, $status);
   }
-
 }
 
 
@@ -192,6 +196,17 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($target_code);
   $nid = lingotek_get_node_id_from_document_id( $document_id );
 
+  watchdog('lingotek_callback', '
+      node: @node_id
+      <br /><strong>doc:</strong> @document_id
+      <br /><strong>code:</strong> @language_code
+      <br /><strong>project:</strong> @project_id', array(
+    '@node_id' => $nid,
+    '@document_id' => $document_id,
+    '@language_code' => $target_drupal_language_code,
+    '@project_id' => $project_id
+      ), WATCHDOG_DEBUG);
+  
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
     if (class_exists('LingotekComment')) {
@@ -220,7 +235,7 @@ function lingotek_notifications() {
       }
     }
     else {
-      watchdog('lingotek', 'LingotkComment class not found.
+      watchdog('lingotek', 'LingotekComment class not found.
           Please clear the Drupal cache to refresh the autoload registry', array(), WATCHDOG_ERROR);
     }
   }
@@ -234,17 +249,6 @@ function lingotek_notifications() {
       lingotek_mt_sync_download_node_target($nid, $target_drupal_language_code, $context);
     }
   }
-
-  watchdog('lingotek_callback', '
-      <strong>NID:</strong> @node_id
-      <br /><strong>DocumentID:</strong> @document_id
-      <br /><strong>LanguageCode:</strong> @language_code
-      <br /><strong>ProjectID:</strong> @project_id', array(
-    '@node_id' => $nid,
-    '@document_id' => $document_id,
-    '@language_code' => $target_drupal_language_code,
-    '@project_id' => $project_id
-      ), WATCHDOG_DEBUG);
 
   $found = $nid || (isset($comment) && $comment) ? TRUE : FALSE;
 

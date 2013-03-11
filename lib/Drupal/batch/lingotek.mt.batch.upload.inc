@@ -10,7 +10,7 @@
  */
 function lingotek_machine_translate_node( $nid, &$context ) {
 
-  watchdog( 'lingotek_batch_mt', 'WORK: Upload Node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
+  watchdog( 'ltk_upload', 'nide: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
 
   $api = LingotekApi::instance();
   $node = node_load( $nid );

@@ -6,10 +6,8 @@
 
 
 function lingotek_cleanup_utility(){
-  
-  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
   lingotek_field_language_data_cleanup_batch_create();
-  
+  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
 }
 
 /**
@@ -17,9 +15,8 @@ function lingotek_cleanup_utility(){
  * 
  * Creates a batch to cleanup nodes with data in an 'und' language field.
  *
- * @param bool $from_post
- *   If the batch create was NOT called from a Drupal form handler, pass in false,
- *   so that the extra call is made that will start the batch processing.
+ * @param bool $front
+ * If this batch was NOT created from a form_submit() handler, then pass in TRUE
  */
 function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
 
@@ -150,13 +147,9 @@ function lingotek_get_sync_download_batch_elements( ) {
 
   $operations = array();
 
-  $target_languages = lingotek_get_target_languages( );
-  foreach ($target_languages as $language) {
-    if ( $language[ 'active' ] ) {
-
+  $target_languages = lingotek_get_target_languages();
+  foreach ($target_languages as $drupal_language_code) {
       // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
-      $drupal_language_code = $language[ 'code' ];
-
       // Grab node targets that are currently marked 'PENDING'.
       // There can be one operation for each node target that is pending.
       $key = 'target_sync_status_' . $drupal_language_code;
@@ -168,8 +161,6 @@ function lingotek_get_sync_download_batch_elements( ) {
       while ( $record = $result->fetchAssoc() ) {
         $operations[] = array( 'lingotek_mt_sync_download_node_target', array( $record['nid'], $drupal_language_code ) );
       }
-
-    }
   } // END:  Target Languages Loop
 
   return $operations;

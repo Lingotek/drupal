@@ -834,6 +834,15 @@ function lingotek_setup_node_translation_settings_form_submit( $form, &$form_sta
  */
 function lingotek_setup_complete_form($form, $form_state) {
 
+  
+  // Mark Lingotek Setup Wizard as Complete
+  variable_set( 'lingotek_setup_complete', 1 );
+  
+  // Clear wizard progress tracking.  
+  if (isset($_SESSION['lingotek_setup_path'])) {
+    unset($_SESSION['lingotek_setup_path']);
+  }
+  
   $form['lingotek_message_1'] = array('#markup' => '<p>The Lingotek configuration module has been setup and configured and is now ready to use.</p>');
 
   $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
@@ -853,18 +862,7 @@ function lingotek_setup_complete_form($form, $form_state) {
  */
 function lingotek_setup_complete_form_submit( $form, &$form_state ) {
 
-  // Mark Lingotek Setup Wizard as Complete
-  variable_set( 'lingotek_setup_complete', 1 );
-
-  
-
-  // Clear wizard progress tracking.  
-  if (isset($_SESSION['lingotek_setup_path'])) {
-    unset($_SESSION['lingotek_setup_path']);
-  }
-
   $form_state['redirect'] = 'admin/settings/lingotek';
-
 }
 
 /**
