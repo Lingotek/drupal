@@ -10,7 +10,7 @@
  */
 function lingotek_mt_sync_upload_node( $nid, &$context ) {
 
-  watchdog( 'ltk_upload_node', 'WORK: Upload Node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
+  watchdog( 'ltk_upload_node', 'node: @node_id', array( '@node_id' => $nid ), WATCHDOG_DEBUG );
 
   $api = LingotekApi::instance();
   $node = node_load( $nid );
@@ -49,9 +49,17 @@ function lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, &$c
   // So first, Get the CURRENT Document and Target Sync Statuses, so we can restore those again after downloading the document.
   $node_status_array = lingotek_get_node_and_target_sync_status( $nid );
 
+  $node->lingotek_upload_override = 0;
   lingotek_download_document($node, $drupal_language_code);
   $context['results'][] = t('Download Target Translation: Node #@nid (@langcode)', array('@nid'=>$nid,'@langcode'=>$drupal_language_code));
 
+  // TEMP CHECK
+  /*$node_status_array1 = lingotek_get_node_and_target_sync_status( $nid );
+  watch_dog('ltk_download','compare: <h2>before</h2> @s1 <h2>after</h2> @s2',array(
+    '@s1' => watchdog_format_object($node_status_array),
+    '@s2' => watchdog_format_object($node_status_array1)
+  ));*/
+  
   // Set this Target status to CURRENT.
   $node_status_array[ 'targets' ][ $drupal_language_code ] = LINGOTEK_TARGET_SYNC_STATUS_CURRENT;
 
@@ -69,7 +77,7 @@ function lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, &$c
   }
 
   // Save the $node_status_array
-  lingotek_set_node_and_targets_sync_status_by_array( $nid, $node_status_array );
+  lingotek_set_node_and_targets_sync_status_by_array( $nid, $node_status_array ); 
 
 }
 

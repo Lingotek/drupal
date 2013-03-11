@@ -686,7 +686,8 @@ function lingotek_add_target_language($drupal_language_code) {
 
     $target_languages = lingotek_get_target_languages();
     $target_languages[] = $drupal_language_code;
-    lingotek_set_target_languages(array_unique($target_languages));
+    watchdog("lingotek", "Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    lingotek_set_target_languages($target_languages);
 
     // Add the Target Language to the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -702,11 +703,9 @@ function lingotek_add_target_language($drupal_language_code) {
  */
 function lingotek_set_target_languages($target_languages) {
   if (is_array($target_languages)) {
-    variable_set('lingotek_target_languages', implode('|',array_filter($target_languages)));
-  } 
+    variable_set('lingotek_target_languages', implode('|', array_filter(array_unique($target_languages))));
+  }
 }
-
-// END:  lingotek_set_target_languages()
 
 /**
  * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.

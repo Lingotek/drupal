@@ -707,9 +707,9 @@ function lingotek_node_update($node) {
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
-
-  if (isset($node->skip_upload)) {
-    $send_lingotek_document = 0;
+  
+  if (isset($node->lingotek_upload_override)) {
+    $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
   }
   else {
     if (isset($node->create_lingotek_document)) {

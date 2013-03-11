@@ -109,10 +109,10 @@ function lingotek_get_node_and_target_sync_status( $node_id ) {
 **/
 function lingotek_set_node_and_targets_sync_status_by_array($node_id, array $node_status_array) {
 
-  watchdog('lingotek_set_node_and_targets_sync_status_by_array', "node: @nid !data", array(
+  /*watchdog('lingotek_set_node_and_targets_sync_status_by_array', "node: @nid !data", array(
     '@nid' => $node_id,
     '!data' => watchdog_format_object($node_status_array)
-  ));
+  ));*/
 
   // Set the Node to EDITED.
   lingotek_set_node_sync_status($node_id, $node_status_array['node_sync_status']);

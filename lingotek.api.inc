@@ -115,6 +115,8 @@ function lingotek_download_document(&$node, $drupal_language_code) {
   $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
   $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
   $node->path['pathauto'] = 0;
+  //watchdog('temp-download-msg', 'hi');
+  watchdog('temp-download-msg', "<h2>node: @nid</h2> !node", array('@nid' => $node->nid, '!node' => watchdog_format_object($node)));
   node_save($node);
 }
 
