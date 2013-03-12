@@ -90,8 +90,7 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $node);
 
       if($with_targets){
-        $targets = LingotekAccount::instance()->getManagedTargets();
-        $parameters['targetAsJSON'] = drupal_json_encode(array_values($targets));
+        $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON();
         $parameters['applyWorkflow'] = 'true';// API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
       } 
@@ -808,6 +807,7 @@ class LingotekApi {
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
+    watchdog('api request',t($method));
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter

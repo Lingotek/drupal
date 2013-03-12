@@ -658,15 +658,15 @@ function lingotek_delete_target_language($drupal_language_code) {
   $result = FALSE;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
-
-    //remove drupal_language_code from target_languages system variable
-    $target_languages = lingotek_get_target_languages();
-    if (($key = array_search($drupal_language_code, $target_languages)) !== false) {
-      unset($target_languages[$key]);
-      watchdog("lingotek", "Target language removed: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
-    }
-    lingotek_set_target_languages($target_languages);
-
+    
+    db_update('languages')
+    ->fields(array(
+      'lingotek_enabled' => 0,
+    ))
+    ->condition('language',  $drupal_language_code)
+    ->execute();
+    watchdog("lingotek", "Target language removed: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
     $api = LingotekApi::instance();
@@ -683,11 +683,13 @@ function lingotek_add_target_language($drupal_language_code) {
   $result = FALSE;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
-
-    $target_languages = lingotek_get_target_languages();
-    $target_languages[] = $drupal_language_code;
+    db_update('languages')
+    ->fields(array(
+      'lingotek_enabled' => 1,
+    ))
+    ->condition('language',  $drupal_language_code)
+    ->execute();
     watchdog("lingotek", "Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
-    lingotek_set_target_languages($target_languages);
 
     // Add the Target Language to the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -699,41 +701,15 @@ function lingotek_add_target_language($drupal_language_code) {
 }
 
 /**
- * Save the Targeted Languages data.
+ * Get only the languages that are lingotek_enabled
  */
-function lingotek_set_target_languages($target_languages) {
-  if (is_array($target_languages)) {
-    variable_set('lingotek_target_languages', implode('|', array_filter(array_unique($target_languages))));
+function lingotek_get_target_languages($codes_only = TRUE) {
+  $target_languages = db_query("SELECT * FROM {languages} WHERE lingotek_enabled = :lingotek_enabled", array(':lingotek_enabled' => 1))->fetchAll();
+  $target_codes = array();
+  foreach($target_languages as $target_language){
+    $target_codes[] = $target_language->language; 
   }
-}
-
-/**
- * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
- * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
- * pass in active == TRUE, to get ONLY the active languages.
- */
-function lingotek_get_target_languages($active_only = FALSE) {
-  $target_languages = array_filter(explode('|',variable_get('lingotek_target_languages', '')));
-  return $target_languages;
-}
-
-/*
- * Uses lingotek_get_target_languages to build a Drupal style format language_list()
- * So this list ONLY includes languages listed in the dashboard.
- */ 
-function lingotek_get_target_language_list() {
-
-  $paid_targets = array();
-
-  $active_languages = lingotek_get_active_languages( TRUE );// Languages activated with Drupal locale
-  $managed_languages = lingotek_get_target_languages( TRUE ); // Simple language list of Paid Target Languages
-  foreach ( $managed_languages as $code ) {
-    if(isset($active_languages[ $code ])) {
-      $paid_targets[ $code ] = $active_languages[ $code ];
-    }
-  }
-  
-  return $paid_targets;
+  return $codes_only ? $target_codes : $target_languages;
 }
 
 /*

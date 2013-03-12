@@ -97,27 +97,38 @@ class LingotekAccount {
     return ( $this->status == 'active' ) ? '<span style="color: green;">Active</span>' : '<span style="color: red;">Inactive</span>';
   }
   
-  public function getManagedTargets( $return_lingotek_codes = TRUE ){
-    if ( $this->isEnterprise() === TRUE ) {
-      $targets_drupal = language_list(); // drupal function
-    }
-    else { 
-      $targets_drupal = lingotek_get_target_language_list( );
-    }
+  public function getManagedTargets($as_detailed_objects = FALSE, $return_lingotek_codes = TRUE) {
+    $targets_drupal = language_list();
+    $lingotek_managed_targets = lingotek_get_target_languages(); //dvz($lingotek_managed_targets,TRUE);
+    $default_language = language_default();
     
-    if($return_lingotek_codes === FALSE) return $targets_drupal;
-      
     $targets = array();
-    foreach($targets_drupal as $target_code_drupal){
-      $lingotek_language = Lingotek::convertDrupal2Lingotek($target_code_drupal->language);
-      if($lingotek_language !== FALSE){
-        $targets[] = $lingotek_language;
+    foreach ($targets_drupal as $key => $target_drupal) {
+      $is_source = $default_language->language == $target_drupal->language;
+      $is_lingotek_managed = ($this->isEnterprise() === TRUE) || in_array($target_drupal->language, $lingotek_managed_targets);
+      if ($is_source) {
+        continue; // skip, since the source language is not a target
       }
+      else if (!$is_lingotek_managed) {
+        continue; // skip, since lingotek is not managing the language
+      }
+      $target_drupal->locale = $target_drupal->language;
+      $target_drupal->active = isset($target_drupal->active) ? $target_drupal->active : 1;
+      if ($return_lingotek_codes === TRUE) {
+        $lingotek_locale = Lingotek::convertDrupal2Lingotek($target_drupal->language);
+        $target_drupal->locale = ($lingotek_locale !== FALSE) ? $lingotek_locale : '';
+        $key = ($lingotek_locale !== FALSE) ? $target_drupal->locale : $key;
+      }
+      $targets[$key] = $target_drupal;
     }
-    return $targets;
+    return $as_detailed_objects ? $targets : (array_map(function ($obj) {
+              return $obj->locale;
+            }, $targets));
   }
 
-
+  public function getManagedTargetsAsJSON() {
+    return drupal_json_encode(array_values($this->getManagedTargets(FALSE, TRUE)));
+  }
 
   public function setPlan( $value ) {
     $this->plan = $value;

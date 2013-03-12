@@ -67,6 +67,8 @@ function lingotek_uninstall() {
   foreach ($delete_variables as $variable) {
     variable_del($variable);
   }
+  
+  db_drop_field('languages', 'lingotek_enabled');
 }
 
 /**
@@ -348,4 +350,24 @@ function lingotek_update_7208() {
   $ret = array();
   db_query("UPDATE {lingotek} SET lingokey = 'document_id' WHERE lingokey LIKE 'document_id_%'");
   return $ret;
+}
+
+
+/**
+ * Update languages table to have lingotek_enabled field
+ */
+function lingotek_update_7209() {
+  $spec = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled language",
+    'not null' => TRUE,
+    'default' => 0
+  );
+  db_add_field('languages', 'lingotek_enabled', $spec);
+  
+  $target_languages = array_filter(explode('|',variable_get('lingotek_target_languages', '')));
+  foreach($target_languages as $drupal_language_code){
+    lingotek_add_target_language($drupal_language_code);
+  }
+  variable_del('lingotek_target_languages');
 }
