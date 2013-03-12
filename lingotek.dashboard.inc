@@ -244,14 +244,8 @@ function lingotek_dashboard_command_ajax() {
       // Add the node sync target language entries to the lingotek table.
       lingotek_add_target_sync_status_to_all_nodes($drupal_language_code);
 
-      $response = array(
-        'code' => Lingotek::convertDrupal2Lingotek($drupal_language_code), // Return this language code as the Lingotek language code.
-        'active' => TRUE,
-        'docs' => '0',
-        'pending' => '0',
-        'current' => '0',
-        'success' => $add
-      );
+      $response = lingotek_get_target_status($lingotek_locale);
+      $response['success'] = $add;
     }
   } // END:  POST
   // 3. Remove/Delete Target Language
@@ -284,47 +278,7 @@ function lingotek_dashboard_command_ajax() {
     $message = 'GET: Retrieve the Target Language(s) and Status';
     $parameters = $_GET;
 
-    $target_languages = lingotek_get_target_languages();
-
-    // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
-    if (isset($_GET['code'])) {
-
-      $lingotek_locale = $_GET['code'];
-      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
-      $target_is_active = in_array($drupal_language_code, $target_languages);
-
-      $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $drupal_language_code);
-      $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $drupal_language_code);
-      $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code);
-      $total = $edited + $pending + $current;
-
-      $response = array(
-        'code' => Lingotek::convertDrupal2Lingotek($drupal_language_code), // Return this language code as the Lingotek language code.
-        'active' => $target_is_active,
-        'docs' => $total,
-        'pending' => $pending,
-        'edited' => $edited,
-        'current' => $current
-      );
-    }
-    else { // Otherwise Return a List of all the Active Languages
-      foreach ($target_languages as $language) {
-
-        $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $language['code']);
-        $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $language['code']);
-        $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $language['code']);
-        $total = $edited + $pending + $current;
-
-        $response[] = array(
-          'code' => Lingotek::convertDrupal2Lingotek($language['code']), // Return this language code as the Lingotek language code.
-          'active' => $language['active'],
-          'docs' => $total,
-          'pending' => $pending,
-          'edited' => $edited,
-          'current' => $current
-        );
-      } // END:  foreach target language
-    } // END:  Language List
+    $response = isset($_GET['code']) ? lingotek_get_target_status($_GET['code']) : lingotek_get_target_status();
   } // END:  GET
 
   if ($method == 'PUT') {
@@ -558,3 +512,50 @@ function lingotek_get_guid() {
 }
 
 // END:  lingotek_get_guid()
+
+
+function lingotek_get_target_status($lingotek_locale = NULL) {
+
+  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE); //dvz($target_languages, TRUE);
+
+  // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
+  if (!is_null($lingotek_locale)) {
+
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+    $target_is_active = in_array($drupal_language_code, $target_languages);
+
+    $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $drupal_language_code);
+    $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $drupal_language_code);
+    $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code);
+    $total = $edited + $pending + $current;
+
+    $response = array(
+      'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
+      'active' => $target_is_active,
+      'docs' => $total,
+      'pending' => $pending,
+      'edited' => $edited,
+      'current' => $current
+    );
+  }
+  else { // Otherwise Return a List of all the Active Languages
+    foreach ($target_languages as $target) {
+
+      $drupal_language_code = $target->language;
+      $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $drupal_language_code);
+      $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $drupal_language_code);
+      $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code);
+      $total = $edited + $pending + $current;
+
+      $response[] = array(
+        'code' => Lingotek::convertDrupal2Lingotek($drupal_language_code), // Return this language code as the Lingotek language code.
+        'active' => $target->active,
+        'docs' => $total,
+        'pending' => $pending,
+        'edited' => $edited,
+        'current' => $current
+      );
+    } // END:  foreach target language
+  } // END:  Language List
+  return $response;
+}
