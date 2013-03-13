@@ -488,15 +488,15 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
-  $options = array();
-  $options[TRUE] = t('Enabled');
-  $options[FALSE] = t('Disabled');
+  //$options = array();
+  //$options[TRUE] = t('Enabled');
+  //$options[FALSE] = t('Disabled');
 
-  $title = t('Translation Settings (Powered by Lingotek)');
+  $title = t('Translation Management');
 
   // Vertical Tab.
   $form['lingotek'] = array(
-    '#title' => t('Lingotek Translation Settings'),
+    '#title' => t('Translation Mangement'),
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -505,6 +505,36 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'lingotek') . '/js/lingotek.form.js'),
     ),
+  );
+  
+  
+  $form['lingotek']['et_content'] = array(
+    '#type' => 'container',
+  );
+  
+  $form['lingotek']['et_content']['explanation'] = array(
+    '#title' => $title,
+    '#type' => 'item',
+    '#description' => t('Translation of this node is currently managed by the Entity Translation module. Click the "Enable Lingotek" button to begin using the Lingotek module to manage this node\'s translation.  Upon saving the node, its content will be uploaded to Lingotek.  You will not be able to switch back to using Entity Translation for this node.'),
+  );
+  
+  $form['lingotek']['et_content']['is_et_node'] = array(
+    '#type' => 'hidden',
+    '#value' => lingotek_managed_by_entity_translation($form['#node']->type),
+    '#attributes' => array('id' => 'ltk-entity-translation-node')
+  );
+  
+  $form['lingotek']['lingotek_push_once'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => 0,
+    '#attributes' => array('id' => 'ltk-push-once', 'style' => 'display: none')
+  );
+  
+  
+  $form['lingotek']['et_content']['btn'] = array(
+    '#type' => 'button',
+    '#value' => 'Enable Lingotek',
+    '#attributes' => array('id' => 'ltk-enable-from-et','onclick' => 'return false;'),
   );
 
   $form['lingotek']['note'] = array(
@@ -710,7 +740,12 @@ function lingotek_node_update($node) {
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
   
-  if (isset($node->lingotek_upload_override)) {
+  if(isset($node->lingotek_push_once) && $node->lingotek_push_once){
+    $send_lingotek_document = 1;
+  }  else if (lingotek_managed_by_entity_translation($node->type)){
+    $send_lingotek_document = 0;
+  }
+  else if (isset($node->lingotek_upload_override)) { // this variable can force to either send or not send (1 or 0) when set.
     $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
   }
   else {
