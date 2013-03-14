@@ -87,11 +87,17 @@ class LingotekApi {
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
       
+      if (!empty($node->lingotek_workflow_id)) {
+        $parameters['workflowId'] = $node->lingotek_workflow_id;
+      }
+      
       $this->addAdvancedParameters($parameters, $node);
 
       if($with_targets){
         $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON();
-        $parameters['applyWorkflow'] = 'true';// API expects a 'true' string
+        if (!isset($parameters['workflowId'])) {
+          $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
+        }
         $result = $this->request('addContentDocumentWithTargets', $parameters);
       } 
       else {
