@@ -95,9 +95,7 @@ class LingotekApi {
 
       if($with_targets){
         $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON();
-        if (!isset($parameters['workflowId'])) {
-          $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
-        }
+        $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
       } 
       else {
