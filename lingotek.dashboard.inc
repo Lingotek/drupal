@@ -516,13 +516,13 @@ function lingotek_get_guid() {
 
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
-  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE); //dvz($target_languages, TRUE);
+  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE); //dvz(array_keys($target_languages), TRUE);
 
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {
 
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
-    $target_is_active = in_array($drupal_language_code, $target_languages);
+    $target_is_active = in_array($lingotek_locale, array_keys($target_languages));
 
     $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $drupal_language_code);
     $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $drupal_language_code);

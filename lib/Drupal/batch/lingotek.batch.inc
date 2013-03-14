@@ -270,7 +270,7 @@ function lingotek_bulk_mt_download_batch_create($lingotek_locale) {
     // Grab nodes that are currently marked 'PENDING'
     $query = db_select('lingotek', 'l')->fields('l');
     $query->condition('lingokey', 'node_sync_status');
-    $query->condition('lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING);
+    $query->condition('lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING);
 
     $result = $query->execute();
 

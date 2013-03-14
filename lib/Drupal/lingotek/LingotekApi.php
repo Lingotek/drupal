@@ -843,7 +843,7 @@ class LingotekApi {
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
 
-      watchdog( 'API_CALL', '
+      watchdog( 'api response', '
       <h1>@method ::</h1>
       <div>!parameters</div>
       <h1>Request:</h1>

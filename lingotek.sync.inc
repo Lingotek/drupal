@@ -176,9 +176,9 @@ function lingotek_get_notifications_url() {
 **/
 function lingotek_notifications() {
 
-  $document_id = ( isset( $_GET['doc_id'] ) ) ? $_GET['doc_id'] : NULL ; // 
-  $target_code = ( isset( $_GET['target_code'] ) ) ? $_GET['target_code'] : NULL ; // $_GET['target_code'];
-  $project_id = ( isset( $_GET['project_id'] ) ) ? $_GET['project_id'] : NULL ; // $_GET['project_id'];
+  $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;
+  $target_code = ( isset($_GET['target_code']) ) ? $_GET['target_code'] : NULL;
+  $project_id = ( isset($_GET['project_id']) ) ? $_GET['project_id'] : NULL;
 
   if (!isset($document_id) || !isset($target_code)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));

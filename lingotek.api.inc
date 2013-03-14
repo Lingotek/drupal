@@ -115,8 +115,10 @@ function lingotek_download_document(&$node, $drupal_language_code) {
   $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
   $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
   $node->path['pathauto'] = 0;
-  //watchdog('temp-download-msg', 'hi');
-  watchdog('temp-download-msg', "<h2>node: @nid</h2> !node", array('@nid' => $node->nid, '!node' => watchdog_format_object($node)));
+  
+  lingotek_set_target_sync_status($node->nid, $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_CURRENT);//slightly pre-emptive, but certainly more cohesive
+  $node->lingotek_upload_override = 0;// ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
+  $node->skip_status_updates = 1;// ensure that the statuses are not set on node update (in lingotek_node_update)
   node_save($node);
 }
 

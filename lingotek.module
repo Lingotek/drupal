@@ -767,11 +767,12 @@ function lingotek_node_update($node) {
   }
 
   // On node create or edit,  set the node sync status to 'edited' and all the targets to edited.
-    $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
+  $is_syncing = (isset($node->skip_status_updates) && $node->skip_status_updates) ? TRUE : FALSE;
+  $is_syncing = (isset($_SESSION['lingotek_sync_in_progress'])) ? $_SESSION['lingotek_sync_in_progress'] : $is_syncing;
 
   if ( $is_syncing === FALSE) {
     lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
-  }
+  }  
 
   // Overwrite document ID.
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
