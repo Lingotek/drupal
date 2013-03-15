@@ -189,6 +189,28 @@ function lingotek_schema() {
 }
 
 /*
+ * Update languages table with lingotek fields
+ */
+function lingotek_schema_alter(&$schema) {
+  // Add fields to existing schema.
+  $schema['languages']['fields']['lingotek_enabled'] = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled",
+    'not null' => TRUE,
+    'default' => 0
+  );
+
+  $schema['languages']['fields']['lingotek_locale'] = array(
+    'type' => 'varchar',
+    'description' => "Locale mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => ''
+  );
+}
+  
+
+/*
  * Update
  * 1. Create the mt-queue
  * 2. delete the reference variable that was stored in lingotek_languages
@@ -359,40 +381,13 @@ function lingotek_update_7208() {
  * Extend languages table to have lingotek_enabled field
  */
 function lingotek_update_7209() {
-  $spec = array(
-    'type' => 'int',
-    'description' => "Lingotek enabled",
-    'not null' => TRUE,
-    'default' => 0
-  );
-  try {
-    db_add_field('languages', 'lingotek_enabled', $spec);
-  } catch (DatabaseSchemaObjectExistsException $e) {
-    // already exists (no need to do anything)
-  }
-
-  $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
-  foreach ($target_languages as $drupal_language_code) {
-    lingotek_add_target_language($drupal_language_code);
-  }
-  variable_del('lingotek_target_languages');
+  lingotek_migration_1();
 }
 
 /**
  * Extend languages table to have lingotek_locale field
  */
 function lingotek_update_7210() {
-  $spec = array(
-    'type' => 'varchar',
-    'description' => "Locale mapping",
-    'length' => 10,
-    'not null' => TRUE,
-    'default' => ''
-  );
-  try {
-    db_add_field('languages', 'lingotek_locale', $spec);
-  } catch (DatabaseSchemaObjectExistsException $e) {
-    // already exists (no need to do anything)
-  }
+  lingotek_migration_2();
   lingotek_add_missing_locales();
 }

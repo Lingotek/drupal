@@ -686,7 +686,7 @@ function lingotek_set_target_language($drupal_language_code, $enabled = 1) {
     db_update('languages')
     ->fields(array(
       'lingotek_enabled' => $enabled,
-      'lingotek_locale' => Lingotek::convertDrupal2Lingotek($drupal_language_code)
+      'lingotek_locale' => Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE)
     ))
     ->condition('language',  $drupal_language_code)
     ->execute();
@@ -764,4 +764,57 @@ function lingotek_get_site_name() {
     $site_name = $site_url['host'];
   }
   return $site_name;
+}
+
+/*
+ * Clean-up utility
+ */
+function lingotek_cleanup_utility(){
+  lingotek_migration_1();
+  lingotek_migration_2();
+  lingotek_add_missing_locales();// any missing lingotek locales to the languages table
+  lingotek_field_language_data_cleanup_batch_create();
+  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
+}
+
+/*
+ * Migration 1
+ */
+function lingotek_migration_1(){
+  $spec = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled",
+    'not null' => TRUE,
+    'default' => 0
+  );
+  try {
+    db_add_field('languages', 'lingotek_enabled', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
+
+  $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
+  foreach ($target_languages as $drupal_language_code) {
+    lingotek_add_target_language($drupal_language_code);
+  }
+  variable_del('lingotek_target_languages');
+}
+
+
+/*
+ * Migration 2
+ */
+function lingotek_migration_2(){
+  $spec = array(
+    'type' => 'varchar',
+    'description' => "Locale mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => ''
+  );
+  try {
+    db_add_field('languages', 'lingotek_locale', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
 }

@@ -5,12 +5,6 @@
  */
 
 
-function lingotek_cleanup_utility(){
-  lingotek_add_missing_locales();// any missing lingotek locales to the languages table
-  lingotek_field_language_data_cleanup_batch_create();
-  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
-}
-
 /**
  * Field Language Data Cleanup Utility
  * 
