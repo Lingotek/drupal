@@ -227,15 +227,17 @@ function lingotek_dashboard_command_ajax() {
 
       // These are the languages that are currently active in this Drupal installation.
       $active_languages = current(language_list('enabled'));
-      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);//
+
 
       // if the Source language is not active, activate it.
-      
       if (!array_key_exists($drupal_language_code, $active_languages)) {
         $name = isset($_POST['language']) ? $_POST['language'] : NULL;
         $native = isset($_POST['native']) ? $_POST['native'] : NULL;
         $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
-        locale_add_language($drupal_language_code, $name, $native, $direction); // Function from the Locale module.
+        $domain = '';
+        $prefix = '';//to-do: attempt to use a short prefix
+        locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
       }
 
       // Adds the language to the local list of languages we do translation for, and to the Lingotek project.
@@ -257,7 +259,7 @@ function lingotek_dashboard_command_ajax() {
     $lingotek_locale = $parameters['code'];
 
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-    
+
     $message = t('DELETE: Remove language (@code)',array('@code'=>$drupal_language_code));
 
     // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
@@ -516,12 +518,12 @@ function lingotek_get_guid() {
 
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
-  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE); //dvz(array_keys($target_languages), TRUE);
+  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE);
 
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {
 
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
     $target_is_active = in_array($lingotek_locale, array_keys($target_languages));
 
     $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $drupal_language_code);
@@ -542,13 +544,15 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
     foreach ($target_languages as $target) {
 
       $drupal_language_code = $target->language;
+      $lingotek_locale = $target->lingotek_locale; //Lingotek::convertDrupal2Lingotek($drupal_language_code)
       $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $drupal_language_code);
       $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $drupal_language_code);
       $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $drupal_language_code);
       $total = $edited + $pending + $current;
 
       $response[] = array(
-        'code' => Lingotek::convertDrupal2Lingotek($drupal_language_code), // Return this language code as the Lingotek language code.
+        'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
+        'dcode' => $drupal_language_code,
         'active' => $target->active,
         'docs' => $total,
         'pending' => $pending,

@@ -405,6 +405,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
   $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
+
   if (count($targets) == 0) {
     return '';
   }

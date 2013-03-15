@@ -209,27 +209,38 @@ class Lingotek {
   /**
    * Converts the Lingotek language code for the specified Drupal language code.
    *
-   * @param string $language_code
+   * @param string $drupal_language_code
    *   A Drupal language code.
    *
    * @return mixed
    *   The Lingotek language code if there is a match for the passed language code,
    *   FALSE otherwise.
    */
-  public static function convertDrupal2Lingotek($language_code) {
+  public static function convertDrupal2Lingotek($drupal_language_code, $enabled_check = TRUE) {
 
     $lingotek_locale = FALSE;
-
-    // If the code contains a dash then, keep it specific
-    $dash_pos = strpos($language_code, "-");
-    if ($dash_pos !== FALSE) {
-      $lang = substr($language_code, 0, $dash_pos);
-      $loc = strtoupper(substr($language_code, $dash_pos + 1));
-      $lingotek_locale = $lang . '_' . $loc;
-    } // If it is generic then use the mapping to pick a specific 
-    else if (isset(self::$language_map[$language_code])) {
-      $lingotek_locale = self::$language_map[$language_code];
+    
+    if (!$enabled_check) {
+      // If the code contains a dash then, keep it specific 
+      $dash_pos = strpos($drupal_language_code, "-");
+      if ($dash_pos !== FALSE) {
+        $lang = substr($drupal_language_code, 0, $dash_pos);
+        $loc = strtoupper(substr($drupal_language_code, $dash_pos + 1));
+        $lingotek_locale = $lang . '_' . $loc;
+      } // If it is generic then use the mapping to pick a specific 
+      else if (isset(self::$language_map[$drupal_language_code])) {
+        $lingotek_locale = self::$language_map[$drupal_language_code];
+      }
+      return $lingotek_locale;
     }
+
+    // check to see if the lingotek_locale is set the drupal languages table for this language
+    $languages = language_list();
+    foreach ($languages as $target) {
+      if ( strcasecmp($drupal_language_code,$target->language) == 0 && isset($target->lingotek_locale)) {
+        return $target->lingotek_locale;
+      }
+    }   
 
     return $lingotek_locale;
   }
@@ -252,16 +263,14 @@ class Lingotek {
     }
 
     $ret = FALSE;
-    
+
     // check to see if the lingotek_locale is set the drupal languages table
     $languages = language_list();
     foreach ($languages as $target) {
-      $drupal_language_code = $target->language;
       if (isset($target->lingotek_locale) && strcmp($target->lingotek_locale,$lingotek_locale)==0) {
-        return $drupal_language_code;
+        return $target->language;
       }
     }
-    
     // if it doesn't exist, then try a general code using the mapping (degraded)
     $languages = current(language_list('enabled')); // enabled drupal languages as associative array
     $exists = array_key_exists($drupal_language_code, $languages);
