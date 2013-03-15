@@ -103,23 +103,18 @@ class LingotekAccount {
     $default_language = language_default();
     
     $targets = array();
-    foreach ($targets_drupal as $key => $target_drupal) {
-      $is_source = $default_language->language == $target_drupal->language;
-      $is_lingotek_managed = ($this->isEnterprise() === TRUE) || in_array($target_drupal->language, $lingotek_managed_targets);
+    foreach ($targets_drupal as $key => $target) {
+      $is_source = $default_language->language == $target->language;
+      $is_lingotek_managed = ($this->isEnterprise() === TRUE) || in_array($target->language, $lingotek_managed_targets);
       if ($is_source) {
         continue; // skip, since the source language is not a target
       }
       else if (!$is_lingotek_managed) {
         continue; // skip, since lingotek is not managing the language
       }
-      $target_drupal->locale = $target_drupal->language;
-      $target_drupal->active = isset($target_drupal->active) ? $target_drupal->active : 1;
-      if (!isset($target_drupal->locale) && $return_lingotek_codes === TRUE) {
-        $lingotek_locale = Lingotek::convertDrupal2Lingotek($target_drupal->language);
-        $target_drupal->locale = ($lingotek_locale !== FALSE) ? $lingotek_locale : '';
-        $key = ($lingotek_locale !== FALSE) ? $target_drupal->locale : $key;
-      }
-      $targets[$key] = $target_drupal;
+      $target->locale = $target->lingotek_locale;
+      $target->active = $target->lingotek_enabled;
+      $targets[$key] = $target;
     }
     return $as_detailed_objects ? $targets : (array_map(function ($obj) {
               return $obj->locale;

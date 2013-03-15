@@ -685,6 +685,7 @@ function lingotek_set_target_language($drupal_language_code, $enabled = 1, $ling
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
     db_update('languages')
     ->fields(array(
+      'enabled' => 1,
       'lingotek_enabled' => $enabled,
       'lingotek_locale' => is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale
     ))
@@ -701,11 +702,40 @@ function lingotek_set_target_language($drupal_language_code, $enabled = 1, $ling
   return $result;
 }
 
+function lingotek_lookup_language_by_locale($lingotek_locale){
+  $languages = language_list();
+  foreach ($languages as $target) {
+    if (isset($target->lingotek_locale) && strcmp($target->lingotek_locale,$lingotek_locale)==0) {
+      return $target;
+    }
+  }
+  return FALSE;
+}
+
 /**
  * Adds the target language as being enabled.
  */
-function lingotek_add_target_language($drupal_language_code) {
-  return lingotek_set_target_language($drupal_language_code, 1);
+function lingotek_add_target_language($lingotek_locale) {
+  
+  $language = lingotek_lookup_language_by_locale($lingotek_locale);
+  if ($language) {
+    // If already in the languages table then just tack on the lingotek_locale and enable it
+    $drupal_language_code = $language->language;
+  }
+  else { 
+    // If not add it to the languages table first and then tack on the lingotek_locale and enable it
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+    
+    $name = isset($_POST['language']) ? $_POST['language'] : NULL;
+    $native = isset($_POST['native']) ? $_POST['native'] : NULL;
+    $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
+    $domain = '';
+    $prefix = '';//to-do: attempt to use a short prefix
+    locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
+  }
+  
+  lingotek_add_target_sync_status_to_all_nodes($drupal_language_code);// Add the node sync target language entries to the lingotek table.
+  return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale);
 }
 
 /**
@@ -795,7 +825,7 @@ function lingotek_migration_1(){
 
   $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
   foreach ($target_languages as $drupal_language_code) {
-    lingotek_add_target_language($drupal_language_code);
+    lingotek_add_target_language(Lingotek::convertDrupal2Lingotek($drupal_language_code));
   }
   variable_del('lingotek_target_languages');
   drupal_static_reset('language_list');

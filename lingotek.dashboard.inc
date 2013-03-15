@@ -89,7 +89,10 @@ function lingotek_get_dashboard_code() {
   //$active_languages = lingotek_get_active_languages();  // array of enabled Drupal language codes (from locale module)
   $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE);
 
-  foreach ($target_languages as $target) {
+  $totals = lingotek_get_target_status();
+  
+  
+  /*foreach ($target_languages as $target) {
       $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $target->language);
       $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $target->language);
       $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $target->language);
@@ -105,7 +108,7 @@ function lingotek_get_dashboard_code() {
         'pending' => $pending,
         'current' => $current
       );
-  } // END:  foreach language counts
+  } */
 
   $script = '
       <script src="' . LINGOTEK_GMC_SERVER . '/js/lingotek.min.js"></script>
@@ -225,27 +228,9 @@ function lingotek_dashboard_command_ajax() {
 
     if (strlen($lingotek_locale) > 1) {
 
-      // These are the languages that are currently active in this Drupal installation.
-      $active_languages = current(language_list('enabled'));
-      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);//
-
-
-      // if the Source language is not active, activate it.
-      if (!array_key_exists($drupal_language_code, $active_languages)) {
-        $name = isset($_POST['language']) ? $_POST['language'] : NULL;
-        $native = isset($_POST['native']) ? $_POST['native'] : NULL;
-        $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
-        $domain = '';
-        $prefix = '';//to-do: attempt to use a short prefix
-        locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
-      }
-
-      // Adds the language to the local list of languages we do translation for, and to the Lingotek project.
-      $add = lingotek_add_target_language($drupal_language_code);
+      // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
+      $add = lingotek_add_target_language($lingotek_locale);
       
-      // Add the node sync target language entries to the lingotek table.
-      lingotek_add_target_sync_status_to_all_nodes($drupal_language_code);
-
       $response = lingotek_get_target_status($lingotek_locale);
       $response['success'] = $add;
     }
