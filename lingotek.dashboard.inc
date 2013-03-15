@@ -503,8 +503,9 @@ function lingotek_get_guid() {
 
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
+  $response = array();
   $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE);
-
+  
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {
 

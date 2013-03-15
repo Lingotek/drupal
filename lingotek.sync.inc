@@ -127,24 +127,22 @@ function lingotek_set_node_and_targets_sync_status_by_array($node_id, array $nod
 /**
  *  When a new MT language is added, add a Target status tag to every node.
 **/
-function lingotek_add_target_sync_status_to_all_nodes( $drupal_language_code ) {
+function lingotek_add_target_sync_status_to_all_nodes($drupal_language_code) {
 
-  $query = db_select( 'lingotek', 'l' )->fields( 'l' );
-  $query->condition( 'lingokey', 'node_sync_status' );
+  $query = db_select('lingotek', 'l')->fields('l');
+  $query->condition('lingokey', 'node_sync_status');
   $result = $query->execute();
 
-  while ( $record = $result->fetchAssoc() ) {
+  while ($record = $result->fetchAssoc()) {
     // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Node and Target to PENDING.
-    if ( ($record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_CURRENT ) || ( $record[ 'lingovalue' ] == LINGOTEK_NODE_SYNC_STATUS_PENDING ) ) {
-      lingotek_set_node_sync_status( $record[ 'nid' ], LINGOTEK_NODE_SYNC_STATUS_PENDING );
-      lingotek_set_target_sync_status( $record[ 'nid' ], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_PENDING );
+    if ($record['lingovalue'] == LINGOTEK_NODE_SYNC_STATUS_CURRENT) {
+      lingotek_set_target_sync_status($record['nid'], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
     }
     else { // Otherwise, set it to EDITED
-      lingotek_set_node_sync_status( $record[ 'nid' ], LINGOTEK_NODE_SYNC_STATUS_EDITED );
-      lingotek_set_target_sync_status( $record[ 'nid' ], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_EDITED );
+      lingotek_set_node_sync_status($record['nid'], LINGOTEK_NODE_SYNC_STATUS_EDITED);
+      lingotek_set_target_sync_status($record['nid'], $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
     }
   }
-
 }
 
 
