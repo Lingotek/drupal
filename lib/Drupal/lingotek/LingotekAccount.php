@@ -99,7 +99,7 @@ class LingotekAccount {
   
   public function getManagedTargets($as_detailed_objects = FALSE, $return_lingotek_codes = TRUE) {
     $targets_drupal = language_list();
-    $lingotek_managed_targets = lingotek_get_target_languages(); //dvz($lingotek_managed_targets,TRUE);
+    $lingotek_managed_targets = lingotek_get_target_languages();
     $default_language = language_default();
     
     $targets = array();
@@ -114,7 +114,7 @@ class LingotekAccount {
       }
       $target_drupal->locale = $target_drupal->language;
       $target_drupal->active = isset($target_drupal->active) ? $target_drupal->active : 1;
-      if ($return_lingotek_codes === TRUE) {
+      if (!isset($target_drupal->locale) && $return_lingotek_codes === TRUE) {
         $lingotek_locale = Lingotek::convertDrupal2Lingotek($target_drupal->language);
         $target_drupal->locale = ($lingotek_locale !== FALSE) ? $lingotek_locale : '';
         $key = ($lingotek_locale !== FALSE) ? $target_drupal->locale : $key;

@@ -679,14 +679,14 @@ function lingotek_delete_target_language($drupal_language_code) {
 /**
  * Sets the extended target language locale in the languages table and whether or not it is enabled
  */
-function lingotek_set_target_language($drupal_language_code, $enabled = 1) {
+function lingotek_set_target_language($drupal_language_code, $enabled = 1, $lingotek_locale = NULL) {
   $result = FALSE;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
     db_update('languages')
     ->fields(array(
       'lingotek_enabled' => $enabled,
-      'lingotek_locale' => Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE)
+      'lingotek_locale' => is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale
     ))
     ->condition('language',  $drupal_language_code)
     ->execute();
@@ -714,8 +714,8 @@ function lingotek_add_target_language($drupal_language_code) {
 function lingotek_add_missing_locales() {
   $languages = language_list();
   foreach ($languages as $target) {
-    $drupal_language_code = $target->language;
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
+      $drupal_language_code = $target->language;
       lingotek_set_target_language($drupal_language_code, $target->lingotek_enabled);
     }
   }
@@ -798,6 +798,7 @@ function lingotek_migration_1(){
     lingotek_add_target_language($drupal_language_code);
   }
   variable_del('lingotek_target_languages');
+  drupal_static_reset('language_list');
 }
 
 
@@ -817,4 +818,5 @@ function lingotek_migration_2(){
   } catch (DatabaseSchemaObjectExistsException $e) {
     // already exists (no need to do anything)
   }
+  drupal_static_reset('language_list');
 }
