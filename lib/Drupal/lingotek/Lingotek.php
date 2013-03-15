@@ -145,8 +145,7 @@ class Lingotek {
     'pau' => 'pau_PW',
     'pl' => 'pl_PL',
     'ps' => 'ps_AF',
-    'pt-pt' => 'pt_PT',
-    'pt-br' => 'pt_BR',
+    'pt' => 'pt_BR',
     'qu' => 'qu_BO',
     'rar' => 'rar_CK',
     'rn' => 'rn_BI',
@@ -177,7 +176,7 @@ class Lingotek {
     'ti' => 'ti_ER',
     'tk' => 'tk_TM',
     'fil' => 'tl_PH',
-    //'tl' => 'tl_PH',
+    'tl' => 'tl_PH',
     'tn' => 'tn_BW',
     'to' => 'to_TO',
     'tpi' => 'tpi_PG',
@@ -200,7 +199,7 @@ class Lingotek {
     'yap' => 'yap_FM',
     'yi' => 'yi_IL',
     'yo' => 'yo_NG',
-    //'zh' => 'zh_TW',
+    'zh' => 'zh_CN',
     'zh-hans' => 'zh_CN',
     'zh-hant' => 'zh_TW',
     'zu' => 'zu_ZA',
@@ -253,7 +252,17 @@ class Lingotek {
     }
 
     $ret = FALSE;
-    // if it doesn't exist, then try a general code using the mapping
+    
+    // check to see if the lingotek_locale is set the drupal languages table
+    $languages = language_list();
+    foreach ($languages as $target) {
+      $drupal_language_code = $target->language;
+      if (isset($target->lingotek_locale) && strcmp($target->lingotek_locale,$lingotek_locale)==0) {
+        return $drupal_language_code;
+      }
+    }
+    
+    // if it doesn't exist, then try a general code using the mapping (degraded)
     $languages = current(language_list('enabled')); // enabled drupal languages as associative array
     $exists = array_key_exists($drupal_language_code, $languages);
     if ($exists) {

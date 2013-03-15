@@ -8,6 +8,7 @@
 /*
  * Implements hook_requirements()
  */
+
 function lingotek_requirements($phase) {
   $requirements = array();
   $t = get_t();
@@ -69,6 +70,7 @@ function lingotek_uninstall() {
   }
   
   db_drop_field('languages', 'lingotek_enabled');
+  db_drop_field('languages', 'lingotek_locale');
 }
 
 /**
@@ -76,8 +78,8 @@ function lingotek_uninstall() {
  */
 function lingotek_enable() {
   lingotek_set_priority();
-  lingotek_set_defaults();
-  lingotek_add_enabled_tracking_column();
+  lingotek_set_defaults();  
+  lingotek_add_missing_locales();
 }
 
 /**
@@ -106,24 +108,6 @@ function lingotek_set_defaults() {
   // Check if vars are set.  If so, use what is already set.  If not, set them using the defaults provided above.
   foreach ($defaults as $k => $default_value) {
     variable_set($k, variable_get($k, $default_value));
-  }
-}
-
-
-/*
- * Add lingotek_enabled tracking column to languages table
- */
-function lingotek_add_enabled_tracking_column(){
-  $spec = array(
-    'type' => 'int',
-    'description' => "Lingotek enabled language",
-    'not null' => TRUE,
-    'default' => 0
-  );
-  try {
-    db_add_field('languages', 'lingotek_enabled', $spec);
-  } catch (DatabaseSchemaObjectExistsException $e) {
-    // already exists (no need to do anything)
   }
 }
 
@@ -372,14 +356,43 @@ function lingotek_update_7208() {
 }
 
 /**
- * Update languages table to have lingotek_enabled field
+ * Extend languages table to have lingotek_enabled field
  */
 function lingotek_update_7209() {
-  lingotek_add_enabled_tracking_column();
-  
-  $target_languages = array_filter(explode('|',variable_get('lingotek_target_languages', '')));
-  foreach($target_languages as $drupal_language_code){
+  $spec = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled",
+    'not null' => TRUE,
+    'default' => 0
+  );
+  try {
+    db_add_field('languages', 'lingotek_enabled', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
+
+  $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
+  foreach ($target_languages as $drupal_language_code) {
     lingotek_add_target_language($drupal_language_code);
   }
   variable_del('lingotek_target_languages');
+}
+
+/**
+ * Extend languages table to have lingotek_locale field
+ */
+function lingotek_update_7210() {
+  $spec = array(
+    'type' => 'varchar',
+    'description' => "Locale mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => ''
+  );
+  try {
+    db_add_field('languages', 'lingotek_locale', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
+  lingotek_add_missing_locales();
 }
