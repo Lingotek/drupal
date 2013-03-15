@@ -68,10 +68,14 @@ class LingotekApi {
   public function addContentDocument($node, $with_targets = FALSE) {
     global $_lingotek_locale;
     $success = FALSE;
-
+    
     $project_id = empty($node->lingotek_project_id) ? NULL : $node->lingotek_project_id;
     $project_id = empty($project_id) ? lingotek_lingonode($node->nid, 'project_id') : $project_id;
     $project_id = empty($project_id) ? variable_get('lingotek_project', NULL) : $project_id;
+    
+    $vault_id = empty($node->lingotek_vault_id) ? NULL : $node->lingotek_vault_id;
+    $vault_id = empty($vault_id) ? lingotek_lingonode($node->nid, 'vault_id') : $vault_id;
+    $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
 
     $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
@@ -82,7 +86,7 @@ class LingotekApi {
         'documentDesc' => $node->title,
         'format' => $this->xmlFormat(),
         'sourceLanguage' => $source_language,
-        'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
+        'tmVaultId' => $vault_id,
         'content' => lingotek_xml_node_body($node),
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
@@ -104,7 +108,7 @@ class LingotekApi {
       
       if ($result) {
         lingotek_lingonode($node->nid, 'document_id', $result->id);
-        lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+        lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
         $success = TRUE;
       }
     }
@@ -765,6 +769,10 @@ class LingotekApi {
     $this->addAdvancedParameters($parameters, $node);
 
     $result = $this->request('updateContentDocument', $parameters);
+    
+    if($result){
+      lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+    }
 
     return ( $result ) ? TRUE : FALSE;
   }

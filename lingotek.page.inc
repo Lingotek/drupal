@@ -45,9 +45,6 @@ function lingotek_push_form_submit($form, $form_state) {
   }
   else {
     // Create a new Lingotek Document.
-    // Add project and vault parameters to the node object.
-    $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
-    $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'vault_id');
     $api->addContentDocument($node, TRUE);
   }
 

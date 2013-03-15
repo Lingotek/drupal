@@ -29,10 +29,7 @@ function lingotek_machine_translate_node( $nid, &$context ) {
     
   }
 
-  // Set this Node and its targets to PENDING status. (meaning the content has been uploaded, but not downloaded)
-  lingotek_set_node_and_targets_sync_status( $nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING );
   $context['results'][] = 'Upload Node: ' . $nid;
-
 } // END:  lingotek_machine_translate_node();
 
 
