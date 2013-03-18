@@ -23,14 +23,14 @@ function lingotek_menu() {
   // Enterprise Only Menu Items
   if (TRUE === LingotekAccount::instance()->isEnterprise()) {
 
-    /*$items['admin/settings/lingotek'] = array(
+    $items['admin/settings/lingotek'] = array(
       'title' => 'Lingotek',
       'access arguments' => array('administration'),
       'description' => 'Community Translation Settings',
       'file' => 'lingotek.admin.inc',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('lingotek_admin_form'),
-    );*/
+    );
 
     $items['node/%node/lingotek_pm'] = array(
       'title' => 'Lingotek',
@@ -53,21 +53,26 @@ function lingotek_menu() {
       'type' => MENU_LOCAL_TASK
     );
   }
-  // Use the Standard Dashboard Interface
-  // Lingotek Dashboard and Settings Tabs
-  $items['admin/settings/lingotek'] = array(
-    'title' => 'Lingotek',
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_dashboard',
-    'weight' => 1,
-    'type' => MENU_NORMAL_ITEM,
-    'access arguments' => array('administration')
-  );
-  $items['admin/settings/lingotek/dashboard'] = array(
-    'title' => 'Dashboard',
-    'type' => MENU_DEFAULT_LOCAL_TASK
-  );
-
+  else {
+    // Use the Standard Dashboard Interface
+    // Lingotek Dashboard and Settings Tabs
+    $items['admin/settings/lingotek'] = array(
+      'title' => 'Lingotek',
+      'file' => 'lingotek.dashboard.inc',
+      'page callback' => 'lingotek_dashboard',
+      'weight' => 1,
+      'type' => MENU_NORMAL_ITEM,
+      'access arguments' => array('administration')
+    );
+    $items['admin/settings/lingotek/dashboard'] = array(
+      'title' => 'Dashboard',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'file' => 'lingotek.dashboard.inc',
+      'page callback' => 'lingotek_dashboard',
+      'weight' => 1,
+      'access arguments' => array('administration')
+    );
+  }
   // Tab:  Settings
   $items['admin/settings/lingotek/settings'] = array(
     'title' => 'Settings',
