@@ -5,11 +5,6 @@
  */
 
 
-function lingotek_cleanup_utility(){
-  lingotek_field_language_data_cleanup_batch_create();
-  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
-}
-
 /**
  * Field Language Data Cleanup Utility
  * 
@@ -149,9 +144,7 @@ function lingotek_get_sync_download_batch_elements( ) {
 
   $target_languages = lingotek_get_target_languages();
   foreach ($target_languages as $drupal_language_code) {
-      // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
-      // Grab node targets that are currently marked 'PENDING'.
-      // There can be one operation for each node target that is pending.
+
       $key = 'target_sync_status_' . $drupal_language_code;
       $query = db_select( 'lingotek', 'l' )->fields( 'l' );
       $query->condition( 'lingokey', $key );
@@ -270,7 +263,7 @@ function lingotek_bulk_mt_download_batch_create($lingotek_locale) {
     // Grab nodes that are currently marked 'PENDING'
     $query = db_select('lingotek', 'l')->fields('l');
     $query->condition('lingokey', 'node_sync_status');
-    $query->condition('lingovalue', LINGOTEK_NODE_SYNC_STATUS_PENDING);
+    $query->condition('lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING);
 
     $result = $query->execute();
 

@@ -12,6 +12,8 @@ include_once('lingotek.api.inc');
 include_once('lingotek.sync.inc');
 include_once('lib/Drupal/batch/lingotek.batch.inc');
 
+
+
 /**
  * Implements hook_menu().
  */
@@ -19,16 +21,16 @@ function lingotek_menu() {
   $items = array();
   
   // Enterprise Only Menu Items
-  if (TRUE === LingotekAccount::instance()->isEnterprise()) {
+  if (LingotekAccount::instance()->isEnterprise()) {
 
-    /*$items['admin/settings/lingotek'] = array(
+    $items['admin/settings/lingotek'] = array(
       'title' => 'Lingotek',
       'access arguments' => array('administration'),
       'description' => 'Community Translation Settings',
       'file' => 'lingotek.admin.inc',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('lingotek_admin_form'),
-    );*/
+    );
 
     $items['node/%node/lingotek_pm'] = array(
       'title' => 'Lingotek',
@@ -51,21 +53,26 @@ function lingotek_menu() {
       'type' => MENU_LOCAL_TASK
     );
   }
-  // Use the Standard Dashboard Interface
-  // Lingotek Dashboard and Settings Tabs
-  $items['admin/settings/lingotek'] = array(
-    'title' => 'Lingotek',
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_dashboard',
-    'weight' => 1,
-    'type' => MENU_NORMAL_ITEM,
-    'access arguments' => array('administration')
-  );
-  $items['admin/settings/lingotek/dashboard'] = array(
-    'title' => 'Dashboard',
-    'type' => MENU_DEFAULT_LOCAL_TASK
-  );
-
+  else {
+    // Use the Standard Dashboard Interface
+    // Lingotek Dashboard and Settings Tabs
+    $items['admin/settings/lingotek'] = array(
+      'title' => 'Lingotek',
+      'file' => 'lingotek.dashboard.inc',
+      'page callback' => 'lingotek_dashboard',
+      'weight' => 1,
+      'type' => MENU_NORMAL_ITEM,
+      'access arguments' => array('administration')
+    );
+    $items['admin/settings/lingotek/dashboard'] = array(
+      'title' => 'Dashboard',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'file' => 'lingotek.dashboard.inc',
+      'page callback' => 'lingotek_dashboard',
+      'weight' => 1,
+      'access arguments' => array('administration')
+    );
+  }
   // Tab:  Settings
   $items['admin/settings/lingotek/settings'] = array(
     'title' => 'Settings',
@@ -486,15 +493,15 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
-  $options = array();
-  $options[TRUE] = t('Enabled');
-  $options[FALSE] = t('Disabled');
+  //$options = array();
+  //$options[TRUE] = t('Enabled');
+  //$options[FALSE] = t('Disabled');
 
-  $title = t('Translation Settings (Powered by Lingotek)');
+  $title = t('Translation Management');
 
   // Vertical Tab.
   $form['lingotek'] = array(
-    '#title' => t('Lingotek Translation Settings'),
+    '#title' => t('Translation Mangement'),
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -503,6 +510,36 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#attached' => array(
       'js' => array(drupal_get_path('module', 'lingotek') . '/js/lingotek.form.js'),
     ),
+  );
+  
+  
+  $form['lingotek']['et_content'] = array(
+    '#type' => 'container',
+  );
+  
+  $form['lingotek']['et_content']['explanation'] = array(
+    '#title' => $title,
+    '#type' => 'item',
+    '#description' => t('Translation of this node is currently managed by the Entity Translation module. Click the "Enable Lingotek" button to begin using the Lingotek module to manage this node\'s translation.  Upon saving the node, its content will be uploaded to Lingotek.  You will not be able to switch back to using Entity Translation for this node.'),
+  );
+  
+  $form['lingotek']['et_content']['is_et_node'] = array(
+    '#type' => 'hidden',
+    '#value' => lingotek_managed_by_entity_translation($form['#node']->type),
+    '#attributes' => array('id' => 'ltk-entity-translation-node')
+  );
+  
+  $form['lingotek']['lingotek_push_once'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => 0,
+    '#attributes' => array('id' => 'ltk-push-once', 'style' => 'display: none')
+  );
+  
+  
+  $form['lingotek']['et_content']['btn'] = array(
+    '#type' => 'button',
+    '#value' => 'Enable Lingotek',
+    '#attributes' => array('id' => 'ltk-enable-from-et','onclick' => 'return false;'),
   );
 
   $form['lingotek']['note'] = array(
@@ -708,7 +745,12 @@ function lingotek_node_update($node) {
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
   
-  if (isset($node->lingotek_upload_override)) {
+  if(isset($node->lingotek_push_once) && $node->lingotek_push_once){
+    $send_lingotek_document = 1;
+  }  else if (lingotek_managed_by_entity_translation($node->type)){
+    $send_lingotek_document = 0;
+  }
+  else if (isset($node->lingotek_upload_override)) { // this variable can force to either send or not send (1 or 0) when set.
     $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
   }
   else {
@@ -730,11 +772,12 @@ function lingotek_node_update($node) {
   }
 
   // On node create or edit,  set the node sync status to 'edited' and all the targets to edited.
-    $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
+  $is_syncing = (isset($node->skip_status_updates) && $node->skip_status_updates) ? TRUE : FALSE;
+  $is_syncing = (isset($_SESSION['lingotek_sync_in_progress'])) ? $_SESSION['lingotek_sync_in_progress'] : $is_syncing;
 
   if ( $is_syncing === FALSE) {
     lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
-  }
+  }  
 
   // Overwrite document ID.
   if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
@@ -1026,10 +1069,7 @@ function lingotek_content_push_form_submit($form, $form_state) {
     $api->updateContentDocument(LingotekNode::load($node));
   }
   else {
-    // Create a new Lingotek Document.
-    // Add project and vault parameters to the node object.
-    $node->lingotek_project_id = lingotek_lingonode($node->nid, 'project_id');
-    $node->lingotek_vault_id = lingotek_lingonode($node->nid, 'vault_id');
+    // Create a new Lingotek Document. 
     $api->addContentDocument($node, TRUE);
   }
 

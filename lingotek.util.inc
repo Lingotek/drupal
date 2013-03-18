@@ -658,15 +658,15 @@ function lingotek_delete_target_language($drupal_language_code) {
   $result = FALSE;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
-
-    //remove drupal_language_code from target_languages system variable
-    $target_languages = lingotek_get_target_languages();
-    if (($key = array_search($drupal_language_code, $target_languages)) !== false) {
-      unset($target_languages[$key]);
-      watchdog("lingotek", "Target language removed: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
-    }
-    lingotek_set_target_languages($target_languages);
-
+    
+    db_update('languages')
+    ->fields(array(
+      'lingotek_enabled' => 0,
+    ))
+    ->condition('language',  $drupal_language_code)
+    ->execute();
+    watchdog("lingotek", "Target language removed: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
     $api = LingotekApi::instance();
@@ -677,17 +677,21 @@ function lingotek_delete_target_language($drupal_language_code) {
 }
 
 /**
- * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
+ * Sets the extended target language locale in the languages table and whether or not it is enabled
  */
-function lingotek_add_target_language($drupal_language_code) {
+function lingotek_set_target_language($drupal_language_code, $enabled = 1, $lingotek_locale = NULL) {
   $result = FALSE;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
-
-    $target_languages = lingotek_get_target_languages();
-    $target_languages[] = $drupal_language_code;
+    db_update('languages')
+    ->fields(array(
+      'enabled' => 1,
+      'lingotek_enabled' => $enabled,
+      'lingotek_locale' => is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale
+    ))
+    ->condition('language',  $drupal_language_code)
+    ->execute();
     watchdog("lingotek", "Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
-    lingotek_set_target_languages($target_languages);
 
     // Add the Target Language to the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -698,42 +702,65 @@ function lingotek_add_target_language($drupal_language_code) {
   return $result;
 }
 
-/**
- * Save the Targeted Languages data.
- */
-function lingotek_set_target_languages($target_languages) {
-  if (is_array($target_languages)) {
-    variable_set('lingotek_target_languages', implode('|', array_filter(array_unique($target_languages))));
-  }
-}
-
-/**
- * Get the languages we are going to translate into.  These are ONLY those added on the Dashboard.
- * These are Drupal language codes.  This is how we track lingotek translations vs active Drupal languages.
- * pass in active == TRUE, to get ONLY the active languages.
- */
-function lingotek_get_target_languages($active_only = FALSE) {
-  $target_languages = array_filter(explode('|',variable_get('lingotek_target_languages', '')));
-  return $target_languages;
-}
-
-/*
- * Uses lingotek_get_target_languages to build a Drupal style format language_list()
- * So this list ONLY includes languages listed in the dashboard.
- */ 
-function lingotek_get_target_language_list() {
-
-  $paid_targets = array();
-
-  $active_languages = lingotek_get_active_languages( TRUE );// Languages activated with Drupal locale
-  $managed_languages = lingotek_get_target_languages( TRUE ); // Simple language list of Paid Target Languages
-  foreach ( $managed_languages as $code ) {
-    if(isset($active_languages[ $code ])) {
-      $paid_targets[ $code ] = $active_languages[ $code ];
+function lingotek_lookup_language_by_locale($lingotek_locale){
+  $languages = language_list();
+  foreach ($languages as $target) {
+    if (isset($target->lingotek_locale) && strcmp($target->lingotek_locale,$lingotek_locale)==0) {
+      return $target;
     }
   }
+  return FALSE;
+}
+
+/**
+ * Adds the target language as being enabled.
+ */
+function lingotek_add_target_language($lingotek_locale) {
   
-  return $paid_targets;
+  $language = lingotek_lookup_language_by_locale($lingotek_locale);
+  if ($language) {
+    // If already in the languages table then just tack on the lingotek_locale and enable it
+    $drupal_language_code = $language->language;
+  }
+  else { 
+    // If not add it to the languages table first and then tack on the lingotek_locale and enable it
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+    
+    $name = isset($_POST['language']) ? $_POST['language'] : NULL;
+    $native = isset($_POST['native']) ? $_POST['native'] : NULL;
+    $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
+    $domain = '';
+    $prefix = '';//to-do: attempt to use a short prefix
+    locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
+  }
+  
+  lingotek_add_target_sync_status_to_all_nodes($drupal_language_code);// Add the node sync target language entries to the lingotek table.
+  return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale);
+}
+
+/**
+ * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
+ */
+function lingotek_add_missing_locales() {
+  $languages = language_list();
+  foreach ($languages as $target) {
+    if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
+      $drupal_language_code = $target->language;
+      lingotek_set_target_language($drupal_language_code, $target->lingotek_enabled);
+    }
+  }
+}
+
+/**
+ * Get only the languages that are lingotek_enabled
+ */
+function lingotek_get_target_languages($codes_only = TRUE) {
+  $target_languages = db_query("SELECT * FROM {languages} WHERE lingotek_enabled = :lingotek_enabled", array(':lingotek_enabled' => 1))->fetchAll();
+  $target_codes = array();
+  foreach($target_languages as $target_language){
+    $target_codes[] = $target_language->language; 
+  }
+  return $codes_only ? $target_codes : $target_languages;
 }
 
 /*
@@ -767,4 +794,59 @@ function lingotek_get_site_name() {
     $site_name = $site_url['host'];
   }
   return $site_name;
+}
+
+/*
+ * Clean-up utility
+ */
+function lingotek_cleanup_utility(){
+  lingotek_migration_1();
+  lingotek_migration_2();
+  lingotek_add_missing_locales();// any missing lingotek locales to the languages table
+  lingotek_field_language_data_cleanup_batch_create();
+  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
+}
+
+/*
+ * Migration 1
+ */
+function lingotek_migration_1(){
+  $spec = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled",
+    'not null' => TRUE,
+    'default' => 0
+  );
+  try {
+    db_add_field('languages', 'lingotek_enabled', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
+
+  $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
+  foreach ($target_languages as $drupal_language_code) {
+    lingotek_add_target_language(Lingotek::convertDrupal2Lingotek($drupal_language_code));
+  }
+  variable_del('lingotek_target_languages');
+  drupal_static_reset('language_list');
+}
+
+
+/*
+ * Migration 2
+ */
+function lingotek_migration_2(){
+  $spec = array(
+    'type' => 'varchar',
+    'description' => "Locale mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => ''
+  );
+  try {
+    db_add_field('languages', 'lingotek_locale', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
+  drupal_static_reset('language_list');
 }

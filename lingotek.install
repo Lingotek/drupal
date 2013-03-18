@@ -8,6 +8,7 @@
 /*
  * Implements hook_requirements()
  */
+
 function lingotek_requirements($phase) {
   $requirements = array();
   $t = get_t();
@@ -67,6 +68,9 @@ function lingotek_uninstall() {
   foreach ($delete_variables as $variable) {
     variable_del($variable);
   }
+  
+  db_drop_field('languages', 'lingotek_enabled');
+  db_drop_field('languages', 'lingotek_locale');
 }
 
 /**
@@ -74,7 +78,7 @@ function lingotek_uninstall() {
  */
 function lingotek_enable() {
   lingotek_set_priority();
-  lingotek_set_defaults();
+  lingotek_set_defaults();  
 }
 
 /**
@@ -181,7 +185,7 @@ function lingotek_schema() {
   );
   
   return $schema;
-}
+}  
 
 /*
  * Update
@@ -323,7 +327,7 @@ function lingotek_update_7206(&$sandbox) {
 /**
  * Change the value for LINGOTEK_ENABLED to a string to avoid collision.
  */
-function lingotek_update_7207() {
+function lingotek_update_7207(&$sandbox) {
   $updated = array();
   foreach (array_keys(node_type_get_names()) as $type) {
     $name = 'language_content_type_' . $type;
@@ -344,8 +348,48 @@ function lingotek_update_7207() {
 /**
  * Update lingokey name from 'document_id_xx' to 'document_id'
  */
-function lingotek_update_7208() {
+function lingotek_update_7208(&$sandbox) {
   $ret = array();
   db_query("UPDATE {lingotek} SET lingokey = 'document_id' WHERE lingokey LIKE 'document_id_%'");
   return $ret;
 }
+
+/**
+ * Extend languages table to have lingotek_enabled field
+ */
+function lingotek_update_7209(&$sandbox) {
+  $ret = array();
+  lingotek_migration_1();
+  return $ret;
+}
+
+/**
+ * Extend languages table to have lingotek_locale field
+ */
+function lingotek_update_7210(&$sandbox) {
+  $ret = array();
+  lingotek_migration_2();
+  lingotek_add_missing_locales();
+  return $ret;
+}
+
+/*
+ * Update languages table with lingotek fields
+ */
+/*function lingotek_schema_alter(&$schema) {
+  // Add fields to existing schema.
+  $schema['languages']['fields']['lingotek_enabled'] = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled",
+    'not null' => TRUE,
+    'default' => 0
+  );
+
+  $schema['languages']['fields']['lingotek_locale'] = array(
+    'type' => 'varchar',
+    'description' => "Locale mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => ''
+  );
+}*/

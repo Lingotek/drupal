@@ -115,8 +115,10 @@ function lingotek_download_document(&$node, $drupal_language_code) {
   $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
   $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
   $node->path['pathauto'] = 0;
-  //watchdog('temp-download-msg', 'hi');
-  watchdog('temp-download-msg', "<h2>node: @nid</h2> !node", array('@nid' => $node->nid, '!node' => watchdog_format_object($node)));
+  
+  lingotek_set_target_sync_status($node->nid, $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_CURRENT);//slightly pre-emptive, but certainly more cohesive
+  $node->lingotek_upload_override = 0;// ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
+  $node->skip_status_updates = 1;// ensure that the statuses are not set on node update (in lingotek_node_update)
   node_save($node);
 }
 
@@ -379,7 +381,7 @@ function lingotek_get_translation_target($translation_target_id) {
  *
  * @param object $node
  *   A Drupal node.
- * @param $language
+ * @param $drupal_language_code
  *   A target language.
  * @param mixed $label
  *   The label to use as text for the link. Possible values are
@@ -390,10 +392,9 @@ function lingotek_get_translation_target($translation_target_id) {
  * @return string
  *   Either a link pointing the the url, or the url itself if $label is FALSE
  */
-function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = FALSE) {
-  global $_lingotek_client, $_lingotek_locale;
-
-  if (!isset($_lingotek_locale[$language])) {
+function lingotek_get_workbench_url($node, $drupal_language_code, $label = FALSE, $force = FALSE) {
+  
+  if (Lingotek::convertDrupal2Lingotek($drupal_language_code, TRUE) === FALSE) {
     return "";
   }
 
@@ -403,12 +404,13 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
   $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
+
   if (count($targets) == 0) {
     return '';
   }
 
   foreach ($targets as $lang => $translation_target) {
-    if ($lang != $language) {
+    if ($lang != $drupal_language_code) {
       continue;
     }
 
@@ -459,7 +461,7 @@ function lingotek_get_workbench_url($node, $language, $label = FALSE, $force = F
     );
   }
 
-  return $link[$language]['link'];
+  return $link[$drupal_language_code]['link'];
 }
 
 /*

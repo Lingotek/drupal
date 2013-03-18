@@ -68,10 +68,14 @@ class LingotekApi {
   public function addContentDocument($node, $with_targets = FALSE) {
     global $_lingotek_locale;
     $success = FALSE;
-
+    
     $project_id = empty($node->lingotek_project_id) ? NULL : $node->lingotek_project_id;
     $project_id = empty($project_id) ? lingotek_lingonode($node->nid, 'project_id') : $project_id;
     $project_id = empty($project_id) ? variable_get('lingotek_project', NULL) : $project_id;
+    
+    $vault_id = empty($node->lingotek_vault_id) ? NULL : $node->lingotek_vault_id;
+    $vault_id = empty($vault_id) ? lingotek_lingonode($node->nid, 'vault_id') : $vault_id;
+    $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
 
     $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
@@ -82,17 +86,20 @@ class LingotekApi {
         'documentDesc' => $node->title,
         'format' => $this->xmlFormat(),
         'sourceLanguage' => $source_language,
-        'tmVaultId' => (!empty($node->lingotek_vault_id)) ? $node->lingotek_vault_id : variable_get('lingotek_vault', 1),
+        'tmVaultId' => $vault_id,
         'content' => lingotek_xml_node_body($node),
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
       
+      if (!empty($node->lingotek_workflow_id)) {
+        $parameters['workflowId'] = $node->lingotek_workflow_id;
+      }
+      
       $this->addAdvancedParameters($parameters, $node);
 
       if($with_targets){
-        $targets = LingotekAccount::instance()->getManagedTargets();
-        $parameters['targetAsJSON'] = drupal_json_encode(array_values($targets));
-        $parameters['applyWorkflow'] = 'true';// API expects a 'true' string
+        $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON();
+        $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
       } 
       else {
@@ -101,7 +108,7 @@ class LingotekApi {
       
       if ($result) {
         lingotek_lingonode($node->nid, 'document_id', $result->id);
-        lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+        lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
         $success = TRUE;
       }
     }
@@ -762,6 +769,10 @@ class LingotekApi {
     $this->addAdvancedParameters($parameters, $node);
 
     $result = $this->request('updateContentDocument', $parameters);
+    
+    if($result){
+      lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+    }
 
     return ( $result ) ? TRUE : FALSE;
   }
@@ -808,6 +819,7 @@ class LingotekApi {
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
+    watchdog('api request',t($method));
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
@@ -837,7 +849,7 @@ class LingotekApi {
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
 
-      watchdog( 'API_CALL', '
+      watchdog( 'api response', '
       <h1>@method ::</h1>
       <div>!parameters</div>
       <h1>Request:</h1>
