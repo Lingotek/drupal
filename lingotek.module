@@ -21,7 +21,7 @@ function lingotek_menu() {
   $items = array();
   
   // Enterprise Only Menu Items
-  if (TRUE === LingotekAccount::instance()->isEnterprise()) {
+  if (LingotekAccount::instance()->isEnterprise()) {
 
     $items['admin/settings/lingotek'] = array(
       'title' => 'Lingotek',

@@ -53,13 +53,7 @@ class LingotekAccount {
     if ( isset( $current_status ) && isset( $current_plan ) && isset( $current_enterprise ) ) {
       $this->setStatus( $current_status );
       $this->setPlan( $current_plan );
-
-      if ( $current_enterprise == 1 ) {
-        $this->setEnterpriseStatus( TRUE );
-      }
-      else {
-        $this->setEnterpriseStatus( FALSE );
-      }
+      $this->setEnterpriseStatus( $current_enterprise );
     }
     else { // If the Account data isn't cached locally pull it down.
       $this->getAccountStatus();
@@ -148,7 +142,7 @@ class LingotekAccount {
   }
 
   public function setEnterpriseStatus( $value ) {
-    $this->enterprise = $value;
+    $this->enterprise = (bool)$value;
   }
 
   public function getEnterpriseStatusText() {
@@ -217,6 +211,7 @@ class LingotekAccount {
               variable_set( 'lingotek_account_enterprise', 1 ); // Store as 0/1
             }
             else {
+              //$this->setEnterpriseStatus( FALSE );
               variable_set( 'lingotek_account_enterprise', 0 ); // Store as 0/1
             }
 
