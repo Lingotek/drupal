@@ -745,8 +745,13 @@ function lingotek_node_update($node) {
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
   
+  
+  
   if (isset($node->lingotek_push_once) && $node->lingotek_push_once) {
     $send_lingotek_document = 1;
+    if (isset($node->create_lingotek_document)) {
+      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+    }
   }
   else if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
     $send_lingotek_document = 0;
