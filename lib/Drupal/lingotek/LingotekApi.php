@@ -77,6 +77,10 @@ class LingotekApi {
     $vault_id = empty($vault_id) ? lingotek_lingonode($node->nid, 'vault_id') : $vault_id;
     $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
 
+    $workflow_id = empty($node->workflow_id) ? NULL : $node->workflow_id;
+    $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'workflow_id') : $workflow_id;
+    $workflow_id = empty($workflow_id) ? variable_get('workflow_id', NULL) : $workflow_id;
+    
     $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
     if ($project_id) {
@@ -91,8 +95,8 @@ class LingotekApi {
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
       
-      if (!empty($node->lingotek_workflow_id)) {
-        $parameters['workflowId'] = $node->lingotek_workflow_id;
+      if (!empty($workflow_id)) {
+        $parameters['workflowId'] = $workflow_id;
       }
       
       $this->addAdvancedParameters($parameters, $node);
