@@ -155,7 +155,7 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       'communityDisplayName' => lingotek_get_site_name(),
       'contactName' => $first_name . ' ' . $last_name,
       'contactEmail' => $email,
-      'company' => $base_url, //currently we are not asking for this.
+      'company' => lingotek_get_site_name(), //currently we are not asking for this.
       'website' => $base_url,
         ));
 
@@ -186,8 +186,10 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_notifications_callback', $callback_url );
       variable_set( 'lingotek_cms_tag', $tags['distribution']);
 
-      $extras['company'] = $base_url; // Company
-      $extras['lead_source'] = $tags['leadSource'];
+      $extras['company'] = lingotek_get_site_name();// Website name => company
+      $extras['URL'] = $base_url; // website
+      $extras['lead_source'] = $tags['leadSource'];// lead source
+      $extras['Type__c'] = LINGOTEK_DEV ? 'QA' : 'Prospect';
       $extras['Distribution__c'] = $tags['distribution']; // Distribution
       if(isset($tags['partner']) && strlen($tags['partner'])) {
         $extras['Partner__c'] = $tags['partner']; // Partner
@@ -1040,31 +1042,48 @@ function lingotek_get_projects_v4( $login, $passwd, $community_identity, $url ) 
 /**
  * Activation
  */
-function lingotek_activation( $first_name, $last_name, $email, $extras = array() ) {
+function lingotek_activation($first_name, $last_name, $email, $extras = array()) {
 
-  $url = 'https://www.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
+  $url = 'https://www.salesforce.com/servlet/servlet.WebToLead';
   $fields = array(
+    'encoding' => 'UTF-8',
+    'oid' => '00D80000000bjBA',
     'first_name' => $first_name,
-    'last_name'  => $last_name,
-    'email'      => $email,
-    'oid'        => '00D80000000bjBA',
-    //'debug'      => '1',
-    //'debugEmail' => '',
+    'last_name' => $last_name,
+    'email' => $email,
+      //'debug'      => '1',
+      //'debugEmail' => '',
   );
 
-  $fields = array_merge( $fields, $extras );
+  $fields = array_merge($fields, $extras);
+
+  $defaults = array(
+    CURLOPT_URL => $url,
+    CURLOPT_POST => 1,
+    CURLOPT_POSTFIELDS => http_build_query($fields),
+    //CURLOPT_SSL_VERIFYPEER => 0,
+    CURLOPT_RETURNTRANSFER => 1,
+    //CURLOPT_FOLLOWLOCATION => 1,
+    CURLOPT_VERBOSE => 1,
+    CURLOPT_HEADER => 1
+  );
 
   $ch = curl_init();
-  curl_setopt( $ch, CURLOPT_URL, $url );
-  curl_setopt( $ch, CURLOPT_POST, count( $fields ) );
-  curl_setopt( $ch, CURLOPT_POSTFIELDS, $fields );
-  curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, FALSE );
-  curl_setopt( $ch, CURLOPT_RETURNTRANSFER, TRUE );
-  curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, TRUE );
-  $result = curl_exec($ch);
-  curl_close($ch);
+  curl_setopt_array($ch, $defaults);
 
-} // END:  activation
+  $response = curl_exec($ch);
+
+  /*
+    // Then, after your curl_exec call:
+    $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $header = substr($response, 0, $header_size);
+    $body = substr($response, $header_size);
+   */
+
+  curl_close($ch);
+}
+
+// END:  activation
 
 /**
  * Implement hook_mail()
