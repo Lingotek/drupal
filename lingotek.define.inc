@@ -40,7 +40,7 @@ def('LINGOTEK_DEV', FALSE);
 /**
  * Defines the current module release version.
  */
-define('LINGOTEK_VERSION', '7.x-2.6');
+define('LINGOTEK_VERSION', '7.x-2.7');
 
 /**
  * Identifies a content type which has Lingotek translation enabled.
