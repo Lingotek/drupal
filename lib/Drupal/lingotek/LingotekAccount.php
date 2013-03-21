@@ -93,13 +93,13 @@ class LingotekAccount {
   
   public function getManagedTargets($as_detailed_objects = FALSE, $return_lingotek_codes = TRUE) {
     $targets_drupal = language_list();
-    $lingotek_managed_targets = lingotek_get_target_languages();
+    //$lingotek_managed_targets = lingotek_get_target_languages();
     $default_language = language_default();
     
     $targets = array();
     foreach ($targets_drupal as $key => $target) {
       $is_source = $default_language->language == $target->language;
-      $is_lingotek_managed = ($this->isEnterprise() === TRUE) || in_array($target->language, $lingotek_managed_targets);
+      $is_lingotek_managed = ($this->isEnterprise() === TRUE) || $target->lingotek_enabled;//in_array($target->language, $lingotek_managed_targets);
       if ($is_source) {
         continue; // skip, since the source language is not a target
       }

@@ -243,17 +243,13 @@ function lingotek_dashboard_command_ajax() {
     
     $lingotek_locale = $parameters['code'];
 
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-
-    $message = t('DELETE: Remove language (@code)',array('@code'=>$drupal_language_code));
+    $message = t('DELETE: Remove language (@code)',array('@code'=>$lingotek_locale));
 
     // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
-    $delete = lingotek_delete_target_language($drupal_language_code); // Mark this language as Active => False
-    // Removes the node sync target language entries from the lingotek table.
-    lingotek_delete_target_sync_status_for_all_nodes($drupal_language_code);
+    $delete = lingotek_delete_target_language($lingotek_locale); // Mark this language as Active => False
 
     $response = array(
-      'code' => Lingotek::convertDrupal2Lingotek($drupal_language_code),
+      'code' => $lingotek_locale,
       'active' => FALSE,
       'success' => $delete
     ); // Format:  {'code':'es','active':'FALSE','success':TRUE}

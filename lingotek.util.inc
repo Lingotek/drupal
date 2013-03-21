@@ -137,8 +137,8 @@ function lingotek_node_sync(&$node) {
   if ($sync_method != "0" && $lingotek_document_id) {
     $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id'));
     // Check for changes in % complete.
-    foreach ($progress as $lang => $target) {
-      $key = 'percent_complete_' . $lang;
+    foreach ($progress as $lingotek_locale => $target) {
+      $key = 'percent_complete_' . $lingotek_locale;
       $before = lingotek_lingonode($node->nid, $key);
       if ($before == "") {
         $before = "0";
@@ -148,12 +148,12 @@ function lingotek_node_sync(&$node) {
         ($sync_method == "1" && $before !== (string)$after) ||
         ($sync_method == "100" && $after == "100" && $before !== (string)$after)
       ) {
-        lingotek_trace("lingotek_node_sync percent complete changed", array('target_language' => $lang, 'nid' => $node->nid, 'percent' => $after));
+        lingotek_trace("lingotek_node_sync percent complete changed", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
         lingotek_lingonode($node->nid, $key, $after);
-        lingotek_download_document($node, $lang);
+        lingotek_download_document($node, $lingotek_locale);
       }
       else {
-        lingotek_trace("lingotek_node_sync percent complete stayed the same", array('target_language' => $lang, 'nid' => $node->nid, 'percent' => $after));
+        lingotek_trace("lingotek_node_sync percent complete stayed the same", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
       }
     }
   }
@@ -654,23 +654,29 @@ function lingotek_get_active_languages( $get_details = FALSE ) {
  /**
  * Flags a target language as active:FALSE in the Target Language tracking.
  */
-function lingotek_delete_target_language($drupal_language_code) {
+function lingotek_delete_target_language($lingotek_locale) {
   $result = FALSE;
 
-  if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
+  if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
     
     db_update('languages')
     ->fields(array(
       'lingotek_enabled' => 0,
     ))
-    ->condition('language',  $drupal_language_code)
+    ->condition('lingotek_locale',  $lingotek_locale) //->condition('language',  $drupal_language_code)
     ->execute();
-    watchdog("lingotek", "Target language removed: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    watchdog("lingotek", "Target language removed: @lingotek_locale"
+        , array(
+      '@lingotek_locale' => $lingotek_locale)
+    );
+    
+    // Removes the node sync target language entries from the lingotek table.
+    lingotek_delete_target_sync_status_for_all_nodes($lingotek_locale);
     
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
     $api = LingotekApi::instance();
-    $result = $api->removeTranslationTarget(NULL, $project_id, $drupal_language_code);
+    $result = $api->removeTranslationTarget(NULL, $project_id, $lingotek_locale);
   }
 
   return $result;
@@ -688,8 +694,8 @@ function lingotek_delete_target_language($drupal_language_code) {
 function lingotek_set_target_language($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL, $api_add = TRUE) {
   $result = FALSE;
 
-  $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
+    $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
     db_update('languages')
     ->fields(array(
       'enabled' => 1,
@@ -703,7 +709,7 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enabled =
     if ($lingotek_enabled && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
       $project_id = variable_get('lingotek_project', '');
       $api = LingotekApi::instance();
-      $result = $api->addTranslationTarget(NULL, $project_id, $drupal_language_code);
+      $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
     }
   }
 
@@ -764,6 +770,19 @@ function lingotek_add_missing_locales() {
   }
 }
 
+
+/**
+ * Get only the languages that are lingotek_enabled
+ */
+function lingotek_get_target_locales($codes_only = TRUE) {
+  $target_languages = db_query("SELECT * FROM {languages} WHERE lingotek_enabled = :lingotek_enabled", array(':lingotek_enabled' => 1))->fetchAll();
+  $target_codes = array();
+  foreach($target_languages as $target_language){
+    $target_codes[] = $target_language->lingotek_locale; 
+  }
+  return $codes_only ? $target_codes : $target_languages;
+}
+
 /**
  * Get only the languages that are lingotek_enabled
  */
@@ -815,6 +834,7 @@ function lingotek_get_site_name() {
 function lingotek_cleanup_utility(){
   lingotek_migration_1();
   lingotek_migration_2();
+  lingotek_migration_3();
   lingotek_add_missing_locales();// any missing lingotek locales to the languages table
   lingotek_field_language_data_cleanup_batch_create();
   lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
@@ -862,4 +882,33 @@ function lingotek_migration_2(){
     // already exists (no need to do anything)
   }
   drupal_static_reset('language_list');
+}
+
+
+/*
+ * Migration 3 - Upgrade lingotek table entries from drupal_codes to lingotek_locales (whenever applicable) 
+ */
+function lingotek_migration_3() {
+  $ret = array();
+  $field_name_prefix = 'target_sync_status_';
+  $result = db_query("SELECT lingokey, COUNT(*) as num FROM {lingotek} WHERE lingokey LIKE :pattern GROUP BY lingokey"
+      , array(':pattern' => db_like($field_name_prefix) . '%'));
+  
+  $total_affected_rows = 0;
+  foreach ($result as $record) {
+    $old_key = $record->lingokey;
+    $code = @end(explode("_", $old_key));
+    $lingotek_locale = Lingotek::convertDrupal2Lingotek($code); //will return FALSE when lingotek_locales are passed in (so, they'll be skipped)
+    if ($lingotek_locale) {
+      $new_key = $field_name_prefix . $lingotek_locale;
+      //dvz($old_key . " => " . $new_key);
+      $query = db_update('lingotek', $ret)
+          ->fields(array('lingokey' => $new_key))
+         ->condition('lingokey', $old_key, '=');
+      $affected_rows = $query->execute();
+      $total_affected_rows += $affected_rows;
+    }
+  }
+  $ret['total_affected_rows'] = $total_affected_rows;
+  return $ret;
 }

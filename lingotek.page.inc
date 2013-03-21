@@ -290,7 +290,7 @@ function lingotek_pm($node) {
 function lingotek_update($nid) {
   $node = node_load($nid);
   foreach ($_POST['targets'] as $target) {
-    lingotek_download_document($node, check_plain($target));
+    lingotek_download_document($node, Lingotek::convertDrupal2Lingotek(check_plain($target)));
   }
   drupal_set_message(t('Updated local translations for the selected languages.'));
   drupal_json_output(array('status' => 0, 'updated' => $_POST['targets'], 'nid' => $nid));
