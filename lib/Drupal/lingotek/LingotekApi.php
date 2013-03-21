@@ -77,6 +77,10 @@ class LingotekApi {
     $vault_id = empty($vault_id) ? lingotek_lingonode($node->nid, 'vault_id') : $vault_id;
     $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
 
+    $workflow_id = empty($node->workflow_id) ? NULL : $node->workflow_id;
+    $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'workflow_id') : $workflow_id;
+    $workflow_id = empty($workflow_id) ? variable_get('workflow_id', NULL) : $workflow_id;
+    
     $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
     if ($project_id) {
@@ -91,8 +95,8 @@ class LingotekApi {
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
       
-      if (!empty($node->lingotek_workflow_id)) {
-        $parameters['workflowId'] = $node->lingotek_workflow_id;
+      if (!empty($workflow_id)) {
+        $parameters['workflowId'] = $workflow_id;
       }
       
       $this->addAdvancedParameters($parameters, $node);
@@ -922,7 +926,7 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function createCommunity( $tag = NULL, $callback_url = NULL, $community_name = NULL ) {
+  public function createCommunity( $parameters = array(), $callback_url = NULL ) {
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
@@ -932,15 +936,8 @@ class LingotekApi {
     $method = 'autoProvisionCommunity';
     $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
 
-    $parameters = array();
-    if ( isset( $tag ) ) {
-      $parameters[ 'distribution' ] = $tag;
-    }
     if ( isset( $callback_url ) ) {
       $parameters[ 'callbackUrl' ] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
-    }
-    if ( isset( $community_name ) ) {
-      $parameters[ 'communityDisplayName' ] = $community_name;
     }
 
     $timer_name = $method . '-' . microtime(TRUE);
