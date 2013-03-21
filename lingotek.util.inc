@@ -688,18 +688,19 @@ function lingotek_delete_target_language($drupal_language_code) {
 function lingotek_set_target_language($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL, $api_add = TRUE) {
   $result = FALSE;
 
+  $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
     db_update('languages')
     ->fields(array(
       'enabled' => 1,
       'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
-      'lingotek_locale' => is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale
+      'lingotek_locale' => $lingotek_locale
     ))
     ->condition('language',  $drupal_language_code)
     ->execute();
     watchdog("lingotek", "Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
 
-    if ($lingotek_enabled && $api_add) { // Add the Target Language to the Lingotek Project.
+    if ($lingotek_enabled && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
       $project_id = variable_get('lingotek_project', '');
       $api = LingotekApi::instance();
       $result = $api->addTranslationTarget(NULL, $project_id, $drupal_language_code);
