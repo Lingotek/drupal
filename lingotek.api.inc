@@ -13,14 +13,14 @@ $GLOBALS['_lingotek_client'] = new LingotekSession();
  *
  * @param $node
  *  Node being updated/synchronized
- * @param $target_language
+ * @param $lingotek_locale
  *  Target language to be updated/synchronized
  */
-function lingotek_download_document(&$node, $drupal_language_code) {
+function lingotek_download_document(&$node, $lingotek_locale) {
   global $_lingotek_client, $_lingotek_locale;
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
-  lingotek_trace('lingotek_download_document', array('document_id' => $document_id, "language" => $drupal_language_code));
+  lingotek_trace('lingotek_download_document', array('document_id' => $document_id, "language" => $lingotek_locale));
 
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = lingotek_lingonode($node->nid, 'use_source');
@@ -31,10 +31,11 @@ function lingotek_download_document(&$node, $drupal_language_code) {
     $use_source = 'TRUE';
   }
 
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $params = array
   (
     'documentId' => $document_id,
-    'targetLanguage' => Lingotek::convertDrupal2Lingotek($drupal_language_code),
+    'targetLanguage' => $lingotek_locale,
     'useSource' => $use_source,
   );
 
@@ -116,7 +117,7 @@ function lingotek_download_document(&$node, $drupal_language_code) {
   $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
   $node->path['pathauto'] = 0;
   
-  lingotek_set_target_sync_status($node->nid, $drupal_language_code, LINGOTEK_TARGET_SYNC_STATUS_CURRENT);//slightly pre-emptive, but certainly more cohesive
+  lingotek_set_target_sync_status($node->nid, $lingotek_locale, LINGOTEK_TARGET_SYNC_STATUS_CURRENT);//slightly pre-emptive, but certainly more cohesive
   $node->lingotek_upload_override = 0;// ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
   $node->skip_status_updates = 1;// ensure that the statuses are not set on node update (in lingotek_node_update)
   node_save($node);
@@ -298,7 +299,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
     $output = LingotekApi::instance()->getDocument($document_id);
     if ($output) {
       foreach ($output->translationTargets as $target) {
-        $results[Lingotek::convertLingotek2Drupal($target->language)] = $target;
+        $results[$target->language] = $target;
       }
     }
     lingotek_trace("lingotek_get_document_targets GENERATING NEW CACHE DATA getDocument", array('document_id' => $document_id, 'flushCache' => $flush_cache));

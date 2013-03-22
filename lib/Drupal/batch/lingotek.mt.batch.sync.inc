@@ -32,13 +32,13 @@ function lingotek_mt_sync_upload_node( $nid, &$context ) {
 /**
  * Download Batch Worker Function: Download Translated Node Content
  */
-function lingotek_mt_sync_download_node_target( $nid, $drupal_language_code, &$context ) {
+function lingotek_mt_sync_download_node_target( $nid, $lingotek_locale, &$context ) {
 
-  watchdog( 'ltk_download_target', 'node: @node_id (@language)', array( '@node_id' => $nid, '@language' => $drupal_language_code ), WATCHDOG_DEBUG );
+  watchdog( 'ltk_download_target', 'node: @node_id (@language)', array( '@node_id' => $nid, '@language' => $lingotek_locale ), WATCHDOG_DEBUG );
 
   $node = node_load($nid);
-  lingotek_download_document($node, $drupal_language_code);
-  $context['results'][] = t('Download Target Translation: Node #@nid (@langcode)', array('@nid'=>$nid,'@langcode'=>$drupal_language_code));
+  lingotek_download_document($node, $lingotek_locale);
+  $context['results'][] = t('Download Target Translation: Node #@nid (@langcode)', array('@nid'=>$nid,'@langcode'=>$lingotek_locale));
 }
 
 

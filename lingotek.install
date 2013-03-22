@@ -373,6 +373,13 @@ function lingotek_update_7210(&$sandbox) {
   return $ret;
 }
 
+/**
+ * Upgrade lingotek table entries from drupal_codes to lingotek_locales
+ */
+function lingotek_update_7211(&$sandbox) {
+  return lingotek_migration_3();
+}
+
 /*
  * Update languages table with lingotek fields
  */

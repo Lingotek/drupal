@@ -142,17 +142,17 @@ function lingotek_get_sync_download_batch_elements( ) {
 
   $operations = array();
 
-  $target_languages = lingotek_get_target_languages();
-  foreach ($target_languages as $drupal_language_code) {
+  $target_locales = lingotek_get_target_locales();
+  foreach ($target_locales as $lingotek_locale) {
 
-      $key = 'target_sync_status_' . $drupal_language_code;
+      $key = 'target_sync_status_' . $lingotek_locale;
       $query = db_select( 'lingotek', 'l' )->fields( 'l' );
       $query->condition( 'lingokey', $key );
       $query->condition( 'lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING );
     
       $result = $query->execute();
       while ( $record = $result->fetchAssoc() ) {
-        $operations[] = array( 'lingotek_mt_sync_download_node_target', array( $record['nid'], $drupal_language_code ) );
+        $operations[] = array( 'lingotek_mt_sync_download_node_target', array( $record['nid'], $lingotek_locale ) );
       }
   } // END:  Target Languages Loop
 

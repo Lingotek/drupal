@@ -13,7 +13,6 @@ include_once('lingotek.sync.inc');
 include_once('lib/Drupal/batch/lingotek.batch.inc');
 
 
-
 /**
  * Implements hook_menu().
  */
@@ -834,6 +833,7 @@ function lingotek_node_update($node) {
     $is_syncing = ( isset( $_SESSION['lingotek_sync_in_progress'] ) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
 
     if ( $send_lingotek_document && $path_match === FALSE && $is_syncing === FALSE) {
+      dpm($node);
       LingotekApi::instance()->updateContentDocument($node);//LingotekNode::load($node));
     }
   }
