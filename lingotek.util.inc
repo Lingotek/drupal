@@ -726,10 +726,20 @@ function lingotek_lookup_language_by_locale($lingotek_locale){
   return FALSE;
 }
 
+function lingotek_lookup_locale_exists($drupal_language_code) {
+  $languages = language_list();
+  foreach ($languages as $target) {
+    if (isset($target->language) && strcmp($target->language,$drupal_language_code)==0) {
+      return $target;
+    }
+  }
+  return FALSE;
+}
+
 /**
  * Adds the target language as being enabled.
  */
-function lingotek_add_target_language($lingotek_locale, $api_add = TRUE) {
+function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
   
   $language = lingotek_lookup_language_by_locale($lingotek_locale);
   if ($language) {
@@ -740,16 +750,18 @@ function lingotek_add_target_language($lingotek_locale, $api_add = TRUE) {
     // If not add it to the languages table first and then tack on the lingotek_locale and enable it
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
     
-    $name = isset($_POST['language']) ? $_POST['language'] : NULL;
-    $native = isset($_POST['native']) ? $_POST['native'] : NULL;
-    $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
-    $domain = '';
-    $prefix = '';//to-do: attempt to use a short prefix
-    locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
+    if (!lingotek_lookup_locale_exists($drupal_language_code)) {
+      $name = isset($_POST['language']) ? $_POST['language'] : NULL;
+      $native = isset($_POST['native']) ? $_POST['native'] : NULL;
+      $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
+      $domain = '';
+      $prefix = ''; //to-do: attempt to use a short prefix
+      locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
+    }
   }
   
-  lingotek_add_target_sync_status_to_all_nodes($drupal_language_code);// Add the node sync target language entries to the lingotek table.
-  return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale, $api_add);
+  lingotek_add_target_sync_status_to_all_nodes($lingotek_locale);// Add the node sync target language entries to the lingotek table.
+  return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale, $call_api);
 }
 
 /**
@@ -765,11 +777,26 @@ function lingotek_add_missing_locales() {
       // Set default when Enterprise to 1 (unless source language, then set to 0)
       $lingotek_enabled = LingotekAccount::instance()->isEnterprise() ? (($target->language == $default_language->language) ? 0 : 1) 
                         : $target->lingotek_enabled;
-      lingotek_set_target_language($drupal_language_code, $lingotek_enabled, NULL, FALSE);
+      lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled);
     }
   }
 }
 
+/*
+ * Add lingotek_locale and lingotek_enable to the language table for the passed in drupal_language_code 
+ */
+function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL) {
+  $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
+  db_update('languages')
+      ->fields(array(
+        'enabled' => 1,
+        'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
+        'lingotek_locale' => $lingotek_locale
+      ))
+      ->condition('language', $drupal_language_code)
+      ->execute();
+  return $lingotek_locale;
+}
 
 /**
  * Get only the languages that are lingotek_enabled
@@ -893,22 +920,30 @@ function lingotek_migration_3() {
   $field_name_prefix = 'target_sync_status_';
   $result = db_query("SELECT lingokey, COUNT(*) as num FROM {lingotek} WHERE lingokey LIKE :pattern GROUP BY lingokey"
       , array(':pattern' => db_like($field_name_prefix) . '%'));
-  
+
   $total_affected_rows = 0;
   foreach ($result as $record) {
     $old_key = $record->lingokey;
     $code = @end(explode("_", $old_key));
-    $lingotek_locale = Lingotek::convertDrupal2Lingotek($code); //will return FALSE when lingotek_locales are passed in (so, they'll be skipped)
+    $lingotek_locale = Lingotek::convertDrupal2Lingotek($code, FALSE); //will return FALSE when lingotek_locales are passed in (so, they'll be skipped)
     if ($lingotek_locale) {
       $new_key = $field_name_prefix . $lingotek_locale;
-      //dvz($old_key . " => " . $new_key);
+      //dpm($old_key . " => " . $new_key);
       $query = db_update('lingotek', $ret)
           ->fields(array('lingokey' => $new_key))
-         ->condition('lingokey', $old_key, '=');
-      $affected_rows = $query->execute();
+          ->condition('lingokey', $old_key, '=');
+      try {
+        $affected_rows = $query->execute();
+      } catch (PDOException $e) {
+        // skip these:  manually delete for later rows that key violation constraint issues (if it already exists it need not succeed)
+        $affected_rows = 0;
+      }
       $total_affected_rows += $affected_rows;
+    } else {
+      //dpm("skip: ".$old_key);
     }
   }
   $ret['total_affected_rows'] = $total_affected_rows;
+  //drupal_set_message("fields updated");
   return $ret;
 }

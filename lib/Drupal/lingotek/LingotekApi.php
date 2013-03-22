@@ -788,7 +788,7 @@ class LingotekApi {
    *   A XML format code.
    */
   public function xmlFormat() {
-    return (variable_get('lingotek_advanced_parsing', FALSE)) ? 'XML_OKAPI' : 'XML';
+    return (variable_get('lingotek_advanced_parsing', TRUE)) ? 'XML_OKAPI' : 'XML';
   }
 
   /**
