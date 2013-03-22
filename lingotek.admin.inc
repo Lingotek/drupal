@@ -19,33 +19,95 @@ function lingotek_admin_form() {
   $api = LingotekApi::instance();
   $connected = $api->testAuthentication();
   $site = variable_get('site_name', 'Drupal Site');
-
-  $connection_group_description = ($connected) ? '' :
-    t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.',
-      array('@signup_url' => url(variable_get('lingotek_url', LINGOTEK_API_SERVER) . '/lingopoint/portal/communitySignup.action'))
-    );
-
-  // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
-  if ( !LingotekAccount::instance()->isEnterprise() ) {
-    $collapse_settigns = FALSE;
-  }
-  elseif ( $connected ) { // If enterprise users connected successfully, it can be closed.
-    $collapse_settigns = TRUE;
-  }
-  else { // Default to open.
-    $collapse_settigns = FALSE;    
-  }
-
-
+  $is_enterprise = LingotekAccount::instance()->isEnterprise();
+  
   /*
+   * Account Information
+   */
+  $form['information'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Account Information'),
+    '#description' => t('Account information and connection settings.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+  );
+
+  
+  $activation_details = variable_get('lingotek_activation_first_name', '') . ' ' . variable_get('lingotek_activation_last_name', '');
+  $activation_email = variable_get('lingotek_activation_email', '');
+  $activation_details .= strlen($activation_email) ? ' (' . $activation_email . ')' : '';
+  $activation_details = strlen(trim($activation_details)) ? $activation_details : 'NA';
+  
+  $form['information'][] = array(
+    '#type' => 'item',
+    '#title' => t("Account Status") . ' - ' . l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
+    '#markup' => theme('table', array('header' => array(), 'rows' => array(
+        array('Status:', $account->getStatusText()),
+        array('Plan:', $account->getPlanText())
+        //,array('Enterprise:', $account->getEnterpriseStatusText())
+        )))
+  );
+  
+  
+  
+  $form['information'][] = array(
+    '#type' => 'item',
+    '#title' => t("Lingotek Identifiers"),
+    '#markup' => theme('table', array('header' => array(), 'rows' => array(
+        array('Activation Name:', $activation_details),
+        array('Community Identifier:', variable_get('lingotek_community_identifier', '')),
+        array('OAuth Key:', variable_get('lingotek_oauth_consumer_id', '')),
+        array('OAuth Secret:', variable_get('lingotek_oauth_consumer_secret', '')),
+        array('Workflow ID:', variable_get('lingotek_workflow', '')),
+        array('External ID:', variable_get('lingotek_login_id', '')),
+        array('Project ID:', variable_get('lingotek_project', '')),
+        array('Vault ID:', variable_get('lingotek_vault', '')),
+        )))
+  );
+
+  $config_path = getenv( 'LINGOTEK_CONFIG_PATH' );
+  if (!empty( $config_path ) ) {
+    $form['information'][] = array(
+      '#type' => 'item',
+      '#title' => t('Connection Details'),
+      '#markup' => theme('table', array('header' => array(), 'rows' => array(
+          array('API:', LINGOTEK_API_SERVER),
+          array('GMC:', LINGOTEK_GMC_SERVER),
+          array('Billing:', LINGOTEK_BILLING_SERVER),
+          array('Key:', LINGOTEK_AP_OAUTH_KEY),
+          array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
+          )))
+    );
+  }
+  
+  
+   /*
    * Lingotek connection settings.
    */
+
+  $connection_group_description = ($connected) ? '' :
+      t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(variable_get('lingotek_url', LINGOTEK_API_SERVER) . '/lingopoint/portal/communitySignup.action'))
+      );
+
+  // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
+  if (!$is_enterprise) {
+    $collapse_setting = TRUE;
+  }
+  elseif ($connected) { // If enterprise users connected successfully, it can be closed.
+    $collapse_setting = TRUE;
+  }
+  else { // Default to open.
+    $collapse_setting = FALSE;
+  }
+
+
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection Settings'),
     '#description' => filter_xss($connection_group_description),
     '#collapsible' => TRUE,
-    '#collapsed' => $collapse_settigns,
+    '#collapsed' => $collapse_setting,
     '#group' => 'administrative_settings',
   );
   
@@ -84,58 +146,6 @@ function lingotek_admin_form() {
     '#description' => t('The path to the Lingotek server to which this site should be connected.'),
     '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
   );
-
-
-  /*
-   * Account Information
-   */
-  $form['information'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Account Information'),
-    '#description' => t('Account information and connection settings.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'administrative_settings',
-  );
-
-  $form['information'][] = array(
-    '#type' => 'item',
-    '#title' => t("Account Status") . ' - ' . l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
-    '#markup' => theme('table', array('header' => array(), 'rows' => array(
-        array('Status:', $account->getStatusText()),
-        array('Plan:', $account->getPlanText())
-        //,array('Enterprise:', $account->getEnterpriseStatusText())
-        )))
-  );
-  
-  $form['information'][] = array(
-    '#type' => 'item',
-    '#title' => t("Lingotek Identifiers"),
-    '#markup' => theme('table', array('header' => array(), 'rows' => array(
-        array('Community Identifier:', variable_get('lingotek_community_identifier', '')),
-        array('OAuth Key:', variable_get('lingotek_oauth_consumer_id', '')),
-        array('OAuth Secret:', variable_get('lingotek_oauth_consumer_secret', '')),
-        array('Workflow ID:', variable_get('lingotek_workflow', '')),
-        array('External ID:', variable_get('lingotek_login_id', '')),
-        array('Project ID:', variable_get('lingotek_project', '')),
-        array('Vault ID:', variable_get('lingotek_vault', '')),
-        )))
-  );
-
-  $config_path = getenv( 'LINGOTEK_CONFIG_PATH' );
-  if (!empty( $config_path ) ) {
-    $form['information'][] = array(
-      '#type' => 'item',
-      '#title' => t('Connection Details'),
-      '#markup' => theme('table', array('header' => array(), 'rows' => array(
-          array('API:', LINGOTEK_API_SERVER),
-          array('GMC:', LINGOTEK_GMC_SERVER),
-          array('Billing:', LINGOTEK_BILLING_SERVER),
-          array('Key:', LINGOTEK_AP_OAUTH_KEY),
-          array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
-          )))
-    );
-  }
 
   // STOP HERE IF:
   // If the connection isn't yet established.
