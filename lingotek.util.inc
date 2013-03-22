@@ -718,9 +718,9 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enabled =
 
 function lingotek_lookup_language_by_locale($lingotek_locale){
   $languages = language_list();
-  foreach ($languages as $target) {
-    if (isset($target->lingotek_locale) && strcmp($target->lingotek_locale,$lingotek_locale)==0) {
-      return $target;
+  foreach ($languages as $language) {
+    if (isset($language->lingotek_locale) && strcmp($language->lingotek_locale,$lingotek_locale)==0) {
+      return $language;
     }
   }
   return FALSE;
@@ -740,6 +740,7 @@ function lingotek_lookup_locale_exists($drupal_language_code) {
  * Adds the target language as being enabled.
  */
 function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
+  lingotek_add_missing_locales();// fills in any missing lingotek_locale values to the languages table
   
   $language = lingotek_lookup_language_by_locale($lingotek_locale);
   if ($language) {
@@ -765,7 +766,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
 }
 
 /**
- * Adds a target language to the local Target Language tracking, and adds the Target Langauge to the Lingotek Project.
+ * Fills in any missing lingotek_locale values to the languages table
  */
 function lingotek_add_missing_locales() {
   $languages = language_list();
@@ -862,7 +863,7 @@ function lingotek_cleanup_utility(){
   lingotek_migration_1();
   lingotek_migration_2();
   lingotek_migration_3();
-  lingotek_add_missing_locales();// any missing lingotek locales to the languages table
+  lingotek_add_missing_locales();// fills in any missing lingotek_locale values to the languages table
   lingotek_field_language_data_cleanup_batch_create();
   lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
 }

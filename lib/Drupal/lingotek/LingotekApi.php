@@ -263,7 +263,7 @@ class LingotekApi {
    *   The document to which the new translation target should be added.  Or null if the target will be added to the project.
    * @param int $lingotek_project_id
    *   The project to which the new translation target should be added.  Or null if the target will be added to a document instead.
-   * @param string $target_language_code
+   * @param string $lingotek_locale
    *   The two letter code representing the language which should be added as a translation target.
    * @param string $workflow_id
    *   The optional workflow to associate with this target. If omitted, the project's default
@@ -272,12 +272,11 @@ class LingotekApi {
    * @return bool
    *  TRUE on success, or FALSE on error.
    */
-  public function removeTranslationTarget($lingotek_document_id, $lingotek_project_id, $target_language_code, $workflow_id = '') {
-    global $_lingotek_client, $_lingotek_locale;
+  public function removeTranslationTarget($lingotek_document_id, $lingotek_project_id, $lingotek_locale, $workflow_id = '') {
 
     $parameters = array(
       'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
-      'targetLanguage' => Lingotek::convertDrupal2Lingotek($target_language_code)
+      'targetLanguage' => $lingotek_locale
     );
 
     if (isset($lingotek_document_id) && !isset($lingotek_project_id)) {
