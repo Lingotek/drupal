@@ -255,20 +255,34 @@ function lingotek_test_locale_duplicates($locales) {
 
 /*
  * Language formal name
+ * @param field ('native', )
+ *    
  */
-
-function lingotek_language_name($langcode) {
+function lingotek_language_field_lookup($field, $lingotek_locale) {
   $languages = language_list();
-  if (array_key_exists($langcode, $languages)) {
-    return $languages[$langcode]->name;
+  foreach($languages as $key=>$language){
+    if(isset($language->lingotek_locale) && strcmp($language->lingotek_locale,$lingotek_locale) == 0 ){
+      return $language->$field;
+    }
+  }
+  return NULL;
+}
+
+/*
+ * Language formal name (by drupal language code)
+ */
+function lingotek_language_name($drupal_language_code) {
+  $languages = language_list();
+  if (array_key_exists($drupal_language_code, $languages)) {
+    return $languages[$drupal_language_code]->name;
   }
   else {
     $languages = _locale_get_predefined_list();
-    if (array_key_exists($langcode, $languages) && array_key_exists(0, $languages[$langcode])) {
-      return $languages[$langcode][0];
+    if (array_key_exists($drupal_language_code, $languages) && array_key_exists(0, $languages[$drupal_language_code])) {
+      return $languages[$drupal_language_code][0];
     }
     else {
-      return $langcode;
+      return $drupal_language_code;
     }
   }
 }

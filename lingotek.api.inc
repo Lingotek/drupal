@@ -395,7 +395,9 @@ function lingotek_get_translation_target($translation_target_id) {
  */
 function lingotek_get_workbench_url($node, $drupal_language_code, $label = FALSE, $force = FALSE) {
   
-  if (Lingotek::convertDrupal2Lingotek($drupal_language_code, TRUE) === FALSE) {
+  $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code, TRUE);
+  
+  if ($lingotek_locale === FALSE) {
     return "";
   }
 
@@ -411,7 +413,7 @@ function lingotek_get_workbench_url($node, $drupal_language_code, $label = FALSE
   }
 
   foreach ($targets as $lang => $translation_target) {
-    if ($lang != $drupal_language_code) {
+    if ($lang != $lingotek_locale) {
       continue;
     }
 
@@ -462,7 +464,7 @@ function lingotek_get_workbench_url($node, $drupal_language_code, $label = FALSE
     );
   }
 
-  return $link[$drupal_language_code]['link'];
+  return $link[$lingotek_locale]['link'];
 }
 
 /*

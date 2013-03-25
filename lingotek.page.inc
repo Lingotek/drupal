@@ -195,18 +195,18 @@ function lingotek_pm($node) {
     $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id'));
     $targets = lingotek_get_document_targets($document->document_id, TRUE);
     $rows = array();
-    foreach ($targets as $language => $target) {
+    foreach ($targets as $lingotek_locale => $target) {
       $current_phase = $document->currentPhase($target->id);
       $phase_complete = ($current_phase->isMarkedComplete) ? TRUE : FALSE;
-
+      
       $phase_complete_percent = $current_phase->percentComplete;
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
-      $language_link = l(lingotek_language_native($language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $language) . '\'); return false;')));
-      $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_name($language)));
+      $language_link = l(lingotek_language_field_lookup('native',$lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
+      $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_field_lookup('name',$lingotek_locale)));
       $row = array(
-        '<input type="checkbox" tag="lingotek_pm_row" language="' . $language . '" />',
+        '<input type="checkbox" tag="lingotek_pm_row" language="' . $lingotek_locale . '" />',
         $language_link,
         $target->percentComplete . '%',
         $current_phase->name,
@@ -214,7 +214,7 @@ function lingotek_pm($node) {
         ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
       );
 
-      lingotek_trace("lingotek_pm table row", array('language' => $language));
+      lingotek_trace("lingotek_pm table row", array('language' => $lingotek_locale));
       $rows[] = $row;
     }
     $table = theme('table', array('header' => $headers, 'rows' => $rows));
