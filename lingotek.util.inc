@@ -859,13 +859,21 @@ function lingotek_get_site_name() {
 /*
  * Clean-up utility
  */
-function lingotek_cleanup_utility(){
+function lingotek_cleanup_utility($show_messages = TRUE) {
   lingotek_migration_1();
   lingotek_migration_2();
   lingotek_migration_3();
-  lingotek_add_missing_locales();// fills in any missing lingotek_locale values to the languages table
+  lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
+
   lingotek_field_language_data_cleanup_batch_create();
-  lingotek_batch_identify_content();// Identify pre-existing content (based on these new content-type settings)
+  if ($show_messages) {
+    drupal_set_message(t('The field data cleanup utility completed.'));
+  }
+
+  lingotek_batch_identify_content(); // Identify pre-existing content (based on these new content-type settings)
+  if ($show_messages) {
+    drupal_set_message(t('Translatable content has been identified.'));
+  }
 }
 
 /*

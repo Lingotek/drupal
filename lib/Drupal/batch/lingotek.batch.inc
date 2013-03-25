@@ -193,13 +193,6 @@ function lingotek_batch_identify_content($front = FALSE) {
   }
 }
 
-/**
- * Batch Finished: Identify Content Complete.
- */
-function lingotek_batch_identify_content_finished( $success, $results, $operations ) {
-  drupal_set_message(t('Translatable content has been identified.'));
-} // END:  lingotek_batch_identify_content_finished()
-
 
 
 
