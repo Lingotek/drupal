@@ -944,9 +944,10 @@ class LingotekApi {
 
     try {
       OAuthStore::instance('2Leg', $credentials);
+      
     	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
-    	watchdog( 'lingotek_community', 'Provision Community: !result', array( '!result' => watchdog_format_object( $result ) ), WATCHDOG_DEBUG );
+    	watchdog( 'lingotek_community', 'Provision Community: !result <p>parameters: !params</p>', array( '!result' => watchdog_format_object( $result ), '!params' => watchdog_format_object( $parameters ) ), WATCHDOG_DEBUG );
     }
     catch (OAuthException2 $e) {
       watchdog('lingotek', 'Failed to Provision Community Account.

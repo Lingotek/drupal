@@ -154,7 +154,7 @@ function lingotek_get_dashboard_code() {
       variable_get('site_name', 'Unidentified Drupal Site'), // sitename
       'Drupal', // cms type
       VERSION, // drupal version
-      variable_get('lingotek_cms_tag', ''), // CMS tag     
+      variable_get('install_profile', ''), // CMS tag variable_get('lingotek_cms_tag','')
       LINGOTEK_VERSION, // module version
       $endpoint, // endpoint url
       $upload_url, $download_url, $sync_url,

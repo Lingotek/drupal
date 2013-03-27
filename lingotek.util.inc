@@ -860,6 +860,8 @@ function lingotek_get_site_name() {
  * Clean-up utility
  */
 function lingotek_cleanup_utility($show_messages = TRUE) {
+  lingotek_set_priority();
+  lingotek_set_defaults();
   lingotek_migration_1();
   lingotek_migration_2();
   lingotek_migration_3();
@@ -873,6 +875,28 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
   lingotek_batch_identify_content(); // Identify pre-existing content (based on these new content-type settings)
   if ($show_messages) {
     drupal_set_message(t('Translatable content has been identified.'));
+  }
+}
+
+/*
+ * Sets the priority of the Lingotek module
+ */
+function lingotek_set_priority() {
+  db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
+}
+
+/*
+ * Sets the global defaults for the Lingotek module
+ */
+function lingotek_set_defaults() {
+  $defaults = array(
+    'lingotek_sync' => 1, // auto-download
+    'lingotek_create_documents_by_default' => 1, // auto-upload
+  );
+
+  // Check if vars are set.  If so, use what is already set.  If not, set them using the defaults provided above.
+  foreach ($defaults as $k => $default_value) {
+    variable_set($k, variable_get($k, $default_value));
   }
 }
 
