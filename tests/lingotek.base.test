@@ -84,7 +84,7 @@ class LingotekFunctionalTest extends DrupalWebTestCase {
       'lingotek_password' => self::LINGOTEK_PASSWORD,
     );
 
-    $this->drupalPost('admin/settings/lingotek', $form_values, t('Save configuration'));
+    $this->drupalPost(LINGOTEK_BASE_URL, $form_values, t('Save configuration'));
     $this->drupalLogout();
   }
 }

@@ -41,11 +41,11 @@ function lingotek_admin_form() {
   
   $form['information'][] = array(
     '#type' => 'item',
-    '#title' => t("Account Status") . ' - ' . l(t('Update'), 'admin/settings/lingotek/get-account-status', array('query' => array('token' => md5(time())))),
+    '#title' => t("Account Status") . ' - ' . l(t('Update'), 'lingotek/get-account-status', array('query' => array('token' => md5(time())))),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array('Status:', $account->getStatusText()),
         array('Plan:', $account->getPlanText())
-        //,array('Enterprise:', $account->getEnterpriseStatusText())
+      //,array('Enterprise:', $account->getEnterpriseStatusText())
         )))
   );
   
@@ -382,7 +382,7 @@ function lingotek_admin_form() {
   $form['developer_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Developer Settings'),
-    '#description' => t('Help debug any issues with the module and adds ways to manipulate the module\'s data directly.') . ' ' . l(t('(tools)'), 'admin/settings/lingotek/dev'),
+    '#description' => t('Help debug any issues with the module and adds ways to manipulate the module\'s data directly.') . ' ' . l(t('(tools)'), LINGOTEK_BASE_URL . '/dev'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -536,11 +536,11 @@ function lingotek_get_account_status() {
 
   if ($result === FALSE) { // There was a problem retrieving the account status.
     drupal_set_message(t('There was an error retrieving your account status.  Please try again later.'), 'error');
-    drupal_goto('admin/settings/lingotek/settings');
+    drupal_goto(LINGOTEK_BASE_URL . '/settings');
   }
   else { // We got a valid account status.  Send the user back to the Lingotek settings page, via the second cache clearer.
     drupal_set_message(t('Your account status has been updated.'));
-    drupal_goto('admin/settings/lingotek/flush-cache');
+    drupal_goto('lingotek/flush-cache');
   }
 }
 
@@ -549,5 +549,5 @@ function lingotek_get_account_status() {
  */
 function lingotek_flush_cache() {
   menu_rebuild();
-  drupal_goto( 'admin/settings/lingotek' );
+  drupal_goto( LINGOTEK_BASE_URL );
 }

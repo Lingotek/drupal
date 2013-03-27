@@ -856,6 +856,13 @@ function lingotek_get_site_name() {
   return $site_name;
 }
 
+function lingotek_get_module_info( $field = NULL ) {
+  $result = db_query("SELECT info FROM {system} WHERE type = :type AND name = :name", 
+      array(':type' => 'module', ':name' => 'lingotek'))->fetchObject();
+  $info = unserialize(current($result));
+  return is_null($field) ? $info : (isset($info[$field]) ? $info[$field] : NULL);
+}
+
 /*
  * Clean-up utility
  */

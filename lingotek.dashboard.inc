@@ -29,7 +29,7 @@ function lingotek_dashboard() {
             array('data' => t('Login to the ' . l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank'))) . '')),
             array('data' => t('Select the <i>Community &gt; Integrations</i> menu item')),
             array('data' => t('Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>')),
-            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ' . l(t('Lingotek Drupal module settings'), 'admin/settings/lingotek/settings')))
+            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ' . l(t('Lingotek Drupal module settings'), LINGOTEK_BASE_URL . '/settings')))
           )
         ))
       );
@@ -115,7 +115,7 @@ function lingotek_get_dashboard_code() {
           "cms_type": "%s",
           "cms_version": "%s",
           "cms_tag": "%s",
-          "module_version": "%s",
+          "module_version": %s,
           "endpoint_url": "%s",
           "upload_url": "%s",
           "download_url": "%s",
@@ -130,11 +130,10 @@ function lingotek_get_dashboard_code() {
       </script>
     ';
 
-  $lingotek_url = $base_url . '/' . current_path();
-  $endpoint = $lingotek_url . '/command';
-  $upload_url = $lingotek_url . '/mt-upload';
-  $download_url = $lingotek_url . '/mt-download';
-  $sync_url = $lingotek_url . '/sync';
+  $endpoint = 'lingotek/target';
+  $upload_url = 'lingotek/mt-upload';
+  $download_url = 'lingotek/mt-download';
+  $sync_url = 'lingotek/sync';
 
   $output .= sprintf($script,
       // lingotek 
@@ -155,7 +154,7 @@ function lingotek_get_dashboard_code() {
       'Drupal', // cms type
       VERSION, // drupal version
       variable_get('install_profile', ''), // CMS tag variable_get('lingotek_cms_tag','')
-      LINGOTEK_VERSION, // module version
+      json_encode(lingotek_get_module_info('version')), // module version --- get all module info:  lingotek_get_module_info()
       $endpoint, // endpoint url
       $upload_url, $download_url, $sync_url,
       // data

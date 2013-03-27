@@ -87,7 +87,7 @@ function lingotek_sync_batch_create( ) {
 
   
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : 'admin/settings/lingotek';
+  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_BASE_URL;
 
   if ( count( $operations ) > 0 ) {
 

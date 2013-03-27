@@ -52,7 +52,7 @@ function lingotek_bulk_mt_upload_batch_finished( $success, $results, $operations
 
   $_SESSION['bulk_mt_batch_results'] = $messages; // Save data before redirect.
 
-  drupal_goto('admin/settings/lingotek/mt-content-queued');
+  drupal_goto(LINGOTEK_BASE_URL . '/mt-content-queued');
 
 } // END:  lingotek_bulk_mt_batch_finished()
 
@@ -96,5 +96,5 @@ function lingotek_bulk_mt_upload_batch_complete() {
  * Dashboard: Machine Translation Complete - Form Submit - Redirects Back to the Lingotek Dashboard.
  */
 function lingotek_bulk_mt_upload_batch_complete_submit( $form, $form_state ) {
-  drupal_goto( 'admin/settings/lingotek' );
+  drupal_goto(LINGOTEK_BASE_URL);
 } // END:  lingotek_bulk_mt_batch_complete_submit
