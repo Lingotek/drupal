@@ -268,8 +268,6 @@ function lingotek_dashboard_command_ajax() {
   }
 }
 
-// END:  lingotek_dashboard_command_ajax
-
 /**
  * The number of nodes with the status sync counts from the lingotek table for the LANGUAGE TARGETS.
  * */
@@ -282,8 +280,6 @@ function lingotek_count_nodes($status) { //LINGOTEK_NODE_SYNC_STATUS_EDITED, LIN
 
   return $result;
 }
-
-// END:  lingotek_count_nodes()
 
 /**
  * Gets the current sync counts from the lingotek table for the LANGUAGE TARGETS.
