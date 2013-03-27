@@ -130,10 +130,10 @@ function lingotek_get_dashboard_code() {
       </script>
     ';
 
-  $endpoint = 'lingotek/target';
-  $upload_url = 'lingotek/mt-upload';
-  $download_url = 'lingotek/mt-download';
-  $sync_url = 'lingotek/sync';
+  $endpoint = $base_url . '/lingotek/target';
+  $upload_url = $base_url . '/lingotek/mt-upload';
+  $download_url = $base_url . '/lingotek/mt-download';
+  $sync_url = $base_url . '/lingotek/sync';
 
   $output .= sprintf($script,
       // lingotek 

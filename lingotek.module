@@ -106,6 +106,7 @@ function lingotek_menu() {
 
   $items['admin/settings/lingotek'] = $items[LINGOTEK_BASE_URL]; // Add a link to main menu bar
   $items['admin/settings/lingotek/notifications'] = $items[LINGOTEK_NOTIFICATIONS_URL]; // allow early auto-provision community callback urls to work
+  
   // Dashboard:  Ajax Command Processor
   $items['lingotek/target'] = array(
     'type' => MENU_CALLBACK,
