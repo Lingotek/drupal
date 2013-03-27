@@ -87,7 +87,7 @@ function lingotek_sync_batch_create( ) {
 
   
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : 'admin/settings/lingotek';
+  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_BASE_URL;
 
   if ( count( $operations ) > 0 ) {
 
@@ -142,17 +142,17 @@ function lingotek_get_sync_download_batch_elements( ) {
 
   $operations = array();
 
-  $target_languages = lingotek_get_target_languages();
-  foreach ($target_languages as $drupal_language_code) {
+  $target_locales = lingotek_get_target_locales();
+  foreach ($target_locales as $lingotek_locale) {
 
-      $key = 'target_sync_status_' . $drupal_language_code;
+      $key = 'target_sync_status_' . $lingotek_locale;
       $query = db_select( 'lingotek', 'l' )->fields( 'l' );
       $query->condition( 'lingokey', $key );
       $query->condition( 'lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING );
     
       $result = $query->execute();
       while ( $record = $result->fetchAssoc() ) {
-        $operations[] = array( 'lingotek_mt_sync_download_node_target', array( $record['nid'], $drupal_language_code ) );
+        $operations[] = array( 'lingotek_mt_sync_download_node_target', array( $record['nid'], $lingotek_locale ) );
       }
   } // END:  Target Languages Loop
 
@@ -192,13 +192,6 @@ function lingotek_batch_identify_content($front = FALSE) {
     batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   }
 }
-
-/**
- * Batch Finished: Identify Content Complete.
- */
-function lingotek_batch_identify_content_finished( $success, $results, $operations ) {
-  drupal_set_message(t('Translatable content has been identified.'));
-} // END:  lingotek_batch_identify_content_finished()
 
 
 

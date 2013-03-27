@@ -34,7 +34,7 @@ function lingotek_bulk_mt_download_batch_finished( $success, $results, $operatio
 
   $_SESSION['bulk_mt_batch_download_results'] = $messages; // Save data before redirect.
 
-  drupal_goto('admin/settings/lingotek/mt-content-downloaded');
+  drupal_goto(LINGOTEK_BASE_URL . '/mt-content-downloaded');
 
 } // END:  lingotek_bulk_mt_batch_finished()
 
@@ -77,5 +77,5 @@ function lingotek_bulk_mt_download_batch_complete() {
  * Dashboard Confirmation Screen: Machine Translation Download Complete - Form Submit - Redirects Back to the Lingotek Dashboard.
  */
 function lingotek_bulk_mt_download_batch_complete_submit( $form, $form_state ) {
-  drupal_goto( 'admin/settings/lingotek' );
-} // END:  lingotek_bulk_mt_batch_complete_submit
+  drupal_goto( LINGOTEK_BASE_URL );
+}

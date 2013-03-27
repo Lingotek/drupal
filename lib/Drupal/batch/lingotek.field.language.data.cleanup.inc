@@ -80,5 +80,4 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
  * FINISHED CALLBACK:  lingotek_field_language_data_cleanup_batch_create()
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
-  drupal_set_message(t('The field data cleanup utility completed.'));
 }

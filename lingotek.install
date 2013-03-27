@@ -89,28 +89,6 @@ function lingotek_disable() {
 }
 
 /*
- * Sets the priority of the Lingotek module
- */
-function lingotek_set_priority() {
-  db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
-}
-
-/*
- * Sets the global defaults for the Lingotek module
- */
-function lingotek_set_defaults() {
-  $defaults = array(
-    'lingotek_sync' => 1, // auto-download
-    'lingotek_create_documents_by_default' => 1, // auto-upload
-  );
-
-  // Check if vars are set.  If so, use what is already set.  If not, set them using the defaults provided above.
-  foreach ($defaults as $k => $default_value) {
-    variable_set($k, variable_get($k, $default_value));
-  }
-}
-
-/*
  * Install the database schema for the Lingotek module
  */
 function lingotek_schema() {
@@ -370,6 +348,15 @@ function lingotek_update_7210(&$sandbox) {
   $ret = array();
   lingotek_migration_2();
   lingotek_add_missing_locales();
+  return $ret;
+}
+
+/**
+ * Upgrade lingotek table entries from drupal_codes to lingotek_locales
+ */
+function lingotek_update_7211(&$sandbox) {
+  $ret = array();
+  lingotek_migration_3();
   return $ret;
 }
 

@@ -95,20 +95,42 @@ function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
 }
 
 /**
+ * Identify lead details 
+ */
+function lingotek_identify_lead($data) {
+  global $base_url;
+
+  $lead = array_merge(array(
+    'first_name' => '',
+    'last_name' => '',
+    'email' => '',
+    'company' => lingotek_get_site_name(), // Website name => company
+    'website' => $base_url, // website url
+    'type' => LINGOTEK_DEV ? 'QA' : 'Prospect',
+    'cms' => 'Drupal',
+    'distribution' => '',
+    'lead_source' => '',
+    'partner' => ''
+      ), $data);
+  $tags = lingotek_identify_tags();
+  return array_merge($lead, $tags);
+}
+
+/**
  * Identify CMS tags (e.g., distribution channel)
  */
 function lingotek_identify_tags() {
     $tags = array();
     $tags['distribution'] = variable_get('install_profile', 'standard');// This should identify the distribution including:  'standard', 'acquia', 'commons', 'commerce_kickstart'
-    $tags['leadSource'] = 'Module';
+    $tags['lead_source'] = 'Module';
     switch($tags['distribution']){
       case 'commerce_kickstart':
         $tags['partner'] = 'Commerce Guys';
-        $tags['leadSource'] = 'Distribution';
+        $tags['lead_source'] = 'Distribution';
         break;
       case 'commons':
         $tags['partner'] = 'Acquia';
-        $tags['leadSource'] = 'Distribution';
+        $tags['lead_source'] = 'Distribution';
       default:
         $tags['partner'] = '';
         break;
@@ -148,15 +170,20 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
   if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' ) {
 
     // Provision a new Community & Save the Credentials
-    $tags = lingotek_identify_tags();
+    $lead = lingotek_identify_lead(array(
+      'first_name' => $first_name,
+      'last_name' => $last_name,
+      'email' => $email
+        ));
     $callback_url = lingotek_get_notifications_url();
 
-    $parameters = array_merge($tags, array(
+    $parameters = array_merge($lead, array(
       'communityDisplayName' => lingotek_get_site_name(),
       'contactName' => $first_name . ' ' . $last_name,
       'contactEmail' => $email,
       'company' => lingotek_get_site_name(), //currently we are not asking for this.
       'website' => $base_url,
+      'lead' => json_encode($lead)
         ));
 
     $api = LingotekApi::instance();
@@ -184,20 +211,7 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
       variable_set( 'lingotek_vault', $community->tm_vault_id );
       variable_set( 'lingotek_workflow', $community->workflow_id );
       variable_set( 'lingotek_notifications_callback', $callback_url );
-      variable_set( 'lingotek_cms_tag', $tags['distribution']);
-
-      $extras['company'] = lingotek_get_site_name();// Website name => company
-      $extras['URL'] = $base_url; // website
-      $extras['lead_source'] = $tags['leadSource'];// lead source
-      $extras['Type__c'] = LINGOTEK_DEV ? 'QA' : 'Prospect';
-      $extras['Distribution__c'] = $tags['distribution']; // Distribution
-      if(isset($tags['partner']) && strlen($tags['partner'])) {
-        $extras['Partner__c'] = $tags['partner']; // Partner
-      }
-      $extras['CMS_SBS__c'] = 'Drupal'; // CMS/SBS (custom field)
-      $extras['Community__c'] = $community->community; // Community (custom field)
-
-      lingotek_activation( $first_name, $last_name, $email, $extras );
+      variable_set( 'lingotek_cms_tag', $lead['distribution']);
 
       $_SESSION['lingotek_setup_path'] = array( 'admin/config/lingotek/new-account' );
       drupal_set_message( t( 'Your new Lingotek account has been setup.' ) );
@@ -844,16 +858,18 @@ function lingotek_setup_node_translation_settings_form_submit( $form, &$form_sta
 
   } // END: foreach form value
 
-  lingotek_cleanup_utility();
-  
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
-  variable_set( 'lingotek_translate_fields', $translate );
-  drupal_set_message( t( 'Your content types and fields selections have been saved.' ) );
-  
-  $form_state['redirect'] = 'admin/config/lingotek/setup-complete';
-  //drupal_goto( 'admin/config/lingotek/setup-complete' );
+  lingotek_cleanup_utility(FALSE);
 
-} // END:  lingotek_setup_node_translation_settings_form_submit()
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
+  variable_set('lingotek_translate_fields', $translate);
+
+
+  variable_set( 'lingotek_setup_complete', 1 );// Mark Lingotek Configuration as Complete
+  drupal_set_message( t( 'You have completed setup successfully!' ) );
+  $form_state['redirect'] = LINGOTEK_BASE_URL;// Redirect to start using Lingotek
+  //$form_state['redirect'] = 'admin/config/lingotek/setup-complete';
+  //drupal_goto( 'admin/config/lingotek/setup-complete' );  
+}
 
 /**
  * Setup Complete - Form Layout
@@ -888,7 +904,7 @@ function lingotek_setup_complete_form($form, $form_state) {
  */
 function lingotek_setup_complete_form_submit( $form, &$form_state ) {
 
-  $form_state['redirect'] = 'admin/settings/lingotek';
+  $form_state['redirect'] = LINGOTEK_BASE_URL;
 }
 
 /**
