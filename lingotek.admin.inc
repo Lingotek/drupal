@@ -43,9 +43,9 @@ function lingotek_admin_form() {
     '#type' => 'item',
     '#title' => t("Account Status") . ' - ' . l(t('Update'), 'lingotek/get-account-status', array('query' => array('token' => md5(time())))),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
-        array('Status:', $account->getStatusText()),
-        array('Plan:', $account->getPlanText())
-      //,array('Enterprise:', $account->getEnterpriseStatusText())
+        array('Status:', $account->getStatusText())
+        ,array('Plan:', $account->getPlanText())
+        //,array('Enterprise:', $account->getEnterpriseStatusText())
         )))
   );
   

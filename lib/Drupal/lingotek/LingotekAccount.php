@@ -19,7 +19,6 @@ class LingotekAccount {
 
   const LINGOTEK_ACCOUNT_PLAN_UNKNOWN = 'unknown';
   const LINGOTEK_ACCOUNT_PLAN_NONE = 'none';
-  const LINGOTEK_ACCOUNT_COSMOPOLITAN_MONTHLY = 'cosmopolitan_monthly';
   const LINGOTEK_ACCOUNT_ENTERPRISE = 'enterprise';
 
 
@@ -77,8 +76,6 @@ class LingotekAccount {
     return self::$instance;
   }
 
-
-
   public function setStatus( $value = 'inactive' ) {
     $this->status = $value;
   }
@@ -128,7 +125,9 @@ class LingotekAccount {
   }
 
   public function getPlanText() {
-    return ucwords( str_replace ( '_', ' ', $this->plan ) );
+    $plan_pieces = explode('_', $this->plan); 
+    $details = ucwords(end($plan_pieces));// e.g., Enterprise, Monthly, Yearly
+    return $details;
   }
 
 
