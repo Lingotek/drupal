@@ -18,17 +18,18 @@ include_once('lib/Drupal/batch/lingotek.batch.inc');
 function lingotek_menu() {
   $items = array();
 
+  $items['admin/settings/lingotek'] = array( //main menu bar link including module description
+    'title' => 'Lingotek',
+    'access arguments' => array('administration'),
+    'description' => 'The Lingotek module helps you translate and keep your site translated',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_admin_form'),
+  );
+  
+  //
   // Enterprise Only Menu Items
   if (LingotekAccount::instance()->isEnterprise()) {
-
-    $items[LINGOTEK_BASE_URL] = array(
-      'title' => 'Lingotek',
-      'access arguments' => array('administration'),
-      'description' => 'Community Translation Settings',
-      'file' => 'lingotek.admin.inc',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('lingotek_admin_form'),
-    );
 
     $items['node/%node/lingotek_pm'] = array(
       'title' => 'Lingotek',
@@ -54,15 +55,13 @@ function lingotek_menu() {
   else {
     // Use the Standard Dashboard Interface
     // Lingotek Dashboard and Settings Tabs
-    $items[LINGOTEK_BASE_URL] = array(
-      'title' => 'Lingotek',
+    $items['admin/settings/lingotek'] = array_merge($items['admin/settings/lingotek'], array(
       'file' => 'lingotek.dashboard.inc',
       'page callback' => 'lingotek_dashboard',
       'weight' => 1,
       'type' => MENU_NORMAL_ITEM,
-      'access arguments' => array('administration')
-    );
-    $items[LINGOTEK_BASE_URL . '/dashboard'] = array(
+    ));
+    $items['admin/settings/lingotek/dashboard'] = array(
       'title' => 'Dashboard',
       'type' => MENU_DEFAULT_LOCAL_TASK,
       'file' => 'lingotek.dashboard.inc',
@@ -70,10 +69,13 @@ function lingotek_menu() {
       'weight' => 1,
       'access arguments' => array('administration')
     );
+    $items[LINGOTEK_BASE_URL . '/dashboard'] = $items['admin/settings/lingotek/dashboard'];
   }
+  
+  $items[LINGOTEK_BASE_URL] = $items['admin/settings/lingotek']; // Add a link to regional settings
 
   // Tab:  Settings
-  $items[LINGOTEK_BASE_URL . '/settings'] = array(
+  $items['admin/settings/lingotek/settings'] = array(
     'title' => 'Settings',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
@@ -83,6 +85,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
+  $items[LINGOTEK_BASE_URL . '/settings'] = $items['admin/settings/lingotek/settings'];
   
   $items[LINGOTEK_BASE_URL . '/cleanup-utility'] = array(
     'title' => 'Lingotek cleanup utility',
@@ -95,7 +98,7 @@ function lingotek_menu() {
   );
 
   // Content Update Notifications Callback
-  $items[LINGOTEK_NOTIFICATIONS_URL] = array(
+  $items[LINGOTEK_NOTIFICATIONS_URL] = array( 
     'title' => 'Content Translation Notifications',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
@@ -103,9 +106,7 @@ function lingotek_menu() {
     'file' => 'lingotek.sync.inc',
     'page callback' => 'lingotek_notifications',
   );
-
-  $items['admin/settings/lingotek'] = $items[LINGOTEK_BASE_URL]; // Add a link to main menu bar
-  $items['admin/settings/lingotek/notifications'] = $items[LINGOTEK_NOTIFICATIONS_URL]; // allow early auto-provision community callback urls to work
+  $items['admin/settings/lingotek/notifications'] = $items[LINGOTEK_NOTIFICATIONS_URL]; // allow early auto-provision community callback urls to wor
   
   // Dashboard:  Ajax Command Processor
   $items['lingotek/target'] = array(
