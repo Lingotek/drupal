@@ -170,7 +170,7 @@ function lingotek_menu() {
   );
 
   // START UPLOAD:  Upload documents for the Machine Translation process
-  $items[LINGOTEK_BASE_URL . '/mt-upload'] = array(
+  $items['lingotek/upload'] = array(
     'title' => 'Upload Documents For Machine Translation',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
@@ -189,7 +189,7 @@ function lingotek_menu() {
   );
 
   // START DOWNLOAD: Download documents that have been Machine Translated
-  $items[LINGOTEK_BASE_URL . '/mt-download'] = array(
+  $items['lingotek/download'] = array(
     'title' => 'Download Machine Translated Documents',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
