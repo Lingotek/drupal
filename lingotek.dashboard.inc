@@ -29,7 +29,7 @@ function lingotek_dashboard() {
             array('data' => t('Login to the ' . l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank'))) . '')),
             array('data' => t('Select the <i>Community &gt; Integrations</i> menu item')),
             array('data' => t('Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>')),
-            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ' . l(t('Lingotek Drupal module settings'), LINGOTEK_BASE_URL . '/settings')))
+            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ') . l(t('Lingotek Drupal module settings'), LINGOTEK_BASE_URL . '/settings'))
           )
         ))
       );

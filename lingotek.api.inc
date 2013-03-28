@@ -260,7 +260,7 @@ function lingotek_get_communities() {
   $list_communities = LingotekApi::instance()->request("listCommunities", array());
   if ($list_communities->results == "success") {
     foreach ($list_communities->communities as $community) {
-      $options[$community->id] = t($community->name);
+      $options[$community->id] = $community->name;
     }
   }
 
@@ -449,7 +449,7 @@ function lingotek_get_workbench_url($node, $drupal_language_code, $label = FALSE
           if ($label === TRUE) {
             $label = lingotek_get_phase_name($phase_id);
           }
-          $l = l(t($label), '', array('attributes' => array(
+          $l = l($label, '', array('attributes' => array(
             'onclick' => 'window.open(\'' . $path . '\'); return false;',
             'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
             'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',

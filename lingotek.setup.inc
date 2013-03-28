@@ -78,7 +78,7 @@ function lingotek_setup_new_account_form() {
     '#type' => 'submit', 
     '#value' => t( 'Next' ) // Create Account
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/account-settings', 'Already have an account?');
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/account-settings', t('Already have an account?'));
   $form['lingotek_support_footer'] = lingotek_support_footer();
   
   return $form;
@@ -272,7 +272,7 @@ function lingotek_setup_account_settings_form() {
     '#type' => 'submit',
     '#value' => t( 'Next' ), // Login
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/new-account', 'Need to create an account?');
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/new-account', t('Need to create an account?'));
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -366,7 +366,7 @@ function lingotek_community_select_form() {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -461,7 +461,7 @@ function lingotek_project_select_form() {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-select' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -545,7 +545,7 @@ function lingotek_setup_language_settings_form() {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -616,7 +616,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
   $form['lingotek_checkboxes_open'] = array( '#markup' => '<div id="content-checkboxes" style="border: 0px solid red;">' );
   // Arrange the Types nicely.
   foreach ( $raw_types as $value ) {
-    $types[ $value->type ] = t( $value->name );
+    $types[ $value->type ] = $value->name;
     $form[ 'type_' . $value->type ] = array(
       '#type' => 'checkbox',
       '#title' => t( '@value_name (<span id="showhidelink_@value_type"><a id="showlink_@value_type" href="@url" class="use-ajax">choose fields</a></span>)', array( '@value_name' => $value->name, '@value_type' => $value->type, '@url' => url('admin/config/lingotek/content-type-choose-fields-ajax/' . $value->type) ) ),
@@ -702,7 +702,7 @@ function lingotek_setup_node_translation_settings_form( $form, $form_state ) {
     if ( end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings' ) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), 'Previous Step');
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
@@ -957,7 +957,7 @@ function lingotek_setup_node_updates_form( $form, $form_state ) {
     '#type' => 'submit', 
     '#value' => t( 'Next' )
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', 'Previous Step');
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'));
 
   return $form;
 }
@@ -967,7 +967,7 @@ function lingotek_setup_node_updates_form( $form, $form_state ) {
  */
 function lingotek_setup_link($path = 'admin/config/lingotek/language-settings', $text = 'Previous Step') {
   return array(
-    '#markup' => l(t($text), $path, array('#attributes' => 'margin-left: 20px;'))
+    '#markup' => l($text, $path, array('#attributes' => 'margin-left: 20px;'))
   );
 }
 
@@ -1012,7 +1012,7 @@ function lingotek_get_communities_v4( $login, $passwd, $url ) {
   $list_communities = $client->request("listCommunities", array());
   if ($list_communities->results == "success") {
     foreach ($list_communities->communities as $community) {
-      $options[$community->id] = t( $community->name );
+      $options[$community->id] = $community->name;
     }
   }
 
@@ -1042,10 +1042,10 @@ function lingotek_get_projects_v4( $login, $passwd, $community_identity, $url ) 
     foreach ($list_projects->projects as $project) {
       if ( $project->state == 'Active' ) {
         if ( !empty( $project->workflowId ) ) { // Send back the ProjectID AND WorkflowID.  Joined by |||
-          $options[$project->id . '|||' . $project->workflowId ] = t( $project->name );
+          $options[$project->id . '|||' . $project->workflowId ] = $project->name;
         }
         else { // Just send back the Project ID
-          $options[$project->id] = t( $project->name );
+          $options[$project->id] = $project->name;
         }
 
       }
