@@ -155,7 +155,7 @@ function lingotek_publish_form_submit($form, $form_state) {
     $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";
 
     if ($updates > 0) {
-      drupal_set_message(t('The following languages have been <b><i>@publish_status_text</i></b>: ' . $languages_updated_html, array('@publish_status_text' => $publish_status_text))); //'@node_title' => $node->title, 
+      drupal_set_message(t('The following languages have been <b><i>@publish_status_text</i></b>: @languages_updated_html', array('@publish_status_text' => $publish_status_text, '@languages_updated_html' => $languages_updated_html))); //'@node_title' => $node->title, 
     }
     else {
       drupal_set_message(t('Nothing was changed, since no languages were selected'));

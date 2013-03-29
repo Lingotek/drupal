@@ -29,7 +29,7 @@ function lingotek_dashboard() {
             array('data' => t('Login to the ' . l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank'))) . '')),
             array('data' => t('Select the <i>Community &gt; Integrations</i> menu item')),
             array('data' => t('Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>')),
-            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ' . l(t('Lingotek Drupal module settings'), LINGOTEK_BASE_URL . '/settings')))
+            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ') . l(t('Lingotek Drupal module settings'), LINGOTEK_BASE_URL . '/settings'))
           )
         ))
       );
@@ -130,10 +130,10 @@ function lingotek_get_dashboard_code() {
       </script>
     ';
 
-  $endpoint = 'lingotek/target';
-  $upload_url = 'lingotek/mt-upload';
-  $download_url = 'lingotek/mt-download';
-  $sync_url = 'lingotek/sync';
+  $endpoint = $base_url . '/lingotek/target';
+  $upload_url = $base_url . '/lingotek/upload';
+  $download_url = $base_url . '/lingotek/download';
+  $sync_url = $base_url . '/lingotek/sync';
 
   $output .= sprintf($script,
       // lingotek 
@@ -268,8 +268,6 @@ function lingotek_dashboard_command_ajax() {
   }
 }
 
-// END:  lingotek_dashboard_command_ajax
-
 /**
  * The number of nodes with the status sync counts from the lingotek table for the LANGUAGE TARGETS.
  * */
@@ -282,8 +280,6 @@ function lingotek_count_nodes($status) { //LINGOTEK_NODE_SYNC_STATUS_EDITED, LIN
 
   return $result;
 }
-
-// END:  lingotek_count_nodes()
 
 /**
  * Gets the current sync counts from the lingotek table for the LANGUAGE TARGETS.
