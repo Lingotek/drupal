@@ -382,7 +382,7 @@ function lingotek_get_translation_target($translation_target_id) {
  *
  * @param object $node
  *   A Drupal node.
- * @param $drupal_language_code
+ * @param $lingotek_locale
  *   A target language.
  * @param mixed $label
  *   The label to use as text for the link. Possible values are
@@ -393,9 +393,7 @@ function lingotek_get_translation_target($translation_target_id) {
  * @return string
  *   Either a link pointing the the url, or the url itself if $label is FALSE
  */
-function lingotek_get_workbench_url($node, $drupal_language_code, $label = FALSE, $force = FALSE) {
-  
-  $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code, TRUE);
+function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $force = FALSE) {
   
   if ($lingotek_locale === FALSE) {
     return "";
