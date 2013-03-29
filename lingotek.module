@@ -504,9 +504,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   
   $drupal_language_code = $language->language;
   
-  //dpm($node);
-  if ($drupal_language_code != $node->language) {
+  if ($drupal_language_code != $node->language && lingotek_node_pushed($node)) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
+    lingotek_set_target_sync_status($node->nid, $lingotek_locale, LINGOTEK_TARGET_SYNC_STATUS_PENDING);//set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native',$lingotek_locale)." (".$drupal_language_code.")";
     $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale,t('Edit Translation: @language_text ',array('@language_text'=>$language_text))); 
     $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
