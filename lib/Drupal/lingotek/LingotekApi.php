@@ -1001,9 +1001,19 @@ class LingotekApi {
       (!$advanced_parsing_enabled && lingotek_lingonode($node->nid, 'use_advanced_parsing')));
 
     if ($use_advanced_parsing) {
+      
+      $fprmFileContents = variable_get('lingotek_advanced_xml_config1','');
+      $secondaryFprmFileContents = variable_get('lingotek_advanced_xml_config2','');
+      
+      if(!strlen($fprmFileContents) || !strlen($secondaryFprmFileContents)) {
+        lingotek_set_default_advanced_xml();
+        $fprmFileContents = variable_get('lingotek_advanced_xml_config1','');
+        $secondaryFprmFileContents = variable_get('lingotek_advanced_xml_config2','');  
+      }
+      
       $advanced_parameters = array(
-        'fprmFileContents' => variable_get('lingotek_advanced_xml_config1',''),
-        'secondaryFprmFileContents' => variable_get('lingotek_advanced_xml_config2',''),
+        'fprmFileContents' => $fprmFileContents,
+        'secondaryFprmFileContents' => $secondaryFprmFileContents,
         'secondaryFilter' => 'okf_html',
       );
 

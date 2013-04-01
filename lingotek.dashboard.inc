@@ -429,25 +429,22 @@ function lingotek_get_localization_languages_json() {
   return json_encode($result);
 }
 
-// END:  lingotek_get_localization_languages_json()
-
 /**
  * Generates Lingotek GUID for this installation.
  */
 function lingotek_get_guid() {
-
   $guid = variable_get('lingotek_guid', '');
   if ($guid == '') {
     $guid = substr(hash('sha256', drupal_get_hash_salt()), 0, 16);
     variable_set('lingotek_guid', $guid);
   }
-
   return $guid;
 }
 
-// END:  lingotek_get_guid()
 
-
+/**
+ * Get the status of the target given by locale
+ */
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
   $response = array();
@@ -466,6 +463,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
 
     $response = array(
       'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
+      'dcode' => $drupal_language_code,
       'active' => $target_is_active,
       'docs' => $total,
       'pending' => $pending,
@@ -486,7 +484,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
       $response[] = array(
         'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
         'dcode' => $drupal_language_code,
-        'active' => $target->active,
+        'active' => $target->lingotek_enabled,
         'docs' => $total,
         'pending' => $pending,
         'edited' => $edited,

@@ -29,8 +29,6 @@ function lingotek_requirements($phase) {
  * Implements hook_install().
  */
 function lingotek_install() {
-  variable_set('lingotek_advanced_parsing', TRUE);
-  lingotek_install_default_advanced_xml();
 }
 
 /**
@@ -262,7 +260,7 @@ function lingotek_update_7202(&$sandbox) {
  */
 function lingotek_update_7203(&$sandbox) {
   if (!variable_get('lingotek_advanced_xml_config1', FALSE) && !variable_get('lingotek_advanced_xml_config2', FALSE)) {
-    lingotek_install_default_advanced_xml();
+    lingotek_set_default_advanced_xml();
   }
   else {
     return t('No action was taken, since your system already has data in the Primary and/or Secondary advanced parsing configuration fields.

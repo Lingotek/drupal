@@ -504,9 +504,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   
   $drupal_language_code = $language->language;
   
-  //dpm($node);
-  if ($drupal_language_code != $node->language) {
+  if ($drupal_language_code != $node->language && lingotek_node_pushed($node)) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
+    lingotek_set_target_sync_status($node->nid, $lingotek_locale, LINGOTEK_TARGET_SYNC_STATUS_PENDING);//set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native',$lingotek_locale)." (".$drupal_language_code.")";
     $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale,t('Edit Translation: @language_text ',array('@language_text'=>$language_text))); 
     $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
@@ -995,23 +995,33 @@ function lingotek_advanced_parsing_update_finished($success, $results, $operatio
 /**
  * Installs the default advanced XML configuration that ships with the module.
  */
-function lingotek_install_default_advanced_xml() {
+function lingotek_set_default_advanced_xml( $force = FALSE ) {
   $filepath_stub = DRUPAL_ROOT . '/' . drupal_get_path('module', 'lingotek') . '/fprm/';
   $config_file_primary = $filepath_stub . 'okf_xmlstream@drupal_filter.fprm';
   $config_file_secondary = $filepath_stub . 'okf_html@drupal_subfilter.fprm';
 
-  if ($config = file_get_contents($config_file_primary)) {
-    variable_set('lingotek_advanced_xml_config1', $config);
+  $current_config = variable_get('lingotek_advanced_xml_config1', '');
+  $default_config = file_get_contents($config_file_primary);
+  
+  if ($default_config) {
+    if(!strlen($current_config) || $force) {
+      variable_set('lingotek_advanced_xml_config1', $default_config);
+    }
   }
   else {
-    watchdog('lingotek', 'Unable to install default primary advanced XML configuration from: @config_file', array('@config_file' => $config_file_primary), WATCHDOG_ERROR);
+    watchdog('lingotek', 'Unable to set default primary advanced XML configuration from: @config_file', array('@config_file' => $config_file_primary), WATCHDOG_ERROR);
   }
 
-  if ($config2 = file_get_contents($config_file_secondary)) {
-    variable_set('lingotek_advanced_xml_config2', $config2);
+  $current_config2 = variable_get('lingotek_advanced_xml_config2', '');
+  $default_config2 = file_get_contents($config_file_secondary);
+  
+  if ($default_config2) {
+    if(!strlen($current_config2) || $force) {
+      variable_set('lingotek_advanced_xml_config2', $default_config2);
+    }
   }
   else {
-    watchdog('lingotek', 'Unable to install default secondary advanced XML configuration from: @config_file', array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
+    watchdog('lingotek', 'Unable to set default secondary advanced XML configuration from: @config_file', array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
   }
 }
 

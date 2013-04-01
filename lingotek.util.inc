@@ -771,6 +771,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
 function lingotek_add_missing_locales() {
   $languages = language_list();
   $default_language = language_default();
+  $update_static_language_list = FALSE;
   //$source_language = variable_get( 'lingotek_source_language', $default_language->language );
   foreach ($languages as $target) {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
@@ -779,7 +780,11 @@ function lingotek_add_missing_locales() {
       $lingotek_enabled = LingotekAccount::instance()->isEnterprise() ? (($target->language == $default_language->language) ? 0 : 1) 
                         : $target->lingotek_enabled;
       lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled);
+      $update_static_language_list = TRUE;
     }
+  }
+  if($update_static_language_list){
+    drupal_static_reset('language_list');
   }
 }
 
@@ -896,15 +901,19 @@ function lingotek_set_priority() {
  * Sets the global defaults for the Lingotek module
  */
 function lingotek_set_defaults() {
+
   $defaults = array(
     'lingotek_sync' => 1, // auto-download
     'lingotek_create_documents_by_default' => 1, // auto-upload
+    'lingotek_advanced_parsing' => TRUE
   );
 
   // Check if vars are set.  If so, use what is already set.  If not, set them using the defaults provided above.
   foreach ($defaults as $k => $default_value) {
     variable_set($k, variable_get($k, $default_value));
   }
+  
+  lingotek_set_default_advanced_xml();
 }
 
 /*
