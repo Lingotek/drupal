@@ -901,15 +901,19 @@ function lingotek_set_priority() {
  * Sets the global defaults for the Lingotek module
  */
 function lingotek_set_defaults() {
+
   $defaults = array(
     'lingotek_sync' => 1, // auto-download
     'lingotek_create_documents_by_default' => 1, // auto-upload
+    'lingotek_advanced_parsing' => TRUE
   );
 
   // Check if vars are set.  If so, use what is already set.  If not, set them using the defaults provided above.
   foreach ($defaults as $k => $default_value) {
     variable_set($k, variable_get($k, $default_value));
   }
+  
+  lingotek_set_default_advanced_xml();
 }
 
 /*

@@ -144,7 +144,7 @@ elements:
   img:
     ruleTypes: [INLINE]
     elementType: image
-    translatableAttributes: [title, alt, src]
+    translatableAttributes: [title, alt]
   input:
     ruleTypes: [INLINE]
     translatableAttributes:

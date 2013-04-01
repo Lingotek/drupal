@@ -92,7 +92,6 @@ class LingotekAccount {
     lingotek_add_missing_locales();// fills in any missing lingotek_locale values to the languages table
     
     $targets_drupal = language_list();
-    //$lingotek_managed_targets = lingotek_get_target_languages();
     $default_language = language_default();
     
     $targets = array();
@@ -105,13 +104,11 @@ class LingotekAccount {
       else if (!$is_lingotek_managed) {
         continue; // skip, since lingotek is not managing the language
       }
-      $target->locale = $target->lingotek_locale;
-      
       $target->active = $target->lingotek_enabled;
       $targets[$key] = $target;
     }
     return $as_detailed_objects ? $targets : (array_map(function ($obj) {
-              return $obj->locale;
+              return $obj->lingotek_locale;
             }, $targets));
   }
 
