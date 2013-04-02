@@ -454,27 +454,25 @@ function lingotek_admin_form_submit($form, $form_state) {
 function lingotek_form_cleanup_utility($form_state) {
   $form = array();
 
+  $translatable_fields = lingotek_translatable_node_fields();
+  
   $form['description'] = array(
-    '#markup' => '<p class="help">' . t('This tool processes all existing field data for translation-enabled fields on nodes,
-      ensuring that if data was entered before enabling field translation on a field
-      that the existing field data is copied over to the parent node\'s current language. Additionally, translatable content is identified.') .
-      '</p>',
+    '#markup' => '<p class="help">' . t('This tool identifies translatable content and processes all existing field data for translation-enabled fields on nodes,
+      ensuring that if data was entered before enabling field translation on a field 
+      that the existing field data is copied over to the parent node\'s current language.') . "</p>"
+     // .' ('. t("Translatable fields: ")."".join(", ", $translatable_fields).")<br/>"
   );
 
-  $form['warning'] = array(
+  /*$form['warning'] = array(
     '#markup' => '<p class="help">' . t('<strong>WARNING:</strong> This tool makes changes to your site\'s data. We strongly encourage you to back up your database before using this tool.') .
       '</p>',
   );
-
-  $translatable_fields = lingotek_translatable_node_fields();
-
   $form['status'] = array(
     '#markup' => theme('item_list', array('items' => $translatable_fields, 'title' => t('Translation-enabled Fields'), 'type' => 'ul')),
-  );
-  
+  );  
   $form[] = array(
     '#markup' => '<br/>'
-  );
+  );*/
 
   $form['submit'] = array(
     '#type' => 'submit',

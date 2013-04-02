@@ -151,7 +151,7 @@ function lingotek_notifications() {
   $sleep = rand($min, $max);
   sleep($sleep);
 
-  include_once('lib/Drupal/batch/lingotek.mt.batch.sync.inc');
+  include_once('lingotek.batch.inc');
   $context = '';
 
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);

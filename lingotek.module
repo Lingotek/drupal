@@ -10,7 +10,7 @@ include_once('lingotek.reference.inc');
 include_once('lingotek.util.inc');
 include_once('lingotek.api.inc');
 include_once('lingotek.sync.inc');
-include_once('lib/Drupal/batch/lingotek.batch.inc');
+include_once('lingotek.batch.inc');
 
 /**
  * Implements hook_menu().
@@ -88,8 +88,8 @@ function lingotek_menu() {
   $items[LINGOTEK_BASE_URL . '/settings'] = $items['admin/settings/lingotek/settings'];
   
   $items[LINGOTEK_BASE_URL . '/cleanup-utility'] = array(
-    'title' => 'Lingotek cleanup utility',
-    'description' => 'Updates language settings for existing field data.',
+    'title' => 'Lingotek Cleanup Utility',
+    'description' => 'This utility helps clean up any node settings that are awry.',
     'access arguments' => array('access lingotek utilities'),
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
@@ -182,7 +182,7 @@ function lingotek_menu() {
   $items[LINGOTEK_BASE_URL . '/mt-content-queued'] = array(
     'title' => 'Content Queued for Translation',
     'type' => MENU_CALLBACK,
-    'file' => 'lib/Drupal/batch/lingotek.mt.batch.upload.inc',
+    'file' => 'lingotek.batch.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_bulk_mt_upload_batch_complete'),
     'access arguments' => array('administration')
@@ -201,7 +201,7 @@ function lingotek_menu() {
   $items[LINGOTEK_BASE_URL . '/mt-content-downloaded'] = array(
     'title' => 'Download Translated Content',
     'type' => MENU_CALLBACK,
-    'file' => 'lib/Drupal/batch/lingotek.mt.batch.download.inc',
+    'file' => 'lingotek.batch.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_bulk_mt_download_batch_complete'),
     'access arguments' => array('administration')
