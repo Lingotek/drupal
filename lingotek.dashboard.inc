@@ -61,23 +61,6 @@ function lingotek_dashboard() {
 // END:  lingotek_dashboard()
 
 /**
- * Drupal JSON Output - CORS - allows cross domain requests
- * (adapted from: drupal_json_output)
- * @param type $var
- */
-function drupal_json_output_cors($var = NULL) {
-  // We are returning JSON, so tell the browser.
-  drupal_add_http_header('Content-Type', 'application/json');
-  drupal_add_http_header('Access-Control-Allow-Origin', "*");
-  drupal_add_http_header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-  drupal_add_http_header('Access-Control-Allow-Headers', 'Content-Type');
-  drupal_add_http_header('X-Powered-By', 'Lingotek');
-  if (isset($var)) {
-    echo drupal_json_encode($var);
-  }
-}
-
-/**
  * Generates the code for the embedded Javascript dashboard.
  */
 function lingotek_get_dashboard_code() {
@@ -248,7 +231,7 @@ function lingotek_dashboard_command_ajax() {
     ajax_deliver(array('#type' => 'ajax', '#commands' => $commands));
   }
   else {
-    //drupal_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
+    //lingotek_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     $general = array('message' => $message);
     $full_response = array_merge($general, $response);
     if ($method !== 'GET') { //skip GETS (since they occur lots)
@@ -264,7 +247,7 @@ function lingotek_dashboard_command_ajax() {
         '!response' => watchdog_format_object($response)
           ), WATCHDOG_NOTICE);
     }
-    return drupal_json_output_cors($full_response);
+    return lingotek_json_output_cors($full_response);
   }
 }
 

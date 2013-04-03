@@ -256,6 +256,54 @@ function lingotek_get_node_id_from_document_id($document_id) {
  * 
  * */
 function lingotek_sync() {
-
   lingotek_sync_batch_create();
+}
+
+
+/**
+ * The API endpoint for bulk translation management
+ */
+function lingotek_sync_endpoint() {
+  $parameters = array();
+  $method = $_SERVER['REQUEST_METHOD'];
+  $status = "200";
+  $request = array(
+    'method' => $method,
+  );
+  $response = array();
+
+  switch ($method) {
+    case 'POST':
+      $request['parameters'] = $parameters = $_POST;
+      $request['upload'] = $upload = isset($parameters['upload']) && $parameters['upload'] && strcmp($parameters['upload'], 'false') != 0 ? true : false;
+      $request['download'] = $download = isset($parameters['download']) && $parameters['download'] && strcmp($parameters['download'], 'false') != 0 ? true : false;
+      $request['lingotek_locales'] = $lingotek_locales = array_map(function($val) {
+            return trim($val);
+          }, explode(',', $parameters['codes']));
+      if ($upload) {
+        $request['upload_et'] = $upload_et = isset($parameters['upload_et']) && $parameters['upload_et'] && strcmp($parameters['upload_et'], 'false') != 0 ? true : false;
+      }
+      if ($download) {
+        $request['download_incomplete'] = $download_incomplete = isset($parameters['download_incomplete']) && $parameters['download_incomplete'] && strcmp($parameters['download_incomplete'], 'false') != 0 ? true : false;
+      }
+      $response = $request;
+      lingotek_sync_batch_create($upload, $download, $upload_et, $download_incomplete);
+      break;
+    case 'GET':
+      $request['parameters'] = $parameters = $_GET;
+      $project_id = variable_get('lingotek_project', NULL);
+      $request['doc_ids'] = $document_ids = array_map(function($val) {
+            return trim($val);
+          }, explode(',', $parameters['doc_ids']));
+      $api = LingotekApi::instance();
+      $response = $api->getProgressReport($project_id, $document_ids);
+      break;
+    case 'PUT': case 'DELETE':
+    default:
+      parse_str(file_get_contents("php://input"), $parameters);
+      $status = "405 Method Not Allowed";
+      break;
+  }
+
+  return lingotek_json_output_cors($response, $status, array('methods_allowed' => 'GET,POST'));
 }

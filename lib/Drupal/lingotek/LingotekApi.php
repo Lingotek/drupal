@@ -443,6 +443,30 @@ class LingotekApi {
 
     return $document;
   }
+  
+  /**
+   * Gets the workflow progress of the specified project (or list of document ids).
+   *
+   * @param int $project_id
+   * 
+   * @param array<int> $document_ids
+   *   An array of document IDs of the Lingotek Document to retrieve.
+   *
+   * @return mixed
+   *  The API response object with Lingotek Document data, or FALSE on error.
+   */
+  public function getProgressReport($project_id = NULL, $document_ids = array()) {
+    $params = array();
+    if (!empty($project_id)) {
+      $params['projectId'] = $project_id;
+    }
+    if (count($document_ids)) {
+      $document_id_str = join('&documentId=', $document_ids);
+      $params['documentId'] = $document_id_str;
+    }
+    $report = $this->request('getProgressReport', $params);
+    return $report;
+  }
 
   /**
    * Gets data for a specific Workflow Phase.
