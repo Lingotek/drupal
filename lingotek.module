@@ -171,9 +171,17 @@ function lingotek_menu() {
 
   // Batch Process Pages ----------------------------------------
    
-  
   // Sync Process:  Upload documents & Download the Translations 
   $items['lingotek/sync'] = array(
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration'),
+    'description' => 'Lingotek Sync Endpoint',
+    'file' => 'lingotek.sync.inc',
+    'page callback' => 'lingotek_sync',
+  );
+  
+  // Sync Progress Report 
+  $items['lingotek/sync/report'] = array(
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration'),
     'description' => 'Lingotek Sync Endpoint',

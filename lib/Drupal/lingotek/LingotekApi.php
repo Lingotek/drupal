@@ -455,7 +455,7 @@ class LingotekApi {
    * @return mixed
    *  The API response object with Lingotek Document data, or FALSE on error.
    */
-  public function getProgressReport($project_id = NULL, $document_ids = array()) {
+  public function getProgressReport($project_id = NULL, $document_ids = array(), $counts_only = FALSE) {
     $params = array();
     if (!empty($project_id)) {
       $params['projectId'] = $project_id;
@@ -465,6 +465,11 @@ class LingotekApi {
       $params['documentId'] = $document_id_str;
     }
     $report = $this->request('getProgressReport', $params);
+    if($counts_only){
+     $counts = array();
+     //TODO: compute counts
+     return $counts;  
+    }    
     return $report;
   }
 

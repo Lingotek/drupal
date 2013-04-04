@@ -10,7 +10,7 @@
  * (adapted from: drupal_json_output)
  * @param type $var
  */
-function lingotek_json_output_cors($var = NULL, $status = "200", $params) {
+function lingotek_json_output_cors($var = NULL, $status = "200", $params=array()) {
   // We are returning JSON, so tell the browser.
   $methods_allowed = isset($params['methods_allowed']) ? $params['methods_allowed'] : 'GET,PUT,POST,DELETE';
   drupal_add_http_header('Status', $status);
