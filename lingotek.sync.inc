@@ -256,7 +256,8 @@ function lingotek_get_node_id_from_document_id($document_id) {
  * 
  * */
 function lingotek_sync() {
-  $parameters = $_GET;
+  lingotek_sync_batch_create_old();
+  /*$parameters = $_GET;
   $method = $_SERVER['REQUEST_METHOD'];
   $status = "200";
   $test = isset($parameters['test']) && $parameters['test'] && strcmp($parameters['test'], 'false') != 0 ? true : false;
@@ -280,7 +281,7 @@ function lingotek_sync() {
     lingotek_json_output_cors($request, $status, array('methods_allowed' => 'GET,POST'));
   } else {
     lingotek_sync_batch_create($upload, $download, $upload_et, $download_incomplete);
-  }
+  }*/
 }
 
 /**
