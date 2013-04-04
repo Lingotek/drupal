@@ -256,8 +256,7 @@ function lingotek_get_node_id_from_document_id($document_id) {
  * 
  * */
 function lingotek_sync() {
-  lingotek_sync_batch_create_old();
-  /*$parameters = $_GET;
+  $parameters = $_GET;
   $method = $_SERVER['REQUEST_METHOD'];
   $status = "200";
   $test = isset($parameters['test']) && $parameters['test'] && strcmp($parameters['test'], 'false') != 0 ? true : false;
@@ -271,17 +270,14 @@ function lingotek_sync() {
   $request['lingotek_locales'] = $lingotek_locales = isset($parameters['codes']) ? array_map(function($val) {
             return trim($val);
           }, explode(',', $parameters['codes'])) : array();
-  if ($upload) {
-    $request['upload_et'] = $upload_et = isset($parameters['upload_et']) && $parameters['upload_et'] && strcmp($parameters['upload_et'], 'false') != 0 ? true : false;
-  }
-  if ($download) {
-    $request['download_incomplete'] = $download_incomplete = isset($parameters['download_incomplete']) && $parameters['download_incomplete'] && strcmp($parameters['download_incomplete'], 'false') != 0 ? true : false;
-  }
+  $request['upload_et'] = $upload_et = isset($parameters['upload_et']) && $parameters['upload_et'] && strcmp($parameters['upload_et'], 'false') != 0 ? true : false;
+  $request['download_incomplete'] = $download_incomplete = isset($parameters['download_incomplete']) && $parameters['download_incomplete'] && strcmp($parameters['download_incomplete'], 'false') != 0 ? true : false;
+  
   if($test) {
     lingotek_json_output_cors($request, $status, array('methods_allowed' => 'GET,POST'));
   } else {
     lingotek_sync_batch_create($upload, $download, $upload_et, $download_incomplete);
-  }*/
+  }
 }
 
 /**

@@ -68,11 +68,11 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
  *
  * Creates the batch operations array.  Downloads first, then uploads.
  */
-function lingotek_sync_batch_create($upload = true, $download = true, $download_locales = array(), $upload_et = false, $download_incomplete = false) {
+function lingotek_sync_batch_create($upload = true, $download = true, $download_doc_ids = array(), $upload_doc_ids = array()) {
 
   // Grab the Nodes that need to be Downloaded & Uploaded.  These are batch operation arrays.
-  $download_commands = $download ? lingotek_get_sync_download_batch_elements($download_locales, $download_incomplete) : array();
-  $upload_commands = $upload ? lingotek_get_sync_upload_batch_elements($upload_et) : array();
+  $download_commands = $download ? lingotek_get_sync_download_batch_elements($download_doc_ids) : array();
+  $upload_commands = $upload ? lingotek_get_sync_upload_batch_elements($upload_doc_ids) : array();
 
   // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
   $operations = array();
