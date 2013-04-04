@@ -792,7 +792,8 @@ function lingotek_add_missing_locales() {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
       $drupal_language_code = $target->language;
       // Set default when Enterprise to 1 (unless source language, then set to 0)
-      $lingotek_enabled = LingotekAccount::instance()->isEnterprise() ? (($target->language == $default_language->language) ? 0 : 1) : $target->lingotek_enabled;
+      //$lingotek_enabled = LingotekAccount::instance()->isEnterprise() ? (($target->language == $default_language->language) ? 0 : 1) : $target->lingotek_enabled;
+      $lingotek_enabled = $target->lingotek_enabled;
       lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled);
       $update_static_language_list = TRUE;
     }

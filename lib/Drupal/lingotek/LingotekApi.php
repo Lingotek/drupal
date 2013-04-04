@@ -465,11 +465,13 @@ class LingotekApi {
       $params['documentId'] = $document_id_str;
     }
     $report = $this->request('getProgressReport', $params);
-    if($counts_only){
-     $counts = array();
-     //TODO: compute counts
-     return $counts;  
-    }    
+    if ($report !== FALSE && $counts_only) {
+      $counts = array();
+      if (isset($report['byTargetLocale'])) {
+        
+      }
+      return $counts;
+    }
     return $report;
   }
 

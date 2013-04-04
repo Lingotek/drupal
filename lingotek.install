@@ -76,8 +76,21 @@ function lingotek_uninstall() {
  */
 function lingotek_enable() {
   lingotek_set_priority();
-  lingotek_set_defaults();  
+  lingotek_set_defaults(); 
 }
+
+function lingotek_auto_loader($class){
+  $paths = array(
+    'lib/Drupal/lingotek/'
+  );
+  foreach($paths as $path){
+    $filename = $path.$class.'.php'; 
+    if(file_exists($filename)){
+      include($filename);
+    }
+  }
+}
+
 
 /**
  * Implements hook_disable().
@@ -334,6 +347,7 @@ function lingotek_update_7208(&$sandbox) {
  * Extend languages table to have lingotek_enabled field
  */
 function lingotek_update_7209(&$sandbox) {
+  spl_autoload_register('lingotek_auto_loader');
   $ret = array();
   lingotek_migration_1();
   return $ret;
@@ -343,6 +357,7 @@ function lingotek_update_7209(&$sandbox) {
  * Extend languages table to have lingotek_locale field
  */
 function lingotek_update_7210(&$sandbox) {
+  spl_autoload_register('lingotek_auto_loader');
   $ret = array();
   lingotek_migration_2();
   lingotek_add_missing_locales();
@@ -353,6 +368,7 @@ function lingotek_update_7210(&$sandbox) {
  * Upgrade lingotek table entries from drupal_codes to lingotek_locales
  */
 function lingotek_update_7211(&$sandbox) {
+  spl_autoload_register('lingotek_auto_loader');
   $ret = array();
   lingotek_migration_3();
   return $ret;

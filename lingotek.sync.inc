@@ -303,7 +303,7 @@ function lingotek_sync_endpoint() {
             return trim($val);
           }, explode(',', $parameters['doc_ids'])) : array();
       $api = LingotekApi::instance();
-      $response = $api->getProgressReport($project_id, $document_ids);
+      $report = $api->getProgressReport($project_id, $document_ids, TRUE);
       break;
     case 'POST': case 'PUT': case 'DELETE':
     default:

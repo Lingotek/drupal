@@ -5,16 +5,6 @@
  * Module core functionality.
  */
 include_once('lingotek.define.inc');
-
-include_once('lib/Drupal/lingotek/Lingotek.php');
-include_once('lib/Drupal/lingotek/LingotekApi.php');
-include_once('lib/Drupal/lingotek/LingotekAccount.php');
-include_once('lib/Drupal/lingotek/LingotekComment.php');
-include_once('lib/Drupal/lingotek/LingotekDocument.php');
-include_once('lib/Drupal/lingotek/LingotekNode.php');
-include_once('lib/Drupal/lingotek/LingotekPhase.php');
-include_once('lib/Drupal/lingotek/LingotekTranslatableEntity.php');
-
 include_once('lingotek.session.inc');
 include_once('lingotek.reference.inc');
 include_once('lingotek.util.inc');
