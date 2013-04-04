@@ -12,6 +12,26 @@ include_once('lingotek.api.inc');
 include_once('lingotek.sync.inc');
 include_once('lingotek.batch.inc');
 
+
+/**
+ * Auto-loader function used for upgrades
+ * @param type $class
+ */
+function lingotek_auto_loader($class){
+  $module_location = drupal_get_path('module', 'lingotek');
+  $paths = array(
+    $module_location,
+    $module_location.'/lib/Drupal/lingotek/'
+  );
+  foreach($paths as $path){
+    $filename = $path.$class.'.php'; 
+    if(file_exists($filename)){
+      include($filename);
+    }
+  }
+}
+//spl_autoload_register('lingotek_auto_loader');
+
 /**
  * Implements hook_menu().
  */

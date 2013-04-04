@@ -79,19 +79,6 @@ function lingotek_enable() {
   lingotek_set_defaults(); 
 }
 
-function lingotek_auto_loader($class){
-  $paths = array(
-    'lib/Drupal/lingotek/'
-  );
-  foreach($paths as $path){
-    $filename = $path.$class.'.php'; 
-    if(file_exists($filename)){
-      include($filename);
-    }
-  }
-}
-
-
 /**
  * Implements hook_disable().
  */
