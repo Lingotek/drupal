@@ -30,10 +30,6 @@ function lingotek_auto_loader($class){
     }
   }
 }
-spl_autoload_register('lingotek_auto_loader');
-spl_autoload_register('lingotek_auto_loader');
-dvz(spl_autoload_functions());
-
 
 /**
  * Implements hook_menu().
