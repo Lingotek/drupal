@@ -251,98 +251,6 @@ function lingotek_dashboard_command_ajax() {
   }
 }
 
-/**
- * The number of nodes with the status sync counts from the lingotek table for the LANGUAGE TARGETS.
- * */
-function lingotek_count_nodes($status) { //LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_NODE_SYNC_STATUS_PENDING, LINGOTEK_NODE_SYNC_STATUS_CURRENT
-  $query = db_select('lingotek', 'l')->fields('l');
-  $query->condition('lingokey', 'node_sync_status');
-  $query->condition('lingovalue', $status);
-
-  $result = $query->countQuery()->execute()->fetchField();
-
-  return $result;
-}
-
-/**
- * Gets the current sync counts from the lingotek table for the LANGUAGE TARGETS.
- *
- * Defaults to CURRENT.
- * */
-function lingotek_count_node_targets($status = LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $lingotek_locale) {
-
-  $node_language_target_key = 'target_sync_status_' . $lingotek_locale;
-
-  $query = db_select('lingotek', 'l')->fields('l');
-  $query->condition('lingokey', $node_language_target_key);
-  $query->condition('lingovalue', $status);
-
-  $result = $query->countQuery()->execute()->fetchAssoc();
-
-  if (is_array($result)) {
-    $count = array_shift($result);
-  }
-  else {
-    $count = 0;
-  }
-
-  return $count;
-}
-
-
-/**
- * Counts all the nodes of a specific language.
- * 
- * OLD METHOD.   Replaced by:  lingotek_count_node_targets() (for reporting node target counts)
- * Not removed yet, because its still used in other places for reporting other counts.
- *
- * Limits the counts to node / fields that are marked translatable.
- */
-function lingotek_get_node_count($language = NULL) {
-
-  $result = 0;
-
-  if (isset($language)) {
-
-    $source_language = lingotek_get_source_language();
-
-    // if the language count we are requested to do, IS the source language.  Do a direct query against the nodes, using EntityFieldQuery.
-    if ($language == $source_language) {
-
-      $bundles = lingotek_translatable_node_types(); // $bundles -- array ( 0 => 'page', 1 => 'article', )
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', 'node')->propertyCondition('status', 1); // Published Nodes
-      $query->entityCondition('bundle', $bundles); // The Content Types we Want Translated.
-      $query->propertyCondition('language', $language, '='); // The Language to search for
-      $result = $query->count()->execute();
-    }
-    else { // Otherwise, do a regular count, where we count field languages.
-      $sum = 0;
-      $type_field_mapping = lingotek_get_type_field_mapping();
-      //debug( $type_field_mapping );
-      // Loop though the type_field_mapping, and count this language for EACH node type and get a sum.
-      foreach ($type_field_mapping as $type => $db_table) {
-
-        $count = 0;
-
-        $query = db_select($db_table, 'tbl')->fields('tbl');
-        $query->condition('entity_type', 'node');
-        $query->condition('deleted', 0);
-        $query->condition('bundle', $type);
-        $query->condition('language', $language);
-        $count = $query->countQuery()->execute()->fetchAssoc();
-
-        $sum += $count['expression'];
-        //debug( 'Lang: ' . $language . ' Type: ' . $type . ' Count: ' . $count['expression'] );
-      }
-      $result = $sum;
-    } // END:  regular count
-  } // END:  isset $language
-
-  return $result;
-}
-
-// END:  lingotek_get_node_count()
 
 /**
  * Returns an array that maps a content_type to one (and just 1) of its translated fields.
@@ -377,7 +285,7 @@ function lingotek_get_type_field_mapping($node_type = NULL) {
 
 /**
  * Outputs the language code with page count in json format.  Supplied to the dashboard.
- * Output Format: {'code':'en','docs':'500'}
+ * Output Format (example): {'code':'en_US','docs':'500'}
  */
 function lingotek_get_source_language_json() {
 
@@ -385,20 +293,19 @@ function lingotek_get_source_language_json() {
   $source_language = lingotek_get_source_language();
   $data['code'] = Lingotek::convertDrupal2Lingotek($source_language);
 
-  $data['edited'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_EDITED);
-  $data['pending'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_PENDING);
-  $data['current'] = lingotek_count_nodes(LINGOTEK_NODE_SYNC_STATUS_CURRENT);
+  $data['edited'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_EDITED);
+  $data['pending'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_PENDING);
+  $data['current'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_CURRENT);
 
   $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];
 
   return json_encode($data);
 }
 
-// END:  lingotek_get_source_language_json()
 
 /**
  * Outputs the languages active in this installation.  Supplied to the dashboard.
- * Output Format: ["en","es"]
+ * Output Format (example): ["en_US","fr_FR"]
  */
 function lingotek_get_localization_languages_json() {
 
@@ -439,9 +346,9 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
     $target_is_active = in_array($lingotek_locale, array_keys($target_languages));
 
-    $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $lingotek_locale);
-    $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $lingotek_locale);
-    $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $lingotek_locale);
+    $edited = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_EDITED, $lingotek_locale);
+    $pending = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_PENDING, $lingotek_locale);
+    $current = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
     $total = $edited + $pending + $current;
 
     $response = array(
@@ -459,9 +366,9 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
 
       $drupal_language_code = $target->language;
       $lingotek_locale = $target->lingotek_locale; //Lingotek::convertDrupal2Lingotek($drupal_language_code)
-      $edited = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_EDITED, $lingotek_locale);
-      $pending = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_PENDING, $lingotek_locale);
-      $current = lingotek_count_node_targets(LINGOTEK_TARGET_SYNC_STATUS_CURRENT, $lingotek_locale);
+      $edited = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_EDITED, $lingotek_locale);
+      $pending = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_PENDING, $lingotek_locale);
+      $current = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
       $total = $edited + $pending + $current;
 
       $response[] = array(

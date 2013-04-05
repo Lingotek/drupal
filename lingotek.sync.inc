@@ -2,124 +2,12 @@
 
 /**
  * @file
- * Content translation management and sync functions.
+ * Sync and management
  */
-// -- Node Sync Statuses (Main Node Level) --
-define('LINGOTEK_NODE_SYNC_STATUS_CURRENT', 'CURRENT'); // Node and all target languages in sync.
-define('LINGOTEK_NODE_SYNC_STATUS_EDITED', 'EDITED');  // Node and one or more target languages out of sync.
-define('LINGOTEK_NODE_SYNC_STATUS_PENDING', 'PENDING'); // Node 
-// -- Target Sync Statuses (Node Language Level) --
-define('LINGOTEK_TARGET_SYNC_STATUS_CURRENT', 'CURRENT'); // Node target language in sync.
-define('LINGOTEK_TARGET_SYNC_STATUS_EDITED', 'EDITED'); // Node target language in waiting for the node to be uploaded.
-define('LINGOTEK_TARGET_SYNC_STATUS_PENDING', 'PENDING'); // Node target language out of sync.  The source language has been sent for translation, but the translated version has not been downloaded.
-define('LINGOTEK_TARGET_SYNC_STATUS_LOCKED', 'LOCKED');  // Node target language is locked, and will NOT be replaced.
 
-/**
- *  Gets the Node sync status.
- * */
-function lingotek_get_node_sync_status($node_id) {
-  return lingotek_lingonode($node_id, 'node_sync_status');
-}
 
-/**
- *  Sets the Node sync status.
- * */
-function lingotek_set_node_sync_status($node_id, $node_status) {
-  return lingotek_lingonode($node_id, 'node_sync_status', $node_status);
-}
+// ----  Other Functions
 
-/**
- *  Gets the Node Target language status.
- * */
-function lingotek_get_target_sync_status($node_id, $lingotek_locale) {
-  $key = 'target_sync_status_' . $lingotek_locale;
-  return lingotek_lingonode($node_id, $key);
-}
-
-/**
- *  Sets the Node Target language to the specified value.
- * */
-function lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status) {
-  $key = 'target_sync_status_' . $lingotek_locale;
-  return lingotek_lingonode($node_id, $key, $node_status);
-}
-
-// ----  Combo Functions
-
-/**
- *  Sets the Node and Target languages to a given value.
- *  Note:  All targets get the SAME status.
- * */
-function lingotek_set_node_and_targets_sync_status($node_id, $node_status, $targets_status) {
-
-  // Set the Node to EDITED.
-  lingotek_set_node_sync_status($node_id, $node_status);
-
-  // Loop though each target language, and set that target to EDITED.
-  $languages = lingotek_get_target_locales();
-  foreach ($languages as $lingotek_locale) {
-    lingotek_set_target_sync_status($node_id, $lingotek_locale, $targets_status);
-  }
-}
-
-/**
- *  Gets the nodes current sync status array.
- * */
-function lingotek_get_node_and_target_sync_status($node_id) {
-
-  $result = array();
-
-  $result['node_sync_status'] = lingotek_get_node_sync_status($node_id);
-
-  // Loop though each target language, and set that target to EDITED.
-  $languages = lingotek_get_target_locales();
-  foreach ($languages as $lingotek_locale) {
-    $result['targets'][$lingotek_locale] = lingotek_get_target_sync_status($node_id, $lingotek_locale);
-  }
-
-  /* -- This will be the sync status array format
-    array (
-    'node_sync_status' => 'EDITED',
-    'targets' =>
-    array (
-    'es_ES' => 'EDITED',
-    'pt_BR' => 'CURRENT',
-    ),
-    )
-   */
-
-  return $result;
-}
-
-/**
- *  When a new MT language is added, add a Target status tag to every node.
- * */
-function lingotek_add_target_sync_status_to_all_nodes($lingotek_locale) {
-
-  $query = db_select('lingotek', 'l')->fields('l');
-  $query->condition('lingokey', 'node_sync_status');
-  $result = $query->execute();
-
-  while ($record = $result->fetchAssoc()) {
-    // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Node and Target to PENDING.
-    if ($record['lingovalue'] == LINGOTEK_NODE_SYNC_STATUS_CURRENT) {
-      lingotek_set_target_sync_status($record['nid'], $lingotek_locale, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
-    }
-    else { // Otherwise, set it to EDITED
-      lingotek_set_node_sync_status($record['nid'], LINGOTEK_NODE_SYNC_STATUS_EDITED);
-      lingotek_set_target_sync_status($record['nid'], $lingotek_locale, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
-    }
-  }
-}
-
-/**
- *  When a new MT language is added, add a Target status tag to every node.
- * */
-function lingotek_delete_target_sync_status_for_all_nodes($lingotek_locale) {
-
-  $key = 'target_sync_status_' . $lingotek_locale;
-  db_delete('lingotek')->condition('lingokey', $key)->execute();
-}
 
 /**
  * Returns the site callback url.
@@ -155,7 +43,7 @@ function lingotek_notifications() {
   $context = '';
 
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-  $nid = lingotek_get_node_id_from_document_id($document_id);
+  $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
   watchdog('lingotek_callback', '
       node: @node_id
@@ -207,7 +95,7 @@ function lingotek_notifications() {
     $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
 
     if ($auto_download) { // download only when automatic download is enabled
-      lingotek_mt_sync_download_node_target($nid, $lingotek_locale, $context);
+      lingotek_sync_download_node_target($nid, $lingotek_locale, $context);
     }
   }
 
@@ -227,28 +115,6 @@ function lingotek_notifications() {
       ));
 
   drupal_json_output($response);
-}
-
-/**
- * Finds the Node ID when given a Document ID.  (Deprecate)
- * Returns FALSE if not found.
- * */
-function lingotek_get_node_id_from_document_id($document_id) {
-
-  $found = FALSE;
-  $source_language = lingotek_get_source_language();
-  $key = 'document_id';
-
-  $query = db_select('lingotek', 'l')->fields('l');
-  $query->condition('lingokey', $key);
-  $query->condition('lingovalue', $document_id);
-  $result = $query->execute();
-
-  if ($record = $result->fetchAssoc()) {
-    $found = $record['nid'];
-  }
-
-  return $found;
 }
 
 /**
@@ -295,12 +161,10 @@ function lingotek_sync_endpoint() {
   switch ($method) {
     case 'GET':
       $request['parameters'] = $parameters = $_GET;
-      $project_id = variable_get('lingotek_project', NULL);
-      $request['doc_ids'] = $document_ids = isset($parameters['doc_ids']) ? array_map(function($val) {
-            return trim($val);
-          }, explode(',', $parameters['doc_ids'])) : array();
-      $api = LingotekApi::instance();
-      $report = $api->getProgressReport($project_id, $document_ids, TRUE);
+      /*$request['doc_ids'] = $document_ids = isset($parameters['doc_ids']) ? array_map(function($val) {
+              return trim($val);
+            }, explode(',', $parameters['doc_ids'])) : array();*/
+      $response = LingotekSync::getReport();
       break;
     case 'POST': case 'PUT': case 'DELETE':
     default:
@@ -310,4 +174,17 @@ function lingotek_sync_endpoint() {
   }
 
   return lingotek_json_output_cors($response, $status, array('methods_allowed' => 'GET'));
+}
+
+function lingotek_sync_calc(){
+  /*if ($report !== FALSE && $counts_only) {
+      $counts = array();
+      if (isset($report->byTargetLocale)) {
+        
+      }
+      if (isset($report->byDocumentIdAndTargetLocale)){
+        
+      }
+      return $counts;
+    }*/
 }

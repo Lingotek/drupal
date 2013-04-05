@@ -112,7 +112,7 @@ class LingotekApi {
       
       if ($result) {
         lingotek_lingonode($node->nid, 'document_id', $result->id);
-        lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+        LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
         $success = TRUE;
       }
     }
@@ -455,23 +455,15 @@ class LingotekApi {
    * @return mixed
    *  The API response object with Lingotek Document data, or FALSE on error.
    */
-  public function getProgressReport($project_id = NULL, $document_ids = array(), $counts_only = FALSE) {
+  public function getProgressReport($project_id = NULL, $document_ids = array()) {
     $params = array();
-    if (!empty($project_id)) {
+    if (!empty($project_id) && empty($document_ids)) {
       $params['projectId'] = $project_id;
     }
-    if (count($document_ids)) {
-      $document_id_str = join('&documentId=', $document_ids);
-      $params['documentId'] = $document_id_str;
+    else if (count($document_ids)) {
+      $params['documentId'] = $document_ids;
     }
     $report = $this->request('getProgressReport', $params);
-    if ($report !== FALSE && $counts_only) {
-      $counts = array();
-      if (isset($report['byTargetLocale'])) {
-        
-      }
-      return $counts;
-    }
     return $report;
   }
 
@@ -805,7 +797,7 @@ class LingotekApi {
     $result = $this->request('updateContentDocument', $parameters);
     
     if($result){
-      lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_CURRENT, LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+      LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
     }
 
     return ( $result ) ? TRUE : FALSE;

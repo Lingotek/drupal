@@ -686,7 +686,7 @@ function lingotek_delete_target_language($lingotek_locale) {
     );
 
     // Removes the node sync target language entries from the lingotek table.
-    lingotek_delete_target_sync_status_for_all_nodes($lingotek_locale);
+    LingotekSync::deleteTargetEntriesForAllNodes($lingotek_locale);
 
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -776,7 +776,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
     }
   }
 
-  lingotek_add_target_sync_status_to_all_nodes($lingotek_locale); // Add the node sync target language entries to the lingotek table.
+  LingotekSync::insertTargetEntriesForAllNodes($lingotek_locale); // Add the node sync target language entries to the lingotek table.
   return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale, $call_api);
 }
 

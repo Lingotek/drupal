@@ -153,12 +153,12 @@ function lingotek_get_sync_upload_batch_elements() {
   // Grab nodes that are currently marked 'EDITED'
   $query = db_select('lingotek', 'l')->fields('l');
   $query->condition('lingokey', 'node_sync_status');
-  $query->condition('lingovalue', LINGOTEK_NODE_SYNC_STATUS_EDITED);
+  $query->condition('lingovalue', LingotekSync::STATUS_EDITED);
 
   $result = $query->execute();
 
   while ($record = $result->fetchAssoc()) {
-    $operations[] = array('lingotek_mt_sync_upload_node', array($record['nid']));
+    $operations[] = array('lingotek_sync_upload_node', array($record['nid']));
   }
 
   return $operations;
@@ -177,11 +177,11 @@ function lingotek_get_sync_download_batch_elements() {
     $key = 'target_sync_status_' . $lingotek_locale;
     $query = db_select('lingotek', 'l')->fields('l');
     $query->condition('lingokey', $key);
-    $query->condition('lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+    $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
 
     $result = $query->execute();
     while ($record = $result->fetchAssoc()) {
-      $operations[] = array('lingotek_mt_sync_download_node_target', array($record['nid'], $lingotek_locale));
+      $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale));
     }
   }
 
@@ -204,7 +204,7 @@ function lingotek_batch_identify_content($front = FALSE) {
     foreach ($nodes as $node) {
       if (!in_array($node->nid, $existing_nids)) {
         // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
-        $operations[] = array('lingotek_set_node_sync_status', array($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED));
+        $operations[] = array('LingotekSync::setNodeStatus', array($node->nid, LingotekSync::STATUS_EDITED));
       };
     }
   }
@@ -237,7 +237,7 @@ function lingotek_bulk_mt_upload_batch_create() {
   // Grab nodes that are currently marked 'EDITED'
   $query = db_select('lingotek', 'l')->fields('l');
   $query->condition('lingokey', 'node_sync_status');
-  $query->condition('lingovalue', LINGOTEK_NODE_SYNC_STATUS_EDITED);
+  $query->condition('lingovalue', LingotekSync::STATUS_EDITED);
 
   $result = $query->execute();
 
@@ -270,7 +270,7 @@ function lingotek_bulk_mt_download_batch_create($lingotek_locale) {
     // Grab nodes that are currently marked 'PENDING'
     $query = db_select('lingotek', 'l')->fields('l');
     $query->condition('lingokey', 'node_sync_status');
-    $query->condition('lingovalue', LINGOTEK_TARGET_SYNC_STATUS_PENDING);
+    $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
 
     $result = $query->execute();
 
@@ -394,7 +394,7 @@ function lingotek_bulk_mt_download_batch_complete_submit($form, $form_state) {
 /**
  * Upload Batch Worker Function: Upload Node for Translation
  */
-function lingotek_mt_sync_upload_node($nid, &$context) {
+function lingotek_sync_upload_node($nid, &$context) {
 
   watchdog('ltk_upload_node', 'node: @node_id', array('@node_id' => $nid), WATCHDOG_DEBUG);
 
@@ -417,7 +417,7 @@ function lingotek_mt_sync_upload_node($nid, &$context) {
 /**
  * Download Batch Worker Function: Download Translated Node Content
  */
-function lingotek_mt_sync_download_node_target($nid, $lingotek_locale, &$context) {
+function lingotek_sync_download_node_target($nid, $lingotek_locale, &$context) {
 
   watchdog('ltk_download_target', 'node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale), WATCHDOG_DEBUG);
 

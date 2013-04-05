@@ -535,7 +535,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   
   if ($drupal_language_code != $node->language && lingotek_node_pushed($node)) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
-    lingotek_set_target_sync_status($node->nid, $lingotek_locale, LINGOTEK_TARGET_SYNC_STATUS_PENDING);//set to pending so any changes will be downloaded on next sync
+    LingotekSync::setTargetStatus($node->nid, $lingotek_locale, LingotekSync::STATUS_PENDING);//set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native',$lingotek_locale)." (".$drupal_language_code.")";
     $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale,t('Edit Translation: @language_text ',array('@language_text'=>$language_text))); 
     $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
@@ -821,7 +821,7 @@ function lingotek_node_update($node) {
   $is_syncing = (isset($_SESSION['lingotek_sync_in_progress'])) ? $_SESSION['lingotek_sync_in_progress'] : $is_syncing;
 
   if ($is_syncing === FALSE) {
-    lingotek_set_node_and_targets_sync_status($node->nid, LINGOTEK_NODE_SYNC_STATUS_EDITED, LINGOTEK_TARGET_SYNC_STATUS_EDITED);
+    LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_EDITED, LingotekSync::STATUS_EDITED);
   }
 
   // Overwrite document ID.
