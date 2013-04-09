@@ -68,12 +68,17 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
  *
  * Creates the batch operations array.  Downloads first, then uploads.
  */
-function lingotek_sync_batch_create($upload = true, $download = true, $download_doc_ids = array(), $upload_doc_ids = array()) {
+function lingotek_sync_batch_create($download_targets = array(), $upload_nids = array(), $set_message = TRUE) {
 
+  $upload = !empty($upload_nids);
+  $download = !empty($download_targets);
+  
   // Grab the Nodes that need to be Downloaded & Uploaded.  These are batch operation arrays.
-  $download_commands = $download ? lingotek_get_sync_download_batch_elements($download_doc_ids) : array();
-  $upload_commands = $upload ? lingotek_get_sync_upload_batch_elements($upload_doc_ids) : array();
+  $download_commands = $download ? lingotek_get_sync_download_batch_elements($download_targets) : array();
+  $upload_commands = $upload ? lingotek_get_sync_upload_batch_elements($upload_nids) : array();
 
+  if($set_message) drupal_set_message("[Lingotek Sync] uploads:".count($upload_commands)." downloads: ".count($download_commands));
+  
   // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
   $operations = array();
   $operations[] = array('lingotek_mt_sync_set_status', array('set'));
@@ -146,19 +151,26 @@ function lingotek_sync_batch_create_old() {
 /**
  * Sync - Upload Batch Elements:  Creates the batch elements for nodes/documents that need to be uploaded.
  */
-function lingotek_get_sync_upload_batch_elements() {
+function lingotek_get_sync_upload_batch_elements($upload_nids = array()) {
 
   $operations = array();
 
-  // Grab nodes that are currently marked 'EDITED'
-  $query = db_select('lingotek', 'l')->fields('l');
-  $query->condition('lingokey', 'node_sync_status');
-  $query->condition('lingovalue', LingotekSync::STATUS_EDITED);
+  if (is_null($upload_nids)) { //deprecated
+    // Grab nodes that are currently marked 'EDITED'
+    $query = db_select('lingotek', 'l')->fields('l');
+    $query->condition('lingokey', 'node_sync_status');
+    $query->condition('lingovalue', LingotekSync::STATUS_EDITED);
 
-  $result = $query->execute();
+    $result = $query->execute();
 
-  while ($record = $result->fetchAssoc()) {
-    $operations[] = array('lingotek_sync_upload_node', array($record['nid']));
+    while ($record = $result->fetchAssoc()) {
+      $operations[] = array('lingotek_sync_upload_node', array($record['nid']));
+    }
+  }
+  else if (is_array($upload_nids)) {
+    foreach ($upload_nids as $nid) {
+      $operations[] = array('lingotek_sync_upload_node', array($nid));
+    }
   }
 
   return $operations;
@@ -166,25 +178,36 @@ function lingotek_get_sync_upload_batch_elements() {
 
 /**
  * Sync - Download Batch Elements:  Creates the batch elements for nodes/documents that need to be downloaded.
+ * 
+ * @param download_targets 
+ *        list of objects (document_id, lingotek_locale)  //json_decode([ {"document_id": "191", "locale": "fr_FR" }, ... ]);
  */
-function lingotek_get_sync_download_batch_elements() {
-
+function lingotek_get_sync_download_batch_elements($download_targets = NULL) {
   $operations = array();
 
-  $target_locales = lingotek_get_target_locales();
-  foreach ($target_locales as $lingotek_locale) {
+  if (is_null($download_targets)) {
+    $target_locales = lingotek_get_target_locales();
+    foreach ($target_locales as $lingotek_locale) {
 
-    $key = 'target_sync_status_' . $lingotek_locale;
-    $query = db_select('lingotek', 'l')->fields('l');
-    $query->condition('lingokey', $key);
-    $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
+      $key = 'target_sync_status_' . $lingotek_locale;
+      $query = db_select('lingotek', 'l')->fields('l');
+      $query->condition('lingokey', $key);
+      $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
 
-    $result = $query->execute();
-    while ($record = $result->fetchAssoc()) {
-      $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale));
+      $result = $query->execute();
+      while ($record = $result->fetchAssoc()) {
+        $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale));
+      }
     }
   }
-
+  else if(is_array($download_targets)){
+    foreach($download_targets as $download_target){
+      $nid = LingotekSync::getNodeIdFromDocId($download_target->document_id);
+      $lingotek_locale = $download_target->locale;
+      $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale));
+    }
+  }
+  
   return $operations;
 }
 

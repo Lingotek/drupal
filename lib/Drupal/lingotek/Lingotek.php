@@ -343,18 +343,24 @@ class Lingotek {
   /**
    * Gets the site's available target languages for Lingotek translation.
    *
+   * @param $pluck_field - mixed
+   *   NULL - return the entire object
+   *   string - return an array of just the pluck_field specified (if it exists)
+   *   array - return an array of the selected fields   
+   * 
    * @return array
    *   An array of Lingotek language codes.
    */
-  public static function availableLanguageTargets() {
+  public static function availableLanguageTargets($pluck_field = NULL) {
     $languages = array();
-    
+
     foreach (language_list() as $target_language) {
-      if ($target_language->enabled && lingotek_supported_language($target_language->language)) {
-        $languages[] = self::getLingotekLanguage($target_language->language);
+      if ($target_language->enabled && lingotek_supported_language($target_language->language)) { //if($target_language->lingotek_enabled)
+        $languages[] = (is_string($pluck_field) && isset($target_language->$pluck_field))?  $target_language->$pluck_field : $target_language;
       }
     }
-    
+
     return $languages;
   }
+
 }

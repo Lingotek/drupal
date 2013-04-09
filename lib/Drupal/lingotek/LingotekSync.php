@@ -71,39 +71,44 @@ class LingotekSync {
   }
 
   public static function getDownloadableReport() {
-     $project_id = variable_get('lingotek_project', NULL);
-     $document_ids = LingotekSync::getDocIdsByStatus(LingotekSync::STATUS_PENDING);
-     $api = LingotekApi::instance();
-     $response = $api->getProgressReport($project_id, $document_ids, TRUE);
-     
-     $report = array(
-       'complete' => 0,
-       'complete_download_targets' => array(),
-       'incomplete' => 0,
-       'incomplete_download_targets' => array()
-     );
-     $report['complete'] = 0;// workflow complete and ready for download
-     $report['incomplete'] = 0;// not workflow complete
-     if(isset($response->byDocumentIdAndTargetLocale)){
-       $progress_report = $response->byDocumentIdAndTargetLocale;
-       foreach($progress_report as $doc_id => $target_locales){
-         foreach($target_locales as $lingotek_locale => $pct_complete){
-           $doc_target = array(
-             'document_id' => $doc_id,
-             'lingotek_locale' => $lingotek_locale
-           );
-           if($pct_complete == 100){
-             $report['complete_download_targets'][] = $doc_target;
-             $report['complete']++;
-           }
-           else {
-             $report['incomplete_download_targets'][] = $doc_target;
-             $report['incomplete']++;
-           }
-         }
-       }
-     }
-     return $report;
+    $project_id = variable_get('lingotek_project', NULL);
+    $document_ids = LingotekSync::getDocIdsByStatus(LingotekSync::STATUS_PENDING);
+    $api = LingotekApi::instance();
+    $response = $api->getProgressReport($project_id, $document_ids, TRUE);
+
+    $report = array(
+      'download_targets_workflow_complete' => array(), // workflow complete and ready for download
+      'download_targets_workflow_complete_count' => 0,
+      'download_targets_workflow_incomplete' => array(), // not workflow complete (but download if wanted)
+      'download_targets_workflow_incomplete_count' => 0
+    );
+    if (isset($response->byDocumentIdAndTargetLocale)) {
+      $progress_report = $response->byDocumentIdAndTargetLocale;
+      foreach ($progress_report as $doc_id => $target_locales) {
+        foreach ($target_locales as $lingotek_locale => $pct_complete) {
+          $doc_target = array(
+            'document_id' => $doc_id,
+            'locale' => $lingotek_locale
+          );
+          $node_id = self::getNodeIdFromDocId($doc_id);
+
+          if ($pct_complete == 100) {
+            if (self::getTargetStatus($node_id, $lingotek_locale) == self::STATUS_PENDING) {
+              $report['download_targets_workflow_complete'][] = $doc_target;
+              $report['download_targets_workflow_complete_count']++;
+            }
+            else {
+              // Target already downloaded
+            }
+          }
+          else {
+            $report['download_targets_workflow_incomplete'][] = $doc_target;
+            $report['download_targets_workflow_incomplete_count']++;
+          }
+        }
+      }
+    }
+    return $report;
   }
   
   //lingotek_count_nodes
@@ -135,22 +140,46 @@ class LingotekSync {
     return $count;
   }
 
+  public static function getETNodeIds() { // get nids for entity_translation nodes that are not lingotek pushed
+    $types = lingotek_translatable_node_types();// get all translatable node types 
+    $et_content_types = array();
+    foreach ($types as $type) {
+      if (lingotek_managed_by_entity_translation($type)) { // test if lingotek_managed_by_entity_translation
+        $et_content_types[] = $type;
+      }
+    }
+    if(empty($et_content_types)) return array();
+      
+    $nodes = entity_load('node', FALSE, array('type' => $et_content_types));// select nodes with et types
+    $et_node_ids = array();
+    foreach ($nodes as $node) {
+      if (!lingotek_node_pushed($node)) {
+        $et_node_ids[] = $node->nid;
+      }
+    }
+    return $et_node_ids;
+  }
+  
   public static function getUploadableReport() {
     $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED);
-    $et_nodes = array();//TO-DO get nids for entity_translation nodes
     $report = array(
-      'nids' => $edited_nodes,
-      'count' => count($edited_nodes),
-      'nids_et' => $et_nodes,
-      'count_et' => count($et_nodes)
+      'upload_nids' => $edited_nodes,
+      'upload_nids_count' => count($edited_nodes)
     );
+    if(module_exists('entity_translation')){
+      $et_nodes = self::getETNodeIds();
+      $report = array_merge($report,array(
+        'upload_nids_et' => $et_nodes,
+        'upload_nids_et_count' => count($et_nodes)
+      ));
+    }
     return $report;
   }
   
   public static function getReport() {
-    $report = array(
-      'upload' => self::getUploadableReport(),
-      'download' => self::getDownloadableReport()
+    $report = array_merge(
+      self::getUploadableReport(),
+      self::getDownloadableReport()
     );
     return $report;
   }
@@ -167,11 +196,12 @@ class LingotekSync {
 
   public static function getDocIdsByStatus($status) {
     $nids = self::getNodeIdsByStatus($status);
-
+    if(empty($nids)) return array();
+    
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('lingovalue'));
     $query->condition('lingokey', 'document_id');
-    $query->condition('nid', $nids, 'IN');
+    $query->condition('nid', $nids);
     //$query->distinct();
     $result = $query->execute();
     $doc_ids = $result->fetchCol();

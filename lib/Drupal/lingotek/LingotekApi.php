@@ -185,13 +185,7 @@ class LingotekApi {
    *   An array of API parameter values.
    */
   protected function getCommentCreateWithTargetsParams(LingotekComment $comment) {
-    $targets = Lingotek::availableLanguageTargets();
-    foreach ($targets as $index => $target) {
-      if ($target == Lingotek::convertDrupal2Lingotek($comment->language)) {
-        unset($targets[$index]);
-        break;
-      }
-    }
+    $target_locales = Lingotek::availableLanguageTargets("lingotek_locale");
 
     $parameters = array(
       'projectId' => variable_get('lingotek_project', NULL),
@@ -203,7 +197,7 @@ class LingotekApi {
       'sourceLanguage' => Lingotek::convertDrupal2Lingotek($comment->language),
       'tmVaultId' => variable_get('lingotek_vault', 1),
       'content' => $comment->documentLingotekXML(),
-      'targetAsJSON' => drupal_json_encode(array_values($targets)),
+      'targetAsJSON' => drupal_json_encode(array_values($target_locales)),
       'note' => url('node/' . $comment->nid, array('absolute' => TRUE, 'alias' => TRUE))
     );
 
@@ -455,13 +449,13 @@ class LingotekApi {
    * @return mixed
    *  The API response object with Lingotek Document data, or FALSE on error.
    */
-  public function getProgressReport($project_id = NULL, $document_ids = array()) {
+  public function getProgressReport($project_id = NULL, $document_ids = NULL) {
     $params = array();
-    if (!empty($project_id) && empty($document_ids)) {
-      $params['projectId'] = $project_id;
-    }
-    else if (count($document_ids)) {
+    if (is_array($document_ids)) {
       $params['documentId'] = $document_ids;
+    }
+    else if (!is_null($project_id)) {
+      $params['projectId'] = $project_id;
     }
     $report = $this->request('getProgressReport', $params);
     return $report;

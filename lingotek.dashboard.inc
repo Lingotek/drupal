@@ -116,7 +116,7 @@ function lingotek_get_dashboard_code() {
   $endpoint = $base_url . '/lingotek/target';
   $upload_url = $base_url . '/lingotek/upload';
   $download_url = $base_url . '/lingotek/download';
-  $sync_url = $base_url . '/lingotek/sync';
+  $sync_url = $base_url . '/'. LINGOTEK_BASE_URL . '/sync';
 
   $output .= sprintf($script,
       // lingotek 
