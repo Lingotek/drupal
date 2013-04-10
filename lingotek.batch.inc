@@ -87,7 +87,7 @@ function lingotek_sync_batch_create($download_targets = array(), $upload_nids = 
 
 
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_BASE_URL;
+  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_MENU_LANG_BASE_URL;
 
   if (count($operations) > 0) {
 
@@ -124,7 +124,7 @@ function lingotek_sync_batch_create_old() {
 
   
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_BASE_URL;
+  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_MENU_LANG_BASE_URL;
 
   if ( count( $operations ) > 0 ) {
 
@@ -366,7 +366,7 @@ function lingotek_bulk_mt_download_batch_finished($success, $results, $operation
 
   $_SESSION['bulk_mt_batch_download_results'] = $messages; // Save data before redirect.
 
-  drupal_goto(LINGOTEK_BASE_URL . '/mt-content-downloaded');
+  drupal_goto(LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-downloaded');
 }
 
 /**
@@ -405,7 +405,7 @@ function lingotek_bulk_mt_download_batch_complete() {
  * Dashboard Confirmation Screen: Machine Translation Download Complete - Form Submit - Redirects Back to the Lingotek Dashboard.
  */
 function lingotek_bulk_mt_download_batch_complete_submit($form, $form_state) {
-  drupal_goto(LINGOTEK_BASE_URL);
+  drupal_goto(LINGOTEK_MENU_LANG_BASE_URL);
 }
 
 ///////////
@@ -516,7 +516,7 @@ function lingotek_bulk_mt_upload_batch_finished($success, $results, $operations)
 
   $_SESSION['bulk_mt_batch_results'] = $messages; // Save data before redirect.
 
-  drupal_goto(LINGOTEK_BASE_URL . '/mt-content-queued');
+  drupal_goto(LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-queued');
 }
 
 /**
@@ -556,7 +556,7 @@ function lingotek_bulk_mt_upload_batch_complete() {
  * Dashboard: Machine Translation Complete - Form Submit - Redirects Back to the Lingotek Dashboard.
  */
 function lingotek_bulk_mt_upload_batch_complete_submit($form, $form_state) {
-  drupal_goto(LINGOTEK_BASE_URL);
+  drupal_goto(LINGOTEK_MENU_LANG_BASE_URL);
 }
 
 /////// FIELD CLEAN-UP

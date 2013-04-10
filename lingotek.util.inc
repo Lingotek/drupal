@@ -676,6 +676,7 @@ function lingotek_delete_target_language($lingotek_locale) {
 
     db_update('languages')
         ->fields(array(
+          'enabled' => 0,
           'lingotek_enabled' => 0,
         ))
         ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
