@@ -60,7 +60,9 @@ function lingotek_uninstall() {
     'lingotek_translate_fields',
     'lingotek_vault',
     'lingotek_workbench_tagged_users',
-    'lingotek_workflow'
+    'lingotek_workflow',
+    'lingotek_create_documents_by_default',
+    'lingotek_sync'
   );
 
   foreach ($delete_variables as $variable) {

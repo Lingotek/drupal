@@ -71,26 +71,26 @@ function lingotek_menu() {
       'type' => MENU_LOCAL_TASK
     );
   }
-  //else {
-    // Use the Standard Dashboard Interface
-    // Lingotek Dashboard and Settings Tabs
-    $items['admin/settings/lingotek'] = array_merge($items['admin/settings/lingotek'], array(
-      'file' => 'lingotek.dashboard.inc',
-      'page callback' => 'lingotek_dashboard',
-      'weight' => 1,
-      'type' => MENU_NORMAL_ITEM,
-    ));
-    $items['admin/settings/lingotek/dashboard'] = array(
-      'title' => 'Dashboard',
-      'type' => MENU_DEFAULT_LOCAL_TASK,
-      'file' => 'lingotek.dashboard.inc',
-      'page callback' => 'lingotek_dashboard',
-      'weight' => 1,
-      'access arguments' => array('administration')
-    );
-    $items[LINGOTEK_BASE_URL . '/dashboard'] = $items['admin/settings/lingotek/dashboard'];
-  //}
   
+  // Use the Standard Dashboard Interface
+  // Lingotek Dashboard and Settings Tabs
+  $items['admin/settings/lingotek'] = array_merge($items['admin/settings/lingotek'], array(
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard',
+    'weight' => 1,
+    'type' => MENU_NORMAL_ITEM,
+      ));
+  $items['admin/settings/lingotek/dashboard'] = array(
+    'title' => 'Dashboard',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'lingotek.dashboard.inc',
+    'page callback' => 'lingotek_dashboard',
+    'weight' => 1,
+    'access arguments' => array('administration')
+  );
+  $items[LINGOTEK_BASE_URL . '/dashboard'] = $items['admin/settings/lingotek/dashboard'];
+
+
   $items[LINGOTEK_BASE_URL] = $items['admin/settings/lingotek']; // Add a link to regional settings
 
   // Tab:  Settings
