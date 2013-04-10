@@ -355,7 +355,7 @@ class Lingotek {
     $languages = array();
 
     foreach (language_list() as $target_language) {
-      if ($target_language->enabled && lingotek_supported_language($target_language->language)) { //if($target_language->lingotek_enabled)
+      if($target_language->lingotek_enabled) { //if ($target_language->enabled && lingotek_supported_language($target_language->language))
         $languages[] = (is_string($pluck_field) && isset($target_language->$pluck_field))?  $target_language->$pluck_field : $target_language;
       }
     }

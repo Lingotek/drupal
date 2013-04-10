@@ -176,7 +176,7 @@ function lingotek_sync_endpoint() {
 function lingotek_form_bulk_sync(){
 $form = array();
 
-  $report = LingotekSync::getReport(); //dpm($report);
+  $report = LingotekSync::getReport();
   
   // Upload
   $form['upload'] = array(
@@ -210,7 +210,7 @@ $form = array();
   }
   else {
     $form['upload']['none'] = array(
-      '#markup' => 'There are currently no nodes to be uploaded.'
+      '#markup' => 'There are currently no new/modified nodes to be uploaded.'
     );
   }
 
@@ -225,7 +225,7 @@ $form = array();
   $form['download']['download_targets_workflow_complete_json'] = array('#type' => 'hidden', '#value' => json_encode($report['download_targets_workflow_complete']));
   $form['download']['download_targets_workflow_incomplete_json'] = array('#type' => 'hidden', '#value' => json_encode($report['download_targets_workflow_incomplete']));
   
-  $download_count_total = $report['download_targets_workflow_complete_count'] + (isset($report['download_targets_workflow_incomplete_count']) ? $report['download_targets_workflow_complete_count'] : 0);
+  $download_count_total = $report['download_targets_workflow_complete_count'] + (isset($report['download_targets_workflow_incomplete_count']) ? $report['download_targets_workflow_incomplete_count'] : 0);
   /*$form['download']['download_complete'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include completed translations for the selected languages (<span id="download-total">@count</span>)', array('@count' => $report['download_targets_workflow_complete_count'])),
@@ -342,7 +342,7 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
       }
     }
   }
-  $download_targets_complete = array();
+  $download_targets = array();
   if (!empty($download_locales_complete) && isset($vals['download_targets_workflow_complete_json'])) {
     $all_download_targets = json_decode($vals['download_targets_workflow_complete_json']);
     foreach ($all_download_targets as $download_target) {
@@ -361,7 +361,6 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
       }
     }
   }
-  $download_targets_incomplete = array();
   if (!empty($download_locales_incomplete) && isset($vals['download_targets_workflow_complete_json'])) {
     $all_download_targets = json_decode($vals['download_targets_workflow_complete_json']);
     foreach ($all_download_targets as $download_target) {

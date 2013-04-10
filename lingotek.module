@@ -89,8 +89,6 @@ function lingotek_menu() {
     'access arguments' => array('administration')
   );
   $items[LINGOTEK_BASE_URL . '/dashboard'] = $items['admin/settings/lingotek/dashboard'];
-
-
   $items[LINGOTEK_BASE_URL] = $items['admin/settings/lingotek']; // Add a link to regional settings
 
   // Tab:  Settings
@@ -117,7 +115,7 @@ function lingotek_menu() {
   );
   
   $items['lingotek/sync'] = array(
-    'title' => 'Lingotek Bulk Management',
+    'title' => 'Bulk Management',
     'description' => 'This utility helps clean up any node settings that are awry.',
     'access arguments' => array('administration'),
     'file' => 'lingotek.sync.inc',
@@ -125,6 +123,10 @@ function lingotek_menu() {
     'page arguments' => array('lingotek_form_bulk_sync'),
     'type' => MENU_NORMAL_ITEM,
   );
+  $items['admin/settings/lingotek/sync'] = array_merge($items['lingotek/sync'], array(
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5
+      ));
   $items[LINGOTEK_BASE_URL . '/sync'] = $items['lingotek/sync'];
 
   // Content Update Notifications Callback
