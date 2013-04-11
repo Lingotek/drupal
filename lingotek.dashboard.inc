@@ -100,8 +100,6 @@ function lingotek_get_dashboard_code() {
           "cms_tag": "%s",
           "module_version": %s,
           "endpoint_url": "%s",
-          "upload_url": "%s",
-          "download_url": "%s",
           "sync_url": "%s",
           // data
           "source_language":%s ,
@@ -114,8 +112,6 @@ function lingotek_get_dashboard_code() {
     ';
 
   $endpoint = $base_url . '/lingotek/target';
-  $upload_url = $base_url . '/lingotek/upload';
-  $download_url = $base_url . '/lingotek/download';
   $sync_url = $base_url . '/'. LINGOTEK_MENU_LANG_BASE_URL . '/sync';
 
   $output .= sprintf($script,
@@ -139,7 +135,7 @@ function lingotek_get_dashboard_code() {
       variable_get('install_profile', ''), // CMS tag variable_get('lingotek_cms_tag','')
       json_encode(lingotek_get_module_info('version')), // module version --- get all module info:  lingotek_get_module_info()
       $endpoint, // endpoint url
-      $upload_url, $download_url, $sync_url,
+      $sync_url,
       // data
       lingotek_get_source_language_json(), // source_language
       lingotek_get_localization_languages_json(), // localization_languages - The languages "localized" on Drupal

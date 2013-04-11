@@ -89,7 +89,7 @@ function lingotek_notifications() {
     $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
 
     if ($auto_download) { // download only when automatic download is enabled
-      lingotek_sync_download_node_target($nid, $lingotek_locale, $context);
+      lingotek_sync_download_node_target($nid, $lingotek_locale, $context, LingotekSync::STATUS_CURRENT);
     }
   }
 
@@ -355,14 +355,15 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
       }
     }
   }
+  $download_targets_incomplete = array();
   if (!empty($download_locales_incomplete) && isset($vals['download_targets_workflow_incomplete_json'])) {
     $all_download_targets = json_decode($vals['download_targets_workflow_incomplete_json']);
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_incomplete)) {
-        $download_targets[] = $download_target;
+        $download_targets_incomplete[] = $download_target;
       } 
     }
   }
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
-  lingotek_sync_batch_create($download_targets, $upload_nids);
+  lingotek_sync_batch_create($download_targets, $upload_nids, $download_targets_incomplete);
 }
