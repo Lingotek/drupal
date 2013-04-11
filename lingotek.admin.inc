@@ -26,13 +26,12 @@ function lingotek_admin_form() {
    */
   $form['information'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Account Information'),
-    '#description' => t('Account information and connection settings.'),
+    '#title' => t('Account'),
+    '#description' => t('Account information and lingotek identifiers.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
   );
-
   
   $activation_details = variable_get('lingotek_activation_first_name', '') . ' ' . variable_get('lingotek_activation_last_name', '');
   $activation_email = variable_get('lingotek_activation_email', '');
@@ -66,22 +65,6 @@ function lingotek_admin_form() {
         )))
   );
 
-  $config_path = getenv( 'LINGOTEK_CONFIG_PATH' );
-  if (!empty( $config_path ) ) {
-    $form['information'][] = array(
-      '#type' => 'item',
-      '#title' => t('Connection Details'),
-      '#markup' => theme('table', array('header' => array(), 'rows' => array(
-          array('API:', LINGOTEK_API_SERVER),
-          array('GMC:', LINGOTEK_GMC_SERVER),
-          array('Billing:', LINGOTEK_BILLING_SERVER),
-          array('Key:', LINGOTEK_AP_OAUTH_KEY),
-          array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
-          )))
-    );
-  }
-  
-  
    /*
    * Lingotek connection settings.
    */
@@ -100,11 +83,10 @@ function lingotek_admin_form() {
   else { // Default to open.
     $collapse_setting = FALSE;
   }
-
-
+  
   $form['connection'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Connection Settings'),
+    '#title' => t('Connection'),
     '#description' => filter_xss($connection_group_description),
     '#collapsible' => TRUE,
     '#collapsed' => $collapse_setting,
@@ -119,38 +101,55 @@ function lingotek_admin_form() {
     '#markup' => '<h4 class="connection-status">' . $status_message . '</h4>',
   );
 
-  $form['connection']['lingotek_login_id'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Lingotek ID'),
-    '#description' => t('Enter the Lingotek ID you use to access the Lingotek Dashboard and Workbench.'),
-    '#default_value' => variable_get('lingotek_login_id', ''),
-  );
+  if ($is_enterprise) {
+    $form['connection']['lingotek_login_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Lingotek ID'),
+      '#description' => t('Enter the Lingotek ID you use to access the Lingotek Dashboard and Workbench.'),
+      '#default_value' => variable_get('lingotek_login_id', ''),
+    );
 
-  $form['connection']['lingotek_oauth_consumer_id'] = array(
-    '#type' => 'textfield',
-    '#title' => t('OAuth Key'),
-    '#description' => t('The OAuth Key used to connect with the Lingotek server.'),
-    '#default_value' => variable_get('lingotek_oauth_consumer_id', ''),
-  );
+    $form['connection']['lingotek_oauth_consumer_id'] = array(
+      '#type' => 'textfield',
+      '#title' => t('OAuth Key'),
+      '#description' => t('The OAuth Key used to connect with the Lingotek server.'),
+      '#default_value' => variable_get('lingotek_oauth_consumer_id', ''),
+    );
 
-  $form['connection']['lingotek_oauth_consumer_secret'] = array(
-    '#type' => 'textfield',
-    '#title' => t('OAuth Secret'),
-    '#description' => t('The OAuth Secret used to connect with the Lingotek server.'),
-    '#default_value' => variable_get('lingotek_oauth_consumer_secret', ''),
-  );
+    $form['connection']['lingotek_oauth_consumer_secret'] = array(
+      '#type' => 'textfield',
+      '#title' => t('OAuth Secret'),
+      '#description' => t('The OAuth Secret used to connect with the Lingotek server.'),
+      '#default_value' => variable_get('lingotek_oauth_consumer_secret', ''),
+    );
 
-  $form['connection']['lingotek_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Lingotek Server'),
-    '#description' => t('The path to the Lingotek server to which this site should be connected.'),
-    '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
-  );
+    $form['connection']['lingotek_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Lingotek Server'),
+      '#description' => t('The path to the Lingotek server to which this site should be connected.'),
+      '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
+    );
+  }
+  else {
+    $dev_items = array(
+      array('Key:', LINGOTEK_AP_OAUTH_KEY),
+      array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
+    );
+    $form['connection'][] = array(
+      '#type' => 'item',
+      //'#title' => t('Connection Details'),
+      '#markup' => theme('table', array('header' => array(), 'rows' => array_merge(array(
+          array('API:', LINGOTEK_API_SERVER),
+          array('GMC:', LINGOTEK_GMC_SERVER),
+          array('Billing:', LINGOTEK_BILLING_SERVER)), LINGOTEK_DEV ? $dev_items : array()
+          )))
+    );
+  }
 
   // STOP HERE IF:
   // If the connection isn't yet established.
   // If this isn't an enterprise account.
-  if ( !$api->testAuthentication() || !LingotekAccount::instance()->isEnterprise() ) {
+  if ( !$api->testAuthentication() || !$is_enterprise ) {
     return system_settings_form($form);
   }
 
@@ -420,7 +419,7 @@ function lingotek_admin_form() {
     '#type' => 'checkbox',
     '#title' => t('Enable API debugging'),
     '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
-      calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek_debug".', array('@watchdog_path' => url('admin/reports/dblog'))),
+      calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
     '#default_value' => variable_get('lingotek_api_debug', FALSE),
   );
 

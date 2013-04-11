@@ -235,7 +235,7 @@ function lingotek_dashboard_command_ajax() {
     $general = array('message' => $message);
     $full_response = array_merge($general, $response);
     if ($method !== 'GET') { //skip GETS (since they occur lots)
-      watchdog('endpoint_api', '
+      LingotekLog::info('endpoint: 
       <h1>@method</h1>
       <h2>Parameters:</h2>
       <div>!parameters</div>
@@ -243,9 +243,9 @@ function lingotek_dashboard_command_ajax() {
       <div>!response</div>
       ', array(
         '@method' => $method,
-        '!parameters' => watchdog_format_object($parameters),
-        '!response' => watchdog_format_object($response)
-          ), WATCHDOG_NOTICE);
+        '!parameters' => LingotekLog::format($parameters),
+        '!response' => LingotekLog::format($response)
+          ));
     }
     return lingotek_json_output_cors($full_response);
   }

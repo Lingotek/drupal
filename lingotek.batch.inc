@@ -265,7 +265,7 @@ function lingotek_bulk_mt_upload_batch_create() {
   $result = $query->execute();
 
   while ($record = $result->fetchAssoc()) {
-    $operations[] = array('lingotek_machine_translate_node', array($record['nid']));
+    $operations[] = array('lingotek_sync_upload_node', array($record['nid']));
   }
 
   $batch = array(
@@ -419,7 +419,7 @@ function lingotek_bulk_mt_download_batch_complete_submit($form, $form_state) {
  */
 function lingotek_sync_upload_node($nid, &$context) {
 
-  watchdog('ltk_upload_node', 'node: @node_id', array('@node_id' => $nid), WATCHDOG_DEBUG);
+  lingotek_trace('upload node: @node_id', array('@node_id' => $nid));
 
   $api = LingotekApi::instance();
   $node = node_load($nid);
@@ -442,7 +442,7 @@ function lingotek_sync_upload_node($nid, &$context) {
  */
 function lingotek_sync_download_node_target($nid, $lingotek_locale, &$context) {
 
-  watchdog('ltk_download_target', 'node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale), WATCHDOG_DEBUG);
+  lingotek_trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
 
   $node = node_load($nid);
   lingotek_download_document($node, $lingotek_locale);
@@ -472,30 +472,6 @@ function lingotek_mt_sync_set_status($status, &$context) {
  * Lingotek Batch Translate Process.
  */
 
-/**
- * Batch Worker Function: Machine Translate a Node.
- */
-function lingotek_machine_translate_node($nid, &$context) {
-
-  watchdog('ltk_upload', 'nide: @node_id', array('@node_id' => $nid), WATCHDOG_DEBUG);
-
-  $api = LingotekApi::instance();
-  $node = node_load($nid);
-
-  // Push this node for translation.
-  if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
-
-    // Update an existing Lingotek Document.
-    $api->updateContentDocument($node);
-  }
-  else {
-
-    // Create a new Lingotek Document.
-    $api->addContentDocument($node, TRUE);
-  }
-
-  $context['results'][] = 'Upload Node: ' . $nid;
-}
 
 /**
  * Batch Finished: Bulk Machine Translation Complete.
@@ -625,7 +601,7 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
     }
   }
   else {
-    watchdog('lingotek', 'Attempted to update field data for a non-existent node: @node_id', array('@node_id' => $node_id), WATCHDOG_ERROR);
+    LingotekLog::error('Attempted to update field data for a non-existent node: @node_id', array('@node_id' => $node->nid));
   }
 
   return $edited;

@@ -101,8 +101,8 @@ class LingotekSession {
     $timeout = variable_get('lingotek_api_timeout', self::DEFAULT_API_TIMEOUT);
     if (!is_numeric($timeout)) {
       // The site is configured with some non-numeric timeout value, go back to the default.
-      watchdog('lingotek', "The current value for the 'lingotek_api_timeout' system variable ('@value') should be a number. Defaulting to @timeout seconds",
-        array('@value' => $timeout, '@timeout' => self::DEFAULT_API_TIMEOUT), WATCHDOG_ERROR);
+      LingotekLog::error("The current value for the 'lingotek_api_timeout' system variable ('@value') should be a number. Defaulting to @timeout seconds",
+        array('@value' => $timeout, '@timeout' => self::DEFAULT_API_TIMEOUT));
       $timeout = self::DEFAULT_API_TIMEOUT;        
     }
 
@@ -121,15 +121,13 @@ class LingotekSession {
         return $json;
       }
       else {
-        lingotek_error(
-          'API ' . $api . ' FAILED',
-          array(
-            'params' => $params,
-            'error' => isset($response->error) ? $response->error : "",
-            'response' => isset($json) ? $json : "",
-            'logged_in' => $this->logged_in,
-          ),
-          1
+        LingotekLog::log(
+          'API ' . $api . ' FAILED', array(
+          'params' => $params,
+          'error' => isset($response->error) ? $response->error : "",
+          'response' => isset($json) ? $json : "",
+          'logged_in' => $this->logged_in,
+            ), 1, WATCHDOG_ERROR, 'api'
         );
         $json = new stdClass();
         $json->results = 'fail';
@@ -156,7 +154,7 @@ class LingotekSession {
     $result = LingotekApi::instance()->request($api, $params);
 
     if (!$result) {
-      watchdog('lingotek', 'Unable to download Lingotek Document.', array(), WATCHDOG_ERROR);
+      LingotekLog::error('lingotek', 'Unable to download Lingotek Document.', array());
       return FALSE;
     }
 
@@ -244,15 +242,12 @@ class LingotekSession {
     }
     else {
       $this->logged_in = FALSE;
-      lingotek_error(
-        "Unable to log in",
-        array(
-          'params' => $params,
-          'error' => isset($data->error) ? $data->error : "",
-          'response' => isset($response) ? $response : "",
-        ),
-        2,
-        isset($data->error) ? WATCHDOG_ERROR : WATCHDOG_WARNING
+      LingotekLog::log(
+        "Unable to log in", array(
+        'params' => $params,
+        'error' => isset($data->error) ? $data->error : "",
+        'response' => isset($response) ? $response : "",
+          ), 2, isset($data->error) ? WATCHDOG_ERROR : WATCHDOG_WARNING
       );
     }
   }
@@ -267,7 +262,7 @@ class LingotekSession {
     }
     else {
       $this->logged_in = TRUE;
-      lingotek_error('Unable to log out.');
+      LingotekLog::error('Unable to log out.');
     }
   }
 }

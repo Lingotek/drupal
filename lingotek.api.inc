@@ -45,7 +45,7 @@ function lingotek_download_document(&$node, $lingotek_locale) {
     $xml = new SimpleXMLElement($text);
   }
   catch (Exception $e) {
-    lingotek_error("downloadDocument FAILED", array('xml' => $text, 'error' => $e->getMessage()));
+    LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
     return;
   }
 

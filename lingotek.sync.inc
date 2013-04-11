@@ -45,8 +45,7 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-  watchdog('lingotek_callback', '
-      node: @node_id
+  lingotek_trace('callback :: node @node_id
       <br /><strong>doc:</strong> @document_id
       <br /><strong>code:</strong> @language_code
       <br /><strong>project:</strong> @project_id', array(
@@ -54,7 +53,7 @@ function lingotek_notifications() {
     '@document_id' => $document_id,
     '@language_code' => $lingotek_locale,
     '@project_id' => $project_id
-      ), WATCHDOG_DEBUG);
+      ));
 
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
@@ -70,22 +69,17 @@ function lingotek_notifications() {
         );
 
         if ($comment->updateLocalContent()) {
-          if (variable_get('lingotek_api_debug', FALSE)) {
-            watchdog('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
-                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, WATCHDOG_DEBUG);
-          }
+          lingotek_trace('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
+                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
         }
         else {
-          if (variable_get('lingotek_api_debug', FALSE)) {
-            watchdog('lingotek_debug', 'Unable to update local content for <strong>comment</strong> @id based on hit
-                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, WATCHDOG_ERROR);
-          }
+          lingotek_trace('lingotek_debug', 'Unable to update local content for <strong>comment</strong> @id based on hit
+                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
         }
       }
     }
     else {
-      watchdog('lingotek', 'LingotekComment class not found.
-          Please clear the Drupal cache to refresh the autoload registry', array(), WATCHDOG_ERROR);
+      LingotekLog::error('LingotekComment class not found. Please clear the Drupal cache to refresh the autoload registry');
     }
   }
   else {
@@ -272,7 +266,7 @@ $form = array();
     }
   }
 
-  if (empty($options_complete) && empty($options_complete)) {
+  if (empty($options_complete) && empty($options_incomplete)) {
     $form['download']['none'] = array(
       '#markup' => 'There are currently no pending translations to be downloaded.'
     );
@@ -361,8 +355,8 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
       }
     }
   }
-  if (!empty($download_locales_incomplete) && isset($vals['download_targets_workflow_complete_json'])) {
-    $all_download_targets = json_decode($vals['download_targets_workflow_complete_json']);
+  if (!empty($download_locales_incomplete) && isset($vals['download_targets_workflow_incomplete_json'])) {
+    $all_download_targets = json_decode($vals['download_targets_workflow_incomplete_json']);
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_incomplete)) {
         $download_targets[] = $download_target;

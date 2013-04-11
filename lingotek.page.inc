@@ -337,7 +337,7 @@ function lingotek_advanced_parsing_upgrade_form($form_state) {
       }
     }
     else {
-      watchdog('lingotek', 'Unable to locate node ID for advanced parsing upgrade form: @path', array('@path' => $_GET['q']), WATCHDOG_ERROR);
+      LingotekLog::error('Unable to locate node ID for advanced parsing upgrade form: @path', array('@path' => $_GET['q']));
     }
   }
 
@@ -364,17 +364,17 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
       }
       else {
         $error = TRUE;
-        watchdog('lingotek', 'Error updating node for advanced content parsing. Lingotek updateContentDocument call failed.', array(), WATCHDOG_ERROR);
+        LingotekLog::error('Error updating node for advanced content parsing. Lingotek updateContentDocument call failed.', array());
       }
     }
     else {
       $error = TRUE;
-      watchdog('lingotek', 'Unable to load target node for content parsing upgrade: @node_id', array('@node_id' => $form_state['values']['node_id']), WATCHDOG_ERROR);
+      LingotekLog::error('Unable to load target node for content parsing upgrade: @node_id', array('@node_id' => $form_state['values']['node_id']));
     }
   }
   else {
     $error = TRUE;
-    watchdog('lingotek', 'No target node ID in parsing upgrade form data.', array(), WATCHDOG_ERROR);
+    LingotekLog::error('No target node ID in parsing upgrade form data.', array());
   }
 
   if ($error) {
@@ -451,7 +451,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
       );
     }
     else {
-      watchdog('lingotek', 'Unable to build mark as complete form: could not get progress data from API.', array(), WATCHDOG_ERROR);
+      LingotekLog::error('Unable to build mark as complete form: could not get progress data from API.');
     }
   }
 
@@ -502,8 +502,8 @@ function page_sync_comment_translations($comment_id) {
               drupal_set_message(t('Local translations for the comment have been updated.'));
             }
             else {
-              watchdog('lingotek', 'Unable to update local translations for comment @id',
-                array('@id' => $comment_id), WATCHDOG_ERROR);
+              LingotekLog::error('Unable to update local translations for comment @id',
+                array('@id' => $comment_id));
               drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
             }
           }
@@ -512,22 +512,22 @@ function page_sync_comment_translations($comment_id) {
           }
         }
         else {
-          watchdog('lingotek', 'Unable to retrieve the status of the lingotek document: @id while updating
-            comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $commment_id),
+          LingotekLog::error('Unable to retrieve the status of the lingotek document: @id while updating
+            comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $comment_id),
             WATCHDOG_ERROR);
             
           drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
         }
       }
       else {
-        watchdog('lingotek', 'Attempt to refresh local translations for comment @id, but the comment
-          is not associated with a Lingotek document.', array('@id' => $comment_id), WATCHDOG_ERROR);
+        LingotekLog::error('Attempt to refresh local translations for comment @id, but the comment
+          is not associated with a Lingotek document.', array('@id' => $comment_id));
       }
     }
   }
   else {
-    watchdog('lingotek', 'Attempt to refresh local translations for comment @id without a valid security token.',
-      array('@id' => $comment_id), WATCHDOG_ERROR);
+    LingotekLog::error('Attempt to refresh local translations for comment @id without a valid security token.',
+      array('@id' => $comment_id));
   }
   
   drupal_goto();  

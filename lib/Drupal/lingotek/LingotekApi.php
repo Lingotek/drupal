@@ -377,8 +377,7 @@ class LingotekApi {
         $document = new SimpleXMLElement($text);
       }
       catch (Exception $e) {
-        watchdog('lingotek', 'Unable to parse downloaded document. Error: @error. Text: !xml.',
-          array('!xml' => $text, '@error' => $e->getMessage()), WATCHDOG_ERROR);
+        LingotekLog::error('Unable to parse downloaded document. Error: @error. Text: !xml.', array('!xml' => $text, '@error' => $e->getMessage()));
       }
     }
 
@@ -839,7 +838,7 @@ class LingotekApi {
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
-    watchdog('api request',t($method));
+    LingotekLog::trace('api request: @method', array('@method' => $method));
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
@@ -869,7 +868,7 @@ class LingotekApi {
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
 
-      watchdog( 'api response', '
+      LingotekLog::info('api response:  
       <h1>@method ::</h1>
       <div>!parameters</div>
       <h1>Request:</h1>
@@ -879,14 +878,14 @@ class LingotekApi {
       ', 
       array( 
         '@method' => $method,
-        '!parameters' => watchdog_format_object($parameters),
-        '!request' => watchdog_format_object($request),
-        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : watchdog_format_object($response)
-      ), WATCHDOG_DEBUG );
+        '!parameters' => LingotekLog::format($parameters),
+        '!request' => LingotekLog::format($request),
+        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : LingotekLog::format($response)
+      ),'api');
 
     }
     catch (OAuthException2 $e) {
-      watchdog('lingotek', 'Failed OAuth request.
+      LingotekLog::error('Failed OAuth request.
       <br />API URL: @url
       <br />Message: @message. 
       <br />Method: @name. 
@@ -896,8 +895,8 @@ class LingotekApi {
           '@url' => $api_url,
           '@message' => $e->getMessage(),
           '@name' => $method,
-          '!params' => $this->watchdog_format_object($parameters),
-          '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);
+          '!params' => LingotekLog::format($parameters),
+          '!response' => LingotekLog::format($response)), 'api');
     }
 
     $timer_results = timer_stop($timer_name);
@@ -906,17 +905,16 @@ class LingotekApi {
       $message_params = array(
         '@url' => $api_url,
         '@method' => $method,
-        '!params' => $this->watchdog_format_object($parameters),
-        '!response' => $this->watchdog_format_object($response),
+        '!params' => LingotekLog::format($parameters),
+        '!response' => LingotekLog::format($response),
         '@response_time' => number_format($timer_results['time']) . ' ms',
       );
 
-      watchdog('lingotek_debug', '<strong>Called API method</strong>: @method
+      LingotekLog::info('<strong>API method</strong>: @method
       <br /><strong>API URL:</strong> @url
       <br /><strong>Response Time:</strong> @response_time<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
-      $message_params, WATCHDOG_DEBUG);
+      $message_params, 'api');
     }
-
 
     /*
       Exceptions:
@@ -927,9 +925,9 @@ class LingotekApi {
       $response_data = $response;
     }
     else {
-      watchdog('lingotek', 'Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@name' => $method, '!params' => $this->watchdog_format_object($parameters),
-        '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);
+      LingotekLog::error('Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response',
+        array('@name' => $method, '!params' => LingotekLog::format($parameters),
+        '!response' =>  LingotekLog::format($response)), 'api');
     }
 
     return $response_data;
@@ -964,43 +962,30 @@ class LingotekApi {
       
     	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
-    	watchdog( 'lingotek_community', 'Provision Community: !result <p>parameters: !params</p>', array( '!result' => watchdog_format_object( $result ), '!params' => watchdog_format_object( $parameters ) ), WATCHDOG_DEBUG );
+    	LingotekLog::info( 'Provision Community: !result <p>parameters: !params</p>', array( '!result' => LingotekLog::format( $result ), '!params' => LingotekLog::format( $parameters ) ), 'api' );
     }
     catch (OAuthException2 $e) {
-      watchdog('lingotek', 'Failed to Provision Community Account.
+      LingotekLog::error('Failed to Provision Community Account.
       <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@message' => $e->getMessage(), '@name' => $method, '!params' => $this->watchdog_format_object($parameters),
-        '!response' => $this->watchdog_format_object($response)), WATCHDOG_ERROR);      
+        array('@message' => $e->getMessage(), '@name' => $method, '!params' => LingotekLog::format($parameters),
+        '!response' => LingotekLog::format($response)), 'api');      
     }
 
     $timer_results = timer_stop($timer_name);
 
-    if ($this->debug) {
       $message_params = array(
-        '@method' => $method,
-        '!params' => $this->watchdog_format_object($parameters),
-        '!response' => $this->watchdog_format_object($response),
-        '@response_time' => number_format($timer_results['time']) . ' ms',
-      );
-      watchdog(
-        'lingotek_debug',
-        '<strong>Called API method</strong>: @method<br />
+      '@method' => $method,
+      '!params' => LingotekLog::format($parameters),
+      '!response' => LingotekLog::format($response),
+      '@response_time' => number_format($timer_results['time']) . ' ms',
+    );
+    LingotekLog::info('<strong>Called API method</strong>: @method<br />
         <strong>Response Time:</strong> @response_time<br />
         <strong>Params</strong>: !params<br />
-        <strong>Response:</strong> !response',
-        $message_params,
-        WATCHDOG_DEBUG
-      );
-    } // END:  if debug
+        <strong>Response:</strong> !response', $message_params, 'api'
+    );
 
     return $result;
-  }
-
-  /**
-   * Formats a complex object for presentation in a watchdog message.
-   */
-  private function watchdog_format_object($object) {
-    return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
   }
 
   /**

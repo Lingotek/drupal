@@ -1012,7 +1012,7 @@ function lingotek_advanced_parsing_update_node($nid, &$context) {
       $context['results'][] = t('Updated node: @id', array('@id' => $process_node->nid));
     }
     else {
-      watchdog('lingotek', 'Unable to send advanced XML version of node to Lingotek: @node_id', array('@node_id' => $process_node->nid), WATCHDOG_ERROR);
+      LingotekLog::error('lingotek', 'Unable to send advanced XML version of node to Lingotek: @node_id', array('@node_id' => $process_node->nid));
     }
   }
 }
@@ -1046,7 +1046,7 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
     }
   }
   else {
-    watchdog('lingotek', 'Unable to set default primary advanced XML configuration from: @config_file', array('@config_file' => $config_file_primary), WATCHDOG_ERROR);
+    LingotekLog::error('Unable to set default primary advanced XML configuration from: @config_file', array('@config_file' => $config_file_primary));
   }
 
   $current_config2 = variable_get('lingotek_advanced_xml_config2', '');
@@ -1058,7 +1058,7 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
     }
   }
   else {
-    watchdog('lingotek', 'Unable to set default secondary advanced XML configuration from: @config_file', array('@config_file' => $config_file_secondary), WATCHDOG_ERROR);
+    LingotekLog::error('Unable to set default secondary advanced XML configuration from: @config_file', array('@config_file' => $config_file_secondary));
   }
 }
 

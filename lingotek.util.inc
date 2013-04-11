@@ -54,7 +54,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
     return $lingo_node;
   }
   if ($nid == -1) {
-    lingotek_error("Invalid -1 nid passed to lingotek_lingonode().", array('nid' => $nid, 'key' => $key, 'value' => $value));
+    LingotekLog::error("Invalid -1 nid passed to lingotek_lingonode().", array('@nid' => $nid, '@key' => $key, '@value' => $value));
     return FALSE;
   }
   if (is_numeric($nid) && $nid) {
@@ -100,7 +100,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
     }
   }
   else {
-    lingotek_error("Invalid nid passed to lingotek_lingonode().", array('nid' => $nid, 'key' => $key, 'value' => $value), 1);
+    LingotekLog::error("Invalid nid (@nid) passed to lingotek_lingonode().", array('@nid' => $nid, '@key' => $key, '@value' => $value));
     return FALSE;
   }
 }
@@ -218,11 +218,11 @@ function lingotek_variable_get($var, $drupal, $default) {
  * Debug/Trace error logging
  */
 
-function lingotek_trace($msg, $data = NULL) {
-  if (variable_get('lingotek_trace_log', TRUE)) {
+function lingotek_trace($msg, $data = NULL, $tag = 'trace') {
+  if (!variable_get('lingotek_trace_log', FALSE)) {
     return;
   }
-  lingotek_error($msg, $data, $depth = 1, WATCHDOG_DEBUG);
+  lingotek_error($msg, $data, $depth = 1, WATCHDOG_DEBUG, $tag);
 }
 
 /*
@@ -238,7 +238,7 @@ function lingotek_trace($msg, $data = NULL) {
  *  default = WATCHDOG_ERROR, watchdog severity
  */
 
-function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERROR) {
+function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERROR, $tag='') {
   if ($severity == WATCHDOG_WARNING && variable_get('lingotek_warning_log', FALSE)) {
     return;
   }
@@ -252,10 +252,10 @@ function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERR
   if (isset($data)) {
     $data_output = json_encode($data);
   }
-
+  $suffix = is_string($tag) && strlen($tag) ? ' - '.$tag : '';
   watchdog
       (
-      'lingotek', '<span style="word-break: break-all;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b>%function<br /><b>ARGS:</b> %args</span>', array(
+      'lingotek'.$suffix, t($msg, is_array($data) ? $data : array()) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args</div>', array(
     '%msg' => $msg,
     '%data' => $data_output,
     '%location' => $location,
@@ -475,9 +475,7 @@ function lingotek_supported_language($language) {
   global $_lingotek_locale;
   $supported = $language != LANGUAGE_NONE && array_key_exists($language, $_lingotek_locale);
   if (!$supported) {
-    lingotek_error(
-        "Unsupported language detected", array('language' => $language), 1, WATCHDOG_WARNING
-    );
+    LingotekLog::error("Unsupported language detected: @language", array('@language' => $language));
   }
   return $supported;
 }
@@ -681,7 +679,7 @@ function lingotek_delete_target_language($lingotek_locale) {
         ))
         ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
         ->execute();
-    watchdog("lingotek", "Target language removed: @lingotek_locale"
+    LingotekLog::info("Target language removed: @lingotek_locale"
         , array(
       '@lingotek_locale' => $lingotek_locale)
     );
@@ -720,7 +718,7 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enabled =
         ))
         ->condition('language', $drupal_language_code)
         ->execute();
-    watchdog("lingotek", "Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    LingotekLog::info("Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
 
     if ($lingotek_enabled && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
       $project_id = variable_get('lingotek_project', '');
