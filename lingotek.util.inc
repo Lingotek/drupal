@@ -215,61 +215,6 @@ function lingotek_variable_get($var, $drupal, $default) {
 }
 
 /*
- * Debug/Trace error logging
- */
-
-function lingotek_trace($msg, $data = NULL, $tag = 'trace') {
-  if (!variable_get('lingotek_trace_log', FALSE)) {
-    return;
-  }
-  lingotek_error($msg, $data, $depth = 1, WATCHDOG_DEBUG, $tag);
-}
-
-/*
- * Error output
- *
- * @param $msg
- *  Text to display in the error as the cause
- * @param $data
- *  default = NULL, Additional useful data as an associative array to print for diagnosing the problem.
- * @param $depth
- *  default = 0, How far to look for the calling function and it's parameters
- * @param $severity
- *  default = WATCHDOG_ERROR, watchdog severity
- */
-
-function lingotek_error($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_ERROR, $tag='') {
-  if ($severity == WATCHDOG_WARNING && variable_get('lingotek_warning_log', FALSE)) {
-    return;
-  }
-
-  $backtrace = debug_backtrace();
-  $location = $backtrace[$depth]['file'] . ':' . $backtrace[$depth]['line'];
-  $function = $backtrace[$depth + 1]['function'];
-  $args = @json_encode($backtrace[$depth + 1]['args']);
-
-  $data_output = "";
-  if (isset($data)) {
-    $data_output = json_encode($data);
-  }
-  $suffix = is_string($tag) && strlen($tag) ? ' - '.$tag : '';
-  watchdog
-      (
-      'lingotek'.$suffix, t($msg, is_array($data) ? $data : array()) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args</div>', array(
-    '%msg' => $msg,
-    '%data' => $data_output,
-    '%location' => $location,
-    '%function' => $function,
-    '%args' => $args,
-      ), $severity
-  );
-
-  if (variable_get('lingotek_error_log', FALSE)) {
-    error_log("MESSAGE: $msg DATA: $data_output FILE: $location FUNCTION: $function ARGS: $args");
-  }
-}
-
-/*
  * Get a string representation of an object
  *
  * @param $obj

@@ -408,19 +408,19 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_trace_log', TRUE),
   );
 
-  $form['developer_settings']['lingotek_flush_cache'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Never cache'),
-    '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
-    '#default_value' => variable_get('lingotek_flush_cache', FALSE),
-  );
-
   $form['developer_settings']['lingotek_api_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable API debugging'),
     '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
       calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
     '#default_value' => variable_get('lingotek_api_debug', FALSE),
+  );
+  
+  $form['developer_settings']['lingotek_flush_cache'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Never cache'),
+    '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
+    '#default_value' => variable_get('lingotek_flush_cache', FALSE),
   );
 
 
