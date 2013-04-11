@@ -16,7 +16,7 @@ $GLOBALS['_lingotek_client'] = new LingotekSession();
  * @param $lingotek_locale
  *  Target language to be updated/synchronized
  */
-function lingotek_download_document(&$node, $lingotek_locale, $success_status = LingotekSync::STATUS_CURRENT) {
+function lingotek_download_document(&$node, $lingotek_locale, $sync_success_status = LingotekSync::STATUS_CURRENT) {
   global $_lingotek_client, $_lingotek_locale;
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
@@ -117,7 +117,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $success_status = 
   $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
   $node->path['pathauto'] = 0;
   
-  LingotekSync::setTargetStatus($node->nid, $lingotek_locale, $success_status);//slightly pre-emptive, but certainly more cohesive
+  LingotekSync::setTargetStatus($node->nid, $lingotek_locale, $sync_success_status);//slightly pre-emptive, but certainly more cohesive
   $node->lingotek_upload_override = 0;// ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
   $node->skip_status_updates = 1;// ensure that the statuses are not set on node update (in lingotek_node_update)
   node_save($node);

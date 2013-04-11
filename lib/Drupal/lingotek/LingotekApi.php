@@ -4,11 +4,11 @@
  * @file
  * Defines Drupal\lingotek\LingotekApi
  */
-
 class LingotekApi {
   /**
    * The status string representing a successful API call.
    */
+
   const RESPONSE_STATUS_SUCCESS = 'success';
 
   /**
@@ -68,11 +68,11 @@ class LingotekApi {
   public function addContentDocument($node, $with_targets = FALSE) {
     global $_lingotek_locale;
     $success = FALSE;
-    
+
     $project_id = empty($node->lingotek_project_id) ? NULL : $node->lingotek_project_id;
     $project_id = empty($project_id) ? lingotek_lingonode($node->nid, 'project_id') : $project_id;
     $project_id = empty($project_id) ? variable_get('lingotek_project', NULL) : $project_id;
-    
+
     $vault_id = empty($node->lingotek_vault_id) ? NULL : $node->lingotek_vault_id;
     $vault_id = empty($vault_id) ? lingotek_lingonode($node->nid, 'vault_id') : $vault_id;
     $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
@@ -80,8 +80,8 @@ class LingotekApi {
     $workflow_id = empty($node->workflow_id) ? NULL : $node->workflow_id;
     $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'workflow_id') : $workflow_id;
     $workflow_id = empty($workflow_id) ? variable_get('workflow_id', NULL) : $workflow_id;
-    
-    $source_language = ( isset( $_lingotek_locale[$node->language] ) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
+
+    $source_language = ( isset($_lingotek_locale[$node->language]) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
     if ($project_id) {
       $parameters = array(
@@ -94,22 +94,22 @@ class LingotekApi {
         'content' => lingotek_xml_node_body($node),
         'note' => url('node/' . $node->nid, array('absolute' => TRUE, 'alias' => TRUE))
       );
-      
+
       if (!empty($workflow_id)) {
         $parameters['workflowId'] = $workflow_id;
       }
-      
+
       $this->addAdvancedParameters($parameters, $node);
 
-      if($with_targets){
+      if ($with_targets) {
         $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON();
         $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
-      } 
+      }
       else {
         $result = $this->request('addContentDocument', $parameters);
       }
-      
+
       if ($result) {
         lingotek_lingonode($node->nid, 'document_id', $result->id);
         LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
@@ -118,7 +118,6 @@ class LingotekApi {
     }
     return $success;
   }
-
 
   /**
    * Adds a Document and one or more Translation Targets to the Lingotek platform. (only used by comments currently)
@@ -134,7 +133,7 @@ class LingotekApi {
 
     if ($result = $this->request('addContentDocumentWithTargets', $parameters)) {
       $entity->setMetadataValue('document_id', $result->id);
-      
+
       // Comments are all associated with the configured "default" Lingotek project.
       // Nodes can have their projects selected on a per-node basis, and will need
       // separate consideration if addContentDocumentWithTargets is used for them
@@ -147,7 +146,6 @@ class LingotekApi {
 
     return $success;
   }
-
 
   /**
    * Collects the entity-specific parameter values for a document create API call.
@@ -173,7 +171,6 @@ class LingotekApi {
 
     return $parameters;
   }
-
 
   /**
    * Gets the comment-specific parameters for use in a createContentDocumentWithTargets API call.
@@ -205,7 +202,6 @@ class LingotekApi {
 
     return $parameters;
   }
-
 
   /**
    * Adds a target language to an existing Lingotek Document or Project.
@@ -325,7 +321,6 @@ class LingotekApi {
     }
   }
 
-
   /**
    * Downloads the translated document for the specified document and language.
    *
@@ -375,15 +370,13 @@ class LingotekApi {
         unlink($tmpFile);
 
         $document = new SimpleXMLElement($text);
-      }
-      catch (Exception $e) {
+      } catch (Exception $e) {
         LingotekLog::error('Unable to parse downloaded document. Error: @error. Text: !xml.', array('!xml' => $text, '@error' => $e->getMessage()));
       }
     }
 
     return $document;
   }
-
 
   /**
    * Gets Lingotek Document data for the specified document.
@@ -436,7 +429,7 @@ class LingotekApi {
 
     return $document;
   }
-  
+
   /**
    * Gets the workflow progress of the specified project (or list of document ids).
    *
@@ -511,35 +504,35 @@ class LingotekApi {
    *
    * Note:  the Request() method will switch the ExternalID to whatever is passed in, instead of the regular ExternalID.
    */
-  public function getProfileAttributes( $externalId = NULL ) {
+  public function getProfileAttributes($externalId = NULL) {
     $result = FALSE;
 
     $parameters = array();
-    if ( isset( $externalId ) ) {
+    if (isset($externalId)) {
       $parameters['externalId'] = $externalId;
     }
 
     if ($output = $this->request('getProfileAttributes', $parameters)) {
-      if ( $output->results == 'success' && is_object( $output->attributes ) ) {
+      if ($output->results == 'success' && is_object($output->attributes)) {
         $result = $output->attributes;
       }
     }
 
     /*
       stdClass::__set_state(array(
-         'results' => 'success',
-         'attributes' => 
-        stdClass::__set_state(array(
-           'id' => 26,
-           'name' => 'Community Admin',
-           'login_id' => 'community_admin@S8NFUBG8',
-           'on_leaderboard' => false,
-           'language_skills' => 
-          array (
-          ),
-        )),
+      'results' => 'success',
+      'attributes' =>
+      stdClass::__set_state(array(
+      'id' => 26,
+      'name' => 'Community Admin',
+      'login_id' => 'community_admin@S8NFUBG8',
+      'on_leaderboard' => false,
+      'language_skills' =>
+      array (
+      ),
+      )),
       ))
-    */
+     */
 
     return $result;
   }
@@ -547,10 +540,10 @@ class LingotekApi {
   /**
    * Uses getProfileAttributes to Get the User Profile Attributes, and return the ID.
    */
-  public function getProfileId( $externalId = NULL ) {
+  public function getProfileId($externalId = NULL) {
     $result = FALSE;
-    $profile = $this->getProfileAttributes( $externalId );
-    if ( $profile ) {
+    $profile = $this->getProfileAttributes($externalId);
+    if ($profile) {
       $result = $profile->id;
     }
     return $result;
@@ -560,18 +553,18 @@ class LingotekApi {
    * Assigns a role to a user.  (Must be done by an community admin)
    * Returns TRUE or FALSE
    */
-  public function addRoleAssignment ( $role, $userId ) {
+  public function addRoleAssignment($role, $userId) {
     $result = FALSE;
-    if ( isset( $role ) && isset( $userId ) ) {
+    if (isset($role) && isset($userId)) {
       $parameters = array(
         'role' => $role,
         'clientId' => $userId
       );
       if ($output = $this->request('addRoleAssignment', $parameters)) {
-        if ( $output->results == 'success' ) {
+        if ($output->results == 'success') {
           $result = TRUE;
         }
-      }      
+      }
     }
     return $result;
   }
@@ -581,19 +574,19 @@ class LingotekApi {
    * Returns TRUE or FALSE
    * This will only return TRUE the first time.
    */
-  public function assignProjectManager( $projectId, $userId ) {
+  public function assignProjectManager($projectId, $userId) {
     $result = FALSE;
-    if ( isset( $projectId ) && isset( $userId ) ) {
+    if (isset($projectId) && isset($userId)) {
       $parameters = array(
         'projectId' => $projectId,
         'managerUserId' => $userId
       );
       $output = $this->request('assignProjectManager', $parameters);
       if ($output) {
-        if ( $output->results == 'success' ) {
+        if ($output->results == 'success') {
           $result = TRUE;
         }
-      }      
+      }
     }
     return $result;
   }
@@ -603,28 +596,28 @@ class LingotekApi {
    *
    * @param str $username
    *   A Drupal username.
-   */ 
-  private function checkUserWorkbenchLinkPermissions( $username = self::ANONYMOUS_LINGOTEK_ID ) {
+   */
+  private function checkUserWorkbenchLinkPermissions($username = self::ANONYMOUS_LINGOTEK_ID) {
 
     // Don't do anything with the community_admin user.
-    if ( $username == 'community_admin' ) {
+    if ($username == 'community_admin') {
       return true;
     }
 
     // To use the workbench, users need to be tagged.  Check to see if the current user has already been tagged.
-    $workbench_list = variable_get( 'lingotek_workbench_tagged_users', array() );
-    $found = array_search( $username, $workbench_list );
+    $workbench_list = variable_get('lingotek_workbench_tagged_users', array());
+    $found = array_search($username, $workbench_list);
 
     // If not, update his account to allow  him to use the workbench.
-    if ( $found === false ) {
-      $profileId = $this->getProfileId( $username );
-      if ( $profileId ) {
-        $projectId = variable_get( 'lingotek_project', NULL );
-        $role = $this->addRoleAssignment( "project_manager", $profileId );
-        if ( $role && isset( $projectId ) ) {
-          $manager = $this->assignProjectManager( $projectId, $profileId ); // This call will only return true the FIRST time.
+    if ($found === false) {
+      $profileId = $this->getProfileId($username);
+      if ($profileId) {
+        $projectId = variable_get('lingotek_project', NULL);
+        $role = $this->addRoleAssignment("project_manager", $profileId);
+        if ($role && isset($projectId)) {
+          $manager = $this->assignProjectManager($projectId, $profileId); // This call will only return true the FIRST time.
           $workbench_list[] = $username;
-          variable_set( 'lingotek_workbench_tagged_users', $workbench_list );
+          variable_set('lingotek_workbench_tagged_users', $workbench_list);
         }
       }
     }
@@ -645,8 +638,8 @@ class LingotekApi {
     $links = &drupal_static(__FUNCTION__);
 
     global $user;
-    $externalId = isset($user->name)? $user->name : '';// send a blank string for anonymous users (community translation)
-    self::checkUserWorkbenchLinkPermissions( $externalId );
+    $externalId = isset($user->name) ? $user->name : ''; // send a blank string for anonymous users (community translation)
+    self::checkUserWorkbenchLinkPermissions($externalId);
 
     $static_id = $document_id . '-' . $phase_id;
     if (empty($links[$static_id])) {
@@ -655,7 +648,7 @@ class LingotekApi {
         'phaseId' => $phase_id,
         'externalId' => $externalId
       );
-      
+
       if ($output = $this->request('getWorkbenchLink', $params)) {
         $links[$static_id] = $url = $output->url;
       }
@@ -754,7 +747,6 @@ class LingotekApi {
     return ($this->request('markPhaseComplete', $parameters)) ? TRUE : FALSE;
   }
 
-
   /**
    * Updates the content of an existing Lingotek document with the current node contents.
    *
@@ -788,8 +780,8 @@ class LingotekApi {
     $this->addAdvancedParameters($parameters, $node);
 
     $result = $this->request('updateContentDocument', $parameters);
-    
-    if($result){
+
+    if ($result) {
       LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
     }
 
@@ -819,7 +811,7 @@ class LingotekApi {
       // Only test the connection if the oauth keys have been setup.
       $consumer_key = variable_get('lingotek_oauth_consumer_id', '');
       $consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
-      if ( !empty( $consumer_key ) && !empty( $consumer_secret ) ) {
+      if (!empty($consumer_key) && !empty($consumer_secret)) {
         $valid_connection = ($this->request('listProjects')) ? TRUE : FALSE;
       }
       else {
@@ -842,8 +834,8 @@ class LingotekApi {
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
-    if ( !isset( $parameters[ 'externalId' ] ) ) {
-      $parameters['externalId'] = variable_get( 'lingotek_login_id', '' );
+    if (!isset($parameters['externalId'])) {
+      $parameters['externalId'] = variable_get('lingotek_login_id', '');
     }
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
@@ -860,56 +852,53 @@ class LingotekApi {
     try {
       OAuthStore::instance('2Leg', $credentials);
       $api_url = $this->api_url . '/' . $method;
-    	$request = @new OAuthRequester($api_url, $request_method, $parameters);
-    	  // There is an error right here.  The new OAuthRequester throws it, because it barfs on $parameters
-    	  // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in OAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/OAuthRequest.php).
-    	  // The thing is, if you encode the params, they just get translated back to an array by the object.  They have some type of error internal to the object code that is handling things wrong.
-    	  // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
-    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
-    	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
-    }
-    catch (OAuthException2 $e) {
+      $request = @new OAuthRequester($api_url, $request_method, $parameters);
+      // There is an error right here.  The new OAuthRequester throws it, because it barfs on $parameters
+      // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in OAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/OAuthRequest.php).
+      // The thing is, if you encode the params, they just get translated back to an array by the object.  They have some type of error internal to the object code that is handling things wrong.
+      // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
+      $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
+      $response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
+    } catch (OAuthException2 $e) {
       LingotekLog::error('Failed OAuth request.
       <br />API URL: @url
       <br />Message: @message. 
       <br />Method: @name. 
       <br />Parameters: !params.
-      <br />Response: !response',
-        array(
-          '@url' => $api_url,
-          '@message' => $e->getMessage(),
-          '@name' => $method,
-          '!params' => ($parameters),
-          '!response' => ($response)), 'api');
+      <br />Response: !response', array(
+        '@url' => $api_url,
+        '@message' => $e->getMessage(),
+        '@name' => $method,
+        '!params' => ($parameters),
+        '!response' => ($response)), 'api');
     }
 
     $timer_results = timer_stop($timer_name);
 
-      $message_params = array(
-        '@url' => $api_url,
-        '@method' => $method,
-        '!params' => $parameters,
-        '!request' => $request,
-        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : ($response),
-        '@response_time' => number_format($timer_results['time']) . ' ms',
-      );
-
-      LingotekLog::info('<h1>@method</h1>
-      <strong>API URL:</strong> @url
-      <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<strong>Full Request:</strong> !request',
-      $message_params, 'api');
+    $message_params = array(
+      '@url' => $api_url,
+      '@method' => $method,
+      '!params' => $parameters,
+      '!request' => $request,
+      '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : ($response),
+      '@response_time' => number_format($timer_results['time']) . ' ms',
+    );
 
     /*
       Exceptions:
       downloadDocument - Returns misc data (no $response->results), and should always be sent back.
       assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
-    */
+     */
     if ($method == 'downloadDocument' || $method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
+      LingotekLog::info('<h1>@method</h1>
+        <strong>API URL:</strong> @url
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params, 'api');
       $response_data = $response;
     }
     else {
-      LingotekLog::error('Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response', 
-          array('@name' => $method, '!params' => $parameters, '!response' => $response), 'api');
+      LingotekLog::error('<h1>@method (Failed)</h1>
+        <strong>API URL:</strong> @url
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params, 'api');
     }
 
     return $response_data;
@@ -922,7 +911,7 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function createCommunity( $parameters = array(), $callback_url = NULL ) {
+  public function createCommunity($parameters = array(), $callback_url = NULL) {
 
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
@@ -932,8 +921,8 @@ class LingotekApi {
     $method = 'autoProvisionCommunity';
     $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
 
-    if ( isset( $callback_url ) ) {
-      $parameters[ 'callbackUrl' ] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
+    if (isset($callback_url)) {
+      $parameters['callbackUrl'] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
     }
 
     $timer_name = $method . '-' . microtime(TRUE);
@@ -941,21 +930,19 @@ class LingotekApi {
 
     try {
       OAuthStore::instance('2Leg', $credentials);
-      
-    	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
-    	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
-    	LingotekLog::info( 'Provision Community: !result <p>parameters: !params</p>', array( '!result' => ( $result ), '!params' => ( $parameters ) ), 'api' );
-    }
-    catch (OAuthException2 $e) {
+
+      $request = new OAuthRequester($this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
+      $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
+      LingotekLog::info('Provision Community: !result <p>parameters: !params</p>', array('!result' => ( $result ), '!params' => ( $parameters )), 'api');
+    } catch (OAuthException2 $e) {
       LingotekLog::error('Failed to Provision Community Account.
-      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@message' => $e->getMessage(), '@name' => $method, '!params' => ($parameters),
-        '!response' => $response), 'api');      
+      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response', array('@message' => $e->getMessage(), '@name' => $method, '!params' => ($parameters),
+        '!response' => $response), 'api');
     }
 
     $timer_results = timer_stop($timer_name);
 
-      $message_params = array(
+    $message_params = array(
       '@method' => $method,
       '!params' => $parameters,
       '!response' => $response,
@@ -982,19 +969,19 @@ class LingotekApi {
     // Extra parameters when using advanced XML configuration.
     $advanced_parsing_enabled = variable_get('lingotek_advanced_parsing', FALSE);
     $use_advanced_parsing = ($advanced_parsing_enabled ||
-      (!$advanced_parsing_enabled && lingotek_lingonode($node->nid, 'use_advanced_parsing')));
+        (!$advanced_parsing_enabled && lingotek_lingonode($node->nid, 'use_advanced_parsing')));
 
     if ($use_advanced_parsing) {
-      
-      $fprmFileContents = variable_get('lingotek_advanced_xml_config1','');
-      $secondaryFprmFileContents = variable_get('lingotek_advanced_xml_config2','');
-      
-      if(!strlen($fprmFileContents) || !strlen($secondaryFprmFileContents)) {
+
+      $fprmFileContents = variable_get('lingotek_advanced_xml_config1', '');
+      $secondaryFprmFileContents = variable_get('lingotek_advanced_xml_config2', '');
+
+      if (!strlen($fprmFileContents) || !strlen($secondaryFprmFileContents)) {
         lingotek_set_default_advanced_xml();
-        $fprmFileContents = variable_get('lingotek_advanced_xml_config1','');
-        $secondaryFprmFileContents = variable_get('lingotek_advanced_xml_config2','');  
+        $fprmFileContents = variable_get('lingotek_advanced_xml_config1', '');
+        $secondaryFprmFileContents = variable_get('lingotek_advanced_xml_config2', '');
       }
-      
+
       $advanced_parameters = array(
         'fprmFileContents' => $fprmFileContents,
         'secondaryFprmFileContents' => $secondaryFprmFileContents,
@@ -1014,13 +1001,15 @@ class LingotekApi {
     // Trim trailing slash from user-entered server name, if it exists.
     if (substr($host, -1) == '/') {
       $host = substr($host, 0, -1);
-    }    
+    }
     $this->api_url = $host . self::API_ENDPOINT_V4;
   }
 
   /**
    * Private clone implementation.
    */
-  private function __clone() {}
+  private function __clone() {
+    
+  }
 
 }

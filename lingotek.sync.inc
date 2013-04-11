@@ -89,7 +89,7 @@ function lingotek_notifications() {
     $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
 
     if ($auto_download) { // download only when automatic download is enabled
-      lingotek_sync_download_node_target($nid, $lingotek_locale, $context, LingotekSync::STATUS_CURRENT);
+      lingotek_sync_download_node_target($nid, $lingotek_locale, LingotekSync::STATUS_CURRENT, $context);
     }
   }
 
@@ -188,7 +188,7 @@ $form = array();
     $form['upload']['upload'] = array(
       '#type' => 'checkbox',
       '#title' => t('Include new/modified nodes (<span id="upload-total">@count</span>)', array('@count' => $report['upload_nids_count'])),
-      '#default_value' => 0,
+      '#default_value' => $report['upload_nids_count'] == 0 ? 0 : 1,
       '#disabled' => $report['upload_nids_count'] == 0
     );
     if (module_exists('entity_translation')) {
@@ -271,6 +271,7 @@ $form = array();
       '#markup' => 'There are currently no pending translations to be downloaded.'
     );
   }
+ 
   if (!empty($options_complete)) {
     $form['download']['download_locales_complete'] = array(
       '#type' => 'tableselect',
@@ -280,7 +281,7 @@ $form = array();
         t('Translations')
       ),
       '#options' => $options_complete,
-      '#default_value' => array_fill(0, count($options_complete), TRUE)
+      '#default_value' => array_fill_keys(array_keys($options_complete), 1)
     );
   }
   if (!empty($options_incomplete)) {
@@ -292,7 +293,7 @@ $form = array();
         t('Translations')
       ),
       '#options' => $options_incomplete,
-      '#default_value' => array_fill(0, count($options_incomplete), TRUE)
+      '#default_value' => array_fill_keys(array_keys($options_complete), 0)
     );
   }
 

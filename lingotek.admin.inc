@@ -27,7 +27,7 @@ function lingotek_admin_form() {
   $form['information'] = array(
     '#type' => 'fieldset',
     '#title' => t('Account'),
-    '#description' => t('Account information and lingotek identifiers.'),
+    '#description' => t('Account information and Lingotek identifiers.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -101,7 +101,7 @@ function lingotek_admin_form() {
     '#markup' => '<h4 class="connection-status">' . $status_message . '</h4>',
   );
 
-  if ($is_enterprise) {
+  if (1 || $is_enterprise) { //temp enable in the case where oauth keys are not for enterprise user
     $form['connection']['lingotek_login_id'] = array(
       '#type' => 'textfield',
       '#title' => t('Lingotek ID'),
@@ -131,18 +131,18 @@ function lingotek_admin_form() {
     );
   }
   else {
-    $dev_items = array(
+    /*$dev_items = array(
       array('Key:', LINGOTEK_AP_OAUTH_KEY),
       array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
-    );
+    );*/
     $form['connection'][] = array(
       '#type' => 'item',
       //'#title' => t('Connection Details'),
-      '#markup' => theme('table', array('header' => array(), 'rows' => array_merge(array(
+      '#markup' => theme('table', array('header' => array(), 'rows' => array(
           array('API:', LINGOTEK_API_SERVER),
           array('GMC:', LINGOTEK_GMC_SERVER),
-          array('Billing:', LINGOTEK_BILLING_SERVER)), LINGOTEK_DEV ? $dev_items : array()
-          )))
+          array('Billing:', LINGOTEK_BILLING_SERVER))
+        ))
     );
   }
 

@@ -187,7 +187,7 @@ function lingotek_get_sync_upload_batch_elements($upload_nids = array()) {
  * @param download_targets 
  *        list of objects (document_id, lingotek_locale)  //json_decode([ {"document_id": "191", "locale": "fr_FR" }, ... ]);
  */
-function lingotek_get_sync_download_batch_elements($download_targets = NULL, $success_status = LingotekSync::STATUS_CURRENT) {
+function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sync_success_target = LingotekSync::STATUS_CURRENT) {
   $operations = array();
 
   if (is_null($download_targets)) {
@@ -201,7 +201,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $su
 
       $result = $query->execute();
       while ($record = $result->fetchAssoc()) {
-        $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale, $success_status));
+        $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale, $sync_success_target));
       }
     }
   }
@@ -209,7 +209,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $su
     foreach($download_targets as $download_target){
       $nid = LingotekSync::getNodeIdFromDocId($download_target->document_id);
       $lingotek_locale = $download_target->locale;
-      $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale, $success_status));
+      $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale, $sync_success_target));
     }
   }
   
@@ -444,12 +444,12 @@ function lingotek_sync_upload_node($nid, &$context) {
 /**
  * Download Batch Worker Function: Download Translated Node Content
  */
-function lingotek_sync_download_node_target($nid, $lingotek_locale, &$context, $success_sync_status = LingotekSync::STATUS_CURRENT) {
+function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_success_status, &$context) {
 
   LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
 
   $node = node_load($nid);
-  lingotek_download_document($node, $lingotek_locale, $success_sync_status);
+  lingotek_download_document($node, $lingotek_locale, $sync_success_status);
   $context['results'][] = t('Download Target Translation: Node #@nid (@langcode)', array('@nid' => $nid, '@langcode' => $lingotek_locale));
 }
 
