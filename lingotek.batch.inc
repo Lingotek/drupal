@@ -423,7 +423,7 @@ function lingotek_bulk_mt_download_batch_complete_submit($form, $form_state) {
  */
 function lingotek_sync_upload_node($nid, &$context) {
 
-  lingotek_trace('upload node: @node_id', array('@node_id' => $nid));
+  LingotekLog::trace('upload node: @node_id', array('@node_id' => $nid));
 
   $api = LingotekApi::instance();
   $node = node_load($nid);
@@ -446,7 +446,7 @@ function lingotek_sync_upload_node($nid, &$context) {
  */
 function lingotek_sync_download_node_target($nid, $lingotek_locale, &$context, $success_sync_status = LingotekSync::STATUS_CURRENT) {
 
-  lingotek_trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
+  LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
 
   $node = node_load($nid);
   lingotek_download_document($node, $lingotek_locale, $success_sync_status);

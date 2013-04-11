@@ -43,7 +43,7 @@ class LingotekLog {
   }
 
   public static function format($obj) {
-    return '<pre>' . htmlspecialchars(var_export($obj, TRUE)) . '</pre>';
+    return is_string($obj)? $obj : '<pre>' . print_r($obj, TRUE) . '</pre>'; //htmlspecialchars(var_export($obj, TRUE))
   }
 
   private static function log($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_NOTICE, $tag = '') {
@@ -64,9 +64,15 @@ class LingotekLog {
       $data_output = json_encode($data);
     }
     $suffix = is_string($tag) && strlen($tag) ? ' - ' . $tag : '';
+    $data_array = array();
+    if(is_array($data)){
+      foreach($data as $k=>$v){
+        $data_array[$k] = LingotekLog::format($v);
+      }
+    }
+    
     watchdog
-        (
-        'lingotek' . $suffix, t($msg, is_array($data) ? $data : array()) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args</div>', array(
+        ('lingotek' . $suffix, t($msg, $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args</div>', array(
       '%msg' => $msg,
       '%data' => $data_output,
       '%location' => $location,

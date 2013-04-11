@@ -20,7 +20,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $success_status = 
   global $_lingotek_client, $_lingotek_locale;
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
-  lingotek_trace('lingotek_download_document', array('document_id' => $document_id, "language" => $lingotek_locale));
+  LingotekLog::trace('lingotek_download_document @doc_id @target', array('@doc_id' => $document_id, 'target' => $lingotek_locale));
 
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = lingotek_lingonode($node->nid, 'use_source');
@@ -292,7 +292,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
   $cache_id = 'lingotek_targets_' . $document_id;
   $cache = cache_get($cache_id);
   if (lingotek_do_cache() && !$flush_cache && !empty($cache->data)) {
-    lingotek_trace("lingotek_get_document_targets USING CACHE", array('document_id' => $document_id, 'flushCache' => $flush_cache));
+    LingotekLog::trace("lingotek_get_document_targets USING CACHE", array('document_id' => $document_id, 'flushCache' => $flush_cache));
     $results = $cache->data;
   }
   else {
@@ -302,7 +302,7 @@ function lingotek_get_document_targets($document_id, $flush_cache = FALSE) {
         $results[$target->language] = $target;
       }
     }
-    lingotek_trace("lingotek_get_document_targets GENERATING NEW CACHE DATA getDocument", array('document_id' => $document_id, 'flushCache' => $flush_cache));
+    LingotekLog::trace("lingotek_get_document_targets GENERATING NEW CACHE DATA getDocument", array('document_id' => $document_id, 'flushCache' => $flush_cache));
     $targets[$document_id] = $results;
     if (!empty($results)) {
       cache_set($cache_id, $results, 'cache', time() + 900);
@@ -415,7 +415,6 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
       continue;
     }
 
-    lingotek_trace('lingotek_get_workbench_url TARGETS', array('lang' => $lang, 'translation_target' => $translation_target));
     $target = $api->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
 

@@ -239,8 +239,8 @@ function lingotek_dashboard_command_ajax() {
       <div>!response</div>
       ', array(
         '@method' => $method,
-        '!parameters' => LingotekLog::format($parameters),
-        '!response' => LingotekLog::format($response)
+        '!parameters' => ($parameters),
+        '!response' => ($response)
           ));
     }
     return lingotek_json_output_cors($full_response);

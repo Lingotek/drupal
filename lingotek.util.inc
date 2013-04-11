@@ -140,7 +140,7 @@ function lingotek_xml_decode($text) {
  */
 function lingotek_node_init_default($node) {
   if (lingotek_lingonode($node->nid, 'document_id') === FALSE) {
-    lingotek_trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
+    LingotekLog::trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
     LingotekApi::instance()->addContentDocument($node, TRUE);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
   }
@@ -156,7 +156,7 @@ function lingotek_node_sync(&$node) {
   // Keep synchronized?
   $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 100);
   $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id');
-  lingotek_trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
+  LingotekLog::trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
   if ($sync_method != "0" && $lingotek_document_id) {
     $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id'));
     // Check for changes in % complete.
@@ -171,12 +171,12 @@ function lingotek_node_sync(&$node) {
           ($sync_method == "1" && $before !== (string) $after) ||
           ($sync_method == "100" && $after == "100" && $before !== (string) $after)
       ) {
-        lingotek_trace("lingotek_node_sync percent complete changed", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
+        LingotekLog::trace("lingotek_node_sync percent complete changed", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
         lingotek_lingonode($node->nid, $key, $after);
         lingotek_download_document($node, $lingotek_locale);
       }
       else {
-        lingotek_trace("lingotek_node_sync percent complete stayed the same", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
+        LingotekLog::trace("lingotek_node_sync percent complete stayed the same", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
       }
     }
   }

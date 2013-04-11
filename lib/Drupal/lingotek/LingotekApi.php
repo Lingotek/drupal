@@ -838,7 +838,7 @@ class LingotekApi {
    */
   public function request($method, $parameters = array(), $request_method = 'POST') {
     global $user;
-    LingotekLog::trace('api request: @method', array('@method' => $method));
+    LingotekLog::trace('@method (trace)', array('@method' => $method), 'api request');
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
@@ -867,22 +867,6 @@ class LingotekApi {
     	  // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
     	$response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
-
-      LingotekLog::info('api response:  
-      <h1>@method ::</h1>
-      <div>!parameters</div>
-      <h1>Request:</h1>
-      <div>!request</div>
-      <h1>Response:</h1>
-      <div>!response</div>
-      ', 
-      array( 
-        '@method' => $method,
-        '!parameters' => LingotekLog::format($parameters),
-        '!request' => LingotekLog::format($request),
-        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : LingotekLog::format($response)
-      ),'api');
-
     }
     catch (OAuthException2 $e) {
       LingotekLog::error('Failed OAuth request.
@@ -895,26 +879,25 @@ class LingotekApi {
           '@url' => $api_url,
           '@message' => $e->getMessage(),
           '@name' => $method,
-          '!params' => LingotekLog::format($parameters),
-          '!response' => LingotekLog::format($response)), 'api');
+          '!params' => ($parameters),
+          '!response' => ($response)), 'api');
     }
 
     $timer_results = timer_stop($timer_name);
 
-    if ($this->debug) {
       $message_params = array(
         '@url' => $api_url,
         '@method' => $method,
-        '!params' => LingotekLog::format($parameters),
-        '!response' => LingotekLog::format($response),
+        '!params' => $parameters,
+        '!request' => $request,
+        '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : ($response),
         '@response_time' => number_format($timer_results['time']) . ' ms',
       );
 
-      LingotekLog::info('<strong>API method</strong>: @method
-      <br /><strong>API URL:</strong> @url
-      <br /><strong>Response Time:</strong> @response_time<br /><strong>Params</strong>: !params<br /><strong>Response:</strong> !response',
+      LingotekLog::info('<h1>@method</h1>
+      <strong>API URL:</strong> @url
+      <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<strong>Full Request:</strong> !request',
       $message_params, 'api');
-    }
 
     /*
       Exceptions:
@@ -925,9 +908,8 @@ class LingotekApi {
       $response_data = $response;
     }
     else {
-      LingotekLog::error('Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@name' => $method, '!params' => LingotekLog::format($parameters),
-        '!response' =>  LingotekLog::format($response)), 'api');
+      LingotekLog::error('Failed API call.<br />Method: @name. <br />Parameters: !params. <br />Response: !response', 
+          array('@name' => $method, '!params' => $parameters, '!response' => $response), 'api');
     }
 
     return $response_data;
@@ -962,21 +944,21 @@ class LingotekApi {
       
     	$request = new OAuthRequester(  $this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
     	$result = $request->doRequest( 0, array( CURLOPT_SSL_VERIFYPEER => FALSE ) );
-    	LingotekLog::info( 'Provision Community: !result <p>parameters: !params</p>', array( '!result' => LingotekLog::format( $result ), '!params' => LingotekLog::format( $parameters ) ), 'api' );
+    	LingotekLog::info( 'Provision Community: !result <p>parameters: !params</p>', array( '!result' => ( $result ), '!params' => ( $parameters ) ), 'api' );
     }
     catch (OAuthException2 $e) {
       LingotekLog::error('Failed to Provision Community Account.
       <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response',
-        array('@message' => $e->getMessage(), '@name' => $method, '!params' => LingotekLog::format($parameters),
-        '!response' => LingotekLog::format($response)), 'api');      
+        array('@message' => $e->getMessage(), '@name' => $method, '!params' => ($parameters),
+        '!response' => $response), 'api');      
     }
 
     $timer_results = timer_stop($timer_name);
 
       $message_params = array(
       '@method' => $method,
-      '!params' => LingotekLog::format($parameters),
-      '!response' => LingotekLog::format($response),
+      '!params' => $parameters,
+      '!response' => $response,
       '@response_time' => number_format($timer_results['time']) . ' ms',
     );
     LingotekLog::info('<strong>Called API method</strong>: @method<br />

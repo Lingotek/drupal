@@ -396,15 +396,15 @@ function lingotek_admin_form() {
 
   $form['developer_settings']['lingotek_warning_log'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Supress Warnings'),
-    '#description' => t('This prevents warnings from being sent to watchdog and the web server\'s error logs.'),
+    '#title' => t('Enable Warnings Log'),
+    '#description' => t('This logs any warnings in watchdog and the web server\'s error logs.'),
     '#default_value' => variable_get('lingotek_warning_log', FALSE),
   );
 
   $form['developer_settings']['lingotek_trace_log'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Supress Trace'),
-    '#description' => t('This prevents debug messages from being sent to watchdog and the web server\'s error logs.'),
+    '#title' => t('Enable Trace Log'),
+    '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
     '#default_value' => variable_get('lingotek_trace_log', TRUE),
   );
 

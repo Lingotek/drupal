@@ -45,7 +45,7 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-  lingotek_trace('callback :: node @node_id
+  LingotekLog::trace('callback :: node @node_id
       <br /><strong>doc:</strong> @document_id
       <br /><strong>code:</strong> @language_code
       <br /><strong>project:</strong> @project_id', array(
@@ -69,11 +69,11 @@ function lingotek_notifications() {
         );
 
         if ($comment->updateLocalContent()) {
-          lingotek_trace('lingotek_debug', 'Updated local content for <strong>comment</strong> @id based on hit
+          LingotekLog::trace('Updated local content for <strong>comment</strong> @id based on hit
                 from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
         }
         else {
-          lingotek_trace('lingotek_debug', 'Unable to update local content for <strong>comment</strong> @id based on hit
+          LingotekLog::trace('Unable to update local content for <strong>comment</strong> @id based on hit
                 from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
         }
       }

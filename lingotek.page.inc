@@ -214,9 +214,10 @@ function lingotek_pm($node) {
         ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
       );
 
-      lingotek_trace("lingotek_pm table row", array('language' => $lingotek_locale));
+      LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $lingotek_locale));
       $rows[] = $row;
     }
+    
     $table = theme('table', array('header' => $headers, 'rows' => $rows));
 
     $actions = '<input type="button" id="lingotek-update-button" value="' . t('Download') . '" class="form-submit"/>';
