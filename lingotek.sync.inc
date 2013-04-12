@@ -45,15 +45,15 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-  LingotekLog::trace('callback :: node @node_id
-      <br /><strong>doc:</strong> @document_id
+  LingotekLog::trace('<h2>node: @node_id (@language_code)</h2>
+      <strong>doc:</strong> @document_id
       <br /><strong>code:</strong> @language_code
       <br /><strong>project:</strong> @project_id', array(
     '@node_id' => $nid,
     '@document_id' => $document_id,
     '@language_code' => $lingotek_locale,
     '@project_id' => $project_id
-      ));
+      ), 'callback');
 
   if (!$nid) {
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.

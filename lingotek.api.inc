@@ -20,7 +20,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
   global $_lingotek_client, $_lingotek_locale;
 
   $document_id = lingotek_lingonode($node->nid, 'document_id');
-  LingotekLog::trace('lingotek_download_document @doc_id @target', array('@doc_id' => $document_id, 'target' => $lingotek_locale));
+  LingotekLog::trace('lingotek_download_document @doc_id (@target)', array('@doc_id' => $document_id, '@target' => $lingotek_locale));
 
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = lingotek_lingonode($node->nid, 'use_source');

@@ -97,7 +97,7 @@ class LingotekAccount {
     $targets = array();
     foreach ($targets_drupal as $key => $target) {
       $is_source = $default_language->language == $target->language;
-      $is_lingotek_managed = ($this->isEnterprise() === TRUE) || $target->lingotek_enabled;//in_array($target->language, $lingotek_managed_targets);
+      $is_lingotek_managed = $target->lingotek_enabled;
       if ($is_source) {
         continue; // skip, since the source language is not a target
       }

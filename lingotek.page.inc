@@ -245,7 +245,7 @@ function lingotek_pm($node) {
       '#markup' => $table . $actions . $vars,
     );
 
-    if (lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
+    if (lingotek_supported_type($node->type) &&  Lingotek::isSupportedLanguage($node->language)) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);
 
       $output['content_push'] = array(

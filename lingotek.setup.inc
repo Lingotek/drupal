@@ -100,7 +100,7 @@ function lingotek_setup_new_account_form_validate( $form, &$form_state ) {
 function lingotek_identify_lead($data) {
   global $base_url;
 
-  $lead = array_merge(array(
+  $info = array(
     'first_name' => '',
     'last_name' => '',
     'email' => '',
@@ -111,9 +111,10 @@ function lingotek_identify_lead($data) {
     'distribution' => '',
     'lead_source' => '',
     'partner' => ''
-      ), $data);
+  );
   $tags = lingotek_identify_tags();
-  return array_merge($lead, $tags);
+  $lead = array_merge($info, $tags, $data);
+  return $lead;
 }
 
 /**
@@ -123,6 +124,7 @@ function lingotek_identify_tags() {
     $tags = array();
     $tags['distribution'] = variable_get('install_profile', 'standard');// This should identify the distribution including:  'standard', 'acquia', 'commons', 'commerce_kickstart'
     $tags['lead_source'] = 'Module';
+
     switch($tags['distribution']){
       case 'commerce_kickstart':
         $tags['partner'] = 'Commerce Guys';
@@ -131,6 +133,7 @@ function lingotek_identify_tags() {
       case 'commons':
         $tags['partner'] = 'Acquia';
         $tags['lead_source'] = 'Distribution';
+        break;
       default:
         $tags['partner'] = '';
         break;
@@ -187,10 +190,10 @@ function lingotek_setup_new_account_form_submit( $form, &$form_state ) {
         ));
 
     $api = LingotekApi::instance();
-    $community = $api->createCommunity($parameters, $callback_url);
+    $response = $api->createCommunity($parameters, $callback_url);
 
-    if ( $community['code'] == 200 ) {
-      $community = json_decode( $community['body'] );
+    if ( $response->results == "success" ) {
+      $community = $response;
       /*
         stdClass::__set_state(array(
            'results' => 'success',

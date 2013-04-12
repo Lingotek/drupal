@@ -357,7 +357,7 @@ function lingotek_support_footer() {
  */
 function lingotek_access($node, $permission) {
 
-  if (lingotek_supported_language($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
+  if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
     if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
       return FALSE;
     }
@@ -408,21 +408,6 @@ function lingotek_node_pushed($node) {
  */
 function lingotek_supported_field_type($type) {
   return in_array($type, array('text_long', 'text_with_summary', 'text')); //'taxonomy_term_reference'));
-}
-
-/**
- * Returns whether the given language is supported.
- *
- * @return
- *   Boolean value.
- */
-function lingotek_supported_language($language) {
-  global $_lingotek_locale;
-  $supported = $language != LANGUAGE_NONE && array_key_exists($language, $_lingotek_locale);
-  if (!$supported) {
-    LingotekLog::error("Unsupported language detected: @language", array('@language' => $language));
-  }
-  return $supported;
 }
 
 /**

@@ -23,11 +23,11 @@ class LingotekLog {
     return (LINGOTEK_DEV == TRUE);
   }
 
-  public static function info($msg, $data, $tag = '') {
+  public static function info($msg, $data, $tag = 'info') {
     self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
   }
 
-  public static function error($msg, $data, $tag = '') {
+  public static function error($msg, $data, $tag = 'error') {
     self::log($msg, $data, $depth = 1, WATCHDOG_ERROR, $tag);
   }
 
@@ -72,7 +72,7 @@ class LingotekLog {
     }
     
     watchdog
-        ('lingotek' . $suffix, t($msg, $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /><b>FILE:</b> %location<br /><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args</div>', array(
+        ('lingotek' . $suffix, t($msg, $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /></div>', array(
       '%msg' => $msg,
       '%data' => $data_output,
       '%location' => $location,
@@ -82,7 +82,7 @@ class LingotekLog {
     );
 
     if (variable_get('lingotek_error_log', FALSE)) {
-      error_log("MESSAGE: $msg DATA: $data_output FILE: $location FUNCTION: $function ARGS: $args");
+      error_log("FUNCTION: $function ARGS: $args  FILE: $location MESSAGE: $msg DATA: $data_output ");
     }
   }
 

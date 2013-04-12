@@ -828,9 +828,9 @@ class LingotekApi {
    * @return mixed
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
-  public function request($method, $parameters = array(), $request_method = 'POST') {
+  public function request($method, $parameters = array(), $request_method = 'POST', $credentials = NULL) {
     global $user;
-    LingotekLog::trace('@method (trace)', array('@method' => $method), 'api request');
+    LingotekLog::trace('<h2>@method</h2> (trace)', array('@method' => $method));
     $response_data = FALSE;
     // Every v4 API request needs to have the externalID parameter present.
     // Defaults the externalId to the lingotek_login_id, unless externalId is passed as a parameter
@@ -840,10 +840,10 @@ class LingotekApi {
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
 
-    $credentials = array(
+    $credentials = is_null($credentials) ? array(
       'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
       'consumer_secret' => variable_get('lingotek_oauth_consumer_secret', '')
-    );
+        ) : $credentials;
 
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
@@ -880,7 +880,7 @@ class LingotekApi {
       '@method' => $method,
       '!params' => $parameters,
       '!request' => $request,
-      '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : ($response),
+      '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : $response,
       '@response_time' => number_format($timer_results['time']) . ' ms',
     );
 
@@ -912,49 +912,12 @@ class LingotekApi {
    *   On success, a stdClass object of the returned response data, FALSE on error.
    */
   public function createCommunity($parameters = array(), $callback_url = NULL) {
-
-    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
-    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
-
-    $result = FALSE;
-    $response = null;
-    $method = 'autoProvisionCommunity';
     $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
-
     if (isset($callback_url)) {
       $parameters['callbackUrl'] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
     }
-
-    $timer_name = $method . '-' . microtime(TRUE);
-    timer_start($timer_name);
-
-    try {
-      OAuthStore::instance('2Leg', $credentials);
-
-      $request = new OAuthRequester($this->api_url . '/autoProvisionCommunity', 'POST', $parameters);
-      $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
-      LingotekLog::info('Provision Community: !result <p>parameters: !params</p>', array('!result' => ( $result ), '!params' => ( $parameters )), 'api');
-    } catch (OAuthException2 $e) {
-      LingotekLog::error('Failed to Provision Community Account.
-      <br />Message: @message. <br />Method: @name. <br />Parameters: !params. <br />Response: !response', array('@message' => $e->getMessage(), '@name' => $method, '!params' => ($parameters),
-        '!response' => $response), 'api');
-    }
-
-    $timer_results = timer_stop($timer_name);
-
-    $message_params = array(
-      '@method' => $method,
-      '!params' => $parameters,
-      '!response' => $response,
-      '@response_time' => number_format($timer_results['time']) . ' ms',
-    );
-    LingotekLog::info('<strong>Called API method</strong>: @method<br />
-        <strong>Response Time:</strong> @response_time<br />
-        <strong>Params</strong>: !params<br />
-        <strong>Response:</strong> !response', $message_params, 'api'
-    );
-
-    return $result;
+    $response = $this->request('autoProvisionCommunity', $parameters, 'POST', $credentials);
+    return $response;
   }
 
   /**

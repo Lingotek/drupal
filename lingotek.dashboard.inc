@@ -230,18 +230,17 @@ function lingotek_dashboard_command_ajax() {
     //lingotek_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
     $general = array('message' => $message);
     $full_response = array_merge($general, $response);
-    if ($method !== 'GET') { //skip GETS (since they occur lots)
-      LingotekLog::info('endpoint: 
-      <h1>@method</h1>
-      <h2>Parameters:</h2>
+    if ($method !== 'GET') { //skip logging GETS (since they occur lots)
+      LingotekLog::info('<h2>Target - @method</h21>
+      <h3>Parameters:</h3>
       <div>!parameters</div>
-      <h2>Response:</h2>
+      <h3>Response:</h3>
       <div>!response</div>
       ', array(
         '@method' => $method,
         '!parameters' => ($parameters),
         '!response' => ($response)
-          ));
+          ),'endpoint');
     }
     return lingotek_json_output_cors($full_response);
   }

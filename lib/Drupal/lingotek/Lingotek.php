@@ -339,6 +339,21 @@ class Lingotek {
     return $result;
   }
   
+  /**
+   * Returns whether the given language is supported.
+   *
+   * @return
+   *   Boolean value.
+   */
+  public static function isSupportedLanguage($drupal_language_code, $enabled = TRUE) {
+    //($drupal_language_code != LANGUAGE_NONE)
+    $supported = (self::convertDrupal2Lingotek($drupal_language_code, $enabled) !== FALSE);
+    if (!$supported) {
+      LingotekLog::warning("Unsupported language detected: [@language]", array('@language' => $drupal_language_code));
+    }
+    return $supported;
+  }
+  
   
   /**
    * Gets the site's available target languages for Lingotek translation.
@@ -355,7 +370,7 @@ class Lingotek {
     $languages = array();
 
     foreach (language_list() as $target_language) {
-      if($target_language->lingotek_enabled) { //if ($target_language->enabled && lingotek_supported_language($target_language->language))
+      if($target_language->lingotek_enabled) {
         $languages[] = (is_string($pluck_field) && isset($target_language->$pluck_field))?  $target_language->$pluck_field : $target_language;
       }
     }

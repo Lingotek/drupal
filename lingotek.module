@@ -12,6 +12,7 @@ include_once('lingotek.api.inc');
 include_once('lingotek.sync.inc');
 include_once('lingotek.batch.inc');
 
+
 /**
  * Auto-loader function used for upgrades
  * @param type $class
@@ -79,7 +80,7 @@ function lingotek_menu() {
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
       ));
-  $items[LINGOTEK_MENU_MAIN_BASE_URL.'/dashboard'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'] = array(
     'title' => 'Dashboard',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'lingotek.dashboard.inc',
@@ -87,11 +88,10 @@ function lingotek_menu() {
     'weight' => 1,
     'access arguments' => array('administration')
   );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/dashboard'] = $items[LINGOTEK_MENU_MAIN_BASE_URL.'/dashboard'];
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/dashboard'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'];
   $items[LINGOTEK_MENU_LANG_BASE_URL] = $items[LINGOTEK_MENU_MAIN_BASE_URL]; // Add a link to regional settings
-  
   // Tab:  Settings
-  $items[LINGOTEK_MENU_MAIN_BASE_URL.'/settings'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'] = array(
     'title' => 'Settings',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
@@ -101,7 +101,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL.'/settings'];
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
   // Tab: Bulk Management
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'] = array(
@@ -114,7 +114,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_form_bulk_sync')
   );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL.'/sync'];
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'];
 
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/cleanup-utility'] = array(
     'title' => 'Cleanup Utility',
@@ -135,7 +135,7 @@ function lingotek_menu() {
     'file' => 'lingotek.sync.inc',
     'page callback' => 'lingotek_notifications',
   );
-  $items[LINGOTEK_MENU_MAIN_BASE_URL.'/notifications'] = $items[LINGOTEK_NOTIFICATIONS_URL]; // allow early auto-provision community callback urls to wor
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/notifications'] = $items[LINGOTEK_NOTIFICATIONS_URL]; // allow early auto-provision community callback urls to wor
   // Dashboard:  Ajax Command Processor
   $items['lingotek/target'] = array(
     'type' => MENU_CALLBACK,
@@ -188,7 +188,6 @@ function lingotek_menu() {
   );
 
   // Batch Process Pages ----------------------------------------
-
   // Sync Progress Report 
   $items['lingotek/sync/report'] = array(
     'type' => MENU_CALLBACK,
@@ -198,7 +197,7 @@ function lingotek_menu() {
     'page callback' => 'lingotek_sync_endpoint', //'lingotek_sync'
   );
 
-    // Sync Process:  Upload documents & Download the Translations 
+  // Sync Process:  Upload documents & Download the Translations 
   /* $items['lingotek/sync'] = array(
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration'),
@@ -206,15 +205,15 @@ function lingotek_menu() {
     'file' => 'lingotek.sync.inc',
     'page callback' => 'lingotek_sync',
     ); */
-  
+
   // START UPLOAD:  Upload documents for the Machine Translation process
-  /*$items['lingotek/upload'] = array(
+  /* $items['lingotek/upload'] = array(
     'title' => 'Upload Documents For Machine Translation',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard_mt_upload',
-  );*/
+    ); */
 
   // UPLOAD COMPLETE:  Machine Translation Upload Complete Screen (is this necessary?)
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-queued'] = array(
@@ -227,13 +226,13 @@ function lingotek_menu() {
   );
 
   // START DOWNLOAD: Download documents that have been Machine Translated
-  /*$items['lingotek/download'] = array(
+  /* $items['lingotek/download'] = array(
     'title' => 'Download Machine Translated Documents',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard_mt_download',
-  );*/
+    ); */
 
   // DOWNLOAD COMPLETE: Machine Translation Download Complete Screen (is this necessary?)
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-downloaded'] = array(
@@ -546,7 +545,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
     LingotekSync::setTargetStatus($node->nid, $lingotek_locale, LingotekSync::STATUS_PENDING); //set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native', $lingotek_locale) . " (" . $drupal_language_code . ")";
-    $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale, t('Edit Translation: @language_text ', array('@language_text' => $language_text)));
+    $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale, t('Edit Translation: @language_text', array('@language_text' => $language_text)));
     $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
     $edit_translation_message .= "<br/>" . $translation_edit_link;
     drupal_set_message($edit_translation_message, 'warning', FALSE);
@@ -750,7 +749,7 @@ function lingotek_node_view($node, $view_mode) {
 
   $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id');
   $community_translation_allowed = lingotek_lingonode($node->nid, 'allow_community_translation');
-  if ($view_mode == 'full' && $community_translation_allowed && $lingotek_document_id && lingotek_supported_type($node->type) && lingotek_supported_language($node->language)) {
+  if ($view_mode == 'full' && $community_translation_allowed && $lingotek_document_id && lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
     drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/base.css');
 
     // TODO: Is sync on view ever desired behavior?
@@ -804,11 +803,11 @@ function lingotek_node_update($node) {
   if (isset($node->lingotek_push_once) && $node->lingotek_push_once) {
     $send_lingotek_document = 1;
   }
-  else if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
+  elseif (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
     $send_lingotek_document = 0;
     return; // no need to continue on and save settings for nodes managed by entity_translation and not pushed
   }
-  else if (isset($node->lingotek_upload_override)) { // this variable can force to either send or not send (1 or 0) when set.
+  elseif (isset($node->lingotek_upload_override)) { // this variable can force to either send or not send (1 or 0) when set.
     $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
   }
   else {  // Only send the node content to Lingotek on edit if auto-upload is enabled.
@@ -821,7 +820,7 @@ function lingotek_node_update($node) {
     }
   }
 
-  if (!lingotek_supported_type($node->type) || !lingotek_supported_language($node->language)) {
+  if (!lingotek_supported_type($node->type) || !Lingotek::isSupportedLanguage($node->language)) {
     return;
   }
 
