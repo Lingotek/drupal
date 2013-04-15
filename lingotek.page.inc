@@ -198,13 +198,13 @@ function lingotek_pm($node) {
     foreach ($targets as $lingotek_locale => $target) {
       $current_phase = $document->currentPhase($target->id);
       $phase_complete = ($current_phase->isMarkedComplete) ? TRUE : FALSE;
-      
+
       $phase_complete_percent = $current_phase->percentComplete;
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
-      $language_link = l(lingotek_language_field_lookup('native',$lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
-      $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_field_lookup('name',$lingotek_locale)));
+      $language_link = l(lingotek_language_field_lookup('native', $lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
+      $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_field_lookup('name', $lingotek_locale)));
       $row = array(
         '<input type="checkbox" tag="lingotek_pm_row" language="' . $lingotek_locale . '" />',
         $language_link,
@@ -217,7 +217,7 @@ function lingotek_pm($node) {
       LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $lingotek_locale));
       $rows[] = $row;
     }
-    
+
     $table = theme('table', array('header' => $headers, 'rows' => $rows));
 
     $actions = '<input type="button" id="lingotek-update-button" value="' . t('Download') . '" class="form-submit"/>';
@@ -245,7 +245,7 @@ function lingotek_pm($node) {
       '#markup' => $table . $actions . $vars,
     );
 
-    if (lingotek_supported_type($node->type) &&  Lingotek::isSupportedLanguage($node->language)) {
+    if (lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);
 
       $output['content_push'] = array(
@@ -503,8 +503,7 @@ function page_sync_comment_translations($comment_id) {
               drupal_set_message(t('Local translations for the comment have been updated.'));
             }
             else {
-              LingotekLog::error('Unable to update local translations for comment @id',
-                array('@id' => $comment_id));
+              LingotekLog::error('Unable to update local translations for comment @id', array('@id' => $comment_id));
               drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
             }
           }
@@ -514,9 +513,8 @@ function page_sync_comment_translations($comment_id) {
         }
         else {
           LingotekLog::error('Unable to retrieve the status of the lingotek document: @id while updating
-            comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $comment_id),
-            WATCHDOG_ERROR);
-            
+            comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $comment_id), WATCHDOG_ERROR);
+
           drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
         }
       }
@@ -527,9 +525,8 @@ function page_sync_comment_translations($comment_id) {
     }
   }
   else {
-    LingotekLog::error('Attempt to refresh local translations for comment @id without a valid security token.',
-      array('@id' => $comment_id));
+    LingotekLog::error('Attempt to refresh local translations for comment @id without a valid security token.', array('@id' => $comment_id));
   }
-  
-  drupal_goto();  
+
+  drupal_goto();
 }

@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Central location for batch create functions, before control is handed off to individual batch command files.
  */
 
@@ -74,16 +75,18 @@ function lingotek_sync_batch_create($download_targets = array(), $upload_nids = 
   $download = !empty($download_targets);
   $download_incomplete = !empty($download_targets_incomplete);
 
-  
+
   // Grab the Nodes that need to be Downloaded & Uploaded.  These are batch operation arrays.
   $download_commands = $download ? lingotek_get_sync_download_batch_elements($download_targets, LingotekSync::STATUS_CURRENT) : array();
   $download_commands_inc = $download_incomplete ? lingotek_get_sync_download_batch_elements($download_targets_incomplete, LingotekSync::STATUS_PENDING) : array();
   $upload_commands = $upload ? lingotek_get_sync_upload_batch_elements($upload_nids) : array();
 
-  $message = "[Lingotek Sync] uploads:".count($upload_commands).", downloads: ".(count($download_commands)+count($download_commands_inc));
-  $message .= empty($download_commands_inc) ? '' : " (".count($download_commands_inc)." incomplete translations)";
-  if($set_message) drupal_set_message($message);
-  
+  $message = "[Lingotek Sync] uploads:" . count($upload_commands) . ", downloads: " . (count($download_commands) + count($download_commands_inc));
+  $message .= empty($download_commands_inc) ? '' : " (" . count($download_commands_inc) . " incomplete translations)";
+  if ($set_message) {
+    drupal_set_message(check_plain($message));
+  }
+
   // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
   $operations = array();
   $operations[] = array('lingotek_mt_sync_set_status', array('set'));
@@ -123,15 +126,15 @@ function lingotek_sync_batch_create_old() {
 
   // Important: Until we add the call to get target statuses, and can work off that, do the upload SECOND. (so we dont try to download what we just uploaded.)
   $operations = array();
-  $operations[] = array( 'lingotek_mt_sync_set_status', array( 'set' ) );
-  $operations = array_merge( $operations, $download_commands, $upload_commands );
-  $operations[] = array( 'lingotek_mt_sync_set_status', array( 'clear' ) );
+  $operations[] = array('lingotek_mt_sync_set_status', array('set'));
+  $operations = array_merge($operations, $download_commands, $upload_commands);
+  $operations[] = array('lingotek_mt_sync_set_status', array('clear'));
 
-  
+
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
   $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_MENU_LANG_BASE_URL;
 
-  if ( count( $operations ) > 0 ) {
+  if (count($operations) > 0) {
 
     // Note, the first step of the batch process sets a session variable that tracks that we are in a sync state.
     // The Node update hook uses that so it knows NOT to reupload the content we just recieved.
@@ -145,7 +148,6 @@ function lingotek_sync_batch_create_old() {
 
     batch_set($batch);
     batch_process($redirect); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-
   }
   else {
     $options = strpos($redirect, '//') !== FALSE ? array('external' => TRUE) : array();
@@ -172,7 +174,7 @@ function lingotek_get_sync_upload_batch_elements($upload_nids = array()) {
       $operations[] = array('lingotek_sync_upload_node', array($record['nid']));
     }
   }
-  else if (is_array($upload_nids)) {
+  elseif (is_array($upload_nids)) {
     foreach ($upload_nids as $nid) {
       $operations[] = array('lingotek_sync_upload_node', array($nid));
     }
@@ -205,14 +207,14 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       }
     }
   }
-  else if(is_array($download_targets)){
-    foreach($download_targets as $download_target){
+  elseif (is_array($download_targets)) {
+    foreach ($download_targets as $download_target) {
       $nid = LingotekSync::getNodeIdFromDocId($download_target->document_id);
       $lingotek_locale = $download_target->locale;
       $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale, $sync_success_target));
     }
   }
-  
+
   return $operations;
 }
 
@@ -287,36 +289,36 @@ function lingotek_bulk_mt_upload_batch_create() {
 /**
  * Batch Create - Download:  Create a Bulk Machine Translate DOWNLOAD Batch.
  */
-/*function lingotek_bulk_mt_download_batch_create($lingotek_locale) {
+/* function lingotek_bulk_mt_download_batch_create($lingotek_locale) {
 
   $operations = array();
 
   if ($lingotek_locale) {
 
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-    // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
-    // Grab nodes that are currently marked 'PENDING'
-    $query = db_select('lingotek', 'l')->fields('l');
-    $query->condition('lingokey', 'node_sync_status');
-    $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+  // NOTE!!!   lingotek_download_document() does its OWN drupal to lingotek lookup.  So pass in the DRUPAL language code
+  // Grab nodes that are currently marked 'PENDING'
+  $query = db_select('lingotek', 'l')->fields('l');
+  $query->condition('lingokey', 'node_sync_status');
+  $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
 
-    $result = $query->execute();
+  $result = $query->execute();
 
-    while ($record = $result->fetchAssoc()) {
-      $operations[] = array('lingotek_download_node_machine_translation', array($record['nid'], $drupal_language_code));
-    }
+  while ($record = $result->fetchAssoc()) {
+  $operations[] = array('lingotek_download_node_machine_translation', array($record['nid'], $drupal_language_code));
+  }
 
-    $batch = array(
-      'title' => t('Downloading Lingotek Translated Content'),
-      'operations' => $operations,
-      'finished' => 'lingotek_bulk_mt_download_batch_finished',
-      'file' => 'lingotek.batch.inc'
-    );
+  $batch = array(
+  'title' => t('Downloading Lingotek Translated Content'),
+  'operations' => $operations,
+  'finished' => 'lingotek_bulk_mt_download_batch_finished',
+  'file' => 'lingotek.batch.inc'
+  );
 
-    batch_set($batch);
-    batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+  batch_set($batch);
+  batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   } // END:  if language_code
-}*/
+  } */
 
 /**
  * Batch Create:  Bulk Machine Translate Upload.
@@ -333,7 +335,7 @@ function lingotek_dashboard_mt_download() {
 
   if (isset($_GET['code'])) {
     lingotek_bulk_mt_download_batch_create($_GET['code']);
-  } 
+  }
 }
 
 ////////
@@ -475,7 +477,6 @@ function lingotek_mt_sync_set_status($status, &$context) {
 /**
  * Lingotek Batch Translate Process.
  */
-
 
 /**
  * Batch Finished: Bulk Machine Translation Complete.

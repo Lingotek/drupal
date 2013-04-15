@@ -44,7 +44,7 @@ function lingotek_admin_form() {
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array('Status:', $account->getStatusText())
         //,array('Plan:', $account->getPlanText())
-        ,array('Enterprise:', $account->getEnterpriseStatusText())
+        , array('Enterprise:', $account->getEnterpriseStatusText())
         )))
   );
   

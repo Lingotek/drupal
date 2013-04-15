@@ -4,10 +4,7 @@
  * @file
  * Sync and management
  */
-
-
 // ----  Other Functions
-
 
 /**
  * Returns the site callback url.
@@ -119,7 +116,7 @@ function lingotek_sync() {
   $parameters = $_GET;
   $method = $_SERVER['REQUEST_METHOD'];
   $status = "200";
-  $test = isset($parameters['test']) && $parameters['test'] && strcmp($parameters['test'], 'false') != 0 ? true : false;
+  $test = isset($parameters['test']) && $parameters['test'] && strcmp($parameters['test'], 'false') != 0 ? TRUE : FALSE;
   $request = array(
     'test' => $test,
     'method' => $method,
@@ -127,12 +124,13 @@ function lingotek_sync() {
   );
   //$request['upload'] = $upload = isset($parameters['upload']) && ($parameters['upload'] == 0 || strcmp($parameters['upload'], 'false') == 0) ? false : true;
   //$request['download'] = $download = isset($parameters['download']) && ($parameters['download'] == 0 || strcmp($parameters['download'], 'false') == 0) ? false : true;
-  $request['upload_nids_as_json'] = $upload_nids = isset($parameters['upload_nids']) ? json_decode($parameters['upload_nids']): NULL;
-  $request['download_targets_as_json'] = $download_targets = isset($parameters['download_targets_as_json']) ? json_decode($parameters['download_targets_as_json']): NULL;
-  
-  if($test) {
+  $request['upload_nids_as_json'] = $upload_nids = isset($parameters['upload_nids']) ? json_decode($parameters['upload_nids']) : NULL;
+  $request['download_targets_as_json'] = $download_targets = isset($parameters['download_targets_as_json']) ? json_decode($parameters['download_targets_as_json']) : NULL;
+
+  if ($test) {
     lingotek_json_output_cors($request, $status, array('methods_allowed' => 'GET,POST'));
-  } else {
+  }
+  else {
     lingotek_sync_batch_create($download_targets, $upload_nids);
   }
 }
@@ -152,9 +150,9 @@ function lingotek_sync_endpoint() {
   switch ($method) {
     case 'GET':
       $request['parameters'] = $parameters = $_GET;
-      /*$request['doc_ids'] = $document_ids = isset($parameters['doc_ids']) ? array_map(function($val) {
-              return trim($val);
-            }, explode(',', $parameters['doc_ids'])) : array();*/
+      /* $request['doc_ids'] = $document_ids = isset($parameters['doc_ids']) ? array_map(function($val) {
+        return trim($val);
+        }, explode(',', $parameters['doc_ids'])) : array(); */
       $response = LingotekSync::getReport();
       break;
     case 'POST': case 'PUT': case 'DELETE':
@@ -167,11 +165,11 @@ function lingotek_sync_endpoint() {
   return lingotek_json_output_cors($response, $status, array('methods_allowed' => 'GET'));
 }
 
-function lingotek_form_bulk_sync(){
-$form = array();
+function lingotek_form_bulk_sync() {
+  $form = array();
 
   $report = LingotekSync::getReport();
-  
+
   // Upload
   $form['upload'] = array(
     '#type' => 'fieldset',
@@ -182,7 +180,7 @@ $form = array();
     '#group' => 'administrative_settings',
   );
   $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
-  
+
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0);
   if ($upload_count_total > 0) {
     $form['upload']['upload'] = array(
@@ -218,26 +216,26 @@ $form = array();
   );
   $form['download']['download_targets_workflow_complete_json'] = array('#type' => 'hidden', '#value' => json_encode($report['download_targets_workflow_complete']));
   $form['download']['download_targets_workflow_incomplete_json'] = array('#type' => 'hidden', '#value' => json_encode($report['download_targets_workflow_incomplete']));
-  
+
   $download_count_total = $report['download_targets_workflow_complete_count'] + (isset($report['download_targets_workflow_incomplete_count']) ? $report['download_targets_workflow_incomplete_count'] : 0);
-  /*$form['download']['download_complete'] = array(
+  /* $form['download']['download_complete'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include completed translations for the selected languages (<span id="download-total">@count</span>)', array('@count' => $report['download_targets_workflow_complete_count'])),
     '#default_value' => 0,
     '#disabled' => $report['download_targets_workflow_complete_count'] == 0
-  );
-  $form['download']['download_incomplete'] = array(
+    );
+    $form['download']['download_incomplete'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include incomplete translations for the selected languages (<span id="download-total">@count</span>)', array('@count' => $report['download_targets_workflow_incomplete_count'])),
     '#default_value' => 0,
     '#disabled' => $report['download_targets_workflow_incomplete_count'] == 0
-  );*/
+    ); */
   $available_targets = Lingotek::availableLanguageTargets(); //array_combine(Lingotek::availableLanguageTargets("lingotek_locale"),Lingotek::availableLanguageTargets("name"));
   $options_complete = array(); // locale => label
   $options_incomplete = array();
 
   foreach ($available_targets as $target) {
-    $label = $target->name.' ('.$target->native.')';
+    $label = $target->name . ' (' . $target->native . ')';
     $locale_complete_count = 0;
     foreach ($report['download_targets_workflow_complete'] as $download_target) {
       if ($target->lingotek_locale == $download_target['locale']) {
@@ -271,7 +269,7 @@ $form = array();
       '#markup' => 'There are currently no pending translations to be downloaded.'
     );
   }
- 
+
   if (!empty($options_complete)) {
     $form['download']['download_locales_complete'] = array(
       '#type' => 'tableselect',
@@ -343,10 +341,10 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_complete)) {
         $download_targets[] = $download_target;
-      } 
+      }
     }
   }
-  
+
   //download - incomplete
   $download_locales_incomplete = array();
   if (isset($vals['download_locales_incomplete'])) {
@@ -362,7 +360,7 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_incomplete)) {
         $download_targets_incomplete[] = $download_target;
-      } 
+      }
     }
   }
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);

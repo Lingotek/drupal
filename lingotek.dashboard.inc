@@ -29,7 +29,7 @@ function lingotek_dashboard() {
             array('data' => t('Login to the ' . l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank'))) . '')),
             array('data' => t('Select the <i>Community &gt; Integrations</i> menu item')),
             array('data' => t('Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>')),
-            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the ') . l(t('Lingotek Drupal module settings'), LINGOTEK_MENU_LANG_BASE_URL . '/settings'))
+            array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the') . ' ' . l(t('Lingotek Drupal module settings'), LINGOTEK_MENU_LANG_BASE_URL . '/settings'))
           )
         ))
       );
@@ -40,7 +40,7 @@ function lingotek_dashboard() {
     $output[] = lingotek_support_footer();
     return $output;
   }
-  
+
   // As a backup fail safe, the dashboard loading should clear the sync flag if its still set.
   if (isset($_SESSION['lingotek_sync_in_progress'])) {
     unset($_SESSION['lingotek_sync_in_progress']);
@@ -112,7 +112,7 @@ function lingotek_get_dashboard_code() {
     ';
 
   $endpoint = $base_url . '/lingotek/target';
-  $sync_url = $base_url . '/'. LINGOTEK_MENU_LANG_BASE_URL . '/sync';
+  $sync_url = $base_url . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
 
   $output .= sprintf($script,
       // lingotek 
@@ -163,7 +163,7 @@ function lingotek_dashboard_command_ajax() {
     // Initiate Machine Translation
     $message = 'PUT: Initiate Machine Translation';
     parse_str(file_get_contents("php://input"), $parameters);
-    
+
     $type = $parameters['type'];
     $lingotek_locale = $parameters['code'];
 
@@ -188,7 +188,7 @@ function lingotek_dashboard_command_ajax() {
 
       // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
       $add = lingotek_add_target_language($lingotek_locale);
-      
+
       $response = lingotek_get_target_status($lingotek_locale);
       $response['success'] = $add;
     }
@@ -198,10 +198,10 @@ function lingotek_dashboard_command_ajax() {
 
     // Initiate Language Delete
     parse_str(file_get_contents("php://input"), $parameters);
-    
+
     $lingotek_locale = $parameters['code'];
 
-    $message = t('DELETE: Remove language (@code)',array('@code'=>$lingotek_locale));
+    $message = t('DELETE: Remove language (@code)', array('@code' => $lingotek_locale));
 
     // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
     $delete = lingotek_delete_target_language($lingotek_locale); // Mark this language as Active => False
@@ -240,12 +240,11 @@ function lingotek_dashboard_command_ajax() {
         '@method' => $method,
         '!parameters' => ($parameters),
         '!response' => ($response)
-          ),'endpoint');
+          ), 'endpoint');
     }
     return lingotek_json_output_cors($full_response);
   }
 }
-
 
 /**
  * Returns an array that maps a content_type to one (and just 1) of its translated fields.
@@ -297,7 +296,6 @@ function lingotek_get_source_language_json() {
   return json_encode($data);
 }
 
-
 /**
  * Outputs the languages active in this installation.  Supplied to the dashboard.
  * Output Format (example): ["en_US","fr_FR"]
@@ -326,7 +324,6 @@ function lingotek_get_guid() {
   return $guid;
 }
 
-
 /**
  * Get the status of the target given by locale
  */
@@ -334,7 +331,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
 
   $response = array();
   $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE);
-  
+
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {
 
