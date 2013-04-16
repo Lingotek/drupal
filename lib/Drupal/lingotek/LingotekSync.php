@@ -73,8 +73,6 @@ class LingotekSync {
   public static function getDownloadableReport() {
     $project_id = variable_get('lingotek_project', NULL);
     $document_ids = LingotekSync::getDocIdsByStatus(LingotekSync::STATUS_PENDING);
-    $api = LingotekApi::instance();
-    $response = $api->getProgressReport($project_id, $document_ids, TRUE);
 
     $report = array(
       'download_targets_workflow_complete' => array(), // workflow complete and ready for download
@@ -82,6 +80,10 @@ class LingotekSync {
       'download_targets_workflow_incomplete' => array(), // not workflow complete (but download if wanted)
       'download_targets_workflow_incomplete_count' => 0
     );
+    if(empty($document_ids)) return $report;// if no documents are PENDING, then no need to make the API call.
+    $api = LingotekApi::instance();
+    $response = $api->getProgressReport($project_id, $document_ids, TRUE);
+    
     if (isset($response->byDocumentIdAndTargetLocale)) {
       $progress_report = $response->byDocumentIdAndTargetLocale;
       foreach ($progress_report as $doc_id => $target_locales) {
