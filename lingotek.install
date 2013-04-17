@@ -329,15 +329,17 @@ function lingotek_update_7207(&$sandbox) {
     );
     return t("Updated @count content type(s) to use 'lingotek' instead of '5' for the identifier: @updated", $t_args);
   }
+  else {
+    return t('No updates necessary.');
+  }
 }
 
 /**
  * Update lingokey name from 'document_id_xx' to 'document_id'
  */
 function lingotek_update_7208(&$sandbox) {
-  $ret = array();
   db_query("UPDATE {lingotek} SET lingokey = 'document_id' WHERE lingokey LIKE 'document_id_%'");
-  return $ret;
+  return t('Updated lingotek lingokey name from \'document_id_xx\' to \'document_id\'');
 }
 
 /**
@@ -345,9 +347,8 @@ function lingotek_update_7208(&$sandbox) {
  */
 function lingotek_update_7209(&$sandbox) {
   spl_autoload_register('lingotek_auto_loader');
-  $ret = array();
-  lingotek_migration_1();
-  return $ret;
+  lingotek_migration_1();// Add the lingotek_enabled field to the languages table. Remove lingotek_target_languages variable
+  return t('Upgraded the languages table to have the lingotek_enabled field (if not already present) and removed lingotek_target_languages variable.');
 }
 
 /**
@@ -355,10 +356,9 @@ function lingotek_update_7209(&$sandbox) {
  */
 function lingotek_update_7210(&$sandbox) {
   spl_autoload_register('lingotek_auto_loader');
-  $ret = array();
-  lingotek_migration_2();
-  lingotek_add_missing_locales();
-  return $ret;
+  lingotek_migration_2(); // Add the lingotek_locale field to the languages table
+  lingotek_add_missing_locales();// Fill-in the lingotek_locale column based on drupal code
+  return t('Upgraded the languages table to have the lingotek_locale field (if not already present) and filled-in any missing lingotek_locale values.');
 }
 
 /**
@@ -366,9 +366,8 @@ function lingotek_update_7210(&$sandbox) {
  */
 function lingotek_update_7211(&$sandbox) {
   spl_autoload_register('lingotek_auto_loader');
-  $ret = array();
-  lingotek_migration_3();
-  return $ret;
+  lingotek_migration_3();// Upgrade lingotek table entries from drupal_codes to lingotek_locales (whenever applicable)
+  return t('Upgraded lingotek table entries from drupal_codes to lingotek_locales (as needed).');
 }
 
 /*
