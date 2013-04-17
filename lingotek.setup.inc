@@ -291,8 +291,7 @@ function lingotek_setup_account_settings_form_submit($form, $form_state) {
   //debug( $password );
   // Validate the Account - Can we Login?
   // These are V4 Basic Auth API Calls for Legacy Users
-  $lingotek_url = variable_get('lingotek_url', LINGOTEK_API_SERVER);
-  $communities = lingotek_get_communities_v4($login_id, $password, $lingotek_url . '/lingopoint/api/4');
+  $communities = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
   if ($communities === FALSE) {
     drupal_set_message(t('Invalid login or password.'), 'error');
   }
@@ -318,8 +317,7 @@ function lingotek_community_select_form() {
   $form = array();
 
   // V3 API Calls for Legacy Users
-  $lingotek_url = variable_get('lingotek_url', LINGOTEK_API_SERVER);
-  $communities = lingotek_get_communities_v4($login_id, $password, $lingotek_url . '/lingopoint/api/4');
+  $communities = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
 
   if ($communities === FALSE) {
 
@@ -398,9 +396,8 @@ function lingotek_project_select_form() {
   $form = array();
 
   // V3 API Call for Legacy Users
-  $lingotek_url = variable_get('lingotek_url', LINGOTEK_API_SERVER);
   $community_identity = variable_get('lingotek_community_identifier', NULL);
-  $projects = lingotek_get_projects_v4($login_id, $password, $community_identity, $lingotek_url . '/lingopoint/api/4');
+  $projects = lingotek_get_projects_v4($login_id, $password, $community_identity, LINGOTEK_API_SERVER . '/lingopoint/api/4');
   //To-do: $vaults = lingotek_get_vaults_v4( $login_id, $password, $community_identity, $lingotek_url . '/lingopoint/api/4' );
 
   if ($projects === FALSE) {

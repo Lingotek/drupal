@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Administrative Settings for the module.
@@ -17,10 +18,11 @@ function lingotek_admin_form() {
   $account = LingotekAccount::instance();
 
   $api = LingotekApi::instance();
-  $connected = $api->testAuthentication();
+  $force = isset($_GET['test_connection']) ? TRUE : FALSE;
+  $connected = $api->testAuthentication($force);
   $site = variable_get('site_name', 'Drupal Site');
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
-  
+
   /*
    * Account Information
    */
@@ -32,12 +34,12 @@ function lingotek_admin_form() {
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
   );
-  
+
   $activation_details = variable_get('lingotek_activation_first_name', '') . ' ' . variable_get('lingotek_activation_last_name', '');
   $activation_email = variable_get('lingotek_activation_email', '');
   $activation_details .= strlen($activation_email) ? ' (' . $activation_email . ')' : '';
   $activation_details = strlen(trim($activation_details)) ? $activation_details : 'NA';
-  
+
   $form['information'][] = array(
     '#type' => 'item',
     '#title' => t("Account Status") . ' - ' . l(t('Update'), 'lingotek/get-account-status', array('query' => array('token' => md5(time())))),
@@ -47,9 +49,9 @@ function lingotek_admin_form() {
         , array('Enterprise:', $account->getEnterpriseStatusText())
         )))
   );
-  
-  
-  
+
+
+
   $form['information'][] = array(
     '#type' => 'item',
     '#title' => t("Lingotek Identifiers"),
@@ -64,13 +66,27 @@ function lingotek_admin_form() {
         array('Vault ID:', variable_get('lingotek_vault', '')),
         )))
   );
+  
+  if (LINGOTEK_DEV) {
+    $form['information'][] = array(
+      '#type' => 'item',
+      '#title' => t('DEV - Lingotek Servers'),
+      '#markup' => theme('table', array('header' => array(), 'rows' => array(
+          array('TMS:', LINGOTEK_API_SERVER),
+          array('GMC:', LINGOTEK_GMC_SERVER),
+          array('Billing:', LINGOTEK_BILLING_SERVER),
+          array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
+          array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
+          )))
+    );
+  }
 
-   /*
+  /*
    * Lingotek connection settings.
    */
 
   $connection_group_description = ($connected) ? '' :
-      t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(variable_get('lingotek_url', LINGOTEK_API_SERVER) . '/lingopoint/portal/communitySignup.action'))
+      t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(LINGOTEK_API_SERVER . '/lingopoint/portal/communitySignup.action'))
       );
 
   // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
@@ -80,10 +96,10 @@ function lingotek_admin_form() {
   elseif ($connected) { // If enterprise users connected successfully, it can be closed.
     $collapse_setting = TRUE;
   }
-  else { // Default to open.
+  else { // Default to open
     $collapse_setting = FALSE;
   }
-  
+
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection'),
@@ -92,16 +108,17 @@ function lingotek_admin_form() {
     '#collapsed' => $collapse_setting,
     '#group' => 'administrative_settings',
   );
-  
-  $status_message = ($connected) ? 
-    t('<strong>Connection Status</strong>: OK.') : 
-    t('<strong>Connection Status</strong>: Not Connected.');
-    
+
+  $status_message = ($connected) ?
+      t('<strong>Connection Status</strong>: OK.') :
+      t('<strong>Connection Status</strong>: Not Connected.');
+
   $form['connection']['status'] = array(
     '#markup' => '<h4 class="connection-status">' . $status_message . '</h4>',
   );
 
-  if (1 || $is_enterprise) { //temp enable in the case where oauth keys are not for enterprise user
+
+  if ($is_enterprise || isset($_GET['edit_connection'])) {
     $form['connection']['lingotek_login_id'] = array(
       '#type' => 'textfield',
       '#title' => t('Lingotek ID'),
@@ -122,34 +139,32 @@ function lingotek_admin_form() {
       '#description' => t('The OAuth Secret used to connect with the Lingotek server.'),
       '#default_value' => variable_get('lingotek_oauth_consumer_secret', ''),
     );
-
-    $form['connection']['lingotek_url'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Lingotek Server'),
-      '#description' => t('The path to the Lingotek server to which this site should be connected.'),
-      '#default_value' => variable_get('lingotek_url', LINGOTEK_API_SERVER),
-    );
-  }
-  else {
-    /*$dev_items = array(
-      array('Key:', LINGOTEK_AP_OAUTH_KEY),
-      array('Secret:', LINGOTEK_AP_OAUTH_SECRET),
-    );*/
-    $form['connection'][] = array(
-      '#type' => 'item',
-      //'#title' => t('Connection Details'),
-      '#markup' => theme('table', array('header' => array(), 'rows' => array(
-          array('API:', LINGOTEK_API_SERVER),
-          array('GMC:', LINGOTEK_GMC_SERVER),
-          array('Billing:', LINGOTEK_BILLING_SERVER))
-        ))
-    );
   }
 
+  /* $form['connection']['lingotek_api_server'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Lingotek Server'),
+    '#description' => t('The path to the Lingotek server to which this site should be connected. '.LINGOTEK_API_SERVER),
+    '#default_value' => variable_get('lingotek_api_server', LINGOTEK_API_SERVER),
+    ); */
+
+  if ($is_enterprise && !LINGOTEK_DEV) {
+    $form['connection']['lingotek_use_stage_servers'] = array(
+      '#type' => 'select',
+      '#title' => t('Lingotek Environment'),
+      '#options' => array(
+        0 => 'Production',
+        1 => 'Staging)'
+      ),
+      '#description' => t(''),
+      '#default_value' => variable_get('lingotek_use_stage_servers', 0),
+    );
+  }
+  
   // STOP HERE IF:
   // If the connection isn't yet established.
   // If this isn't an enterprise account.
-  if ( !$api->testAuthentication() || !$is_enterprise ) {
+  if (!$api->testAuthentication() || !$is_enterprise) {
     return system_settings_form($form);
   }
 
@@ -166,7 +181,7 @@ function lingotek_admin_form() {
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
   );
-  
+
   // Upload
   $form['defaults']['lingotek_create_documents_by_default'] = array(
     '#type' => 'checkbox',
@@ -174,7 +189,7 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
   );
-  
+
   // Download  
   $form['defaults']['lingotek_sync'] = array(
     '#type' => 'checkbox',
@@ -182,7 +197,7 @@ function lingotek_admin_form() {
     '#default_value' => (variable_get('lingotek_sync', 1) !== 0) ? 1 : 0,
     '#description' => t('When enabled, completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
   );
-  
+
   // Community Translation
   $form['defaults']['lingotek_allow_community_translation'] = array(
     '#type' => 'checkbox',
@@ -198,7 +213,7 @@ function lingotek_admin_form() {
     '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
     '#options' => $options,
     '#default_value' => variable_get('lingotek_use_source', TRUE),
-  );*/
+    ); */
 
 
   /*
@@ -219,8 +234,8 @@ function lingotek_admin_form() {
     '#options' => lingotek_get_url_alias_translations(),
     '#default_value' => variable_get('lingotek_url_alias_translation', 1),
   );
-  
-  
+
+
   // Projects
   $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
   $id = variable_get('lingotek_project', '');
@@ -259,14 +274,14 @@ function lingotek_admin_form() {
 
   $vaults = $api->listVaults();
   $current_vault_id = variable_get('lingotek_vault', '');
-  $personal_vault_count = ( isset( $vaults['Personal Vaults'] ) ) ? count( $vaults['Personal Vaults'] ) : 0 ;
-  $community_vault_count = ( isset( $vaults['Community Vaults'] ) ) ? count( $vaults['Community Vaults'] ) : 0 ;
+  $personal_vault_count = ( isset($vaults['Personal Vaults']) ) ? count($vaults['Personal Vaults']) : 0;
+  $community_vault_count = ( isset($vaults['Community Vaults']) ) ? count($vaults['Community Vaults']) : 0;
 
   // If no vault id is set, and we don't have any personal vaults, then create one and add it to our project.
-  if ( ( $current_vault_id == '' ) && ( $personal_vault_count == 0 ) && ( $community_vault_count == 0 ) ) {
+  if (( $current_vault_id == '' ) && ( $personal_vault_count == 0 ) && ( $community_vault_count == 0 )) {
     $current_project_id = variable_get('lingotek_project', '');
     // But only if we have a ProjectID.
-    if ( $current_project_id != '' ) {
+    if ($current_project_id != '') {
       $current_vault_id = lingotek_add_vault($site);
       lingotek_add_vault_to_project();
     }
@@ -291,7 +306,7 @@ function lingotek_admin_form() {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
-  
+
   $form['comments']['lingotek_translate_comments'] = array(
     '#type' => 'select',
     '#title' => t('Translate comments'),
@@ -302,18 +317,18 @@ function lingotek_admin_form() {
     ),
     '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
-  
+
   /*
-   
-     $form['comments']['lingotek_translate_comments'] = array(
+
+    $form['comments']['lingotek_translate_comments'] = array(
     '#type' => 'checkbox',
     '#title' => t('Translate comments'),
     '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
     '#default_value' => variable_get('lingotek_translate_comments', 0),
-  ); 
-   
+    );
+
    */
-  
+
   $type_options = array();
   foreach (node_type_get_types() as $type => $type_data) {
     $type_options[$type] = $type_data->name;
@@ -325,8 +340,8 @@ function lingotek_admin_form() {
     '#options' => $type_options,
     '#multiple' => TRUE,
     '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
-  );  
-  
+  );
+
   $form['comments']['lingotek_translate_comments_workflow_id'] = array(
     '#type' => 'select',
     '#title' => t('Comment translation Workflow'),
@@ -415,7 +430,7 @@ function lingotek_admin_form() {
       calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
     '#default_value' => variable_get('lingotek_api_debug', FALSE),
   );
-  
+
   $form['developer_settings']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
@@ -425,7 +440,7 @@ function lingotek_admin_form() {
 
 
   $form = system_settings_form($form);
-  
+
   $form['#submit'][] = 'lingotek_admin_form_submit';
 
   return $form;
@@ -454,24 +469,24 @@ function lingotek_form_cleanup_utility($form_state) {
   $form = array();
 
   $translatable_fields = lingotek_translatable_node_fields();
-  
+
   $form['description'] = array(
     '#markup' => '<p class="help">' . t('This tool identifies translatable content and processes all existing field data for translation-enabled fields on nodes,
       ensuring that if data was entered before enabling field translation on a field 
       that the existing field data is copied over to the parent node\'s current language.') . "</p>"
-     // .' ('. t("Translatable fields: ")."".join(", ", $translatable_fields).")<br/>"
+      // .' ('. t("Translatable fields: ")."".join(", ", $translatable_fields).")<br/>"
   );
 
-  /*$form['warning'] = array(
+  /* $form['warning'] = array(
     '#markup' => '<p class="help">' . t('<strong>WARNING:</strong> This tool makes changes to your site\'s data. We strongly encourage you to back up your database before using this tool.') .
-      '</p>',
-  );
-  $form['status'] = array(
+    '</p>',
+    );
+    $form['status'] = array(
     '#markup' => theme('item_list', array('items' => $translatable_fields, 'title' => t('Translation-enabled Fields'), 'type' => 'ul')),
-  );  
-  $form[] = array(
+    );
+    $form[] = array(
     '#markup' => '<br/>'
-  );*/
+    ); */
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -546,5 +561,5 @@ function lingotek_get_account_status() {
  */
 function lingotek_flush_cache() {
   menu_rebuild();
-  drupal_goto( LINGOTEK_MENU_LANG_BASE_URL );
+  drupal_goto(LINGOTEK_MENU_LANG_BASE_URL);
 }

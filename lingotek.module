@@ -119,7 +119,7 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/cleanup-utility'] = array(
     'title' => 'Cleanup Utility',
     'description' => 'This utility helps clean up node settings and identifies translatable content.',
-    'access arguments' => array('administrative'), //array('access lingotek utilities'),
+    'access arguments' => array('administration'), //array('access lingotek utilities'),
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_form_cleanup_utility'),

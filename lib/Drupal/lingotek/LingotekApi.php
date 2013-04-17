@@ -804,10 +804,10 @@ class LingotekApi {
    * @return bool
    *   TRUE if the configuration is correct, FALSE otherwise.
    */
-  public function testAuthentication() {
+  public function testAuthentication( $force = FALSE ) {
     $valid_connection = &drupal_static(__FUNCTION__);
 
-    if (!isset($valid_connection)) {
+    if ($force || !isset($valid_connection)) {
       // Only test the connection if the oauth keys have been setup.
       $consumer_key = variable_get('lingotek_oauth_consumer_id', '');
       $consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
@@ -960,7 +960,7 @@ class LingotekApi {
    */
   private function __construct() {
     $this->debug = variable_get('lingotek_api_debug', FALSE);
-    $host = variable_get('lingotek_url', LINGOTEK_API_SERVER);
+    $host = LINGOTEK_API_SERVER;
     // Trim trailing slash from user-entered server name, if it exists.
     if (substr($host, -1) == '/') {
       $host = substr($host, 0, -1);
