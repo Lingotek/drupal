@@ -67,19 +67,19 @@ function lingotek_admin_form() {
         )))
   );
   
-  if (LINGOTEK_DEV) {
+  //if (LINGOTEK_DEV) {
     $form['information'][] = array(
       '#type' => 'item',
-      '#title' => t('DEV - Lingotek Servers'),
+      '#title' => t('Lingotek Servers'),
       '#markup' => theme('table', array('header' => array(), 'rows' => array(
           array('TMS:', LINGOTEK_API_SERVER),
           array('GMC:', LINGOTEK_GMC_SERVER),
           array('Billing:', LINGOTEK_BILLING_SERVER),
-          array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
-          array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
+          //array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
+          //array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
           )))
     );
-  }
+  //}
 
   /*
    * Lingotek connection settings.
@@ -89,34 +89,29 @@ function lingotek_admin_form() {
       t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(LINGOTEK_API_SERVER . '/lingopoint/portal/communitySignup.action'))
       );
 
-  
-  if(isset($_GET['edit_connection']) || !$connected){
-    $collapsed = FALSE;// open
-  }
-  else {
-    $collapsed = TRUE;// closed
-  }
-  
+  $edit_connection = isset($_GET['edit_connection']) || !$connected; 
 
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection'),
     '#description' => filter_xss($connection_group_description),
     '#collapsible' => TRUE,
-    '#collapsed' => $collapsed,
+    '#collapsed' => !$edit_connection,
     '#group' => 'administrative_settings',
   );
 
   $status_message = ($connected) ?
-      t('<strong>Connection Status</strong>: OK.') :
-      t('<strong>Connection Status</strong>: Not Connected.');
+      t('<strong>Connection Status</strong>: <span style="color: green;">OK</span>') :
+      t('<strong>Connection Status</strong>: <span style="color: red;">Not Connected</span>');
 
   $form['connection']['status'] = array(
-    '#markup' => '<h4 class="connection-status">' . $status_message . '</h4>',
+    '#prefix' => '<h4 class="connection-status">',
+    '#markup' => $status_message,
+    '#suffix' => '</h4>'
   );
 
 
-  if ($is_enterprise || isset($_GET['edit_connection'])) {
+  if ($is_enterprise || $edit_connection) {
     $form['connection']['lingotek_login_id'] = array(
       '#type' => 'textfield',
       '#title' => t('Lingotek ID'),
@@ -139,14 +134,7 @@ function lingotek_admin_form() {
     );
   }
 
-  /* $form['connection']['lingotek_api_server'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Lingotek Server'),
-    '#description' => t('The path to the Lingotek server to which this site should be connected. '.LINGOTEK_API_SERVER),
-    '#default_value' => variable_get('lingotek_api_server', LINGOTEK_API_SERVER),
-    ); */
-
-  if (($is_enterprise || isset($_GET['edit_connection']))) { 
+  if ($is_enterprise || $edit_connection) { 
     // Note: The Lingotek servers may easily be set in code or by setting a 'lingotek_use_stage_servers' drupal variable
     $form['connection']['lingotek_use_stage_servers'] = array(
       '#type' => 'select',
