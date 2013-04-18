@@ -796,8 +796,8 @@ function lingotek_content_type_checkbox_callback($form, &$form_state) {
  * Node Translation Settings - Form Submit
  */
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
-
   $translate = array();
+  $operations = array();
   foreach ($form_state['values'] as $key => $value) {
 
     // Look for Selected Content Types and Fields.
@@ -826,72 +826,40 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
         $content_type = substr($key, strlen('title_swap_'));
         //dpm( 'Title Swap: ' . $content_type );
         // Do the actual title replacement
-        $title_entity = 'node';
-        $title_bundle = $content_type;
-        $title_field = 'title';
-
+        $entity_type = 'node';
+        $bundle = $content_type;
+        $legacy_field = 'title';
 
         // Use the Title module to migrate the content.
-        if (title_field_replacement_toggle($title_entity, $title_bundle, $title_field)) {
-          title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
+        if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
+          //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
+          $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
         }
 
-        // Make sure the title field gets flagged for Lingotek translation.
         $translate[$content_type][] = 'title_field';
         $field = field_info_field('title_field');
         $field['translatable'] = 1;
-        $field['lingotek_translatable'] = 1;
-        field_update_field($field);
+        $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
+        //field_update_field($field);
+        $operations[] = array('field_update_fields', array($field));
       }
-    } // END:  Title Swap
-  } // END: foreach form value
-
-  lingotek_cleanup_utility(FALSE);
-
+    } 
+  } 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set('lingotek_translate_fields', $translate);
-
-
-  variable_set('lingotek_setup_complete', 1); // Mark Lingotek Configuration as Complete
-  drupal_set_message(t('You have completed setup successfully!'));
-  $form_state['redirect'] = LINGOTEK_MENU_LANG_BASE_URL; // Redirect to start using Lingotek
-  //$form_state['redirect'] = 'admin/config/lingotek/setup-complete';
-  //drupal_goto( 'admin/config/lingotek/setup-complete' );  
-}
-
-/**
- * Setup Complete - Form Layout
- */
-function lingotek_setup_complete_form($form, $form_state) {
-
-
-  // Mark Lingotek Setup Wizard as Complete
-  variable_set('lingotek_setup_complete', 1);
-
-  // Clear wizard progress tracking.  
-  if (isset($_SESSION['lingotek_setup_path'])) {
-    unset($_SESSION['lingotek_setup_path']);
-  }
-
-  $form['lingotek_message_1'] = array('#markup' => '<p>The Lingotek configuration module has been setup and configured and is now ready to use.</p>');
-
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Start Using Lingotek')
+  
+  $operations[] = array('lingotek_cleanup_utility', array(FALSE));
+  $operations[] = array('variable_set', array('lingotek_setup_complete',1));
+  
+  $batch = array(
+    'title' => t('Preparing content for translation'),
+    'operations' => $operations
   );
-
-  $form['lingotek_support_footer'] = lingotek_support_footer();
-
-  return $form;
-}
-
-/**
- * Setup Complete - Form Submit - Redirects to Lingotek Dashboard.
- */
-function lingotek_setup_complete_form_submit($form, &$form_state) {
-
-  $form_state['redirect'] = LINGOTEK_MENU_LANG_BASE_URL;
+  
+  batch_set($batch);
+  drupal_set_message(t('You have completed setup successfully!'));
+  $redirect = LINGOTEK_MENU_LANG_BASE_URL;
+  batch_process($redirect);
 }
 
 /**
