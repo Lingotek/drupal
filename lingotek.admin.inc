@@ -89,23 +89,21 @@ function lingotek_admin_form() {
       t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(LINGOTEK_API_SERVER . '/lingopoint/portal/communitySignup.action'))
       );
 
-  // Leave the connection settings open for everyone that isnt an enterprise user.  Period.
-  if (!$is_enterprise) {
-    $collapse_setting = TRUE;
+  
+  if(isset($_GET['edit_connection']) || !$connected){
+    $collapsed = FALSE;// open
   }
-  elseif ($connected) { // If enterprise users connected successfully, it can be closed.
-    $collapse_setting = TRUE;
+  else {
+    $collapsed = TRUE;// closed
   }
-  else { // Default to open
-    $collapse_setting = FALSE;
-  }
+  
 
   $form['connection'] = array(
     '#type' => 'fieldset',
     '#title' => t('Connection'),
     '#description' => filter_xss($connection_group_description),
     '#collapsible' => TRUE,
-    '#collapsed' => $collapse_setting,
+    '#collapsed' => $collapsed,
     '#group' => 'administrative_settings',
   );
 
@@ -148,15 +146,16 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_api_server', LINGOTEK_API_SERVER),
     ); */
 
-  if ($is_enterprise && !LINGOTEK_DEV) {
+  if (($is_enterprise || isset($_GET['edit_connection']))) { 
+    // Note: The Lingotek servers may easily be set in code or by setting a 'lingotek_use_stage_servers' drupal variable
     $form['connection']['lingotek_use_stage_servers'] = array(
       '#type' => 'select',
-      '#title' => t('Lingotek Environment'),
+      '#title' => t('Environment'),
       '#options' => array(
         0 => 'Production',
-        1 => 'Staging)'
+        1 => 'Staging'
       ),
-      '#description' => t(''),
+      '#description' => LINGOTEK_DEV ? t('Note: The above Environment setting above will be overriden by your local configuration (i.e., config.php).') : t(''),
       '#default_value' => variable_get('lingotek_use_stage_servers', 0),
     );
   }
