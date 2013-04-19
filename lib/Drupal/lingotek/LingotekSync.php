@@ -32,6 +32,20 @@ class LingotekSync {
   public static function getNodeStatus($node_id) {
     return lingotek_lingonode($node_id, 'node_sync_status');
   }
+  
+  public static function getSyncProjects() {
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('lingovalue'));
+    $query->condition('lingokey', 'project_id');
+    $query->distinct();
+    $result = $query->execute();
+    $projects = $result->fetchCol();
+    $default_project_id = variable_get('lingotek_project', NULL);
+    if(!is_null($default_project_id) && !in_array($default_project_id, $projects)){
+      $projects[] = $default_project_id;
+    }
+    return $projects;
+  }
 
   //lingotek_set_node_and_targets_sync_status
   public static function setNodeAndTargetsStatus($node_id, $node_status, $targets_status) {

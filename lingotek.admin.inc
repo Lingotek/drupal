@@ -193,16 +193,6 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_allow_community_translation', 0),
   );
 
-  // Paste Source Setting.
-  /* $form['defaults']['lingotek_use_source'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Include source text in synchronization.'),
-    '#description' => t('Should the synchronization include the source language when a translation isn\'t provided?'),
-    '#options' => $options,
-    '#default_value' => variable_get('lingotek_use_source', TRUE),
-    ); */
-
-
   /*
    * Misc. Options
    */
@@ -304,17 +294,6 @@ function lingotek_admin_form() {
     ),
     '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
-
-  /*
-
-    $form['comments']['lingotek_translate_comments'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Translate comments'),
-    '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
-    '#default_value' => variable_get('lingotek_translate_comments', 0),
-    );
-
-   */
 
   $type_options = array();
   foreach (node_type_get_types() as $type => $type_data) {

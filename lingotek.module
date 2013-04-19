@@ -12,7 +12,6 @@ include_once('lingotek.api.inc');
 include_once('lingotek.sync.inc');
 include_once('lingotek.batch.inc');
 
-
 /**
  * Auto-loader function used for upgrades
  * @param type $class
@@ -197,24 +196,6 @@ function lingotek_menu() {
     'page callback' => 'lingotek_sync_endpoint', //'lingotek_sync'
   );
 
-  // Sync Process:  Upload documents & Download the Translations 
-  /* $items['lingotek/sync'] = array(
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('administration'),
-    'description' => 'Lingotek Sync Endpoint',
-    'file' => 'lingotek.sync.inc',
-    'page callback' => 'lingotek_sync',
-    ); */
-
-  // START UPLOAD:  Upload documents for the Machine Translation process
-  /* $items['lingotek/upload'] = array(
-    'title' => 'Upload Documents For Machine Translation',
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_dashboard_mt_upload',
-    ); */
-
   // UPLOAD COMPLETE:  Machine Translation Upload Complete Screen (is this necessary?)
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-queued'] = array(
     'title' => 'Content Queued for Translation',
@@ -224,15 +205,6 @@ function lingotek_menu() {
     'page arguments' => array('lingotek_bulk_mt_upload_batch_complete'),
     'access arguments' => array('administration')
   );
-
-  // START DOWNLOAD: Download documents that have been Machine Translated
-  /* $items['lingotek/download'] = array(
-    'title' => 'Download Machine Translated Documents',
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
-    'file' => 'lingotek.dashboard.inc',
-    'page callback' => 'lingotek_dashboard_mt_download',
-    ); */
 
   // DOWNLOAD COMPLETE: Machine Translation Download Complete Screen (is this necessary?)
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-downloaded'] = array(
