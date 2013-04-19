@@ -651,9 +651,11 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enabled =
     LingotekLog::info("Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
 
     if ($lingotek_enabled && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
-      $project_id = variable_get('lingotek_project', '');
       $api = LingotekApi::instance();
-      $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
+      $projects = LingotekSync::getSyncProjects();
+      foreach ($projects as $project_id) {
+        $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
+      }
     }
   }
 
