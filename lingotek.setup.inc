@@ -839,21 +839,21 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
           $field['translatable'] = 1;
           $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
           $operations[] = array('field_update_field', array($field)); //field_update_field($field);
-        }        
+        }
       }
-    } 
-  } 
+    }
+  }
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set('lingotek_translate_fields', $translate);
-  
+
   $operations[] = array('lingotek_cleanup_utility', array(FALSE));
-  $operations[] = array('variable_set', array('lingotek_setup_complete',1));
-  
+  $operations[] = array('variable_set', array('lingotek_setup_complete', 1));
+
   $batch = array(
     'title' => t('Preparing content for translation'),
     'operations' => $operations
   );
-  
+
   batch_set($batch);
   drupal_set_message(t('You have completed setup successfully!'));
   $redirect = LINGOTEK_MENU_LANG_BASE_URL;
