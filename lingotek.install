@@ -1,27 +1,36 @@
 <?php
+
 /**
  * @file
  * Installation for Lingotek Community Translation Module.
  */
-
-
 /*
- * Implements hook_requirements()
+ * Implements hook_requirements() (see: 
  */
 
 function lingotek_requirements($phase) {
   $requirements = array();
   $t = get_t();
-  // Check for the PHP Zip library during install
-  if ($phase == 'install') {
-    if (!extension_loaded('zip')) {
-      $requirements['zip'] = array(
-        'title' => t('Zip allows PHP to work with ZIP compressed archives.'), 
-        'description' => t('Lingotek requires the PHP module \'Zip\', but it is missing or not enabled on your server.  <br>For more information visit: http://php.net/manual/en/book.zip.php'),
-        'severity' => REQUIREMENT_ERROR,
-      );
-    }
+  $test = FALSE; // test requirement message appearance
+  // Ensure that the PHP Zip library is loaded
+  if ($test || !extension_loaded('zip')) {
+    $requirements['zip'] = array(
+      'title' => $t('Lingotek'),
+      'value' => $t('PHP Zip support required.'),
+      'description' => $t('The Lingotek module requires the PHP module \'Zip\', but it is missing or not enabled on your server. This module allows PHP to work with ZIP compressed archives.  <br>For more information visit: <a href="http://php.net/manual/en/book.zip.php">http://php.net/manual/en/book.zip.php</a>'),
+      'severity' => REQUIREMENT_ERROR,
+    );
   }
+  // Ensure that the PHP cURL support is enabled
+  if ($test || !function_exists('curl_version')) {
+    $requirements['curl'] = array(
+      'title' => $t('Lingotek'),
+      'value' => $t('PHP cURL support required'),
+      'description' => $t('Lingotek requires the that PHP CURL be enabled on your server.  <br>For more information visit: <a href="http://www.php.net/manual/en/curl.installation.php">http://www.php.net/manual/en/curl.installation.php</a>'),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
   return $requirements;
 }
 
@@ -29,6 +38,7 @@ function lingotek_requirements($phase) {
  * Implements hook_install().
  */
 function lingotek_install() {
+  
 }
 
 /**
@@ -76,7 +86,7 @@ function lingotek_uninstall() {
   foreach ($delete_variables as $variable) {
     variable_del($variable);
   }
-  
+
   db_drop_field('languages', 'lingotek_enabled');
   db_drop_field('languages', 'lingotek_locale');
 }
@@ -86,7 +96,7 @@ function lingotek_uninstall() {
  */
 function lingotek_enable() {
   lingotek_set_priority();
-  lingotek_set_defaults(); 
+  lingotek_set_defaults();
 }
 
 /**
@@ -99,6 +109,7 @@ function lingotek_disable() {
 /*
  * Install the database schema for the Lingotek module
  */
+
 function lingotek_schema() {
   $schema['lingotek'] = array(
     'description' => 'Table for storing node related data.',
@@ -130,7 +141,7 @@ function lingotek_schema() {
       'lingokey',
     ),
   );
-  
+
   $schema['lingotek_entity_metadata'] = array(
     'description' => 'Stores Lingotek-related metadata about Drupal entities.',
     'fields' => array(
@@ -169,15 +180,16 @@ function lingotek_schema() {
       'entity_key',
     ),
   );
-  
+
   return $schema;
-}  
+}
 
 /*
  * Update
  * 1. Create the mt-queue
  * 2. delete the reference variable that was stored in lingotek_languages
  */
+
 function lingotek_update_7200(&$sandbox) {
   drupal_load('module', 'lingotek');
 
@@ -224,9 +236,9 @@ function lingotek_update_7201(&$sandbox) {
   if ($default_lingotek_project) {
     if (!isset($sandbox['progress'])) {
       $result = db_select('lingotek', 'l')
-        ->distinct(TRUE)
-        ->fields('l', array('nid'))
-        ->execute();
+          ->distinct(TRUE)
+          ->fields('l', array('nid'))
+          ->execute();
 
       foreach ($result as $row) {
         $lingotek_nodes[] = $row->nid;
@@ -306,7 +318,7 @@ function lingotek_update_7206(&$sandbox) {
   else {
     $output = t('The @table table already exists. No action taken.', array('@table' => $table));
   }
-  
+
   return $output;
 }
 
@@ -322,7 +334,7 @@ function lingotek_update_7207(&$sandbox) {
       variable_set($name, LINGOTEK_ENABLED);
     }
   }
-  
+
   if (count($updated)) {
     $t_args = array(
       '@updated' => implode(', ', $updated),
@@ -347,7 +359,7 @@ function lingotek_update_7208(&$sandbox) {
  */
 function lingotek_update_7209(&$sandbox) {
   spl_autoload_register('lingotek_auto_loader');
-  lingotek_migration_1();// Add the lingotek_enabled field to the languages table. Remove lingotek_target_languages variable
+  lingotek_migration_1(); // Add the lingotek_enabled field to the languages table. Remove lingotek_target_languages variable
   return t('Upgraded the languages table to have the lingotek_enabled field (if not already present) and removed lingotek_target_languages variable.');
 }
 
@@ -357,7 +369,7 @@ function lingotek_update_7209(&$sandbox) {
 function lingotek_update_7210(&$sandbox) {
   spl_autoload_register('lingotek_auto_loader');
   lingotek_migration_2(); // Add the lingotek_locale field to the languages table
-  lingotek_add_missing_locales();// Fill-in the lingotek_locale column based on drupal code
+  lingotek_add_missing_locales(); // Fill-in the lingotek_locale column based on drupal code
   return t('Upgraded the languages table to have the lingotek_locale field (if not already present) and filled-in any missing lingotek_locale values.');
 }
 
@@ -366,7 +378,7 @@ function lingotek_update_7210(&$sandbox) {
  */
 function lingotek_update_7211(&$sandbox) {
   spl_autoload_register('lingotek_auto_loader');
-  lingotek_migration_3();// Upgrade lingotek table entries from drupal_codes to lingotek_locales (whenever applicable)
+  lingotek_migration_3(); // Upgrade lingotek table entries from drupal_codes to lingotek_locales (whenever applicable)
   return t('Upgraded lingotek table entries from drupal_codes to lingotek_locales (as needed).');
 }
 

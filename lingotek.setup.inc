@@ -673,7 +673,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
       $form['title_swap_' . $value->type] = array(
         '#type' => 'checkbox',
         '#title' => t('Title (Note: field will be created)'),
-        '#default_value' => FALSE,
+        '#default_value' => TRUE,
         '#prefix' => '<div style="padding-left: 35px;">',
         '#suffix' => '</div>',
       );
@@ -834,15 +834,13 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
         if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
           //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
           $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
-          
-          $translate[$content_type][] = 'title_field';
-          $field = field_info_field('title_field');
-          $field['translatable'] = 1;
-          $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
-          $operations[] = array('field_update_fields', array($field));//field_update_field($field);
         }
 
-        
+        $translate[$content_type][] = 'title_field';
+        $field = field_info_field('title_field');
+        $field['translatable'] = 1;
+        $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
+        $operations[] = array('field_update_fields', array($field)); //field_update_field($field);
       }
     } 
   } 
