@@ -194,7 +194,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
     $api = LingotekApi::instance();
     $response = $api->createCommunity($parameters, $callback_url);
 
-    if ($response->results == "success") {
+    if ($response && $response->results == "success") {
       $community = $response;
       /*
         stdClass::__set_state(array(
@@ -225,7 +225,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
     else {
 
       // If there were any setup or communication problems.
-      drupal_set_message(t('There was an error contacting the Lingotek servers to create your account.  Please try again later.'), 'error');
+      drupal_set_message(t('There was an error contacting the Lingotek servers to create your account.  Please try again later. [Server: '. LINGOTEK_API_SERVER).']', 'error');
     } // END:  if error.
   } // END:  Provision new Community
   else { // If the user already has all the required community credentials, just direct them to the next step.

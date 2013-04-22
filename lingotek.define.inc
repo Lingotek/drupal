@@ -7,16 +7,21 @@
 /*
  * def - only defines the constant if it has not been defined previously (in local override file)
  */
-function def($key, $val) {
-  if (!defined($key)) {
-    define($key, $val);
+if (!function_exists('def')) {
+
+  function def($key, $val) {
+    if (!defined($key)) {
+      define($key, $val);
+    }
   }
+
 }
 
 /**
- * Local Override - a local override config file may be used by either: 
- * (1) setting the environment var 'LINGOTEK_CONFIG_PATH' to a file, or by
- * (2) having a "config.php" file in your lingotek module folder 
+ * Local Override - a local override configuration may be used by: 
+ * (1) inserting variable overrides into the Drupal "sites/default/settings.php" file (recommended)
+ * (2) inserting variable into a "config.php" file in your lingotek module folder 
+ * (3) setting the environment var 'LINGOTEK_CONFIG_PATH' to a file path elsewhere on your system
  */
 $local_env_config_filepath = getenv('LINGOTEK_CONFIG_PATH');
 $local_config_file = $local_env_config_filepath !== FALSE ? $local_env_config_filepath : getcwd() . '/' . drupal_get_path('module', 'lingotek') . '/config.php';
@@ -26,7 +31,8 @@ if ($use_local_override) {
 }
 
 /**
- *  Config
+ *  Config 
+ * (Note: if any of the following variables 'def' variables are set prior to this, then those settings will take precedence rather than these.)
  */
 if (variable_get('lingotek_use_stage_servers', FALSE)) {
   // Stage Servers
@@ -45,8 +51,7 @@ else {
   def('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 }
 
-def('LINGOTEK_DEV', variable_get('lingotek_dev', FALSE));
-
+def('LINGOTEK_DEV', variable_get('lingotek_dev', TRUE));
 
 /**
  * Identifies a content type which has Lingotek translation enabled.
