@@ -143,7 +143,7 @@ function lingotek_admin_form() {
         0 => 'Production',
         1 => 'Staging'
       ),
-      '#description' => LINGOTEK_DEV ? t('Note: The above Environment setting above will be overriden by your local configuration (i.e., config.php).') : t(''),
+      '#description' => LINGOTEK_DEV ? t('Note: The above Environment setting above will be overriden by your local configuration (i.e., config.php).') : '',
       '#default_value' => variable_get('lingotek_use_stage_servers', 0),
     );
   }
