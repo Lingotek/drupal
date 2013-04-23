@@ -119,6 +119,18 @@ class LingotekApi {
     }
     return $success;
   }
+  
+  public function removeDocument($document_id) {
+    $success = FALSE;
+    if ($document_id && is_numeric($document_id)) {
+      LingotekSync::removeNodeInfoByDocId($document_id);//remove locally (regardless of success remotely)
+      $result = $this->request('removeDocument', array('documentId'=>$document_id));
+      if ($result) {
+        $success = TRUE;
+      }
+    }
+    return $success;
+  }
 
   /**
    * Adds a Document and one or more Translation Targets to the Lingotek platform. (only used by comments currently)

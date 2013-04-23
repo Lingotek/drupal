@@ -242,7 +242,7 @@ function lingotek_batch_identify_content($front = FALSE) {
   $batch = array(
     'title' => t('Identifying Translatable Content'),
     'operations' => $operations,
-    'finished' => 'lingotek_batch_identify_content_finished'
+    //'finished' => 'lingotek_batch_identify_content_finished'
   );
 
   batch_set($batch);
@@ -250,6 +250,36 @@ function lingotek_batch_identify_content($front = FALSE) {
     batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   }
 }
+
+/**
+ * Batch Create: Lingotek Reset Content
+ */
+function lingotek_batch_reset_content() {
+  $doc_ids = LingotekSync::getAllLocalDocIds();
+  $api = LingotekApi::instance();
+
+  foreach ($doc_ids as $doc_id) {
+    $operations[] = array('lingotek_batch_reset_content_worker', array($api, $doc_id));
+  }
+
+  LingotekSync::disassociateAllNodes();
+  drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
+  drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
+  
+  $operations[] = array('lingotek_cleanup_utility', array(FALSE));
+
+  $batch = array(
+    'title' => t('Resetting Translations'),
+    'operations' => $operations,
+  );
+
+  batch_set($batch);
+}
+
+function lingotek_batch_reset_content_worker($api, $doc_id) {
+  return $api->removeDocument($doc_id);
+}
+
 
 /**
  *
