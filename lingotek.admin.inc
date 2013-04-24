@@ -194,66 +194,67 @@ function lingotek_admin_form() {
   $form['utilities'] = array(
     '#type' => 'fieldset',
     '#title' => t('Utilities'),
+    '#description' => '',
     '#collapsible' => TRUE,
-    '#collapsed' => FALSE,//TEMP
+    '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
   );
-
   
-  
+  // Start: Not sure why, but without these below, the table button do not work properly
   $form['utilities'][] = array(
-    '#type' => 'markup',
-    '#markup' => '<table class="table"><tr>'
-    );
-  
-  $form['utilities'][] = array(
-    '#type' => 'markup',
-    '#prefix' => '<td><div class="description">',
-    '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be re-translated from scratch using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
-    '#suffix' => '</div></td>'
-  );
-  
-  $form['utilities']['reset_translations'] = array(
     '#type' => 'submit',
-    '#prefix' => '<td>',
-    '#suffix' => '</td>',
     '#value' => t('Reset Translations'),
     '#submit' => array('lingotek_batch_reset_content'),
     '#attributes' => array(
-      'style' => 'float:left;',
-      'onclick' => 'return confirm("' . t('Are you sure?\n\nAll node translations will be removed from Lingotek servers and will need to be re-uploaded.') . '");'
+      'onclick' => 'return confirm("' . t('Are you sure?\n\nAll node translations will be removed from Lingotek servers and will need to be re-uploaded.') . '");',
+      'style' => 'display: none;'
     ),
   );
-  
+
   $form['utilities'][] = array(
-    '#type' => 'markup',
-    '#markup' => '</tr><tr>'
-    );
-  
-  $form['utilities'][] = array(
-    '#type' => 'markup',
-    '#prefix' => '<td><div class="description">',
-    '#markup' => t("The cleanup utility identifies translatable content and processes all existing field data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
-    '#suffix' => '</div></td>'
-  );
-  
-  $form['utilities']['clean_up'] = array(
-    '#prefix' => "<td>",
-    '#suffix' => "</td>",
-    '#description' => "HELLO",
     '#type' => 'submit',
-    //'#executes_submit_callback' => FALSE,
-    //'#title' => t('Reset all node Translations'),
     '#value' => t('Run Cleanup Utility'),
     '#submit' => array('lingotek_cleanup_utility'),
     '#attributes' => array(
-      //'style' => 'float:right;',
-      ),
+      'style' => 'display: none;'
+    )
   );
+  // End: Not sure why
   
-  $form['utilities'][] = array(
-    '#type' => 'markup',
-    '#markup' => '</tr></table>'
+  $rows = array(
+    array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => '<div class="description">',
+          '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
+          '#suffix' => '</div>'
+      )),
+      array('data' => array(
+          '#type' => 'submit',
+          '#value' => t('Reset Translations'),
+          '#submit' => array('lingotek_batch_reset_content'),
+          '#attributes' => array(
+            'onclick' => 'return confirm("' . t('Are you sure?\n\nThe next time you change the content of a previously translated page, the entire page will have to be retranslated.') . '");'
+          ),
+      ))
+    ),
+    array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => '<div class="description">',
+          '#markup' => t("The cleanup utility identifies translatable content and processes all existing field data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
+          '#suffix' => '</div>'
+      )),
+      array('data' => array(
+          '#type' => 'submit',
+          '#value' => t('Run Cleanup Utility'),
+          '#submit' => array('lingotek_cleanup_utility')
+      )),
+    )
+  );
+  $header = array();
+  $form['utilities']['utility_table'] =  array(
+      '#markup' => theme('table', array('header' => $header, 'rows' => $rows))
     );
   
   if ($is_enterprise) {
