@@ -36,7 +36,7 @@ class LingotekLog {
   }
 
   public static function trace($msg, $data = NULL, $tag = 'trace') {
-    if (!variable_get('lingotek_trace_log', self::getDefault())) {
+    if (!variable_get('lingotek_trace_log', FALSE)) {
       return;
     }
     self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);

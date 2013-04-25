@@ -445,21 +445,21 @@ function lingotek_admin_form() {
     '#type' => 'checkbox',
     '#title' => t('Enable Error Log'),
     '#description' => t('This prints errors and warnings to the web server\'s error logs in addition to adding them to watchdog.'),
-    '#default_value' => variable_get('lingotek_error_log', FALSE),
+    '#default_value' => variable_get('lingotek_error_log', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
   $form['developer_settings']['lingotek_warning_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Warnings Log'),
     '#description' => t('This logs any warnings in watchdog and the web server\'s error logs.'),
-    '#default_value' => variable_get('lingotek_warning_log', FALSE),
+    '#default_value' => variable_get('lingotek_warning_log', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
   $form['developer_settings']['lingotek_trace_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Trace Log'),
     '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
-    '#default_value' => variable_get('lingotek_trace_log', FALSE),
+    '#default_value' => variable_get('lingotek_trace_log', LINGOTEK_DEV ? FALSE : FALSE),
   );
 
   $form['developer_settings']['lingotek_api_debug'] = array(
@@ -467,14 +467,14 @@ function lingotek_admin_form() {
     '#title' => t('Enable API debugging'),
     '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
       calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
-    '#default_value' => variable_get('lingotek_api_debug', FALSE),
+    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
   $form['developer_settings']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
-    '#default_value' => variable_get('lingotek_flush_cache', FALSE),
+    '#default_value' => variable_get('lingotek_flush_cache', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
 
