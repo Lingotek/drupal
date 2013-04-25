@@ -231,15 +231,34 @@ class LingotekSync {
     db_truncate('lingotek');
   }  
   
-  public static function removeNodeInfoByDocId($lingotek_document_id) {
-    $nid = self::getNodeIdFromDocId($lingotek_document_id);
-    if ($nid) {
-      $query = db_delete('lingotek');
-      $query->condition('nid', $nid);
-      //$query->distinct();
-      $result = $query->execute();
+  public static function resetNodeInfoByDocId($lingotek_document_id) {
+    $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
+    $count = 0;
+    foreach($doc_ids as $doc_id){
+      $node_id = LingotekSync::getNodeIdFromDocId($doc_id); // grab before node info is removed
+      LingotekSync::removeNodeInfoByDocId($doc_id); //remove locally (regardless of success remotely)
+      if ($node_id !== FALSE) {
+        LingotekSync::setNodeStatus($node_id, LingotekSync::STATUS_EDITED);
+        $count++;
+      }
     }
-    return $result;
+    return $count;
+  }
+  
+  public static function removeNodeInfoByDocId($lingotek_document_id) {
+    $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
+    $count = 0;
+    foreach ($doc_ids as $doc_id) {
+      $nid = self::getNodeIdFromDocId($lingotek_document_id);
+      if ($nid) {
+        $query = db_delete('lingotek');
+        $query->condition('nid', $nid);
+        //$query->distinct();
+        $result = $query->execute();
+        $count++;
+      }
+    }
+    return $count;
   }
 
   public static function getAllLocalDocIds() {

@@ -206,7 +206,6 @@ function lingotek_admin_form() {
     '#value' => t('Reset Translations'),
     '#submit' => array('lingotek_batch_reset_content'),
     '#attributes' => array(
-      'onclick' => 'return confirm("' . t('Are you sure?\n\nAll node translations will be removed from Lingotek servers and will need to be re-uploaded.') . '");',
       'style' => 'display: none;'
     ),
   );
@@ -234,7 +233,7 @@ function lingotek_admin_form() {
           '#value' => t('Reset Translations'),
           '#submit' => array('lingotek_batch_reset_content'),
           '#attributes' => array(
-            'onclick' => 'return confirm("' . t('Are you sure?\n\nThe next time you change the content of a previously translated page, the entire page will have to be retranslated.') . '");'
+            'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
           ),
       ))
     ),

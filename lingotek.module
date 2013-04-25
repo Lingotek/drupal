@@ -702,7 +702,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#title' => t('Node Data'),
     '#value' => isset($nid) ? (json_encode(lingotek_lingonode($nid))) : t('None'),
     '#disabled' => TRUE,
-    '#attributes' => array('rows'=>'2')
+    '#attributes' => array('rows' => '2')
   );
 }
 

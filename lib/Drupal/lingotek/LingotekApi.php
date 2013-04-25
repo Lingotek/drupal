@@ -120,10 +120,15 @@ class LingotekApi {
     return $success;
   }
   
-  public function removeDocument($document_id) {
+  public function removeDocument($document_id, $reset_node = TRUE) {
     $success = FALSE;
-    if ($document_id && is_numeric($document_id)) {
-      LingotekSync::removeNodeInfoByDocId($document_id);//remove locally (regardless of success remotely)
+    if ($document_id && (is_numeric($document_id) || is_array($document_id))) {
+      // Remove node info from lingotek table (and reset for upload when reset_node is TRUE)
+      if($reset_node) {
+        LingotekSync::resetNodeInfoByDocId($document_id);
+      } else {
+        LingotekSync::removeNodeInfoByDocId($document_id);
+      }
       $result = $this->request('removeDocument', array('documentId'=>$document_id));
       if ($result) {
         $success = TRUE;

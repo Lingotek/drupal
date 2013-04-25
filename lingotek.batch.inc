@@ -257,16 +257,24 @@ function lingotek_batch_identify_content($front = FALSE) {
 function lingotek_batch_reset_content() {
   $doc_ids = LingotekSync::getAllLocalDocIds();
   $api = LingotekApi::instance();
-
+  $operations = array();
+  
+  /*
+  //one at a time
   foreach ($doc_ids as $doc_id) {
     $operations[] = array('lingotek_batch_reset_content_worker', array($api, $doc_id));
   }
-
-  LingotekSync::disassociateAllNodes();
-  drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
-  drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
+  */
   
-  $operations[] = array('lingotek_cleanup_utility', array(FALSE));
+  // all at once
+  $operations[] = array('lingotek_batch_reset_content_worker', array($api, $doc_ids));
+  
+  
+  $operations[] = array('LingotekSync::disassociateAllNodes', array());
+  drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
+  
+  $operations[] = array('lingotek_cleanup_utility', array(FALSE));// identify translatable content
+  drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
 
   $batch = array(
     'title' => t('Resetting Translations'),

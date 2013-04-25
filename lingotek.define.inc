@@ -51,7 +51,7 @@ else {
   def('LINGOTEK_AP_OAUTH_SECRET', 'e4ae98ca-835b-4d9f-8faf-116ce9c69424');
 }
 
-def('LINGOTEK_DEV', variable_get('lingotek_dev', TRUE));
+def('LINGOTEK_DEV', variable_get('lingotek_dev', FALSE));
 
 /**
  * Identifies a content type which has Lingotek translation enabled.

@@ -87,7 +87,7 @@ function lingotek_dev_form($ignore, $param) {
   $form['data']['value'] = array
   (
     '#type' => 'item',
-    '#description' => check_plain($table),
+    '#description' => $table,
   );
 
   return $form;
