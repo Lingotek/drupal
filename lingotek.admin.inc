@@ -224,7 +224,7 @@ function lingotek_admin_form() {
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => '<div class="description">',
+          '#prefix' => t('Reset Translations').'<div class="description">',
           '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
           '#suffix' => '</div>'
       )),
@@ -240,13 +240,13 @@ function lingotek_admin_form() {
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => '<div class="description">',
+          '#prefix' => t('Cleanup').'<div class="description">',
           '#markup' => t("The cleanup utility identifies translatable content and processes all existing field data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
           '#suffix' => '</div>'
       )),
       array('data' => array(
           '#type' => 'submit',
-          '#value' => t('Run Cleanup Utility'),
+          '#value' => t('Run Cleanup'),
           '#submit' => array('lingotek_cleanup_utility')
       )),
     )
