@@ -199,63 +199,52 @@ function lingotek_admin_form() {
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
   );
-  
-  // Start: Not sure why, but without these below, the table button do not work properly
-  $form['utilities'][] = array(
+
+  $btn_reset_translations = array(
     '#type' => 'submit',
     '#value' => t('Reset Translations'),
     '#submit' => array('lingotek_batch_reset_content'),
     '#attributes' => array(
-      'style' => 'display: none;'
+      'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
     ),
   );
 
-  $form['utilities'][] = array(
+  $btn_cleanup = array(
     '#type' => 'submit',
-    '#value' => t('Run Cleanup Utility'),
-    '#submit' => array('lingotek_cleanup_utility'),
-    '#attributes' => array(
-      'style' => 'display: none;'
-    )
+    '#value' => t('Run Cleanup'),
+    '#submit' => array('lingotek_cleanup_utility')
   );
+
+  // Start: Not sure why, but without these below, the table button do not work properly
+  $form['utilities'][] = array_merge($btn_reset_translations, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
-  
+
   $rows = array(
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Reset Translations').'<div class="description">',
+          '#prefix' => t('Reset Translations') . '<div class="description">',
           '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
           '#suffix' => '</div>'
       )),
-      array('data' => array(
-          '#type' => 'submit',
-          '#value' => t('Reset Translations'),
-          '#submit' => array('lingotek_batch_reset_content'),
-          '#attributes' => array(
-            'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
-          ),
-      ))
+      array('data' => $btn_reset_translations)
     ),
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Cleanup').'<div class="description">',
+          '#prefix' => t('Cleanup') . '<div class="description">',
           '#markup' => t("The cleanup utility identifies translatable content and processes all existing field data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
           '#suffix' => '</div>'
       )),
-      array('data' => array(
-          '#type' => 'submit',
-          '#value' => t('Run Cleanup'),
-          '#submit' => array('lingotek_cleanup_utility')
-      )),
+      array('data' => $btn_cleanup),
     )
   );
   $header = array();
-  $form['utilities']['utility_table'] =  array(
-      '#markup' => theme('table', array('header' => $header, 'rows' => $rows))
-    );
-  
+  $form['utilities']['utility_table'] = array(
+    '#markup' => theme('table', array('header' => $header, 'rows' => $rows))
+  );
+
   if ($is_enterprise) {
 
     // Community Translation
@@ -492,59 +481,6 @@ function lingotek_admin_form_submit($form, $form_state) {
   // Enabling/disabling Lingotek comment translation will have an effect on the comment entity.
   entity_info_cache_clear();
   entity_get_info('comment');
-}
-
-/**
- * Administration form for the field language cleanup utility.
- *
- * @param array
- *   The current FAPI form state array.
- *
- * @return array
- *   A FAPI form array.
- */
-function lingotek_form_cleanup_utility($form_state) {
-  $form = array();
-
-  $translatable_fields = lingotek_translatable_node_fields();
-
-  $form['description'] = array(
-    '#markup' => '<p class="help">' . t('This tool identifies translatable content and processes all existing field data for translation-enabled fields on nodes,
-      ensuring that if data was entered before enabling field translation on a field 
-      that the existing field data is copied over to the parent node\'s current language.') . "</p>"
-      // .' ('. t("Translatable fields: ")."".join(", ", $translatable_fields).")<br/>"
-  );
-
-  /* $form['warning'] = array(
-    '#markup' => '<p class="help">' . t('<strong>WARNING:</strong> This tool makes changes to your site\'s data. We strongly encourage you to back up your database before using this tool.') .
-    '</p>',
-    );
-    $form['status'] = array(
-    '#markup' => theme('item_list', array('items' => $translatable_fields, 'title' => t('Translation-enabled Fields'), 'type' => 'ul')),
-    );
-    $form[] = array(
-    '#markup' => '<br/>'
-    ); */
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Run Cleanup Utility'),
-  );
-
-  return $form;
-}
-
-/**
- * Submit handler for the lingotek_form_field_language_utility form.
- * Calls the function that creates a batch job to do the field migration.
- *
- * @param array $form
- *   The FAPI form array.
- * @param array $form_state
- *   The FAPI form state array.
- */
-function lingotek_form_cleanup_utility_submit($form, $form_state) {
-  lingotek_cleanup_utility();
 }
 
 /**

@@ -196,26 +196,6 @@ function lingotek_menu() {
     'page callback' => 'lingotek_sync_endpoint', //'lingotek_sync'
   );
 
-  // UPLOAD COMPLETE:  Machine Translation Upload Complete Screen (is this necessary?)
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-queued'] = array(
-    'title' => 'Content Queued for Translation',
-    'type' => MENU_CALLBACK,
-    'file' => 'lingotek.batch.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_bulk_mt_upload_batch_complete'),
-    'access arguments' => array('administration')
-  );
-
-  // DOWNLOAD COMPLETE: Machine Translation Download Complete Screen (is this necessary?)
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/mt-content-downloaded'] = array(
-    'title' => 'Download Translated Content',
-    'type' => MENU_CALLBACK,
-    'file' => 'lingotek.batch.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_bulk_mt_download_batch_complete'),
-    'access arguments' => array('administration')
-  );
-
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/identify-content'] = array(
     'title' => 'Test',
     'type' => MENU_CALLBACK,
