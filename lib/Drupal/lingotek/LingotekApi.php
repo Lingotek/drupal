@@ -791,8 +791,10 @@ class LingotekApi {
 
     $parameters = array(
       'documentId' => $document_id,
+      'documentName' => $node->title,
+      'documentDesc' => $node->title,
       'content' => $content,
-      'format' => $this->xmlFormat(),
+      'format' => $this->xmlFormat()
     );
 
     $this->addAdvancedParameters($parameters, $node);

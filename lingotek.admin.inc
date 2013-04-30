@@ -21,7 +21,7 @@ function lingotek_admin_form() {
   $force = isset($_GET['test_connection']) ? TRUE : FALSE;
   $connected = $api->testAuthentication($force);
   $site = variable_get('site_name', 'Drupal Site');
-  $is_enterprise = LingotekAccount::instance()->isEnterprise();
+  $is_enterprise = $account->isEnterprise();
 
   /*
    * Account Information
@@ -29,7 +29,7 @@ function lingotek_admin_form() {
   $form['information'] = array(
     '#type' => 'fieldset',
     '#title' => t('Account'),
-    '#description' => t('Account information and Lingotek identifiers.'),
+    '#description' => t('Account information, Lingotek identifiers, and Lingotek servers.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -45,8 +45,8 @@ function lingotek_admin_form() {
     '#title' => t("Account Status") . ' - ' . l(t('Update'), 'lingotek/get-account-status', array('query' => array('token' => md5(time())))),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array('Status:', $account->getStatusText())
-        //,array('Plan:', $account->getPlanText())
-        , array('Enterprise:', $account->getEnterpriseStatusText())
+        //,array('Plan:', $account->getPlanTypeText())
+        , array('Enterprise:', ($account->isEnterprise() ? '<span style="color: green;">' . t('Yes') . '</span>' : '<span>' . t('No') . '</span>'))
         )))
   );
 

@@ -48,6 +48,7 @@ function lingotek_uninstall() {
   $delete_variables = array(
     'lingotek_account_enterprise',
     'lingotek_account_plan',
+    'lingotek_account_plan_type',
     'lingotek_account_status',
     'lingotek_activation_email',
     'lingotek_activation_first_name',

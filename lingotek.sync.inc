@@ -218,24 +218,13 @@ function lingotek_form_bulk_sync() {
   $form['download']['download_targets_workflow_incomplete_json'] = array('#type' => 'hidden', '#value' => json_encode($report['download_targets_workflow_incomplete']));
 
   $download_count_total = $report['download_targets_workflow_complete_count'] + (isset($report['download_targets_workflow_incomplete_count']) ? $report['download_targets_workflow_incomplete_count'] : 0);
-  /* $form['download']['download_complete'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Include completed translations for the selected languages (<span id="download-total">@count</span>)', array('@count' => $report['download_targets_workflow_complete_count'])),
-    '#default_value' => 0,
-    '#disabled' => $report['download_targets_workflow_complete_count'] == 0
-    );
-    $form['download']['download_incomplete'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Include incomplete translations for the selected languages (<span id="download-total">@count</span>)', array('@count' => $report['download_targets_workflow_incomplete_count'])),
-    '#default_value' => 0,
-    '#disabled' => $report['download_targets_workflow_incomplete_count'] == 0
-    ); */
+
   $available_targets = Lingotek::availableLanguageTargets(); //array_combine(Lingotek::availableLanguageTargets("lingotek_locale"),Lingotek::availableLanguageTargets("name"));
   $options_complete = array(); // locale => label
   $options_incomplete = array();
 
   foreach ($available_targets as $target) {
-    $label = $target->name . ' (' . $target->native . ')';
+    $label = $target->name . ' / '.$target->native.' (' . $target->lingotek_locale . ')';
     $locale_complete_count = 0;
     foreach ($report['download_targets_workflow_complete'] as $download_target) {
       if ($target->lingotek_locale == $download_target['locale']) {

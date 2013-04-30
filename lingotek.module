@@ -44,32 +44,40 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
+  
+  
+  /*
+  // Enterprise Only access callback and arguments example
+  $items[LINGOTEK_MENU_MAIN_BASE_URL.'/test'] = array(//main menu bar link including module description
+    'title' => 'ENTERPRISE',
+    'access arguments' => array('enterprise'),
+    'access callback' => 'lingotek_access_by_plan_type',
+    'description' => 'The Lingotek module helps you translate and keep your site translated',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_admin_form'),
+  );*/
 
-  //
-  // Enterprise Only Menu Items
-  if (LingotekAccount::instance()->isEnterprise()) {
+  $items['node/%node/lingotek_pm'] = array(
+    'title' => 'Lingotek',
+    'access arguments' => array(1, 'pm'),
+    'access callback' => 'lingotek_access', // Enterprise Only Function
+    'file' => 'lingotek.page.inc',
+    'page arguments' => array(1),
+    'page callback' => 'lingotek_pm',
+    'type' => MENU_LOCAL_TASK
+  );
 
-    $items['node/%node/lingotek_pm'] = array(
-      'title' => 'Lingotek',
-      'access arguments' => array(1, 'pm'),
-      'access callback' => 'lingotek_access',
-      'file' => 'lingotek.page.inc',
-      'page arguments' => array(1),
-      'page callback' => 'lingotek_pm',
-      'type' => MENU_LOCAL_TASK
-    );
-
-    $items['node/%node/lingotek_dev'] = array(
-      'title' => 'Lingotek Developer Tools',
-      'access arguments' => array(1, 'dev'),
-      'access callback' => 'lingotek_access_dev_tools',
-      'description' => 'Developer Tools',
-      'file' => 'lingotek.dev.inc',
-      'page callback' => 'lingotek_dev_page',
-      'page arguments' => array(1),
-      'type' => MENU_LOCAL_TASK
-    );
-  }
+  $items['node/%node/lingotek_dev'] = array(
+    'title' => 'Lingotek Developer Tools',
+    'access arguments' => array(1, 'dev'),
+    'access callback' => 'lingotek_access_dev_tools', // Enterprise Only Function
+    'description' => 'Developer Tools',
+    'file' => 'lingotek.dev.inc',
+    'page callback' => 'lingotek_dev_page',
+    'page arguments' => array(1),
+    'type' => MENU_LOCAL_TASK
+  );
 
   // Use the Standard Dashboard Interface
   // Lingotek Dashboard and Settings Tabs
@@ -396,16 +404,6 @@ function lingotek_entity_translation_node_tab_access() {
   return FALSE;
 }
 
-function lingotek_access_dev_tools($node, $permission) {
-  // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
-  $user_access = user_access($permission);
-  if (module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && $user_access && !lingotek_node_pushed($node)) {
-    return FALSE;
-  }
-  // Default: Standard user access
-  return user_access($permission);
-}
-
 /**
  * Entity Translation edit access callback when enabled with Lingotek module.
  *
@@ -603,6 +601,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $form['lingotek']['content']['lingotek_allow_community_translation'] = array(
       '#type' => 'checkbox',
       '#title' => t('Allow Community Translation'),
+      
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'allow_community_translation'), 'lingotek_allow_community_translation', 0),
     );

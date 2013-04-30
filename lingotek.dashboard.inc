@@ -138,7 +138,7 @@ function lingotek_get_dashboard_code() {
       $sync_url,
       // data
       lingotek_get_source_language_json(), // source_language
-      lingotek_get_localization_languages_json(), // localization_languages - The languages "localized" on Drupal
+      json_encode(Lingotek::availableLanguageTargets('lingotek_locale', TRUE)), // localization_languages - The languages "localized" on Drupal
       json_encode($totals) // The target languages they are using on Lingotek
   );
   return $output;
@@ -294,22 +294,6 @@ function lingotek_get_source_language_json() {
   $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];
 
   return json_encode($data);
-}
-
-/**
- * Outputs the languages active in this installation.  Supplied to the dashboard.
- * Output Format (example): ["en_US","fr_FR"]
- */
-function lingotek_get_localization_languages_json() {
-
-  $languages = array_keys(current(language_list('enabled')));
-
-  $result = array();
-  foreach ($languages as $language) {
-    $result[] = Lingotek::convertDrupal2Lingotek($language);
-  }
-
-  return json_encode($result);
 }
 
 /**

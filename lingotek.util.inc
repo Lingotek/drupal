@@ -10,7 +10,7 @@
  * (adapted from: drupal_json_output)
  * @param type $var
  */
-function lingotek_json_output_cors($var = NULL, $status = "200", $params=array()) {
+function lingotek_json_output_cors($var = NULL, $status = "200", $params = array()) {
   // We are returning JSON, so tell the browser.
   $methods_allowed = isset($params['methods_allowed']) ? $params['methods_allowed'] : 'GET,PUT,POST,DELETE';
   drupal_add_http_header('Status', $status);
@@ -356,14 +356,45 @@ function lingotek_support_footer() {
  * all languages).
  */
 function lingotek_access($node, $permission) {
-
-  if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
-    if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
-      return FALSE;
+  if (LingotekAccount::instance()->isEnterprise()) {
+    if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
+      if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
+        return FALSE;
+      }
+      return user_access($permission);
     }
-    return user_access($permission);
   }
   return FALSE;
+}
+
+function lingotek_access_by_plan_type($types, $permission = NULL) {
+  $account = LingotekAccount::instance();
+  $access = FALSE;
+  if (is_string($types)) {
+    $types = array($types);
+  }
+  if (!is_array($types)) {
+    return $access;
+  }
+  foreach ($types as $type) {
+    $access = TRUE;
+    if (!$account->isPlanType($type)) {
+      return FALSE;
+    }
+  }
+  return is_null($permission) ? $access : user_access($permission);
+}
+
+function lingotek_access_dev_tools($node, $permission) {
+  // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
+  // OR when not Enterprise
+  $user_access = user_access($permission);
+  if ((module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && $user_access && !lingotek_node_pushed($node))
+      || !LingotekAccount::instance()->isEnterprise()) {
+    return FALSE;
+  }
+  // Default: Standard user access
+  return user_access($permission);
 }
 
 /**
@@ -676,7 +707,7 @@ function lingotek_lookup_locale_exists($drupal_language_code) {
   $languages = language_list();
   foreach ($languages as $target) {
     if (isset($target->language) && strcmp($target->language, $drupal_language_code) == 0) {
-      return $target;
+      return TRUE;
     }
   }
   return FALSE;
@@ -687,24 +718,33 @@ function lingotek_lookup_locale_exists($drupal_language_code) {
  */
 function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
-
   $language = lingotek_lookup_language_by_locale($lingotek_locale);
+
   if ($language) {
+    // ALREADY EXISTS IN LANGUAGE TABLE
     // If already in the languages table then just tack on the lingotek_locale and enable it
     $drupal_language_code = $language->language;
   }
   else {
+    // DOES NOT EXIST, INSERT NEW INTO LANGUAGE TABLE
     // If not add it to the languages table first and then tack on the lingotek_locale and enable it
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
-
-    if (!lingotek_lookup_locale_exists($drupal_language_code)) {
-      $name = isset($_POST['language']) ? $_POST['language'] : NULL;
-      $native = isset($_POST['native']) ? $_POST['native'] : NULL;
-      $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
-      $domain = '';
-      $prefix = ''; //to-do: attempt to use a short prefix
-      locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
+    if (lingotek_lookup_locale_exists($drupal_language_code)) { // drupal code is already being used, generate another
+      $errors = array($drupal_language_code);
+      $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale));
+      if (lingotek_lookup_locale_exists($drupal_language_code)) {
+        $errors[] = $drupal_language_code;
+        LingotekLog::error("Cannot add language code.  Attempted language codes already being used: !errors", array('!errors' => $errors));
+        return FALSE; // do not add the language.
+      }
     }
+
+    $name = isset($_POST['language']) ? $_POST['language'] : NULL;
+    $native = isset($_POST['native']) ? $_POST['native'] : NULL;
+    $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
+    $domain = '';
+    $prefix = '';
+    locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
   }
 
   LingotekSync::insertTargetEntriesForAllNodes($lingotek_locale); // Add the node sync target language entries to the lingotek table.
