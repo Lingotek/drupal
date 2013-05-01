@@ -46,7 +46,7 @@ class LingotekLog {
     return is_string($obj)? $obj : '<pre>' . print_r($obj, TRUE) . '</pre>'; //htmlspecialchars(var_export($obj, TRUE))
   }
 
-  private static function log($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_NOTICE, $tag = '') {
+  public static function log($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_NOTICE, $tag = '') {
     if ($severity == WATCHDOG_WARNING && variable_get('lingotek_warning_log', self::getDefault())) {
       return;
     }
