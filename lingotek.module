@@ -39,19 +39,20 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_MAIN_BASE_URL] = array(//main menu bar link including module description
     'title' => 'Translation',
     'access arguments' => array('administration'),
-    'description' => 'The Lingotek module helps you translate and keep your site translated',
+    'description' => 'The Drupal Translation module helps you translate and keep your site translated',
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
   );
 
   $items['node/%node/lingotek_pm'] = array(
-    'title' => 'Lingotek',
+    'title' => 'Translations',
     'access arguments' => array(1, 'pm'),
     'access callback' => 'lingotek_access', // Enterprise Only Function
     'file' => 'lingotek.page.inc',
     'page arguments' => array(1),
     'page callback' => 'lingotek_pm',
+    'weight' => 1,
     'type' => MENU_LOCAL_TASK
   );
 
@@ -63,6 +64,7 @@ function lingotek_menu() {
     'file' => 'lingotek.dev.inc',
     'page callback' => 'lingotek_dev_page',
     'page arguments' => array(1),
+    'weight' => 2,
     'type' => MENU_LOCAL_TASK
   );
 
@@ -275,7 +277,7 @@ function lingotek_menu() {
 
   $items['admin/config/lingotek/setup-complete'] = array(
     'title' => 'Setup Complete',
-    'description' => 'Your Lingotek module has been configured and is now ready to use.',
+    'description' => 'The Drupal Translation module has been configured and is now ready to use.',
     'file' => 'lingotek.setup.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_complete_form'),
@@ -347,7 +349,7 @@ function lingotek_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
- * Entity Translation access callback when enabled with Lingotek module.
+ * Entity Translation access callback when enabled with Drupal Translation module.
  *
  * @return bool
  *   TRUE if the user should be able to access the requested resource, FALSE otherwise.
@@ -381,7 +383,7 @@ function lingotek_entity_translation_node_tab_access() {
 }
 
 /**
- * Entity Translation edit access callback when enabled with Lingotek module.
+ * Entity Translation edit access callback when enabled with Drupal Translation module.
  *
  * @return bool
  *   TRUE if the user should be able to access the requested resource, FALSE otherwise.
@@ -490,7 +492,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Vertical Tab.
   $form['lingotek'] = array(
-    '#title' => t('Translation Mangement'),
+    '#title' => t('Translation management'),
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -509,7 +511,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form['lingotek']['et_content']['explanation'] = array(
     '#title' => $title,
     '#type' => 'item',
-    '#description' => t('Translation of this node is currently managed by the Entity Translation module. Click the "Enable Lingotek" button to begin using the Lingotek module to manage this node\'s translation.  Upon saving the node, its content will be uploaded to Lingotek.  You will not be able to switch back to using Entity Translation for this node.'),
+    '#description' => t('Translation of this node is currently managed by the Entity Translation module. Click the "Enable Lingotek" button to begin using the Drupal Translation module to manage this node\'s translation.  Upon saving the node, its content will be uploaded to Lingotek.  You will not be able to switch back to using Entity Translation for this node.'),
   );
 
   $form['lingotek']['et_content']['is_et_node'] = array(
@@ -544,7 +546,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form['lingotek']['content']['note'] = array(
     '#type' => 'item',
     '#title' => $title,
-    '#description' => t("The Lingotek module was developed to aid you in getting your Drupal site translated. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
+    '#description' => t("The Drupal Translation module was developed to help you tranlate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
   );
 
   $form['lingotek']['content']['create_lingotek_document'] = array(
@@ -986,7 +988,7 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
 }
 
 /**
- * Checks to make sure the Lingotek module setup completed successfully.  If its not, the user is directed to the setup wizard.
+ * Checks to make sure the Drupal Translation module setup completed successfully.  If its not, the user is directed to the setup wizard.
  */
 function lingotek_is_module_setup() {
 

@@ -879,7 +879,7 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
 }
 
 /*
- * Sets the priority of the Lingotek module
+ * Sets the priority of the Drupal Translation module
  */
 
 function lingotek_set_priority() {
@@ -887,7 +887,7 @@ function lingotek_set_priority() {
 }
 
 /*
- * Sets the global defaults for the Lingotek module
+ * Sets the global defaults for the Drupal Translation module
  */
 
 function lingotek_set_defaults() {

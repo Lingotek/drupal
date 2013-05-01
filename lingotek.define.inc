@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Lingotek Module Constants.
+ * Drupal Translation module Constants.
  */
 /*
  * def - only defines the constant if it has not been defined previously (in local override file)
@@ -20,7 +20,7 @@ if (!function_exists('def')) {
 /**
  * Local Override - a local override configuration may be used by: 
  * (1) inserting variable overrides into the Drupal "sites/default/settings.php" file (recommended)
- * (2) inserting variable into a "config.php" file in your lingotek module folder 
+ * (2) inserting variable into a "config.php" file in The Drupal Translation module folder 
  * (3) setting the environment var 'LINGOTEK_CONFIG_PATH' to a file path elsewhere on your system
  */
 $local_env_config_filepath = getenv('LINGOTEK_CONFIG_PATH');

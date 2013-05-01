@@ -868,7 +868,7 @@ function lingotek_setup_node_updates_form($form, $form_state) {
   $source_language = lingotek_get_source_language();
 
   $form['lingotek_header'] = array('#markup' => '<h1>Node Updates</h1>');
-  //$form['lingotek_instructions'] = array( '#markup' => '<div>The Lingotek module has be</div>' );
+  //$form['lingotek_instructions'] = array( '#markup' => '<div>The Drupal Translation module has be</div>' );
   $form['lingotek_header_line'] = array('#markup' => '<hr />');
   $form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
 
