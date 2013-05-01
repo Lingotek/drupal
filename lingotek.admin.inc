@@ -64,6 +64,7 @@ function lingotek_admin_form() {
         array('External ID:', variable_get('lingotek_login_id', '')),
         array('Project ID:', variable_get('lingotek_project', '')),
         array('Vault ID:', variable_get('lingotek_vault', '')),
+        array('Notify URL:', lingotek_get_notifications_url()),
         )))
   );
 
@@ -421,7 +422,7 @@ function lingotek_admin_form() {
   /*
    * Troubleshooting and Logging - Developer Settings
    */
-  $form['developer_settings'] = array(
+  $form['troubleshooting'] = array(
     '#type' => 'fieldset',
     '#title' => t('Troubleshooting'),
     '#description' => t('Help troubleshoot any issues with the module.'),
@@ -430,28 +431,28 @@ function lingotek_admin_form() {
     '#group' => 'administrative_settings',
   );
 
-  $form['developer_settings']['lingotek_error_log'] = array(
+  $form['troubleshooting']['lingotek_error_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Error Log'),
     '#description' => t('This prints errors and warnings to the web server\'s error logs in addition to adding them to watchdog.'),
     '#default_value' => variable_get('lingotek_error_log', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
-  $form['developer_settings']['lingotek_warning_log'] = array(
+  $form['troubleshooting']['lingotek_warning_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Warnings Log'),
     '#description' => t('This logs any warnings in watchdog and the web server\'s error logs.'),
     '#default_value' => variable_get('lingotek_warning_log', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
-  $form['developer_settings']['lingotek_trace_log'] = array(
+  $form['troubleshooting']['lingotek_trace_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Trace Log'),
     '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
     '#default_value' => variable_get('lingotek_trace_log', LINGOTEK_DEV ? FALSE : FALSE),
   );
 
-  $form['developer_settings']['lingotek_api_debug'] = array(
+  $form['troubleshooting']['lingotek_api_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable API debugging'),
     '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
@@ -459,13 +460,12 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? TRUE : FALSE),
   );
 
-  $form['developer_settings']['lingotek_flush_cache'] = array(
+  $form['troubleshooting']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
     '#default_value' => variable_get('lingotek_flush_cache', LINGOTEK_DEV ? TRUE : FALSE),
   );
-
 
   $form = system_settings_form($form);
 

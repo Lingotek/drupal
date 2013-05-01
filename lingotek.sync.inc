@@ -224,7 +224,7 @@ function lingotek_form_bulk_sync() {
   $options_incomplete = array();
 
   foreach ($available_targets as $target) {
-    $label = $target->name . ' / '.$target->native.' (' . $target->lingotek_locale . ')';
+    $label = $target->name . ' / ' . $target->native . ' (' . $target->lingotek_locale . ')';
     $locale_complete_count = 0;
     foreach ($report['download_targets_workflow_complete'] as $download_target) {
       if ($target->lingotek_locale == $download_target['locale']) {

@@ -62,5 +62,5 @@ define('LINGOTEK_ENABLED', 'lingotek');
  * Defines the path URLs
  */
 define('LINGOTEK_MENU_LANG_BASE_URL', 'admin/config/regional/lingotek');
-define('LINGOTEK_MENU_MAIN_BASE_URL', 'admin/settings/lingotek');
+define('LINGOTEK_MENU_MAIN_BASE_URL', 'admin/settings/lingotek');//admin/config/lingotek
 define('LINGOTEK_NOTIFICATIONS_URL', 'lingotek/notify'); // notification callback URL
