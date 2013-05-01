@@ -194,7 +194,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
     $api = LingotekApi::instance();
     $response = $api->createCommunity($parameters, $callback_url);
 
-    if ($response->results == "success") {
+    if ($response && $response->results == "success") {
       $community = $response;
       /*
         stdClass::__set_state(array(
@@ -225,7 +225,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
     else {
 
       // If there were any setup or communication problems.
-      drupal_set_message(t('There was an error contacting the Lingotek servers to create your account.  Please try again later.'), 'error');
+      drupal_set_message(t('There was an error contacting the Lingotek servers to create your account.  Please try again later. [Server: @server]', array('@server' => LINGOTEK_API_SERVER)), 'error');
     } // END:  if error.
   } // END:  Provision new Community
   else { // If the user already has all the required community credentials, just direct them to the next step.
@@ -868,7 +868,7 @@ function lingotek_setup_node_updates_form($form, $form_state) {
   $source_language = lingotek_get_source_language();
 
   $form['lingotek_header'] = array('#markup' => '<h1>Node Updates</h1>');
-  //$form['lingotek_instructions'] = array( '#markup' => '<div>The Lingotek module has be</div>' );
+  //$form['lingotek_instructions'] = array( '#markup' => '<div>The Drupal Translation module has be</div>' );
   $form['lingotek_header_line'] = array('#markup' => '<hr />');
   $form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
 
@@ -1067,7 +1067,7 @@ function lingotek_mail($key, &$message, $params) {
       $message['body'][] = t('First Name: @firstname', array('@firstname' => $params['first_name']));
       $message['body'][] = t('Last Name: @lastname', array('@lastname' => $params['last_name']));
       $message['body'][] = t('Email: @email', array('@email' => $params['email']));
-      $message['body'][] = t('');
+      $message['body'][] = '';
       break;
   }
 }

@@ -119,6 +119,23 @@ class LingotekApi {
     }
     return $success;
   }
+  
+  public function removeDocument($document_id, $reset_node = TRUE) {
+    $success = FALSE;
+    if ($document_id && (is_numeric($document_id) || is_array($document_id))) {
+      // Remove node info from lingotek table (and reset for upload when reset_node is TRUE)
+      if($reset_node) {
+        LingotekSync::resetNodeInfoByDocId($document_id);
+      } else {
+        LingotekSync::removeNodeInfoByDocId($document_id);
+      }
+      $result = $this->request('removeDocument', array('documentId'=>$document_id));
+      if ($result) {
+        $success = TRUE;
+      }
+    }
+    return $success;
+  }
 
   /**
    * Adds a Document and one or more Translation Targets to the Lingotek platform. (only used by comments currently)
@@ -774,8 +791,10 @@ class LingotekApi {
 
     $parameters = array(
       'documentId' => $document_id,
+      'documentName' => $node->title,
+      'documentDesc' => $node->title,
       'content' => $content,
-      'format' => $this->xmlFormat(),
+      'format' => $this->xmlFormat()
     );
 
     $this->addAdvancedParameters($parameters, $node);

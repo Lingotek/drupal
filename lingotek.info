@@ -1,5 +1,5 @@
-name = "Lingotek"
-description = "Extends Drupal's multilingual features using the Lingotek Collaborative Translation Platform."
+name = "Drupal Translation"
+description = "Extends Drupal's multilingual features by integrating with the Lingotek Translation Management System."
 package = Multilingual
 core = "7.x"
 version = "7.x-2.x"

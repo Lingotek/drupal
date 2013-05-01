@@ -6,7 +6,88 @@
  */
 
 /**
- * Form constructor for the Lingotek Content push form. (Upload to Lingotek)
+ * Download Translations Form.
+ */
+function lingotek_download_translations_form($form, $form_state, $node, $document = NULL) {
+
+  $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
+  $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
+  $headers = array(
+    $checkbox,
+    t('Language'),
+    t('Document Progress'),
+    t('Phase'),
+    t('Phase Progress'),
+    t('Phase Complete'),
+  );
+
+  $document = is_null($document) ? LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id')) : $document;
+  $targets = lingotek_get_document_targets($document->document_id, TRUE);
+  $rows = array();
+  foreach ($targets as $lingotek_locale => $target) {
+    $current_phase = $document->currentPhase($target->id);
+
+    $phase_complete = ($current_phase->isMarkedComplete) ? TRUE : FALSE;
+
+    $phase_complete_percent = is_object($current_phase) ? $current_phase->percentComplete : 0;
+    if (empty($phase_complete_percent)) {
+      $phase_complete_percent = 0;
+    }
+    $language_link = l(lingotek_language_field_lookup('native', $lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
+    $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_field_lookup('name', $lingotek_locale)));
+    $row = array(
+      '<input type="checkbox" tag="lingotek_pm_row" language="' . $lingotek_locale . '" />',
+      $language_link,
+      $target->percentComplete . '%',
+      $current_phase->name,
+      $phase_complete_percent . '%',
+      ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
+    );
+
+    LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $lingotek_locale));
+    $rows[] = $row;
+  }
+
+  $table = theme('table', array('header' => $headers, 'rows' => $rows));
+
+  $actions = '<input type="button" id="lingotek-update-button" value="' . t('Download') . '" class="form-submit"/>';
+
+  $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
+
+  $token_element = array(
+    '#type' => 'hidden',
+    '#attributes' => array('id' => 'submit-token'),
+    '#value' => drupal_get_token(),
+  );
+  $vars .= drupal_render($token_element);
+
+  $download_form = array();
+
+  //$node_auto_download = (lingotek_lingonode($node->nid, 'sync_method'));
+  $download_form['fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Download Translations'),
+    '#description' => t('Download the latest translations from Lingotek in the selected languages.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE //!$node_auto_download,
+  );
+
+  $download_form['fieldset']['contents'] = array(
+    '#markup' => $table . $actions . $vars,
+  );
+
+  return $download_form;
+}
+
+/**
+ * Download Translations Form Submit
+ */
+function lingotek_download_translations_form_submit($form, $form_state) {
+  
+}
+
+/**
+ * Upload Content Form. (Upload to Lingotek)
  */
 function lingotek_push_form($form, $form_state, $node) {
   $form = array();
@@ -52,6 +133,47 @@ function lingotek_push_form_submit($form, $form_state) {
 }
 
 /**
+ * Form constructor for the node content reset form. (Reset Translations)
+ */
+function lingotek_node_content_reset_form($form, $form_state, $node) {
+  $form = array();
+
+  $form['reset_translations'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Reset Translations'),
+    '#description' => t("Disassociates the node's locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the node's translation management settings to their defaults."),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['reset_translations']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Reset Translations'),
+  );
+
+  $form['node_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $node->nid,
+  );
+
+  return $form;
+}
+
+/**
+ * Submit handler for the lingotek_node_content_reset form.
+ */
+function lingotek_node_content_reset_form_submit($form, $form_state) {
+  $drupal_node_id = $form_state['values']['node_id'];
+  $doc_id = LingotekSync::getDocIdFromNodeId($drupal_node_id);
+
+  $api = LingotekApi::instance();
+  $api->removeDocument($doc_id);
+
+  $node = node_load($drupal_node_id);
+  drupal_set_message(t('Translations reset for "@node_title".', array('@node_title' => $node->title)));
+}
+
+/**
  * Form constructor for the Lingotek Publish form (functionality dependent on entity_translation module installed and enabled).
  */
 function lingotek_publish_form($form, $form_state, $node) {
@@ -68,7 +190,7 @@ function lingotek_publish_form($form, $form_state, $node) {
       '#title' => t('Publish'),
       '#description' => t("Manage content visibility to your site's visitors for the selected languages."),
       '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
+      '#collapsed' => TRUE,
     );
 
     $options = array();
@@ -155,7 +277,7 @@ function lingotek_publish_form_submit($form, $form_state) {
     $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";
 
     if ($updates > 0) {
-      drupal_set_message(t('The following languages have been <b><i>@publish_status_text</i></b>: @languages_updated_html', array('@publish_status_text' => $publish_status_text, '@languages_updated_html' => $languages_updated_html))); //'@node_title' => $node->title, 
+      drupal_set_message(t('The following languages have been <b><i>@publish_status_text</i></b>: ' . $languages_updated_html, array('@publish_status_text' => $publish_status_text, '@languages_updated_html' => $languages_updated_html))); //'@node_title' => $node->title, 
     }
     else {
       drupal_set_message(t('Nothing was changed, since no languages were selected'));
@@ -174,108 +296,55 @@ function lingotek_publish_form_submit($form, $form_state) {
  */
 function lingotek_pm($node) {
   // Display all of the appropriate node management sections (e.g., Upload, Download, Publish)
-  // If we have a language prefix, then drupal_get_path will append that to the front of the string it returns.  So lets strip it back off, so it doesn't break the paths.
-  $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
 
   $output = array();
 
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.pm.js');
 
   if (class_exists('LingotekDocument')) {
-    $checkbox = '<input type="checkbox" onchange="lingotek.pm.toggle_checkboxes(this);" />';
-    $headers = array(
-      $checkbox,
-      t('Language'),
-      t('Document Progress'),
-      t('Phase'),
-      t('Phase Progress'),
-      t('Phase Complete'),
-    );
-
     $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id'));
-    $targets = lingotek_get_document_targets($document->document_id, TRUE);
-    $rows = array();
-    foreach ($targets as $lingotek_locale => $target) {
-      $current_phase = $document->currentPhase($target->id);
-      $phase_complete = ($current_phase->isMarkedComplete) ? TRUE : FALSE;
-
-      $phase_complete_percent = $current_phase->percentComplete;
-      if (empty($phase_complete_percent)) {
-        $phase_complete_percent = 0;
-      }
-      $language_link = l(lingotek_language_field_lookup('native', $lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
-      $language_link .= ' ' . t('(@language_name)', array('@language_name' => lingotek_language_field_lookup('name', $lingotek_locale)));
-      $row = array(
-        '<input type="checkbox" tag="lingotek_pm_row" language="' . $lingotek_locale . '" />',
-        $language_link,
-        $target->percentComplete . '%',
-        $current_phase->name,
-        $phase_complete_percent . '%',
-        ($phase_complete) ? '<img src="' . $icon_green_check . '" />' : '',
-      );
-
-      LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $lingotek_locale));
-      $rows[] = $row;
-    }
-
-    $table = theme('table', array('header' => $headers, 'rows' => $rows));
-
-    $actions = '<input type="button" id="lingotek-update-button" value="' . t('Download') . '" class="form-submit"/>';
-
-    $vars = '<input type="hidden" id="lingotek_nid" value="' . $node->nid . '" />';
-
-    $token_element = array(
-      '#type' => 'hidden',
-      '#attributes' => array('id' => 'submit-token'),
-      '#value' => drupal_get_token(),
-    );
-    $vars .= drupal_render($token_element);
-
-    $download_translations = array();
-
-    $download_translations['fieldset'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Download Translations'),
-      '#description' => t('Download the latest translations from Lingotek in the selected languages.'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-
-    $download_translations['fieldset']['contents'] = array(
-      '#markup' => $table . $actions . $vars,
-    );
 
     if (lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
-      $content_push_form = drupal_get_form('lingotek_push_form', $node);
 
-      $output['content_push'] = array(
-        '#markup' => (lingotek_lingonode($node->nid, 'create_lingotek_document')) ? '' : drupal_render($content_push_form),
-      );
+      $node_pushed = lingotek_node_pushed($node);
+      $node_auto_upload = (lingotek_lingonode($node->nid, 'create_lingotek_document'));
+      if (!$node_pushed || !$node_auto_upload) {
+        $content_push_form = drupal_get_form('lingotek_push_form', $node);
+        $output['content_push'] = array(
+          '#markup' => drupal_render($content_push_form),
+        );
+      }
 
-      if (!empty($rows)) {
-        $output['content_pull'] = array(
-          '#markup' => drupal_render($download_translations),
+      if ($node_pushed) {
+        $download_form = drupal_get_form('lingotek_download_translations_form', $node, $document);
+        $output[] = array(
+          '#markup' => drupal_render($download_form),
+        );
+
+        // Add the mark as complete table if there are complete-eligible phrases.
+        if ($document->hasPhasesToComplete()) {
+          $drupal_phase_complete_from = drupal_get_form('lingotek_mark_phases_complete', $node, $document);
+          $output['mark_complete'] = array(
+            '#markup' => drupal_render($drupal_phase_complete_from),
+          );
+        }
+
+        $lingotek_advanced_parsing_form = drupal_get_form('lingotek_advanced_parsing_upgrade_form');
+        $output['upgrade_form'] = array(
+          '#markup' => drupal_render($lingotek_advanced_parsing_form),
+        );
+
+        $reset_translations_form = drupal_get_form('lingotek_node_content_reset_form', $node);
+        $output['reset_translations'] = array(
+          '#markup' => drupal_render($reset_translations_form),
         );
       }
     }
     else {
-      $output['content_pull'] = array(
+      $output[] = array(
         '#markup' => '<p class="help">' . t('This node is not compatible with Lingotek translation. Either it is not a Lingotek tranlsation-enabled content type or the node does not have a defined language.') . '</p>'
       );
     }
-
-    // Add the mark as complete table if there are complete-eligible phrases.
-    if ($document->hasPhasesToComplete()) {
-      $drupal_phase_complete_from = drupal_get_form('lingotek_mark_phases_complete', $node);
-      $output['mark_complete'] = array(
-        '#markup' => drupal_render($drupal_phase_complete_from),
-      );
-    }
-
-    $lingotek_advanced_parsing_form = drupal_get_form('lingotek_advanced_parsing_upgrade_form');
-    $output['upgrade_form'] = array(
-      '#markup' => drupal_render($lingotek_advanced_parsing_form),
-    );
 
     // Publish form
     $output['publish_form'] = drupal_get_form('lingotek_publish_form', $node);
@@ -293,7 +362,7 @@ function lingotek_update($nid) {
   foreach ($_POST['targets'] as $locale) {
     lingotek_download_document($node, $locale);
   }
-  drupal_set_message(t('Updated local translations for the selected languages.'));
+  drupal_set_message(t('Updated local translations for the selected languages: @selected_locales', array('@selected_locales' => implode(", ", $_POST['targets']))));
   drupal_json_output(array('status' => 0, 'updated' => $_POST['targets'], 'nid' => $nid));
 }
 
@@ -396,14 +465,15 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
  * @return array
  *   A FAPI form data array.
  */
-function lingotek_mark_phases_complete($form, $form_state, $node) {
+function lingotek_mark_phases_complete($form, $form_state, $node, $document = NULL) {
   $form = array();
 
-  $document_id = lingotek_lingonode($node->nid, 'document_id');
-  if (class_exists('LingotekDocument') && class_exists('LingotekPhase') && $document_id) {
+  $document = is_null($document) ? LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id')) : $document;
+  $document_id = $document->document_id; //lingotek_lingonode($node->nid, 'document_id');
+  if (class_exists('LingotekPhase') && $document_id) {
     $api = LingotekApi::instance();
 
-    $document = LingotekDocument::load($document_id);
+    //$document = LingotekDocument::load($document_id);
     if ($progress = $document->translationProgress()) {
       $targets = $progress->translationTargets;
 
@@ -434,6 +504,8 @@ function lingotek_mark_phases_complete($form, $form_state, $node) {
         '#type' => 'fieldset',
         '#title' => t('Mark Workflow Phases complete'),
         '#description' => t('The following Translation Targets have Phases that can be marked as complete.'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
       );
 
       $form['mark_complete']['phases'] = array(

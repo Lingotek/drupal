@@ -366,15 +366,18 @@ class Lingotek {
    * @return array
    *   An array of Lingotek language codes.
    */
-  public static function availableLanguageTargets($pluck_field = NULL) {
+  public static function availableLanguageTargets($pluck_field = NULL, $include_all = FALSE) {
     $languages = array();
 
     foreach (language_list() as $target_language) {
-      if($target_language->lingotek_enabled) {
-        $languages[] = (is_string($pluck_field) && isset($target_language->$pluck_field))?  $target_language->$pluck_field : $target_language;
+      $language = (is_string($pluck_field) && isset($target_language->$pluck_field)) ? $target_language->$pluck_field : $target_language;
+      if ($include_all && $target_language->enabled) { // include all languages enabled (not necessarily lingotek_enabled)
+        $languages[] = $language;
+      }
+      else if ($target_language->lingotek_enabled) {
+        $languages[] = $language;
       }
     }
-
     return $languages;
   }
 

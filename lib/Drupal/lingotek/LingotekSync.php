@@ -32,7 +32,7 @@ class LingotekSync {
   public static function getNodeStatus($node_id) {
     return lingotek_lingonode($node_id, 'node_sync_status');
   }
-  
+
   public static function getSyncProjects() {
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('lingovalue'));
@@ -41,7 +41,7 @@ class LingotekSync {
     $result = $query->execute();
     $projects = $result->fetchCol();
     $default_project_id = variable_get('lingotek_project', NULL);
-    if(!is_null($default_project_id) && !in_array($default_project_id, $projects)){
+    if (!is_null($default_project_id) && !in_array($default_project_id, $projects)) {
       $projects[] = $default_project_id;
     }
     return $projects;
@@ -94,10 +94,11 @@ class LingotekSync {
       'download_targets_workflow_incomplete' => array(), // not workflow complete (but download if wanted)
       'download_targets_workflow_incomplete_count' => 0
     );
-    if(empty($document_ids)) return $report;// if no documents are PENDING, then no need to make the API call.
+    if (empty($document_ids))
+      return $report; // if no documents are PENDING, then no need to make the API call.
     $api = LingotekApi::instance();
     $response = $api->getProgressReport($project_id, $document_ids, TRUE);
-    
+
     if (isset($response->byDocumentIdAndTargetLocale)) {
       $progress_report = $response->byDocumentIdAndTargetLocale;
       foreach ($progress_report as $doc_id => $target_locales) {
@@ -126,7 +127,7 @@ class LingotekSync {
     }
     return $report;
   }
-  
+
   //lingotek_count_nodes
   public static function getNodeCountByStatus($status) {
     $query = db_select('lingotek', 'l')->fields('l');
@@ -135,7 +136,7 @@ class LingotekSync {
     $result = $query->countQuery()->execute()->fetchField();
     return $result;
   }
-  
+
   //lingotek_count_node_targets
   public static function getTargetCountByStatus($status, $lingotek_locale) {
     $node_language_target_key = 'target_sync_status_' . $lingotek_locale;
@@ -157,16 +158,17 @@ class LingotekSync {
   }
 
   public static function getETNodeIds() { // get nids for entity_translation nodes that are not lingotek pushed
-    $types = lingotek_translatable_node_types();// get all translatable node types 
+    $types = lingotek_translatable_node_types(); // get all translatable node types 
     $et_content_types = array();
     foreach ($types as $type) {
       if (lingotek_managed_by_entity_translation($type)) { // test if lingotek_managed_by_entity_translation
         $et_content_types[] = $type;
       }
     }
-    if(empty($et_content_types)) return array();
-      
-    $nodes = entity_load('node', FALSE, array('type' => $et_content_types));// select nodes with et types
+    if (empty($et_content_types))
+      return array();
+
+    $nodes = entity_load('node', FALSE, array('type' => $et_content_types)); // select nodes with et types
     $et_node_ids = array();
     foreach ($nodes as $node) {
       if (!lingotek_node_pushed($node)) {
@@ -175,32 +177,31 @@ class LingotekSync {
     }
     return $et_node_ids;
   }
-  
+
   public static function getUploadableReport() {
     $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED);
     $report = array(
       'upload_nids' => $edited_nodes,
       'upload_nids_count' => count($edited_nodes)
     );
-    if(module_exists('entity_translation')){
+    if (module_exists('entity_translation')) {
       $et_nodes = self::getETNodeIds();
-      $report = array_merge($report,array(
+      $report = array_merge($report, array(
         'upload_nids_et' => $et_nodes,
         'upload_nids_et_count' => count($et_nodes)
-      ));
+          ));
     }
     return $report;
   }
-  
+
   public static function getReport() {
     $report = array_merge(
-      self::getUploadableReport(),
-      self::getDownloadableReport()
+        self::getUploadableReport(), self::getDownloadableReport()
     );
     return $report;
   }
-  
-  public static function getNodeIdsByStatus($status){
+
+  public static function getNodeIdsByStatus($status) {
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('nid'));
     $query->condition('lingovalue', $status);
@@ -212,8 +213,9 @@ class LingotekSync {
 
   public static function getDocIdsByStatus($status) {
     $nids = self::getNodeIdsByStatus($status);
-    if(empty($nids)) return array();
-    
+    if (empty($nids))
+      return array();
+
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('lingovalue'));
     $query->condition('lingokey', 'document_id');
@@ -222,6 +224,50 @@ class LingotekSync {
     $result = $query->execute();
     $doc_ids = $result->fetchCol();
 
+    return $doc_ids;
+  }
+
+  public static function disassociateAllNodes() {
+    db_truncate('lingotek');
+  }  
+  
+  public static function resetNodeInfoByDocId($lingotek_document_id) {
+    $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
+    $count = 0;
+    foreach($doc_ids as $doc_id){
+      $node_id = LingotekSync::getNodeIdFromDocId($doc_id); // grab before node info is removed
+      LingotekSync::removeNodeInfoByDocId($doc_id); //remove locally (regardless of success remotely)
+      if ($node_id !== FALSE) {
+        LingotekSync::setNodeStatus($node_id, LingotekSync::STATUS_EDITED);
+        $count++;
+      }
+    }
+    return $count;
+  }
+  
+  public static function removeNodeInfoByDocId($lingotek_document_id) {
+    $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
+    $count = 0;
+    foreach ($doc_ids as $doc_id) {
+      $nid = self::getNodeIdFromDocId($lingotek_document_id);
+      if ($nid) {
+        $query = db_delete('lingotek');
+        $query->condition('nid', $nid);
+        //$query->distinct();
+        $result = $query->execute();
+        $count++;
+      }
+    }
+    return $count;
+  }
+
+  public static function getAllLocalDocIds() {
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('lingovalue'));
+    $query->condition('lingokey', 'document_id');
+    $query->distinct();
+    $result = $query->execute();
+    $doc_ids = $result->fetchCol();
     return $doc_ids;
   }
 

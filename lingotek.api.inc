@@ -31,7 +31,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
     $use_source = 'TRUE';
   }
 
-  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);//lingotek_lookup_language_by_locale($lingotek_locale)->language
   $params = array
   (
     'documentId' => $document_id,
