@@ -431,6 +431,14 @@ function lingotek_admin_form() {
     '#group' => 'administrative_settings',
   );
 
+  $form['troubleshooting']['lingotek_api_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable API Logging'),
+    '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
+      calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
+    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? TRUE : FALSE),
+  );
+
   $form['troubleshooting']['lingotek_error_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Error Log'),
@@ -452,13 +460,7 @@ function lingotek_admin_form() {
     '#default_value' => variable_get('lingotek_trace_log', LINGOTEK_DEV ? FALSE : FALSE),
   );
 
-  $form['troubleshooting']['lingotek_api_debug'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable API debugging'),
-    '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
-      calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
-    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? TRUE : FALSE),
-  );
+
 
   $form['troubleshooting']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
