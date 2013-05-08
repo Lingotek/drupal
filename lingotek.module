@@ -711,7 +711,11 @@ function lingotek_node_insert($node) {
  * Implements hook_node_delete().
  */
 function lingotek_node_delete($node) {
-  lingotek_lingonode_delete($node->nid);
+  $api = LingotekApi::instance();
+  $doc_id = lingotek_lingonode($node->nid, 'document_id');
+  if (is_numeric($doc_id)) {
+    $api->removeDocument($doc_id, FALSE);
+  }
 }
 
 /**
