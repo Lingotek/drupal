@@ -86,6 +86,8 @@ function lingotek_menu() {
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/dashboard'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'];
   $items[LINGOTEK_MENU_LANG_BASE_URL] = $items[LINGOTEK_MENU_MAIN_BASE_URL]; // Add a link to regional settings
+  $items[LINGOTEK_MENU_MAIN_BASE_URL]['access callback'] = 'lingotek_access_tlmi';
+  
   // Tab:  Settings
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'] = array(
     'title' => 'Settings',

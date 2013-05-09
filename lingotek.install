@@ -73,6 +73,7 @@ function lingotek_uninstall() {
     'lingotek_translate_comments',
     'lingotek_translate_comments_node_types',
     'lingotek_translate_fields',
+    'lingotek_hide_tlmi',
     'lingotek_vault',
     'lingotek_workbench_tagged_users',
     'lingotek_workflow',

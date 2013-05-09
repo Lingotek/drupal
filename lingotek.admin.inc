@@ -436,28 +436,28 @@ function lingotek_admin_form() {
     '#title' => t('Enable API Logging'),
     '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
       calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
-    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? TRUE : FALSE),
+    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? 1 : 0),
   );
 
   $form['troubleshooting']['lingotek_error_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Error Log'),
     '#description' => t('This prints errors and warnings to the web server\'s error logs in addition to adding them to watchdog.'),
-    '#default_value' => variable_get('lingotek_error_log', LINGOTEK_DEV ? TRUE : FALSE),
+    '#default_value' => variable_get('lingotek_error_log', LINGOTEK_DEV ? 1 : 0),
   );
 
   $form['troubleshooting']['lingotek_warning_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Warnings Log'),
     '#description' => t('This logs any warnings in watchdog and the web server\'s error logs.'),
-    '#default_value' => variable_get('lingotek_warning_log', LINGOTEK_DEV ? TRUE : FALSE),
+    '#default_value' => variable_get('lingotek_warning_log', LINGOTEK_DEV ? 1 : 0),
   );
 
   $form['troubleshooting']['lingotek_trace_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Trace Log'),
     '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
-    '#default_value' => variable_get('lingotek_trace_log', LINGOTEK_DEV ? FALSE : FALSE),
+    '#default_value' => variable_get('lingotek_trace_log', 0),
   );
 
 
@@ -466,9 +466,28 @@ function lingotek_admin_form() {
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
-    '#default_value' => variable_get('lingotek_flush_cache', LINGOTEK_DEV ? TRUE : FALSE),
+    '#default_value' => variable_get('lingotek_flush_cache', 0),
   );
-
+  
+  /*
+   * Configuration
+   */
+  $form['configuration'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Configuration'),
+    //'#description' => t('Module preferences.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+  );
+  
+  $form['configuration']['lingotek_hide_tlmi'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide top-level menu item'),
+    '#description' => t('When hidden, the module can still be accessed under <i>Configuration &gt; Regional and language</i>'),
+    '#default_value' => variable_get('lingotek_hide_tlmi', 0),
+  );
+  
   $form = system_settings_form($form);
 
   $form['#submit'][] = 'lingotek_admin_form_submit';
@@ -483,6 +502,8 @@ function lingotek_admin_form_submit($form, $form_state) {
   // Enabling/disabling Lingotek comment translation will have an effect on the comment entity.
   entity_info_cache_clear();
   entity_get_info('comment');
+  
+  menu_rebuild();
 }
 
 /**

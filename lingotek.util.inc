@@ -367,6 +367,17 @@ function lingotek_access($node, $permission) {
   return FALSE;
 }
 
+/*
+ * Top-level menu item
+ */
+function lingotek_access_tlmi($permission) {
+  $hide_top_level_menu_item = variable_get('lingotek_hide_tlmi', 0);
+  if ($hide_top_level_menu_item)
+    return FALSE;
+  else
+    return user_access($permission);
+}
+
 function lingotek_access_by_plan_type($types, $permission = NULL) {
   $account = LingotekAccount::instance();
   $access = FALSE;
