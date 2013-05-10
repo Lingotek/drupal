@@ -132,6 +132,16 @@ function lingotek_menu() {
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard_command_ajax',
   );
+  
+  // Admin Configuration
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/config'] = array(
+    'title' => 'Lingotek Configuration Options',
+    'description' => 'The configuration options',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'lingotek_admin_configuration_view',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
 
   // Gets the Users Current Account Status.
   $items['lingotek/get-account-status'] = array(

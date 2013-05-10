@@ -468,7 +468,7 @@ function lingotek_admin_form() {
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
     '#default_value' => variable_get('lingotek_flush_cache', 0),
   );
-  
+
   /*
    * Configuration
    */
@@ -480,14 +480,14 @@ function lingotek_admin_form() {
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
   );
-  
+
   $form['configuration']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
     '#description' => t('When hidden, the module can still be accessed under <i>Configuration &gt; Regional and language</i>'),
     '#default_value' => variable_get('lingotek_hide_tlmi', 0),
   );
-  
+
   $form = system_settings_form($form);
 
   $form['#submit'][] = 'lingotek_admin_form_submit';
@@ -502,9 +502,337 @@ function lingotek_admin_form_submit($form, $form_state) {
   // Enabling/disabling Lingotek comment translation will have an effect on the comment entity.
   entity_info_cache_clear();
   entity_get_info('comment');
-  
+
   menu_rebuild();
 }
+
+function lingotek_admin_configuration_view() {
+  $output = array();
+
+  $output[] = drupal_get_form('lingotek_admin_language_switcher_form');
+
+  $lang_negotiation_info = locale_language_negotiation_info();
+  $general_detection_config_url = substr($lang_negotiation_info['locale-url']['config'], 0, strrpos($lang_negotiation_info['locale-url']['config'], "/"));
+
+  $items = array();
+  $items['items'] = array(
+    //l('Adjust Language Switcher Block', 'admin/config'),
+    //l('Configure Enabled Content Types', 'admin/structure'), //admin/structure/block/manage/locale/language/configure
+    l('Language detection and selection', $general_detection_config_url),
+    l('Configure enabled content types', 'admin/config/lingotek/node-translation-settings'),
+    l('URL language detection configuration', $lang_negotiation_info['locale-url']['config']),
+  );
+  $output[] = array(
+    '#prefix' => '<hr/>',
+    '#type' => 'item',
+    '#title' => t('Other Relevant Configuration'),
+    '#markup' => theme('item_list', $items)
+  );
+
+  return $output;
+}
+
+/*
+ * Language Switcher Form
+ */
+
+function lingotek_admin_language_switcher_form() {
+
+  $form = array();
+
+  $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
+
+  $query = db_select('block', 'b');
+  $query->fields('b');
+  $query->condition('module', 'locale');
+  $query->condition('delta', 'language');
+  $query->condition('theme', $current_theme);
+  $result = $query->execute();
+
+  $block = $result->fetchAssoc();
+  $block_enabled = $block['status'];
+  $block_regions = system_region_list($current_theme, REGIONS_VISIBLE);
+
+  $ls_chkbox_enabled = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enabled'),
+    '#default_value' => $block_enabled,
+  );
+
+  $default_region = "sidebar_first";
+  $default_region_value = array_key_exists($block['region'], $block_regions) ? $block['region'] : (array_key_exists($default_region, $block_regions) ? $default_region : NULL);
+
+  $ls_select_region = array(
+    '#type' => 'select',
+    //'#title' => 'Region',
+    '#options' => $block_regions,
+    '#default_value' => $default_region_value
+  );
+
+  $form[] = array(
+    '#type' => 'item',
+    '#title' => 'Default Language Switcher',
+    '#description' => t('The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+  );
+  $form['theme'] = array(
+    '#type' => 'hidden',
+    '#value' => $current_theme
+  );
+
+  $form['enabled'] = $ls_chkbox_enabled;
+  $form['region'] = $ls_select_region;
+
+
+  /* $language_negotiation = variable_get('language_negotiation_language', array());
+    $url_detection_enabled = array_key_exists('locale-url', $language_negotiation);
+    $ls_chkbox_detection = array(
+    '#type' => 'checkbox',
+    '#title' => t('URL detection Enabled'),
+    '#default_value' => $url_detection_enabled,
+    '#disabled' => TRUE
+    );
+    $form['url_detection'] = $ls_chkbox_detection; */
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save configuration'
+  );
+
+  /* $form[] = array(
+    '#type' => 'markup',
+    '#markup' => json_encode($block),
+    '#attributes' => array('class' => 'description')
+    ); */
+
+  return $form;
+}
+
+function lingotek_admin_language_switcher_form_submit($form, $form_state) {
+
+  $block = array(
+    'status' => $form_state['values']['enabled'],
+    'weight' => 0,
+    'region' => $form_state['values']['region'],
+    'module' => 'locale',
+    'delta' => 'language',
+    'theme' => $form_state['values']['theme']
+  );
+
+  db_update('block')
+      ->fields(array(
+        'status' => $block['status'],
+        'weight' => $block['weight'],
+        'region' => $block['region'],
+      ))
+      ->condition('module', $block['module'])
+      ->condition('delta', $block['delta'])
+      ->condition('theme', $block['theme'])
+      ->execute();
+  // Flush cache
+  cache_clear_all();
+}
+
+/*
+  function lingotek_admin_content_types_form($setup_flow = FALSE) {
+  $form = array();
+  $form[] = array(
+  '#type' => 'item',
+  '#title' => t('Enabled Content-Type Settings'),
+  '#description' => t('Select which nodes and fields you would like translated.'),
+  );
+
+  $raw_types = node_type_get_types();
+  $types = array();
+  $translate = variable_get('lingotek_translate_fields', array());
+
+  if (count($translate) > 0) {
+  $use_defaults = FALSE;
+  }
+  else {
+  $use_defaults = TRUE;
+  }
+
+  // What types of fields DO we translate?
+  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea_with_summary');
+
+  //$form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+
+  $form['lingotek_checkboxes_open'] = array('#markup' => '<div id="content-checkboxes" style="border: 0px solid red;">');
+  // Arrange the Types nicely.
+  foreach ($raw_types as $value) {
+  $types[$value->type] = $value->name;
+  $form['type_' . $value->type] = array(
+  '#type' => 'checkbox',
+  '#title' => t('@value_name (<span id="showhidelink_@value_type"><a id="showlink_@value_type" href="@url" class="use-ajax">choose fields</a></span>)', array('@value_name' => $value->name, '@value_type' => $value->type, '@url' => url('admin/config/lingotek/content-type-choose-fields-ajax/' . $value->type))),
+  '#return_value' => $value->type,
+  '#default_value' => ( array_key_exists($value->type, $translate) || ( $use_defaults === TRUE) ) ? TRUE : FALSE,
+  '#prefix' => '<div id="content_type_' . $value->type . '">',
+  '#suffix' => '</div>' . '',
+  '#ajax' => array(
+  'event' => 'click',
+  'callback' => 'lingotek_content_type_checkbox_callback',
+  'wrapper' => 'content_fields_' . $value->type,
+  ),
+  );
+
+  // Grab the fields for this Content Type.
+  $fields = field_info_instances('node', $value->type);
+
+  $switch = ( array_key_exists($value->type, $translate) ) ? 'block' : 'none';
+  $form['lingotek_' . $value->type . 'fieldlist_open'] = array('#markup' => '<div id="content_fields_' . $value->type . '" style="display: ' . $switch . ';">');
+  $form['lingotek_fieldlist_details_' . $value->type] = array('#markup' => '<div style="padding-left: 25px; padding-bottom: 5px;">Which fields would you like to include:</div>');
+
+  $title_found = FALSE; // Is there a title field present?
+  // Loop the fields, outputting them.
+  foreach ($fields as $field) {
+  $field_label = $field['label'];
+  $field_machine_name = $field['field_name'];
+  $field_type = $field['widget']['type'];
+  $field_name = $value->type . '_SEPERATOR_' . $field_machine_name;
+
+  if (($field_label == 'Title') && ($field_type == 'text_textfield')) {
+  $title_found = TRUE;
+  }
+
+  $rand = rand();
+  $form['lingotek_fieldlist_debug_'.$rand] = array( '#markup' => '<div>'
+  .'Name: ' .$field_name .'<br>'
+  .'Label: ' .$field_label .'<br>'
+  .'Type: ' .$field_type .'<br>'
+  .'</div>' );
+
+  // Exclude field types we dont translate.
+  if (TRUE == array_search($field_type, $included_fields)) {
+  $form[$field_name] = array(
+  '#type' => 'checkbox',
+  '#title' => t('@fieldlabel [@fieldtype]', array('@fieldlabel' => $field_label, '@fieldtype' => $field_type)),
+  // Set if your machine type is set to translate, and your field has been flagged for translation.   OR!  If use defaults == TRUE, and your field type has text in the name somewhere
+  '#default_value' => ( ( isset($translate[$value->type]) && FALSE !== array_search($field_machine_name, $translate[$value->type]) ) || ( ( $use_defaults === TRUE) && (strpos($field_type, 'text') !== FALSE ) ) ) ? TRUE : FALSE,
+  '#prefix' => '<div style="padding-left: 35px;">',
+  '#suffix' => '</div>',
+  );
+  }
+  } // END:  foreach field
+  // if we did NOT find a title field for the specified content type, add it manually as an option, and we can do a title swap for the user.
+  if ($title_found === FALSE) {
+  $form['title_swap_' . $value->type] = array(
+  '#type' => 'checkbox',
+  '#title' => t('Title (Note: field will be created)'),
+  '#default_value' => TRUE,
+  '#prefix' => '<div style="padding-left: 35px;">',
+  '#suffix' => '</div>',
+  );
+  }
+
+  $form['lingotek_' . $value->type . 'fieldlist_close'] = array('#markup' => '</div>');
+
+  $rand = rand();
+  $form['lingotek_after_fields_' . $rand] = array('#markup' => '<div>&nbsp;</div>');
+  } // END:  foreach content type
+
+  $form['lingotek_checkboxes_close'] = array('#markup' => '</div>');
+
+  if ($setup_flow) {
+  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form['submit'] = array(
+  '#type' => 'submit',
+  '#value' => t('Next')
+  );
+
+  if (is_array($_SESSION['lingotek_setup_path'])) {
+  if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
+  $null = array_pop($_SESSION['lingotek_setup_path']);
+  } // if the user went back, remove the last element, which is this page.
+  $form['lingotek_back_button'] = array(
+  '#markup' => l(t('Previous Step'), end($_SESSION['lingotek_setup_path']), array('#attributes' => 'margin-left: 20px;'))
+  );
+  }
+
+  $form['lingotek_support_footer'] = lingotek_support_footer();
+  }
+  else {
+  $form['submit'] = array(
+  '#type' => 'submit',
+  '#value' => 'Save'
+  );
+  }
+  //$form['#submit'][] = 'lingotek_admin_language_switcher_form_submit';
+
+  return $form;
+  }
+
+  function lingotek_admin_content_types_form_submit($form, &$form_state) {
+  dpm(__METHOD__);
+  dpm($form);
+  dpm($form_state);
+
+  $translate = array();
+  $operations = array();
+  foreach ($form_state['values'] as $key => $value) {
+
+  // Look for Selected Content Types and Fields.
+  if (FALSE !== strpos($key, '_SEPERATOR_')) {
+  // And only if set to translate
+  if ($value != 0) {
+  $parts = explode('_SEPERATOR_', $key);
+  $content_type = $parts[0];
+  $content_field = $parts[1];
+  $translate[$content_type][] = $content_field;
+
+  // Set this content type to be Lingotek translated.
+  variable_set('language_content_type_' . $content_type, LINGOTEK_ENABLED);
+  // Set this field to 'translatable'.
+  // Update the field via the Field API (Instead of the direct db_update)
+  $field = field_info_field($content_field);
+  $field['translatable'] = 1;
+  $field['lingotek_translatable'] = 1;
+  field_update_field($field);
+  }
+  } // END:  Selected Content Types and Fields
+  // Look for any nodes we need to do the Title swap for.
+  if (FALSE !== strpos($key, 'title_swap_')) {
+  // And only if set to swap
+  if ($value != 0) {
+  $content_type = substr($key, strlen('title_swap_'));
+  //dpm( 'Title Swap: ' . $content_type );
+  // Do the actual title replacement
+  $entity_type = 'node';
+  $bundle = $content_type;
+  $legacy_field = 'title';
+
+  // Use the Title module to migrate the content.
+  if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
+  //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
+  $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
+  $translate[$content_type][] = 'title_field';
+  $field = field_info_field('title_field');
+  $field['translatable'] = 1;
+  $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
+  $operations[] = array('field_update_field', array($field)); //field_update_field($field);
+  }
+  }
+  }
+  }
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
+  variable_set('lingotek_translate_fields', $translate);
+
+  $operations[] = array('lingotek_cleanup_utility', array(FALSE));
+  $operations[] = array('variable_set', array('lingotek_setup_complete', 1));
+
+  $batch = array(
+  'title' => t('Preparing content for translation'),
+  'operations' => $operations
+  );
+
+  dpm($form_state);
+
+  batch_set($batch);
+
+  drupal_set_message(t('You have completed setup successfully!'));
+  $redirect = LINGOTEK_MENU_LANG_BASE_URL;
+  batch_process($redirect);
+  }
+ */
 
 /**
  * Custom form handler for upgrading a site from using Lingotek's simple to advanced XML parsing of content.

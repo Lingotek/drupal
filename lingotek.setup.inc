@@ -587,13 +587,12 @@ function lingotek_setup_language_settings_form_submit($form, $form_state) {
   drupal_goto('admin/config/lingotek/node-translation-settings');
 }
 
-// END:  lingotek_install_language_settings_form_submit()
 
 /**
  * Node Translation Settings - Form Layout
  * Select the Content Types and Fields to be Translated.
  */
-function lingotek_setup_node_translation_settings_form($form, $form_state) {
+function lingotek_setup_node_translation_settings_form() {
 
   $raw_types = node_type_get_types();
   $types = array();
@@ -609,8 +608,12 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
   // What types of fields DO we translate?
   $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea_with_summary');
 
-  $form['lingotek_instructions'] = array('#markup' => '<div>Which content do you want translated?</div>');
-  $form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form[] = array(
+    '#type' => 'item',
+    '#title' => t('Which content do you want translated?'),
+  );
+  //$form['lingotek_instructions'] = array('#markup' => '<div>Which content do you want translated?</div>');
+  //$form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
 
   $form['lingotek_checkboxes_open'] = array('#markup' => '<div id="content-checkboxes" style="border: 0px solid red;">');
   // Arrange the Types nicely.
@@ -687,25 +690,33 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
 
   $form['lingotek_checkboxes_close'] = array('#markup' => '</div>');
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
-  if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
-      $null = array_pop($_SESSION['lingotek_setup_path']);
-    } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+  
+  if (variable_get('lingotek_setup_complete', 0)) {
+    $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save')
+    );
   }
+  else {
+    $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Next')
+    );
 
-  $form['lingotek_support_footer'] = lingotek_support_footer();
+    if (is_array($_SESSION['lingotek_setup_path'])) {
+      if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
+        $null = array_pop($_SESSION['lingotek_setup_path']);
+      } // if the user went back, remove the last element, which is this page.
+      $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    }
+    $form['lingotek_support_footer'] = lingotek_support_footer();
+  }
 
   return $form;
 }
 
-// END:  lingotek_setup_node_translation_settings_form
 
 /**
  * Node Translation Settings - Ajax Callback 1 (Primary)
