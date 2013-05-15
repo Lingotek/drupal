@@ -45,48 +45,12 @@ function lingotek_install() {
  * Implements hook_uninstall().
  */
 function lingotek_uninstall() {
-  $delete_variables = array(
-    'lingotek_account_enterprise',
-    'lingotek_account_plan',
-    'lingotek_account_plan_type',
-    'lingotek_account_status',
-    'lingotek_activation_email',
-    'lingotek_activation_first_name',
-    'lingotek_activation_last_name',
-    'lingotek_advanced_parsing',
-    'lingotek_advanced_xml_config1',
-    'lingotek_advanced_xml_config2',
-    'lingotek_cms_tag',
-    'lingotek_community_identifier',
-    'lingotek_create_documents_by_default',
-    'lingotek_guid',
-    'lingotek_login_id',
-    'lingotek_notifications_callback',
-    'lingotek_oauth_consumer_id',
-    'lingotek_oauth_consumer_secret',
-    'lingotek_password',
-    'lingotek_project',
-    'lingotek_setup_complete',
-    'lingotek_source_language',
-    'lingotek_sync',
-    'lingotek_target_languages',
-    'lingotek_translate_comments',
-    'lingotek_translate_comments_node_types',
-    'lingotek_translate_fields',
-    'lingotek_hide_tlmi',
-    'lingotek_vault',
-    'lingotek_workbench_tagged_users',
-    'lingotek_workflow',
-    'lingotek_phase_template',
-    'lingotek_warning_log',
-    'lingotek_error_log',
-    'lingotek_trace_log',
-    'lingotek_flush_cache',
-    'lingotek_api_debug'
-  );
-
-  foreach ($delete_variables as $variable) {
-    variable_del($variable);
+  
+  global $conf;
+  foreach (array_keys($conf) as $key) {
+    if (strpos($key, 'lingotek_') === 0) { // It's important to use === instead of == with strpos()
+      variable_del($key);
+    }
   }
 
   db_drop_field('languages', 'lingotek_enabled');

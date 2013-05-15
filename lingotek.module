@@ -96,8 +96,19 @@ function lingotek_menu() {
     'access arguments' => array('administration'),
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_admin_form'),
+    'page callback' => 'lingotek_admin_configuration_view',//drupal_get_form
+    //'page arguments' => array('lingotek_admin_form'),
+  );
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+    'access arguments' => array('administration'),
+    'description' => 'Community Translation Settings',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'lingotek_admin_configuration_view',//drupal_get_form
+    
+    //'page arguments' => array('lingotek_admin_form'),
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
@@ -141,24 +152,6 @@ function lingotek_menu() {
     'page callback' => 'lingotek_admin_configuration_view',
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration')
-  );
-
-  // Gets the Users Current Account Status.
-  $items['lingotek/get-account-status'] = array(
-    'title' => 'Check the Users Account Status',
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('access content'),
-    'description' => 'Check Account Status',
-    'file' => 'lingotek.admin.inc',
-    'page callback' => 'lingotek_get_account_status',
-  );
-
-  // Flushes the Cache
-  $items['lingotek/flush-cache'] = array(
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('administration'),
-    'file' => 'lingotek.admin.inc',
-    'page callback' => 'lingotek_flush_cache',
   );
 
   $items['lingotek/update'] = array(
@@ -915,9 +908,15 @@ function lingotek_update_field($form, $form_state) {
  */
 
 function lingotek_help($path, $arg) {
+  // contact
+  // links to module dependencies (e.g., title)
   switch ($path) {
     case 'admin/help#lingotek':
-      return t('Please see our DevZone:') . ' ' . l(t('Drupal Integration'), 'http://lingotek.com/support/devzone/drupal-integration');
+      $output = '';
+      $output .= '<h2>'.t('Drupal Translation - Help').'</h2>';
+      $support = lingotek_support_footer();
+      $output .= drupal_render($support);      
+      return $output;
   }
 }
 
