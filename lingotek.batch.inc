@@ -14,7 +14,7 @@
  * If this batch was NOT created from a form_submit() handler, then pass in TRUE
  */
 function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
-
+  LingotekLog::trace(__METHOD__);
   $operations = array();
   $entity_type = 'node';
   $source_language = lingotek_get_source_language();
@@ -223,7 +223,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
  * Batch Create: Lingotek Identify Content - create informative lingonode data (in lingotek table) for pre-existing content 
  */
 function lingotek_batch_identify_content($front = FALSE) {
-
+  LingotekLog::trace(__METHOD__);
   $result = db_query('SELECT DISTINCT nid FROM {lingotek}');
   $existing_nids = $result->fetchCol();
   $operations = array();

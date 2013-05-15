@@ -766,6 +766,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
  * Fills in any missing lingotek_locale values to the languages table
  */
 function lingotek_add_missing_locales() {
+  LingotekLog::trace(__METHOD__);
   $languages = language_list();
   $default_language = language_default();
   $update_static_language_list = FALSE;
@@ -871,6 +872,8 @@ function lingotek_get_module_info($field = NULL) {
  */
 
 function lingotek_cleanup_utility($show_messages = TRUE) {
+  LingotekLog::trace(__METHOD__);
+  
   lingotek_set_priority();
   lingotek_set_defaults();
   lingotek_migration_1();
@@ -902,7 +905,7 @@ function lingotek_set_priority() {
  */
 
 function lingotek_set_defaults() {
-
+  LingotekLog::trace(__METHOD__);
   $defaults = array(
     'lingotek_sync' => 1, // auto-download
     'lingotek_create_documents_by_default' => 1, // auto-upload

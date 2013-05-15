@@ -35,7 +35,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
       '#type' => 'actions',
       'submit' => array(
         '#type' => 'submit',
-        '#value' => t('Update Account Status')
+        '#value' => t('Update account status')
       )
     ),
     '#submit' => array('lingotek_admin_account_status_form_submit')
@@ -401,7 +401,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
       '#type' => 'actions',
       'submit' => array(
         '#type' => 'submit',
-        '#value' => t('Save config')
+        '#value' => t('Save configuration')
       )
     ),
     '#submit' => array('lingotek_admin_content_defaults_form_submit')
@@ -548,7 +548,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $btn_reset_translations = array(
     '#type' => 'submit',
-    '#value' => t('Reset Translations'),
+    '#value' => t('Reset translations'),
     '#submit' => array('lingotek_batch_reset_content'),
     '#attributes' => array(
       'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
@@ -557,7 +557,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $btn_cleanup = array(
     '#type' => 'submit',
-    '#value' => t('Run Cleanup'),
+    '#value' => t('Run cleanup'),
     '#submit' => array('lingotek_cleanup_utility')
   );
 
@@ -609,7 +609,7 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
       '#type' => 'actions',
       'submit' => array(
         '#type' => 'submit',
-        '#value' => t('Save config')
+        '#value' => t('Save configuration')
       )
     ),
     '#submit' => array('lingotek_admin_logging_form_submit')
