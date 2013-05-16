@@ -701,17 +701,15 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
 
   if ($connected) {
     $output[] = drupal_get_form('lingotek_admin_content_defaults_form', $show_fieldset);
-    $output[] = drupal_get_form('lingotek_admin_logging_form', $show_fieldset);
-
 
     if ($is_enterprise) {
       $output[] = drupal_get_form('lingotek_admin_comments_form', $show_fieldset);
       $output[] = drupal_get_form('lingotek_admin_advanced_parsing_form', $show_fieldset);
     }
-
     $output[] = drupal_get_form('lingotek_admin_prefs_form', $show_fieldset);
     $output[] = drupal_get_form('lingotek_admin_language_switcher_form', $show_fieldset);
     $output[] = drupal_get_form('lingotek_admin_utilities_form', $show_fieldset);
+    $output[] = drupal_get_form('lingotek_admin_logging_form', $show_fieldset);
   }
 
   $lang_negotiation_info = locale_language_negotiation_info();
