@@ -288,9 +288,22 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
   $connected = $api->testAuthentication($force);
   $is_enterprise = $account->isEnterprise();
 
-  $connection_group_description = ($connected) ? '' :
-      t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(LINGOTEK_API_SERVER . '/lingopoint/portal/communitySignup.action'))
-      );
+
+  $connection_error = t('Connect this site to your Lingotek account by filling in the fields below. If you do not yet have a Lingotek account, you can <a href="@signup_url">sign up</a> to create an ID and collect OAuth credentials. If all fields are complete, there is a problem with one or more of the values.', array('@signup_url' => url(LINGOTEK_API_SERVER . '/lingopoint/portal/communitySignup.action')));
+  if (!$connected) {
+    drupal_set_message($connection_error, 'error');
+  }
+  else {
+    // clear the prior error message
+    $errors = drupal_get_messages('error');
+    if (isset($errors['error'])) {
+      foreach ($errors['error'] as $error) {
+        if ($error != $connection_error) {
+          drupal_set_message($error, 'error');
+        }
+      }
+    }
+  }
 
   $edit_connection = isset($_GET['edit_connection']) || !$connected;
 
@@ -300,7 +313,7 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
 
   $form['connection'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Connection'),
+    '#title' => t('Connection') . ' ' . $status_message,
     //'#markup' => $status_message,
     '#collapsible' => TRUE,
     '#collapsed' => !$edit_connection,
@@ -315,10 +328,11 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
     '#submit' => array('lingotek_admin_connection_form_submit')
   );
 
-  $form['connection'][] = array(
+  /* $form['connection'][] = array(
     '#type' => 'item',
-    '#description' => $status_message . filter_xss(' ' . $connection_group_description),
-  );
+    '#description' => filter_xss($connection_group_description),
+    ); */
+
 
   if ($is_enterprise || $edit_connection) {
     $form['connection']['lingotek_login_id'] = array(
