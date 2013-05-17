@@ -279,6 +279,16 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('administration')
   );
+  
+  $items['admin/config/lingotek/setup-language-switcher'] = array(
+    'title' => 'Enable Language Switcher',
+    'description' => 'Enable the default language switcher',
+    'file' => 'lingotek.setup.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_setup_language_switcher_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administration')
+  );
 
   $items['admin/config/lingotek/setup-complete'] = array(
     'title' => 'Setup Complete',

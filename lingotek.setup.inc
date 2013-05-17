@@ -43,11 +43,11 @@ function lingotek_setup_new_account_form() {
 
   $form = array();
 
-  $form['lingotek_user_directions_1'] = array('#markup' => '<p>New to Lingotek?  Create a free account.</p><p>A Lingotek account is required to process your language translations.  <strong>All fields are required.</strong></p>');
-  $form['lingotek_user_directions_2'] = array('#markup' => '<div>&nbsp;</div>');
-  $form['lingotek_user_directions_3'] = array('#markup' => '<h3>Your information</h3>');
-  $form['lingotek_user_directions_4'] = array('#markup' => '<hr>');
-  $form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form['description'] = array(
+    '#type' => 'item',
+    '#title' => 'Create Account',
+    '#description' => 'New to Lingotek?  Create a free account. <p>A Lingotek account is required to process your language translations.  <strong>All fields are required.</strong></p>'
+  );
 
   $form['first_name'] = array(
     '#type' => 'textfield',
@@ -246,7 +246,11 @@ function lingotek_setup_account_settings_form() {
   $current_password = variable_get('lingotek_password', '');
 
   $form = array();
-  $form['lingotek_user_directions_1'] = array('#markup' => '<p>Login to an existing Lingotek account.</p>');
+  $form['lingotek_user_directions_1'] = array(
+    '#type' => 'item',
+    '#title' => 'Account Login',
+    '#description' => 'Connect an existing Lingotek account.'
+  );
 
   $form['lingotek_lid'] = array(
     '#type' => 'textfield',
@@ -518,16 +522,19 @@ function lingotek_setup_language_settings_form() {
   $default_language = language_default();
   $source_language = variable_get('lingotek_source_language', $default_language->language);
 
-  $form['lingotek_current_language_1'] = array('#markup' => '<p>To get started, select the source language of your website.</p>');
-  $form['lingotek_current_language_2'] = array('#markup' => '<p>The current site default language is: ' . $default_language->name . ' ( ' . $default_language->language . ' )</p>');
-  $form['lingotek_current_language_3'] = array('#markup' => '<p>In most cases, your source language should be the default language.</p>');
+  $form['lingotek_current_language'] = array(
+    '#type' => 'item',
+    '#title' => t('Source language'),
+    '#description' => t('To get started, select the source language that the website is written in.')
+  );
 
   $form['lingotek_install_source_language'] = array(
-    '#title' => t('Source Language'),
+    //'#title' => t('Source Language'),
     '#type' => 'select',
     '#options' => $languages,
     '#default_value' => $source_language,
-    '#description' => t('The current language your site is written in.'),
+    '#description' => t('<br/>In most cases, your source language should be the default language. (The current site default language is: <b>' . $default_language->name . '</b>)'),
+    //t('The current language your site is written in.'),
     '#required' => TRUE,
   );
 
@@ -584,9 +591,79 @@ function lingotek_setup_language_settings_form_submit($form, $form_state) {
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/language-settings';
   drupal_set_message(t('Your language settings have been saved.'));
-  drupal_goto('admin/config/lingotek/node-translation-settings');
+
+
+  drupal_goto('admin/config/lingotek/setup-language-switcher');
 }
 
+function lingotek_setup_language_switcher_form($form, $form_state) {
+  $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
+
+  $query = db_select('block', 'b');
+  $query->fields('b');
+  $query->condition('module', 'locale');
+  $query->condition('delta', 'language');
+  $query->condition('theme', $current_theme);
+  $result = $query->execute();
+
+  $block = $result->fetchAssoc();
+  $block_enabled = $block['status'];
+  $block_regions = system_region_list($current_theme, REGIONS_VISIBLE);
+
+  $ls_chkbox_enabled = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enabled'),
+    '#default_value' => TRUE //$block_enabled,
+  );
+
+  $default_region = "sidebar_first";
+  $default_region_value = array_key_exists($block['region'], $block_regions) ? $block['region'] : (array_key_exists($default_region, $block_regions) ? $default_region : NULL);
+
+  $ls_select_region = array(
+    '#type' => 'select',
+    //'#title' => 'Region',
+    '#description' => t('When enabled, the region to be displayed in.'),
+    '#options' => $block_regions,
+    '#default_value' => $default_region_value
+  );
+
+  $form = array(
+    '#type' => 'item',
+    '#title' => t('Default Language Switcher'),
+    'actions' => array(
+      '#type' => 'actions',
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => t('Next')
+      ),
+      'lingotek_back_button' => lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'))
+    )
+  );
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/setup-language-switcher';
+
+  $form[] = array(
+    '#type' => 'item',
+    '#description' => t('Would you like to enable the default language switcher?'),
+    //'#suffix' => t('The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+  );
+  $form['theme'] = array(
+    '#type' => 'hidden',
+    '#value' => $current_theme
+  );
+
+  $form['enabled'] = $ls_chkbox_enabled;
+  $form['region'] = $ls_select_region;
+  $output = array(
+    $form
+  );
+  return $output;
+}
+
+function lingotek_setup_language_switcher_form_submit($form, $form_state) {
+  require_once('lingotek.admin.inc');
+  lingotek_admin_language_switcher_form_submit($form, $form_state);
+  drupal_goto('admin/config/lingotek/node-translation-settings');
+}
 
 /**
  * Node Translation Settings - Form Layout
@@ -690,7 +767,7 @@ function lingotek_setup_node_translation_settings_form() {
 
   $form['lingotek_checkboxes_close'] = array('#markup' => '</div>');
 
-  
+
   if (variable_get('lingotek_setup_complete', 0)) {
     $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
     $form['submit'] = array(
@@ -716,7 +793,6 @@ function lingotek_setup_node_translation_settings_form() {
 
   return $form;
 }
-
 
 /**
  * Node Translation Settings - Ajax Callback 1 (Primary)

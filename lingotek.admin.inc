@@ -765,6 +765,7 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
   $ls_select_region = array(
     '#type' => 'select',
     //'#title' => 'Region',
+    '#description' => 'When enabled, the region to be displayed in.',
     '#options' => $block_regions,
     '#default_value' => $default_region_value
   );
@@ -780,13 +781,16 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
       'submit' => array(
         '#type' => 'submit',
         '#value' => t('Save configuration')
-      )
+      ),
+    /* 'note' => array(
+      '#markup' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+      ) */
     )
   );
 
   $form['x'][] = array(
     '#type' => 'item',
-    '#description' => t('The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+    '#description' => t('Would you like to enable the default language switcher?')
   );
   $form['x']['theme'] = array(
     '#type' => 'hidden',
@@ -796,7 +800,10 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
   $form['x']['enabled'] = $ls_chkbox_enabled;
   $form['x']['region'] = $ls_select_region;
 
-
+  $form['x'][] = array(
+    '#type' => 'item',
+    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+  );
   /* $language_negotiation = variable_get('language_negotiation_language', array());
     $url_detection_enabled = array_key_exists('locale-url', $language_negotiation);
     $ls_chkbox_detection = array(
@@ -840,8 +847,9 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
   // Flush cache
   cache_clear_all();
 
-  $action = $form_state['values']['enabled'] ? t('enabled') : t('disabled');
-  drupal_set_message(t('The default language switcher is now @action.', array('@action' => $action)));
+  $action = $form_state['values']['enabled'] ? t('now enabled') : t('not enabled');
+  $message_type = $form_state['values']['enabled'] ? 'status' : 'warning';
+  drupal_set_message(t('The default language switcher is @action.', array('@action' => $action)), $message_type);
 }
 
 /**
