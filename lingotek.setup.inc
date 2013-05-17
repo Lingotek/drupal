@@ -556,8 +556,6 @@ function lingotek_setup_language_settings_form() {
   return $form;
 }
 
-// END:  lingotek_install_language_settings_form()
-
 /**
  * Language Selection - Form Validation
  * Requires a source and target language to be selected.
@@ -568,8 +566,6 @@ function lingotek_setup_language_settings_form_validate($form, &$form_state) {
     form_set_error('', t('You must select a valid source language.'));
   }
 }
-
-// END:  lingotek_install_language_settings_form_validate
 
 /**
  * Language Selection - Form Submit Processing
@@ -644,7 +640,7 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
   $form[] = array(
     '#type' => 'item',
     '#description' => t('Would you like to enable the default language switcher?'),
-    //'#suffix' => t('The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+      //'#suffix' => t('The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
   );
   $form['theme'] = array(
     '#type' => 'hidden',
@@ -1139,8 +1135,6 @@ function lingotek_activation($first_name, $last_name, $email, $extras = array())
   curl_close($ch);
 }
 
-// END:  activation
-
 /**
  * Implement hook_mail()
  */
@@ -1158,5 +1152,3 @@ function lingotek_mail($key, &$message, $params) {
       break;
   }
 }
-
-// END:  mail

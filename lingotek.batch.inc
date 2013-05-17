@@ -314,14 +314,14 @@ function lingotek_sync_upload_node($nid, &$context) {
   }
 
   if ($result) {
-    $context['results']['uploads'] = is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
+    $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     if (!isset($context['results']['uploaded_nids']) || !is_array($context['results']['uploaded_nids'])) {
       $context['results']['uploaded_nids'] = array();
     }
     $context['results']['uploaded_nids'][] = $nid;
   }
   else {
-    $context['results']['upload_fails'] = is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
+    $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
     if (!isset($context['results']['upload_fail_nids']) || !is_array($context['results']['upload_fail_nids'])) {
       $context['results']['upload_fail_nids'] = array();
     }

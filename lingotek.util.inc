@@ -370,6 +370,7 @@ function lingotek_access($node, $permission) {
 /*
  * Top-level menu item
  */
+
 function lingotek_access_tlmi($permission) {
   $hide_top_level_menu_item = variable_get('lingotek_hide_tlmi', 0);
   if ($hide_top_level_menu_item)
@@ -728,6 +729,9 @@ function lingotek_lookup_locale_exists($drupal_language_code) {
  * Adds the target language as being enabled.
  */
 function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
+  if (is_null($lingotek_locale)) {
+    return FALSE;
+  }
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
   $language = lingotek_lookup_language_by_locale($lingotek_locale);
 
@@ -786,10 +790,9 @@ function lingotek_add_missing_locales() {
   }
 }
 
-/*
+/**
  * Add lingotek_locale and lingotek_enable to the language table for the passed in drupal_language_code 
  */
-
 function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL) {
   $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
   db_update('languages')
@@ -867,13 +870,12 @@ function lingotek_get_module_info($field = NULL) {
   return is_null($field) ? $info : (isset($info[$field]) ? $info[$field] : NULL);
 }
 
-/*
+/**
  * Clean-up utility
  */
-
 function lingotek_cleanup_utility($show_messages = TRUE) {
   LingotekLog::trace(__METHOD__);
-  
+
   lingotek_set_priority();
   lingotek_set_defaults();
   lingotek_migration_1();
@@ -892,18 +894,16 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
   }
 }
 
-/*
+/**
  * Sets the priority of the Drupal Translation module
  */
-
 function lingotek_set_priority() {
   db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
 }
 
-/*
+/**
  * Sets the global defaults for the Drupal Translation module
  */
-
 function lingotek_set_defaults() {
   LingotekLog::trace(__METHOD__);
   $defaults = array(
@@ -920,10 +920,9 @@ function lingotek_set_defaults() {
   lingotek_set_default_advanced_xml();
 }
 
-/*
+/**
  * Migration 1
  */
-
 function lingotek_migration_1() {
   $spec = array(
     'type' => 'int',
@@ -939,16 +938,22 @@ function lingotek_migration_1() {
 
   $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
   foreach ($target_languages as $drupal_language_code) {
-    lingotek_add_target_language(Lingotek::convertDrupal2Lingotek($drupal_language_code), FALSE);
+    $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
+    if ($lingotek_locale) {
+      lingotek_add_target_language($lingotek_locale, FALSE);
+    }
+    else {
+      // language not supported (skip)
+      LingotekLog::error("Language not supported: @drupal_language_code (no lingotek_locale found for this drupal code)", array('@drupal_language_code'=>$drupal_language_code));
+    }
   }
   variable_del('lingotek_target_languages');
   drupal_static_reset('language_list');
 }
 
-/*
+/**
  * Migration 2
  */
-
 function lingotek_migration_2() {
   $spec = array(
     'type' => 'varchar',
@@ -965,10 +970,9 @@ function lingotek_migration_2() {
   drupal_static_reset('language_list');
 }
 
-/*
+/**
  * Migration 3 - Upgrade lingotek table entries from drupal_codes to lingotek_locales (whenever applicable) 
  */
-
 function lingotek_migration_3() {
   $ret = array();
   $field_name_prefix = 'target_sync_status_';
