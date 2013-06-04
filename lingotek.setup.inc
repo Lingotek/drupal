@@ -1092,50 +1092,6 @@ function lingotek_get_projects_v4($login, $passwd, $community_identity, $url) {
 }
 
 /**
- * Activation
- */
-function lingotek_activation($first_name, $last_name, $email, $extras = array()) {
-
-  $url = 'https://www.salesforce.com/servlet/servlet.WebToLead';
-  $fields = array(
-    'encoding' => 'UTF-8',
-    'oid' => '00D80000000bjBA',
-    'first_name' => $first_name,
-    'last_name' => $last_name,
-    'email' => $email,
-      //'debug'      => '1',
-      //'debugEmail' => '',
-  );
-
-  $fields = array_merge($fields, $extras);
-
-  $defaults = array(
-    CURLOPT_URL => $url,
-    CURLOPT_POST => 1,
-    CURLOPT_POSTFIELDS => http_build_query($fields),
-    //CURLOPT_SSL_VERIFYPEER => 0,
-    CURLOPT_RETURNTRANSFER => 1,
-    //CURLOPT_FOLLOWLOCATION => 1,
-    CURLOPT_VERBOSE => 1,
-    CURLOPT_HEADER => 1
-  );
-
-  $ch = curl_init();
-  curl_setopt_array($ch, $defaults);
-
-  $response = curl_exec($ch);
-
-  /*
-    // Then, after your curl_exec call:
-    $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-    $header = substr($response, 0, $header_size);
-    $body = substr($response, $header_size);
-   */
-
-  curl_close($ch);
-}
-
-/**
  * Implement hook_mail()
  */
 function lingotek_mail($key, &$message, $params) {
