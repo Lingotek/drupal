@@ -120,6 +120,17 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
   LingotekSync::setTargetStatus($node->nid, $lingotek_locale, $sync_success_status);//slightly pre-emptive, but certainly more cohesive
   $node->lingotek_upload_override = 0;// ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
   $node->skip_status_updates = 1;// ensure that the statuses are not set on node update (in lingotek_node_update)
+
+  //Fix for workbench_moderation changing node state after translation download
+  if(module_exists(workbench_moderation)) {
+    try {
+      $node->workbench_moderation['updating_live_revision'] = 1;// ensure that workflow state does not get updated
+    } 
+    catch (Exception $e) {
+      LingotekLog::error("workbench_moderation variable does not exist inside node object. Error: @error.", array('@error' => $e->getMessage()));
+    }
+  }
+
   node_save($node);
 }
 
