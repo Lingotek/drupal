@@ -781,7 +781,8 @@ function lingotek_add_missing_locales() {
       // Set default when Enterprise to 1 (unless source language, then set to 0)
       //$lingotek_enabled = LingotekAccount::instance()->isEnterprise() ? (($target->language == $default_language->language) ? 0 : 1) : $target->lingotek_enabled;
       $lingotek_enabled = $target->lingotek_enabled;
-      lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled);
+      $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
+      lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled, $lingotek_locale);
       $update_static_language_list = TRUE;
     }
   }
@@ -794,13 +795,15 @@ function lingotek_add_missing_locales() {
  * Add lingotek_locale and lingotek_enable to the language table for the passed in drupal_language_code 
  */
 function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL) {
-  $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
+  $field_data = array(
+    'enabled' => 1,
+    'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
+  );
+  if (!is_null($lingotek_locale)) {
+    $field_data['lingotek_locale'] = $lingotek_locale;
+  }
   db_update('languages')
-      ->fields(array(
-        'enabled' => 1,
-        'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
-        'lingotek_locale' => $lingotek_locale
-      ))
+      ->fields($field_data)
       ->condition('language', $drupal_language_code)
       ->execute();
   return $lingotek_locale;
