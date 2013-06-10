@@ -122,7 +122,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
   $node->skip_status_updates = 1;// ensure that the statuses are not set on node update (in lingotek_node_update)
 
   //Fix for workbench_moderation changing node state after translation download
-  if(module_exists(workbench_moderation)) {
+  if(module_exists('workbench_moderation')) {
     try {
       $node->workbench_moderation['updating_live_revision'] = 1;// ensure that workflow state does not get updated
     } 

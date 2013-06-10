@@ -1201,6 +1201,10 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
  * Implements hook_field_language_alter().
  */
 function lingotek_field_language_alter(&$display_language, $context) {
+  // If we have no language set on the entity itself, do nothing.
+  if (!isset($context['entity']->language) || empty($context['entity']->language)) {
+    return;
+  }
   // Comments may be in a state where content only exists in the source language
   // because Lingotek translation hasn't finished yet, or synchonization with
   // Lingotek hasn't yet occurred. In this case, fall back to displaying
