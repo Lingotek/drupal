@@ -936,16 +936,10 @@ function lingotek_migration_1() {
     // already exists (no need to do anything)
   }
 
+  // store lingotek enabled fields in languages table rather than variable table
   $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
   foreach ($target_languages as $drupal_language_code) {
-    $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
-    if ($lingotek_locale) {
-      lingotek_add_target_language($lingotek_locale, FALSE);
-    }
-    else {
-      // language not supported (skip)
-      LingotekLog::error("Language not supported: @drupal_language_code (no lingotek_locale found for this drupal code)", array('@drupal_language_code'=>$drupal_language_code));
-    }
+    lingotek_enable_language_by_code($drupal_language_code, 1);
   }
   variable_del('lingotek_target_languages');
   drupal_static_reset('language_list');
