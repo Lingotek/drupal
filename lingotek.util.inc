@@ -898,14 +898,14 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
 }
 
 /**
- * Sets the priority of the Drupal Translation module
+ * Sets the priority of the Lingotek Translation module
  */
 function lingotek_set_priority() {
   db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
 }
 
 /**
- * Sets the global defaults for the Drupal Translation module
+ * Sets the global defaults for the Lingotek Translation module
  */
 function lingotek_set_defaults() {
   LingotekLog::trace(__METHOD__);

@@ -17,7 +17,7 @@ function lingotek_requirements($phase) {
     $requirements['zip'] = array(
       'title' => $t('Lingotek'),
       'value' => $t('PHP Zip support required.'),
-      'description' => $t('The Drupal Translation module requires the PHP module \'Zip\', but it is missing or not enabled on your server. This module allows PHP to work with ZIP compressed archives.  <br>For more information visit: <a href="http://php.net/manual/en/book.zip.php">http://php.net/manual/en/book.zip.php</a>'),
+      'description' => $t('The Lingotek Translation module requires the PHP module \'Zip\', but it is missing or not enabled on your server. This module allows PHP to work with ZIP compressed archives.  <br>For more information visit: <a href="http://php.net/manual/en/book.zip.php">http://php.net/manual/en/book.zip.php</a>'),
       'severity' => REQUIREMENT_ERROR,
     );
   }
@@ -73,7 +73,7 @@ function lingotek_disable() {
 }
 
 /*
- * Install the database schema for the Drupal Translation module
+ * Install the database schema for the Lingotek Translation module
  */
 
 function lingotek_schema() {
@@ -173,7 +173,7 @@ function lingotek_update_7200(&$sandbox) {
   $node = node_load($sandbox['nodes'][$sandbox['progress']]);
   if ($node !== FALSE) {
     if (!class_exists('LingotekApi')) {
-      // The LingotekApi class might not have been introduced when this user last updated the Drupal Translation module.
+      // The LingotekApi class might not have been introduced when this user last updated the Lingotek Translation module.
       registry_rebuild();
       require_once(drupal_get_path('module', 'lingotek') . '/lib/Drupal/lingotek/LingotekApi.php');
     }
@@ -252,7 +252,7 @@ function lingotek_update_7203(&$sandbox) {
   }
   else {
     return t('No action was taken, since your system already has data in the Primary and/or Secondary advanced parsing configuration fields.
-      If you wish to review the default configuration files and compare them to your current settings, the files are in the fprm subfolder of the Drupal Translation module.');
+      If you wish to review the default configuration files and compare them to your current settings, the files are in the fprm subfolder of the Lingotek Translation module.');
   }
 }
 
@@ -264,7 +264,7 @@ function lingotek_update_7204(&$sandbox) {
 }
 
 /**
- * Ensure that the Drupal Translation module has a weight higher than entity_translation.
+ * Ensure that the Lingotek Translation module has a weight higher than entity_translation.
  */
 function lingotek_update_7205(&$sandbox) {
   lingotek_set_priority();
