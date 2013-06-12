@@ -156,7 +156,7 @@ class LingotekComment implements LingotekTranslatableEntity {
     // We instruct the users to configure comment translation with a
     // single-phase machine translation-only Workflow, so the updated content
     // should be available right after our create/update document calls from above.
-    // If it isn't, Lingotek will call us back via LINGOTEK_NOTIFICATIONS_URL
+    // If it isn't, Lingotek will call us back via LINGOTEK_NOTIFY_URL
     // when machine translation for the item has finished.
     if (!self::$content_update_in_progress) {
       // Only update the local content if the Document is 100% complete

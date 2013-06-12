@@ -7,19 +7,46 @@
 // ----  Other Functions
 
 /**
- * Returns the site callback url.
+ * Generate and return the site callback url.
+ * This URL will be called when a document translation is complete, and can be downloaded.
+ * Format:  ?doc_id={document_id}&target_code={target_language}&project_id={project_id}&completed={completed}
  * */
-function lingotek_get_notifications_url() {
+function lingotek_notify_url_generate() {
   global $base_url;
-  return $base_url . '/' . LINGOTEK_NOTIFICATIONS_URL;
+  return $base_url . '?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}';
+}
+
+/**
+ * Update the Notify URL (via API)
+ */
+function lingotek_notify_url_update($show_messages = TRUE) {
+  global $base_url;
+  $old_url_pattern = $base_url . ".*";
+  $new_url = lingotek_notify_url_generate();
+  $success = LingotekSync::updateNotifyUrl($old_url_pattern, $new_url);
+  if ($show_messages) {
+    if ($success) {
+      drupal_set_message(t("Notification callback URL successfully updated."));
+    }
+    else {
+      drupal_set_message(t("Notification callback URL was not successfully updated."), 'error');
+    }
+  }
+  return $success;
+}
+
+/**
+ * Notify URL Check - call lingotek_notify_url_update when lingotek_notify_url no longer matches lingotek_notify_url_generate
+ */
+function lingotek_notify_url_check() {
+  if (strcasecmp(variable_get('lingotek_notify_url', ''), lingotek_notify_url_generate()) != 0) {
+    lingotek_notify_url_update(FALSE);
+  }
 }
 
 /**
  * Registers the site translation notfication callback.
- * This URL will be called when a document translation is complete, and can be downloaded.
- *
- * Format:  ?doc_id={document_id}&target_code={target_language}&project_id={project_id}
- * */
+ */
 function lingotek_notifications() {
 
   $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;

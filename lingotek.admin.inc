@@ -83,7 +83,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array('External ID:', variable_get('lingotek_login_id', '')),
         array('Project ID:', variable_get('lingotek_project', '')),
         array('Vault ID:', variable_get('lingotek_vault', '')),
-        array('Notify URL:', lingotek_get_notifications_url()),
+        array('Notify URL:', variable_get('lingotek_notify_url', '')),
         )))
   );
 
@@ -575,9 +575,16 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#submit' => array('lingotek_cleanup_utility')
   );
 
+  $btn_callback_url_update = array(
+    '#type' => 'submit',
+    '#value' => t('Update URL'),
+    '#submit' => array('lingotek_notify_url_update')
+  );
+
   // Start: Not sure why, but without these below, the table button do not work properly
   $form['utilities'][] = array_merge($btn_reset_translations, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
 
   $rows = array(
@@ -598,6 +605,16 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
           '#suffix' => '</div>'
       )),
       array('data' => $btn_cleanup),
+    ),
+    array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => t('Notification Callback URL') . '<div class="description">',
+          '#markup' => t("Update the notification callback URL.  This should be run whenever your site is moved (e.g., domain name change or sub-directory re-location). It will remain unchanged when the current URL is already set correctly.")
+          . ' ' . t("Current notification callback URL:") . ' <i>' . variable_get('lingotek_notify_url', 'None') . '</i>',
+          '#suffix' => '</div>'
+      )),
+      array('data' => $btn_callback_url_update),
     )
   );
   $header = array();

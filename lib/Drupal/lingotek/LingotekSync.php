@@ -99,17 +99,17 @@ class LingotekSync {
     $api = LingotekApi::instance();
     $response = $api->getProgressReport($project_id, $document_ids, TRUE);
 
-    if (isset($response->byDocumentIdAndTargetLocale)) {
-      $progress_report = $response->byDocumentIdAndTargetLocale;
+    if (isset($response->workflowCompletedByDocumentIdAndTargetLocale)) {
+      $progress_report = $response->workflowCompletedByDocumentIdAndTargetLocale;
       foreach ($progress_report as $doc_id => $target_locales) {
-        foreach ($target_locales as $lingotek_locale => $pct_complete) {
+        foreach ($target_locales as $lingotek_locale => $workflow_completed) {
           $doc_target = array(
             'document_id' => $doc_id,
             'locale' => $lingotek_locale
           );
           $node_id = self::getNodeIdFromDocId($doc_id);
 
-          if ($pct_complete == 100) {
+          if ($workflow_completed) {
             if (self::getTargetStatus($node_id, $lingotek_locale) == self::STATUS_PENDING) {
               $report['download_targets_workflow_complete'][] = $doc_target;
               $report['download_targets_workflow_complete_count']++;
@@ -229,12 +229,12 @@ class LingotekSync {
 
   public static function disassociateAllNodes() {
     db_truncate('lingotek');
-  }  
-  
+  }
+
   public static function resetNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;
-    foreach($doc_ids as $doc_id){
+    foreach ($doc_ids as $doc_id) {
       $node_id = LingotekSync::getNodeIdFromDocId($doc_id); // grab before node info is removed
       LingotekSync::removeNodeInfoByDocId($doc_id); //remove locally (regardless of success remotely)
       if ($node_id !== FALSE) {
@@ -244,7 +244,7 @@ class LingotekSync {
     }
     return $count;
   }
-  
+
   public static function removeNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;
@@ -300,6 +300,18 @@ class LingotekSync {
     }
 
     return $found;
+  }
+
+  public static function updateNotifyUrl($old_url_pattern, $new_url) {
+    //TO-DO: when actual API is completed
+    //$api = LingotekApi::instance();
+    //$response = $api->updateIntegrationUrls($old_url_pattern, $new_url);
+    //$success = isset($response->success) ? $response->success : FALSE
+    //return $success;
+    /*if ($success) {
+      variable_set('lingotek_notify_url', $new_url);
+    }*/
+    return FALSE;
   }
 
 }
