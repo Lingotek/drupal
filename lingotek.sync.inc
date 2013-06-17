@@ -20,10 +20,8 @@ function lingotek_notify_url_generate() {
  * Update the Notify URL (via API)
  */
 function lingotek_notify_url_update($show_messages = TRUE) {
-  global $base_url;
-  $old_url_pattern = $base_url . ".*";
-  $new_url = lingotek_notify_url_generate();
-  $success = LingotekSync::updateNotifyUrl($old_url_pattern, $new_url);
+  $integration_id = variable_get('lingotek_integration_id', NULL);
+  $success = LingotekSync::updateNotifyUrl();
   if ($show_messages) {
     if ($success) {
       drupal_set_message(t("Notification callback URL successfully updated."));
@@ -52,6 +50,7 @@ function lingotek_notifications() {
   $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;
   $lingotek_locale = ( isset($_GET['target_code']) ) ? $_GET['target_code'] : NULL;
   $project_id = ( isset($_GET['project_id']) ) ? $_GET['project_id'] : NULL;
+  $completed = ( isset($_GET['completed']) ) ? $_GET['completed'] : 1;
 
   if (!isset($document_id) || !isset($lingotek_locale)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
@@ -113,7 +112,8 @@ function lingotek_notifications() {
     $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
 
     if ($auto_download) { // download only when automatic download is enabled
-      lingotek_sync_download_node_target($nid, $lingotek_locale, LingotekSync::STATUS_CURRENT, $context);
+      $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
+      lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
     }
   }
 

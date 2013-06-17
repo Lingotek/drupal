@@ -80,6 +80,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array('OAuth Key:', variable_get('lingotek_oauth_consumer_id', '')),
         array('OAuth Secret:', variable_get('lingotek_oauth_consumer_secret', '')),
         array('Workflow ID:', variable_get('lingotek_workflow', '')),
+        array('Integration Method ID:', variable_get('lingotek_integration_method', '')),
         array('External ID:', variable_get('lingotek_login_id', '')),
         array('Project ID:', variable_get('lingotek_project', '')),
         array('Vault ID:', variable_get('lingotek_vault', '')),
@@ -458,13 +459,6 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
      * Misc. Options
      */
 
-    // Options
-    $options = array();
-    $options[FALSE] = t("Disabled");
-    $options[TRUE] = t("Enabled");
-
-
-
     // URL Alias Translation.
     $form['defaults']['lingotek_url_alias_translation'] = array(
       '#type' => 'select',
@@ -611,7 +605,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
           '#type' => 'markup',
           '#prefix' => t('Notification Callback URL') . '<div class="description">',
           '#markup' => t("Update the notification callback URL.  This should be run whenever your site is moved (e.g., domain name change or sub-directory re-location). It will remain unchanged when the current URL is already set correctly.")
-          . ' ' . t("Current notification callback URL:") . ' <i>' . variable_get('lingotek_notify_url', 'None') . '</i>',
+          . '<br/>' . t("Current notification callback URL:") . ' <i>' . variable_get('lingotek_notify_url', 'None') . '</i>',
           '#suffix' => '</div>'
       )),
       array('data' => $btn_callback_url_update),

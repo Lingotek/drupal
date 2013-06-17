@@ -302,16 +302,42 @@ class LingotekSync {
     return $found;
   }
 
-  public static function updateNotifyUrl($old_url_pattern, $new_url) {
-    //TO-DO: when actual API is completed
-    //$api = LingotekApi::instance();
-    //$response = $api->updateIntegrationUrls($old_url_pattern, $new_url);
-    //$success = isset($response->success) ? $response->success : FALSE
-    //return $success;
-    /*if ($success) {
+  public static function updateNotifyUrl() {
+    $new_url = lingotek_notify_url_generate();
+    $api = LingotekApi::instance();
+    $integration_method_id = variable_get('lingotek_integration_method', '');
+
+    if (!strlen($integration_method_id)) { // request integration id when not already set, attempt to detect
+      $params = array(
+        'regex' => ".*"
+      );
+      $response = $api->request('searchOutboundIntegrationUrls', $params);
+      if (isset($response->results) && $response->results) {
+        global $base_url;
+        $integration_methods = $response->integrationMethods;
+        foreach ($integration_methods as $integration_method) {
+          if (strpos($integration_method->url, $base_url) !== FALSE) {
+            $integration_method_id = $integration_method->id; // prefer integration with matching base_url
+          }
+        }
+        if (!strlen($integration_method_id)) {
+          reset($integration_methods);// just in case the internal pointer is not pointing to the first element
+          $integration_method = current($integration_methods); // grab the first element in the list
+          $integration_method_id = $integration_method->id; // use the first url found (if no matching url was found previously)
+        }
+        variable_set('lingotek_integration_method', $integration_method_id);
+      }
+    }
+    $parameters = array(
+      'id' => $integration_method_id,
+      'url' => $new_url
+    );
+    $response = $api->request('updateOutboundIntegrationUrl', $parameters);
+    $success = isset($response->results) ? $response->results : FALSE;
+    if ($success) {
       variable_set('lingotek_notify_url', $new_url);
-    }*/
-    return FALSE;
+    }
+    return $success;
   }
 
 }
