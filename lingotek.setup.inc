@@ -215,6 +215,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
       variable_set('lingotek_project', $community->project_id);
       variable_set('lingotek_vault', $community->tm_vault_id);
       variable_set('lingotek_workflow', $community->workflow_id);
+      variable_set('lingotek_integration_method', $community->integration_method_id);
       variable_set('lingotek_notify_url', $notify_url);
       variable_set('lingotek_cms_tag', $lead['distribution']);
 
