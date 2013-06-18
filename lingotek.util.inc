@@ -272,36 +272,51 @@ function lingotek_xml_node_body($node) {
     // We may split compound Drupal fields into several Lingotek fields.
     $target_keys = array(
       'value' => '', // Most text fields
-      'summary' => 'summary' // "Long text with summary" fields have this sub-field value as well.
+      'summary' => 'summary', // "Long text with summary" fields have this sub-field value as well.
     );
+    if (module_exists('link')) {
+      $target_keys['link'] = array(
+        'url' => '',
+        'title' => '',
+      );
+    }
 
     // Create fields from all target keys.
     foreach ($target_keys as $target_key => $element_suffix) {
-      if (!empty($text[$language][0][$target_key])) {
-        $element_name = $field;
-        if (!empty($element_suffix)) {
-          $element_name .= '__' . $element_suffix;
+      $array_key = NULL;
+      if (is_array($element_suffix)) {
+        foreach ($element_suffix as $tarkey => $val) {
+          $array_key = $tarkey;
+          continue;
         }
-
-        $current_field = '<' . $element_name . '>';
-
-        foreach ($text[$language] as $key => $value) {
-          if (!array_key_exists('value', $value)) {
-            //TODO add TAGs to be translatable
-            /*
-              $terms = $node->$field;
-              foreach ($terms[$language] as $term) {
-              // Do something.
-              }
-             */
-            continue;
+      }
+      foreach ($text[$language] as $delta) {
+        if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
+          $element_name = $field;
+          if (!is_array($element_suffix) && !empty($element_suffix)) {
+              $element_name .= '__' . $element_suffix;
           }
-
-          $current_field .= '<element><![CDATA[' . $value[$target_key] . ']]></element>' . "\n";
+          $current_field = '<' . $element_name . '>';
+           /* if (!array_key_exists('value', $value)) {
+            dpm($value);
+              //TODO add TAGs to be translatable
+                $terms = $node->$field;
+                foreach ($terms[$language] as $term) {
+                // Do something.
+                }
+              continue;
+            }*/
+            if (is_array($element_suffix)) {
+              foreach ($element_suffix as $t_key => $t_val) {
+                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+              }
+            }
+            else {
+              $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
+            }
+          $current_field .= '</' . $element_name . '>';
+          $content .= $current_field;
         }
-
-        $current_field .= '</' . $element_name . '>';
-        $content .= $current_field;
       }
     }
   }

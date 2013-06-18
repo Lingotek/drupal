@@ -680,6 +680,9 @@ function lingotek_setup_node_translation_settings_form() {
 
   // What types of fields DO we translate?
   $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea_with_summary');
+  if (module_exists('link')) {
+    $included_fields[] = 'link_field';
+  }
 
   $form[] = array(
     '#type' => 'item',

@@ -51,7 +51,15 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
 
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
 
+  $delta = 0;
+  $last_tag = NULL;
   foreach ($xml as $tag => $content) {
+    if ($tag == $last_tag) {
+      $delta++;
+    }
+    else {
+      $delta = 0;
+    }
     if ($tag == 'menu_title') {
       //TODO handle menu translation
     }
@@ -91,11 +99,24 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
       if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
         $node_field = & $node->$drupal_field_name;
         $index = 0;
+        $andex = 0;
+        if (module_exists('link') && $field['type'] == 'link_field') {
+          $target_key = array(
+            'url',
+            'title',
+          );
+        }
         foreach ($content as $text) {
-          $node_field[$drupal_language_code][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
-          if (array_key_exists($node->language, $node_field)) {
-            if (array_key_exists('format', $node_field[$node->language][0])) {
-              $node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
+          if (is_array($target_key)) {
+            $array_key = $target_key[$index];
+            $node_field[$drupal_language_code][$delta][$array_key] = decode_entities(lingotek_xml_decode($text));
+          }
+          else {
+            $node_field[$drupal_language_code][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
+            if (array_key_exists($node->language, $node_field)) {
+              if (array_key_exists('format', $node_field[$node->language][0])) {
+                $node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
+              }
             }
           }
           $index++;
@@ -110,6 +131,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
         pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node), $node->type, $drupal_language_code);
       }
     }
+    $last_tag = $tag;
   }
 
   //Fix for pathauto expecting the form:
@@ -122,10 +144,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
   $node->skip_status_updates = 1; // ensure that the statuses are not set on node update (in lingotek_node_update)
   //Fix for workbench_moderation changing node state after translation download
   if (module_exists('workbench_moderation')) {
-    if (!isset($node->workbench_moderation)) {
-      LingotekLog::error("workbench_moderation variable does not exist inside node object. Error: @error.", array('@error' => $e->getMessage()));
-    }
-    else {
+    if (isset($node->workbench_moderation)) {
       $node->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
     }
   }
