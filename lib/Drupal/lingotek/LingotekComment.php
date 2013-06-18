@@ -423,6 +423,25 @@ class LingotekComment implements LingotekTranslatableEntity {
     return $this->getMetadataValue('document_id');
   }
 
+  /**
+   * Return the Drupal Entity type
+   *
+   * @return string
+   *   The entity type associated with this object
+   */
+  public function getEntityType() {
+    return self::DRUPAL_ENTITY_TYPE;
+  }
+
+  /**
+   * Return the comment ID
+   *
+   * @return int
+   *   The ID associated with this object
+   */
+  public function getId() {
+    return $this->comment->cid;
+  }
 
   /**
    * Magic get for access to node and node properties.

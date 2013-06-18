@@ -15,9 +15,17 @@ class LingotekSync {
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_LOCKED = 'LOCKED';    // A locked node should neither be uploaded nor downloaded by Lingotek
 
-  public static function getTargetStatus($node_id, $lingotek_locale) { //lingotek_get_target_sync_status($node_id, $lingotek_locale) {
+  public static function getTargetStatus($doc_id, $lingotek_locale) { 
     $key = 'target_sync_status_' . $lingotek_locale;
-    return lingotek_lingonode($node_id, $key);
+    if ($chunk_id = LingotekConfigChunk::getIdByDocId($doc_id)) {
+      return LingotekConfigChunk::getTargetStatusById($chunk_id, $lingotek_locale);
+    }
+    else {
+      $node_id = self::getNodeIdFromDocId($doc_id);
+      return lingotek_lingonode($node_id, $key);
+    }
+    LingotekLog::error('Did not find a node or chunk for Doc ID "@id"', array('@id'=>$doc_id));
+    return FALSE;
   }
 
   public static function setTargetStatus($node_id, $lingotek_locale, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
@@ -107,10 +115,9 @@ class LingotekSync {
             'document_id' => $doc_id,
             'locale' => $lingotek_locale
           );
-          $node_id = self::getNodeIdFromDocId($doc_id);
 
           if ($pct_complete == 100) {
-            if (self::getTargetStatus($node_id, $lingotek_locale) == self::STATUS_PENDING) {
+            if (self::getTargetStatus($doc_id, $lingotek_locale) == self::STATUS_PENDING) {
               $report['download_targets_workflow_complete'][] = $doc_target;
               $report['download_targets_workflow_complete_count']++;
             }
@@ -178,7 +185,82 @@ class LingotekSync {
     return $et_node_ids;
   }
 
+  protected static function getQueryCompletedConfigTranslations($drupal_codes) {
+    // return a query object that contains all fully-translated/current strings.
+    
+    // use the first addtl language as the query's base.
+    $first_lang = array_shift($drupal_codes);
+    $query = db_select('locales_target', "lt0")
+      ->fields('lt0', array('lid'))
+      ->condition('lt0.language', $first_lang)
+      ->condition('lt0.i18n_status', 0);
+    $addtl_joins = 0;
+    foreach ($drupal_codes as $new_join) {
+      // join a new instance of locales_target for each target language
+      // where an entry for the language exists for the given lid and
+      // it is "current" (ie. i18n_status field is set to 0)
+      $addtl_joins++;
+      $ja = "lt$addtl_joins"; // join alias
+      $join_str = "$ja.lid=lt0.lid and $ja.language='$new_join' and $ja.i18n_status=0";
+      $query->join('locales_target', $ja, $join_str);
+    }
+    return $query;
+  }
+
+  public static function getConfigChunk($chunk_id) {
+    // return LingotekConfigChunk object containing all segments
+    // for the given chunk id.
+    return LingotekConfigChunk::loadById($chunk_id);
+  }
+
+  public static function getDirtyConfigChunks() {
+    // return the list of all lids from the locale_source table *not* fully translated
+    $drupal_codes = lingotek_get_target_locales();
+    if (!count($drupal_codes)) {
+      LingotekLog::error('No languages configured for this Lingotek account.', array());
+      return array();
+    }
+    $query = db_select('locales_source', 'ls');
+    $query->fields('ls', array('lid'))
+      ->condition('ls.source', '', '!=')
+      ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN');
+    $lids = $query->execute()->fetchCol();
+
+    // return the set of chunk IDs, which are the chunks that contain
+    // lids that are in need of some translation.  These IDs are calculated
+    // as the segment ID of the first segment in the chunk, divided by
+    // the configured chunk size.  So, segments 1 through [chunk size] would
+    // be in chunk #1, etc.
+    $chunk_ids = array();
+    foreach ($lids as $lid) {
+      $id = LingotekConfigChunk::getIdBySegment($lid);
+      if (array_key_exists($id, $chunk_ids)) {
+        $chunk_ids[$id]++;
+      }
+      else {
+        $chunk_ids[$id] = 1;
+      }
+    }
+    $chunk_ids = self::pruneChunksWithPendingTranslations($chunk_ids);
+
+    return $chunk_ids;
+  }
+
+  protected static function pruneChunksWithPendingTranslations($chunk_ids) {
+    // get the list of chunks with pending translations
+    // return the chunk_ids not in the pending set
+    $result = db_select('lingotek_config_metadata', 'meta')
+      ->fields('meta', array('id','id'))
+      ->condition('config_key', 'target_sync_status_%', 'LIKE')
+      ->condition('value', self::STATUS_PENDING)
+      ->distinct()
+      ->execute();
+    $final_chunks = array_diff_key($chunk_ids, $result->fetchAllKeyed());
+    return $final_chunks;
+  }
+
   public static function getUploadableReport() {
+    // Handle nodes
     $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED);
     $report = array(
       'upload_nids' => $edited_nodes,
@@ -191,6 +273,18 @@ class LingotekSync {
         'upload_nids_et_count' => count($et_nodes)
           ));
     }
+    // Handle configuration chunks
+    if (variable_get('language_config_translate')) {
+      $config_chunks_to_update = self::getDirtyConfigChunks();
+      $num_updates = count($config_chunks_to_update);
+    }
+    else {
+      $num_updates = 0;
+    }
+    $report = array_merge($report, array(
+      'upload_config' => (array_keys($config_chunks_to_update)),
+      'upload_config_count' => $num_updates,
+    ));
     return $report;
   }
 
@@ -212,19 +306,42 @@ class LingotekSync {
   }
 
   public static function getDocIdsByStatus($status) {
-    $nids = self::getNodeIdsByStatus($status);
-    if (empty($nids))
-      return array();
+    $doc_ids = array();
 
-    $query = db_select('lingotek', 'l');
-    $query->fields('l', array('lingovalue'));
-    $query->condition('lingokey', 'document_id');
-    $query->condition('nid', $nids);
-    //$query->distinct();
-    $result = $query->execute();
-    $doc_ids = $result->fetchCol();
+    // retrieve document IDs from nodes
+    $nids = self::getNodeIdsByStatus($status);
+    if (!empty($nids)) {
+      $query = db_select('lingotek', 'l');
+      $query->fields('l', array('lingovalue'));
+      $query->condition('lingokey', 'document_id');
+      $query->condition('nid', $nids);
+      $result = $query->execute();
+      $doc_ids = $result->fetchCol();
+    }
+
+    // retrieve document IDs from config chunks
+    $cids = self::getChunkIdsByStatus($status);
+    if (!empty($cids)) {
+      $query = db_select('lingotek_config_metadata', 'meta');
+      $query->fields('meta', array('value'));
+      $query->condition('config_key', 'document_id');
+      $query->condition('id', $cids);
+      $result = $query->execute();
+      $doc_ids = array_merge($doc_ids, $result->fetchCol());
+    }
 
     return $doc_ids;
+  }
+
+  public static function getChunkIdsByStatus($status) {
+    $query = db_select('lingotek_config_metadata', 'meta');
+    $query->fields('meta', array('id'));
+    $query->condition('config_key', 'target_sync_status_%', 'LIKE');
+    $query->condition('value', $status);
+    $query->distinct();
+    $result = $query->execute();
+    $cids = $result->fetchCol();
+    return $cids;
   }
 
   public static function disassociateAllNodes() {

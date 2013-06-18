@@ -252,7 +252,6 @@ class Lingotek {
           $lingotek_locale = self::$language_map[$drupal_language_code];
         }
       }
-      //dvz($lingotek_locale,TRUE);
       return $lingotek_locale;
     }
 

@@ -757,10 +757,18 @@ function lingotek_setup_node_translation_settings_form() {
 
     $form['lingotek_' . $value->type . 'fieldlist_close'] = array('#markup' => '</div>');
 
-    $rand = rand();
-    $form['lingotek_after_fields_' . $rand] = array('#markup' => '<div>&nbsp;</div>');
   } // END:  foreach content type
 
+  // Additional items to be translated
+  // WTD: 1. should these be optionally shown as needed? 2. how to get localized translation for the "taxonomy" term?
+  $form['config_translation'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('@config_translation', array('@config_translation' => 'Configuration and Misc.')),
+          '#default_value' => TRUE,
+          '#prefix' => '<div>',
+          '#suffix' => '</div>',
+    );
+  
   $form['lingotek_checkboxes_close'] = array('#markup' => '</div>');
 
 
@@ -880,6 +888,7 @@ function lingotek_content_type_checkbox_callback($form, &$form_state) {
  */
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
   $translate = array();
+  $translate_addtl = array();
   $operations = array();
   foreach ($form_state['values'] as $key => $value) {
 
@@ -923,6 +932,13 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
           $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
           $operations[] = array('field_update_field', array($field)); //field_update_field($field);
         }
+      }
+    }
+    // Look for additional strings to include in translation, ie. taxonomies, menus, etc.
+    if ($key == 'config_translation') {
+      if ($value != 0) {
+        // Set this content type to be Lingotek translated.
+        variable_set('language_config_translate', LINGOTEK_ENABLED);
       }
     }
   }

@@ -47,6 +47,8 @@ elements:
   address:
     ruleTypes: [TEXTUNIT]
     idAttributes: [id]
+  drupalvar:
+    ruleTypes: [INLINE, EXCLUDE]
   dt:
     ruleTypes: [TEXTUNIT]
     idAttributes: [id]

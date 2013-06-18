@@ -64,3 +64,8 @@ define('LINGOTEK_ENABLED', 'lingotek');
 define('LINGOTEK_MENU_LANG_BASE_URL', 'admin/config/regional/lingotek');
 define('LINGOTEK_MENU_MAIN_BASE_URL', 'admin/settings/lingotek');//admin/config/lingotek
 define('LINGOTEK_NOTIFICATIONS_URL', 'lingotek/notify'); // notification callback URL
+
+/**
+ * Defines the config documents' segment size in rows
+ */
+define('LINGOTEK_CONFIG_CHUNK_SIZE', 500);
