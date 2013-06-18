@@ -78,32 +78,39 @@ function lingotek_notifications() {
     '@project_id' => $project_id
       ), 'callback');
 
+  // If there is not a node ID associated with this document, check for config chunks and comments
+  // associated with the document ID
   if (!$nid) {
+    $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
+    $replacements = array(
+      '@document' => $document_id,
+      '@language_code' => $lingotek_locale,
+      '@project_id' => $project_id,
+      );
+
+    // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
+    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+      $replacements['@id'] = $trans_obj->cid;
+      $replacements['@trans_type'] = $trans_obj->cid;
+    }
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
-    if (class_exists('LingotekComment')) {
-
-      $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the comment?
-      if ($comment = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-        $replacements = array(
-          '@id' => $comment->id,
-          '@document' => $document_id,
-          '@language_code' => $lingotek_locale,
-          '@project_id' => $project_id,
-        );
-
-        if ($comment->updateLocalContent()) {
-          LingotekLog::trace('Updated local content for <strong>comment</strong> @id based on hit
-                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
-        }
-        else {
-          LingotekLog::trace('Unable to update local content for <strong>comment</strong> @id based on hit
-                from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
-        }
-      }
+    elseif ($trans_obj = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+      $replacements['@id'] = $comment->id;
+      $replacements['@trans_type'] = $trans_obj->id;
     }
     else {
-      LingotekLog::error('LingotekComment class not found. Please clear the Drupal cache to refresh the autoload registry');
+      LingotekLog::error('Lingotek document ID not found. Please clear the Drupal cache to refresh the autoload registry');
+      return FALSE;
     }
+
+    if ($trans_obj->updateLocalContent()) {
+      LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
+            from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
+    }
+    else {
+      LingotekLog::trace('Unable to update local content for <strong>@trans_type</strong> @id based on hit
+            from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
+      }
   }
   else {
     $node = node_load($nid);
@@ -117,17 +124,19 @@ function lingotek_notifications() {
     }
   }
 
-  $found = $nid || (isset($comment) && $comment) ? TRUE : FALSE;
+  $found = $nid || (isset($trans_obj) && $trans_obj) ? TRUE : FALSE;
 
-  //print_r($comment);
-  //Response
   $response = $found ? array_merge($_GET, array(
         'target_drupal_language_code' => $target_drupal_language_code,
         'source_language' => $source_language,
-        'type' => isset($comment) ? 'comment' : 'node',
-        'id' => isset($comment) ? $comment->cid : $nid,
+        'type' => isset($trans_obj) ? $trans_obj->getEntityType() : 'node',
+        'id' => isset($trans_obj) ? $trans_obj->getId() : $nid,
         'found' => $found,
-        'download' => $found && isset($comment) ? TRUE : (isset($auto_download) && $auto_download == TRUE)
+        'download' => $found 
+          && isset($trans_obj) 
+          && $trans_obj->getEntityType() == 'comment' 
+          ? TRUE 
+          : (isset($auto_download) && $auto_download == TRUE)
       )) : array_merge($_GET, array(
         'found' => $found
       ));
@@ -149,16 +158,15 @@ function lingotek_sync() {
     'method' => $method,
     'parameters' => $parameters
   );
-  //$request['upload'] = $upload = isset($parameters['upload']) && ($parameters['upload'] == 0 || strcmp($parameters['upload'], 'false') == 0) ? false : true;
-  //$request['download'] = $download = isset($parameters['download']) && ($parameters['download'] == 0 || strcmp($parameters['download'], 'false') == 0) ? false : true;
   $request['upload_nids_as_json'] = $upload_nids = isset($parameters['upload_nids']) ? json_decode($parameters['upload_nids']) : NULL;
+  $request['upload_config_as_json'] = $upload_config = isset($parameters['upload_config']) ? json_decode($parameters['upload_config']) : NULL;
   $request['download_targets_as_json'] = $download_targets = isset($parameters['download_targets_as_json']) ? json_decode($parameters['download_targets_as_json']) : NULL;
 
   if ($test) {
     lingotek_json_output_cors($request, $status, array('methods_allowed' => 'GET,POST'));
   }
   else {
-    lingotek_sync_batch_create($download_targets, $upload_nids);
+    lingotek_sync_batch_create($upload_nids, $upload_config, $download_targets);
   }
 }
 
@@ -208,7 +216,7 @@ function lingotek_form_bulk_sync() {
   );
   $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
 
-  $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0);
+  $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
   if ($upload_count_total > 0) {
     $form['upload']['upload'] = array(
       '#type' => 'checkbox',
@@ -226,10 +234,20 @@ function lingotek_form_bulk_sync() {
         '#description' => t('These nodes will now be managed by Lingotek.')
       );
     }
+    if (variable_get('language_config_translate')) {
+      $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
+      $form['upload']['upload_config'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Include configuration translation (<span id="upload-config-total">@count document units</span>)', array('@count' => $report['upload_config_count'])),
+        '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
+        '#disabled' => $report['upload_config_count'] == 0,
+        '#description' => t('[Some information about the nature of the config being uploaded goes here.]')
+      );
+    }
   }
   else {
     $form['upload']['none'] = array(
-      '#markup' => 'There are currently no new/modified nodes to be uploaded.'
+      '#markup' => 'There are currently no new/modified items to be uploaded.'
     );
   }
 
@@ -342,6 +360,12 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     $upload_nids = array_merge($upload_nids, json_decode($vals['upload_nids_et_json']));
   }
 
+  // upload config
+  $upload_config = array();
+  if (isset($vals['upload_config']) && $vals['upload_config'] && isset($vals['upload_config_json'])) {
+    $upload_config = json_decode($vals['upload_config_json']);
+  }
+
   //download - complete
   $download_locales_complete = array();
   if (isset($vals['download_locales_complete'])) {
@@ -380,5 +404,5 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     }
   }
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
-  lingotek_sync_batch_create($download_targets, $upload_nids, $download_targets_incomplete);
+  lingotek_sync_batch_create($upload_nids, $upload_config, $download_targets, $download_targets_incomplete);
 }

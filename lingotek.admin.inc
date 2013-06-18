@@ -529,9 +529,6 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     );
   }
 
-  //$form = system_settings_form($form);
-  //dvz($form);
-
   return $form;
 }
 
