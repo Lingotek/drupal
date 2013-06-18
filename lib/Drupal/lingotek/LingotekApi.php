@@ -935,7 +935,7 @@ class LingotekApi {
   public function createCommunity($parameters = array(), $callback_url = NULL) {
     $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
     if (isset($callback_url)) {
-      $parameters['callbackUrl'] = $callback_url . '?doc_id={document_id}&target_code={target_language}&project_id={project_id}';
+      $parameters['callbackUrl'] = $callback_url;
     }
     $response = $this->request('autoProvisionCommunity', $parameters, 'POST', $credentials);
     return $response;

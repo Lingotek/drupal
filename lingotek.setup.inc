@@ -180,7 +180,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
       'last_name' => $last_name,
       'email' => $email
         ));
-    $callback_url = lingotek_get_notifications_url();
+    $notify_url = lingotek_notify_url_generate();
 
     $parameters = array_merge($lead, array(
       'communityDisplayName' => lingotek_get_site_name(),
@@ -192,7 +192,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
         ));
 
     $api = LingotekApi::instance();
-    $response = $api->createCommunity($parameters, $callback_url);
+    $response = $api->createCommunity($parameters, $notify_url);
 
     if ($response && $response->results == "success") {
       $community = $response;
@@ -215,7 +215,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
       variable_set('lingotek_project', $community->project_id);
       variable_set('lingotek_vault', $community->tm_vault_id);
       variable_set('lingotek_workflow', $community->workflow_id);
-      variable_set('lingotek_notifications_callback', $callback_url);
+      variable_set('lingotek_notify_url', $notify_url);
       variable_set('lingotek_cms_tag', $lead['distribution']);
 
       $_SESSION['lingotek_setup_path'] = array('admin/config/lingotek/new-account');

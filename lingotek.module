@@ -126,7 +126,7 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'];
 
   // Content Update Notifications Callback
-  $items[LINGOTEK_NOTIFICATIONS_URL] = array(
+  $items[LINGOTEK_NOTIFY_URL] = array(
     'title' => 'Content Translation Notifications',
     'type' => MENU_CALLBACK,
     'access arguments' => array('access content'),
@@ -134,7 +134,7 @@ function lingotek_menu() {
     'file' => 'lingotek.sync.inc',
     'page callback' => 'lingotek_notifications',
   );
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/notifications'] = $items[LINGOTEK_NOTIFICATIONS_URL]; // allow early auto-provision community callback urls to wor
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/notifications'] = $items[LINGOTEK_NOTIFY_URL]; // allow early auto-provision community callback urls to wor
   // Dashboard:  Ajax Command Processor
   $items['lingotek/target'] = array(
     'type' => MENU_CALLBACK,
