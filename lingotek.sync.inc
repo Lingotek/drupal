@@ -13,7 +13,7 @@
  * */
 function lingotek_notify_url_generate() {
   global $base_url;
-  return $base_url . '?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}';
+  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}';
 }
 
 /**
