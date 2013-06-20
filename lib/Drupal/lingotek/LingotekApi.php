@@ -89,9 +89,9 @@ class LingotekApi {
     // populate workflow_id
     $workflow_id = empty($node->workflow_id) ? NULL : $node->workflow_id;
     if ($isContentNode) {
-      $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'workflow_id') : $workflow_id;
+      $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'lingotek_workflow') : $workflow_id;
     }
-    $workflow_id = empty($workflow_id) ? variable_get('workflow_id', NULL) : $workflow_id;
+    $workflow_id = empty($workflow_id) ? variable_get('lingotek_workflow', NULL) : $workflow_id;
 
     $source_language = ( isset($_lingotek_locale[$node->language]) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
 
