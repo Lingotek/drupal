@@ -518,7 +518,8 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    */
   public function setChunkTargetsStatus($status, $target_language='all') {
     if ($target_language != 'all') {
-      $this->setMetadataValue('target_sync_status_'.$target_language, $status);
+      $lingotek_language = Lingotek::convertDrupal2Lingotek($target_language);
+      $this->setMetadataValue('target_sync_status_'.$lingotek_language, $status);
     }
     else { // set status for all available targets
       foreach ($this->language_targets as $lt) {
@@ -537,7 +538,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return string
    *   the original input plus any additional reference tags to be ignored.
    */
-  public function filterPlaceholders($segment_text) {
+  public static function filterPlaceholders($segment_text) {
     // WTD: this regex needs to be verified to align with all possible variable names
     $pattern = '/([!@%][\w_]+\s*)/';
     $replacement = '<drupalvar>${1}</drupalvar>';
@@ -553,7 +554,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return string
    *   the original input less any additional reference tags added prior to upload
    */
-  public function unfilterPlaceholders($segment_text) {
+  public static function unfilterPlaceholders($segment_text) {
     // WTD: this regex needs to be verified to align with all possible variable names
     $pattern = '/<\/?drupalvar>/';
     $replacement = '';
@@ -578,7 +579,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     foreach ($translatable as $field) {
       $language = $this->language;
       $text = $this->source_data[$field];
-      $text = $this->filterPlaceholders($text);
+      $text = self::filterPlaceholders($text);
 
       if ($text) {
         $current_field = '<' . self::TAG_PREFIX . $field . '>';
@@ -658,12 +659,29 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         $document_xml = $api->downloadDocument($metadata['document_id'], $target->language);
 
         $target_language = Lingotek::convertLingotek2Drupal($target->language);
+
+        /* SLOW VERSION */
+        /*
         foreach ($document_xml as $drupal_field_name => $xml_obj) {
           $content = (string) $xml_obj->element;
-          $content = $this->unfilterPlaceholders($content);
-          $lid = $this->getLidFromTag($drupal_field_name);
+          $content = self::unfilterPlaceholders($content);
+          $lid = self::getLidFromTag($drupal_field_name);
           self::saveSegmentTranslation($lid, $target_language, $content);
         }
+        */
+        /* END SLOW VERSION */
+
+        /* FAST VERSION */
+        // 1. save the dirty targets associated with given language
+        $dirty_lids = self::getDirtyLidsByChunkIdAndLanguage($this->cid, $target_language);
+        // 2. delete all segment targets associated with given language
+        self::deleteAllSegmentTranslationsByChunkId($this->cid, $target_language);
+        // 3. insert all segments for the given language
+        self::saveSegmentTranslations($document_xml, $target_language);
+        // 4. return the dirty targets' statuses
+        self::restoreDirtyLids($dirty_lids);
+        /* END FAST */
+
         // set chunk status to current
         $this->setChunkStatus(LingotekSync::STATUS_CURRENT);
         $this->setChunkTargetsStatus(LingotekSync::STATUS_CURRENT, $target_language);
@@ -679,7 +697,86 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
 
   /**
-   * Gets the Lingotek document ID for this entity.
+   * Return all target segments by ID marked to be updated
+   *
+   * This is a preparatory step before resetting the locales targets for a given
+   * chunk.
+   *
+   * @param int
+   *    the ID of the chunk under which to search
+   * @param string
+   *    the language code for which to get the segments that need updating
+   */
+  public static function getDirtyLidsByChunkIdAndLanguage($chunk_id, $language) {
+    $result = db_select('locales_target', 'lt')
+      ->fields('lt', array('lid'))
+      ->condition('lid', self::minLid($chunk_id), '>=')
+      ->condition('lid', self::maxLid($chunk_id), '<=')
+      ->condition('language', $language)
+      ->condition('i18n_status', I18N_STRING_STATUS_CURRENT, '!=')
+      ->execute();
+    return $result->fetchCol();
+  }
+
+  /**
+   * Mark as dirty all target segments passed, in the locales targets
+   *
+   * @param array
+   *    the list of segments that need updating
+   */
+  public static function restoreDirtyLids($dirty_lids) {
+    if ($dirty_lids) {
+      db_update('locales_target')
+        ->fields(array('i18n_status' => 1))
+        ->condition('lid', $dirty_lids, 'IN')
+        ->execute();
+    }
+  }
+
+  /**
+   * Delete all target segments for a given chunk
+   *
+   * @param int
+   *    the ID of the chunk for which to delete target segments
+   * @param string
+   *    the language code for which to delete target segments
+   */
+  public static function deleteAllSegmentTranslationsByChunkId($chunk_id, $target_language) {
+    db_delete('locales_target')
+      ->condition('lid', self::minLid($chunk_id), '>=')
+      ->condition('lid', self::maxLid($chunk_id), '<=')
+      ->execute();
+  }
+
+  /**
+   * Save segment target translations for the given language
+   *
+   * @param obj
+   *    the SimpleXMLElement object containing the translations to be saved
+   * @param string
+   *    the language code under which to save the translations
+   */
+  public static function saveSegmentTranslations($document_xml, $target_language) {
+    $rows = array();
+    $sql = 'INSERT INTO {locales_target} (lid, translation, language) VALUES ';
+    $subsql = '';
+    $icount = 0;
+    foreach ($document_xml as $drupal_field_name => $xml_obj) {
+      $content = (string) $xml_obj->element;
+      $content = self::unfilterPlaceholders($content);
+      $lid = self::getLidFromTag($drupal_field_name);
+      $rows += array(  ":l_$icount" => $lid, 
+                        ":c_$icount" => $content, 
+                        ":lang_$icount" => $target_language);
+      $subsql .= "( :l_$icount, :c_$icount, :lang_$icount),";
+      $icount++;
+    }
+    $subsql = rtrim($subsql, ',');
+    db_query($sql . $subsql, $rows);
+  }
+
+  /**
+   * Get the Lingotek document ID for this entity.
    *
    * @return mixed
    *   The integer document ID if the entity is associated with a
@@ -718,7 +815,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   /**
    * Return the lid for locales source/target tables from the XML tag name
    */
-  protected function getLidFromTag($tag) {
+  protected static function getLidFromTag($tag) {
     // for now, remove the 'config_' as quickly as possible
     return substr($tag, self::TAG_PREFIX_LENGTH);
   }

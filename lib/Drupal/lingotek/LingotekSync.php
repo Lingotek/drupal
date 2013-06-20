@@ -296,11 +296,17 @@ class LingotekSync {
 
   public static function getDirtyChunkLids() {
     // return the list of all lids from the locale_source table *not* fully translated
-    $drupal_codes = lingotek_get_target_locales();
-    if (!count($drupal_codes)) {
+    $lingotek_codes = lingotek_get_target_locales();
+    if (!count($lingotek_codes)) {
       LingotekLog::error('No languages configured for this Lingotek account.', array());
       return array();
     }
+    // get the drupal language for each associated lingotek locale
+    $drupal_codes = array();
+    foreach ($lingotek_codes as $lc) {
+      $drupal_codes[] = Lingotek::convertLingotek2Drupal($lc);
+    }
+    // get the list of all segments that need updating
     $query = db_select('locales_source', 'ls');
     $query->fields('ls', array('lid'))
       ->condition('ls.source', '', '!=')
@@ -314,7 +320,7 @@ class LingotekSync {
     // as the segment ID of the first segment in the chunk, divided by
     // the configured chunk size.  So, segments 1 through [chunk size] would
     // be in chunk #1, etc.
-    $lids = self::getDirtyLids();
+    $lids = self::getDirtyChunkLids();
     $chunk_ids = array();
     foreach ($lids as $lid) {
       $id = LingotekConfigChunk::getIdBySegment($lid);
