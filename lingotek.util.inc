@@ -415,13 +415,14 @@ function lingotek_access_by_plan_type($types, $permission = NULL) {
 function lingotek_access_dev_tools($node, $permission) {
   // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
   // OR when not Enterprise
+  
   $user_access = user_access($permission);
-  if ((module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && $user_access && !lingotek_node_pushed($node))
+  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node))
       || !LingotekAccount::instance()->isEnterprise()) {
     return FALSE;
   }
   // Default: Standard user access
-  return user_access($permission);
+  return $user_access;
 }
 
 /**
@@ -475,7 +476,7 @@ function lingotek_supported_field_type($type) {
  *   Boolean value.
  */
 function lingotek_do_cache() {
-  return !(variable_get('lingotek_flush_cache', FALSE) && user_access('dev'));
+  return !(variable_get('lingotek_flush_cache', FALSE) && user_access('use lingotek developer tools'));
 }
 
 /**

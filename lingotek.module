@@ -38,7 +38,7 @@ function lingotek_menu() {
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL] = array(//main menu bar link including module description
     'title' => 'Translation',
-    'access arguments' => array('administration'),
+    'access arguments' => array('administer lingotek'),
     'description' => 'The Lingotek Translation module helps you translate and keep your site translated',
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
@@ -47,7 +47,7 @@ function lingotek_menu() {
 
   $items['node/%node/lingotek_pm'] = array(
     'title' => 'Translations',
-    'access arguments' => array(1, 'pm'),
+    'access arguments' => array(1, 'manage projects'),
     'access callback' => 'lingotek_access', // Enterprise Only Function
     'file' => 'lingotek.page.inc',
     'page arguments' => array(1),
@@ -58,8 +58,8 @@ function lingotek_menu() {
 
   $items['node/%node/lingotek_dev'] = array(
     'title' => 'Lingotek Developer Tools',
-    'access arguments' => array(1, 'dev'),
     'access callback' => 'lingotek_access_dev_tools', // Enterprise Only Function
+    'access arguments' => array(1, 'use lingotek developer tools'),
     'description' => 'Developer Tools',
     'file' => 'lingotek.dev.inc',
     'page callback' => 'lingotek_dev_page',
@@ -82,33 +82,32 @@ function lingotek_menu() {
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard',
     'weight' => 1,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/dashboard'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'];
   $items[LINGOTEK_MENU_LANG_BASE_URL] = $items[LINGOTEK_MENU_MAIN_BASE_URL]; // Add a link to regional settings
   $items[LINGOTEK_MENU_MAIN_BASE_URL]['access callback'] = 'lingotek_access_tlmi';
-  
+
   // Tab:  Settings
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'] = array(
     'title' => 'Settings',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
-    'access arguments' => array('administration'),
+    'access arguments' => array('administer lingotek'),
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
-    'page callback' => 'lingotek_admin_configuration_view',//drupal_get_form
-    //'page arguments' => array('lingotek_admin_form'),
+    'page callback' => 'lingotek_admin_configuration_view', //drupal_get_form
+      //'page arguments' => array('lingotek_admin_form'),
   );
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'] = array(
     'title' => 'Settings',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
-    'access arguments' => array('administration'),
+    'access arguments' => array('administer lingotek'),
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
-    'page callback' => 'lingotek_admin_configuration_view',//drupal_get_form
-    
-    //'page arguments' => array('lingotek_admin_form'),
+    'page callback' => 'lingotek_admin_configuration_view', //drupal_get_form
+      //'page arguments' => array('lingotek_admin_form'),
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
@@ -117,7 +116,7 @@ function lingotek_menu() {
     'title' => 'Bulk Management',
     'type' => MENU_LOCAL_TASK,
     'weight' => 4,
-    'access arguments' => array('administration'),
+    'access arguments' => array('administer lingotek'),
     'description' => 'Bulk management of content translations',
     'file' => 'lingotek.sync.inc',
     'page callback' => 'drupal_get_form',
@@ -138,12 +137,12 @@ function lingotek_menu() {
   // Dashboard:  Ajax Command Processor
   $items['lingotek/target'] = array(
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration'),
+    'access arguments' => array('administer lingotek'),
     'description' => 'Lingotek Command Router',
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard_command_ajax',
   );
-  
+
   // Admin Configuration
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/config'] = array(
     'title' => 'Lingotek Configuration Options',
@@ -151,11 +150,11 @@ function lingotek_menu() {
     'file' => 'lingotek.admin.inc',
     'page callback' => 'lingotek_admin_configuration_view',
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   $items['lingotek/update'] = array(
-    'access arguments' => array('pm'),
+    'access arguments' => array('manage projects'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_update',
     'type' => MENU_CALLBACK,
@@ -181,7 +180,7 @@ function lingotek_menu() {
   // Sync Progress Report 
   $items['lingotek/sync/report'] = array(
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration'),
+    'access arguments' => array('administer lingotek'),
     'description' => 'Lingotek Sync Endpoint',
     'file' => 'lingotek.sync.inc',
     'page callback' => 'lingotek_sync_endpoint', //'lingotek_sync'
@@ -193,7 +192,7 @@ function lingotek_menu() {
     'weight' => 30,
     'file' => 'lib/Drupal/batch/lingotek.batch.inc',
     'page callback' => 'lingotek_batch_identify_content',
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   // Easy Install Screens ----------------------------------------
@@ -205,7 +204,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   // New Account
@@ -216,7 +215,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_new_account_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   // Current Users
@@ -227,7 +226,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_account_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   $items['admin/config/lingotek/community-select'] = array(
@@ -237,7 +236,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_community_select_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   $items['admin/config/lingotek/project-select'] = array(
@@ -247,7 +246,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_project_select_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   // Standard Screens
@@ -258,7 +257,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_language_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   $items['admin/config/lingotek/node-translation-settings'] = array(
@@ -268,7 +267,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_node_translation_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
   $items['admin/config/lingotek/content-type-choose-fields-ajax/%'] = array(
     'title' => 'Content Types Ajax',
@@ -277,9 +276,9 @@ function lingotek_menu() {
     'page callback' => 'lingotek_content_type_choose_fields_callback',
     'page arguments' => array(4),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
-  
+
   $items['admin/config/lingotek/setup-language-switcher'] = array(
     'title' => 'Enable Language Switcher',
     'description' => 'Enable the default language switcher',
@@ -287,7 +286,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_language_switcher_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   $items['admin/config/lingotek/setup-complete'] = array(
@@ -297,7 +296,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_complete_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   $items['admin/config/lingotek/node-updates'] = array(
@@ -307,7 +306,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_node_updates_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administration')
+    'access arguments' => array('administer lingotek')
   );
 
   return $items;
@@ -420,7 +419,27 @@ function lingotek_entity_translation_edit_access($entity_type, $entity, $langcod
  * Implements hook_permission().
  */
 function lingotek_permission() {
-  return array(
+  $permissions = array(
+    'administer lingotek' => array(
+      'title' => 'Administer Lingotek',
+      'description' => t('Access the administrative settings for the module.')
+    ),
+    'manage projects' => array(
+      'title' => 'Project Management',
+      'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')
+    ),
+    'adjust auto-download node setting' => array(
+      'title' => 'Synchronization Method',
+      'description' => t('Allow node-level setting of setting the synchronization method')
+    ),
+    'translate url aliases' => array(
+      'title' => 'URL Alias Translation',
+      'description' => t('Allow node-level setting of setting the URL alias translation')
+    ),
+    'use lingotek developer tools' => array(
+      'title' => 'Developer',
+      'description' => t('Access developer tools useful for detailed information and debugging')
+    ),
     'access lingotek utilities' => array(
       'title' => t('Access Lingotek Utilities'),
       'description' => t('Access admin-only utility pages.')
@@ -433,18 +452,8 @@ function lingotek_permission() {
       'title' => t('Per-item Vault Selection'),
       'description' => t('Access the Lingotek TM Vault selector on content creation forms.')
     ),
-    'administration' => array('title' => 'Administration Menu', 'description' => t('Access the administrative page for the module.')),
-    'pm' => array('title' => 'Project Management', 'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')),
-    'translation' => array('title' => 'Translate', 'description' => t('Allow access to the workbench for translation (first) phases')),
-    'review' => array('title' => 'Review', 'description' => t('Allow access to the workbench for review (following) phases.')),
-    'phase_template' => array('title' => 'Phase Template (
-)', 'description' => t('Allow node-level setting of the phase template on node creation.  Can only be set once per node.')),
-    'use_source' => array('title' => 'Paste Source', 'description' => t('Allow node-level setting of showing the source when no translation is available yet')),
-    'sync_method' => array('title' => 'Synchronization Method', 'description' => t('Allow node-level setting of setting the synchronization method')),
-    'url_alias_translation' => array('title' => 'URL Alias Translation', 'description' => t('Allow node-level setting of setting the URL alias translation')),
-    'mt' => array('title' => 'Machine Translation', 'description' => t('Allow node-level setting of machine translation')),
-    'dev' => array('title' => 'Developer', 'description' => t('Access useful debugging features')),
   );
+  return $permissions;
 }
 
 /**
@@ -465,7 +474,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     }
   }
 
-  if (!lingotek_supported_type($form['#node']->type) || !user_access('pm')) {
+  if (!lingotek_supported_type($form['#node']->type) || !user_access('manage projects')) {
     return;
   }
 
@@ -498,10 +507,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
-
-  //$options = array();
-  //$options[TRUE] = t('Enabled');
-  //$options[FALSE] = t('Disabled');
 
   $title = t('Translation Management');
 
@@ -575,32 +580,21 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#type' => 'checkbox',
     '#title' => t('Download Translations Automatically'),
     '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 1),
-    '#access' => user_access('sync_method'),
+    '#access' => user_access('adjust auto-download node setting'),
     '#description' => t('When enabled, completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
   );
 
-
-  // Paste Source Setting.
-  /* $form['lingotek']['content']['useSource'] = array(
-    '#type' => 'select',
-    '#title' => t('Include source text in synchronization.'),
-    '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'use_source'), 'lingotek_use_source', TRUE),
-    '#options' => $options,
-    '#access' => user_access('use_source'),
-    '#description' => t("This determines if the target languages will fill untranslated text with the source language or simply leave untranslated text out of the document."),
-    ); */
   if ($is_enterprise) {
     // Community Translation
     $form['lingotek']['content']['lingotek_allow_community_translation'] = array(
       '#type' => 'checkbox',
       '#title' => t('Allow Community Translation'),
-      
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'allow_community_translation'), 'lingotek_allow_community_translation', 0),
     );
 
     // URL Alias Translation.
-    if (user_access('url_alias_translation')) {
+    if (user_access('translate url aliases')) {
       $form['lingotek']['content']['urlAliasTranslation'] = array
         (
         '#type' => 'select',
@@ -610,7 +604,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
         '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, define a path pattern, and check "Enable Lingotek Translation" for the Title field.'),
       );
     }
-
 
     // Only show these options if the Lingotek document hasn't yet been created.
     if (!$document_id && class_exists('LingotekApi')) {
@@ -661,7 +654,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'developer_settings',
-    '#access' => user_access('dev'),
+    '#access' => user_access('use lingotek developer tools'),
   );
   $form['lingotek']['advanced']['document_id'] = array(
     '#type' => 'textfield',
@@ -697,7 +690,7 @@ function lingotek_node_view($node, $view_mode) {
       if ($link != '') {
         $message = t('The translation of @title is still being worked on.', array('@title' => '"' . $node->title . '"')) . " ";
         $message .= $link . '&nbsp;';
-        if (lingotek_access($node, 'pm')) {
+        if (lingotek_access($node, 'manage projects')) {
           $message .= '<span style="font-size: 80%">[' . l(t('progress'), 'node/' . $node->nid . '/lingotek_pm', array('html' => TRUE)) . ']</span>';
         }
         drupal_set_message($message, 'warning', FALSE);
@@ -777,13 +770,13 @@ function lingotek_node_update($node) {
   }
 
   // Overwrite document ID.
-  if (user_access('dev') && isset($node->document_id) && is_numeric($node->document_id)) {
+  if (user_access('use lingotek developer tools') && isset($node->document_id) && is_numeric($node->document_id)) {
     lingotek_lingonode($node->nid, 'document_id', $node->document_id);
   }
   if (isset($node->mtEngine)) {
     lingotek_lingonode($node->nid, 'mt_engine', $node->mtEngine);
   }
-  if (user_access('url_alias_translation') && isset($node->urlAliasTranslation)) {
+  if (user_access('translate url aliases') && isset($node->urlAliasTranslation)) {
     lingotek_lingonode($node->nid, 'url_alias_translation', $node->urlAliasTranslation);
   }
 
@@ -839,11 +832,8 @@ function lingotek_node_update($node) {
   if (isset($node->lingotek_allow_community_translation)) {
     lingotek_lingonode($node->nid, 'allow_community_translation', $node->lingotek_allow_community_translation);
   }
-  if (user_access('sync_method') && isset($node->syncMethod)) {
+  if (user_access('adjust auto-download node setting') && isset($node->syncMethod)) {
     lingotek_lingonode($node->nid, 'sync_method', $node->syncMethod); //auto-download
-  }
-  if (user_access('use_source') && isset($node->useSource)) {
-    lingotek_lingonode($node->nid, 'use_source', $node->useSource);
   }
 }
 
@@ -923,9 +913,9 @@ function lingotek_help($path, $arg) {
   switch ($path) {
     case 'admin/help#lingotek':
       $output = '';
-      $output .= '<h2>'.t('Lingotek Translation - Help').'</h2>';
+      $output .= '<h2>' . t('Lingotek Translation - Help') . '</h2>';
       $support = lingotek_support_footer();
-      $output .= drupal_render($support);      
+      $output .= drupal_render($support);
       return $output;
   }
 }

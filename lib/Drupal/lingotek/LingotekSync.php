@@ -371,14 +371,11 @@ class LingotekSync {
     if (variable_get('language_config_translate')) {
       $config_chunks_to_update = self::getDirtyConfigChunks();
       $num_updates = count($config_chunks_to_update);
+      $report = array_merge($report, array(
+        'upload_config' => (array_keys($config_chunks_to_update)),
+        'upload_config_count' => $num_updates,
+          ));
     }
-    else {
-      $num_updates = 0;
-    }
-    $report = array_merge($report, array(
-      'upload_config' => (array_keys($config_chunks_to_update)),
-      'upload_config_count' => $num_updates,
-    ));
     return $report;
   }
 
