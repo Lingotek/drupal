@@ -290,7 +290,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    */
   protected static function getChunkMeta($chunk_id) {
     $query = db_select('lingotek_config_metadata', 'l');
-    $query->fields('l', array('id','config_key'));
+    $query->fields('l', array('id', 'config_key', 'value'));
     $query->condition('l.id', $chunk_id);
     $result = $query->execute();
     $response = array();
