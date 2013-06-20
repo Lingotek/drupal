@@ -81,7 +81,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return string
    *   The status of the target locale for the given chunk_id
    */
-  public function getTargetStatusById($chunk_id, $target_locale) {
+  public static function getTargetStatusById($chunk_id, $target_locale) {
     $result = db_select('lingotek_config_metadata', 'meta')
       ->fields('meta', array('value'))
       ->condition('id', $chunk_id)
