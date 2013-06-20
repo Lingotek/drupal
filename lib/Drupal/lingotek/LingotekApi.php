@@ -93,7 +93,11 @@ class LingotekApi {
     }
     $workflow_id = empty($workflow_id) ? variable_get('lingotek_workflow', NULL) : $workflow_id;
 
-    $source_language = ( isset($_lingotek_locale[$node->language]) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
+    $node_language = (property_exists($node, 'language') ? $node->language : NULL);
+    if (is_object($node_language)) {
+      $node_language = $node_language->language;
+    }
+    $source_language = ( $node_language && isset($_lingotek_locale[$node_language]) ) ? $_lingotek_locale[$node_language] : $_lingotek_locale[lingotek_get_source_language()];
 
     if ($project_id) {
       $parameters = array(
