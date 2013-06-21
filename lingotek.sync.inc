@@ -238,10 +238,9 @@ function lingotek_form_bulk_sync() {
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Include configuration translation (<span id="upload-config-total">@count document units</span>)', array('@count' => $report['upload_config_count'])),
+        '#title' => t('Include menus, taxonomies, blocks, views, and variables (<span id="upload-config-total">@count set of additions/changes</span>)', array('@count' => $report['upload_config_count'])),
         '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_config_count'] == 0,
-        '#description' => t('[Some information about the nature of the config being uploaded goes here.]')
       );
     }
   }

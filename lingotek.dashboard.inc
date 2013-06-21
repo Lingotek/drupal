@@ -287,9 +287,9 @@ function lingotek_get_source_language_json() {
   $source_language = lingotek_get_source_language();
   $data['code'] = Lingotek::convertDrupal2Lingotek($source_language);
 
-  $data['edited'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_EDITED);
-  $data['pending'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_PENDING);
-  $data['current'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_CURRENT);
+  $data['edited'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_EDITED);
+  $data['pending'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_PENDING);
+  $data['current'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT);
 
   $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];
 

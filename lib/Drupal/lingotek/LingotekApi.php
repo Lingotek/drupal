@@ -89,12 +89,16 @@ class LingotekApi {
     // populate workflow_id
     $workflow_id = empty($node->workflow_id) ? NULL : $node->workflow_id;
     if ($isContentNode) {
-      $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'workflow_id') : $workflow_id;
+      $workflow_id = empty($workflow_id) ? lingotek_lingonode($node->nid, 'lingotek_workflow') : $workflow_id;
     }
-    $workflow_id = empty($workflow_id) ? variable_get('workflow_id', NULL) : $workflow_id;
+    $workflow_id = empty($workflow_id) ? variable_get('lingotek_workflow', NULL) : $workflow_id;
 
-    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language);
-    $source_language =  isset($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
+    $node_language = (property_exists($node, 'language') ? $node->language : NULL);
+    if (is_object($node_language)) {  // Allow language attributes to be objects (e.g., config chunks)
+      $node_language = $node_language->language;
+    }
+    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node_language);
+    $source_language = isset($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
 
     if ($project_id) {
       $parameters = array(
@@ -112,7 +116,7 @@ class LingotekApi {
         if (!$cid) {
           $cid = '(new/unassigned)';
         }
-        $parameters['note'] = 'config chunk #'.$cid;
+        $parameters['note'] = 'config chunk #' . $cid;
       }
       else {
         $parameters['content'] = lingotek_xml_node_body($node);
@@ -159,17 +163,18 @@ class LingotekApi {
     }
     return $success;
   }
-  
+
   public function removeDocument($document_id, $reset_node = TRUE) {
     $success = FALSE;
     if ($document_id && (is_numeric($document_id) || is_array($document_id))) {
       // Remove node info from lingotek table (and reset for upload when reset_node is TRUE)
-      if($reset_node) {
+      if ($reset_node) {
         LingotekSync::resetNodeInfoByDocId($document_id);
-      } else {
+      }
+      else {
         LingotekSync::removeNodeInfoByDocId($document_id);
       }
-      $result = $this->request('removeDocument', array('documentId'=>$document_id));
+      $result = $this->request('removeDocument', array('documentId' => $document_id));
       if ($result) {
         $success = TRUE;
       }
@@ -226,7 +231,7 @@ class LingotekApi {
         break;
       case 'LingotekNode':
       default:
-        throw new Exception("createContentDocumentWithTargets not implemented for type '".get_class($entity)."'.");
+        throw new Exception("createContentDocumentWithTargets not implemented for type '" . get_class($entity) . "'.");
         break;
     };
 
@@ -900,7 +905,7 @@ class LingotekApi {
    * @return bool
    *   TRUE if the configuration is correct, FALSE otherwise.
    */
-  public function testAuthentication( $force = FALSE ) {
+  public function testAuthentication($force = FALSE) {
     $valid_connection = &drupal_static(__FUNCTION__);
 
     if ($force || !isset($valid_connection)) {
