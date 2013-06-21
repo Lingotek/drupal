@@ -70,7 +70,7 @@ function lingotek_get_dashboard_code() {
   $totals = array();
   $guid = lingotek_get_guid(); // 16 char string
   //$active_languages = lingotek_get_active_languages();  // array of enabled Drupal language codes (from locale module)
-  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE);
+  $target_languages = LingotekAccount::instance()->getManagedTargets(NULL, TRUE);
 
   $totals = lingotek_get_target_status();
 
@@ -314,13 +314,13 @@ function lingotek_get_guid() {
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
   $response = array();
-  $target_languages = LingotekAccount::instance()->getManagedTargets(TRUE);
+  $target_languages = LingotekAccount::instance()->getManagedTargets(NULL, TRUE);
 
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {
 
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-    $target_is_active = in_array($lingotek_locale, array_keys($target_languages));
+    $target_is_active = in_array($drupal_language_code, array_keys($target_languages));
 
     $edited = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_EDITED, $lingotek_locale);
     $pending = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_PENDING, $lingotek_locale);
