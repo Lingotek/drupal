@@ -93,10 +93,6 @@ class LingotekAccount {
     return $result;
   }
 
-<<<<<<< Updated upstream
-  public function getManagedTargetsAsJSON() {
-    return drupal_json_encode(array_values($this->getManagedTargets(FALSE, TRUE)));
-=======
   public function getManagedTargetsAsJSON($lingotek_locale_to_exclude = NULL) {
     return drupal_json_encode(array_values($this->getManagedTargets($lingotek_locale_to_exclude)));
   }
@@ -115,7 +111,6 @@ class LingotekAccount {
     }
     $result = $as_detailed_objects ? $managed_target_languages : array_map(create_function('$obj', 'return $obj->lingotek_locale;'), $managed_target_languages);
     return $result;
->>>>>>> Stashed changes
   }
 
   public function setPlan($plan) {
