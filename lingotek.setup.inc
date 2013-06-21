@@ -763,18 +763,7 @@ function lingotek_setup_node_translation_settings_form() {
 
   } // END:  foreach content type
 
-  // Additional items to be translated
-  // WTD: 1. should these be optionally shown as needed? 2. how to get localized translation for the "taxonomy" term?
-  $form['config_translation'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('@config_translation', array('@config_translation' => 'Configuration and Misc.')),
-          '#default_value' => TRUE,
-          '#prefix' => '<div>',
-          '#suffix' => '</div>',
-    );
-  
   $form['lingotek_checkboxes_close'] = array('#markup' => '</div>');
-
 
   if (variable_get('lingotek_setup_complete', 0)) {
     $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');

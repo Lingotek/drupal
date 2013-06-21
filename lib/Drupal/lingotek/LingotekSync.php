@@ -173,7 +173,9 @@ class LingotekSync {
   public static function getCountByStatus($status) {
     $count = 0;
     $count += self::getNodeCountByStatus($status);
-    $count += self::getChunkCountByStatus($status);
+    if (variable_get('lingotek_translate_config',0)) {
+      $count += self::getChunkCountByStatus($status);
+    }
     return $count;
   }
 
@@ -232,8 +234,10 @@ class LingotekSync {
     $count += self::getTargetNodeCountByStatus($status, $lingotek_locale);
 
     // get the count of config chunks
-    $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
-    
+    if (variable_get('lingotek_translate_config',0)) {
+      $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
+    }
+
     return $count;
   }
 
@@ -260,6 +264,7 @@ class LingotekSync {
 
   protected static function getQueryCompletedConfigTranslations($drupal_codes) {
     // return a query object that contains all fully-translated/current strings.
+    
     // use the first addtl language as the query's base.
     $first_lang = array_shift($drupal_codes);
     $query = db_select('locales_target', "lt0")

@@ -120,7 +120,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
    */
   $form['comments'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => strtoupper(t('Comment Translation')),
+    '#title' => strtoupper(t('Additional Translation')),
     //'#description' => t('Enable/disable and set defaults for comment translation.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -135,19 +135,10 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
     '#submit' => array('lingotek_admin_comments_form_submit')
   );
 
-  $form['comments'][] = array(
-    '#type' => 'item',
-    '#description' => t('Enable/disable and set defaults for comment translation.'),
-  );
-
   $form['comments']['lingotek_translate_comments'] = array(
-    '#type' => 'select',
+    '#type' => 'checkbox',
     '#title' => t('Translate comments'),
     '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
-    '#options' => array(
-      1 => t('Enabled'),
-      0 => t('Disabled'),
-    ),
     '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
 
@@ -172,7 +163,18 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
       recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
     '#options' => $api->listWorkflows(),
     '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
+    '#suffix' => '<hr/>',
   );
+
+  // Configuration translation (ie. taxonomies, menus, etc.)
+  $form['comments']['lingotek_translate_config'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Translate configurations'),
+    '#description' => t('When enabled, taxonomies, menus, blocks, variables, and views will be translated.'). '<span class="warning"><br/>'.t('(Warning: This is a new feature still in testing and is not currently intended for production use.)').'</span>',
+    '#default_value' => variable_get('lingotek_translate_config', 0),
+    '#suffix' => '<hr/>',
+  );
+
   return $form;
 }
 
