@@ -942,7 +942,7 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     if ($key == 'config_translation') {
       if ($value != 0) {
         // Set this content type to be Lingotek translated.
-        variable_set('language_config_translate', LINGOTEK_ENABLED);
+        variable_set('lingotek_translate_config', LINGOTEK_ENABLED);
       }
     }
   }

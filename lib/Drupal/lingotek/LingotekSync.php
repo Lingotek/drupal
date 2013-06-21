@@ -368,7 +368,7 @@ class LingotekSync {
           ));
     }
     // Handle configuration chunks
-    if (variable_get('language_config_translate')) {
+    if (variable_get('lingotek_translate_config')) {
       $config_chunks_to_update = self::getDirtyConfigChunks();
       $num_updates = count($config_chunks_to_update);
       $report = array_merge($report, array(

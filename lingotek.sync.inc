@@ -234,7 +234,7 @@ function lingotek_form_bulk_sync() {
         '#description' => t('These nodes will now be managed by Lingotek.')
       );
     }
-    if (variable_get('language_config_translate')) {
+    if (variable_get('lingotek_translate_config')) {
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
