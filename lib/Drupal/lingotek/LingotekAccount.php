@@ -79,11 +79,13 @@ class LingotekAccount {
     lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
 
     $targets_drupal = language_list();
-
+    $default_language = language_default();
+    
     $targets = array();
     foreach ($targets_drupal as $key => $target) {
       $is_lingotek_managed = $target->lingotek_enabled;
-      if (!$is_lingotek_managed) {
+      $is_source = $default_language->language == $target->language;
+      if (!($is_lingotek_managed || $is_source)) {// include the default language source as a managed language
         continue; // skip, since lingotek is not managing the language
       }
       $target->active = $target->lingotek_enabled;
