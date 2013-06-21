@@ -98,8 +98,18 @@ class LingotekAccount {
     return $result;
   }
 
-  public function getManagedTargetsAsJSON() {
-    return drupal_json_encode(array_values($this->getManagedTargets(FALSE, TRUE)));
+  public function getManagedTargetsAsJSON($lingotek_locale_to_exclude = NULL) {
+    $managed_target_values = $this->getManagedTargets(FALSE);
+    if (!is_null($lingotek_locale_to_exclude)) {
+      $num_managed_prior = count($managed_target_values);
+      $managed_target_values = array_unique(array_diff($managed_target_values, array($lingotek_locale_to_exclude)));
+      $num_managed = count($managed_target_values);
+      if (($num_managed - $num_managed_prior) !== 0) {// Bi-directional language support
+        $managed_target_values['en'] = 'en_US'; // Add English as target when it isn't the source
+        // Note:  This assumes that all other languages, aside from English must be explicitly added as a Target
+      }
+    }
+    return drupal_json_encode(array_values($managed_target_values));
   }
 
   public function setPlan($plan) {
@@ -191,7 +201,7 @@ class LingotekAccount {
         '!response' => $response_json,
         '@response_time' => number_format($timer_results['time']) . ' ms',
       );
-      
+
       if (isset($response_json) && $info['http_code'] == 200) { // Did we get valid json data back?  If not, $json is NULL.
         //debug ( $json );
         LingotekLog::info('<h1>@method</h1>

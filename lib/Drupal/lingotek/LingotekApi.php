@@ -93,7 +93,8 @@ class LingotekApi {
     }
     $workflow_id = empty($workflow_id) ? variable_get('workflow_id', NULL) : $workflow_id;
 
-    $source_language = ( isset($_lingotek_locale[$node->language]) ) ? $_lingotek_locale[$node->language] : $_lingotek_locale[lingotek_get_source_language()];
+    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language);
+    $source_language =  isset($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
 
     if ($project_id) {
       $parameters = array(
@@ -126,7 +127,8 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $node);
 
       if ($with_targets) {
-        $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON();
+        $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON($source_language);
+
         $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
       }
