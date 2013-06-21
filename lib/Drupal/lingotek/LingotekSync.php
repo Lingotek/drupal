@@ -115,6 +115,7 @@ class LingotekSync {
             'document_id' => $doc_id,
             'locale' => $lingotek_locale
           );
+          $node_id = self::getNodeIdFromDocId($doc_id);
 
           if ($workflow_completed) {
             if (self::getTargetStatus($doc_id, $lingotek_locale) == self::STATUS_PENDING) {
@@ -185,6 +186,7 @@ class LingotekSync {
     $target_key = $target_prefix . $lingotek_locale;
 
     $query = db_select('lingotek', 'l')->fields('l');
+    $query->condition('lingokey', $node_language_target_key);
     $query->condition('lingovalue', $status);
     if ($lingotek_locale) {
       $query->condition('lingokey', $target_key);
@@ -194,6 +196,7 @@ class LingotekSync {
       $query->condition('lingokey', $target_prefix, 'LIKE');
     }
     $result = $query->countQuery()->execute()->fetchAssoc();
+
     if (is_array($result)) {
       $count = array_shift($result);
     }
