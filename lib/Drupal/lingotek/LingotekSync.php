@@ -153,7 +153,6 @@ class LingotekSync {
     else {
       $count = 0;
     }
-
     return $count;
   }
 
@@ -229,12 +228,12 @@ class LingotekSync {
 
   public static function disassociateAllNodes() {
     db_truncate('lingotek');
-  }  
-  
+  }
+
   public static function resetNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;
-    foreach($doc_ids as $doc_id){
+    foreach ($doc_ids as $doc_id) {
       $node_id = LingotekSync::getNodeIdFromDocId($doc_id); // grab before node info is removed
       LingotekSync::removeNodeInfoByDocId($doc_id); //remove locally (regardless of success remotely)
       if ($node_id !== FALSE) {
@@ -244,7 +243,7 @@ class LingotekSync {
     }
     return $count;
   }
-  
+
   public static function removeNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;

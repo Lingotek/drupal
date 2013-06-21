@@ -75,20 +75,17 @@ class LingotekAccount {
     return ( $this->status == 'active' ) ? '<span style="color: green;">Active</span>' : '<span style="color: red;">Inactive</span>';
   }
 
-  public function getManagedTargets($as_detailed_objects = FALSE) {
+  public function getManagedLanguages($as_detailed_objects = FALSE) {
     lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
 
     $targets_drupal = language_list();
     $default_language = language_default();
-
+    
     $targets = array();
     foreach ($targets_drupal as $key => $target) {
-      $is_source = $default_language->language == $target->language;
       $is_lingotek_managed = $target->lingotek_enabled;
-      if ($is_source) {
-        continue; // skip, since the source language is not a target
-      }
-      else if (!$is_lingotek_managed) {
+      $is_source = $default_language->language == $target->language;
+      if (!($is_lingotek_managed || $is_source)) {// include the default language source as a managed language
         continue; // skip, since lingotek is not managing the language
       }
       $target->active = $target->lingotek_enabled;
@@ -98,8 +95,24 @@ class LingotekAccount {
     return $result;
   }
 
-  public function getManagedTargetsAsJSON() {
-    return drupal_json_encode(array_values($this->getManagedTargets(FALSE, TRUE)));
+  public function getManagedTargetsAsJSON($lingotek_locale_to_exclude = NULL) {
+    return drupal_json_encode(array_values($this->getManagedTargets($lingotek_locale_to_exclude)));
+  }
+
+  public function getManagedTargets($lingotek_locale_to_exclude = NULL, $as_detailed_objects = FALSE) {
+    if (is_null($lingotek_locale_to_exclude)) {
+      $default_language = language_default();
+      $lingotek_locale_to_exclude = isset($default_language->lingotek_locale) ? $default_language->lingotek_locale : Lingotek::convertDrupal2Lingotek($default_language->language);
+    }
+    $managed_languages = $this->getManagedLanguages(TRUE);
+    $managed_target_languages = array();
+    foreach ($managed_languages as $key => $language) {
+      if (strcmp($language->lingotek_locale, $lingotek_locale_to_exclude) !== 0) {
+        $managed_target_languages[$key] = $language;
+      }
+    }
+    $result = $as_detailed_objects ? $managed_target_languages : array_map(create_function('$obj', 'return $obj->lingotek_locale;'), $managed_target_languages);
+    return $result;
   }
 
   public function setPlan($plan) {
