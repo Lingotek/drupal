@@ -15,7 +15,7 @@ class LingotekSync {
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_LOCKED = 'LOCKED';    // A locked node should neither be uploaded nor downloaded by Lingotek
 
-  public static function getTargetStatus($doc_id, $lingotek_locale) { 
+  public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     if ($chunk_id = LingotekConfigChunk::getIdByDocId($doc_id)) {
       return LingotekConfigChunk::getTargetStatusById($chunk_id, $lingotek_locale);
@@ -24,7 +24,7 @@ class LingotekSync {
       $node_id = self::getNodeIdFromDocId($doc_id);
       return lingotek_lingonode($node_id, $key);
     }
-    LingotekLog::error('Did not find a node or chunk for Doc ID "@id"', array('@id'=>$doc_id));
+    LingotekLog::error('Did not find a node or chunk for Doc ID "@id"', array('@id' => $doc_id));
     return FALSE;
   }
 
@@ -222,10 +222,9 @@ class LingotekSync {
     }
     return $count;
   }
-  
 
   //lingotek_count_all_targets
-  public static function getTargetCountByStatus($status, $lingotek_locale=NULL) {
+  public static function getTargetCountByStatus($status, $lingotek_locale = NULL) {
 
     $count = 0;
 
@@ -234,7 +233,7 @@ class LingotekSync {
 
     // get the count of config chunks
     $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
-
+    
     return $count;
   }
 
@@ -261,13 +260,12 @@ class LingotekSync {
 
   protected static function getQueryCompletedConfigTranslations($drupal_codes) {
     // return a query object that contains all fully-translated/current strings.
-    
     // use the first addtl language as the query's base.
     $first_lang = array_shift($drupal_codes);
     $query = db_select('locales_target', "lt0")
-      ->fields('lt0', array('lid'))
-      ->condition('lt0.language', $first_lang)
-      ->condition('lt0.i18n_status', 0);
+        ->fields('lt0', array('lid'))
+        ->condition('lt0.language', $first_lang)
+        ->condition('lt0.i18n_status', 0);
     $addtl_joins = 0;
     foreach ($drupal_codes as $new_join) {
       // join a new instance of locales_target for each target language
@@ -290,7 +288,7 @@ class LingotekSync {
   public static function getAllChunkLids() {
     // return the list of all lids
     $query = db_select('locales_source', 'ls')
-      ->fields('ls', array('lid'));
+        ->fields('ls', array('lid'));
     return $query->execute()->fetchCol();
   }
 
@@ -309,8 +307,8 @@ class LingotekSync {
     // get the list of all segments that need updating
     $query = db_select('locales_source', 'ls');
     $query->fields('ls', array('lid'))
-      ->condition('ls.source', '', '!=')
-      ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN');
+        ->condition('ls.source', '', '!=')
+        ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN');
     return $query->execute()->fetchCol();
   }
 
@@ -339,12 +337,12 @@ class LingotekSync {
   protected static function getChunksWithPendingTranslations() {
     // get the list of chunks with pending translations
     $result = db_select('lingotek_config_metadata', 'meta')
-      ->fields('meta', array('id','id'))
-      ->condition('config_key', 'target_sync_status_%', 'LIKE')
-      ->condition('value', self::STATUS_PENDING)
-      ->distinct()
-      ->execute();
-      return $result->fetchAllKeyed();
+        ->fields('meta', array('id', 'id'))
+        ->condition('config_key', 'target_sync_status_%', 'LIKE')
+        ->condition('value', self::STATUS_PENDING)
+        ->distinct()
+        ->execute();
+    return $result->fetchAllKeyed();
   }
 
   protected static function pruneChunksWithPendingTranslations($chunk_ids) {
@@ -529,7 +527,7 @@ class LingotekSync {
           }
         }
         if (!strlen($integration_method_id)) {
-          reset($integration_methods);// just in case the internal pointer is not pointing to the first element
+          reset($integration_methods); // just in case the internal pointer is not pointing to the first element
           $integration_method = current($integration_methods); // grab the first element in the list
           $integration_method_id = $integration_method->id; // use the first url found (if no matching url was found previously)
         }
