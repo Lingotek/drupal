@@ -248,8 +248,8 @@ class LingotekApi {
    *   An array of API parameter values.
    */
   protected function getCommentCreateWithTargetsParams(LingotekComment $comment) {
-    $target_locales = Lingotek::availableLanguageTargets("lingotek_locale");
 
+    $source_language = Lingotek::convertDrupal2Lingotek($comment->language);
     $parameters = array(
       'projectId' => variable_get('lingotek_project', NULL),
       'documentName' => 'comment - ' . $comment->cid,
@@ -257,10 +257,10 @@ class LingotekApi {
       'format' => $this->xmlFormat(),
       'applyWorkflow' => 'true',
       'workflowId' => variable_get('lingotek_translate_comments_workflow_id', NULL),
-      'sourceLanguage' => Lingotek::convertDrupal2Lingotek($comment->language),
+      'sourceLanguage' => $source_language,
       'tmVaultId' => variable_get('lingotek_vault', 1),
       'content' => $comment->documentLingotekXML(),
-      'targetAsJSON' => drupal_json_encode(array_values($target_locales)),
+      'targetAsJSON' => LingotekAccount::instance()->getManagedTargetsAsJSON($source_language),
       'note' => url('node/' . $comment->nid, array('absolute' => TRUE, 'alias' => TRUE))
     );
 
