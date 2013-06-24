@@ -180,46 +180,30 @@ class LingotekSync {
     return $count;
   }
 
-  // lingotek_count_node_targets
   public static function getTargetNodeCountByStatus($status, $lingotek_locale) {
     $target_prefix = 'target_sync_status_';
     $target_key = $target_prefix . $lingotek_locale;
 
     $query = db_select('lingotek', 'l')->fields('l');
-    $query->condition('lingokey', $lingotek_locale);
+    $query->condition('lingokey', $target_key);
     $query->condition('lingovalue', $status);
-    if ($lingotek_locale) {
-      $query->condition('lingokey', $target_key);
-    }
-    else {
-      // get targets for all languages
-      $query->condition('lingokey', $target_prefix, 'LIKE');
-    }
     $result = $query->countQuery()->execute()->fetchAssoc();
-
+    
+    $count = 0;
     if (is_array($result)) {
       $count = array_shift($result);
-    }
-    else {
-      $count = 0;
     }
     return $count;
   }
 
-  // lingotek_count_chunk_targets
   public static function getTargetChunkCountByStatus($status, $lingotek_locale) {
     $target_prefix = 'target_sync_status_';
     $target_key = $target_prefix . $lingotek_locale;
 
     $query = db_select('lingotek_config_metadata', 'l')->fields('l');
     $query->condition('value', $status);
-    if ($lingotek_locale) {
-      $query->condition('config_key', $target_key);
-    }
-    else {
-      // get targets for all languages
-      $query->condition('config_key', $target_prefix, 'LIKE');
-    }
+    $query->condition('config_key', $target_key);
+    
     $count = 0;
     $result = $query->countQuery()->execute()->fetchAssoc();
     if (is_array($result)) {
@@ -229,7 +213,7 @@ class LingotekSync {
   }
 
   //lingotek_count_all_targets
-  public static function getTargetCountByStatus($status, $lingotek_locale = NULL) {
+  public static function getTargetCountByStatus($status, $lingotek_locale) {
 
     $count = 0;
 
@@ -416,15 +400,17 @@ class LingotekSync {
       $doc_ids = $result->fetchCol();
     }
 
-    // retrieve document IDs from config chunks
-    $cids = self::getChunkIdsByStatus($status);
-    if (!empty($cids)) {
-      $query = db_select('lingotek_config_metadata', 'meta');
-      $query->fields('meta', array('value'));
-      $query->condition('config_key', 'document_id');
-      $query->condition('id', $cids);
-      $result = $query->execute();
-      $doc_ids = array_merge($doc_ids, $result->fetchCol());
+    if (variable_get('lingotek_translate_config', 0)) {
+      // retrieve document IDs from config chunks
+      $cids = self::getChunkIdsByStatus($status);
+      if (!empty($cids)) {
+        $query = db_select('lingotek_config_metadata', 'meta');
+        $query->fields('meta', array('value'));
+        $query->condition('config_key', 'document_id');
+        $query->condition('id', $cids);
+        $result = $query->execute();
+        $doc_ids = array_merge($doc_ids, $result->fetchCol());
+      }
     }
 
     return $doc_ids;
