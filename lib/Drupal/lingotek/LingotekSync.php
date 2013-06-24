@@ -186,7 +186,7 @@ class LingotekSync {
     $target_key = $target_prefix . $lingotek_locale;
 
     $query = db_select('lingotek', 'l')->fields('l');
-    $query->condition('lingokey', $node_language_target_key);
+    $query->condition('lingokey', $lingotek_locale);
     $query->condition('lingovalue', $status);
     if ($lingotek_locale) {
       $query->condition('lingokey', $target_key);
