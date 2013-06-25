@@ -120,7 +120,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
    */
   $form['comments'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => strtoupper(t('Comment Translation')),
+    '#title' => strtoupper(t('Additional Translation')),
     //'#description' => t('Enable/disable and set defaults for comment translation.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -135,19 +135,10 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
     '#submit' => array('lingotek_admin_comments_form_submit')
   );
 
-  $form['comments'][] = array(
-    '#type' => 'item',
-    '#description' => t('Enable/disable and set defaults for comment translation.'),
-  );
-
   $form['comments']['lingotek_translate_comments'] = array(
-    '#type' => 'select',
+    '#type' => 'checkbox',
     '#title' => t('Translate comments'),
     '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
-    '#options' => array(
-      1 => t('Enabled'),
-      0 => t('Disabled'),
-    ),
     '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
 
@@ -172,7 +163,18 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
       recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
     '#options' => $api->listWorkflows(),
     '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
+    '#suffix' => '<hr/>',
   );
+
+  // Configuration translation (ie. taxonomies, menus, etc.)
+  $form['comments']['lingotek_translate_config'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Translate configurations'),
+    '#description' => t('When enabled, taxonomies, menus, blocks, variables, and views will be translated.'). '<span class="warning"><br/>'.t('(Warning: This is a new feature still in testing and is not currently intended for production use.)').'</span>',
+    '#default_value' => variable_get('lingotek_translate_config', 0),
+    '#suffix' => '<hr/>',
+  );
+
   return $form;
 }
 
@@ -637,8 +639,8 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
  * Troubleshooting and Logging Form
  */
 function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE) {
-
-  $form['x'] = array(
+  
+  $form['logging'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => 'Troubleshooting and Logging',
     '#collapsible' => TRUE,
@@ -654,12 +656,12 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
     '#submit' => array('lingotek_admin_logging_form_submit')
   );
 
-  $form['x'][] = array(
+  $form['logging'][] = array(
     '#type' => 'item',
     '#description' => t('Help troubleshoot any issues with the module.')
   );
 
-  $form['x']['lingotek_api_debug'] = array(
+  $form['logging']['lingotek_api_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable API Logging'),
     '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
@@ -667,28 +669,28 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
     '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? 1 : 0),
   );
 
-  $form['x']['lingotek_error_log'] = array(
+  $form['logging']['lingotek_error_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Error Log'),
     '#description' => t('This prints errors and warnings to the web server\'s error logs in addition to adding them to watchdog.'),
     '#default_value' => variable_get('lingotek_error_log', LINGOTEK_DEV ? 1 : 0),
   );
 
-  $form['x']['lingotek_warning_log'] = array(
+  $form['logging']['lingotek_warning_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Warnings Log'),
     '#description' => t('This logs any warnings in watchdog and the web server\'s error logs.'),
     '#default_value' => variable_get('lingotek_warning_log', LINGOTEK_DEV ? 1 : 0),
   );
 
-  $form['x']['lingotek_trace_log'] = array(
+  $form['logging']['lingotek_trace_log'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Trace Log'),
     '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
     '#default_value' => variable_get('lingotek_trace_log', 0),
   );
 
-  $form['x']['lingotek_flush_cache'] = array(
+  $form['logging']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
@@ -780,7 +782,7 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
 
   $ls_chkbox_enabled = array(
     '#type' => 'checkbox',
-    '#title' => t('Enabled'),
+    '#title' => t('Enable'),
     '#default_value' => $block_enabled,
   );
 
@@ -789,13 +791,19 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
 
   $ls_select_region = array(
     '#type' => 'select',
-    //'#title' => 'Region',
-    '#description' => 'When enabled, the region to be displayed in.',
+    '#title' => 'Choose the region that you wish to display the switcher in.',
+    //'#description' => 'When enabled, the region to be displayed in.',
     '#options' => $block_regions,
-    '#default_value' => $default_region_value
+    '#default_value' => $default_region_value,
+    '#states' => array(
+      'invisible' => array(
+       ':input[name="enabled"]' => array('checked' => FALSE),
+      ),
+    ),
   );
-
-  $form['x'] = array(
+  
+  $fkey = 'language_switcher';// form key
+  $form[$fkey] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => t('Default Language Switcher'),
     '#collapsible' => TRUE,
@@ -813,22 +821,27 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
     )
   );
 
-  $form['x'][] = array(
+  $form[$fkey][] = array(
     '#type' => 'item',
     '#description' => t('Would you like to enable the default language switcher?')
   );
-  $form['x']['theme'] = array(
+  $form[$fkey]['theme'] = array(
     '#type' => 'hidden',
     '#value' => $current_theme
   );
 
-  $form['x']['enabled'] = $ls_chkbox_enabled;
-  $form['x']['region'] = $ls_select_region;
+  $form[$fkey]['enabled'] = $ls_chkbox_enabled;
+  $form[$fkey]['region'] = $ls_select_region;
 
-  $form['x'][] = array(
+  $form[$fkey][] = array(
     '#type' => 'item',
-    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
-  );
+    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'),
+    '#states' => array(
+      'invisible' => array(
+       ':input[name="enabled"]' => array('checked' => FALSE),
+      ),
+    ),
+    );
   /* $language_negotiation = variable_get('language_negotiation_language', array());
     $url_detection_enabled = array_key_exists('locale-url', $language_negotiation);
     $ls_chkbox_detection = array(
@@ -837,9 +850,9 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
     '#default_value' => $url_detection_enabled,
     '#disabled' => TRUE
     );
-    $form['x']['url_detection'] = $ls_chkbox_detection;
+    $form[$form_key]['url_detection'] = $ls_chkbox_detection;
 
-    $form['x'][] = array(
+    $form[$form_key][] = array(
     '#type' => 'markup',
     '#markup' => json_encode($block),
     '#attributes' => array('class' => 'description')
