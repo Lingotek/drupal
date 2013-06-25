@@ -337,7 +337,7 @@ function lingotek_sync_upload_node($nid, &$context) {
   LingotekLog::trace('upload node: @node_id', array('@node_id' => $nid));
 
   $api = LingotekApi::instance();
-  $node = node_load($nid);
+  $node = lingotek_node_load_default($nid);
 
   // Push this node for translation.
   if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
@@ -412,8 +412,9 @@ function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_succes
 
   LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
 
-  $node = node_load($nid);
+  $node = lingotek_node_load_default($nid);
   lingotek_download_document($node, $lingotek_locale, $sync_success_status);
+  cache_clear_all('field:node:' . $nid, 'cache_field');
   $result = TRUE; // assume TRUE until the above lingotek_download_document call is updated to return the result
 
   if ($result) {
@@ -483,7 +484,7 @@ function lingotek_mt_sync_set_status($status, &$context) {
  */
 function lingotek_node_source_language_cleanup_batch_worker($nid, $source_language) {
 
-  $loaded_node = node_load($nid);
+  $loaded_node = lingotek_node_load_default($nid);
   $loaded_node->language = $source_language;
   $loaded_node->lingotek_upload_override = 0; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
   node_save($loaded_node);
@@ -494,7 +495,7 @@ function lingotek_node_source_language_cleanup_batch_worker($nid, $source_langua
  */
 function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
 
-  $process_node = node_load($nid);
+  $process_node = lingotek_node_load_default($nid);
   if ($process_node->nid) {
     lingotek_field_language_data_cleanup_update_node($process_node->nid);
     //$context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
@@ -520,7 +521,7 @@ function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
 function lingotek_field_language_data_cleanup_update_node($nid) {
   $edited = FALSE;
 
-  $node = node_load($nid, NULL, TRUE);
+  $node = lingotek_node_load_default($nid, NULL, TRUE);
   if ($node->nid) {
     if ($node->language != 'und') {
       $translatable_fields = lingotek_translatable_node_fields();

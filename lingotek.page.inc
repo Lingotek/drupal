@@ -117,8 +117,7 @@ function lingotek_push_form($form, $form_state, $node) {
  * Submit handler for the lingotek_push_form form.
  */
 function lingotek_push_form_submit($form, $form_state) {
-  $node = node_load($form_state['values']['node_id']);
-
+  $node = lingotek_node_load_default($form_state['values']['node_id']);
   $api = LingotekApi::instance();
   if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
     // Update an existing Lingotek Document.
@@ -169,7 +168,7 @@ function lingotek_node_content_reset_form_submit($form, $form_state) {
   $api = LingotekApi::instance();
   $api->removeDocument($doc_id);
 
-  $node = node_load($drupal_node_id);
+  $node = lingotek_node_load_default($drupal_node_id);
   drupal_set_message(t('Translations reset for "@node_title".', array('@node_title' => $node->title)));
 }
 
@@ -252,7 +251,7 @@ function lingotek_publish_form($form, $form_state, $node) {
  */
 function lingotek_publish_form_submit($form, $form_state) {
   if (module_exists('entity_translation')) {
-    $node = node_load($form_state['values']['node_id']);
+    $node = lingotek_node_load_default($form_state['values']['node_id']);
 
     $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0;
     $handler = entity_translation_get_handler('node', $node);
@@ -358,10 +357,11 @@ function lingotek_pm($node) {
  */
 
 function lingotek_update($nid) {
-  $node = node_load($nid);
+  $node = lingotek_node_load_default($nid);
   foreach ($_POST['targets'] as $locale) {
     lingotek_download_document($node, $locale);
   }
+  cache_clear_all('field:node:' . $nid, 'cache_field');
   drupal_set_message(t('Updated local translations for the selected languages: @selected_locales', array('@selected_locales' => implode(", ", $_POST['targets']))));
   drupal_json_output(array('status' => 0, 'updated' => $_POST['targets'], 'nid' => $nid));
 }
@@ -427,7 +427,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
 
   if (!empty($form_state['values']['node_id'])) {
     lingotek_lingonode($form_state['values']['node_id'], 'use_advanced_parsing', 1);
-    $target_node = node_load($form_state['values']['node_id']);
+    $target_node = lingotek_node_load_default($form_state['values']['node_id']);
     if ($target_node->nid) {
       if (LingotekApi::instance()->updateContentDocument(LingotekNode::load($target_node))) {
         drupal_set_message(t('This node has been upgraded to use advanced content parsing.'));
