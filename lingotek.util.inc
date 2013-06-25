@@ -174,10 +174,14 @@ function lingotek_node_sync(&$node) {
         LingotekLog::trace("lingotek_node_sync percent complete changed", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
         lingotek_lingonode($node->nid, $key, $after);
         lingotek_download_document($node, $lingotek_locale);
+        $clear_field_caches = TRUE;
       }
       else {
         LingotekLog::trace("lingotek_node_sync percent complete stayed the same", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
       }
+    }
+    if ($clear_field_caches) {
+      cache_clear_all('field:node:' . $node->nid, 'cache_field');
     }
   }
 }
@@ -661,7 +665,7 @@ function lingotek_delete_target_language($lingotek_locale) {
 
   if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
 
-    if(Lingotek::convertDrupal2Lingotek(variable_get("language_default")->language, FALSE) <> $lingotek_locale) {
+    if(Lingotek::convertDrupal2Lingotek(language_default()->language, FALSE) <> $lingotek_locale) {
       db_update('languages')
           ->fields(array(
             'enabled' => 0,
@@ -825,6 +829,25 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabl
       ->condition('language', $drupal_language_code)
       ->execute();
   return $lingotek_locale;
+}
+
+/**
+ * Lingotek custom wrapper function for node_load
+ *
+ * This is needed because the Lingotek module should translate only the most current revision of any node
+ *
+ * @param $nid entity_id of node to load
+ *
+ * @return $node most current revision of the node at $nid
+ */
+function lingotek_node_load_default($nid) {
+  $query = db_select('node_revision', 'nr')
+    ->condition('nid', $nid, '=');
+  $query->addExpression('MAX(vid)', 'max_vid');
+  $max_vid = $query->execute()->fetchField();
+
+  $node = node_load($nid, $max_vid);
+  return $node;
 }
 
 /**

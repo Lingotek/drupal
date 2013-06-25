@@ -106,20 +106,56 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
             'title',
           );
         }
+        if (!is_array($target_key)) {
+          $target_key = array($target_key);
+        }
+        $insert_array = array(
+          'entity_type' => 'node',
+          'bundle' => $node->type,
+          'entity_id' => $node->nid,
+          'revision_id' => $node->vid,
+          'language' => $drupal_language_code,
+          'delta' => $delta,
+          'deleted' => '0',
+        );
         foreach ($content as $text) {
-          if (is_array($target_key)) {
-            $array_key = $target_key[$index];
-            $node_field[$drupal_language_code][$delta][$array_key] = decode_entities(lingotek_xml_decode($text));
-          }
-          else {
-            $node_field[$drupal_language_code][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
-            if (array_key_exists($node->language, $node_field)) {
-              if (array_key_exists('format', $node_field[$node->language][0])) {
-                $node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
-              }
+          $array_key = $target_key[$index];
+          $db_field_name = $field['field_name'] . '_' . $array_key;
+          $insert_array[$db_field_name] = decode_entities(lingotek_xml_decode($text));
+          //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities(lingotek_xml_decode($text));
+          if (array_key_exists($node->language, $node_field)) {
+            if (array_key_exists('format', $node_field[$node->language][0])) {
+              //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
+              $format_db_field_name = $field['field_name'] . '_format';
+              $insert_array[$format_db_field_name] = $node_field[$node->language][0]['format'];
             }
           }
           $index++;
+        }
+        $field_names = array('field_revision_' . $field['field_name']);
+        if ($node->vid == $node->workbench_moderation['current']->vid) { // if published version (in node table) is as current as most current revision (in node_revision table)
+          $field_names[] = 'field_data_' . $field['field_name']; // put fields into both field_data_ and field_revision_ tables
+        }
+        foreach ($field_names as $field_name) {
+          // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
+          try {
+            drupal_write_record($field_name, $insert_array);           }
+          catch (PDOException $e) {
+           // switch($e->errorInfo[0]) {
+             // case 23000:
+                $primary_keys = array(
+                  'entity_type',
+                  'entity_id',
+                  'revision_id',
+                  'deleted',
+                  'delta',
+                  'language',
+                );
+             // default:
+               // throw $e;
+           // }
+            drupal_write_record($field_name, $insert_array, $primary_keys);
+          }
         }
       }
 
@@ -148,8 +184,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
       $node->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
     }
   }
-
-  node_save($node);
+ // node_save($node);
 }
 
 /*
@@ -262,6 +297,20 @@ function lingotek_get_url_alias_translations() {
   $methods[0] = t("Don't translate");
   $methods[1] = t("Translate the URL alias");
   $methods[2] = t("Use the translated page title");
+  return $methods;
+}
+
+/*
+ * Get all workbench moderation states
+ */
+function lingotek_get_workbench_moderation_states() {
+  $methods = array();
+  $index = 0;
+  $states = workbench_moderation_states();
+  foreach ($states as $array) {
+    $methods[$index] = $array->name;
+    $index++;
+  }
   return $methods;
 }
 

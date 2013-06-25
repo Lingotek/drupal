@@ -201,7 +201,7 @@ function lingotek_update_7200(&$sandbox) {
     $sandbox['max'] = count($nodes);
     $sandbox['nodes'] = $nodes;
   }
-  $node = node_load($sandbox['nodes'][$sandbox['progress']]);
+  $node = lingotek_node_load_default($sandbox['nodes'][$sandbox['progress']]);
   if ($node !== FALSE) {
     if (!class_exists('LingotekApi')) {
       // The LingotekApi class might not have been introduced when this user last updated the Lingotek Translation module.
@@ -246,7 +246,7 @@ function lingotek_update_7201(&$sandbox) {
       $sandbox['nodes'] = $lingotek_nodes;
     }
 
-    $process_node = node_load(array_shift($sandbox['nodes']));
+    $process_node = lingotek_node_load_default(array_shift($sandbox['nodes']));
     if ($process_node->nid && !lingotek_lingonode($process_node->nid, 'project_id')) {
       lingotek_lingonode($process_node->nid, 'project_id', $default_lingotek_project);
     }

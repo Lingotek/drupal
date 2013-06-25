@@ -485,7 +485,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $document_id = FALSE;
   if (isset($form['nid']['#value'])) {
     $nid = $form['nid']['#value'];
-    $node = node_load($nid);
+    $node = lingotek_node_load_default($nid);
     $document_id = lingotek_lingonode($nid, 'document_id');
   }
 
@@ -505,6 +505,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
 
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
+
+  $workbench_moderation_enabled = FALSE;
+  if (module_exists('workbench_moderation')) {
+    $workbench_moderation_enabled = TRUE;
+  }
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
@@ -575,6 +580,21 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 0),
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
   );
+
+  if ($workbench_moderation_enabled) {
+    $form['lingotek']['content']['create_lingotek_document_workbench_moderation'] = array(
+      '#type' => 'select',
+      '#title' => t('Workbench Moderation State'),
+      '#options' => lingotek_get_workbench_moderation_states(),
+      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 2),
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="create_lingotek_document"]' => array('checked' => FALSE),
+        ),
+      ),
+      '#description' => t('Your content will be automatically uploaded when changed to this state.'),
+    );
+  }
 
   $form['lingotek']['content']['syncMethod'] = array(
     '#type' => 'checkbox',
@@ -730,6 +750,16 @@ function lingotek_node_delete($node) {
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
+
+  if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
+    return;
+  }
+  else {
+    lingotek_upload_document($node);
+  }
+}
+
+function lingotek_upload_document($node) {
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
@@ -746,6 +776,7 @@ function lingotek_node_update($node) {
   }
   elseif (isset($node->lingotek_upload_override)) { // this variable can force to either send or not send (1 or 0) when set.
     $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
+    $node->lingotek_upload_override = 0;
   }
   else {  // Only send the node content to Lingotek on edit if auto-upload is enabled.
     if (isset($node->create_lingotek_document)) {
@@ -944,7 +975,7 @@ function lingotek_translatable_node_fields() {
  * Processing callback for the advanced parsing update batch operation.
  */
 function lingotek_advanced_parsing_update_node($nid, &$context) {
-  $process_node = node_load($nid);
+  $process_node = lingotek_node_load_default($nid);
 
   if (!empty($process_node->nid)) {
     $context['message'] = t('Sending advanced parsing data to Lingotek for node @node_id: @node_title', array('@node_id' => $process_node->nid, '@node_title' => $process_node->title));
@@ -1064,7 +1095,7 @@ function lingotek_content_push_form($form, $form_state, $node) {
  * Submit handler for the lingotek_content_push_form form.
  */
 function lingotek_content_push_form_submit($form, $form_state) {
-  $node = node_load($form_state['values']['node_id']);
+  $node = lingotek_node_load_default($form_state['values']['node_id']);
 
   $api = LingotekApi::instance();
   if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
@@ -1092,7 +1123,7 @@ function lingotek_comment_insert($comment) {
  */
 function lingotek_comment_update($comment) {
   $target_types = variable_get('lingotek_translate_comments_node_types', array());
-  $comment_node = node_load($comment->nid);
+  $comment_node = lingotek_node_load_default($comment->nid);
   $valid_translation_target = (!empty($comment_node->type) && isset($target_types[$comment_node->type]));
   if (class_exists('LingotekComment') && variable_get('lingotek_translate_comments', FALSE) && $valid_translation_target) {
     $lingotek_comment = LingotekComment::load($comment)->contentUpdated();
@@ -1221,4 +1252,25 @@ function lingotek_field_language_alter(&$display_language, $context) {
       $display_language[$field] = $context['entity']->language;
     }
   }
+}
+
+/**
+ * Implements hook_workbench_moderation_transition()
+ *
+ * Upload content automatically only if new state corresponds auto-upload workbench_moderation variables
+ * Otherwise override upload
+ */
+function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
+  // Check global and node-specific settings
+  $def_state = lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 2);
+  if (isset($node->create_lingotek_document_workbench_moderation)) {
+    lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation', $node->create_lingotek_document_workbench_moderation);
+    $def_state = $node->create_lingotek_document_workbench_moderation;
+  }
+  $states = lingotek_get_workbench_moderation_states();
+  // Check new state against settings
+  if ($new_state != $states[$def_state]) {
+    $node->lingotek_upload_override = 0;
+  }
+  lingotek_upload_document($node);
 }

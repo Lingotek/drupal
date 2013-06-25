@@ -101,7 +101,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   public static function loadById($node_id) {
     $node = FALSE;
-    if ($drupal_node = node_load($node_id)) {
+    if ($drupal_node = lingotek_node_load_default($node_id)) {
       $node = self::load($drupal_node);
     }
     return $node;

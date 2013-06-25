@@ -404,6 +404,10 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
   $api = LingotekApi::instance();
   $site = variable_get('site_name', 'Drupal Site');
   $is_enterprise = $account->isEnterprise();
+  $workbench_moderation_enabled = FALSE;
+  if (module_exists('workbench_moderation')) {
+    $workbench_moderation_enabled = TRUE;
+  }
 
   /*
    * Default Settings
@@ -437,6 +441,19 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     //'#disabled' => !$is_enterprise,
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
   );
+
+  if ($workbench_moderation_enabled) {
+    $form['defaults']['lingotek_create_documents_by_default_workbench_moderation'] = array(
+      '#type' => 'select',
+      '#options' => lingotek_get_workbench_moderation_states(),
+      '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 2),
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="lingotek_create_documents_by_default"]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+  }
 
   // Download  
   $form['defaults']['lingotek_sync'] = array(
@@ -881,7 +898,7 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
     $results = db_select('lingotek', 'l')->fields('l', array('nid'))->distinct()->execute();
     $operations = array();
     foreach ($results as $result) {
-      $node = node_load($result->nid, NULL, TRUE);
+      $node = lingotek_node_load_default($result->nid, NULL, TRUE);
       if (!empty($node->nid)) {
         $operations[] = array('lingotek_advanced_parsing_update_node', array($node->nid));
       }
