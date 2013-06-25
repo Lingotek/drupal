@@ -766,7 +766,7 @@ function lingotek_node_update($node) {
   $is_syncing = (isset($_SESSION['lingotek_sync_in_progress'])) ? $_SESSION['lingotek_sync_in_progress'] : $is_syncing;
 
   if ($is_syncing === FALSE) {
-    LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_EDITED, LingotekSync::STATUS_EDITED);
+    LingotekSync::setNodeAndTargetsStatus($node, LingotekSync::STATUS_EDITED, LingotekSync::STATUS_EDITED);
   }
 
   // Overwrite document ID.

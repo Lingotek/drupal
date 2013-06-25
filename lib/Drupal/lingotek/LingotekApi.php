@@ -156,7 +156,7 @@ class LingotekApi {
         else {
           lingotek_lingonode($node->nid, 'document_id', $result->id);
           lingotek_lingonode($node->nid, 'project_id', $project_id);
-          LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
+          LingotekSync::setNodeAndTargetsStatus($node, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
         }
         $success = TRUE;
       }
@@ -883,7 +883,7 @@ class LingotekApi {
     $result = $this->request('updateContentDocument', $parameters);
 
     if ($result) {
-      LingotekSync::setNodeAndTargetsStatus($node->nid, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
+      LingotekSync::setNodeAndTargetsStatus($node, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
     }
 
     return ( $result ) ? TRUE : FALSE;

@@ -55,22 +55,29 @@ class LingotekSync {
     return $projects;
   }
 
-  //lingotek_set_node_and_targets_sync_status
-  public static function setNodeAndTargetsStatus($node_id, $node_status, $targets_status) {
+  public static function setNodeAndTargetsStatus($node, $node_status, $targets_status) {
     // Set the Node to EDITED.
-    self::setNodeStatus($node_id, $node_status);
-
+    self::setNodeStatus($node->nid, $node_status);
+    
+    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language, FALSE);
+    
     // Loop though each target language, and set that target to EDITED.
-    $languages = lingotek_get_target_locales();
+    $languages = LingotekAccount::instance()->getManagedTargets($source_lingotek_locale);//lingotek_get_target_locales();
     foreach ($languages as $lingotek_locale) {
-      self::setTargetStatus($node_id, $lingotek_locale, $targets_status);
+      self::setTargetStatus($node->nid, $lingotek_locale, $targets_status);
     }
   }
 
   // Add the node sync target language entries to the lingotek table.
   public static function insertTargetEntriesForAllNodes($lingotek_locale) {
+    // select all nids where the node's source is the locale provided
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+    $subquery = db_select('node', 'n')->fields('n', array('nid'));
+    $subquery->condition('language', $drupal_language_code);
+
     $query = db_select('lingotek', 'l')->fields('l');
     $query->condition('lingokey', 'node_sync_status');
+    $query->condition('nid', $subquery, 'NOT IN'); // exclude adding to nodes where this locale is the source
     $result = $query->execute();
 
     while ($record = $result->fetchAssoc()) {
@@ -115,7 +122,6 @@ class LingotekSync {
             'document_id' => $doc_id,
             'locale' => $lingotek_locale
           );
-          $node_id = self::getNodeIdFromDocId($doc_id);
 
           if ($workflow_completed) {
             if (self::getTargetStatus($doc_id, $lingotek_locale) == self::STATUS_PENDING) {
@@ -193,6 +199,16 @@ class LingotekSync {
     if (is_array($result)) {
       $count = array_shift($result);
     }
+    
+    // include nodes that have this language as the source
+    if($status == LingotekSync::STATUS_CURRENT){
+      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+      $query = db_select('node', 'n');
+      $query->condition('language',$drupal_language_code);
+      $query->addExpression('COUNT(*)', 'cnt');
+      $result = $query->execute()->fetchField();
+      $count += $result;
+    }  
     return $count;
   }
 
