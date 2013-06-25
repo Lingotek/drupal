@@ -37,9 +37,9 @@ function lingotek_menu() {
   $items = array();
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL] = array(//main menu bar link including module description
-    'title' => 'Translation',
+    'title' => 'Lingotek Translation',
     'access arguments' => array('administer lingotek'),
-    'description' => 'The Lingotek Translation module helps you translate and keep your site translated',
+    'description' => "Translate and keep your site translated using Lingotek.",
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
