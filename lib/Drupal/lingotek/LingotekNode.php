@@ -211,4 +211,17 @@ class LingotekNode implements LingotekTranslatableEntity {
     // on LingotekNode objects, explicitly.    
   }
   
+  /**
+   * Updates the local content of $target_code with data from a Lingotek Document
+   *
+   * @param string $lingotek_locale
+   *   The code for the language that needs to be updated.
+   * @return bool
+   *   TRUE if the content updates succeeded, FALSE otherwise.
+   */
+  public function updateLocalContentByTarget($lingotek_locale) {
+    // Necessary to fully implement the interface, but we don't do anything
+    // on LingotekNode objects, explicitly.    
+  }
+  
 }

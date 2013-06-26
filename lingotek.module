@@ -1122,6 +1122,10 @@ function lingotek_comment_insert($comment) {
  * Implements hook_comment_update().
  */
 function lingotek_comment_update($comment) {
+  if(LingotekComment::$content_update_in_progress) {
+    return;
+  }
+
   $target_types = variable_get('lingotek_translate_comments_node_types', array());
   $comment_node = lingotek_node_load_default($comment->nid);
   $valid_translation_target = (!empty($comment_node->type) && isset($target_types[$comment_node->type]));

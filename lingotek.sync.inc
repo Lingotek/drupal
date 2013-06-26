@@ -68,7 +68,7 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-  LingotekLog::trace('<h2>node: @node_id (@language_code)</h2>
+  LingotekLog::trace('Notificition Recieved <h2>node: @node_id (@language_code)</h2>
       <strong>doc:</strong> @document_id
       <br /><strong>code:</strong> @language_code
       <br /><strong>project:</strong> @project_id', array(
@@ -95,15 +95,15 @@ function lingotek_notifications() {
     }
     // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
     elseif ($trans_obj = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-      $replacements['@id'] = $comment->id;
+      $replacements['@id'] = $trans_obj->id;
       $replacements['@trans_type'] = $trans_obj->id;
     }
     else {
-      LingotekLog::error('Lingotek document ID not found. Please clear the Drupal cache to refresh the autoload registry');
+      LingotekLog::error('Lingotek document ID not found. Please clear the Drupal cache to refresh the autoload registry', array());
       return FALSE;
     }
 
-    if ($trans_obj->updateLocalContent()) {
+    if ($trans_obj->updateLocalContentByTarget($lingotek_locale)) {
       LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
     }

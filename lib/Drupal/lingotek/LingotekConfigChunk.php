@@ -695,6 +695,20 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
 
     return $success;
   }
+  
+  /**
+   * Updates the local content of $target_code with data from a Lingotek Document
+   *
+   * @param string $lingotek_locale
+   *   The code for the language that needs to be updated.
+   * @return bool
+   *   TRUE if the content updates succeeded, FALSE otherwise.
+   */
+  public function updateLocalContentByTarget($lingotek_locale) {
+    return updateLocalContent(); //this needs to be fixed.
+    //for now just point to the other function. This is bad because it updates all
+    //languages when being asked to update only 1 specific language
+  }
 
   /**
    * Return all target segments by ID marked to be updated

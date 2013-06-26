@@ -47,6 +47,16 @@ interface LingotekTranslatableEntity {
   public function updateLocalContent();
   
   /**
+   * Updates the local content of $target_code with data from a Lingotek Document
+   *
+   * @param string $lingotek_locale
+   *   The code for the language that needs to be updated.
+   * @return bool
+   *   TRUE if the content updates succeeded, FALSE otherwise.
+   */
+  public function updateLocalContentByTarget($lingotek_locale);
+  
+  /**
    * Gets the Lingotek document ID for this entity.
    *
    * @return mixed
