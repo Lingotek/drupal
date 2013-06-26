@@ -147,11 +147,16 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   an array of lids from locales_source
    */
   public static function getSegmentIdsById($chunk_id) {
-    $result = db_select('locales_source', 'ls')
-      ->fields('ls',array('lid'))
-      ->condition('lid', self::minLid($chunk_id), '>=')
-      ->condition('lid', self::maxLid($chunk_id), '<=')
-      ->execute();
+    $result = db_query(' SELECT ls.lid
+                        FROM {locales_source} ls
+                        WHERE ls.lid >= :minLid
+                        AND ls.lid <= :maxLid
+                        AND LENGTH(ls.source) < :maxLen
+                        ', array( ':minLid' => self::minLid($chunk_id),
+                                  ':maxLid' => self::maxLid($chunk_id),
+                                  ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
+                                )
+                      );
     return $result->fetchCol();
   }
 
@@ -266,11 +271,18 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $chunk_size = LINGOTEK_CONFIG_CHUNK_SIZE;
     $chunk_min = (intval($chunk_id)-1) * intval($chunk_size) + 1;
     $chunk_max = (intval($chunk_id)-1) * intval($chunk_size) + $chunk_size;
-    $query = db_select('locales_source', 'ls');
-    $query->fields('ls', array('lid','source'));
-    $query->condition('ls.lid', $chunk_min, '>=');
-    $query->condition('ls.lid', $chunk_max, '<=');
-    $results = $query->execute();
+
+    $results = db_query(' SELECT ls.lid, ls.source
+                        FROM {locales_source} ls
+                        WHERE ls.lid >= :minLid
+                        AND ls.lid <= :maxLid
+                        AND LENGTH(ls.source) < :maxLen
+                        ', array( ':minLid' => $chunk_min,
+                                  ':maxLid' => $chunk_max,
+                                  ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
+                                )
+                      );
+
     $response = array();
     while ($r = $results->fetchAssoc()) {
       $response[$r['lid']] = $r['source'];
