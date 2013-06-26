@@ -66,6 +66,7 @@ define('LINGOTEK_MENU_MAIN_BASE_URL', 'admin/settings/lingotek');//admin/config/
 define('LINGOTEK_NOTIFY_URL', 'lingotek/notify'); // notification callback URL
 
 /**
- * Defines the config documents' segment size in rows
+ * Defines the config documents' segment size in rows and config strings' maxlength
  */
 define('LINGOTEK_CONFIG_CHUNK_SIZE', 500);
+define('LINGOTEK_CONFIG_MAX_SOURCE_LENGTH', 4096);
