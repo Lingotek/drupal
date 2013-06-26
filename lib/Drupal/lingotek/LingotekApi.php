@@ -131,7 +131,7 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $node);
 
       if ($with_targets) {
-        $parameters['targetAsJSON'] = LingotekAccount::instance()->getManagedTargetsAsJSON($source_language);
+        $parameters['targetAsJSON'] = Lingotek::availableLanguageTargetsWithoutSourceAsJSON($source_language);
 
         $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargets', $parameters);
@@ -260,7 +260,7 @@ class LingotekApi {
       'sourceLanguage' => $source_language,
       'tmVaultId' => variable_get('lingotek_vault', 1),
       'content' => $comment->documentLingotekXML(),
-      'targetAsJSON' => LingotekAccount::instance()->getManagedTargetsAsJSON($source_language),
+      'targetAsJSON' => Lingotek::availableLanguageTargetsWithoutSourceAsJSON($source_language),
       'note' => url('node/' . $comment->nid, array('absolute' => TRUE, 'alias' => TRUE))
     );
 

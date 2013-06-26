@@ -307,7 +307,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
 
   $download_count_total = $report['download_targets_workflow_complete_count'] + (isset($report['download_targets_workflow_incomplete_count']) ? $report['download_targets_workflow_incomplete_count'] : 0);
 
-  $available_targets = Lingotek::availableLanguageTargets(); //array_combine(Lingotek::availableLanguageTargets("lingotek_locale"),Lingotek::availableLanguageTargets("name"));
+  $available_targets = Lingotek::availableLanguageTargets();
   $options_complete = array(); // locale => label
   $options_incomplete = array();
 

@@ -67,11 +67,7 @@ function lingotek_get_dashboard_code() {
   global $base_url;
 
   $output = '';
-  $totals = array();
   $guid = lingotek_get_guid(); // 16 char string
-  //$active_languages = lingotek_get_active_languages();  // array of enabled Drupal language codes (from locale module)
-  $target_languages = LingotekAccount::instance()->getManagedTargets(NULL, TRUE);
-
   $totals = lingotek_get_target_status();
 
   $script = '
@@ -314,7 +310,7 @@ function lingotek_get_guid() {
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
   $response = array();
-  $target_languages = LingotekAccount::instance()->getManagedTargets(NULL, TRUE);
+  $target_languages = Lingotek::availableLanguageTargets();
 
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {

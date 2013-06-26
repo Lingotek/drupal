@@ -739,10 +739,13 @@ function lingotek_node_insert($node) {
  * Implements hook_node_delete().
  */
 function lingotek_node_delete($node) {
-  $api = LingotekApi::instance();
   $doc_id = lingotek_lingonode($node->nid, 'document_id');
   if (is_numeric($doc_id)) {
+    $api = LingotekApi::instance();
     $api->removeDocument($doc_id, FALSE);
+  }
+  else { // node was never uploaded to Lingotek
+    LingotekSync::removeNodeInfoByNodeId($node->nid);
   }
 }
 
@@ -1138,7 +1141,6 @@ function lingotek_comment_update($comment) {
  * Implements hook_comment_delete().
  */
 function lingotek_comment_delete($comment) {
-  $api = LingotekApi::instance();
   $target_types = variable_get('lingotek_translate_comments_node_types', array());
   $comment_node = node_load($comment->nid);
   $valid_translation_target = (!empty($comment_node->type) && isset($target_types[$comment_node->type]));
@@ -1146,6 +1148,7 @@ function lingotek_comment_delete($comment) {
     $lingotek_comment = LingotekComment::load($comment);
     $doc_id = $lingotek_comment->getMetadataValue('document_id');
     if (is_numeric($doc_id)) {
+      $api = LingotekApi::instance();
       $api->removeDocument($doc_id, FALSE);
     }
   }

@@ -58,11 +58,11 @@ class LingotekSync {
   public static function setNodeAndTargetsStatus($node, $node_status, $targets_status) {
     // Set the Node to EDITED.
     self::setNodeStatus($node->nid, $node_status);
-    
+
     $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language, FALSE);
-    
+
     // Loop though each target language, and set that target to EDITED.
-    $languages = LingotekAccount::instance()->getManagedTargets($source_lingotek_locale);//lingotek_get_target_locales();
+    $languages = Lingotek::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale);
     foreach ($languages as $lingotek_locale) {
       self::setTargetStatus($node->nid, $lingotek_locale, $targets_status);
     }
@@ -180,7 +180,7 @@ class LingotekSync {
   public static function getCountByStatus($status) {
     $count = 0;
     $count += self::getNodeCountByStatus($status);
-    if (variable_get('lingotek_translate_config',0)) {
+    if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getChunkCountByStatus($status);
     }
     return $count;
@@ -194,21 +194,21 @@ class LingotekSync {
     $query->condition('lingokey', $target_key);
     $query->condition('lingovalue', $status);
     $result = $query->countQuery()->execute()->fetchAssoc();
-    
+
     $count = 0;
     if (is_array($result)) {
       $count = array_shift($result);
     }
-    
+
     // include nodes that have this language as the source
-    if($status == LingotekSync::STATUS_CURRENT){
+    if ($status == LingotekSync::STATUS_CURRENT) {
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
       $query = db_select('node', 'n');
-      $query->condition('language',$drupal_language_code);
+      $query->condition('language', $drupal_language_code);
       $query->addExpression('COUNT(*)', 'cnt');
       $result = $query->execute()->fetchField();
       $count += $result;
-    }  
+    }
     return $count;
   }
 
@@ -219,7 +219,7 @@ class LingotekSync {
     $query = db_select('lingotek_config_metadata', 'l')->fields('l');
     $query->condition('value', $status);
     $query->condition('config_key', $target_key);
-    
+
     $count = 0;
     $result = $query->countQuery()->execute()->fetchAssoc();
     if (is_array($result)) {
@@ -237,7 +237,7 @@ class LingotekSync {
     $count += self::getTargetNodeCountByStatus($status, $lingotek_locale);
 
     // get the count of config chunks
-    if (variable_get('lingotek_translate_config',0)) {
+    if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
     }
 
@@ -267,7 +267,6 @@ class LingotekSync {
 
   protected static function getQueryCompletedConfigTranslations($drupal_codes) {
     // return a query object that contains all fully-translated/current strings.
-    
     // use the first addtl language as the query's base.
     $first_lang = array_shift($drupal_codes);
     $query = db_select('locales_target', "lt0")
@@ -461,15 +460,19 @@ class LingotekSync {
     return $count;
   }
 
+  public static function removeNodeInfoByNodeId($nid) {
+    $query = db_delete('lingotek');
+    $query->condition('nid', $nid);
+    $result = $query->execute();
+  }
+
   public static function removeNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;
     foreach ($doc_ids as $doc_id) {
       $nid = self::getNodeIdFromDocId($doc_id);
       if ($nid) {
-        $query = db_delete('lingotek');
-        $query->condition('nid', $nid);
-        $result = $query->execute();
+        self::removeNodeInfoByNodeId($nid);
         $count++;
       }
     }
