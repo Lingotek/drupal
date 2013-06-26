@@ -469,6 +469,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
   if ($workbench_moderation_enabled) {
     $form['defaults']['lingotek_create_documents_by_default_workbench_moderation'] = array(
       '#type' => 'select',
+      '#title' => 'Workbench Moderation State',
       '#options' => lingotek_get_workbench_moderation_states(),
       '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 2),
       '#states' => array(
@@ -476,6 +477,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
           ':input[name="lingotek_create_documents_by_default"]' => array('checked' => FALSE),
         ),
       ),
+      '#description' => 'Content will be automatically uploaded when changed to this state',
     );
   }
 

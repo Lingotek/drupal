@@ -581,7 +581,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
   );
 
-  if ($workbench_moderation_enabled) {
+  if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
     $form['lingotek']['content']['create_lingotek_document_workbench_moderation'] = array(
       '#type' => 'select',
       '#title' => t('Workbench Moderation State'),
