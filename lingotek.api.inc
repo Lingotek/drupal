@@ -134,8 +134,9 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
         }
         $field_names = array('field_revision_' . $field['field_name']);
         $field_names[] = 'field_data_' . $field['field_name']; // put fields into both field_data_ and field_revision_ tables
+
         // if published version (in node table) is as current as most current revision (in node_revision table)
-        if (isset($node->workbench_moderation) && $node->vid == $node->workbench_moderation['current']->vid) {
+        if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
           $only_write_revisions = 1;
           unset($field_names[$only_write_revisions]);
         }
