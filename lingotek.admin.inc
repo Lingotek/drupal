@@ -120,7 +120,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
    */
   $form['comments'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => strtoupper(t('Additional Translation')),
+    '#title' => t('Additional Translation'),
     //'#description' => t('Enable/disable and set defaults for comment translation.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -194,7 +194,7 @@ function lingotek_admin_advanced_parsing_form($form, &$form_state, $show_fieldse
    */
   $form['advanced-parsing'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => strtoupper(t('Advanced Content Parsing')),
+    '#title' => t('Advanced Content Parsing'),
     '#description' => t('Settings to support advanced parsing of translatable content.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
