@@ -180,6 +180,30 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
 
 function lingotek_admin_comments_form_submit($form, &$form_state) {
   system_settings_form_submit($form, $form_state);
+
+  //This code configures the content entity and it's fields so that they can be translated.
+  if($form_state['values']['lingotek_translate_comments']) {
+    foreach($form_state['values']['lingotek_translate_comments_node_types'] as $content_type => $value) {
+      if(!title_field_replacement_enabled('comment', 'comment_node_' . $content_type, 'subject')) {
+        title_field_replacement_toggle('comment', 'comment_node_' . $content_type, 'subject');
+        title_field_replacement_batch_set('comment', 'comment_node_' . $content_type, 'subject');
+      }
+    }
+
+    $field = field_info_field('subject_field');
+    $field['lingotek_translatable'] = TRUE;
+    $field['translatable'] = TRUE;
+    field_update_field($field);
+
+    $field = field_info_field('comment_body');
+    $field['lingotek_translatable'] = TRUE;
+    $field['translatable'] = TRUE;
+    field_update_field($field);
+
+    // This is needed for versions of Drupal core 7.10 and lower. See http://drupal.org/node/1380660 for details.
+    drupal_static_reset('field_available_languages');
+  }
+
   // Enabling/disabling Lingotek comment translation will have an effect on the comment entity.
   entity_info_cache_clear();
   entity_get_info('comment');
