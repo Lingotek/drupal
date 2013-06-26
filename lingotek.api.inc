@@ -133,27 +133,26 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
           $index++;
         }
         $field_names = array('field_revision_' . $field['field_name']);
-        if ($node->vid == $node->workbench_moderation['current']->vid) { // if published version (in node table) is as current as most current revision (in node_revision table)
-          $field_names[] = 'field_data_' . $field['field_name']; // put fields into both field_data_ and field_revision_ tables
+        $field_names[] = 'field_data_' . $field['field_name']; // put fields into both field_data_ and field_revision_ tables
+        // if published version (in node table) is as current as most current revision (in node_revision table)
+        if (isset($node->workbench_moderation) && $node->vid == $node->workbench_moderation['current']->vid) {
+          $only_write_revisions = 1;
+          unset($field_names[$only_write_revisions]);
         }
         foreach ($field_names as $field_name) {
           // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
           try {
-            drupal_write_record($field_name, $insert_array);           }
+            drupal_write_record($field_name, $insert_array);
+          }
           catch (PDOException $e) {
-           // switch($e->errorInfo[0]) {
-             // case 23000:
-                $primary_keys = array(
-                  'entity_type',
-                  'entity_id',
-                  'revision_id',
-                  'deleted',
-                  'delta',
-                  'language',
-                );
-             // default:
-               // throw $e;
-           // }
+            $primary_keys = array(
+              'entity_type',
+              'entity_id',
+              'revision_id',
+              'deleted',
+              'delta',
+              'language',
+            );
             drupal_write_record($field_name, $insert_array, $primary_keys);
           }
         }
