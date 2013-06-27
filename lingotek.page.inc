@@ -77,7 +77,8 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
  * Download Translations Form Submit
  */
 function lingotek_download_translations_form_submit($form, $form_state) {
-  $document_id = lingotek_lingonode($form_state['values']['nid'], 'document_id');
+  $nid = $form_state['values']['nid'];
+  $document_id = lingotek_lingonode($nid, 'document_id');
   
   $locales = array();
   $download_targets = array();
@@ -88,8 +89,14 @@ function lingotek_download_translations_form_submit($form, $form_state) {
       $download_targets[] = (object) array('document_id' => $document_id, 'locale' => $locale);
     }
   }
+
+  $extra_operations = array();
+  $wb = lingotek_lingonode($nid, 'sync_method_workbench_moderation'); // for workbench moderation transition after download
+  if ($wb) {
+    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($wb, array($document_id)));
+  }
   
-  lingotek_sync_batch_create(array(), array(), $download_targets, array(), 'node/' . $form_state['values']['nid'] . '/lingotek_pm');
+  lingotek_sync_batch_create(array(), array(), $download_targets, array(), 'node/' . $form_state['values']['nid'] . '/lingotek_pm', $extra_operations);
   
   drupal_set_message(t('Updated local translations for the selected languages: @selected_locales', array('@selected_locales' => implode(", ", $locales))));
   cache_clear_all('field:node:' . $form_state['values']['nid'], 'cache_field');

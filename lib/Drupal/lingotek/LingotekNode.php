@@ -119,20 +119,14 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   public static function loadByLingotekDocumentId($lingotek_document_id) {
     $node = FALSE;
-    $key = 'document_id';
-    $query = db_select('lingotek', 'l')->fields('l');
-    $query->condition('lingokey', $key.'%', 'LIKE');
-    $query->condition('lingovalue', $lingotek_document_id);
-    $result = $query->execute();
-
-    if ($record = $result->fetchAssoc()) {
-      $node = self::loadById($record['nid']);
+    $nid = lingotek_get_nid_by_doc_id($lingotek_document_id);
+    if ($nid) {
+      $node = self::loadById($nid);
     }
-
     return $node;
   }
-  
-  
+
+
   /**
    * Gets the Lingotek document ID for this entity.
    *

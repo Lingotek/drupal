@@ -245,7 +245,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
       );
       $form['upload']['upload_wb'] = array(
         '#type' => 'select',
-        '#title' => 'Workbench Moderation State',
+        '#prefix' => 'Workbench Moderation State',
         '#options' => lingotek_get_workbench_moderation_states(),
         '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 0),
         '#description' => t('Pressing Sync will upload the following edited nodes currently in this moderation state.'),
@@ -340,8 +340,17 @@ function lingotek_form_bulk_sync($form, $form_state) {
     );
   }
 
+  if (!empty($options_complete) || !empty($options_incomplete)) {
+    $form['download']['download_locales_wb'] = array(
+      '#type' => 'select',
+      '#prefix' => 'Workbench Moderation State',
+      '#options' => lingotek_get_workbench_moderation_options(),
+      '#default' => variable_get('lingotek_sync_workbench_moderation', 0),
+      '#description' => 'Pressing Sync will download all documents into the above Workbench Moderation state.',
+    );
+  }
   if (!empty($options_complete)) {
-    $form['download']['download_locales']['download_locales_complete'] = array(
+    $form['download']['download_locales_complete'] = array(
       '#type' => 'tableselect',
       '#prefix' => t('Completed Translations'),
       '#header' => array(
@@ -353,7 +362,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
     );
   }
   if (!empty($options_incomplete)) {
-    $form['download']['download_locales']['download_locales_incomplete'] = array(
+    $form['download']['download_locales_incomplete'] = array(
       '#type' => 'tableselect',
       '#prefix' => t('Incomplete Translations'),
       '#header' => array(
@@ -415,11 +424,13 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
       }
     }
   }
+  $document_ids = array();
   $download_targets = array();
   if (!empty($download_locales_complete) && isset($vals['download_targets_workflow_complete_json'])) {
     $all_download_targets = json_decode($vals['download_targets_workflow_complete_json']);
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_complete)) {
+        $document_ids[] = $download_target->document_id;
         $download_targets[] = $download_target;
       }
     }
@@ -439,12 +450,18 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     $all_download_targets = json_decode($vals['download_targets_workflow_incomplete_json']);
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_incomplete)) {
+        $document_ids[] = $download_targets_incomplete->document_id;
         $download_targets_incomplete[] = $download_target;
       }
     }
   }
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
-  lingotek_sync_batch_create($upload_nids, $upload_config, $download_targets, $download_targets_incomplete);
+  $extra_operations = array();
+  $document_ids = array_unique($document_ids);
+  if (isset($form_state['values']['download_locales_wb'])) {
+    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb'], $document_ids));
+  }
+  lingotek_sync_batch_create($upload_nids, $upload_config, $download_targets, $download_targets_incomplete, NULL, $extra_operations);
 }
 
 /*
@@ -504,4 +521,24 @@ function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array
     ->condition('state', $wb_state);
   $result = $query->execute()->fetchCol(0);
   return $result;
+}
+
+/*
+ * Build operations array with batch worker functions to moderate workbench moderation
+ *
+ * @param int $options_index
+ *    Index for array returned by lingotek_get_workbench_moderation_options()
+ *    Specifies the state to which we should moderate
+ *
+ * @param array $document_ids
+ *    Document IDs of downloaded documents
+ *    Used to get corresponding Node IDs for nodes which need moderation
+ */
+function lingotek_post_download_workbench_moderation($options_index, $document_ids = array()) {
+  $operations = array();
+  foreach ($document_ids as $document_id) {
+    $nid = lingotek_get_nid_by_doc_id($document_id);
+    $operations[] = array('lingotek_workbench_moderation_moderate', array($nid, $options_index));
+  }
+  return $operations;
 }

@@ -623,6 +623,21 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
   );
 
+  if ($workbench_moderation_enabled) {
+    $form['defaults']['lingotek_sync_workbench_moderation'] = array(
+      '#type' => 'select',
+      '#title' => 'Workbench Moderation State',
+      '#options' => lingotek_get_workbench_moderation_options(),
+      '#default_value' => variable_get('lingotek_sync_workbench_moderation', 0),
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="lingotek_sync"]' => array('checked' => FALSE),
+        ),
+      ),
+      '#description' => 'Content will be automatically downloaded into this state',
+    );
+  }
+
   if ($is_enterprise) {
 
     // Community Translation

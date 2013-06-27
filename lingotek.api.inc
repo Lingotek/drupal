@@ -305,13 +305,25 @@ function lingotek_get_url_alias_translations() {
  */
 function lingotek_get_workbench_moderation_states() {
   $methods = array();
-  $index = 0;
   $states = workbench_moderation_states();
   foreach ($states as $array) {
-    $methods[$index] = $array->name;
-    $index++;
+    $methods[] = $array->name;
   }
   return $methods;
+}
+
+/*
+ * Get post-download workbench moderation options
+ */
+function lingotek_get_workbench_moderation_options() {
+  $options = array();
+  $options[] = 'Leave at the current state';
+  $options[] = 'Increment to the next state';
+  $states = workbench_moderation_states();
+  foreach ($states as $array) {
+    $options[] = 'Change to ' . $array->name;
+  }
+  return $options;
 }
 
 /*

@@ -146,46 +146,6 @@ function lingotek_node_init_default($node) {
   }
 }
 
-/**
- * Synchronize the node's content with current translations as stored on the Lingotek platform.
- *
- * @param object $node
- *   A Drupal node object.
- */
-function lingotek_node_sync(&$node) {
-  // Keep synchronized?
-  $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 100);
-  $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id');
-  LingotekLog::trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
-  if ($sync_method != "0" && $lingotek_document_id) {
-    $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id'));
-    // Check for changes in % complete.
-    foreach ($progress as $lingotek_locale => $target) {
-      $key = 'percent_complete_' . $lingotek_locale;
-      $before = lingotek_lingonode($node->nid, $key);
-      if ($before == "") {
-        $before = "0";
-      }
-      $after = $target->percentComplete;
-      if (
-          ($sync_method == "1" && $before !== (string) $after) ||
-          ($sync_method == "100" && $after == "100" && $before !== (string) $after)
-      ) {
-        LingotekLog::trace("lingotek_node_sync percent complete changed", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
-        lingotek_lingonode($node->nid, $key, $after);
-        lingotek_download_document($node, $lingotek_locale);
-        $clear_field_caches = TRUE;
-      }
-      else {
-        LingotekLog::trace("lingotek_node_sync percent complete stayed the same", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
-      }
-    }
-    if ($clear_field_caches) {
-      cache_clear_all('field:node:' . $node->nid, 'cache_field');
-    }
-  }
-}
-
 /*
  * Filter for removing unchecked checkboxes from an array for drupal forms
  */
@@ -910,6 +870,23 @@ function lingotek_get_module_info($field = NULL) {
   $result = db_query("SELECT info FROM {system} WHERE type = :type AND name = :name", array(':type' => 'module', ':name' => 'lingotek'))->fetchObject();
   $info = unserialize(current($result));
   return is_null($field) ? $info : (isset($info[$field]) ? $info[$field] : NULL);
+}
+
+/*
+ * Returns nid of the node associated with this document id
+ *
+ * @param string $lingotek_document_id
+ *    ID associated with a Lingotek document
+ *
+ * @return node id of the associated node
+ */
+function lingotek_get_nid_by_doc_id($lingotek_document_id) {
+  $query = db_select('lingotek', 'l')
+    ->fields('l')
+    ->condition('lingokey', 'document_id%', 'LIKE')
+    ->condition('lingovalue', $lingotek_document_id);
+  $result = $query->execute()->fetchAssoc();
+  return $result['nid'];
 }
 
 /**

@@ -69,7 +69,7 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
  *
  * Creates the batch operations array.  Downloads first, then uploads.
  */
-function lingotek_sync_batch_create($upload_nids = array(), $upload_config = array(), $download_targets = array(), $download_targets_incomplete = array(), $redirect = '') {
+function lingotek_sync_batch_create($upload_nids = array(), $upload_config = array(), $download_targets = array(), $download_targets_incomplete = array(), $redirect = '', $extra_operations = array()) {
 
   $has_upload = !empty($upload_nids);
   $has_upload_config = !empty($upload_config);
@@ -86,6 +86,7 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   $operations[] = array('lingotek_mt_sync_set_status', array('set'));
   $operations = array_merge($operations, $download_commands, $download_commands_inc, $upload_commands, $upload_config_commands);
   $operations[] = array('lingotek_mt_sync_set_status', array('clear'));
+  $operations = array_merge($operations, $extra_operations);
 
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
   if (empty($redirect)) {
@@ -507,6 +508,42 @@ function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
   $context['finished'] = 1;
 }
 
+/*
+ * Batch worker for workbench moderation moderating post-download
+ *
+ * @param int $nid
+ *    Node ID of node to be moderated
+ *
+ * @param int $options_index
+ *    Index for array returned by lingotek_get_workbench_moderation_options()
+ *    Specifies the state to which we should moderate
+ */
+function lingotek_workbench_moderation_moderate($nid, $options_index) {
+  $options = lingotek_get_workbench_moderation_options();
+  $option = $options[$options_index];
+  $node = lingotek_node_load_default($nid);
+
+  if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
+    $sub = substr($option, 10);
+    $change_to = strpos($option, 'Change to');
+    if ($change_to !== FALSE) { // if changing to a specific state
+      $option = substr($option, 10);
+      workbench_moderation_moderate($node, $option);
+      return;
+    }
+    else if ($options_index == 1) { // if incrementing state
+      $transitions = workbench_moderation_transitions();
+      foreach ($transitions as $transition) {
+        if ($transition->from_name == $node->workbench_moderation['current']->state) {
+          workbench_moderation_moderate($node, $transition->to_name);
+          return;
+        }
+      }
+    }
+  }
+  return; // if state is staying the same or workbench_moderation is not enabled for this node
+}
+
 /**
  * Ensures correct language-specific field data for the specified item.
  * 
@@ -553,4 +590,3 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
   
 }
-

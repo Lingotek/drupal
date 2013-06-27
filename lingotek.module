@@ -597,6 +597,21 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
   );
 
+  if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
+    $form['lingotek']['content']['syncMethod_workbench_moderation'] = array(
+      '#type' => 'select',
+      '#title' => t('Workbench Moderation State'),
+      '#options' => lingotek_get_workbench_moderation_options(),
+      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0),
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="syncMethod"]' => array('checked' => FALSE),
+        ),
+      ),
+      '#description' => t('Your content will be automatically downloaded into this state.'),
+    );
+  }
+
   if ($is_enterprise) {
     // Community Translation
     $form['lingotek']['content']['lingotek_allow_community_translation'] = array(
@@ -694,9 +709,6 @@ function lingotek_node_view($node, $view_mode) {
   $community_translation_allowed = lingotek_lingonode($node->nid, 'allow_community_translation');
   if ($view_mode == 'full' && $community_translation_allowed && $lingotek_document_id && lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
     drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/base.css');
-
-    // TODO: Is sync on view ever desired behavior?
-    lingotek_node_sync($node);
 
     if ($language->language != $node->language) {
       $link = lingotek_get_workbench_url($node, $language->lingotek_locale, t('Help make it better.'));
@@ -1261,10 +1273,15 @@ function lingotek_field_language_alter(&$display_language, $context) {
 function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
   // Check global and node-specific settings
   $def_state = lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 2);
+
   if (isset($node->create_lingotek_document_workbench_moderation)) {
     lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation', $node->create_lingotek_document_workbench_moderation);
     $def_state = $node->create_lingotek_document_workbench_moderation;
   }
+  if (isset($node->syncMethod_workbench_moderation)) {
+    lingotek_lingonode($node->nid, 'sync_method_workbench_moderation', $node->syncMethod_workbench_moderation);
+  }
+
   $states = lingotek_get_workbench_moderation_states();
   // Check new state against settings
   if ($new_state != $states[$def_state]) {
