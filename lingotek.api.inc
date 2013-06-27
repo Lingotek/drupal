@@ -488,8 +488,6 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
 
   $api = LingotekApi::instance();
 
-  $link = array();
-
   $document_id = lingotek_lingonode($node->nid, 'document_id');
   $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
 
@@ -504,51 +502,73 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
 
     $target = $api->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
+    
+    return lingotek_get_workbench_url_by_phases($node, $phases, $label, $force);
+  }
+  
+  LingotekLog::error('lingotek_get_workbench_url - Specified language target not found');
 
-    $phase_id = -1;
-    $which_phase = 0;
-    foreach ($phases as $phase) {
-      if (!$phase->isMarkedComplete || $force) {
-        $phase_id = $phase->id;
-        break;
-      }
-      $which_phase++;
+  return '';
+}
+
+/**
+ * Get the url to open the Lingotek Workbench.
+ *
+ * This fetches a link.
+ *
+ * @param object $node
+ *   A Drupal node.
+ * @param $lingotek_locale
+ *   A target language.
+ * @param mixed $label
+ *   The label to use as text for the link. Possible values are
+ *   TRUE, FALSE, or a string to use as a the custom label for the link.
+ * @param bool $force
+ *   Force the link to use the label of the first returned workflow phase for the target Document.
+ *
+ * @return string
+ *   Either a link pointing the the url, or the url itself if $label is FALSE
+ */
+function lingotek_get_workbench_url_by_phases($node, $phases, $label = FALSE, $force = FALSE) {
+
+  $phase_id = -1;
+  $which_phase = 0;
+  foreach ($phases as $phase) {
+    if (!$phase->isMarkedComplete || $force) {
+      $phase_id = $phase->id;
+      break;
     }
-
-    // All phases are complete, use last phase as current.
-    if (!empty($phases) && $phase_id == -1) {
-      $last_phase = end($phases);
-      $phase_id = $last_phase->id;
-    }
-
-    $l = '';
-    if ($phase_id != -1) {
-      $document_id = lingotek_lingonode($node->nid, 'document_id');
-      if ($document_id && $workbench_url = $api->getWorkbenchLink($document_id, $phase_id)) {
-        if ($label === FALSE) {
-          $l = $workbench_url;
-        }
-        else {
-          $path = $workbench_url;
-          if ($label === TRUE) {
-            $label = lingotek_get_phase_name($phase_id);
-          }
-          $l = l($label, '', array('attributes' => array(
-              'onclick' => 'window.open(\'' . $path . '\'); return false;',
-              'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
-              'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
-              )));
-        }
-      }
-    }
-
-    $link[$lang] = array(
-      'which_phase' => $which_phase,
-      'link' => $l,
-    );
+    $which_phase++;
   }
 
-  return $link[$lingotek_locale]['link'];
+  // All phases are complete, use last phase as current.
+  if (!empty($phases) && $phase_id == -1) {
+    $last_phase = end($phases);
+    $phase_id = $last_phase->id;
+  }
+
+  $l = '';
+  if ($phase_id != -1) {
+    $document_id = lingotek_lingonode($node->nid, 'document_id');
+    if ($document_id && $workbench_url = LingotekApi::instance()->getWorkbenchLink($document_id, $phase_id)) {
+      if ($label === FALSE) {
+        $l = $workbench_url;
+      }
+      else {
+        $path = $workbench_url;
+        if ($label === TRUE) {
+          $label = lingotek_get_phase_name($phase_id);
+        }
+        $l = l($label, '', array('attributes' => array(
+            'onclick' => 'window.open(\'' . $path . '\'); return false;',
+            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
+            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
+            )));
+      }
+    }
+  }
+
+  return $l;
 }
 
 /*

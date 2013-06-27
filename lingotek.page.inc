@@ -12,20 +12,19 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
   $form = array();
   
-  $document = is_null($document) ? LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id')) : $document;
-  $targets = lingotek_get_document_targets($document->document_id, TRUE);
+  $document_progress = LingotekApi::instance()->getDocumentProgress($document->document_id);
   $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
   
   $rows = array();
-  foreach ($targets as $lingotek_locale => $target) {
+  foreach ($document_progress->translationTargets as $target) {
     $current_phase = $document->currentPhase($target->id);
     
     $phase_complete_percent = is_object($current_phase) ? $current_phase->percentComplete : 0;
     if (empty($phase_complete_percent)) {
       $phase_complete_percent = 0;
     }
-    $language_link = l(lingotek_language_field_lookup('native', $lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
-    $language_link .= ' (' . lingotek_language_field_lookup('name', $lingotek_locale) . ')';
+    $language_link = l(lingotek_language_field_lookup('native', $target->language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url_by_phases($node, $target->phases) . '\'); return false;')));
+    $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
     $row = array(
       'language' => $language_link,
       'document_progress' => $target->percentComplete . '%',
@@ -34,8 +33,8 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       'phase_complete' => ($current_phase->isMarkedComplete) ? '<img src="' . $icon_green_check . '" />' : '',
     );
 
-    LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $lingotek_locale));
-    $rows[$lingotek_locale] = $row;
+    LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $target->language));
+    $rows[$target->language] = $row;
   }
 
   $form['fieldset'] = array(
@@ -85,7 +84,6 @@ function lingotek_download_translations_form_submit($form, $form_state) {
   
   foreach($form_state['values']['documents'] as $locale => $selected) {
     if($selected) {
-      //lingotek_download_document($node, $locale);
       $locales[] = $locale;
       $download_targets[] = (object) array('document_id' => $document_id,'locale' => $locale);
     }
