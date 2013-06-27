@@ -203,9 +203,9 @@ class LingotekSync {
       $count = array_shift($result);
     }
 
-    // include nodes that have this language as the source
+    // count nodes having this language as the source as current
     if ($status == LingotekSync::STATUS_CURRENT) {
-      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+      $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
       $query->condition('language', $drupal_language_code);
       $query->addExpression('COUNT(*)', 'cnt');
@@ -233,7 +233,7 @@ class LingotekSync {
 
   //lingotek_count_all_targets
   public static function getTargetCountByStatus($status, $lingotek_locale) {
-
+    
     $count = 0;
 
     // get the count of nodes
@@ -245,7 +245,6 @@ class LingotekSync {
       $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
     }
      */
-
     return $count;
   }
 

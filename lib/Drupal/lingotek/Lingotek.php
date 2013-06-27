@@ -365,7 +365,6 @@ class Lingotek {
   public static function availableLanguageTargets($pluck_field = NULL, $include_all = FALSE, $lingotek_locale_to_exclude = NULL) {
     //lingotek_add_missing_locales();
     $languages = array();
-    $default_language = language_default();
     
     foreach (language_list() as $target_language) {
       if ($target_language->lingotek_locale == $lingotek_locale_to_exclude)
@@ -374,7 +373,7 @@ class Lingotek {
       if ($include_all && $target_language->enabled) { // include all languages enabled (not necessarily lingotek_enabled)
         $languages[] = $language;
       }
-      else if ($target_language->lingotek_enabled || $target_language->language = $default_language->language) { // include default language for free
+      else if ($target_language->lingotek_enabled) { // include default language for free
         $languages[] = $language;
       }
     }
