@@ -180,9 +180,12 @@ class LingotekSync {
   public static function getCountByStatus($status) {
     $count = 0;
     $count += self::getNodeCountByStatus($status);
+    // (turned off reporting of config chunks, for now)
+    /*
     if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getChunkCountByStatus($status);
     }
+     */
     return $count;
   }
 
@@ -236,10 +239,12 @@ class LingotekSync {
     // get the count of nodes
     $count += self::getTargetNodeCountByStatus($status, $lingotek_locale);
 
-    // get the count of config chunks
+    // get the count of config chunks (turned off for now)
+    /*
     if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
     }
+     */
 
     return $count;
   }

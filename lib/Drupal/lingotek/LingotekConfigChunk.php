@@ -55,7 +55,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $this->source_data = self::getAllSegments($this->cid);
     $this->source_meta = self::getChunkMeta($this->cid);
     $this->language = language_default();
-    $this->language_targets = Lingotek::availableLanguageTargets("lingotek_locale");
+    $this->language_targets = Lingotek::availableLanguageTargetsWithoutSource($this->language->lingotek_locale);
     $this->min_lid = $this->getMinLid();
     $this->max_lid = $this->getMaxLid();
   }
@@ -482,8 +482,8 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return boolean TRUE/FALSE
    */
   public function hasLingotekDocId() {
-    $has_id = array_key_exists('DocumentId', $this->source_meta);
-    if ($has_id && ($this->source_meta['DocumentId'] > 0))  {
+    $has_id = array_key_exists('document_id', $this->source_meta);
+    if ($has_id && ($this->source_meta['document_id'] > 0))  {
       return TRUE;
     }
     return FALSE;
