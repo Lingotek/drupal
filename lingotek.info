@@ -9,15 +9,6 @@ dependencies[] = locale
 dependencies[] = translation
 dependencies[] = field_ui
 dependencies[] = title
-dependencies[] = variable
-dependencies[] = i18n
-dependencies[] = i18n_block
-dependencies[] = i18n_menu
-dependencies[] = i18n_string
-dependencies[] = i18n_taxonomy
-dependencies[] = i18n_translation
-dependencies[] = i18n_variable
-dependencies[] = i18nviews
 
 files[] = lib/Drupal/lingotek/Lingotek.php
 files[] = lib/Drupal/lingotek/LingotekApi.php
