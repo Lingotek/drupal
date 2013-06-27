@@ -471,7 +471,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
       '#type' => 'select',
       '#title' => 'Workbench Moderation State',
       '#options' => lingotek_get_workbench_moderation_states(),
-      '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 2),
+      '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 0),
       '#states' => array(
         'invisible' => array(
           ':input[name="lingotek_create_documents_by_default"]' => array('checked' => FALSE),

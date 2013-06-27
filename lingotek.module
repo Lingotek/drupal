@@ -586,7 +586,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#type' => 'select',
       '#title' => t('Workbench Moderation State'),
       '#options' => lingotek_get_workbench_moderation_states(),
-      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 2),
+      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 0),
       '#states' => array(
         'invisible' => array(
           ':input[name="create_lingotek_document"]' => array('checked' => FALSE),

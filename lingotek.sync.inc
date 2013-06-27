@@ -247,7 +247,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         '#type' => 'select',
         '#title' => 'Workbench Moderation State',
         '#options' => lingotek_get_workbench_moderation_states(),
-        '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 2),
+        '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 0),
         '#description' => t('Pressing Sync will upload the following edited nodes currently in this moderation state.'),
         '#ajax' => array(
           'callback' => 'lingotek_workbench_moderation_callback_upload',
@@ -463,7 +463,7 @@ function lingotek_workbench_moderation_callback_upload($form, &$form_state) {
 function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_report) {
 
   if (!isset($form_state['values']['upload_wb'])) {
-    $wb_index = variable_get('lingotek_create_documents_by_default_workbench_moderation', 2);
+    $wb_index = variable_get('lingotek_create_documents_by_default_workbench_moderation', 0);
   }
   else {
     $wb_index = $form_state['values']['upload_wb'];
@@ -494,7 +494,6 @@ function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_re
  */
 function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array()) {
 
-$nids = array('67');
   $sub_query = db_select('workbench_moderation_node_history', 'wb1') // populate a numbered array with nids whose most recent moderation state has been selected
     ->condition('nid', $nids, 'IN')
     ->groupBy('nid');
