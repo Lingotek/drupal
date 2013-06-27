@@ -601,7 +601,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#title' => t('Download Translations Automatically'),
     '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 1),
     '#access' => user_access('adjust auto-download node setting'),
-    '#description' => t('When enabled, completed translatoins will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
+    '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
   );
 
   if ($is_enterprise) {
@@ -767,11 +767,12 @@ function lingotek_upload_document($node) {
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
 
+  if (isset($node->create_lingotek_document)) {
+    lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+  }
+
   if (isset($node->lingotek_push_once) && $node->lingotek_push_once) {
     $send_lingotek_document = 1;
-    if (isset($node->create_lingotek_document)) {
-      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
-    }
   }
   elseif (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
     $send_lingotek_document = 0;
@@ -782,9 +783,6 @@ function lingotek_upload_document($node) {
     $node->lingotek_upload_override = 0;
   }
   else {  // Only send the node content to Lingotek on edit if auto-upload is enabled.
-    if (isset($node->create_lingotek_document)) {
-      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
-    }
     $send_lingotek_document = lingotek_lingonode($node->nid, 'create_lingotek_document');
     if ($send_lingotek_document === FALSE) { // use global default if node-level setting is not set
       $send_lingotek_document = variable_get('lingotek_create_documents_by_default', $send_lingotek_document);
