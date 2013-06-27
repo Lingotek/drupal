@@ -82,10 +82,10 @@ function lingotek_download_translations_form_submit($form, $form_state) {
   $locales = array();
   $download_targets = array();
   
-  foreach($form_state['values']['documents'] as $locale => $selected) {
-    if($selected) {
+  foreach ($form_state['values']['documents'] as $locale => $selected) {
+    if ($selected) {
       $locales[] = $locale;
-      $download_targets[] = (object) array('document_id' => $document_id,'locale' => $locale);
+      $download_targets[] = (object) array('document_id' => $document_id, 'locale' => $locale);
     }
   }
   

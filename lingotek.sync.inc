@@ -475,7 +475,7 @@ function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_re
   $sync_report['upload_nids_count'] = count($result); // update nid count
   $sync_report['upload_nids'] = $result; // update nid list
 
-  if(module_exists('entity_translation') && $sync_report['upload_nids_et_count'] > 0) {
+  if (module_exists('entity_translation') && $sync_report['upload_nids_et_count'] > 0) {
     $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids_et']);
     $sync_report['upload_nids_et_count'] = count($result);
     $sync_report['upload_nids_et'] = $result;

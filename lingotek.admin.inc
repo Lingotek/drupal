@@ -266,9 +266,9 @@ function lingotek_admin_comments_form_submit($form, &$form_state) {
   system_settings_form_submit($form, $form_state);
 
   //This code configures the content entity and it's fields so that they can be translated.
-  if($form_state['values']['lingotek_translate_comments']) {
-    foreach($form_state['values']['lingotek_translate_comments_node_types'] as $content_type => $value) {
-      if(!title_field_replacement_enabled('comment', 'comment_node_' . $content_type, 'subject')) {
+  if ($form_state['values']['lingotek_translate_comments']) {
+    foreach ($form_state['values']['lingotek_translate_comments_node_types'] as $content_type => $value) {
+      if (!title_field_replacement_enabled('comment', 'comment_node_' . $content_type, 'subject')) {
         title_field_replacement_toggle('comment', 'comment_node_' . $content_type, 'subject');
         title_field_replacement_batch_set('comment', 'comment_node_' . $content_type, 'subject');
       }

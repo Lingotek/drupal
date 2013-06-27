@@ -1116,7 +1116,7 @@ function lingotek_comment_insert($comment) {
  * Implements hook_comment_update().
  */
 function lingotek_comment_update($comment) {
-  if(LingotekComment::$content_update_in_progress) {
+  if (LingotekComment::$content_update_in_progress) {
     return;
   }
 

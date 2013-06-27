@@ -88,7 +88,7 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   $operations[] = array('lingotek_mt_sync_set_status', array('clear'));
 
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  if(empty($redirect)) {
+  if (empty($redirect)) {
     $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_MENU_LANG_BASE_URL;
   }
 
