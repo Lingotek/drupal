@@ -100,7 +100,7 @@ function lingotek_notifications() {
     }
     else {
       LingotekLog::error('Lingotek document ID not found. Please clear the Drupal cache to refresh the autoload registry', array());
-      return FALSE;
+      return drupal_json_output(array("message" => "The doc_id was not found on the site."));
     }
 
     if ($trans_obj->updateLocalContentByTarget($lingotek_locale)) {

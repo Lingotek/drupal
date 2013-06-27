@@ -153,13 +153,6 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
-  $items['lingotek/update'] = array(
-    'access arguments' => array('manage projects'),
-    'file' => 'lingotek.page.inc',
-    'page callback' => 'lingotek_update',
-    'type' => MENU_CALLBACK,
-  );
-
   $items['lingotek/sync/comment/%'] = array(
     'access arguments' => array('administer comments'),
     'file' => 'lingotek.page.inc',

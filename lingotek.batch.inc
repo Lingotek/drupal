@@ -69,7 +69,7 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
  *
  * Creates the batch operations array.  Downloads first, then uploads.
  */
-function lingotek_sync_batch_create($upload_nids = array(), $upload_config = array(), $download_targets = array(), $download_targets_incomplete = array()) {
+function lingotek_sync_batch_create($upload_nids = array(), $upload_config = array(), $download_targets = array(), $download_targets_incomplete = array(), $redirect = '') {
 
   $has_upload = !empty($upload_nids);
   $has_upload_config = !empty($upload_config);
@@ -88,7 +88,9 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   $operations[] = array('lingotek_mt_sync_set_status', array('clear'));
 
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
-  $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_MENU_LANG_BASE_URL;
+  if(empty($redirect)) {
+    $redirect = (isset($_GET['redirect_url']) && strlen($_GET['redirect_url'])) ? $_GET['redirect_url'] : LINGOTEK_MENU_LANG_BASE_URL;
+  }
 
   if (count($operations) > 0) {
 
