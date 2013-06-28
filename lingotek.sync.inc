@@ -442,7 +442,7 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     $all_download_targets = json_decode($vals['download_targets_workflow_incomplete_json']);
     foreach ($all_download_targets as $download_target) {
       if (in_array($download_target->locale, $download_locales_incomplete)) {
-        $document_ids[] = $download_targets_incomplete->document_id;
+        $document_ids[] = $download_target->document_id;
         $download_targets_incomplete[] = $download_target;
       }
     }
