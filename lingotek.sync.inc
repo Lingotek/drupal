@@ -206,20 +206,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
   $report = LingotekSync::getReport();
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
 
-  if (module_exists('workbench_moderation')) { // Get nodes that correspond to the upload state in $form['upload']['upload_workbench_moderation']
 
-    $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
-      ->fields('wb', array('nid'));
-    $query = db_select('node_revision', 'nr')
-      ->distinct(TRUE)
-      ->fields('nr', array('nid'))
-      ->condition('nid', $sub_query, 'NOT IN');
-    $no_wb_mod = $query->execute()->fetchCol(0);
-    $report['upload_nids_nowb_count'] = count($no_wb_mod);
-    $report['upload_nids_nowb'] = $no_wb_mod;
-
-    lingotek_workbench_moderation_bulk_select($form, $form_state, $report);
-  }
 
   // Upload
   $form['upload'] = array(
@@ -236,6 +223,19 @@ function lingotek_form_bulk_sync($form, $form_state) {
 
   if ($upload_count_total > 0) {
     if (module_exists('workbench_moderation')) {
+
+      // Get nodes that correspond to the upload state in $form['upload']['upload_workbench_moderation']
+      $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
+        ->fields('wb', array('nid'));
+      $query = db_select('node_revision', 'nr')
+        ->distinct(TRUE)
+        ->fields('nr', array('nid'))
+        ->condition('nid', $sub_query, 'NOT IN');
+      $no_wb_mod = $query->execute()->fetchCol(0);
+      $report['upload_nids_nowb_count'] = count($no_wb_mod);
+      $report['upload_nids_nowb'] = $no_wb_mod;
+      lingotek_workbench_moderation_bulk_select($form, $form_state, $report);
+
       $form['upload']['upload_nids_nowb_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_nowb']));
       $form['upload']['upload_nowb'] = array(
         '#type' => 'checkbox',
