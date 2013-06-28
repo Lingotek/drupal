@@ -91,10 +91,6 @@ function lingotek_download_translations_form_submit($form, $form_state) {
   }
 
   $extra_operations = array();
-  $wb = lingotek_lingonode($nid, 'sync_method_workbench_moderation'); // for workbench moderation transition after download
-  if ($wb) {
-    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($wb, array($document_id)));
-  }
   
   lingotek_sync_batch_create(array(), array(), $download_targets, array(), 'node/' . $form_state['values']['nid'] . '/lingotek_pm', $extra_operations);
   
