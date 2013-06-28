@@ -482,9 +482,11 @@ function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_re
   $states = lingotek_get_workbench_moderation_states();
   $state = $states[$wb_index];
 
-  $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids']);
-  $sync_report['upload_nids_count'] = count($result); // update nid count
-  $sync_report['upload_nids'] = $result; // update nid list
+  if ($sync_report['upload_nids_count'] > 0) {
+    $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids']);
+    $sync_report['upload_nids_count'] = count($result); // update nid count
+    $sync_report['upload_nids'] = $result; // update nid list
+  }
 
   if (module_exists('entity_translation') && $sync_report['upload_nids_et_count'] > 0) {
     $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids_et']);

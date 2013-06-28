@@ -62,6 +62,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
     }
     if ($tag == 'menu_title') {
       //TODO handle menu translation
+      $translated_menu_title = check_plain($content);
     }
     elseif ($tag == 'url_alias' && $url_alias_translation == 1) {
       $target = check_plain($content);

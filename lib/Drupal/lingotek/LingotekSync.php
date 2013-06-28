@@ -389,7 +389,7 @@ class LingotekSync {
           ));
     }
     if (module_exists('workbench_moderation')) {
-      $no_wb_nodes = self::getNonWorkbenchModerationNodeIds($edited_nodes);
+      $no_wb_nodes = empty($edited_nodes) ? array() : self::getNonWorkbenchModerationNodeIds($edited_nodes);
       $report = array_merge($report, array(
         'upload_nids_nowb' => $no_wb_nodes,
         'upload_nids_nowb_count' => count($no_wb_nodes)
