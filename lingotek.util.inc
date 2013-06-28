@@ -872,23 +872,6 @@ function lingotek_get_module_info($field = NULL) {
   return is_null($field) ? $info : (isset($info[$field]) ? $info[$field] : NULL);
 }
 
-/*
- * Returns nid of the node associated with this document id
- *
- * @param string $lingotek_document_id
- *    ID associated with a Lingotek document
- *
- * @return node id of the associated node
- */
-function lingotek_get_nid_by_doc_id($lingotek_document_id) {
-  $query = db_select('lingotek', 'l')
-    ->fields('l')
-    ->condition('lingokey', 'document_id%', 'LIKE')
-    ->condition('lingovalue', $lingotek_document_id);
-  $result = $query->execute()->fetchAssoc();
-  return $result['nid'];
-}
-
 /**
  * Clean-up utility
  */

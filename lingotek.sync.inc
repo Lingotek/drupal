@@ -225,15 +225,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
     if (module_exists('workbench_moderation')) {
 
       // Get nodes that correspond to the upload state in $form['upload']['upload_workbench_moderation']
-      $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
-        ->fields('wb', array('nid'));
-      $query = db_select('node_revision', 'nr')
-        ->distinct(TRUE)
-        ->fields('nr', array('nid'))
-        ->condition('nid', $sub_query, 'NOT IN');
-      $no_wb_mod = $query->execute()->fetchCol(0);
-      $report['upload_nids_nowb_count'] = count($no_wb_mod);
-      $report['upload_nids_nowb'] = $no_wb_mod;
       lingotek_workbench_moderation_bulk_select($form, $form_state, $report);
 
       $form['upload']['upload_nids_nowb_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_nowb']));
@@ -379,7 +370,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
     '#value' => t('Sync'),
     '#disabled' => ($upload_count_total == 0 && $download_count_total == 0),
   );
-
   return $form;
 }
 
@@ -537,7 +527,7 @@ function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array
 function lingotek_post_download_workbench_moderation($options_index, $document_ids = array()) {
   $operations = array();
   foreach ($document_ids as $document_id) {
-    $nid = lingotek_get_nid_by_doc_id($document_id);
+    $nid = LingotekSync::getNodeIdFromDocId($document_id);
     $operations[] = array('lingotek_workbench_moderation_moderate', array($nid, $options_index));
   }
   return $operations;

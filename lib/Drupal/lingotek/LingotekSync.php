@@ -269,6 +269,18 @@ class LingotekSync {
     return $et_node_ids;
   }
 
+  public static function getNonWorkbenchModerationNodeIds($edited_nodes) {
+      $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
+        ->fields('wb', array('nid'));
+      $query = db_select('node_revision', 'nr')
+        ->distinct(TRUE)
+        ->fields('nr', array('nid'))
+        ->condition('nid', $sub_query, 'NOT IN')
+        ->condition('nid', $edited_nodes, 'IN');
+      $no_wb_mod = $query->execute()->fetchCol(0);
+      return $no_wb_mod;
+  }
+
   protected static function getQueryCompletedConfigTranslations($drupal_codes) {
     // return a query object that contains all fully-translated/current strings.
     // use the first addtl language as the query's base.
@@ -374,6 +386,13 @@ class LingotekSync {
       $report = array_merge($report, array(
         'upload_nids_et' => $et_nodes,
         'upload_nids_et_count' => count($et_nodes)
+          ));
+    }
+    if (module_exists('workbench_moderation')) {
+      $no_wb_nodes = self::getNonWorkbenchModerationNodeIds($edited_nodes);
+      $report = array_merge($report, array(
+        'upload_nids_nowb' => $no_wb_nodes,
+        'upload_nids_nowb_count' => count($no_wb_nodes)
           ));
     }
     // Handle configuration chunks

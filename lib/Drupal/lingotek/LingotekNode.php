@@ -119,7 +119,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   public static function loadByLingotekDocumentId($lingotek_document_id) {
     $node = FALSE;
-    $nid = lingotek_get_nid_by_doc_id($lingotek_document_id);
+    $nid = LingotekSync::getNodeIdFromDocId($lingotek_document_id);
     if ($nid) {
       $node = self::loadById($nid);
     }
