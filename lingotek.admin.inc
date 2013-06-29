@@ -47,7 +47,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
         array(t('Status:'), $account_status)
         //,array('Plan:', $account->getPlanTypeText())
-        , array('Enterprise:', ($is_enterprise ? '<span style="color: green;">' . t('Yes') . '</span>' : '<span>' . t('No') . '</span>'))
+        , array(t('Enterprise:'), ($is_enterprise ? '<span style="color: green;">' . t('Yes') . '</span>' : '<span>' . t('No') . '</span>'))
         )))
   );
 
@@ -75,16 +75,16 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
     '#type' => 'item',
     //'#title' => t("Lingotek Identifiers"),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
-        array('Activation Name:', $activation_details),
-        array('Community Identifier:', variable_get('lingotek_community_identifier', '')),
-        array('OAuth Key:', variable_get('lingotek_oauth_consumer_id', '')),
-        array('OAuth Secret:', variable_get('lingotek_oauth_consumer_secret', '')),
-        array('Workflow ID:', variable_get('lingotek_workflow', '')),
-        array('Integration Method ID:', variable_get('lingotek_integration_method', '')),
-        array('External ID:', variable_get('lingotek_login_id', '')),
-        array('Project ID:', variable_get('lingotek_project', '')),
-        array('Vault ID:', variable_get('lingotek_vault', '')),
-        array('Notify URL:', variable_get('lingotek_notify_url', '')),
+        array(t('Activation Name:'), $activation_details),
+        array(t('Community Identifier:'), variable_get('lingotek_community_identifier', '')),
+        array(t('OAuth Key:'), variable_get('lingotek_oauth_consumer_id', '')),
+        array(t('OAuth Secret:'), variable_get('lingotek_oauth_consumer_secret', '')),
+        array(t('Workflow ID:'), variable_get('lingotek_workflow', '')),
+        array(t('Integration Method ID:'), variable_get('lingotek_integration_method', '')),
+        array(t('External ID:'), variable_get('lingotek_login_id', '')),
+        array(t('Project ID:'), variable_get('lingotek_project', '')),
+        array(t('Vault ID:'), variable_get('lingotek_vault', '')),
+        array(t('Notify URL:'), variable_get('lingotek_notify_url', '')),
         )))
   );
 
@@ -178,7 +178,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
 
   $form['comments']['lingotek_translate_config_options'] = array(
     '#type' => 'fieldset',
-    '#description' => t('<a href="@baseUrl/admin/config/regional/translate">View Current Status of Configuration Translation</a><br/><br/>Choose the configuration types you want to have translated:', array("@baseUrl" => $base_url)),
+    '#description' => '<a href="'.$base_url.'/admin/config/regional/translate">'.t('View Current Status of Configuration Translation').'</a><br/><br/>'.t('Choose the configuration types you want to have translated:'),
     '#states' => array(
       'visible' => array(
         ':input[name="lingotek_translate_config"]' => array('checked' => TRUE),
@@ -230,7 +230,8 @@ function lingotek_verify_modules_enabled($module_list) {
   $missing_modules = FALSE;
   foreach ($module_list as $mod) {
     if (!(module_exists($mod))) {
-      form_set_error('', t('Module \'@mod\' must first be enabled.', array('@mod' => $mod)));
+      form_set_error(t('missing:@mod', array('@mod'=>$mod)), t('Module \'@mod\' must first be enabled.', array('@mod' => $mod)));
+
       $missing_modules = TRUE;
     }
   }
@@ -321,6 +322,7 @@ function lingotek_prepare_blocks() {
 }
 
 function lingotek_prepare_taxonomies() {
+  // update all taxonomies to be updated to use translation mode 'Localize'
   db_update('taxonomy_vocabulary')
     ->fields(array('i18n_mode' => LINGOTEK_TAXONOMY_LOCALIZE_VALUE))
     ->execute();
@@ -328,7 +330,10 @@ function lingotek_prepare_taxonomies() {
 }
 
 function lingotek_prepare_menus() {
-  // WTD: 
+  // update all menus to use 'Translate and Localize' in the Multilingual Options
+  db_update('menu_custom')
+    ->fields(array('i18n_mode' => LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE))
+    ->execute();
   return TRUE;
 }
 
@@ -520,8 +525,8 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
       '#type' => 'select',
       '#title' => t('Environment'),
       '#options' => array(
-        0 => 'Production',
-        1 => 'Staging'
+        0 => t('Production'),
+        1 => t('Staging'),
       ),
       '#description' => LINGOTEK_DEV ? t('Note: The above Environment setting above will be overriden by your local configuration (i.e., settings.php).') : '',
       '#default_value' => variable_get('lingotek_use_stage_servers', 0),
@@ -816,7 +821,7 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
   
   $form['logging'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => 'Troubleshooting and Logging',
+    '#title' => t('Troubleshooting and Logging'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -920,8 +925,8 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $items['items'] = array(
     //l('Adjust Language Switcher Block', 'admin/config'),
     //l('Configure Enabled Content Types', 'admin/structure'), //admin/structure/block/manage/locale/language/configure
-    l('Language detection and selection', $general_detection_config_url) . ' ( ' . l('URL', $lang_negotiation_info['locale-url']['config']) . ' | ' . l('Session', $lang_negotiation_info['locale-session']['config']) . ' ) ',
-    l('Configure enabled content types', 'admin/config/lingotek/node-translation-settings'),
+    l(t('Language detection and selection'), $general_detection_config_url) . ' ( ' . l(t('URL'), $lang_negotiation_info['locale-url']['config']) . ' | ' . l(t('Session'), $lang_negotiation_info['locale-session']['config']) . ' ) ',
+    l(t('Configure enabled content types'), 'admin/config/lingotek/node-translation-settings'),
   );
   $output[] = array(
     '#type' => 'item',
@@ -965,7 +970,7 @@ function lingotek_admin_language_switcher_form($form, &$form_state, $show_fields
 
   $ls_select_region = array(
     '#type' => 'select',
-    '#title' => 'Choose the region that you wish to display the switcher in.',
+    '#title' => t('Choose the region that you wish to display the switcher in.'),
     //'#description' => 'When enabled, the region to be displayed in.',
     '#options' => $block_regions,
     '#default_value' => $default_region_value,

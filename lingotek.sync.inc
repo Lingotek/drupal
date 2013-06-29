@@ -276,7 +276,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
   }
   else {
     $form['upload']['none'] = array(
-      '#markup' => 'There are currently no new/modified items to be uploaded.'
+      '#markup' => t('There are currently no new/modified items to be uploaded.'),
     );
   }
 
@@ -329,7 +329,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
 
   if (empty($options_complete) && empty($options_incomplete)) {
     $form['download']['none'] = array(
-      '#markup' => 'There are currently no pending translations to be downloaded.'
+      '#markup' => t('There are currently no pending translations to be downloaded.'),
     );
   }
 

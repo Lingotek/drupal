@@ -72,7 +72,7 @@ class LingotekAccount {
   }
 
   public function getStatusText() {
-    return ( $this->status == 'active' ) ? '<span style="color: green;">Active</span>' : '<span style="color: red;">Inactive</span>';
+    return ( $this->status == 'active' ) ? '<span style="color: green;">'.t('Active').'</span>' : '<span style="color: red;">'.t('Inactive').'</span>';
   }
 
   public function setPlan($plan) {
