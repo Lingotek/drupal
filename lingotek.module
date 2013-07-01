@@ -824,6 +824,12 @@ function lingotek_upload_document($node) {
     }
   }
 
+  // if workbench moderation is enabled for this node and it is being sent, set flag to be moderated
+  if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
+    $moderate = ($send_lingotek_document == 1) ? 1 : 0;
+    lingotek_lingonode($node->nid, 'workbench_moderate', $moderate);
+  }
+
   if (!lingotek_supported_type($node->type) || !Lingotek::isSupportedLanguage($node->language)) {
     return;
   }
