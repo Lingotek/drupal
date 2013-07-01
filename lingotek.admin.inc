@@ -612,6 +612,13 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
   );
 
   if ($workbench_moderation_enabled) {
+
+    $form_element = NULL;
+    if (isset($form_state['values']['lingotek_sync_workbench_moderation'])) {
+      $form_element = $form_state['values']['lingotek_sync_workbench_moderation'];
+    }
+    $transition_select = lingotek_workbench_moderation_update_transitions($form_element);
+
     $form['defaults']['lingotek_sync_workbench_moderation'] = array(
       '#type' => 'select',
       '#title' => 'Workbench Moderation State',
@@ -623,7 +630,30 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
         ),
       ),
       '#description' => 'Content will be automatically downloaded into this state',
+      '#ajax' => array(
+        'callback' => 'lingotek_workbench_moderation_callback_transitions_default',
+        'wrapper' => 'wb_select_transitions',
+      ),
     );
+
+    $form['defaults']['lingotek_sync_wb_select'] = array(
+      '#prefix' => '<div id="wb_select_transitions">',
+      '#suffix' => '</div>',
+    );
+    foreach ($transition_select as $from_state => $to_states) {
+      $form['defaults']['lingotek_sync_wb_select']['lingotek_sync_wb_select_' . $from_state] = array(
+        '#type' => 'select',
+        '#title' => $from_state,
+        '#options' => $to_states,
+        '#default_value' => variable_get('lingotek_sync_wb_' . $from_state, 0),
+        '#states' => array(
+          'invisible' => array(
+            ':input[name="lingotek_sync"]' => array('checked' => FALSE),
+          ),
+        ),
+      );
+    }
+
   }
 
   if ($is_enterprise) {
@@ -1079,4 +1109,11 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
 
     batch_set($batch);
   }
+}
+
+/*
+ * AJAX callback to update transition options
+ */
+function lingotek_workbench_moderation_callback_transitions_default($form, &$form_state) {
+  return $form['defaults']['lingotek_sync_wb_select'];
 }

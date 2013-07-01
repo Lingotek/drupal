@@ -517,8 +517,12 @@ function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
  * @param int $options_index
  *    Index for array returned by lingotek_get_workbench_moderation_options()
  *    Specifies the state to which we should moderate
+ *
+ * @param array $trans_options
+ *    Associative array where $key => $value is $transitions_from => $transitions_to
+ *    Only set when a $transitions_from state has multiple transitions, in which case $transitions_to is specified by the user (in defaults, node-level settings, or bulk management)
  */
-function lingotek_workbench_moderation_moderate($nid, $options_index) {
+function lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options, &$context) {
   $options = lingotek_get_workbench_moderation_options();
   $option = $options[$options_index];
   $node = lingotek_node_load_default($nid);
@@ -535,7 +539,12 @@ function lingotek_workbench_moderation_moderate($nid, $options_index) {
       $transitions = workbench_moderation_transitions();
       foreach ($transitions as $transition) {
         if ($transition->from_name == $node->workbench_moderation['current']->state) {
-          workbench_moderation_moderate($node, $transition->to_name);
+          if (!empty($trans_options) && isset($trans_options[$transition->from_name])) { // if a from state has multiple transitions
+            workbench_moderation_moderate($node, $trans_options[$transition->from_name]); // moderate to specified transition
+          }
+          else {
+            workbench_moderation_moderate($node, $transition->to_name); // otherwise moderate to next transition
+          }
           return;
         }
       }
