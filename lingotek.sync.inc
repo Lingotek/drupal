@@ -207,6 +207,7 @@ function lingotek_sync_endpoint() {
 
 function lingotek_form_bulk_sync($form, $form_state) {
 
+  global $base_url;
   $report = LingotekSync::getReport();
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
 
@@ -265,13 +266,42 @@ function lingotek_form_bulk_sync($form, $form_state) {
       );
     }
     if (variable_get('lingotek_translate_config')) {
+      // pre-build include/exclude messages based on enabled config types
+      $config_types = array(
+        'lingotek_translate_config' => t('Include built-in interface data'),
+        'lingotek_translate_config_blocks' => t('blocks'),
+        'lingotek_translate_config_taxonomies' => t('taxonomies'),
+        'lingotek_translate_config_menus' => t('menus'),
+        'lingotek_translate_config_views' => t('views'),
+        );
+      $config_types_included = array();
+      $config_types_excluded = array();
+      foreach ($config_types as $k => $v) {
+        if (variable_get($k, 0)) {
+          $config_types_included[$k] = $v;
+        }
+        else {
+          $config_types_excluded[$k] = $v;
+        }
+      }
+      $cf_included_str = implode(', ', $config_types_included);
+      if (count($config_types_included) > 1) {
+        $cf_included_str = substr_replace($cf_included_str, t(' and ').substr($cf_included_str, strrpos($cf_included_str, ', ')+2), strrpos($cf_included_str, ', '));
+      }
+      $cf_excluded_str = implode(', ', $config_types_excluded);
+      if (count($config_types_excluded) > 1) {
+        $cf_excluded_str = substr_replace($cf_excluded_str, t(' and ').substr($cf_excluded_str, strrpos($cf_excluded_str, ', ')+2), strrpos($cf_excluded_str, ', '));
+      }
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Include built-in interface data, menus, taxonomies, blocks, and views ').'(<span id="upload-config-total">'.t('@count set(s) of additions/changes', array('@count' => $report['upload_config_count'])).'</span>)',
+        '#title' => $cf_included_str . ' (<span id="upload-config-total">'.t('@count set(s) of additions/changes', array('@count' => $report['upload_config_count'])).'</span>)',
         '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_config_count'] == 0,
       );
+      if (count($config_types_excluded)) {
+        $form['upload']['upload_config']['#description'] = t('(You can also enable translation for ') . $cf_excluded_str . t(' in the Additional Translation tab of the ') . '<a href="' . $base_url . '/admin/settings/lingotek/settings">' . t('Lingotek Settings') . '</a>)';
+      }
     }
   }
   else {
