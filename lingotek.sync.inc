@@ -122,12 +122,16 @@ function lingotek_notifications() {
       $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
       lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
 
+      // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
       if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
         $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
         $trans_options = array();
         if ($options_index == 1) {
           $from_state = $node->workbench_moderation['current']->state;
-          $trans_options[$from_state] = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_wb_select_' . $from_state), 'lingotek_sync_wb_' . $from_state, $from_state);
+          $mult_trans = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_wb_select_' . $from_state), 'lingotek_sync_wb_' . $from_state, NULL);
+          if ($mult_trans) {
+            $trans_options[$from_state] = $mult_trans;
+          }
         }
         lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options);
         lingotek_lingonode($nid, 'workbench_moderate', 0);

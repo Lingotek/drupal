@@ -522,7 +522,7 @@ function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
  *    Associative array where $key => $value is $transitions_from => $transitions_to
  *    Only set when a $transitions_from state has multiple transitions, in which case $transitions_to is specified by the user (in defaults, node-level settings, or bulk management)
  */
-function lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options) {
+function lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options = array()) {
   $options = lingotek_get_workbench_moderation_options();
   $option = $options[$options_index];
   $node = lingotek_node_load_default($nid);
