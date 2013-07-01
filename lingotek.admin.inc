@@ -144,11 +144,20 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
     '#default_value' => variable_get('lingotek_translate_comments', 0),
   );
 
+  $form['comments']['lingotek_translate_comments_options'] = array(
+    '#type' => 'fieldset',
+    '#states' => array(
+      'visible' => array(
+        ':input[name="lingotek_translate_comments"]' => array('checked' => TRUE),
+        ),
+      ),
+  );
+
   $type_options = array();
   foreach (node_type_get_types() as $type => $type_data) {
     $type_options[$type] = $type_data->name;
   }
-  $form['comments']['lingotek_translate_comments_node_types'] = array(
+  $form['comments']['lingotek_translate_comments_options']['lingotek_translate_comments_node_types'] = array(
     '#type' => 'select',
     '#title' => t('Comment translation node types'),
     '#description' => t('When comment translation is enabled, only automatically translate comments on the selected node types.'),
@@ -157,7 +166,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
     '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
   );
 
-  $form['comments']['lingotek_translate_comments_workflow_id'] = array(
+  $form['comments']['lingotek_translate_comments_options']['lingotek_translate_comments_workflow_id'] = array(
     '#type' => 'select',
     '#title' => t('Comment translation Workflow'),
     '#description' => t('When comment translation is enabled, use this workflow for translating 
