@@ -268,7 +268,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Include built-in interface data, menus, taxonomies, blocks, and views (<span id="upload-config-total">@count set of additions/changes</span>)', array('@count' => $report['upload_config_count'])),
+        '#title' => t('Include built-in interface data, menus, taxonomies, blocks, and views ').'(<span id="upload-config-total">'.t('@count set(s) of additions/changes').'</span>)', array('@count' => $report['upload_config_count'])),
         '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_config_count'] == 0,
       );
