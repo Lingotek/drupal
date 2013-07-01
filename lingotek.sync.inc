@@ -334,13 +334,36 @@ function lingotek_form_bulk_sync($form, $form_state) {
   }
 
   if (!empty($options_complete) || !empty($options_incomplete)) {
-    $form['download']['download_locales_wb'] = array(
-      '#type' => 'select',
-      '#prefix' => 'Workbench Moderation State',
-      '#options' => lingotek_get_workbench_moderation_options(),
-      '#default' => variable_get('lingotek_sync_workbench_moderation', 0),
-      '#description' => 'Pressing Sync will download all documents into the above Workbench Moderation state.',
-    );
+    if (module_exists('workbench_moderation')) {
+      $form_element = NULL;
+      if (isset($form_state['values']['download_locales_wb'])) {
+        $form_element = $form_state['values']['download_locales_wb'];
+      }
+      $transition_select = lingotek_workbench_moderation_update_transitions($form_element);
+
+      $form['download']['download_locales_wb'] = array(
+        '#type' => 'select',
+        '#prefix' => 'Workbench Moderation State',
+        '#options' => lingotek_get_workbench_moderation_options(),
+        '#default_value' => variable_get('lingotek_sync_workbench_moderation', 1),
+        '#description' => 'Pressing Sync will download all documents into the above Workbench Moderation state.',
+        '#ajax' => array(
+          'callback' => 'lingotek_workbench_moderation_callback_transitions',
+          'wrapper' => 'wb_select_transitions',
+        ),
+      );
+      $form['download']['download_locales_wb_select'] = array(
+        '#prefix' => '<div id="wb_select_transitions">',
+        '#suffix' => '</div>',
+      );
+      foreach ($transition_select as $from_state => $to_states) {
+        $form['download']['download_locales_wb_select']['download_locales_wb_select_' . $from_state] = array(
+          '#type' => 'select',
+          '#title' => $from_state,
+          '#options' => $to_states,
+        );
+      }
+    }
   }
   if (!empty($options_complete)) {
     $form['download']['download_locales_complete'] = array(
@@ -450,8 +473,17 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
 
   $extra_operations = array();
   $document_ids = array_unique($document_ids);
+
+  // if workbench moderation is enabled
   if (isset($form_state['values']['download_locales_wb'])) {
-    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb'], $document_ids, TRUE));
+    $transitions = workbench_moderation_transitions();
+    $trans_options = array();
+    foreach ($transitions as $transition) {
+      if (isset($form_state['values']['download_locales_wb_select_' . $transition->from_name])) {
+        $trans_options[$transition->from_name] = $form_state['values']['download_locales_wb_select_' . $transition->from_name];
+      }
+    }
+    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb'], $document_ids, $trans_options, TRUE));
   }
 
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
@@ -463,6 +495,13 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
  */
 function lingotek_workbench_moderation_callback_upload($form, &$form_state) {
   return $form['upload'];
+}
+
+/*
+ * AJAX callback function to output transition options when "Increment to the next state" is selected
+ */
+function lingotek_workbench_moderation_callback_transitions($form, &$form_state) {
+  return $form['download']['download_locales_wb_select'];
 }
 
 /*
@@ -520,6 +559,40 @@ function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array
 }
 
 /*
+ * Gets associative array of duplicate workbench moderation transitions
+ *  i.e. needs_review transitions to draft AND needs_review transitions to published
+ *
+ * @return array $dup_trans
+ *    associative array with array(transitions_from => array(transitions_to_1, transitions_to_2, etc.), transitions_from => etc.)
+ *    ONLY returns transitions with duplicate from_name
+ *    Returns empty if option is not "Increment to next state" or if no from_state has multiple transitions
+ *
+ */
+function lingotek_workbench_moderation_update_transitions($form_element = array()) {
+  $increment_to_next = 1;
+  $dup_trans = array();
+  if (!isset($form_element)) {
+    $wb_option = variable_get('lingotek_sync_workbench_moderation', 0);
+  }
+  else {
+    $wb_option = $form_element;
+  }
+  if ($wb_option == $increment_to_next) {
+    $transitions = workbench_moderation_transitions();
+
+    foreach ($transitions as $transition) { // insert transitions into a keyed array
+      $dup_trans[$transition->from_name][$transition->to_name] = $transition->to_name;
+    }
+    foreach ($transitions as $transition) { // remove transitions without duplicate from_name
+      if (count($dup_trans[$transition->from_name]) < 2) {
+        unset ($dup_trans[$transition->from_name]);
+      }
+    }
+  }
+  return $dup_trans; // otherwise return NULL
+}
+
+/*
  * Build operations array with batch worker functions to moderate workbench moderation
  *
  * @param int $options_index
@@ -530,12 +603,12 @@ function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array
  *    Document IDs of downloaded documents
  *    Used to get corresponding Node IDs for nodes which need moderation
  */
-function lingotek_post_download_workbench_moderation($options_index, $document_ids = array(), $automatic_download = FALSE) {
+function lingotek_post_download_workbench_moderation($options_index, $document_ids = array(), $trans_options = array(), $automatic_moderate = FALSE) {
   $operations = array();
-  if($automatic_download) {
+  if($automatic_moderate) {
     foreach ($document_ids as $document_id) {
       $nid = LingotekSync::getNodeIdFromDocId($document_id);
-      $operations[] = array('lingotek_workbench_moderation_moderate', array($nid, $options_index));
+      $operations[] = array('lingotek_workbench_moderation_moderate', array($nid, $options_index, $trans_options));
     }
   }
   return $operations;
