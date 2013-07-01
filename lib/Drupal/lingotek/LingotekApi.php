@@ -986,8 +986,8 @@ class LingotekApi {
       <br />Parameters: !params.
       <br />Response: !response', array(
         '@url' => $api_url,
-        //'@message' => $e->getMessage(),
-        '@message' => '(stripped)',
+        '@message' => $e->getMessage(),
+        //'@message' => '(stripped)',
         '@name' => $method,
         '!params' => ($parameters),
         '!response' => ($response)), 'api');
