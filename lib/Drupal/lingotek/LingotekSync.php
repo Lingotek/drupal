@@ -521,7 +521,7 @@ class LingotekSync {
       ->condition('config_key', 'document_id')
       ->distinct();
     $result = $query->execute();
-    $doc_ids = $result->fetchCol();
+    $doc_ids = array_merge($doc_ids, $result->fetchCol());
 
     return $doc_ids;
   }
