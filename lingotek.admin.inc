@@ -249,18 +249,24 @@ function lingotek_verify_modules_enabled($module_list) {
 
 function lingotek_admin_comments_form_validate($form, &$form_state) {
   // check for required modules if config translation is enabled
-  if ($form['comments']['lingotek_translate_config']) {
+  $conf_part = $form['comments']['lingotek_translate_config'];
+  $conf_opt_part = $form['comments']['lingotek_translate_config_options'];
+  if ($conf_part && $conf_part['#value'] != 0) {
     lingotek_verify_modules_enabled(array('i18n', 'i18n_translation'));
-    if ($form['comments']['lingotek_translate_config_options']['lingotek_translate_config_blocks']) {
+    if ($conf_opt_part['lingotek_translate_config_blocks']
+        && $conf_opt_part['lingotek_translate_config_blocks']['#value'] != 0) {
       lingotek_verify_modules_enabled(array('i18n_block'));
     }
-    if ($form['comments']['lingotek_translate_config_options']['lingotek_translate_config_taxonomies']) {
+    if ($conf_opt_part['lingotek_translate_config_taxonomies']
+        && $conf_opt_part['lingotek_translate_config_taxonomies']['#value'] != 0) {
       lingotek_verify_modules_enabled(array('i18n_taxonomy'));
     }
-    if ($form['comments']['lingotek_translate_config_options']['lingotek_translate_config_menus']) {
+    if ($conf_opt_part['lingotek_translate_config_menus']
+        && $conf_opt_part['lingotek_translate_config_menus']['#value'] != 0) {
       lingotek_verify_modules_enabled(array('i18n_menu'));
     }
-    if ($form['comments']['lingotek_translate_config_options']['lingotek_translate_config_views']) {
+    if ($conf_opt_part['lingotek_translate_config_views']
+        && $conf_opt_part['lingotek_translate_config_views']['#value'] != 0) {
       lingotek_verify_modules_enabled(array('i18nviews'));
     }
   }
@@ -311,6 +317,14 @@ function lingotek_admin_comments_form_submit($form, &$form_state) {
       lingotek_prepare_views();
     }
     // WTD: run the translation strings refresh
+  }
+  else {
+    // unset all sub-translation options
+    variable_set('lingotek_translate_config_builtins', 0);
+    variable_set('lingotek_translate_config_blocks', 0);
+    variable_set('lingotek_translate_config_taxonomies', 0);
+    variable_set('lingotek_translate_config_menus', 0);
+    variable_set('lingotek_translate_config_views', 0);
   }
 }
 
