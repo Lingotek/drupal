@@ -551,8 +551,12 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   the original input plus any additional reference tags to be ignored.
    */
   public static function filterPlaceholders($segment_text) {
-    // WTD: this regex needs to be verified to align with all possible variable names
-    $pattern = '/([!@%][\w_]+\s*)/';
+    // NOTE: This regex is only a generalization of the variable names possible using
+    // the t-function's variable interpolation.  This finds all sets of word
+    // characters (A-Z, a-z, - or _) that begin with either !, @, or %, that do not
+    // fall between angle brackets (which would indicate being on the inside
+    // of an HTML tag).
+    $pattern = '/([!@%][\w_-]+\s*)(?![^<]*\>)/';
     $replacement = '<drupalvar>${1}</drupalvar>';
     return preg_replace($pattern, $replacement, $segment_text);
   }
