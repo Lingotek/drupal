@@ -235,6 +235,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
     '#suffix' => '</div>',
   );
 
+
   if ($upload_count_total > 0) {
     if (module_exists('workbench_moderation')) {
 
@@ -248,25 +249,35 @@ function lingotek_form_bulk_sync($form, $form_state) {
         '#default_value' => $report['upload_nids_nowb_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_nids_nowb_count'] == 0,
       );
-      $form['upload']['upload_wb'] = array(
-        '#type' => 'select',
-        '#prefix' => 'Workbench Moderation State',
-        '#options' => lingotek_get_workbench_moderation_states(),
-        '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 0),
-        '#description' => t('Pressing Sync will upload the following edited nodes currently in this moderation state.'),
-        '#ajax' => array(
-          'callback' => 'lingotek_workbench_moderation_callback_upload',
-          'wrapper' => 'upload_wrapper',
-        ),
+      $options_upload = array();
+      foreach ($report['workbench_moderation_states'] as $state) {
+        if (isset($report['upload_nids_wb_count_' . $state]) && $report['upload_nids_wb_count_' . $state] > 0) {
+          $form['upload']['upload_nids_wb_json_' . $state] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_wb_' . $state]));
+          $options_upload[$state] = array($state, $report['upload_nids_wb_count_' . $state]);
+        }
+      }
+      if (!empty($options_upload)) {
+        $form['upload']['upload_wb'] = array(
+          '#type' => 'tableselect',
+          '#prefix' => t('Workbench Moderation States'),
+          '#header' => array(
+            t('State'),
+            t('Edited Nodes'),
+          ),
+          '#options' => $options_upload,
+          '#default_value' => array_fill_keys(array_keys($options_upload), 0),
+        );
+      }
+    }
+    else {
+      $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
+      $form['upload']['upload'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Include new/modified nodes (<span id="upload-total">@count</span>)', array('@count' => $report['upload_nids_count'])),
+        '#default_value' => $report['upload_nids_count'] == 0 ? 0 : 1,
+        '#disabled' => $report['upload_nids_count'] == 0,
       );
     }
-    $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
-    $form['upload']['upload'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Include new/modified nodes (<span id="upload-total">@count</span>)', array('@count' => $report['upload_nids_count'])),
-      '#default_value' => $report['upload_nids_count'] == 0 ? 0 : 1,
-      '#disabled' => $report['upload_nids_count'] == 0,
-    );
     if (module_exists('entity_translation')) {
       $form['upload']['upload_nids_et_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_et']));
       $form['upload']['upload_et'] = array(
@@ -477,6 +488,13 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
   if (isset($vals['upload_et']) && $vals['upload_et'] && isset($vals['upload_nids_et_json'])) {
     $upload_nids = array_merge($upload_nids, json_decode($vals['upload_nids_et_json']));
   }
+  if (isset($vals['upload_wb']) && $vals['upload_wb']) {
+    foreach ($vals['upload_wb'] as $state) {
+      if (isset($vals['upload_nids_wb_json_' . $state])) {
+        $upload_nids = array_merge($upload_nids, json_decode($vals['upload_nids_wb_json_' . $state]));
+      }
+    }
+  }
   if (isset($vals['upload_nowb']) && $vals['upload_nowb'] && isset($vals['upload_nids_nowb_json'])) {
     $upload_nids = array_merge($upload_nids, json_decode($vals['upload_nids_nowb_json']));
   }
@@ -583,19 +601,21 @@ function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_re
     $wb_index = $form_state['values']['upload_wb'];
   }
   $states = lingotek_get_workbench_moderation_states();
-  $state = $states[$wb_index];
+  $sync_report['workbench_moderation_states'] = $states;
 
   if ($sync_report['upload_nids_count'] > 0) {
-    $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids']);
-    $sync_report['upload_nids_count'] = count($result); // update nid count
-    $sync_report['upload_nids'] = $result; // update nid list
+    foreach ($states as $state) {
+      $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids']);
+      $sync_report['upload_nids_wb_count_' . $state] = count($result); // update nid count
+      $sync_report['upload_nids_wb_' . $state] = $result; // update nid list
+    }
   }
-
+/*
   if (module_exists('entity_translation') && $sync_report['upload_nids_et_count'] > 0) {
     $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids_et']);
     $sync_report['upload_nids_et_count'] = count($result);
     $sync_report['upload_nids_et'] = $result;
-  }
+  }*/
 }
 
 /*
