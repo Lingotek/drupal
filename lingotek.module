@@ -785,6 +785,21 @@ function lingotek_node_delete($node) {
 }
 
 /**
+ * Implements hook_node_load().
+ */
+function lingotek_node_load($nodes, $types) {
+  foreach ($nodes as $node) {
+    // translate node titles for workbench moderation 'View draft' node tab
+    if (module_exists('workbench_moderation') && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->vid) {
+      // Workbench Moderation calls two node saves if viewing a draft, so we have to
+      // clear this cache in order for the translated title fields to be loaded
+      drupal_static_reset('title_entity_sync');
+      title_entity_sync('node', $node);
+    }
+  }
+}
+
+/**
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
