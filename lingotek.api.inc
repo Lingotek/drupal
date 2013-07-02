@@ -574,8 +574,8 @@ function lingotek_get_workbench_url_by_phases($node, $phases, $label = FALSE, $f
         }
         $l = l($label, '', array('attributes' => array(
             'onclick' => 'window.open(\'' . $path . '\'); return false;',
-            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
-            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
+            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("lingotek-highlight");',
+            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("lingotek-highlight");',
             )));
       }
     }

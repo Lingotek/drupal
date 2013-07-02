@@ -25,3 +25,5 @@ files[] = lib/Drupal/lingotek/LingotekTranslatableEntity.php
 files[] = tests/lingotek.base.test
 files[] = tests/lingotek.access.test
 files[] = tests/lingotek.advanced_parsing.test
+
+stylesheets[all][] = style/base.css

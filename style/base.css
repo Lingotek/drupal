@@ -1,4 +1,12 @@
 
-.highlight {
+.lingotek-highlight {
   background-color: #ecf2f9 !important;
+}
+
+#navbar-link-admin-settings-lingotek::before {
+  background-attachment: scroll;
+  background-color: transparent;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-image: url("../images/ico_chevs_dd.png");
 }
