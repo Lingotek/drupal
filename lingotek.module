@@ -1311,6 +1311,10 @@ function lingotek_workbench_moderation_transition($node, $old_state, $new_state)
   $def_state = lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 2);
   $states = lingotek_get_workbench_moderation_states();
 
+  // do not change status updates if only moderated (no node_save called)
+  if (!isset($node->workbench_moderation_state_new)) {
+    $node->skip_status_updates = TRUE;
+  }
   // set lingonode variable for workbench moderation auto-upload
   if (isset($node->create_lingotek_document_workbench_moderation)) {
     lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation', $node->create_lingotek_document_workbench_moderation);
