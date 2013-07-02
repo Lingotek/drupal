@@ -377,7 +377,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
 
   if (!empty($options_complete) || !empty($options_incomplete)) {
     if (module_exists('workbench_moderation')) {
-      $form_element = NULL;
+      $form_element = variable_get('lingotek_sync_workbench_moderation', 0);
       if (isset($form_state['values']['download_locales_wb'])) {
         $form_element = $form_state['values']['download_locales_wb'];
       }
@@ -387,11 +387,22 @@ function lingotek_form_bulk_sync($form, $form_state) {
         '#type' => 'select',
         '#prefix' => 'Workbench Moderation State',
         '#options' => lingotek_get_workbench_moderation_options(),
-        '#default_value' => variable_get('lingotek_sync_workbench_moderation', 1),
+        '#default_value' => variable_get('lingotek_sync_workbench_moderation', 0),
         '#description' => 'Pressing Sync will download all documents into the above Workbench Moderation state.',
         '#ajax' => array(
           'callback' => 'lingotek_workbench_moderation_callback_transitions',
           'wrapper' => 'wb_select_transitions',
+        ),
+      );
+      $form['download']['download_wb_override_defaults'] = array(
+        '#type' => 'checkbox',
+        '#title' => 'Override defaults',
+        '#description' => t('Recommended if defaults have not been set in admin->lingotek->settings->content defaults'),
+        '#default_value' => 0,
+        '#states' => array(
+          'visible' => array(
+            'select[name="download_locales_wb"]' => array('value' => 1),
+          ),
         ),
       );
       $form['download']['download_locales_wb_select'] = array(
@@ -403,6 +414,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
           '#type' => 'select',
           '#title' => $from_state,
           '#options' => $to_states,
+          '#states' => array(
+            'invisible' => array(
+              ':input[name="download_wb_override_defaults"]' => array('checked' => FALSE),
+            ),
+          ),
         );
       }
     }
@@ -520,9 +536,15 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
   if (isset($form_state['values']['download_locales_wb'])) {
     $transitions = workbench_moderation_transitions();
     $trans_options = array();
-    foreach ($transitions as $transition) {
-      if (isset($form_state['values']['download_locales_wb_select_' . $transition->from_name])) {
-        $trans_options[$transition->from_name] = $form_state['values']['download_locales_wb_select_' . $transition->from_name];
+    if ($form_state['values']['download_locales_wb'] == 1) {
+      foreach ($transitions as $transition) {
+        $var = variable_get('lingotek_sync_wb_select_' . $transition->from_name);
+        if (isset($form_state['values']['download_wb_override_defaults']) && $form_state['values']['download_wb_override_defaults'] == 1 && $var) {
+          $trans_options[$transition->from_name] = $var;
+        }
+        else if (isset($form_state['values']['download_locales_wb_select_' . $transition->from_name])) {
+          $trans_options[$transition->from_name] = $form_state['values']['download_locales_wb_select_' . $transition->from_name];
+        }
       }
     }
     $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb'], $document_ids, $trans_options, TRUE));
