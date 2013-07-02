@@ -469,6 +469,10 @@ class LingotekSync {
     db_truncate('lingotek');
   }
 
+  public static function disassociateAllChunks() {
+    db_truncate('lingotek_config_metadata')->execute();
+  }
+
   public static function resetNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;
@@ -503,12 +507,22 @@ class LingotekSync {
   }
 
   public static function getAllLocalDocIds() {
+    // node-related doc IDs
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('lingovalue'));
     $query->condition('lingokey', 'document_id');
     $query->distinct();
     $result = $query->execute();
     $doc_ids = $result->fetchCol();
+
+    // config-related doc IDs
+    $query = db_select('lingotek_config_metadata', 'l')
+      ->fields('l', array('value'))
+      ->condition('config_key', 'document_id')
+      ->distinct();
+    $result = $query->execute();
+    $doc_ids = $result->fetchCol();
+
     return $doc_ids;
   }
 

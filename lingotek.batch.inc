@@ -311,6 +311,7 @@ function lingotek_batch_reset_content() {
 
 
   $operations[] = array('LingotekSync::disassociateAllNodes', array());
+  $operations[] = array('LingotekSync::disassociateAllChunks', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 
   $operations[] = array('lingotek_cleanup_utility', array(FALSE)); // identify translatable content
