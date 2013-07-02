@@ -27,7 +27,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
 
   $form['status'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Account Status') . ': ' . $account_status,
+    '#title' => t('Account') . ': ' . $account_status,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -41,16 +41,6 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
     '#submit' => array('lingotek_admin_account_status_form_submit')
   );
 
-  $form['status'][] = array(
-    '#type' => 'item',
-    //'#title' => t("Account Status"), // . ' - ' . l(t('Update'), 'lingotek/get-account-status', array('query' => array('token' => md5(time())))),
-    '#markup' => theme('table', array('header' => array(), 'rows' => array(
-        array(t('Status:'), $account_status)
-        //,array('Plan:', $account->getPlanTypeText())
-        , array(t('Enterprise:'), ($is_enterprise ? '<span style="color: green;">' . t('Yes') . '</span>' : '<span>' . t('No') . '</span>'))
-        )))
-  );
-
   // Account Information
 
   $activation_details = variable_get('lingotek_activation_first_name', '') . ' ' . variable_get('lingotek_activation_last_name', '');
@@ -58,23 +48,12 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
   $activation_details .= strlen($activation_email) ? ' (' . $activation_email . ')' : '';
   $activation_details = strlen(trim($activation_details)) ? $activation_details : 'NA';
 
-  $form['information'] = array(
-    '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Account Information'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'administrative_settings',
-  );
-
-  $form['information'][] = array(
+  $form['status'][] = array(
     '#type' => 'item',
-    '#description' => t('Lingotek account information.')
-  );
-
-  $form['information'][] = array(
-    '#type' => 'item',
-    //'#title' => t("Lingotek Identifiers"),
     '#markup' => theme('table', array('header' => array(), 'rows' => array(
+        array(t('Status:'), $account_status),
+        //,array('Plan:', $account->getPlanTypeText()),
+        array(t('Enterprise:'), ($is_enterprise ? '<span style="color: green;">' . t('Yes') . '</span>' : '<span>' . t('No') . '</span>')),
         array(t('Activation Name:'), $activation_details),
         array(t('Community Identifier:'), variable_get('lingotek_community_identifier', '')),
         array(t('OAuth Key:'), variable_get('lingotek_oauth_consumer_id', '')),
@@ -181,7 +160,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
   $form['comments']['lingotek_translate_config'] = array(
     '#type' => 'checkbox',
     '#title' => t('Translate configurations (requires modules <a href="https://drupal.org/project/variable">Variable</a> and <a href="https://drupal.org/project/i18n">i18n</a>)'),
-    '#description' => t('When enabled, the specified configuration types will be included in bulk management processes for translation.'),
+    '#description' => t('When enabled, the specified configuration types will be included in bulk management processes for translation.') . ' ' . t('See') . ' ' . l(t('configuration translation overview'), $base_url . '/admin/config/regional/translate') . '.',
     '#default_value' => variable_get('lingotek_translate_config', 0),
   );
 
@@ -189,13 +168,11 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
     '#type' => 'fieldset',
     '#title' => t('Configurations settings'),
     '#description' => t('Choose the configuration types you want to have translated:'),
-    //l(t('View Current Status of Configuration Translation'), $base_url . '/admin/config/regional/translate')
     '#states' => array(
       'visible' => array(
         ':input[name="lingotek_translate_config"]' => array('checked' => TRUE),
       ),
-    ),
-      //'<span class="warning"><br/>'.t('(Warning: This is a new feature still in testing and is not currently intended for production use.)').'</span>'
+    )
   );
   $form['comments']['lingotek_translate_config_options']['lingotek_translate_config_builtins'] = array(
     '#type' => 'checkbox',
