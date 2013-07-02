@@ -1328,6 +1328,10 @@ function lingotek_workbench_moderation_transition($node, $old_state, $new_state)
       lingotek_lingonode($node->nid, 'sync_method_wb_select_' . $states[$i], $node->$wb_var);
     }
   }
+  if ($old_state == workbench_moderation_state_published() && $new_state != workbench_moderation_state_published()) { // if changing from published
+    $node->status = 0; // unpublish
+    node_save($node);
+  }
 
   // Check new state against settings
   if ($new_state != $states[$def_state]) {

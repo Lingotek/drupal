@@ -234,7 +234,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
     '#prefix' => '<div id="upload_wrapper">',
     '#suffix' => '</div>',
   );
-  $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
 
   if ($upload_count_total > 0) {
     if (module_exists('workbench_moderation')) {
@@ -261,6 +260,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         ),
       );
     }
+    $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
     $form['upload']['upload'] = array(
       '#type' => 'checkbox',
       '#title' => t('Include new/modified nodes (<span id="upload-total">@count</span>)', array('@count' => $report['upload_nids_count'])),
@@ -647,7 +647,7 @@ function lingotek_workbench_moderation_update_transitions($form_element = array(
  */
 function lingotek_post_download_workbench_moderation($options_index, $document_ids = array(), $trans_options = array(), $automatic_moderate = FALSE) {
   $operations = array();
-  if($automatic_moderate) {
+  if ($automatic_moderate) {
     foreach ($document_ids as $document_id) {
       $nid = LingotekSync::getNodeIdFromDocId($document_id);
       $operations[] = array('lingotek_workbench_moderation_moderate', array($nid, $options_index, $trans_options));
