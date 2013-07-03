@@ -208,6 +208,7 @@ class LingotekSync {
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
       $query->condition('language', $drupal_language_code);
+      $query->condition('nid', LingotekSync::getAllNodeIds(), 'IN'); // nodes sent to lingotek
       $query->addExpression('COUNT(*)', 'cnt');
       $result = $query->execute()->fetchField();
       $count += $result;
@@ -522,8 +523,19 @@ class LingotekSync {
       ->distinct();
     $result = $query->execute();
     $doc_ids = array_merge($doc_ids, $result->fetchCol());
-
+    
     return $doc_ids;
+  }
+  
+  public static function getAllNodeIds() {
+    // all node ids having document_ids in lingotek table
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('nid'));
+    //$query->condition('lingokey', 'document_id');
+    $query->distinct('nid');
+    $result = $query->execute();
+    $nids = $result->fetchCol();
+    return $nids;
   }
 
   //lingotek_get_node_id_from_document_id
