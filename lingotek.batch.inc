@@ -536,7 +536,7 @@ function lingotek_workbench_moderation_moderate($nid, $options_index, $trans_opt
       workbench_moderation_moderate($node, $option);
       return;
     }
-    else if ($options_index == 1) { // if incrementing state
+    elseif ($options_index == 1) { // if incrementing state
       $transitions = workbench_moderation_transitions();
       foreach ($transitions as $transition) {
         if ($transition->from_name == $node->workbench_moderation['current']->state) {

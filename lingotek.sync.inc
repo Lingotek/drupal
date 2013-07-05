@@ -318,7 +318,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
-        '#title' => $cf_included_str . ' (<span id="upload-config-total">'.t('@count set(s) of additions/changes', array('@count' => $report['upload_config_count'])).'</span>)',
+        '#title' => $cf_included_str . ' (<span id="upload-config-total">' . $report['upload_config_count'] . ' ' . format_plural($report['upload_config_count'], 'set', 'sets') . ' ' . t('of additions/changes') . '</span>)',
         '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_config_count'] == 0,
       );
@@ -332,7 +332,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
       '#markup' => t('There are currently no new/modified items to be uploaded.'),
     );
   }
-
+  
   // Download  
   $form['download'] = array(
     '#type' => 'fieldset',

@@ -160,7 +160,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
   $form['comments']['lingotek_translate_config'] = array(
     '#type' => 'checkbox',
     '#title' => t('Translate configurations (requires modules <a href="https://drupal.org/project/variable">Variable</a> and <a href="https://drupal.org/project/i18n">i18n</a>)'),
-    '#description' => t('When enabled, the specified configuration types will be included in bulk management processes for translation.') . ' ' . t('See') . ' ' . l(t('configuration translation overview'), $base_url . '/admin/config/regional/translate') . '.',
+    '#description' => t('When enabled, the specified configuration types will be included for translation.') . ' ' . t('See') . ' ' . l(t('configuration translation overview'), $base_url . '/admin/config/regional/translate') . '.',
     '#default_value' => variable_get('lingotek_translate_config', 0),
   );
 
@@ -450,7 +450,7 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
     if (isset($errors['error'])) {
       foreach ($errors['error'] as $error) {
         if ($error != $connection_error) {
-          drupal_set_message($error, 'error');
+          drupal_set_message(check_plain($error), 'error');
         }
       }
     }
@@ -646,7 +646,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     foreach ($transition_select as $from_state => $to_states) {
       $form['defaults']['lingotek_sync_wb_select']['lingotek_sync_wb_select_' . $from_state] = array(
         '#type' => 'select',
-        '#title' => $from_state,
+        '#title' => check_plain($from_state),
         '#options' => $to_states,
         '#default_value' => variable_get('lingotek_sync_wb_' . $from_state, 0),
         '#states' => array(
