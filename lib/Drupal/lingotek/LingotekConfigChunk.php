@@ -793,7 +793,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $icount = 0;
     foreach ($document_xml as $drupal_field_name => $xml_obj) {
       $content = (string) $xml_obj->element;
-      $content = self::unfilterPlaceholders($content);
+      $content = self::unfilterPlaceholders(decode_entities($content));
       $lid = self::getLidFromTag($drupal_field_name);
       $rows += array(  ":l_$icount" => $lid, 
                         ":c_$icount" => $content, 

@@ -400,7 +400,7 @@ class LingotekComment implements LingotekTranslatableEntity {
         $comment_field = &$this->comment->$drupal_field_name;
         $index = 0;
         foreach ($content as $text) {
-          $comment_field[$target_language][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
+          $comment_field[$target_language][$index][$target_key] = decode_entities($text);
 
           // Copy filter format from source language field.
           if (!empty($comment_field[$this->comment->language][0]['format'])) {

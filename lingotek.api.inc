@@ -100,7 +100,6 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
       if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
         $node_field = & $node->$drupal_field_name;
         $index = 0;
-        $andex = 0;
         if (module_exists('link') && $field['type'] == 'link_field') {
           $target_key = array(
             'url',
@@ -122,8 +121,8 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
         foreach ($content as $text) {
           $array_key = $target_key[$index];
           $db_field_name = $field['field_name'] . '_' . $array_key;
-          $insert_array[$db_field_name] = decode_entities(lingotek_xml_decode($text));
-          //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities(lingotek_xml_decode($text));
+          $insert_array[$db_field_name] = decode_entities($text);
+          //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
           if (array_key_exists($node->language, $node_field)) {
             if (array_key_exists('format', $node_field[$node->language][0])) {
               //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];

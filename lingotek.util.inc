@@ -116,25 +116,6 @@ function lingotek_lingonode_delete($nid) {
   db_delete('lingotek')->condition('nid', $nid)->execute();
 }
 
-/*
- * Revert from having been embedded in XML
- *
- * @param $text
- *  Text to be unescaped
- * @return
- *  Text that has been unescaped
- */
-
-function lingotek_xml_decode($text) {
-  //return htmlspecialchars_decode($text);
-  $text = str_replace("&lt;", "<", $text);
-  $text = str_replace("&gt;", ">", $text);
-  $text = str_replace("&apos;", "'", $text);
-  $text = str_replace("&quot;", "\"", $text);
-  $text = str_replace("&amp;", "&", $text);
-  return $text;
-}
-
 /**
  * Run this on nodes you aren't sure if they've been initialized yet for use with Lingotek.
  */
