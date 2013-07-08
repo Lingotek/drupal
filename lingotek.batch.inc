@@ -442,7 +442,7 @@ function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_succe
   LingotekLog::trace('download chunk: @chunk_id (@language)', array('@chunk_id' => $cid, '@language' => $lingotek_locale));
   $trans_obj = LingotekConfigChunk::loadById($cid);
   if ($trans_obj) {
-    $result = $trans_obj->updateLocalContent();
+    $result = $trans_obj->updateLocalContentByTarget($lingotek_locale);
   }
   if ($result) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;

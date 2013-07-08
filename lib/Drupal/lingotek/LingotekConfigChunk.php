@@ -663,53 +663,21 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function updateLocalContent() {
-    $success = TRUE;
     $metadata = $this->metadata();
-
-    if (!empty($metadata['document_id'])) {
-      $document_id = $metadata['document_id'];
-      $api = LingotekApi::instance();
-      $document = $api->getDocument($document_id);
-
-      foreach ($document->translationTargets as $target) {
-        $document_xml = $api->downloadDocument($metadata['document_id'], $target->language);
-
-        $target_language = Lingotek::convertLingotek2Drupal($target->language);
-
-        /* SLOW VERSION */
-        /*
-        foreach ($document_xml as $drupal_field_name => $xml_obj) {
-          $content = (string) $xml_obj->element;
-          $content = self::unfilterPlaceholders($content);
-          $lid = self::getLidFromTag($drupal_field_name);
-          self::saveSegmentTranslation($lid, $target_language, $content);
-        }
-        */
-        /* END SLOW VERSION */
-
-        /* FAST VERSION */
-        // 1. save the dirty targets associated with given language
-        $dirty_lids = self::getDirtyLidsByChunkIdAndLanguage($this->cid, $target_language);
-        // 2. delete all segment targets associated with given language
-        self::deleteAllSegmentTranslationsByChunkId($this->cid, $target_language);
-        // 3. insert all segments for the given language
-        self::saveSegmentTranslations($document_xml, $target_language);
-        // 4. return the dirty targets' statuses
-        self::restoreDirtyLids($dirty_lids);
-        /* END FAST */
-
-        // set chunk status to current
-        $this->setChunkStatus(LingotekSync::STATUS_CURRENT);
-        $this->setChunkTargetsStatus(LingotekSync::STATUS_CURRENT, $target_language);
-      }
-    }
-    else {
+    $document_id = $metadata['document_id'];
+    
+    if (empty($document_id)) {
       LingotekLog::error('Unable to refresh local contents for config chunk @cid. Could not find Lingotek Document ID.',
         array('@cid' => $this->cid));
-      $success = FALSE;
+      return FALSE;
     }
+    
+    $api = LingotekApi::instance();
+    $document = $api->getDocument($document_id);
 
-    return $success;
+    foreach ($document->translationTargets as $target) {
+      $this->updateLocalContentByTarget($target->lingotek_locale);
+    }
   }
   
   /**
@@ -721,9 +689,35 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function updateLocalContentByTarget($lingotek_locale) {
-    return updateLocalContent(); //this needs to be fixed.
-    //for now just point to the other function. This is bad because it updates all
-    //languages when being asked to update only 1 specific language
+    $metadata = $this->metadata();
+    $document_id = $metadata['document_id'];
+    
+    if (empty($document_id)) {
+      LingotekLog::error('Unable to refresh local contents for config chunk @cid. Could not find Lingotek Document ID.',
+        array('@cid' => $this->cid));
+      return FALSE;
+    }
+    
+    $api = LingotekApi::instance();
+    $document_xml = $api->downloadDocument($document_id, $lingotek_locale);
+    $target_language = Lingotek::convertLingotek2Drupal($lingotek_locale);
+
+    /* FAST VERSION (git history for slow version) */
+    // 1. save the dirty targets associated with given language
+    $dirty_lids = self::getDirtyLidsByChunkIdAndLanguage($this->cid, $target_language);
+    // 2. delete all segment targets associated with given language
+    self::deleteSegmentTranslationsByChunkIdAndLanguage($this->cid, $target_language);
+    // 3. insert all segments for the given language
+    self::saveSegmentTranslations($document_xml, $target_language);
+    // 4. return the dirty targets' statuses
+    self::restoreDirtyLids($dirty_lids);
+    /* END FAST */
+
+    // set chunk status to current
+    $this->setChunkStatus(LingotekSync::STATUS_CURRENT);
+    $this->setChunkTargetsStatus(LingotekSync::STATUS_CURRENT, $target_language);
+
+    return TRUE;
   }
 
   /**
@@ -771,8 +765,9 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @param string
    *    the language code for which to delete target segments
    */
-  public static function deleteAllSegmentTranslationsByChunkId($chunk_id, $target_language) {
+  public static function deleteSegmentTranslationsByChunkIdAndLanguage($chunk_id, $target_language) {
     db_delete('locales_target')
+      ->condition('language', $target_language)
       ->condition('lid', self::minLid($chunk_id), '>=')
       ->condition('lid', self::maxLid($chunk_id), '<=')
       ->execute();
