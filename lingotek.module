@@ -578,8 +578,8 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $form['lingotek']['content']['create_lingotek_document_workbench_moderation'] = array(
       '#type' => 'select',
       '#title' => t('Workbench Moderation Upload'),
-      '#field_prefix' => t('Upload to Lingotek when node reaches '),
-      '#field_suffix' => t(' state.'),
+      '#field_prefix' => t('Upload to Lingotek when node reaches'),
+      '#field_suffix' => t('state.'),
       '#options' => lingotek_get_workbench_moderation_states(),
       '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published()),
       '#states' => array(

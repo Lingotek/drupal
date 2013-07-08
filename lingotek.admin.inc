@@ -760,7 +760,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
 }
 
 function lingotek_admin_content_defaults_form_submit($form, &$form_state) {
-  if(module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
+  if (module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
     variable_set('lingotek_sync_workbench_moderation', $form_state['input']['wb_options']);
     $states = lingotek_get_workbench_moderation_states();
     if (isset($form_state['values']['lingotek_sync']) && $form_state['values']['lingotek_sync'] == 1) {
