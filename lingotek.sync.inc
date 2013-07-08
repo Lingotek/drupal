@@ -459,7 +459,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         $default_override = variable_get('lingotek_sync', 0) ? 0 : 1;
         $form['download']['download_locales_wb']['wb_override_defaults'] = array(
           '#type' => 'checkbox',
-          '#prefix' => t('<b>The Workbench Moderation module has multiple transition paths for the following states.<br>Choose the state that you would like the transitions to transition to below.</b>'),
+          '#prefix' => t('<b>Your configuration of the Workbench Moderation module has multiple transition paths.</b>'),
           '#title' => 'Override defaults',
           '#description' => t('Recommended if defaults have not been set in admin->lingotek->settings->content defaults'),
           '#default_value' => $default_override,
@@ -475,6 +475,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         $header = array('INITIAL STATE', 'TRANSITIONS TO');
         $form['download']['download_locales_wb']['wb_select']['wb_table'] = array(
           '#input' => TRUE,
+          '#prefix' => t('Choose the state that you would like the translations to transition to below.'),
           '#type' => 'container',
           '#theme' => 'table',
           '#header' => $header,
