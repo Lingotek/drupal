@@ -1334,3 +1334,15 @@ function lingotek_workbench_moderation_transition($node, $old_state, $new_state)
 function lingotek_workbench_moderation_node_callback($form, &$form_state) {
   return $form['lingotek']['content']['syncMethod_wb_message'];
 }
+
+/*
+ * Implements hook_entity_delete()
+ * 
+ * This removes the lingotek data of an entity.
+ */
+function lingotek_entity_delete($entity, $type) {
+  db_delete('lingotek_entity_metadata')
+    ->condition('entity_type', $type)
+    ->condition('entity_id', entity_extract_ids($type, $entity))
+    ->execute();
+}

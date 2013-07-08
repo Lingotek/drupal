@@ -483,6 +483,10 @@ class LingotekSync {
     db_truncate('lingotek');
   }
 
+  public static function disassociateAllEntities() {
+    db_truncate('lingotek_entity_metadata')->execute();
+  }
+  
   public static function disassociateAllChunks() {
     db_truncate('lingotek_config_metadata')->execute();
   }
@@ -529,6 +533,14 @@ class LingotekSync {
     $result = $query->execute();
     $doc_ids = $result->fetchCol();
 
+    // entity-related doc IDs
+    $query = db_select('lingotek_entity_metadata', 'l');
+    $query->fields('l', array('value'));
+    $query->condition('entity_key', 'document_id');
+    $query->distinct();
+    $result = $query->execute();
+    $doc_ids = array_merge($doc_ids, $result->fetchCol());
+    
     // config-related doc IDs
     $query = db_select('lingotek_config_metadata', 'l')
       ->fields('l', array('value'))
