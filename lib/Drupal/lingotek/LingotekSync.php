@@ -331,7 +331,8 @@ class LingotekSync {
 
   public static function getDirtyChunkLids() {
     // return the list of all lids from the locale_source table *not* fully translated
-    $lingotek_codes = lingotek_get_target_locales();
+    $source_language = language_default();
+    $lingotek_codes = Lingotek::availableLanguageTargetsWithoutSource($source_language->language);
     if (!count($lingotek_codes)) {
       LingotekLog::error('No languages configured for this Lingotek account.', array());
       return array();
