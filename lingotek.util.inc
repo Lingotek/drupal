@@ -267,6 +267,7 @@ function lingotek_xml_node_body($node) {
   }
 
   //Menus related to the page:
+  // Do we still want this? Config translation translates these items
   $menu = menu_link_get_preferred('node/' . $node->nid);
   $txt = $menu['link_title'];
   if ($txt != "") {

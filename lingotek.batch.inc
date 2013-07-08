@@ -30,6 +30,7 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
   if (isset($nodes1[$entity_type])) {
     foreach ($nodes1[$entity_type] as $node1) {
       $operations[] = array('lingotek_node_source_language_cleanup_batch_worker', array($node1->nid, $source_language));
+      $operations[] = array('lingotek_node_url_alias_source_language_cleanup_batch_worker', array($node1->nid, $source_language));
       $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($node1->nid));
     }
   }
@@ -44,6 +45,7 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
 
   if (isset($nodes2[$entity_type])) {
     foreach ($nodes2[$entity_type] as $node2) {
+      $operations[] = array('lingotek_node_url_alias_source_language_cleanup_batch_worker', array($node2->nid, $source_language));
       $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($node2->nid));
     }
   }
@@ -492,6 +494,25 @@ function lingotek_node_source_language_cleanup_batch_worker($nid, $source_langua
   $loaded_node->language = $source_language;
   $loaded_node->lingotek_upload_override = 0; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
   node_save($loaded_node);
+}
+
+/**
+ * Batch API worker for changing the url alias language setting
+ */
+function lingotek_node_url_alias_source_language_cleanup_batch_worker($nid, $source_language) {
+
+  $conditions = array('source' => 'node/' . $nid);
+  $conditions['language'] = $source_language;
+  $source_alias = path_load($conditions);
+  if ($source_alias === FALSE) { // if no url alias exists for this node in the source language
+    $conditions['language'] = LANGUAGE_NONE;
+    $und_alias = path_load($conditions);
+    if ($und_alias !== FALSE) { // if a url alias exists for language none (
+      $conditions['language'] = $source_language;
+      $conditions['alias'] = $und_alias['alias'];
+      path_save($conditions);
+    }
+  }
 }
 
 /**
