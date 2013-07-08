@@ -376,17 +376,17 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
       ->condition('value', $lingotek_document_id);
     $results = $query->execute();
 
-    $target_entity_ids = array();
+    $target_ids = array();
     foreach ($results as $result) {
-      $target_entity_ids[] = $result->entity_id;
+      $target_ids[] = $result->id;
     }
 
     // Get the results that are associated with the passed Lingotek project ID.
     // Lingotek Document IDs are not unique across projects.
-    if (!empty($target_entity_ids)) {
+    if (!empty($target_ids)) {
       $in_project_results = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('id'))
-        ->condition('id', $target_entity_ids, 'IN')
+        ->condition('id', $target_ids, 'IN')
         ->condition('config_key', 'project_id')
         ->condition('value', $lingotek_project_id)
         ->execute()
