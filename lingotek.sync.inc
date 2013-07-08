@@ -696,7 +696,7 @@ function lingotek_workbench_moderation_get_mult_transitions() {
   }
   foreach ($transitions as $transition) { // remove transitions without duplicate from_name
     if (count($dup_trans[$transition->from_name]) < 2) {
-      unset ($dup_trans[$transition->from_name]);
+      unset($dup_trans[$transition->from_name]);
     }
   }
   return $dup_trans; // otherwise return NULL

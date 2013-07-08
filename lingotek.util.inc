@@ -265,14 +265,14 @@ function lingotek_xml_node_body($node) {
       }
     }
   }
-
+  /* deprecated with config translation
   //Menus related to the page:
   // Do we still want this? Config translation translates these items
   $menu = menu_link_get_preferred('node/' . $node->nid);
   $txt = $menu['link_title'];
   if ($txt != "") {
     $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
-  }
+  }*/
 
   //URL Alias related to the page:
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
