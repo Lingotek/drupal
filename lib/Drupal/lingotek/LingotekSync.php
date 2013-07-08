@@ -215,10 +215,13 @@ class LingotekSync {
 
     // count nodes having this language as the source as current
     if ($status == LingotekSync::STATUS_CURRENT) {
+      $nids = LingotekSync::getAllNodeIds();
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
       $query->condition('language', $drupal_language_code);
-      $query->condition('nid', LingotekSync::getAllNodeIds(), 'IN'); // nodes sent to lingotek
+      if (count($nids)) {
+        $query->condition('nid', $nids, 'IN'); // nodes sent to lingotek
+      }
       $query->addExpression('COUNT(*)', 'cnt');
       $result = $query->execute()->fetchField();
       $count += $result;
