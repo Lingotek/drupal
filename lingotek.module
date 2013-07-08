@@ -788,12 +788,11 @@ function lingotek_upload_document($node) {
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
 
-  if (isset($node->create_lingotek_document)) {
-    lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
-  }
-
   if (isset($node->lingotek_push_once) && $node->lingotek_push_once) {
     $send_lingotek_document = 1;
+    if (isset($node->create_lingotek_document)) {
+      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+    }
   }
   elseif (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
     $send_lingotek_document = 0;
@@ -802,8 +801,14 @@ function lingotek_upload_document($node) {
   elseif (isset($node->lingotek_upload_override)) { // this variable can force to either send or not send (1 or 0) when set.
     $send_lingotek_document = ($node->lingotek_upload_override == 1) ? 1 : 0;
     $node->lingotek_upload_override = 0;
+    if (isset($node->create_lingotek_document)) {
+      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+    }
   }
   else {  // Only send the node content to Lingotek on edit if auto-upload is enabled.
+    if (isset($node->create_lingotek_document)) {
+      lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+    }
     $send_lingotek_document = lingotek_lingonode($node->nid, 'create_lingotek_document');
     if ($send_lingotek_document === FALSE) { // use global default if node-level setting is not set
       $send_lingotek_document = variable_get('lingotek_create_documents_by_default', $send_lingotek_document);
