@@ -159,7 +159,7 @@ function lingotek_admin_comments_form($form, &$form_state, $show_fieldset = FALS
   // Configuration translation (ie. taxonomies, menus, etc.)
   $form['comments']['lingotek_translate_config'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Translate configurations (requires modules <a href="https://drupal.org/project/variable">Variable</a> and <a href="https://drupal.org/project/i18n">i18n</a>)'),
+    '#title' => t('Translate configurations (requires modules <a href="https://drupal.org/project/variable">Variable</a> and <a href="https://drupal.org/project/i18n">i18n</a> with String translation and Translation sets enabled)'),
     '#description' => t('When enabled, the specified configuration types will be included for translation.') . ' ' . t('See') . ' ' . l(t('configuration translation overview'), $base_url . '/admin/config/regional/translate') . '.',
     '#default_value' => variable_get('lingotek_translate_config', 0),
   );
@@ -229,7 +229,7 @@ function lingotek_admin_comments_form_validate($form, &$form_state) {
   $conf_part = $form['comments']['lingotek_translate_config'];
   $conf_opt_part = $form['comments']['lingotek_translate_config_options'];
   if ($conf_part && $conf_part['#value'] != 0) {
-    lingotek_verify_modules_enabled(array('i18n', 'i18n_translation'));
+    lingotek_verify_modules_enabled(array('variable', 'i18n', 'i18n_translation', 'i18n_string'));
     if ($conf_opt_part['lingotek_translate_config_blocks']
         && $conf_opt_part['lingotek_translate_config_blocks']['#value'] != 0) {
       lingotek_verify_modules_enabled(array('i18n_block'));
