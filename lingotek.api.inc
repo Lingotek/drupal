@@ -307,7 +307,7 @@ function lingotek_get_workbench_moderation_states() {
   $methods = array();
   $states = workbench_moderation_states();
   foreach ($states as $array) {
-    $methods[] = $array->name;
+    $methods[$array->name] = $array->name;
   }
   return $methods;
 }
@@ -317,13 +317,44 @@ function lingotek_get_workbench_moderation_states() {
  */
 function lingotek_get_workbench_moderation_options() {
   $options = array();
-  $options[] = 'Leave at the current state';
-  $options[] = 'Increment to the next state';
+  $options['no_moderation'] = 'Leave at the current state';
+  $options['increment'] = 'Increment to the next state';
   $states = workbench_moderation_states();
   foreach ($states as $array) {
     $options[] = 'Change to ' . $array->name;
   }
   return $options;
+}
+
+/*
+ * Get lingotek default workbench moderation transitions
+ * If global variables are not set, it picks the first transition for a state
+ * If no transitions exist for a state, it picks a transition to the same state
+ *
+ * @return array $lingotek_transitions
+ *    associative array of transitions_from => transitions_to sets
+ */
+function lingotek_get_workbench_moderation_transitions() {
+  $lingotek_transitions = array();
+  $states = lingotek_get_workbench_moderation_states();
+  $transitions = workbench_moderation_transitions();
+  foreach ($transitions as $transition) {
+    $trans = variable_get('lingotek_sync_wb_select_' . $transition->from_name, NULL);
+    if ($trans) {
+      $lingotek_transitions[$transition->from_name] = $trans;
+      unset($states[$transition->from_name]);
+    }
+    else {
+      if (isset($states[$transition->from_name])) {
+        $lingotek_transitions[$transition->from_name] = $transition->to_name;
+        unset($states[$transition->from_name]);
+      }
+    }
+  }
+  foreach ($states as $state) {
+    $lingotek_transitions[$state] = $state;
+  }
+  return $lingotek_transitions;
 }
 
 /*

@@ -595,7 +595,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
       '#type' => 'select',
       '#title' => 'Workbench Moderation State',
       '#options' => lingotek_get_workbench_moderation_states(),
-      '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', 0),
+      '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published()),
       '#states' => array(
         'invisible' => array(
           ':input[name="lingotek_create_documents_by_default"]' => array('checked' => FALSE),
@@ -615,46 +615,60 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
   );
 
   if ($workbench_moderation_enabled) {
+    $transition_select = lingotek_workbench_moderation_get_mult_transitions();
 
-    $form_element = NULL;
-    if (isset($form_state['values']['lingotek_sync_workbench_moderation'])) {
-      $form_element = $form_state['values']['lingotek_sync_workbench_moderation'];
-    }
-    $transition_select = lingotek_workbench_moderation_update_transitions($form_element);
-
-    $form['defaults']['lingotek_sync_workbench_moderation'] = array(
+    $form['defaults']['lingotek_sync_wb']['wb_options'] = array(
       '#type' => 'select',
-      '#title' => 'Workbench Moderation State',
+      '#title' => t('<b>WORKBENCH MODERATION</b>'),
+//      '#field_prefix' => t('After translations have downloaded'),
+      '#field_suffix' => t('after translations have downloaded.'),
       '#options' => lingotek_get_workbench_moderation_options(),
-      '#default_value' => variable_get('lingotek_sync_workbench_moderation', 0),
+      '#default_value' => variable_get('lingotek_sync_workbench_moderation', 'no_moderation'),
       '#states' => array(
         'invisible' => array(
           ':input[name="lingotek_sync"]' => array('checked' => FALSE),
         ),
       ),
-      '#description' => 'Content will be automatically downloaded into this state',
-      '#ajax' => array(
-        'callback' => 'lingotek_workbench_moderation_callback_transitions_default',
-        'wrapper' => 'wb_select_transitions',
-      ),
     );
 
-    $form['defaults']['lingotek_sync_wb_select'] = array(
-      '#prefix' => '<div id="wb_select_transitions">',
-      '#suffix' => '</div>',
-    );
-    foreach ($transition_select as $from_state => $to_states) {
-      $form['defaults']['lingotek_sync_wb_select']['lingotek_sync_wb_select_' . $from_state] = array(
-        '#type' => 'select',
-        '#title' => check_plain($from_state),
-        '#options' => $to_states,
-        '#default_value' => variable_get('lingotek_sync_wb_' . $from_state, 0),
+    if (!empty($transition_select)) {
+      $form['defaults']['lingotek_sync_wb']['wb_select'] = array(
+        '#type' => 'item',
+        '#title' => t('The Workbench Moderation module has multiple transition paths for the following states.<br>Choose the state that you would like the transitions to transition to below.'),
         '#states' => array(
-          'invisible' => array(
-            ':input[name="lingotek_sync"]' => array('checked' => FALSE),
+          'visible' => array(
+            'select[name="wb_options"]' => array('value' => 'increment'),
+            ':input[name="lingotek_sync"]' => array('checked' => TRUE),
           ),
         ),
       );
+      $header = array('Current State', 'Transitions to');
+      $form['defaults']['lingotek_sync_wb']['wb_select']['wb_table'] = array(
+        '#type' => 'container',
+        '#theme' => 'table',
+        '#header' => $header,
+        '#rows' => array(),
+      );
+      foreach ($transition_select as $from_state => $to_states) {
+        $selected = variable_get('lingotek_sync_wb_select_' . $from_state); // get default
+        $select_str = '<div class="form-item form-type-select form-item-lingotek-sync-wb-select-' . $from_state . '">'; // HTML for a Drupal form select element
+        $select_str .= '<select id="lingotek_sync_wb_select_' . $from_state . '" name="lingotek_sync_wb_select_' . $from_state . '"';
+        $select_str .= ' class="form-select">';
+        foreach ($to_states as $state) {
+          $select_str .= '<option ';
+          $select_str .= 'value="' . $state . '"';
+          if ($selected && $selected == $state) { // select default
+            $select_str .= ' selected="selected"';
+          }
+          $select_str .= '>' . $state . '</option>';
+        }
+        // foreach option add to string
+        $select_str .= '</select></div>';
+        $form['defaults']['lingotek_sync_wb']['wb_select']['wb_table']['#rows'][] = array(
+          array('data' => $from_state, 'width' => '20%'),
+          array('data' => $select_str, 'width' => '80%'),
+        ); // Get out of _POST
+      }
     }
   }
 
@@ -746,6 +760,26 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
 }
 
 function lingotek_admin_content_defaults_form_submit($form, &$form_state) {
+  if(module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
+    variable_set('lingotek_sync_workbench_moderation', $form_state['input']['wb_options']);
+    $states = lingotek_get_workbench_moderation_states();
+    if (isset($form_state['values']['lingotek_sync']) && $form_state['values']['lingotek_sync'] == 1) {
+      if (isset($form_state['input']['wb_options']) && $form_state['input']['wb_options'] == 'increment') {
+        foreach ($states as $state) {
+          if (isset($form_state['input']['lingotek_sync_wb_select_' . $state])) {
+            variable_set('lingotek_sync_wb_select_' . $state, $form_state['input']['lingotek_sync_wb_select_' . $state]);
+          }
+        }
+      }
+    }
+    else {
+      foreach ($states as $state) {
+        if (variable_get('lingotek_sync_wb_select_' . $state)) {
+          variable_del('lingotek_sync_wb_select_' . $state);
+        }
+      }
+    }
+  }
   system_settings_form_submit($form, $form_state);
 }
 

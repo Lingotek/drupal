@@ -128,13 +128,16 @@ function lingotek_notifications() {
         $trans_options = array();
         if ($options_index == 1) {
           $from_state = $node->workbench_moderation['current']->state;
-          $mult_trans = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_wb_select_' . $from_state), 'lingotek_sync_wb_' . $from_state, NULL);
+          $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
           if ($mult_trans) {
             $trans_options[$from_state] = $mult_trans;
           }
         }
-        lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options);
-        lingotek_lingonode($nid, 'workbench_moderate', 0);
+        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
+        if (empty($target_statuses)) {
+          lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
+          lingotek_lingonode($nid, 'workbench_moderate', 0);
+        }
       }
 
     }
@@ -220,6 +223,7 @@ function lingotek_sync_endpoint() {
 function lingotek_form_bulk_sync($form, $form_state) {
 
   global $base_url;
+  $submit_functions = array('lingotek_form_bulk_sync_submit');
   $report = LingotekSync::getReport();
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
 
@@ -242,51 +246,60 @@ function lingotek_form_bulk_sync($form, $form_state) {
       // Get nodes that correspond to the upload state in $form['upload']['upload_workbench_moderation']
       lingotek_workbench_moderation_bulk_select($form, $form_state, $report);
 
-      $form['upload']['upload_nids_nowb_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_nowb']));
-      $form['upload']['upload_nowb'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Include new/modified nodes not moderated by Workbench Moderation (<span id="upload-total-nowb">@count</span>)', array('@count' => $report['upload_nids_nowb_count'])),
-        '#default_value' => $report['upload_nids_nowb_count'] == 0 ? 0 : 1,
-        '#disabled' => $report['upload_nids_nowb_count'] == 0,
-      );
       $options_upload = array();
       foreach ($report['workbench_moderation_states'] as $state) {
         if (isset($report['upload_nids_wb_count_' . $state]) && $report['upload_nids_wb_count_' . $state] > 0) {
           $form['upload']['upload_nids_wb_json_' . $state] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_wb_' . $state]));
-          $options_upload[$state] = array($state, $report['upload_nids_wb_count_' . $state]);
+          $options_upload[$state] = array(
+            array('data' => $state, 'width' => '20%'),
+            array('data' => $report['upload_nids_wb_count_' . $state], 'width' => '80%')
+          );
         }
       }
       if (!empty($options_upload)) {
         $form['upload']['upload_wb'] = array(
           '#type' => 'tableselect',
-          '#prefix' => t('Workbench Moderation States'),
+          '#prefix' => t('Select nodes to upload based on their Workbench Moderation state'),
           '#header' => array(
             t('State'),
-            t('Edited Nodes'),
+            t('New / Modified Nodes'),
           ),
           '#options' => $options_upload,
           '#default_value' => array_fill_keys(array_keys($options_upload), 0),
         );
       }
+      $form['upload']['upload_nids_nowb_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_nowb']));
+      if ($report['upload_nids_nowb_count'] > 0) {
+        $form['upload']['upload_nowb'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Include new/modified nodes not using Workbench Moderation (<span id="upload-total-nowb">@count</span>)', array('@count' => $report['upload_nids_nowb_count'])),
+          '#default_value' => $report['upload_nids_nowb_count'] == 0 ? 0 : 1,
+          '#disabled' => $report['upload_nids_nowb_count'] == 0,
+        );
+      }
     }
     else {
       $form['upload']['upload_nids_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids']));
-      $form['upload']['upload'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Include new/modified nodes (<span id="upload-total">@count</span>)', array('@count' => $report['upload_nids_count'])),
-        '#default_value' => $report['upload_nids_count'] == 0 ? 0 : 1,
-        '#disabled' => $report['upload_nids_count'] == 0,
-      );
+      if ($report['upload_nids_count'] > 0) {
+        $form['upload']['upload'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Include new/modified nodes (<span id="upload-total">@count</span>)', array('@count' => $report['upload_nids_count'])),
+          '#default_value' => $report['upload_nids_count'] == 0 ? 0 : 1,
+          '#disabled' => $report['upload_nids_count'] == 0,
+        );
+      }
     }
     if (module_exists('entity_translation')) {
       $form['upload']['upload_nids_et_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_et']));
-      $form['upload']['upload_et'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Include nodes managed by Entity Translation (<span id="upload-et-total">@count</span>)', array('@count' => $report['upload_nids_et_count'])),
-        '#default_value' => 0,
-        '#disabled' => $report['upload_nids_et_count'] == 0,
-        '#description' => t('These nodes will now be managed by Lingotek.')
-      );
+      if ($report['upload_nids_et_count'] > 0) {
+        $form['upload']['upload_et'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Include nodes managed by Entity Translation (<span id="upload-et-total">@count</span>)', array('@count' => $report['upload_nids_et_count'])),
+          '#default_value' => 0,
+          '#disabled' => $report['upload_nids_et_count'] == 0,
+          '#description' => t('These nodes will now be managed by Lingotek.')
+        );
+      }
     }
     if (variable_get('lingotek_translate_config')) {
       // pre-build include/exclude messages based on enabled config types
@@ -366,15 +379,15 @@ function lingotek_form_bulk_sync($form, $form_state) {
     }
     if ($locale_complete_count > 0) {
       $row = array(
-        $label,
-        $locale_complete_count
+        array('data' => $label, 'width' => '20%'),
+        array('data' => $locale_complete_count, 'width' => '80%'),
       );
       $options_complete[$target->lingotek_locale] = $row;
     }
     if ($locale_incomplete_count > 0) {
       $row = array(
-        $label,
-        $locale_incomplete_count
+        array('data' => $label, 'width' => '20%'),
+        array('data' => $locale_incomplete_count, 'width' => '80%'),
       );
       $options_incomplete[$target->lingotek_locale] = $row;
     }
@@ -386,54 +399,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
     );
   }
 
-  if (!empty($options_complete) || !empty($options_incomplete)) {
-    if (module_exists('workbench_moderation')) {
-      $form_element = variable_get('lingotek_sync_workbench_moderation', 0);
-      if (isset($form_state['values']['download_locales_wb'])) {
-        $form_element = $form_state['values']['download_locales_wb'];
-      }
-      $transition_select = lingotek_workbench_moderation_update_transitions($form_element);
 
-      $form['download']['download_locales_wb'] = array(
-        '#type' => 'select',
-        '#prefix' => 'Workbench Moderation State',
-        '#options' => lingotek_get_workbench_moderation_options(),
-        '#default_value' => variable_get('lingotek_sync_workbench_moderation', 0),
-        '#description' => 'Pressing Sync will download all documents into the above Workbench Moderation state.',
-        '#ajax' => array(
-          'callback' => 'lingotek_workbench_moderation_callback_transitions',
-          'wrapper' => 'wb_select_transitions',
-        ),
-      );
-      $form['download']['download_wb_override_defaults'] = array(
-        '#type' => 'checkbox',
-        '#title' => 'Override defaults',
-        '#description' => t('Recommended if defaults have not been set in admin->lingotek->settings->content defaults'),
-        '#default_value' => 0,
-        '#states' => array(
-          'visible' => array(
-            'select[name="download_locales_wb"]' => array('value' => 1),
-          ),
-        ),
-      );
-      $form['download']['download_locales_wb_select'] = array(
-        '#prefix' => '<div id="wb_select_transitions">',
-        '#suffix' => '</div>',
-      );
-      foreach ($transition_select as $from_state => $to_states) {
-        $form['download']['download_locales_wb_select']['download_locales_wb_select_' . $from_state] = array(
-          '#type' => 'select',
-          '#title' => $from_state,
-          '#options' => $to_states,
-          '#states' => array(
-            'invisible' => array(
-              ':input[name="download_wb_override_defaults"]' => array('checked' => FALSE),
-            ),
-          ),
-        );
-      }
-    }
-  }
   if (!empty($options_complete)) {
     $form['download']['download_locales_complete'] = array(
       '#type' => 'tableselect',
@@ -447,6 +413,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
     );
   }
   if (!empty($options_incomplete)) {
+    /*$form['download']['download_locales_incomplete_check'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Download Incomplete Translations'),
+      '#default_value' => 0,
+    );*/
     $form['download']['download_locales_incomplete'] = array(
       '#type' => 'tableselect',
       '#prefix' => t('Incomplete Translations'),
@@ -455,14 +426,90 @@ function lingotek_form_bulk_sync($form, $form_state) {
         t('Translations')
       ),
       '#options' => $options_incomplete,
-      '#default_value' => array_fill_keys(array_keys($options_complete), 0)
+      '#default_value' => array_fill_keys(array_keys($options_complete), 0),
+      /*'#states' => array(
+        'visible' => array(
+          ':input[name="download_locales_incomplete_check"]' => array('checked' => TRUE),
+        ),
+      ),*/
     );
+  }
+  if (!empty($options_complete) || !empty($options_incomplete)) {
+    if (module_exists('workbench_moderation')) {
+      $transition_select = lingotek_workbench_moderation_get_mult_transitions();
+
+      $form['download']['download_locales_wb_options'] = array(
+        '#type' => 'select',
+        '#prefix' => '<b>WORKBENCH MODERATION</b>',
+        '#title' => 'after translations have downloaded.',
+        '#title_display' => 'after',
+        '#options' => lingotek_get_workbench_moderation_options(),
+        '#default_value' => variable_get('lingotek_sync_workbench_moderation', 'no_moderation'),
+      );
+
+      if (!empty($transition_select)) { // select options for multiple possible transitions
+        $form['download']['download_locales_wb'] = array(
+          '#type' => 'container',
+          '#states' => array(
+            'visible' => array(
+              'select[name="download_locales_wb_options"]' => array('value' => 'increment'),
+            ),
+          ),
+        );
+        $default_override = variable_get('lingotek_sync', 0) ? 0 : 1;
+        $form['download']['download_locales_wb']['wb_override_defaults'] = array(
+          '#type' => 'checkbox',
+          '#prefix' => t('<b>The Workbench Moderation module has multiple transition paths for the following states.<br>Choose the state that you would like the transitions to transition to below.</b>'),
+          '#title' => 'Override defaults',
+          '#description' => t('Recommended if defaults have not been set in admin->lingotek->settings->content defaults'),
+          '#default_value' => $default_override,
+        );
+        $form['download']['download_locales_wb']['wb_select'] = array(
+          '#type' => 'container',
+          '#states' => array(
+            'invisible' => array(
+              ':input[name="wb_override_defaults"]' => array('checked' => FALSE),
+            ),
+          ),
+        );
+        $header = array('INITIAL STATE', 'TRANSITIONS TO');
+        $form['download']['download_locales_wb']['wb_select']['wb_table'] = array(
+          '#input' => TRUE,
+          '#type' => 'container',
+          '#theme' => 'table',
+          '#header' => $header,
+          '#rows' => array(),
+        );
+        foreach ($transition_select as $from_state => $to_states) {
+          $selected = variable_get('lingotek_sync_wb_select_' . $from_state); // get default
+          $select_str = '<div class="form-item form-type-select form-item-download-locales-wb-' . $from_state . '">';
+          $select_str .= '<select id="edit_download_locales_wb_' . $from_state . '" name="download_locales_wb_' . $from_state . '"';
+          $select_str .= ' class="form-select">';
+          foreach ($to_states as $state) {
+            $select_str .= '<option ';
+            $select_str .= 'value="' . $state . '"';
+            if ($selected && $selected == $state) { // select default
+              $select_str .= ' selected="selected"';
+            }
+            $select_str .= '>' . $state . '</option>';
+          }
+          // foreach option add to string
+          $select_str .= '</select></div>';
+          $form['download']['download_locales_wb']['wb_select']['wb_table']['#rows'][] = array(
+            array('data' => $from_state, 'width' => '20%'),
+            array('data' => $select_str, 'width' => '80%'),
+          ); // Get out of $form_state['input']
+        }
+      }
+
+    } // end workbench_moderation form elements
   }
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Sync'),
     '#disabled' => ($upload_count_total == 0 && $download_count_total == 0),
+    '#submit' => $submit_functions,
   );
   return $form;
 }
@@ -551,39 +598,26 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
   $document_ids = array_unique($document_ids);
 
   // if workbench moderation is enabled
-  if (isset($form_state['values']['download_locales_wb'])) {
-    $transitions = workbench_moderation_transitions();
-    $trans_options = array();
-    if ($form_state['values']['download_locales_wb'] == 1) {
-      foreach ($transitions as $transition) {
-        $var = variable_get('lingotek_sync_wb_select_' . $transition->from_name);
-        if (isset($form_state['values']['download_wb_override_defaults']) && $form_state['values']['download_wb_override_defaults'] == 1 && $var) {
-          $trans_options[$transition->from_name] = $var;
-        }
-        else if (isset($form_state['values']['download_locales_wb_select_' . $transition->from_name])) {
-          $trans_options[$transition->from_name] = $form_state['values']['download_locales_wb_select_' . $transition->from_name];
+  if (module_exists('workbench_moderation')) {
+    $transitions = lingotek_get_workbench_moderation_transitions();
+    if (isset($form_state['values']['download_locales_wb_options'])) {
+      if ($form_state['values']['download_locales_wb_options'] == 'increment') {
+        if (isset($form_state['values']['wb_override_defaults']) && $form_state['values']['wb_override_defaults'] == 1) { // if we are overriding
+          $trans_keys = array_keys($transitions);
+          foreach ($trans_keys as $trans_key) {
+            if (isset($form_state['input']['download_locales_wb_' . $trans_key])) { // if there is a form variable for this transition
+              $transitions[$trans_key] = $form_state['input']['download_locales_wb_' . $trans_key]; // override the defaults
+            }
+          }
         }
       }
+    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb_options'], $document_ids, $transitions, TRUE));
     }
-    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb'], $document_ids, $trans_options, TRUE));
+
   }
 
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
   lingotek_sync_batch_create($upload_nids, $upload_config, $download_targets, $download_targets_incomplete, NULL, $extra_operations);
-}
-
-/*
- * AJAX callback function to update upload_nids
- */
-function lingotek_workbench_moderation_callback_upload($form, &$form_state) {
-  return $form['upload'];
-}
-
-/*
- * AJAX callback function to output transition options when "Increment to the next state" is selected
- */
-function lingotek_workbench_moderation_callback_transitions($form, &$form_state) {
-  return $form['download']['download_locales_wb_select'];
 }
 
 /*
@@ -652,25 +686,16 @@ function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array
  *    Returns empty if option is not "Increment to next state" or if no from_state has multiple transitions
  *
  */
-function lingotek_workbench_moderation_update_transitions($form_element = array()) {
-  $increment_to_next = 1;
+function lingotek_workbench_moderation_get_mult_transitions() {
   $dup_trans = array();
-  if (!isset($form_element)) {
-    $wb_option = variable_get('lingotek_sync_workbench_moderation', 0);
-  }
-  else {
-    $wb_option = $form_element;
-  }
-  if ($wb_option == $increment_to_next) {
-    $transitions = workbench_moderation_transitions();
+  $transitions = workbench_moderation_transitions();
 
-    foreach ($transitions as $transition) { // insert transitions into a keyed array
-      $dup_trans[$transition->from_name][$transition->to_name] = $transition->to_name;
-    }
-    foreach ($transitions as $transition) { // remove transitions without duplicate from_name
-      if (count($dup_trans[$transition->from_name]) < 2) {
-        unset ($dup_trans[$transition->from_name]);
-      }
+  foreach ($transitions as $transition) { // insert transitions into a keyed array
+    $dup_trans[$transition->from_name][$transition->to_name] = $transition->to_name;
+  }
+  foreach ($transitions as $transition) { // remove transitions without duplicate from_name
+    if (count($dup_trans[$transition->from_name]) < 2) {
+      unset ($dup_trans[$transition->from_name]);
     }
   }
   return $dup_trans; // otherwise return NULL

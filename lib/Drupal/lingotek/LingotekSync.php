@@ -28,6 +28,16 @@ class LingotekSync {
     return FALSE;
   }
 
+  public static function getAllTargetStatusNotCurrent($nid) {
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('lingokey', 'lingovalue'))
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE')
+      ->condition('lingovalue', 'CURRENT', '!=')
+      ->condition('nid', $nid);
+    $result = $query->execute()->fetchAll();
+    return $result;
+  }
+
   public static function setTargetStatus($node_id, $lingotek_locale, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_lingonode($node_id, $key, $status);

@@ -577,15 +577,16 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
     $form['lingotek']['content']['create_lingotek_document_workbench_moderation'] = array(
       '#type' => 'select',
-      '#title' => t('Workbench Moderation State'),
+      '#title' => t('Workbench Moderation Upload'),
+      '#field_prefix' => t('Upload to Lingotek when node reaches '),
+      '#field_suffix' => t(' state.'),
       '#options' => lingotek_get_workbench_moderation_states(),
-      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 0),
+      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published()),
       '#states' => array(
         'invisible' => array(
           ':input[name="create_lingotek_document"]' => array('checked' => FALSE),
         ),
       ),
-      '#description' => t('Your content will be automatically uploaded when changed to this state.'),
     );
   }
 
@@ -598,48 +599,19 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   );
 
   if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
-
-    $form_element = NULL;
-    if (isset($form_state['values']['syncMethod_workbench_moderation'])) {
-      $form_element = $form_state['values']['syncMethod_workbench_moderation'];
-    }
-    $transition_select = lingotek_workbench_moderation_update_transitions($form_element);
-
-    $form['lingotek']['content']['syncMethod_workbench_moderation'] = array(
+    $transition_select = lingotek_workbench_moderation_get_mult_transitions();
+    $form['lingotek']['content']['syncMethod_wb'] = array(
       '#type' => 'select',
-      '#title' => t('Workbench Moderation State'),
+      '#title' => t('Workbench Moderation Download'),
+      '#field_suffix' => t('after translations have downloaded from Lingotek.'),
       '#options' => lingotek_get_workbench_moderation_options(),
-      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0),
+      '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 'no_moderation'),
       '#states' => array(
         'invisible' => array(
           ':input[name="syncMethod"]' => array('checked' => FALSE),
         ),
       ),
-      '#description' => t('Your content will be automatically downloaded into this state.'),
-      '#ajax' => array(
-        'callback' => 'lingotek_workbench_moderation_callback_transitions_node',
-        'wrapper' => 'wb_select_transitions',
-      ),
     );
-
-    $form['lingotek']['content']['syncMethod_wb_select'] = array(
-      '#prefix' => '<div id="wb_select_transitions">',
-      '#suffix' => '</div>',
-    );
-    foreach ($transition_select as $from_state => $to_states) {
-      $form['lingotek']['content']['syncMethod_wb_select']['syncMethod_wb_select_' . $from_state] = array(
-        '#type' => 'select',
-        '#title' => $from_state,
-        '#options' => $to_states,
-        '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method_wb_select_' . $from_state), 'lingotek_sync_wb_select_' . $from_state, 0),
-        '#states' => array(
-          'invisible' => array(
-            ':input[name="syncMethod"]' => array('checked' => FALSE),
-          ),
-        ),
-      );
-    }
-
   }
 
   if ($is_enterprise) {
@@ -816,6 +788,10 @@ function lingotek_upload_document($node) {
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
 
+  if (isset($node->create_lingotek_document)) {
+    lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
+  }
+
   if (isset($node->lingotek_push_once) && $node->lingotek_push_once) {
     $send_lingotek_document = 1;
   }
@@ -832,10 +808,6 @@ function lingotek_upload_document($node) {
     if ($send_lingotek_document === FALSE) { // use global default if node-level setting is not set
       $send_lingotek_document = variable_get('lingotek_create_documents_by_default', $send_lingotek_document);
     }
-  }
-  
-  if (isset($node->create_lingotek_document)) {
-    lingotek_lingonode($node->nid, 'create_lingotek_document', $node->create_lingotek_document);
   }
 
   // if workbench moderation is enabled for this node and it is being sent, set flag to be moderated
@@ -1323,38 +1295,35 @@ function lingotek_field_language_alter(&$display_language, $context) {
  */
 function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
   // Check global and node-specific settings
-  $def_state = lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', 2);
-  $states = lingotek_get_workbench_moderation_states();
 
-  // do not change status updates if only moderated (no node_save called)
-  if (!isset($node->workbench_moderation_state_new)) {
-    $node->skip_status_updates = TRUE;
-  }
-  // set lingonode variable for workbench moderation auto-upload
-  if (isset($node->create_lingotek_document_workbench_moderation)) {
-    lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation', $node->create_lingotek_document_workbench_moderation);
-    $def_state = $node->create_lingotek_document_workbench_moderation;
-  }
-  // set lingonode variable for workbench moderation auto-download setting
-  if (isset($node->syncMethod_workbench_moderation)) {
-    lingotek_lingonode($node->nid, 'sync_method_workbench_moderation', $node->syncMethod_workbench_moderation);
-  }
-  // set lingonode variable for workbench moderation auto-download setting with mutliple possible next states
-  $state_count = count($states);
-  for ($i = 0; $i < $state_count; $i++) {
-    $wb_var = 'syncMethod_wb_select_' . $states[$i];
-    if (isset($node->$wb_var)) {
-      lingotek_lingonode($node->nid, 'sync_method_wb_select_' . $states[$i], $node->$wb_var);
+  // if this node is managed by lingotek, add lingotek wb variables
+  if ((isset($node->lingotek_push_once) && $node->lingotek_push_once) || lingotek_node_pushed($node) || !lingotek_managed_by_entity_translation($node->type)) {
+    $def_state = lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published());
+    $states = lingotek_get_workbench_moderation_states();
+
+    // do not change status updates if only moderated (no node_save called)
+    if (!isset($node->workbench_moderation_state_new)) {
+      $node->skip_status_updates = TRUE;
     }
-  }
-  if ($old_state == workbench_moderation_state_published() && $new_state != workbench_moderation_state_published()) { // if changing from published
-    $node->status = 0; // unpublish
-    node_save($node);
-  }
+    // set lingonode variable for workbench moderation auto-upload
+    if (isset($node->create_lingotek_document_workbench_moderation)) {
+      lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation', $node->create_lingotek_document_workbench_moderation);
+      $def_state = $node->create_lingotek_document_workbench_moderation;
+    }
+    // set lingonode variable for workbench moderation auto-download setting
+    if (isset($node->syncMethod_wb)) {
+      lingotek_lingonode($node->nid, 'sync_method_workbench_moderation', $node->syncMethod_wb);
+    }
 
-  // Check new state against settings
-  if ($new_state != $states[$def_state] && !isset($node->is_new)) {
-    $node->lingotek_upload_override = 0;
+    if ($old_state == workbench_moderation_state_published() && $new_state != workbench_moderation_state_published()) { // if changing from published
+      $node->status = 0; // unpublish
+      node_save($node);
+    }
+
+    // Check new state against settings
+    if ($new_state != $states[$def_state]) {// && !isset($node->is_new)) {
+      $node->lingotek_upload_override = 0;
+    }
   }
   lingotek_upload_document($node);
 }
@@ -1362,6 +1331,6 @@ function lingotek_workbench_moderation_transition($node, $old_state, $new_state)
 /*
  * AJAX callback to update transition options
  */
-function lingotek_workbench_moderation_callback_transitions_node($form, &$form_state) {
-  return $form['lingotek']['content']['syncMethod_wb_select'];
+function lingotek_workbench_moderation_node_callback($form, &$form_state) {
+  return $form['lingotek']['content']['syncMethod_wb_message'];
 }
