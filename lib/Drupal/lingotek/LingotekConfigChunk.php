@@ -847,4 +847,28 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     // for now, remove the 'config_' as quickly as possible
     return substr($tag, self::TAG_PREFIX_LENGTH);
   }
+  
+  /**
+   * Return all textgroups from locales_source for which translation is desired
+   */
+  public static function getTextgroupsForTranslation() {
+    $textgroups = array();
+    if (variable_get('lingotek_translate_config_builtins', 0)) {
+      $textgroups[] = 'default';
+    }
+    if (variable_get('lingotek_translate_config_menus', 0)) {
+      $textgroups[] = 'menu';
+    }
+    if (variable_get('lingotek_translate_config_taxonomies', 0)) {
+      $textgroups[] = 'taxonomy';
+    }
+    if (variable_get('lingotek_translate_config_blocks', 0)) {
+      $textgroups[] = 'blocks';
+    }
+    if (variable_get('lingotek_translate_config_views', 0)) {
+      $textgroups[] = 'views';
+    }
+    return $textgroups;
+  }
+
 }

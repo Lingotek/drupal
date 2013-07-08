@@ -342,9 +342,11 @@ class LingotekSync {
       $drupal_codes[] = Lingotek::convertLingotek2Drupal($lc);
     }
     // get the list of all segments that need updating
+    // that belong to the textgroups the user wants translated
     $query = db_select('locales_source', 'ls');
     $query->fields('ls', array('lid'))
         ->condition('ls.source', '', '!=')
+        ->condition('ls.textgroup', LingotekConfigChunk::getTextgroupsForTranslation(), 'IN')
         ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN');
     return $query->execute()->fetchCol();
   }
