@@ -587,13 +587,13 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     '#title' => t('Upload Content Automatically'),
     '#default_value' => variable_get('lingotek_create_documents_by_default', 0),
     //'#disabled' => !$is_enterprise,
-    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
+    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
   );
 
   if ($workbench_moderation_enabled) {
     $form['defaults']['lingotek_create_documents_by_default_workbench_moderation'] = array(
       '#type' => 'select',
-      '#title' => 'Workbench Moderation State',
+      '#title' => 'Workbench Moderation Uploads',
       '#options' => lingotek_get_workbench_moderation_states(),
       '#default_value' => variable_get('lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published()),
       '#states' => array(
@@ -601,7 +601,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
           ':input[name="lingotek_create_documents_by_default"]' => array('checked' => FALSE),
         ),
       ),
-      '#description' => 'Content will be automatically uploaded when changed to this state',
+      '#description' => 'The most recent revision will be automatically uploaded when changed to this state.',
     );
   }
 
@@ -611,7 +611,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     '#title' => t('Download Translations Automatically'),
     '#default_value' => (variable_get('lingotek_sync', 1) !== 0) ? 1 : 0,
     //'#disabled' => !$is_enterprise,
-    '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
+    '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
 
   if ($workbench_moderation_enabled) {
@@ -619,11 +619,12 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
 
     $form['defaults']['lingotek_sync_wb']['wb_options'] = array(
       '#type' => 'select',
-      '#title' => t('<b>WORKBENCH MODERATION</b>'),
+      '#title' => t('Workbench Moderation Downloads'),
 //      '#field_prefix' => t('After translations have downloaded'),
       '#field_suffix' => t('after translations have downloaded.'),
       '#options' => lingotek_get_workbench_moderation_options(),
       '#default_value' => variable_get('lingotek_sync_workbench_moderation', 'no_moderation'),
+      '#description' => t("Transitions will not occur until <i>all</i> of a node's translations have downloaded."),
       '#states' => array(
         'invisible' => array(
           ':input[name="lingotek_sync"]' => array('checked' => FALSE),
@@ -634,7 +635,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     if (!empty($transition_select)) {
       $form['defaults']['lingotek_sync_wb']['wb_select'] = array(
         '#type' => 'item',
-        '#title' => t('The Workbench Moderation module has multiple transition paths for the following states.<br>Choose the state that you would like the transitions to transition to below.'),
+        '#title' => t('Your configuration of the Workbench Moderation module has multiple transition paths.<br>Choose the state that you would like the translations to transition to below.'),
         '#states' => array(
           'visible' => array(
             'select[name="wb_options"]' => array('value' => 'increment'),

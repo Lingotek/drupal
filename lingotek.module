@@ -571,7 +571,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#type' => 'checkbox',
     '#title' => t('Upload Content Automatically'),
     '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document'), 'lingotek_create_documents_by_default', 0),
-    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Lingteok tab.'),
+    '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
   );
 
   if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
@@ -582,6 +582,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#field_suffix' => t('state.'),
       '#options' => lingotek_get_workbench_moderation_states(),
       '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published()),
+      '#description' => 'The most recent revision will be automatically uploaded when changed to this state.',
       '#states' => array(
         'invisible' => array(
           ':input[name="create_lingotek_document"]' => array('checked' => FALSE),
@@ -595,7 +596,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#title' => t('Download Translations Automatically'),
     '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 1),
     '#access' => user_access('adjust auto-download node setting'),
-    '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Lingotek tab.'),
+    '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
 
   if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
@@ -606,6 +607,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#field_suffix' => t('after translations have downloaded from Lingotek.'),
       '#options' => lingotek_get_workbench_moderation_options(),
       '#default_value' => lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 'no_moderation'),
+      '#description' => t("Transition will not occur until <i>all</i> of the node's translations have downloaded."),
       '#states' => array(
         'invisible' => array(
           ':input[name="syncMethod"]' => array('checked' => FALSE),

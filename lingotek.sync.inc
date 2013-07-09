@@ -440,11 +440,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
 
       $form['download']['download_locales_wb_options'] = array(
         '#type' => 'select',
-        '#prefix' => '<b>WORKBENCH MODERATION</b>',
-        '#title' => 'after translations have downloaded.',
-        '#title_display' => 'after',
+        '#title' => 'WORKBENCH MODERATION',
+        '#field_suffix' => 'after translations have downloaded.',
         '#options' => lingotek_get_workbench_moderation_options(),
         '#default_value' => variable_get('lingotek_sync_workbench_moderation', 'no_moderation'),
+        '#description' => t("Transitions will not occur until <i>all</i> of a node's translations have downloaded."),
       );
 
       if (!empty($transition_select)) { // select options for multiple possible transitions

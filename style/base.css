@@ -20,3 +20,19 @@
 #lingotek-navbar-tab .ddTitle {
   height: 23px;
 }
+
+div.form-item-create-lingotek-document-workbench-moderation, div.form-item-syncMethod-wb {
+  margin-left: 50px;
+}
+
+/*div.form-item-create-lingotek-document-workbench-moderation label, div.form-item-syncMethod-wb label {
+  font-weight: normal !important;
+}*/
+
+div.form-item-lingotek-create-documents-by-default-workbench-moderation, div.form-item-wb-options {
+  margin-left: 50px;
+}
+
+#edit-wb-select {
+  margin-left: 50px;
+}
