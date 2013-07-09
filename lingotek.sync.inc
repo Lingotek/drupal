@@ -11,9 +11,16 @@
  * This URL will be called when a document translation is complete, and can be downloaded.
  * Format:  ?doc_id={document_id}&target_code={target_language}&project_id={project_id}&completed={completed}
  * */
-function lingotek_notify_url_generate() {
+function lingotek_notify_url_generate($security_token = NULL) {
   global $base_url;
-  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}';
+  if (is_null($security_token)) {
+    $security_token = variable_get('lingotek_notify_security_token', NULL);
+    if (is_null($security_token)) {
+      $security_token = md5(time());
+      variable_set('lingotek_notify_security_token', $security_token);
+    }
+  }
+  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}&security_token=' . $security_token;
 }
 
 /**
@@ -51,6 +58,15 @@ function lingotek_notifications() {
   $lingotek_locale = ( isset($_GET['target_code']) ) ? $_GET['target_code'] : NULL;
   $project_id = ( isset($_GET['project_id']) ) ? $_GET['project_id'] : NULL;
   $completed = ( isset($_GET['completed']) ) ? $_GET['completed'] : 1;
+  $security_token = ( isset($_GET['security_token']) ) ? $_GET['security_token'] : NULL;
+
+  $stored_security_token = variable_get('lingotek_notify_security_token', NULL);
+
+  if (!is_null($stored_security_token)) { // only enforce security token matching if set as variable
+    if (strcmp($security_token, $stored_security_token) != 0) {
+      return drupal_json_output(array("message" => "Invalid security token"));
+    }
+  }
 
   if (!isset($document_id) || !isset($lingotek_locale)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
@@ -86,7 +102,7 @@ function lingotek_notifications() {
       '@document' => $document_id,
       '@language_code' => $lingotek_locale,
       '@project_id' => $project_id,
-      );
+    );
 
     // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
     if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
@@ -110,7 +126,7 @@ function lingotek_notifications() {
     else {
       LingotekLog::trace('Unable to update local content for <strong>@trans_type</strong> @id based on hit
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
-      }
+    }
   }
   else {
     $node = lingotek_node_load_default($nid);
@@ -140,7 +156,6 @@ function lingotek_notifications() {
         lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
         lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
       }
-
     }
   }
 
@@ -152,11 +167,9 @@ function lingotek_notifications() {
         'type' => isset($trans_obj) ? $trans_obj->getEntityType() : 'node',
         'id' => isset($trans_obj) ? $trans_obj->getId() : $nid,
         'found' => $found,
-        'download' => $found 
-          && isset($trans_obj) 
-          && $trans_obj->getEntityType() == 'comment' 
-          ? TRUE 
-          : (isset($auto_download) && $auto_download == TRUE)
+        'download' => $found
+        && isset($trans_obj)
+        && $trans_obj->getEntityType() == 'comment' ? TRUE : (isset($auto_download) && $auto_download == TRUE)
       )) : array_merge($_GET, array(
         'found' => $found
       ));
@@ -219,7 +232,6 @@ function lingotek_sync_endpoint() {
 
   return lingotek_json_output_cors($response, $status, array('methods_allowed' => 'GET'));
 }
-
 
 function lingotek_form_bulk_sync($form, $form_state) {
 
@@ -310,7 +322,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         'lingotek_translate_config_taxonomies' => t('taxonomies'),
         'lingotek_translate_config_menus' => t('menus'),
         'lingotek_translate_config_views' => t('views'),
-        );
+      );
       $config_types_included = array();
       $config_types_excluded = array();
       foreach ($config_types as $k => $v) {
@@ -323,11 +335,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
       }
       $cf_included_str = implode(', ', $config_types_included);
       if (count($config_types_included) > 1) {
-        $cf_included_str = substr_replace($cf_included_str, t(' and ').substr($cf_included_str, strrpos($cf_included_str, ', ')+2), strrpos($cf_included_str, ', '));
+        $cf_included_str = substr_replace($cf_included_str, t(' and ') . substr($cf_included_str, strrpos($cf_included_str, ', ') + 2), strrpos($cf_included_str, ', '));
       }
       $cf_excluded_str = implode(', ', $config_types_excluded);
       if (count($config_types_excluded) > 1) {
-        $cf_excluded_str = substr_replace($cf_excluded_str, t(' and ').substr($cf_excluded_str, strrpos($cf_excluded_str, ', ')+2), strrpos($cf_excluded_str, ', '));
+        $cf_excluded_str = substr_replace($cf_excluded_str, t(' and ') . substr($cf_excluded_str, strrpos($cf_excluded_str, ', ') + 2), strrpos($cf_excluded_str, ', '));
       }
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
@@ -346,7 +358,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
       '#markup' => t('There are currently no new/modified items to be uploaded.'),
     );
   }
-  
+
   // Download  
   $form['download'] = array(
     '#type' => 'fieldset',
@@ -414,11 +426,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
     );
   }
   if (!empty($options_incomplete)) {
-    /*$form['download']['download_locales_incomplete_check'] = array(
+    /* $form['download']['download_locales_incomplete_check'] = array(
       '#type' => 'checkbox',
       '#title' => t('Download Incomplete Translations'),
       '#default_value' => 0,
-    );*/
+      ); */
     $form['download']['download_locales_incomplete'] = array(
       '#type' => 'tableselect',
       '#prefix' => t('Incomplete Translations'),
@@ -428,11 +440,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
       ),
       '#options' => $options_incomplete,
       '#default_value' => array_fill_keys(array_keys($options_complete), 0),
-      /*'#states' => array(
-        'visible' => array(
+        /* '#states' => array(
+          'visible' => array(
           ':input[name="download_locales_incomplete_check"]' => array('checked' => TRUE),
-        ),
-      ),*/
+          ),
+          ), */
     );
   }
   if (!empty($options_complete) || !empty($options_incomplete)) {
@@ -503,7 +515,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
           ); // Get out of $form_state['input']
         }
       }
-
     } // end workbench_moderation form elements
   }
 
@@ -613,9 +624,8 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
           }
         }
       }
-    $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb_options'], $document_ids, $transitions, TRUE));
+      $extra_operations = array_merge($extra_operations, lingotek_post_download_workbench_moderation($form_state['values']['download_locales_wb_options'], $document_ids, $transitions, TRUE));
     }
-
   }
 
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
@@ -628,6 +638,7 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
  * @param array $sync_report
  *    Contains information returned by LingotekSync::getReport() about edited nodes ready for translation
  */
+
 function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_report) {
 
   if (!isset($form_state['values']['upload_wb'])) {
@@ -646,12 +657,12 @@ function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_re
       $sync_report['upload_nids_wb_' . $state] = $result; // update nid list
     }
   }
-/*
-  if (module_exists('entity_translation') && $sync_report['upload_nids_et_count'] > 0) {
+  /*
+    if (module_exists('entity_translation') && $sync_report['upload_nids_et_count'] > 0) {
     $result = lingotek_get_workbench_moderation_state_select($state, $sync_report['upload_nids_et']);
     $sync_report['upload_nids_et_count'] = count($result);
     $sync_report['upload_nids_et'] = $result;
-  }*/
+    } */
 }
 
 /*
@@ -664,16 +675,17 @@ function lingotek_workbench_moderation_bulk_select($form, $form_state, &$sync_re
  * @return array $result
  *    a numbered array containing the matching nids
  */
+
 function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array()) {
 
   $sub_query = db_select('workbench_moderation_node_history', 'wb1') // populate a numbered array with nids whose most recent moderation state has been selected
-    ->condition('nid', $nids, 'IN')
-    ->groupBy('nid');
+      ->condition('nid', $nids, 'IN')
+      ->groupBy('nid');
   $sub_query->addExpression('MAX(hid)', 'hid');
   $query = db_select('workbench_moderation_node_history', 'wb2')
-    ->fields('wb2', array('nid'))
-    ->condition('hid', $sub_query, 'IN')
-    ->condition('state', $wb_state);
+      ->fields('wb2', array('nid'))
+      ->condition('hid', $sub_query, 'IN')
+      ->condition('state', $wb_state);
   $result = $query->execute()->fetchCol(0);
   return $result;
 }
@@ -688,6 +700,7 @@ function lingotek_get_workbench_moderation_state_select($wb_state, $nids = array
  *    Returns empty if option is not "Increment to next state" or if no from_state has multiple transitions
  *
  */
+
 function lingotek_workbench_moderation_get_mult_transitions() {
   $dup_trans = array();
   $transitions = workbench_moderation_transitions();
@@ -714,6 +727,7 @@ function lingotek_workbench_moderation_get_mult_transitions() {
  *    Document IDs of downloaded documents
  *    Used to get corresponding Node IDs for nodes which need moderation
  */
+
 function lingotek_post_download_workbench_moderation($options_index, $document_ids = array(), $trans_options = array(), $automatic_moderate = FALSE) {
   $operations = array();
   if ($automatic_moderate) {

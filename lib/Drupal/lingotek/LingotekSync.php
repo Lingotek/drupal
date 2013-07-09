@@ -631,7 +631,8 @@ class LingotekSync {
   }
 
   public static function updateNotifyUrl() {
-    $new_url = lingotek_notify_url_generate();
+    $security_token = md5(time());
+    $new_url = lingotek_notify_url_generate($security_token);
     $api = LingotekApi::instance();
     $integration_method_id = variable_get('lingotek_integration_method', '');
 
@@ -664,6 +665,7 @@ class LingotekSync {
     $success = isset($response->results) ? $response->results : FALSE;
     if ($success) {
       variable_set('lingotek_notify_url', $new_url);
+      variable_set('lingotek_notify_security_token', $security_token);
     }
     return $success;
   }
