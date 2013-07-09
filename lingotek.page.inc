@@ -131,6 +131,9 @@ function lingotek_push_form($form, $form_state, $node) {
 function lingotek_push_form_submit($form, $form_state) {
   $node = lingotek_node_load_default($form_state['values']['node_id']);
   $api = LingotekApi::instance();
+  if (lingotek_lingonode($node->nid, 'sync_method') == 1 && module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
+    lingotek_lingonode($node->nid, 'workbench_moderate', '0');
+  }
   if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
     // Update an existing Lingotek Document.
     $api->updateContentDocument($node);

@@ -106,6 +106,23 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
 }
 
 /*
+ * Helper function to delete a specified variable from the Lingotek table
+ *
+ * @param int $nid
+ *    node id for the variable that needs to be deleted
+ *
+ * @param string $lingokey
+ *    variable name to be deleted
+ *
+ */
+function lingotek_lingonode_variable_delete($nid, $lingokey) {
+  $query = db_delete('lingotek');
+  $query->condition('nid', $nid);
+  $query->condition('lingokey', $lingokey);
+  $query->execute();
+}
+
+/*
  * When a node is deleted, this is called to clean out the extra data from that node in the Lingotek table.
  *
  * @param $nid

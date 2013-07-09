@@ -123,6 +123,10 @@ function lingotek_notifications() {
       lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
 
       // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
+      $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
+      if (empty($target_statuses)) {
+        lingotek_lingonode($nid, 'workbench_moderate', 1);
+      }
       if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
         $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
         $trans_options = array();
@@ -133,11 +137,8 @@ function lingotek_notifications() {
             $trans_options[$from_state] = $mult_trans;
           }
         }
-        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
-        if (empty($target_statuses)) {
-          lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
-          lingotek_lingonode($nid, 'workbench_moderate', 0);
-        }
+        lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
+        lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
       }
 
     }
