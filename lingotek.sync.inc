@@ -129,7 +129,7 @@ function lingotek_notifications() {
       }
       if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
         $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
-        $trans_options = array();
+        $trans_options = lingotek_get_workbench_moderation_transitions();
         if ($options_index == 1) {
           $from_state = $node->workbench_moderation['current']->state;
           $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
