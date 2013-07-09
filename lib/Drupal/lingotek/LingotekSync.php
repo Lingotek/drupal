@@ -102,11 +102,40 @@ class LingotekSync {
       }
     }
   }
+  
+  public static function insertTargetEntriesForAllChunks($lingotek_locale) {
+    // insert/update a target language for all chunks
+    $query = db_select('lingotek_config_metadata', 'meta')
+        ->fields('meta', array('id'))
+        ->groupBy('id');
+    $ids = $query->execute()->fetchCol();
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+    
+    foreach($ids as $i) {
+      $chunk = LingotekConfigChunk::loadById($i);
+      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $drupal_language_code);
+    }
+  }
+  
+  public static function insertTargetEntriesForAllDocs($lingotek_locale) {
+    self::insertTargetEntriesForAllNodes($lingotek_locale);
+    self::insertTargetEntriesForAllChunks($lingotek_locale);
+  }
 
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes
   public static function deleteTargetEntriesForAllNodes($lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     db_delete('lingotek')->condition('lingokey', $key)->execute();
+  }
+  
+  public static function deleteTargetEntriesForAllChunks($lingotek_locale) {
+    $key = 'target_sync_status_' . $lingotek_locale;
+    db_delete('lingotek_config_metadata')->condition('config_key', $key)->execute();
+  }
+  
+  public static function deleteTargetEntriesForAllDocs($lingotek_locale) {
+    self::deleteTargetEntriesForAllNodes($lingotek_locale);
+    self::deleteTargetEntriesForAllChunks($lingotek_locale);
   }
 
   public static function getDownloadableReport() {
@@ -332,7 +361,10 @@ class LingotekSync {
   public static function getDirtyChunkLids() {
     // return the list of all lids from the locale_source table *not* fully translated
     $source_language = language_default();
-    $lingotek_codes = Lingotek::availableLanguageTargetsWithoutSource($source_language->language);
+    if (!isset($source_language->lingotek_locale)) {
+      $source_language->lingotek_locale = Lingotek::convertDrupal2Lingotek($source_language->language);
+    }
+    $lingotek_codes = Lingotek::availableLanguageTargetsWithoutSource($source_language->lingotek_locale);
     if (!count($lingotek_codes)) {
       LingotekLog::error('No languages configured for this Lingotek account.', array());
       return array();
