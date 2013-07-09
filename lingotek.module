@@ -574,7 +574,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
   );
 
-  if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
+  if ($workbench_moderation_enabled && workbench_moderation_node_type_moderated($form['type']['#value'])) {
     $form['lingotek']['content']['create_lingotek_document_workbench_moderation'] = array(
       '#type' => 'select',
       '#title' => t('Workbench Moderation Upload'),
@@ -599,7 +599,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
 
-  if ($workbench_moderation_enabled && isset($node->workbench_moderation)) {
+  if ($workbench_moderation_enabled && workbench_moderation_node_type_moderated($form['type']['#value'])) {
     $transition_select = lingotek_workbench_moderation_get_mult_transitions();
     $form['lingotek']['content']['syncMethod_wb'] = array(
       '#type' => 'select',
