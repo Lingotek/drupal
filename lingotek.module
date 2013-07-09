@@ -750,9 +750,7 @@ function lingotek_node_delete($node) {
     $api = LingotekApi::instance();
     $api->removeDocument($doc_id, FALSE);
   }
-  else { // node was never uploaded to Lingotek
-    LingotekSync::removeNodeInfoByNodeId($node->nid);
-  }
+  LingotekSync::removeNodeInfoByNodeId($node->nid);
 }
 
 /**
