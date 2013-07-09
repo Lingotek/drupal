@@ -1349,3 +1349,29 @@ function lingotek_entity_delete($entity, $type) {
     ->condition('entity_id', entity_extract_ids($type, $entity))
     ->execute();
 }
+
+/**
+ * Implements hook_navbar().
+ */
+function lingotek_navbar() {
+  //this addon requieres the Language DropDown module. But I don't want to make
+  //it a strict dependency.
+  if(module_exists('lang_dropdown')) {
+    $path = drupal_is_front_page() ? '<front>' : $_GET['q'];
+    $languages = language_negotiation_get_switch_links('language', $path);
+
+    $items['lingotek'] = array(
+      '#type' => 'navbar_item',
+      '#tag' => 'div',
+      'tab' => drupal_get_form('lang_dropdown_form', $languages, 'language'),
+      '#wrapper_attributes' => array(
+        'id' => 'lingotek-navbar-tab',
+      ),
+      '#weight' => 400,
+      '#access' => TRUE,
+    );
+    return $items;
+  } else {
+    return array();
+  }
+}
