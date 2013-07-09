@@ -1360,7 +1360,7 @@ function lingotek_entity_delete($entity, $type) {
 function lingotek_navbar() {
   //this addon requieres the Language DropDown module. But I don't want to make
   //it a strict dependency.
-  if(module_exists('lang_dropdown')) {
+  if (module_exists('lang_dropdown')) {
     $path = drupal_is_front_page() ? '<front>' : $_GET['q'];
     $languages = language_negotiation_get_switch_links('language', $path);
 
@@ -1375,7 +1375,8 @@ function lingotek_navbar() {
       '#access' => TRUE,
     );
     return $items;
-  } else {
+  }
+  else {
     return array();
   }
 }

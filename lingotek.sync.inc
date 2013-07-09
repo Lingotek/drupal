@@ -167,12 +167,10 @@ function lingotek_notifications() {
         'type' => isset($trans_obj) ? $trans_obj->getEntityType() : 'node',
         'id' => isset($trans_obj) ? $trans_obj->getId() : $nid,
         'found' => $found,
-        'download' => $found
-        && isset($trans_obj)
-        && $trans_obj->getEntityType() == 'comment' ? TRUE : (isset($auto_download) && $auto_download == TRUE)
+        'download' => $found && isset($trans_obj) && $trans_obj->getEntityType() == 'comment' ? TRUE : (isset($auto_download) && $auto_download == TRUE)
       )) : array_merge($_GET, array(
         'found' => $found
-      ));
+  ));
 
   drupal_json_output($response);
 }
@@ -335,11 +333,11 @@ function lingotek_form_bulk_sync($form, $form_state) {
       }
       $cf_included_str = implode(', ', $config_types_included);
       if (count($config_types_included) > 1) {
-        $cf_included_str = substr_replace($cf_included_str, t(' and ') . substr($cf_included_str, strrpos($cf_included_str, ', ') + 2), strrpos($cf_included_str, ', '));
+        $cf_included_str = substr_replace($cf_included_str, ' ' . t('and') . ' ' . substr($cf_included_str, strrpos($cf_included_str, ', ') + 2), strrpos($cf_included_str, ', '));
       }
       $cf_excluded_str = implode(', ', $config_types_excluded);
       if (count($config_types_excluded) > 1) {
-        $cf_excluded_str = substr_replace($cf_excluded_str, t(' and ') . substr($cf_excluded_str, strrpos($cf_excluded_str, ', ') + 2), strrpos($cf_excluded_str, ', '));
+        $cf_excluded_str = substr_replace($cf_excluded_str, ' ' . t('and') . ' ' . substr($cf_excluded_str, strrpos($cf_excluded_str, ', ') + 2), strrpos($cf_excluded_str, ', '));
       }
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
@@ -349,7 +347,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         '#disabled' => $report['upload_config_count'] == 0,
       );
       if (count($config_types_excluded)) {
-        $form['upload']['upload_config']['#description'] = t('(You can also enable translation for ') . $cf_excluded_str . t(' in the Additional Translation tab of the ') . '<a href="' . $base_url . '/admin/settings/lingotek/settings">' . t('Lingotek Settings') . '</a>)';
+        $form['upload']['upload_config']['#description'] = t('(You can also enable translation for') . ' ' . $cf_excluded_str . ' ' . t('in the Additional Translation tab of the') . ' <a href="' . $base_url . '/admin/settings/lingotek/settings">' . t('Lingotek Settings') . '</a>)';
       }
     }
   }
