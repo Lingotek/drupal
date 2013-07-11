@@ -607,22 +607,8 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
   $block_enabled = $block['status'];
   $block_regions = system_region_list($current_theme, REGIONS_VISIBLE);
 
-  $ls_chkbox_enabled = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enabled'),
-    '#default_value' => TRUE //$block_enabled,
-  );
-
   $default_region = "sidebar_first";
   $default_region_value = array_key_exists($block['region'], $block_regions) ? $block['region'] : (array_key_exists($default_region, $block_regions) ? $default_region : NULL);
-
-  $ls_select_region = array(
-    '#type' => 'select',
-    //'#title' => 'Region',
-    '#description' => t('When enabled, the region to be displayed in.'),
-    '#options' => $block_regions,
-    '#default_value' => $default_region_value
-  );
 
   $form = array(
     '#type' => 'item',
@@ -636,20 +622,43 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
       'lingotek_back_button' => lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'))
     )
   );
+  
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/setup-language-switcher';
 
-  $form[] = array(
-    '#type' => 'item',
-    '#description' => t('Would you like to enable the default language switcher?'),
-      //'#suffix' => t('The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
-  );
   $form['theme'] = array(
     '#type' => 'hidden',
     '#value' => $current_theme
   );
 
-  $form['enabled'] = $ls_chkbox_enabled;
-  $form['region'] = $ls_select_region;
+  $form['enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable the default language switcher'),
+    '#default_value' => TRUE //$block_enabled,
+  );
+  
+  $form['region'] = array(
+    '#type' => 'select',
+    '#title' => t('The region where the switcher will be displayed.'),
+    '#options' => $block_regions,
+    '#default_value' => $default_region_value,
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="enabled"]' => array('checked' => FALSE),
+      ),
+    ),
+  );
+  
+//  $form['detection'] = array(
+//    '#type' => 'select',
+//    '#description' => t("How to decide which language is used to display pages"),
+//    '#options' => array('Session', 'URL'),
+//    '#states' => array(
+//      'invisible' => array(
+//        ':input[name="enabled"]' => array('checked' => FALSE),
+//      ),
+//    ),
+//  );
+  
   $output = array(
     $form
   );

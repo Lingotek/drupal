@@ -419,10 +419,106 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#default_value' => variable_get('lingotek_hide_tlmi', 0),
   );
 
+  $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
+
+  $query = db_select('block', 'b');
+  $query->fields('b');
+  $query->condition('module', 'locale');
+  $query->condition('delta', 'language');
+  $query->condition('theme', $current_theme);
+  $result = $query->execute();
+
+  $block = $result->fetchAssoc();
+  $block_enabled = $block['status'];
+  $block_regions = system_region_list($current_theme, REGIONS_VISIBLE);
+
+  $ls_chkbox_enabled = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable the default language switcher'),
+    '#default_value' => $block_enabled,
+  );
+
+  $default_region = "sidebar_first";
+  $default_region_value = array_key_exists($block['region'], $block_regions) ? $block['region'] : (array_key_exists($default_region, $block_regions) ? $default_region : NULL);
+
+  $ls_select_region = array(
+    '#type' => 'select',
+    '#title' => t('The region where the switcher will be displayed.'),
+    //'#description' => 'When enabled, the region to be displayed in.',
+    '#options' => $block_regions,
+    '#default_value' => $default_region_value,
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="enabled"]' => array('checked' => FALSE),
+      ),
+    ),
+  );
+
+  $fkey = 'prefs'; // form key
+//  $form[$fkey] = array(
+//    '#type' => $show_fieldset ? 'fieldset' : 'item',
+//    '#title' => t('Default Language Switcher'),
+//    '#collapsible' => TRUE,
+//    '#collapsed' => TRUE,
+//    '#group' => 'administrative_settings',
+//    'actions' => array(
+//      '#type' => 'actions',
+//      'submit' => array(
+//        '#type' => 'submit',
+//        '#value' => t('Save configuration')
+//      ),
+//    /* 'note' => array(
+//      '#markup' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+//      ) */
+//    )
+//  );
+
+//  $form[$fkey][] = array(
+//    '#type' => 'item',
+//    '#description' => t('Would you like to enable the default language switcher?')
+//  );
+  $form[$fkey]['theme'] = array(
+    '#type' => 'hidden',
+    '#value' => $current_theme
+  );
+
+  $form[$fkey]['enabled'] = $ls_chkbox_enabled;
+  $form[$fkey]['region'] = $ls_select_region;
+
+  $lang_negotiation_info = locale_language_negotiation_info();
+  $general_detection_config_url = substr($lang_negotiation_info['locale-url']['config'], 0, strrpos($lang_negotiation_info['locale-url']['config'], "/"));
+  
+  $form[$fkey][] = array(
+    '#type' => 'item',
+    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'
+        . '<br>Go to ' . l(t('Language detection and selection'), $general_detection_config_url) . ' to change this.'),
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="enabled"]' => array('checked' => FALSE),
+      ),
+    ),
+  );
+  /* $language_negotiation = variable_get('language_negotiation_language', array());
+    $url_detection_enabled = array_key_exists('locale-url', $language_negotiation);
+    $ls_chkbox_detection = array(
+    '#type' => 'checkbox',
+    '#title' => t('URL detection Enabled'),
+    '#default_value' => $url_detection_enabled,
+    '#disabled' => TRUE
+    );
+    $form[$form_key]['url_detection'] = $ls_chkbox_detection;
+
+    $form[$form_key][] = array(
+    '#type' => 'markup',
+    '#markup' => json_encode($block),
+    '#attributes' => array('class' => 'description')
+    ); */
+
   return $form;
 }
 
 function lingotek_admin_prefs_form_submit($form, &$form_state) {
+  lingotek_admin_language_switcher_form_submit($form, $form_state);
   system_settings_form_submit($form, $form_state);
   menu_rebuild();
 }
@@ -963,7 +1059,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
       $output[] = drupal_get_form('lingotek_admin_advanced_parsing_form', $show_fieldset);
     }
     $output[] = drupal_get_form('lingotek_admin_prefs_form', $show_fieldset);
-    $output[] = drupal_get_form('lingotek_admin_language_switcher_form', $show_fieldset);
+    //$output[] = drupal_get_form('lingotek_admin_language_switcher_form', $show_fieldset);
     $output[] = drupal_get_form('lingotek_admin_utilities_form', $show_fieldset);
     $output[] = drupal_get_form('lingotek_admin_logging_form', $show_fieldset);
   }
@@ -989,107 +1085,6 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   return $output;
 }
 
-/*
- * Language Switcher Form
- */
-
-function lingotek_admin_language_switcher_form($form, &$form_state, $show_fieldset = FALSE) {
-  $form = array();
-
-  $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
-
-  $query = db_select('block', 'b');
-  $query->fields('b');
-  $query->condition('module', 'locale');
-  $query->condition('delta', 'language');
-  $query->condition('theme', $current_theme);
-  $result = $query->execute();
-
-  $block = $result->fetchAssoc();
-  $block_enabled = $block['status'];
-  $block_regions = system_region_list($current_theme, REGIONS_VISIBLE);
-
-  $ls_chkbox_enabled = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable'),
-    '#default_value' => $block_enabled,
-  );
-
-  $default_region = "sidebar_first";
-  $default_region_value = array_key_exists($block['region'], $block_regions) ? $block['region'] : (array_key_exists($default_region, $block_regions) ? $default_region : NULL);
-
-  $ls_select_region = array(
-    '#type' => 'select',
-    '#title' => t('Choose the region that you wish to display the switcher in.'),
-    //'#description' => 'When enabled, the region to be displayed in.',
-    '#options' => $block_regions,
-    '#default_value' => $default_region_value,
-    '#states' => array(
-      'invisible' => array(
-        ':input[name="enabled"]' => array('checked' => FALSE),
-      ),
-    ),
-  );
-
-  $fkey = 'language_switcher'; // form key
-  $form[$fkey] = array(
-    '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Default Language Switcher'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'administrative_settings',
-    'actions' => array(
-      '#type' => 'actions',
-      'submit' => array(
-        '#type' => 'submit',
-        '#value' => t('Save configuration')
-      ),
-    /* 'note' => array(
-      '#markup' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
-      ) */
-    )
-  );
-
-  $form[$fkey][] = array(
-    '#type' => 'item',
-    '#description' => t('Would you like to enable the default language switcher?')
-  );
-  $form[$fkey]['theme'] = array(
-    '#type' => 'hidden',
-    '#value' => $current_theme
-  );
-
-  $form[$fkey]['enabled'] = $ls_chkbox_enabled;
-  $form[$fkey]['region'] = $ls_select_region;
-
-  $form[$fkey][] = array(
-    '#type' => 'item',
-    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'),
-    '#states' => array(
-      'invisible' => array(
-        ':input[name="enabled"]' => array('checked' => FALSE),
-      ),
-    ),
-  );
-  /* $language_negotiation = variable_get('language_negotiation_language', array());
-    $url_detection_enabled = array_key_exists('locale-url', $language_negotiation);
-    $ls_chkbox_detection = array(
-    '#type' => 'checkbox',
-    '#title' => t('URL detection Enabled'),
-    '#default_value' => $url_detection_enabled,
-    '#disabled' => TRUE
-    );
-    $form[$form_key]['url_detection'] = $ls_chkbox_detection;
-
-    $form[$form_key][] = array(
-    '#type' => 'markup',
-    '#markup' => json_encode($block),
-    '#attributes' => array('class' => 'description')
-    ); */
-
-  return $form;
-}
-
 function lingotek_admin_language_switcher_form_submit($form, $form_state) {
 
   $block = array(
@@ -1111,6 +1106,22 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
       ->condition('delta', $block['delta'])
       ->condition('theme', $block['theme'])
       ->execute();
+  
+  //If the site does not yet have more than 1 language, drupal doesn't bootstrap
+  //some language functions. So here we force this file to be loaded.
+  include_once DRUPAL_ROOT . '/includes/language.inc';
+  
+  //The array variable 'language_negotiation_language' has a entry for each detection method.
+  //Thus if the max is 1 the only possible enabled method is default.
+  //Note that the variable is empty on a new drupal install.
+  if($form_state['values']['enabled'] && count(variable_get('language_negotiation_language')) <= 1) {
+    $types = array(
+      LOCALE_LANGUAGE_NEGOTIATION_URL => 2,
+      LOCALE_LANGUAGE_NEGOTIATION_BROWSER => 4,
+    );
+    language_negotiation_set(LANGUAGE_TYPE_INTERFACE, $types);
+  }  
+  
   // Flush cache
   cache_clear_all();
 
