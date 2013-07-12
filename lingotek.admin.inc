@@ -282,6 +282,8 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   global $base_url;
   $api = LingotekApi::instance();
   $setup_complete = variable_get('lingotek_setup_complete', 0);
+  $account = LingotekAccount::instance();
+  $is_enterprise = $account->isEnterprise();
   /*
    * Comment translation
    */
@@ -333,15 +335,17 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
   );
 
-  $form['additional_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_workflow_id'] = array(
-    '#type' => 'select',
-    '#title' => t('Comment translation Workflow'),
-    '#description' => t('When comment translation is enabled, use this workflow for translating 
-      comments. Since there is no Drupal UI for managing workflow phases for comments, it is 
-      recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
-    '#options' => $api->listWorkflows(),
-    '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
-  );
+  if($is_enterprise) {
+    $form['additional_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_workflow_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Comment translation Workflow'),
+      '#description' => t('When comment translation is enabled, use this workflow for translating 
+        comments. Since there is no Drupal UI for managing workflow phases for comments, it is 
+        recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
+      '#options' => $api->listWorkflows(),
+      '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
+    );
+  }
 
   // Configuration translation (ie. taxonomies, menus, etc.)
   $form['additional_translation']['lingotek_translate_config'] = array(
@@ -1247,19 +1251,6 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
     $output[] = drupal_get_form('lingotek_admin_utilities_form', $show_fieldset);
     $output[] = drupal_get_form('lingotek_admin_logging_form', $show_fieldset);
   }
-
-  $lang_negotiation_info = locale_language_negotiation_info();
-  $general_detection_config_url = substr($lang_negotiation_info['locale-url']['config'], 0, strrpos($lang_negotiation_info['locale-url']['config'], "/"));
-
-  $items = array();
-  $items['items'] = array(
-    l(t('Language detection and selection'), $general_detection_config_url) . ' ( ' . l(t('URL'), $lang_negotiation_info['locale-url']['config']) . ' | ' . l(t('Session'), $lang_negotiation_info['locale-session']['config']) . ' ) ',
-  );
-  $output[] = array(
-    '#type' => 'item',
-    '#title' => t('Quick links to additional configuration'),
-    '#markup' => theme('item_list', $items)
-  );
 
 
 
