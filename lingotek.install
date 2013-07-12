@@ -147,6 +147,37 @@ function lingotek_schema() {
     ),
   );
 
+  $schema['lingotek_config_metadata'] = array(
+    'description' => 'Stores Lingotek-related metadata about Drupal translations from locales source and target tables.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'the segment ID assigned to the given range of strings.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'config_key' => array(
+        'description' => 'The ID for the Lingotek-associated value.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'value' => array(
+        'description' => 'Value for the specified key.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array(
+      'id',
+      'config_key',
+    ),
+  );
+
   return $schema;
 }
 
@@ -170,7 +201,7 @@ function lingotek_update_7200(&$sandbox) {
     $sandbox['max'] = count($nodes);
     $sandbox['nodes'] = $nodes;
   }
-  $node = node_load($sandbox['nodes'][$sandbox['progress']]);
+  $node = lingotek_node_load_default($sandbox['nodes'][$sandbox['progress']]);
   if ($node !== FALSE) {
     if (!class_exists('LingotekApi')) {
       // The LingotekApi class might not have been introduced when this user last updated the Lingotek Translation module.
@@ -215,7 +246,7 @@ function lingotek_update_7201(&$sandbox) {
       $sandbox['nodes'] = $lingotek_nodes;
     }
 
-    $process_node = node_load(array_shift($sandbox['nodes']));
+    $process_node = lingotek_node_load_default(array_shift($sandbox['nodes']));
     if ($process_node->nid && !lingotek_lingonode($process_node->nid, 'project_id')) {
       lingotek_lingonode($process_node->nid, 'project_id', $default_lingotek_project);
     }
@@ -231,7 +262,6 @@ function lingotek_update_7201(&$sandbox) {
 function lingotek_update_7202(&$sandbox) {
   if ($rid = variable_get('user_admin_role', 0)) {
     $new_permisions = array(
-      'url_alias_translation',
       'access lingotek utilities',
       'access per-item lingotek project selection',
       'access per-item lingotek vault selection'
@@ -368,3 +398,44 @@ function lingotek_update_7211(&$sandbox) {
     'default' => ''
   );
 }*/
+
+
+/**
+ * Adds the lingotek_entity_metadata table.
+ */
+function lingotek_update_7212(&$sandbox) {
+  $module = 'lingotek';
+  $table = 'lingotek_config_metadata';
+  if (!db_table_exists($table)) {
+    $schema = drupal_get_schema_unprocessed($module, $table);
+    db_create_table($table, $schema);
+    $output = t('Table @table was created.', array('@table' => $table));
+  }
+  else {
+    $output = t('The @table table already exists. No action taken.', array('@table' => $table));
+  }
+
+  return $output;
+}
+
+/**
+ * Ensure the Administrator role is granted correct permissions.
+ */
+function lingotek_update_7213(&$sandbox) {
+  $rid = variable_get('user_admin_role', 0);
+  if ($rid) {
+    $permissions = array(
+      'administer lingotek',
+      'manage projects',
+      'adjust auto-download node setting',
+      'translate url aliases',
+      'access lingotek utilities',
+      'access per-item lingotek project selection',
+      'access per-item lingotek vault selection'
+    );
+
+    user_role_grant_permissions($rid, $permissions);
+
+    return t('Granted Lingotek permissions to the administrative security role.');
+  }
+}

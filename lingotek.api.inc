@@ -51,11 +51,16 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
 
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
 
+  $delta = 0;
+  $last_tag = NULL;
   foreach ($xml as $tag => $content) {
-    if ($tag == 'menu_title') {
-      //TODO handle menu translation
+    if ($tag == $last_tag) {
+      $delta++;
     }
-    elseif ($tag == 'url_alias' && $url_alias_translation == 1) {
+    else {
+      $delta = 0;
+    }
+    if ($tag == 'url_alias' && $url_alias_translation == 1) {
       $target = check_plain($content);
 
       //URL Alias related to the page:
@@ -91,14 +96,62 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
       if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
         $node_field = & $node->$drupal_field_name;
         $index = 0;
+        if (module_exists('link') && $field['type'] == 'link_field') {
+          $target_key = array(
+            'url',
+            'title',
+          );
+        }
+        if (!is_array($target_key)) {
+          $target_key = array($target_key);
+        }
+        $insert_array = array(
+          'entity_type' => 'node',
+          'bundle' => $node->type,
+          'entity_id' => $node->nid,
+          'revision_id' => $node->vid,
+          'language' => $drupal_language_code,
+          'delta' => $delta,
+          'deleted' => '0',
+        );
         foreach ($content as $text) {
-          $node_field[$drupal_language_code][$index][$target_key] = decode_entities(lingotek_xml_decode($text));
+          $array_key = $target_key[$index];
+          $db_field_name = $field['field_name'] . '_' . $array_key;
+          $insert_array[$db_field_name] = decode_entities($text);
+          //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
           if (array_key_exists($node->language, $node_field)) {
             if (array_key_exists('format', $node_field[$node->language][0])) {
-              $node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
+              //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
+              $format_db_field_name = $field['field_name'] . '_format';
+              $insert_array[$format_db_field_name] = $node_field[$node->language][0]['format'];
             }
           }
           $index++;
+        }
+        $field_names = array('field_revision_' . $field['field_name']);
+        $field_names[] = 'field_data_' . $field['field_name']; // put fields into both field_data_ and field_revision_ tables
+
+        // if published version (in node table) is as current as most current revision (in node_revision table)
+        if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
+          $only_write_revisions = 1;
+          unset($field_names[$only_write_revisions]);
+        }
+        foreach ($field_names as $field_name) {
+          // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
+          try {
+            drupal_write_record($field_name, $insert_array);
+          }
+          catch (PDOException $e) {
+            $primary_keys = array(
+              'entity_type',
+              'entity_id',
+              'revision_id',
+              'deleted',
+              'delta',
+              'language',
+            );
+            drupal_write_record($field_name, $insert_array, $primary_keys);
+          }
         }
       }
 
@@ -110,6 +163,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
         pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node), $node->type, $drupal_language_code);
       }
     }
+    $last_tag = $tag;
   }
 
   //Fix for pathauto expecting the form:
@@ -122,15 +176,11 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
   $node->skip_status_updates = 1; // ensure that the statuses are not set on node update (in lingotek_node_update)
   //Fix for workbench_moderation changing node state after translation download
   if (module_exists('workbench_moderation')) {
-    if (!isset($node->workbench_moderation)) {
-      LingotekLog::error("workbench_moderation variable does not exist inside node object. Error: @error.", array('@error' => $e->getMessage()));
-    }
-    else {
+    if (isset($node->workbench_moderation)) {
       $node->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
     }
   }
-
-  node_save($node);
+ // node_save($node);
 }
 
 /*
@@ -244,6 +294,63 @@ function lingotek_get_url_alias_translations() {
   $methods[1] = t("Translate the URL alias");
   $methods[2] = t("Use the translated page title");
   return $methods;
+}
+
+/*
+ * Get all workbench moderation states
+ */
+function lingotek_get_workbench_moderation_states() {
+  $methods = array();
+  $states = workbench_moderation_states();
+  foreach ($states as $array) {
+    $methods[$array->name] = $array->name;
+  }
+  return $methods;
+}
+
+/*
+ * Get post-download workbench moderation options
+ */
+function lingotek_get_workbench_moderation_options() {
+  $options = array();
+  $options['no_moderation'] = 'Leave at the current state';
+  $options['increment'] = 'Increment to the next state';
+  $states = workbench_moderation_states();
+  foreach ($states as $array) {
+    $options[] = 'Change to ' . $array->name;
+  }
+  return $options;
+}
+
+/*
+ * Get lingotek default workbench moderation transitions
+ * If global variables are not set, it picks the first transition for a state
+ * If no transitions exist for a state, it picks a transition to the same state
+ *
+ * @return array $lingotek_transitions
+ *    associative array of transitions_from => transitions_to sets
+ */
+function lingotek_get_workbench_moderation_transitions() {
+  $lingotek_transitions = array();
+  $states = lingotek_get_workbench_moderation_states();
+  $transitions = workbench_moderation_transitions();
+  foreach ($transitions as $transition) {
+    $trans = variable_get('lingotek_sync_wb_select_' . $transition->from_name, NULL);
+    if ($trans) {
+      $lingotek_transitions[$transition->from_name] = $trans;
+      unset($states[$transition->from_name]);
+    }
+    else {
+      if (isset($states[$transition->from_name])) {
+        $lingotek_transitions[$transition->from_name] = $transition->to_name;
+        unset($states[$transition->from_name]);
+      }
+    }
+  }
+  foreach ($states as $state) {
+    $lingotek_transitions[$state] = $state;
+  }
+  return $lingotek_transitions;
 }
 
 /*
@@ -420,8 +527,6 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
 
   $api = LingotekApi::instance();
 
-  $link = array();
-
   $document_id = lingotek_lingonode($node->nid, 'document_id');
   $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
 
@@ -436,51 +541,73 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
 
     $target = $api->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
+    
+    return lingotek_get_workbench_url_by_phases($node, $phases, $label, $force);
+  }
+  
+  LingotekLog::error('lingotek_get_workbench_url - Specified language target not found');
 
-    $phase_id = -1;
-    $which_phase = 0;
-    foreach ($phases as $phase) {
-      if (!$phase->isMarkedComplete || $force) {
-        $phase_id = $phase->id;
-        break;
-      }
-      $which_phase++;
+  return '';
+}
+
+/**
+ * Get the url to open the Lingotek Workbench.
+ *
+ * This fetches a link.
+ *
+ * @param object $node
+ *   A Drupal node.
+ * @param $lingotek_locale
+ *   A target language.
+ * @param mixed $label
+ *   The label to use as text for the link. Possible values are
+ *   TRUE, FALSE, or a string to use as a the custom label for the link.
+ * @param bool $force
+ *   Force the link to use the label of the first returned workflow phase for the target Document.
+ *
+ * @return string
+ *   Either a link pointing the the url, or the url itself if $label is FALSE
+ */
+function lingotek_get_workbench_url_by_phases($node, $phases, $label = FALSE, $force = FALSE) {
+
+  $phase_id = -1;
+  $which_phase = 0;
+  foreach ($phases as $phase) {
+    if (!$phase->isMarkedComplete || $force) {
+      $phase_id = $phase->id;
+      break;
     }
-
-    // All phases are complete, use last phase as current.
-    if (!empty($phases) && $phase_id == -1) {
-      $last_phase = end($phases);
-      $phase_id = $last_phase->id;
-    }
-
-    $l = '';
-    if ($phase_id != -1) {
-      $document_id = lingotek_lingonode($node->nid, 'document_id');
-      if ($document_id && $workbench_url = $api->getWorkbenchLink($document_id, $phase_id)) {
-        if ($label === FALSE) {
-          $l = $workbench_url;
-        }
-        else {
-          $path = $workbench_url;
-          if ($label === TRUE) {
-            $label = lingotek_get_phase_name($phase_id);
-          }
-          $l = l($label, '', array('attributes' => array(
-              'onclick' => 'window.open(\'' . $path . '\'); return false;',
-              'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("highlight");',
-              'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("highlight");',
-              )));
-        }
-      }
-    }
-
-    $link[$lang] = array(
-      'which_phase' => $which_phase,
-      'link' => $l,
-    );
+    $which_phase++;
   }
 
-  return $link[$lingotek_locale]['link'];
+  // All phases are complete, use last phase as current.
+  if (!empty($phases) && $phase_id == -1) {
+    $last_phase = end($phases);
+    $phase_id = $last_phase->id;
+  }
+
+  $l = '';
+  if ($phase_id != -1) {
+    $document_id = lingotek_lingonode($node->nid, 'document_id');
+    if ($document_id && $workbench_url = LingotekApi::instance()->getWorkbenchLink($document_id, $phase_id)) {
+      if ($label === FALSE) {
+        $l = $workbench_url;
+      }
+      else {
+        $path = $workbench_url;
+        if ($label === TRUE) {
+          $label = lingotek_get_phase_name($phase_id);
+        }
+        $l = l($label, '', array('attributes' => array(
+            'onclick' => 'window.open(\'' . $path . '\'); return false;',
+            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("lingotek-highlight");',
+            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("lingotek-highlight");',
+            )));
+      }
+    }
+  }
+
+  return $l;
 }
 
 /*

@@ -26,7 +26,7 @@ function lingotek_dashboard() {
           'title' => 'Complete configuration by performing the following:',
           'type' => 'ol',
           'items' => array(
-            array('data' => t('Login to the') .' '. l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank')))),
+            array('data' => t('Login to the') . ' ' . l(t('Lingotek account dashboard'), LINGOTEK_API_SERVER, array('attributes' => array('target' => '_blank')))),
             array('data' => t('Select the <i>Community &gt; Integrations</i> menu item')),
             array('data' => t('Setup an <i>Inbound OAuth integration</i> method to create an <i>OAuth Key</i> and <i>OAuth Secret</i>')),
             array('data' => t('Copy and paste the <i>OAuth Key</i> and <i>OAuth Secret</i> that were created into the') . ' ' . l(t('Lingotek Drupal module settings'), LINGOTEK_MENU_LANG_BASE_URL . '/settings', array('query' => array('edit_connection' => 1))))
@@ -67,11 +67,7 @@ function lingotek_get_dashboard_code() {
   global $base_url;
 
   $output = '';
-  $totals = array();
   $guid = lingotek_get_guid(); // 16 char string
-  //$active_languages = lingotek_get_active_languages();  // array of enabled Drupal language codes (from locale module)
-  $target_languages = LingotekAccount::instance()->getManagedTargets(NULL, TRUE);
-
   $totals = lingotek_get_target_status();
 
   $script = '
@@ -111,8 +107,8 @@ function lingotek_get_dashboard_code() {
       </script>
     ';
 
-  $endpoint = $base_url . '/lingotek/target';
-  $sync_url = $base_url . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
+  $endpoint = $base_url . '/lingotek/target'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
+  $sync_url = $base_url . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
 
   $output .= sprintf($script,
       // lingotek 
@@ -287,9 +283,9 @@ function lingotek_get_source_language_json() {
   $source_language = lingotek_get_source_language();
   $data['code'] = Lingotek::convertDrupal2Lingotek($source_language);
 
-  $data['edited'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_EDITED);
-  $data['pending'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_PENDING);
-  $data['current'] = LingotekSync::getNodeCountByStatus(LingotekSync::STATUS_CURRENT);
+  $data['edited'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_EDITED);
+  $data['pending'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_PENDING);
+  $data['current'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT);
 
   $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];
 
@@ -314,7 +310,7 @@ function lingotek_get_guid() {
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
   $response = array();
-  $target_languages = LingotekAccount::instance()->getManagedTargets(NULL, TRUE);
+  $target_languages = Lingotek::availableLanguageTargets();
 
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {

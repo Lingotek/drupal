@@ -106,6 +106,23 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
 }
 
 /*
+ * Helper function to delete a specified variable from the Lingotek table
+ *
+ * @param int $nid
+ *    node id for the variable that needs to be deleted
+ *
+ * @param string $lingokey
+ *    variable name to be deleted
+ *
+ */
+function lingotek_lingonode_variable_delete($nid, $lingokey) {
+  $query = db_delete('lingotek');
+  $query->condition('nid', $nid);
+  $query->condition('lingokey', $lingokey);
+  $query->execute();
+}
+
+/*
  * When a node is deleted, this is called to clean out the extra data from that node in the Lingotek table.
  *
  * @param $nid
@@ -116,25 +133,6 @@ function lingotek_lingonode_delete($nid) {
   db_delete('lingotek')->condition('nid', $nid)->execute();
 }
 
-/*
- * Revert from having been embedded in XML
- *
- * @param $text
- *  Text to be unescaped
- * @return
- *  Text that has been unescaped
- */
-
-function lingotek_xml_decode($text) {
-  //return htmlspecialchars_decode($text);
-  $text = str_replace("&lt;", "<", $text);
-  $text = str_replace("&gt;", ">", $text);
-  $text = str_replace("&apos;", "'", $text);
-  $text = str_replace("&quot;", "\"", $text);
-  $text = str_replace("&amp;", "&", $text);
-  return $text;
-}
-
 /**
  * Run this on nodes you aren't sure if they've been initialized yet for use with Lingotek.
  */
@@ -143,42 +141,6 @@ function lingotek_node_init_default($node) {
     LingotekLog::trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
     LingotekApi::instance()->addContentDocument($node, TRUE);
     lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
-  }
-}
-
-/**
- * Synchronize the node's content with current translations as stored on the Lingotek platform.
- *
- * @param object $node
- *   A Drupal node object.
- */
-function lingotek_node_sync(&$node) {
-  // Keep synchronized?
-  $sync_method = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 100);
-  $lingotek_document_id = lingotek_lingonode($node->nid, 'document_id');
-  LingotekLog::trace("lingotek_node_sync", array("nid" => $node->nid, 'sync_method' => $sync_method));
-  if ($sync_method != "0" && $lingotek_document_id) {
-    $progress = lingotek_get_document_targets(lingotek_lingonode($node->nid, 'document_id'));
-    // Check for changes in % complete.
-    foreach ($progress as $lingotek_locale => $target) {
-      $key = 'percent_complete_' . $lingotek_locale;
-      $before = lingotek_lingonode($node->nid, $key);
-      if ($before == "") {
-        $before = "0";
-      }
-      $after = $target->percentComplete;
-      if (
-          ($sync_method == "1" && $before !== (string) $after) ||
-          ($sync_method == "100" && $after == "100" && $before !== (string) $after)
-      ) {
-        LingotekLog::trace("lingotek_node_sync percent complete changed", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
-        lingotek_lingonode($node->nid, $key, $after);
-        lingotek_download_document($node, $lingotek_locale);
-      }
-      else {
-        LingotekLog::trace("lingotek_node_sync percent complete stayed the same", array('target_locale' => $lingotek_locale, 'nid' => $node->nid, 'percent' => $after));
-      }
-    }
   }
 }
 
@@ -250,9 +212,15 @@ function watchdog_format_object($object) {
 function lingotek_xml_node_body($node) {
   $translatable = array();
 
+  $translate = variable_get('lingotek_translate_fields', array());
+  $fields_desired = array();
+  if ($translate && $t_array = $translate[$node->type]) {
+    $fields_desired = array_combine($t_array, $t_array);
+  }
+  
   foreach ($node as $key => $value) {
     $field = field_info_field($key);
-    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && $fields_desired[$key]) {
       array_push($translatable, $key);
     }
   }
@@ -272,46 +240,62 @@ function lingotek_xml_node_body($node) {
     // We may split compound Drupal fields into several Lingotek fields.
     $target_keys = array(
       'value' => '', // Most text fields
-      'summary' => 'summary' // "Long text with summary" fields have this sub-field value as well.
+      'summary' => 'summary', // "Long text with summary" fields have this sub-field value as well.
     );
+    if (module_exists('link')) {
+      $target_keys['link'] = array(
+        'url' => '',
+        'title' => '',
+      );
+    }
 
     // Create fields from all target keys.
     foreach ($target_keys as $target_key => $element_suffix) {
-      if (!empty($text[$language][0][$target_key])) {
-        $element_name = $field;
-        if (!empty($element_suffix)) {
-          $element_name .= '__' . $element_suffix;
+      $array_key = NULL;
+      if (is_array($element_suffix)) {
+        foreach ($element_suffix as $tarkey => $val) {
+          $array_key = $tarkey;
+          continue;
         }
-
-        $current_field = '<' . $element_name . '>';
-
-        foreach ($text[$language] as $key => $value) {
-          if (!array_key_exists('value', $value)) {
-            //TODO add TAGs to be translatable
-            /*
-              $terms = $node->$field;
-              foreach ($terms[$language] as $term) {
-              // Do something.
-              }
-             */
-            continue;
+      }
+      foreach ($text[$language] as $delta) {
+        if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
+          $element_name = $field;
+          if (!is_array($element_suffix) && !empty($element_suffix)) {
+              $element_name .= '__' . $element_suffix;
           }
-
-          $current_field .= '<element><![CDATA[' . $value[$target_key] . ']]></element>' . "\n";
+          $current_field = '<' . $element_name . '>';
+           /* if (!array_key_exists('value', $value)) {
+            dpm($value);
+              //TODO add TAGs to be translatable
+                $terms = $node->$field;
+                foreach ($terms[$language] as $term) {
+                // Do something.
+                }
+              continue;
+            }*/
+            if (is_array($element_suffix)) {
+              foreach ($element_suffix as $t_key => $t_val) {
+                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+              }
+            }
+            else {
+              $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
+            }
+          $current_field .= '</' . $element_name . '>';
+          $content .= $current_field;
         }
-
-        $current_field .= '</' . $element_name . '>';
-        $content .= $current_field;
       }
     }
   }
-
+  /* deprecated with config translation
   //Menus related to the page:
+  // Do we still want this? Config translation translates these items
   $menu = menu_link_get_preferred('node/' . $node->nid);
   $txt = $menu['link_title'];
   if ($txt != "") {
     $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
-  }
+  }*/
 
   //URL Alias related to the page:
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
@@ -400,13 +384,14 @@ function lingotek_access_by_plan_type($types, $permission = NULL) {
 function lingotek_access_dev_tools($node, $permission) {
   // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
   // OR when not Enterprise
+  
   $user_access = user_access($permission);
-  if ((module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && $user_access && !lingotek_node_pushed($node))
+  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node))
       || !LingotekAccount::instance()->isEnterprise()) {
     return FALSE;
   }
   // Default: Standard user access
-  return user_access($permission);
+  return $user_access;
 }
 
 /**
@@ -460,7 +445,7 @@ function lingotek_supported_field_type($type) {
  *   Boolean value.
  */
 function lingotek_do_cache() {
-  return !(variable_get('lingotek_flush_cache', FALSE) && user_access('dev'));
+  return !(variable_get('lingotek_flush_cache', FALSE) && user_access('use lingotek developer tools'));
 }
 
 /**
@@ -645,20 +630,23 @@ function lingotek_delete_target_language($lingotek_locale) {
 
   if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
 
-    db_update('languages')
-        ->fields(array(
-          'enabled' => 0,
-          'lingotek_enabled' => 0,
-        ))
-        ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
-        ->execute();
-    LingotekLog::info("Target language removed: @lingotek_locale"
-        , array(
-      '@lingotek_locale' => $lingotek_locale)
-    );
+    if (Lingotek::convertDrupal2Lingotek(language_default()->language, FALSE) <> $lingotek_locale) {
+      db_update('languages')
+          ->fields(array(
+            'enabled' => 0,
+            'lingotek_enabled' => 0,
+          ))
+          ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
+          ->execute();
+      LingotekLog::info("Target language removed: @lingotek_locale"
+          , array(
+        '@lingotek_locale' => $lingotek_locale)
+      );
+    }
 
-    // Removes the node sync target language entries from the lingotek table.
-    LingotekSync::deleteTargetEntriesForAllNodes($lingotek_locale);
+    // Removes the node sync target language entries from the lingotek table
+    // and removes config chunk target language entries from lingotek_config_metadata.
+    LingotekSync::deleteTargetEntriesForAllDocs($lingotek_locale);
 
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
@@ -762,7 +750,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
     locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
   }
 
-  LingotekSync::insertTargetEntriesForAllNodes($lingotek_locale); // Add the node sync target language entries to the lingotek table.
+  LingotekSync::insertTargetEntriesForAllDocs($lingotek_locale); // Add the node sync target language entries to the lingotek table.
   return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale, $call_api);
 }
 
@@ -778,9 +766,7 @@ function lingotek_add_missing_locales() {
   foreach ($languages as $target) {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
       $drupal_language_code = $target->language;
-      // Set default when Enterprise to 1 (unless source language, then set to 0)
-      //$lingotek_enabled = LingotekAccount::instance()->isEnterprise() ? (($target->language == $default_language->language) ? 0 : 1) : $target->lingotek_enabled;
-      $lingotek_enabled = $target->lingotek_enabled;
+      $lingotek_enabled = $target->lingotek_enabled ? $target->lingotek_enabled : (($target->language == $default_language->language) ? 0 : 1);// enable default source language by default
       $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE);
       lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled, $lingotek_locale);
       $update_static_language_list = TRUE;
@@ -807,6 +793,27 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabl
       ->condition('language', $drupal_language_code)
       ->execute();
   return $lingotek_locale;
+}
+
+/**
+ * Lingotek custom wrapper function for node_load
+ *
+ * This is needed because the Lingotek module should translate only the most current revision of any node
+ *
+ * @param $nid entity_id of node to load
+ *
+ * @return $node most current revision of the node at $nid
+ */
+function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
+  if ($vid == NULL) {
+    $query = db_select('node_revision', 'nr')
+      ->condition('nid', $nid, '=');
+    $query->addExpression('MAX(vid)', 'max_vid');
+    $vid = $query->execute()->fetchField();
+  }
+
+  $node = node_load($nid, $vid, $reset);
+  return $node;
 }
 
 /**

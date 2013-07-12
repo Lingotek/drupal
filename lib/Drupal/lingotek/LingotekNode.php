@@ -101,7 +101,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   public static function loadById($node_id) {
     $node = FALSE;
-    if ($drupal_node = node_load($node_id)) {
+    if ($drupal_node = lingotek_node_load_default($node_id)) {
       $node = self::load($drupal_node);
     }
     return $node;
@@ -119,20 +119,14 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   public static function loadByLingotekDocumentId($lingotek_document_id) {
     $node = FALSE;
-    $key = 'document_id';
-    $query = db_select('lingotek', 'l')->fields('l');
-    $query->condition('lingokey', $key.'%', 'LIKE');
-    $query->condition('lingovalue', $lingotek_document_id);
-    $result = $query->execute();
-
-    if ($record = $result->fetchAssoc()) {
-      $node = self::loadById($record['nid']);
+    $nid = LingotekSync::getNodeIdFromDocId($lingotek_document_id);
+    if ($nid) {
+      $node = self::loadById($nid);
     }
-
     return $node;
   }
-  
-  
+
+
   /**
    * Gets the Lingotek document ID for this entity.
    *
@@ -207,6 +201,19 @@ class LingotekNode implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function updateLocalContent() {
+    // Necessary to fully implement the interface, but we don't do anything
+    // on LingotekNode objects, explicitly.    
+  }
+  
+  /**
+   * Updates the local content of $target_code with data from a Lingotek Document
+   *
+   * @param string $lingotek_locale
+   *   The code for the language that needs to be updated.
+   * @return bool
+   *   TRUE if the content updates succeeded, FALSE otherwise.
+   */
+  public function updateLocalContentByTarget($lingotek_locale) {
     // Necessary to fully implement the interface, but we don't do anything
     // on LingotekNode objects, explicitly.    
   }

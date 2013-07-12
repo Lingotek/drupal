@@ -1,4 +1,38 @@
 
-.highlight {
+.lingotek-highlight {
   background-color: #ecf2f9 !important;
+}
+
+#navbar-link-admin-settings-lingotek::before {
+  background-attachment: scroll;
+  background-color: transparent;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-image: url("../images/ico_chevs_dd.png");
+}
+
+/*#lingotek-navbar-tab {
+  margin-top: 8px;
+  color: black;
+  float: right;
+}
+
+#lingotek-navbar-tab .ddTitle {
+  height: 23px;
+}*/
+
+div.form-item-create-lingotek-document-workbench-moderation, div.form-item-syncMethod-wb {
+  margin-left: 50px;
+}
+
+/*div.form-item-create-lingotek-document-workbench-moderation label, div.form-item-syncMethod-wb label {
+  font-weight: normal !important;
+}*/
+
+div.form-item-lingotek-create-documents-by-default-workbench-moderation, div.form-item-wb-options {
+  margin-left: 50px;
+}
+
+#edit-wb-select {
+  margin-left: 50px;
 }
