@@ -11,7 +11,7 @@
   background-image: url("../images/ico_chevs_dd.png");
 }
 
-#lingotek-navbar-tab {
+/*#lingotek-navbar-tab {
   margin-top: 8px;
   color: black;
   float: right;
@@ -19,7 +19,7 @@
 
 #lingotek-navbar-tab .ddTitle {
   height: 23px;
-}
+}*/
 
 div.form-item-create-lingotek-document-workbench-moderation, div.form-item-syncMethod-wb {
   margin-left: 50px;

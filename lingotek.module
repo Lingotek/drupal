@@ -75,7 +75,7 @@ function lingotek_menu() {
     'page callback' => 'lingotek_dashboard',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
-      ));
+  ));
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'] = array(
     'title' => 'Dashboard',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -98,7 +98,7 @@ function lingotek_menu() {
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
     'page callback' => 'lingotek_admin_configuration_view', //drupal_get_form
-      //'page arguments' => array('lingotek_admin_form'),
+    //'page arguments' => array('lingotek_admin_form'),
   );
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'] = array(
     'title' => 'Settings',
@@ -108,7 +108,7 @@ function lingotek_menu() {
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
     'page callback' => 'lingotek_admin_configuration_view', //drupal_get_form
-      //'page arguments' => array('lingotek_admin_form'),
+    //'page arguments' => array('lingotek_admin_form'),
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
@@ -168,6 +168,16 @@ function lingotek_menu() {
     'page callback' => 'lingotek_page_mark_phases_complete',
     'page arguments' => array(2),
     'type' => MENU_CALLBACK,
+  );
+
+
+  $items['lingotek/preparecsv'] = array(
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer lingotek'),
+    'description' => 'Lingotek Sync Endpoint',
+    'file' => 'lingotek.sync.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_prepare_csv'),
   );
 
   // Batch Process Pages ----------------------------------------
@@ -927,7 +937,7 @@ function lingotek_form_node_type_form_alter(&$form, &$form_state) {
   /* $lingotek_option_label = (module_exists('entity_translation')) ?
     t('Enabled, with Lingotek translation or field translation.') : t('Enabled, with Lingotek translation'); */
   $lingotek_details = (module_exists('entity_translation')) ?
-      t('If Lingotek translation (or field translation) is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.') : t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
+    t('If Lingotek translation (or field translation) is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.') : t('If Lingotek translation is enabled, then it will be possible to use Lingotek\'s collaborative workbench to translate content.');
   $form['workflow']['language_content_type']['#options'][LINGOTEK_ENABLED] = $lingotek_option_label;
   $form['workflow']['language_content_type']['#description'] .= ' ' . $lingotek_details;
 }
@@ -1102,7 +1112,7 @@ function lingotek_is_config_missing() {
     'lingotek_oauth_consumer_secret',
     'lingotek_login_id',
     'lingotek_project',
-      //'lingotek_vault'  //TO-DO: ensure that the project vault is actually set
+    //'lingotek_vault'  //TO-DO: ensure that the project vault is actually set
   );
   foreach ($required_variables as $required_variable) {
     $val = variable_get($required_variable, NULL);
@@ -1314,7 +1324,6 @@ function lingotek_field_language_alter(&$display_language, $context) {
  */
 function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
   // Check global and node-specific settings
-
   // if this node is managed by lingotek, add lingotek wb variables
   if ((isset($node->lingotek_push_once) && $node->lingotek_push_once) || lingotek_node_pushed($node) || !lingotek_managed_by_entity_translation($node->type)) {
     $def_state = lingotek_variable_get(lingotek_lingonode($node->nid, 'create_lingotek_document_workbench_moderation'), 'lingotek_create_documents_by_default_workbench_moderation', workbench_moderation_state_published());
@@ -1370,25 +1379,90 @@ function lingotek_entity_delete($entity, $type) {
  * Implements hook_navbar().
  */
 function lingotek_navbar() {
-  //this addon requieres the Language DropDown module. But I don't want to make
-  //it a strict dependency.
-  if (module_exists('lang_dropdown')) {
-    $path = drupal_is_front_page() ? '<front>' : $_GET['q'];
-    $languages = language_negotiation_get_switch_links('language', $path);
+  
+  //this integration with the navbar module has depencies on javascript files
+  //that Responsive Theme Preview adds. Thus the integration will only show up if 
+  //the Responsive Theme Preview module is enabled.
+  if(!module_exists('responsive_preview')) {
+    return;
+  }
+  
+  $path = drupal_is_front_page() ? '<front>' : $_GET['q'];
+  $links = language_negotiation_get_switch_links('language', $path);
+  $buttons = array();
+  
+  if(empty($links->links))
+    return;
+  
+  foreach($links->links as $key => $link) {
+    $link['attributes']['class'] = array('device', 'icon', 'icon-active');
+    $link['language'] = (object) array('language' => $key);
+    $buttons[] = l($link['title'], $link['href'], $link);
+  }
 
-    $items['lingotek'] = array(
-      '#type' => 'navbar_item',
-      '#tag' => 'div',
-      'tab' => drupal_get_form('lang_dropdown_form', $languages, 'language'),
-      '#wrapper_attributes' => array(
-        'id' => 'lingotek-navbar-tab',
+  $items['lingotek'] = array(
+    '#type' => 'navbar_item',
+    'tab' => array(
+      'trigger' => array(
+        '#theme' => 'html_tag',
+        '#tag' => 'button',
+        '#value' => t('Layout preview'),
+        '#value_prefix' => '<span class="element-invisible">',
+        '#value_suffix' => '</span>',
+        '#attributes' => array(
+          'title' => t('Preview page layout'),
+          'class' => array('icon', 'icon-lingotek', 'trigger'),
+        ),
       ),
-      '#weight' => 400,
-      '#access' => TRUE,
-    );
-    return $items;
-  }
-  else {
-    return array();
-  }
+      'device_options' => array(
+        '#theme' => 'item_list',
+        '#items' => $buttons,
+        '#attributes' => array(
+          'class' => array('options'),
+        ),
+      ),
+    ),
+    '#wrapper_attributes' => array(
+      'id' => 'lingotek-navbar-tab',
+      'class' => array('navbar-tab-lingotek'),
+    ),
+    '#attached' => array(
+      'library' => array(
+        array('lingotek', 'lingotek-navbar-switcher'),
+      ),
+    ),
+    '#weight' => 300,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_library().
+ */
+function lingotek_library() {
+  $path = drupal_get_path('module', 'lingotek');
+  $options = array(
+    'scope' => 'footer',
+    'attributes' => array('defer' => TRUE),
+  );
+
+  $libraries['lingotek-navbar-switcher'] = array(
+    'title' => 'Lingotek Language Switcher',
+    'version' => VERSION,
+    'css' => array(
+      $path . '/style/lingotek.navbar.css',
+    ),
+    'js' => array(
+      $path . '/js/lingotek-navbar-switcher.js' => $options,
+    ),
+    'dependencies' => array(
+      array('system', 'jquery'),
+      array('responsive_preview', 'debounce'),
+      array('responsive_preview', 'backbone'),
+      array('responsive_preview', 'jquery.ui.position'),
+    ),
+  );
+
+  return $libraries;
 }
