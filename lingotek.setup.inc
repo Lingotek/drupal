@@ -793,7 +793,7 @@ function lingotek_setup_additional_translation_settings_form_validate($form, &$f
 
 function lingotek_setup_additional_translation_settings_form_submit($form, &$form_state) {
   // WTD: process the submitted options
-  lingotek_admin_additional_translation_settings_form_submit($form, &$form_state);
+  lingotek_admin_additional_translation_settings_form_submit($form, $form_state);
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
   
