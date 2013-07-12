@@ -212,9 +212,15 @@ function watchdog_format_object($object) {
 function lingotek_xml_node_body($node) {
   $translatable = array();
 
+  $translate = variable_get('lingotek_translate_fields', array());
+  $fields_desired = array();
+  if ($translate && $t_array = $translate[$node->type]) {
+    $fields_desired = array_combine($t_array, $t_array);
+  }
+  
   foreach ($node as $key => $value) {
     $field = field_info_field($key);
-    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && $fields_desired[$key]) {
       array_push($translatable, $key);
     }
   }

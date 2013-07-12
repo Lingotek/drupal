@@ -263,6 +263,17 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek')
   );
+  
+  $items['admin/config/lingotek/additional-translation-settings'] = array(
+    'title' => 'Enable Additional Translation',
+    'description' => 'Select any additional types you want translated.',
+    'file' => 'lingotek.setup.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_setup_additional_translation_settings_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer lingotek')
+  );
+  
   $items['admin/config/lingotek/content-type-choose-fields-ajax/%'] = array(
     'title' => 'Content Types Ajax',
     'description' => 'Ajax functionality for content options.',

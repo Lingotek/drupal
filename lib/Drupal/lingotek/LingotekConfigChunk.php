@@ -150,12 +150,14 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   an array of lids from locales_source
    */
   public static function getSegmentIdsById($chunk_id) {
-    $result = db_query(' SELECT ls.lid
+    $textgroups = "-1,'".implode("','", self::getTextgroupsForTranslation())."'";
+    $result = db_query(" SELECT ls.lid
                         FROM {locales_source} ls
                         WHERE ls.lid >= :minLid
                         AND ls.lid <= :maxLid
                         AND LENGTH(ls.source) < :maxLen
-                        ', array( ':minLid' => self::minLid($chunk_id),
+                        AND ls.textgroup IN ($textgroups)
+                        ", array( ':minLid' => self::minLid($chunk_id),
                                   ':maxLid' => self::maxLid($chunk_id),
                                   ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
                                 )
@@ -274,13 +276,15 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $chunk_size = LINGOTEK_CONFIG_CHUNK_SIZE;
     $chunk_min = (intval($chunk_id)-1) * intval($chunk_size) + 1;
     $chunk_max = (intval($chunk_id)-1) * intval($chunk_size) + $chunk_size;
+    $textgroups = "-1,'".implode("','", self::getTextgroupsForTranslation())."'";
 
-    $results = db_query(' SELECT ls.lid, ls.source
+    $results = db_query(" SELECT ls.lid, ls.source
                         FROM {locales_source} ls
                         WHERE ls.lid >= :minLid
                         AND ls.lid <= :maxLid
                         AND LENGTH(ls.source) < :maxLen
-                        ', array( ':minLid' => $chunk_min,
+                        AND ls.textgroup IN ($textgroups)
+                        ", array( ':minLid' => $chunk_min,
                                   ':maxLid' => $chunk_max,
                                   ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
                                 )
@@ -596,9 +600,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
 
     $content = '';
     foreach ($translatable as $field) {
-      $language = $this->language;
-      $text = $this->source_data[$field];
-      $text = self::filterPlaceholders($text);
+      $text = self::filterPlaceholders($this->source_data[$field]);
 
       if ($text) {
         $current_field = '<' . self::TAG_PREFIX . $field . '>';

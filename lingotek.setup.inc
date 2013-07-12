@@ -4,6 +4,7 @@
  * @file
  * Lingotek Easy Install Process.
  */
+include_once('lingotek.admin.inc');
 
 /**
  * Routing:  Returning User, New Account or Already Setup
@@ -666,136 +667,23 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
 }
 
 function lingotek_setup_language_switcher_form_submit($form, $form_state) {
-  require_once('lingotek.admin.inc');
   lingotek_admin_language_switcher_form_submit($form, $form_state);
   drupal_goto('admin/config/lingotek/node-translation-settings');
 }
 
 /**
- * Node Translation Settings - Form Layout
+ * Entity Translation Settings - Form Layout
  * Select the Content Types and Fields to be Translated.
  */
-function lingotek_setup_node_translation_settings_form() {
-
-  $raw_types = node_type_get_types();
-  $types = array();
-  $translate = variable_get('lingotek_translate_fields', array());
-
-  if (count($translate) > 0) {
-    $use_defaults = FALSE;
+function lingotek_setup_node_translation_settings_form($form, $form_state) {
+  $form = lingotek_admin_node_translation_settings_form($form, $form_state);
+  if (is_array($_SESSION['lingotek_setup_path'])) {
+    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
+      $null = array_pop($_SESSION['lingotek_setup_path']);
+    } // if the user went back, remove the last element, which is this page.
+    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
-  else {
-    $use_defaults = TRUE;
-  }
-
-  // What types of fields DO we translate?
-  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea_with_summary');
-  if (module_exists('link')) {
-    $included_fields[] = 'link_field';
-  }
-
-  $form[] = array(
-    '#type' => 'item',
-    '#title' => t('Which content do you want translated?'),
-  );
-  //$form['lingotek_instructions'] = array('#markup' => '<div>Which content do you want translated?</div>');
-  //$form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-
-  $form['lingotek_checkboxes_open'] = array('#markup' => '<div id="content-checkboxes" style="border: 0px solid red;">');
-  // Arrange the Types nicely.
-  foreach ($raw_types as $value) {
-    $types[$value->type] = $value->name;
-    $form['type_' . $value->type] = array(
-      '#type' => 'checkbox',
-      '#title' => t('@value_name (<span id="showhidelink_@value_type"><a id="showlink_@value_type" href="@url" class="use-ajax">choose fields</a></span>)', array('@value_name' => $value->name, '@value_type' => $value->type, '@url' => url('admin/config/lingotek/content-type-choose-fields-ajax/' . $value->type))),
-      '#return_value' => $value->type,
-      '#default_value' => ( array_key_exists($value->type, $translate) || ( $use_defaults === TRUE) ) ? TRUE : FALSE,
-      '#prefix' => '<div id="content_type_' . $value->type . '">',
-      '#suffix' => '</div>' . '',
-      '#ajax' => array(
-        'event' => 'click',
-        'callback' => 'lingotek_content_type_checkbox_callback',
-        'wrapper' => 'content_fields_' . $value->type,
-      ),
-    );
-
-    // Grab the fields for this Content Type.
-    $fields = field_info_instances('node', $value->type);
-
-    $switch = ( array_key_exists($value->type, $translate) ) ? 'block' : 'none';
-    $form['lingotek_' . $value->type . 'fieldlist_open'] = array('#markup' => '<div id="content_fields_' . $value->type . '" style="display: ' . $switch . ';">');
-    $form['lingotek_fieldlist_details_' . $value->type] = array('#markup' => '<div style="padding-left: 25px; padding-bottom: 5px;">Which fields would you like to include:</div>');
-
-    $title_found = FALSE; // Is there a title field present?
-    // Loop the fields, outputting them.
-    foreach ($fields as $field) {
-      $field_label = $field['label'];
-      $field_machine_name = $field['field_name'];
-      $field_type = $field['widget']['type'];
-      $field_name = $value->type . '_SEPERATOR_' . $field_machine_name;
-
-      if (($field_label == 'Title') && ($field_type == 'text_textfield')) {
-        $title_found = TRUE;
-      }
-      /*
-        $rand = rand();
-        $form['lingotek_fieldlist_debug_'.$rand] = array( '#markup' => '<div>'
-        .'Name: ' .$field_name .'<br>'
-        .'Label: ' .$field_label .'<br>'
-        .'Type: ' .$field_type .'<br>'
-        .'</div>' );
-       */
-      // Exclude field types we dont translate.
-      if (TRUE == array_search($field_type, $included_fields)) {
-        $form[$field_name] = array(
-          '#type' => 'checkbox',
-          '#title' => t('@fieldlabel [@fieldtype]', array('@fieldlabel' => $field_label, '@fieldtype' => $field_type)),
-          // Set if your machine type is set to translate, and your field has been flagged for translation.   OR!  If use defaults == TRUE, and your field type has text in the name somewhere
-          '#default_value' => ( ( isset($translate[$value->type]) && FALSE !== array_search($field_machine_name, $translate[$value->type]) ) || ( ( $use_defaults === TRUE) && (strpos($field_type, 'text') !== FALSE ) ) ) ? TRUE : FALSE,
-          '#prefix' => '<div style="padding-left: 35px;">',
-          '#suffix' => '</div>',
-        );
-      }
-    } // END:  foreach field
-    // if we did NOT find a title field for the specified content type, add it manually as an option, and we can do a title swap for the user.
-    if ($title_found === FALSE) {
-      $form['title_swap_' . $value->type] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Title (Note: field will be created)'),
-        '#default_value' => TRUE,
-        '#prefix' => '<div style="padding-left: 35px;">',
-        '#suffix' => '</div>',
-      );
-    }
-
-    $form['lingotek_' . $value->type . 'fieldlist_close'] = array('#markup' => '</div>');
-
-  } // END:  foreach content type
-
-  $form['lingotek_checkboxes_close'] = array('#markup' => '</div>');
-
-  if (variable_get('lingotek_setup_complete', 0)) {
-    $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Save')
-    );
-  }
-  else {
-    $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Next')
-    );
-
-    if (is_array($_SESSION['lingotek_setup_path'])) {
-      if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
-        $null = array_pop($_SESSION['lingotek_setup_path']);
-      } // if the user went back, remove the last element, which is this page.
-      $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
-    }
-    $form['lingotek_support_footer'] = lingotek_support_footer();
-  }
+  $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
 }
@@ -889,69 +777,32 @@ function lingotek_content_type_checkbox_callback($form, &$form_state) {
  * Node Translation Settings - Form Submit
  */
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
-  $translate = array();
-  $translate_addtl = array();
+  lingotek_admin_node_translation_settings_form_submit($form, $form_state);
+  drupal_goto('admin/config/lingotek/additional-translation-settings');
+}
+
+function lingotek_setup_additional_translation_settings_form($form, &$form_state) {
+  $form = lingotek_admin_additional_translation_settings_form($form, $form_state);
+  $form['lingotek_support_footer'] = lingotek_support_footer();
+  return $form;
+}
+
+function lingotek_setup_additional_translation_settings_form_validate($form, &$form_state) {
+  lingotek_admin_additional_translation_settings_form_validate($form, $form_state);
+}
+
+function lingotek_setup_additional_translation_settings_form_submit($form, &$form_state) {
+  // WTD: process the submitted options
+  lingotek_admin_additional_translation_settings_form_submit($form, &$form_state);
+
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
+  
   $operations = array();
-  foreach ($form_state['values'] as $key => $value) {
-
-    // Look for Selected Content Types and Fields.
-    if (FALSE !== strpos($key, '_SEPERATOR_')) {
-      // And only if set to translate
-      if ($value != 0) {
-        $parts = explode('_SEPERATOR_', $key);
-        $content_type = $parts[0];
-        $content_field = $parts[1];
-        $translate[$content_type][] = $content_field;
-
-        // Set this content type to be Lingotek translated.
-        variable_set('language_content_type_' . $content_type, LINGOTEK_ENABLED);
-        // Set this field to 'translatable'.
-        // Update the field via the Field API (Instead of the direct db_update)
-        $field = field_info_field($content_field);
-        $field['translatable'] = 1;
-        $field['lingotek_translatable'] = 1;
-        field_update_field($field);
-      }
-    } // END:  Selected Content Types and Fields
-    // Look for any nodes we need to do the Title swap for.
-    if (FALSE !== strpos($key, 'title_swap_')) {
-      // And only if set to swap
-      if ($value != 0) {
-        $content_type = substr($key, strlen('title_swap_'));
-        //dpm( 'Title Swap: ' . $content_type );
-        // Do the actual title replacement
-        $entity_type = 'node';
-        $bundle = $content_type;
-        $legacy_field = 'title';
-
-        // Use the Title module to migrate the content.
-        if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
-          //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
-          $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
-          $translate[$content_type][] = 'title_field';
-          $field = field_info_field('title_field');
-          $field['translatable'] = 1;
-          $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
-          $operations[] = array('field_update_field', array($field)); //field_update_field($field);
-        }
-      }
-    }
-    // Look for additional strings to include in translation, ie. taxonomies, menus, etc.
-    if ($key == 'config_translation') {
-      if ($value != 0) {
-        // Set this content type to be Lingotek translated.
-        variable_set('lingotek_translate_config', LINGOTEK_ENABLED);
-      }
-    }
-  }
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
-  variable_set('lingotek_translate_fields', $translate);
-
   $operations[] = array('lingotek_cleanup_utility', array(FALSE));
   $operations[] = array('variable_set', array('lingotek_setup_complete', 1));
 
   $batch = array(
-    'title' => t('Preparing content for translation'),
+    'title' => t('Preparing additional translation settings'),
     'operations' => $operations
   );
 
