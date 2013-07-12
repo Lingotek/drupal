@@ -170,16 +170,6 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
-
-  $items['lingotek/preparecsv'] = array(
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek'),
-    'description' => 'Lingotek Sync Endpoint',
-    'file' => 'lingotek.sync.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_prepare_csv'),
-  );
-
   // Batch Process Pages ----------------------------------------
   // Sync Progress Report 
   $items['lingotek/sync/report'] = array(
