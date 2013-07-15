@@ -1086,7 +1086,7 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
  */
 function lingotek_is_module_setup() {
   $redirect = lingotek_is_config_missing();
-  if (!is_null($redirect)) {
+  if (!is_bool($redirect)) {
     drupal_goto($redirect); // If something is missing - Go to the Setup Process
   }
 }
@@ -1121,7 +1121,7 @@ function lingotek_is_config_missing() {
       }
     }
   }
-  return NULL; // all required configuration variables are set
+  return FALSE; // all required configuration variables are set
 }
 
 /**

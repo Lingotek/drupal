@@ -94,7 +94,7 @@ function lingotek_admin_account_status_form_submit($form, &$form_state) {
 function lingotek_admin_node_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
 
   //$setup_complete = variable_get('lingotek_setup_complete', 0);
-  $setup_complete = is_null(lingotek_is_config_missing());
+  $setup_complete = (!lingotek_is_config_missing());
   $raw_types = node_type_get_types();
   $types = array();
   $translate = variable_get('lingotek_translate_fields', array());
@@ -277,7 +277,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   global $base_url;
   $api = LingotekApi::instance();
   //$setup_complete = variable_get('lingotek_setup_complete', 0);
-  $setup_complete = is_null(lingotek_is_config_missing());
+  $setup_complete = (!lingotek_is_config_missing());
   $account = LingotekAccount::instance();
   $is_enterprise = $account->isEnterprise();
   /*

@@ -12,7 +12,7 @@ include_once('lingotek.admin.inc');
 function lingotek_setup() {
 
   // Does the install already have connection credentials?
-  if (!is_null(lingotek_is_config_missing())) {
+  if (lingotek_is_config_missing())) {
     drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go though the Setup Process
   }
   else {
