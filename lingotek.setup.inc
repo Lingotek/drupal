@@ -12,7 +12,7 @@ include_once('lingotek.admin.inc');
 function lingotek_setup() {
 
   // Does the install already have connection credentials?
-  if (!lingotek_setup_check_credentials()) {
+  if (!is_null(lingotek_is_config_missing())) {
     drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go though the Setup Process
   }
   else {
@@ -442,13 +442,15 @@ function lingotek_community_settings_select_form() {
     $vault_count = count($community_settings['vault']);
     if ($vault_count == 1) {
       // If there is just 1 Vault, Auto-Select it.  Then move on to the next step.
-      $vault_id = array_keys($community_settings['vault'][0]);
+      $key = array_keys($community_settings['vault']);
+      $vault_id = array_keys($community_settings['vault'][$key[0]]);
       $current_vault = variable_get('lingotek_vault', NULL);
-      if ($current_vault && $current_vault != $vault_id) {
+      if ($current_vault && $current_vault != $vault_id[0]) {
         // Something is wrong here.  The workflow is referencing a vault that the user has no access to.
         // I don't know what to do in this case, however, or if it will ever happen.
       }
-      variable_set('lingotek_vault', $vault_id);
+      variable_set('lingotek_vault', $vault_id[0]);
+      $var = variable_get('lingotek_vault', 0);
     }
 
     if ($project_count == 1 && $workflow_count == 1 && $vault_count == 1) {

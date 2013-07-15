@@ -1085,9 +1085,9 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
  * Checks to make sure the Lingotek Translation module setup completed successfully.  If its not, the user is directed to the setup wizard.
  */
 function lingotek_is_module_setup() {
-
-  if (lingotek_is_config_missing()) {
-    drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go to the Setup Process
+  $redirect = lingotek_is_config_missing();
+  if (!is_null($redirect)) {
+    drupal_goto($redirect); // If something is missing - Go to the Setup Process
   }
 }
 
@@ -1106,10 +1106,22 @@ function lingotek_is_config_missing() {
   );
   foreach ($required_variables as $required_variable) {
     $val = variable_get($required_variable, NULL);
-    if (empty($val))
-      return TRUE;
+    if (empty($val)) {
+      if ($required_variable == 'lingotek_login_id') {
+        return 'admin/config/lingotek/new-account';
+      }
+      elseif ($required_variable == 'lingotek_community_identifier') {
+        return 'admin/config/lingotek/community-select';
+      }
+      elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
+        return 'admin/config/lingotek/community-settings-select';
+      }
+      elseif ($required_variable == 'lingotek_oauth_consumer_id' || $required_variable == 'lingotek_oauth_consumer_secret') {
+        return TRUE;
+      }
+    }
   }
-  return FALSE; // all required configuration variables are set
+  return NULL; // all required configuration variables are set
 }
 
 /**
