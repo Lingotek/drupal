@@ -992,6 +992,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
       }
     }
 
+    $sorted = asort($projects);
     $form['defaults']['lingotek_project'] = array(
       '#type' => 'select',
       '#title' => t('Default Project'),

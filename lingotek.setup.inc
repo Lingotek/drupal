@@ -328,7 +328,7 @@ function lingotek_community_select_form() {
       $community_keys = array_keys($communities);
       $community_id = array_pop($community_keys);
       variable_set('lingotek_community_identifier', $community_id);
-      drupal_goto('admin/config/lingotek/project-select'); // Default path, if they only have 1 community. 
+      drupal_goto('admin/config/lingotek/community-settings-select'); // Default path, if they only have 1 community.
     }
     elseif ($count > 1) { // More then 1 community
       // Stay on this page
@@ -464,6 +464,7 @@ function lingotek_community_settings_select_form() {
 
   if ($project_count > 1) {
 
+    $sorted = asort($community_settings['project']);
     $form['lingotek_site_project'] = array(
       '#title' => t('Project'),
       '#type' => 'select',
