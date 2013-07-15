@@ -315,7 +315,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
     if (variable_get('lingotek_translate_config')) {
       // pre-build include/exclude messages based on enabled config types
       $config_types = array(
-        'lingotek_translate_config' => t('Include built-in interface data'),
+        'lingotek_translate_config_builtins' => t('Include built-in interface data'),
         'lingotek_translate_config_blocks' => t('blocks'),
         'lingotek_translate_config_taxonomies' => t('taxonomies'),
         'lingotek_translate_config_menus' => t('menus'),

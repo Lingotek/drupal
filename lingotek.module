@@ -263,7 +263,17 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek')
   );
-  
+
+  $items['admin/config/lingotek/comment-translation-settings'] = array(
+    'title' => 'Enable Comment Translation',
+    'description' => 'Select any node types you want the comments translated.',
+    'file' => 'lingotek.setup.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_setup_comment_translation_settings_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer lingotek')
+  );
+
   $items['admin/config/lingotek/additional-translation-settings'] = array(
     'title' => 'Enable Additional Translation',
     'description' => 'Select any additional types you want translated.',

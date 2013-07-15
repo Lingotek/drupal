@@ -24,10 +24,11 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
   // Account Status
 
   $account_status = $account->getStatusText();
+  //$account_status .= '<br>Enterprise: ' . ($is_enterprise ? 'Yes' : 'No');
 
   $form['status'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Account') . ': ' . $account_status,
+    '#title' => t('Account'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -39,6 +40,12 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
       )
     ),
     '#submit' => array('lingotek_admin_account_status_form_submit')
+  );
+
+  $form['status']['account_summary'] = array(
+    '#type' => 'hidden',
+    '#value' => t('Account') . ': ' . $account_status,
+    '#attributes' => array('id' => array('account_summary')),
   );
 
   // Account Information
@@ -64,7 +71,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array(t('Project ID:'), variable_get('lingotek_project', '')),
         array(t('Vault ID:'), variable_get('lingotek_vault', '')),
         array(t('Notify URL:'), variable_get('lingotek_notify_url', '')),
-  )))
+    )))
   );
 
   return $form;
@@ -89,7 +96,7 @@ function lingotek_admin_account_status_form_submit($form, &$form_state) {
 }
 
 /**
- * Entity translation form
+ * Content translation form
  */
 function lingotek_admin_node_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
 
@@ -114,8 +121,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
 
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Content types') : t('Which content types would you like to enable for translation?')),
-    '#description' => ($setup_complete ? t('Choose the Entity types to be translated:') : ''),
+    '#title' => ($setup_complete ? t('Content Translation') : t('Which content types do you want translated?')),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -128,7 +134,15 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     ),
     '#submit' => array('lingotek_admin_node_translation_settings_form_submit'),
   );
-  
+
+  if ($setup_complete) {
+    $form['node_translation'][] = array(
+      '#type' => 'item',
+      '#description' => t('Choose the content types to be translated:'),
+    );
+  }
+
+
   $form['node_translation']['lingotek_checkboxes_open'] = array('#markup' => '<div id="content-checkboxes" style="border: 0px solid red;">');
   // Arrange the Types nicely.
   foreach ($raw_types as $value) {
@@ -273,7 +287,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 /**
  * Additional translation form
  */
-function lingotek_admin_additional_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
+function lingotek_admin_comment_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
   global $base_url;
   $api = LingotekApi::instance();
   //$setup_complete = variable_get('lingotek_setup_complete', 0);
@@ -283,9 +297,9 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   /*
    * Comment translation
    */
-  $form['additional_translation'] = array(
+  $form['comment_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Additional Translation') : t('Which additional items do you want translated?')),
+    '#title' => ($setup_complete ? t('Comment Translation') : t('Which comment items do you want translated?')),
     //'#description' => t('Enable/disable and set defaults for comment translation.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -297,42 +311,23 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
         '#value' => t('Save')
       )
     ),
-    '#validate' => array('lingotek_admin_additional_translation_settings_form_validate'),
     '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
-  );
-
-  $form['additional_translation']['lingotek_translate_comments'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Translate comments'),
-    '#description' => t('When enabled, comments on nodes of the specified types will be automatically translated.'),
-    '#default_value' => variable_get('lingotek_translate_comments', 0),
-  );
-
-  $form['additional_translation']['lingotek_translate_comments_options'] = array(
-    '#title' => 'Comment settings',
-    '#type' => 'fieldset',
-    '#states' => array(
-      'visible' => array(
-        ':input[name="lingotek_translate_comments"]' => array('checked' => TRUE),
-      ),
-    ),
   );
 
   $type_options = array();
   foreach (node_type_get_types() as $type => $type_data) {
     $type_options[$type] = $type_data->name;
   }
-  $form['additional_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_node_types'] = array(
-    '#type' => 'select',
-    '#title' => t('Comment translation node types'),
-    '#description' => t('When comment translation is enabled, only automatically translate comments on the selected node types.'),
+  $form['comment_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_node_types'] = array(
+    '#type' => 'checkboxes',
+    '#description' => t('Automatically translate comments on the selected node types.'),
     '#options' => $type_options,
     '#multiple' => TRUE,
     '#default_value' => variable_get('lingotek_translate_comments_node_types', ''),
   );
 
-  if($is_enterprise) {
-    $form['additional_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_workflow_id'] = array(
+  if ($is_enterprise) {
+    $form['comment_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_workflow_id'] = array(
       '#type' => 'select',
       '#title' => t('Comment translation Workflow'),
       '#description' => t('When comment translation is enabled, use this workflow for translating 
@@ -343,96 +338,17 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     );
   }
 
-  // Configuration translation (ie. taxonomies, menus, etc.)
-  $form['additional_translation']['lingotek_translate_config'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Translate configurations (requires modules <a href="https://drupal.org/project/variable">Variable</a> and <a href="https://drupal.org/project/i18n">i18n</a> with Translation Sets enabled)'),
-    '#description' => t('When enabled, the specified configuration types will be included in bulk management processes for translation.'),
-    '#default_value' => variable_get('lingotek_translate_config', 1),
-  );
-
-  $form['additional_translation']['lingotek_translate_config_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Configurations settings'),
-    '#description' => t('Choose the configuration types you want to have translated:'),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="lingotek_translate_config"]' => array('checked' => TRUE),
-      ),
-    )
-  );
-  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_builtins'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Built-in Interface'),
-    '#description' => t('If configuration translation is enabled, all built-in strings will be automatically translated.'),
-    '#default_value' => 1,
-    '#disabled' => TRUE,
-  );
-  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_blocks'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Blocks (requires <a href="https://drupal.org/project/i18n">i18n</a> Block Languages enabled)'),
-    '#description' => t('When enabled, all blocks will be updated automatically to be translatable in the Languages settings.'),
-    '#default_value' => variable_get('lingotek_translate_config_blocks', 1),
-  );
-  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_taxonomies'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Taxonomies (requires <a href="https://drupal.org/project/i18n">i18n</a> Taxonomy Translation enabled)'),
-    '#description' => t('When enabled, all taxonomies will be updated automatically to use translation mode \'Localize\' in the Multilingual Options.'),
-    '#default_value' => variable_get('lingotek_translate_config_taxonomies', 1),
-  );
-  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_menus'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Menus (requires <a href="https://drupal.org/project/i18n">i18n</a> Menu Translation enabled)'),
-    '#description' => t('When enabled, all menus will be updated to use \'Translate and Localize\' in the Multilingual Options.'),
-    '#default_value' => variable_get('lingotek_translate_config_menus', 1),
-  );
-  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_views'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Views (requires modules <a href="https://drupal.org/project/views">Views</a>, <a href="https://drupal.org/project/ctools">Chaos Tools</a>, and <a href="https://drupal.org/project/i18nviews">i18n Views</a>)'),
-    '#description' => t('When enabled, all configured views will be searched for translatable strings.  Note this will not generally include translation of all results generated by each view.'),
-    '#default_value' => variable_get('lingotek_translate_config_views', 1),
-  );
-
   return $form;
 }
 
-function lingotek_verify_modules_enabled($module_list) {
-  $missing_modules = FALSE;
-  foreach ($module_list as $mod) {
-    if (!(module_exists($mod))) {
-      form_set_error(t('missing:@mod', array('@mod' => $mod)), t('Module \'@mod\' must first be enabled.', array('@mod' => $mod)));
+function lingotek_admin_comment_translation_settings_form_submit($form, &$form_state) {
+  $form_state['values']['lingotek_translate_comments'] = FALSE;
 
-      $missing_modules = TRUE;
-    }
+  foreach ($form_state['values']['lingotek_translate_comments_node_types'] as $val) {
+    if (!empty($val))
+      $form_state['values']['lingotek_translate_comments'] = TRUE;
   }
-  if ($missing_modules) {
-    return FALSE;
-  }
-  return TRUE;
-}
 
-function lingotek_admin_additional_translation_settings_form_validate($form, &$form_state) {
-  // check for required modules if config translation is enabled
-  $conf_part = $form['additional_translation']['lingotek_translate_config'];
-  $conf_opt_part = $form['additional_translation']['lingotek_translate_config_options'];
-  if ($conf_part && $conf_part['#value'] != 0) {
-    lingotek_verify_modules_enabled(array('variable', 'i18n', 'i18n_translation', 'i18n_string'));
-    if ($conf_opt_part['lingotek_translate_config_blocks'] && $conf_opt_part['lingotek_translate_config_blocks']['#value'] != 0) {
-      lingotek_verify_modules_enabled(array('i18n_block'));
-    }
-    if ($conf_opt_part['lingotek_translate_config_taxonomies'] && $conf_opt_part['lingotek_translate_config_taxonomies']['#value'] != 0) {
-      lingotek_verify_modules_enabled(array('i18n_taxonomy'));
-    }
-    if ($conf_opt_part['lingotek_translate_config_menus'] && $conf_opt_part['lingotek_translate_config_menus']['#value'] != 0) {
-      lingotek_verify_modules_enabled(array('i18n_menu'));
-    }
-    if ($conf_opt_part['lingotek_translate_config_views'] && $conf_opt_part['lingotek_translate_config_views']['#value'] != 0) {
-      lingotek_verify_modules_enabled(array('i18nviews'));
-    }
-  }
-}
-
-function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state) {
   system_settings_form_submit($form, $form_state);
 
   //This code configures the content entity and it's fields so that they can be translated.
@@ -461,54 +377,151 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   // Enabling/disabling Lingotek comment translation will have an effect on the comment entity.
   entity_info_cache_clear();
   entity_get_info('comment');
+}
+
+/**
+ * Additional translation form
+ */
+function lingotek_admin_additional_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
+  global $base_url;
+  $api = LingotekApi::instance();
+  //$setup_complete = variable_get('lingotek_setup_complete', 0);
+  $setup_complete = is_null(lingotek_is_config_missing());
+  $account = LingotekAccount::instance();
+  $is_enterprise = $account->isEnterprise();
+
+  // Configuration translation (ie. taxonomies, menus, etc.)
+  $form['additional_translation'] = array(
+    '#type' => $show_fieldset ? 'fieldset' : 'item',
+    '#title' => ($setup_complete ? t('Configuration Translation') : t('Which additional items do you want translated?')),
+    //'#description' => t('Enable/disable and set defaults for comment translation.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+    'actions' => array(
+      '#type' => 'actions',
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => t('Save')
+      )
+    ),
+    '#validate' => array('lingotek_admin_additional_translation_settings_form_validate'),
+    '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
+  );
+
+  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_builtins'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Built-in Interface (required if any other options are selected)'),
+    '#description' => t('If configuration translation is enabled, all built-in strings will be automatically translated.'),
+    '#default_value' => variable_get('lingotek_translate_config_builtins', 1),
+  );
+  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_blocks'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Blocks'),
+    '#description' => t('When enabled, all blocks will be updated automatically to be translatable in the Languages settings.'),
+    '#default_value' => variable_get('lingotek_translate_config_blocks', 1),
+  );
+  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_taxonomies'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Taxonomies'),
+    '#description' => t('When enabled, all taxonomies will be updated automatically to use translation mode \'Localize\' in the Multilingual Options.'),
+    '#default_value' => variable_get('lingotek_translate_config_taxonomies', 1),
+  );
+  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_menus'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Menus'),
+    '#description' => t('When enabled, all menus will be updated to use \'Translate and Localize\' in the Multilingual Options.'),
+    '#default_value' => variable_get('lingotek_translate_config_menus', 1),
+  );
+  $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_views'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Views'),
+    '#description' => t('When enabled, all configured views will be searched for translatable strings.  Note this will not generally include translation of all results generated by each view.'),
+    '#default_value' => variable_get('lingotek_translate_config_views', 1),
+  );
+
+  return $form;
+}
+
+function lingotek_verify_modules_enabled($module_list) {
+  $missing_modules = FALSE;
+  foreach ($module_list as $mod) {
+    if (!(module_exists($mod))) {
+      form_set_error(t('missing:@mod', array('@mod' => $mod)), t('Module \'@mod\' must first be enabled.', array('@mod' => $mod)));
+
+      $missing_modules = TRUE;
+    }
+  }
+  if ($missing_modules) {
+    return FALSE;
+  }
+  return TRUE;
+}
+
+function lingotek_admin_additional_translation_settings_form_validate($form, &$form_state) {
+  // check for required modules if config translation is enabled
+  $conf_opt_part = $form['additional_translation']['lingotek_translate_config_options'];
+	
+	if ($conf_opt_part['lingotek_translate_config_blocks'] && $conf_opt_part['lingotek_translate_config_blocks']['#value'] != 0) {
+		lingotek_verify_modules_enabled(array('i18n_block'));
+	}
+	if ($conf_opt_part['lingotek_translate_config_taxonomies'] && $conf_opt_part['lingotek_translate_config_taxonomies']['#value'] != 0) {
+		lingotek_verify_modules_enabled(array('i18n_taxonomy'));
+	}
+	if ($conf_opt_part['lingotek_translate_config_menus'] && $conf_opt_part['lingotek_translate_config_menus']['#value'] != 0) {
+		lingotek_verify_modules_enabled(array('i18n_menu'));
+	}
+	if ($conf_opt_part['lingotek_translate_config_views'] && $conf_opt_part['lingotek_translate_config_views']['#value'] != 0) {
+		lingotek_verify_modules_enabled(array('i18nviews'));
+	}
+}
+
+function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state) {
+  system_settings_form_submit($form, $form_state);
+
+  //if any configuration options are set then config translation is enabled
+  if (variable_get('lingotek_translate_config', 0) || variable_get('lingotek_translate_config_taxonomies', 0) ||
+    variable_get('lingotek_translate_config_menus', 0) || variable_get('lingotek_translate_config_views', 0) ||
+    variable_get('lingotek_translate_config_builtins', 0)) {
+    variable_set('lingotek_translate_config', TRUE);
+  }
 
   // prepare for any configuration translation, if applicable
-  if (variable_get('lingotek_translate_config', 0)) {
-    if (variable_get('lingotek_translate_config_blocks', 0)) {
-      lingotek_admin_prepare_blocks();
-    }
-    if (variable_get('lingotek_translate_config_taxonomies', 0)) {
-      lingotek_admin_prepare_taxonomies();
-    }
-    if (variable_get('lingotek_translate_config_menus', 0)) {
-      lingotek_admin_prepare_menus();
-    }
-    if (variable_get('lingotek_translate_config_views', 0)) {
-      lingotek_admin_prepare_views();
-    }
-    // WTD: run the translation strings refresh
+  if (variable_get('lingotek_translate_config_blocks', 0)) {
+    lingotek_admin_prepare_blocks();
   }
-  else {
-    // unset all sub-translation options
-    variable_set('lingotek_translate_config_builtins', 0);
-    variable_set('lingotek_translate_config_blocks', 0);
-    variable_set('lingotek_translate_config_taxonomies', 0);
-    variable_set('lingotek_translate_config_menus', 0);
-    variable_set('lingotek_translate_config_views', 0);
+  if (variable_get('lingotek_translate_config_taxonomies', 0)) {
+    lingotek_admin_prepare_taxonomies();
+  }
+  if (variable_get('lingotek_translate_config_menus', 0)) {
+    lingotek_admin_prepare_menus();
+  }
+  if (variable_get('lingotek_translate_config_views', 0)) {
+    lingotek_admin_prepare_views();
   }
 }
 
 function lingotek_admin_prepare_blocks() {
   // update all blocks to be translatable in the Languages settings
   db_update('block')
-      ->fields(array('i18n_mode' => LINGOTEK_I18N_ENABLED_VALUE))
-      ->execute();
+    ->fields(array('i18n_mode' => LINGOTEK_I18N_ENABLED_VALUE))
+    ->execute();
   return TRUE;
 }
 
 function lingotek_admin_prepare_taxonomies() {
   // update all taxonomies to be updated to use translation mode 'Localize'
   db_update('taxonomy_vocabulary')
-      ->fields(array('i18n_mode' => LINGOTEK_TAXONOMY_LOCALIZE_VALUE))
-      ->execute();
+    ->fields(array('i18n_mode' => LINGOTEK_TAXONOMY_LOCALIZE_VALUE))
+    ->execute();
   return TRUE;
 }
 
 function lingotek_admin_prepare_menus() {
   // update all menus to use 'Translate and Localize' in the Multilingual Options
   db_update('menu_custom')
-      ->fields(array('i18n_mode' => LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE))
-      ->execute();
+    ->fields(array('i18n_mode' => LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE))
+    ->execute();
   return TRUE;
 }
 
@@ -527,7 +540,6 @@ function lingotek_admin_advanced_parsing_form($form, &$form_state, $show_fieldse
   $form['advanced-parsing'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => t('Advanced Content Parsing'),
-    '#description' => t('Settings to support advanced parsing of translatable content.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -539,6 +551,11 @@ function lingotek_admin_advanced_parsing_form($form, &$form_state, $show_fieldse
       )
     ),
     '#submit' => array('lingotek_admin_advanced_parsing_form_submit')
+  );
+
+  $form['advanced-parsing'][] = array(
+    '#type' => 'item',
+    '#description' => t('Settings to support advanced parsing of translatable content.'),
   );
 
   $form['advanced-parsing']['lingotek_advanced_xml_config1'] = array(
@@ -656,7 +673,6 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 //      ) */
 //    )
 //  );
-
 //  $form[$fkey][] = array(
 //    '#type' => 'item',
 //    '#description' => t('Would you like to enable the default language switcher?')
@@ -671,11 +687,11 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
   $lang_negotiation_info = locale_language_negotiation_info();
   $general_detection_config_url = substr($lang_negotiation_info['locale-url']['config'], 0, strrpos($lang_negotiation_info['locale-url']['config'], "/"));
-  
+
   $form[$fkey][] = array(
     '#type' => 'item',
     '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'
-        . '<br>Go to ' . l(t('Language detection and selection'), $general_detection_config_url) . ' to change this.'),
+      . '<br>Go to ' . l(t('Language detection and selection'), $general_detection_config_url) . ' to change this.'),
     '#states' => array(
       'invisible' => array(
         ':input[name="enabled"]' => array('checked' => FALSE),
@@ -739,24 +755,13 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
   $edit_connection = isset($_GET['edit_connection']) || !$connected;
 
   $status_message = ($connected) ?
-      t('Status: <b style="color: green;">OK</b>') :
-      t('Status: <b style="color: red;">Not Connected</b>');
+    t('Status: <b style="color: green;">OK</b>') :
+    t('Status: <b style="color: red;">Not Connected</b>');
 
-  $form['connection'] = array(
-    '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Connection') . ' ' . $status_message,
-    //'#markup' => $status_message,
-    '#collapsible' => TRUE,
-    '#collapsed' => !$edit_connection,
-    '#group' => 'administrative_settings',
-    'actions' => array(
-      '#type' => 'actions',
-      'submit' => array(
-        '#type' => 'submit',
-        '#value' => t('Save')
-      )
-    ),
-    '#submit' => array('lingotek_admin_connection_form_submit')
+  $form['connection']['connection_summary'] = array(
+    '#type' => 'hidden',
+    '#value' => t('Connection') . ' ' . $status_message,
+    '#attributes' => array('id' => array('connection_summary')),
   );
 
   /* $form['connection'][] = array(
@@ -797,6 +802,11 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
       '#description' => LINGOTEK_DEV ? t('Note: The above Environment setting above will be overriden by your local configuration (i.e., settings.php).') : '',
       '#default_value' => variable_get('lingotek_use_stage_servers', 0),
     );
+
+    $form['connection']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+    );
   }
   else {
     $form['connection'][] = array(
@@ -808,7 +818,7 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
           array('Billing:', LINGOTEK_BILLING_SERVER),
         //array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
         //array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
-    )))
+      )))
     );
   }
 
@@ -1077,7 +1087,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'additional_settings',
-      //'#group' => 'administrative_settings',
+    //'#group' => 'administrative_settings',
   );
 
   $btn_reset_translations = array(
@@ -1229,29 +1239,62 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
     return drupal_get_form($form_id);
   }
 
+  $show_fieldset = FALSE;
+
   $output = array();
 
-  $output[] = drupal_get_form('lingotek_admin_connection_form', $show_fieldset);
-  $output[] = drupal_get_form('lingotek_admin_account_status_form', $show_fieldset);
+  $output['lingotek'] = array(
+    '#type' => 'vertical_tabs',
+    '#attached' => array(
+      'js' => array(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js'),
+    ),
+  );
+
+  $conn = drupal_get_form('lingotek_admin_connection_form', $show_fieldset);
+  //$output['lingotek'][] = lingotek_wrap_in_fieldset($conn, 'Connection Status');
+
+  $acc = drupal_get_form('lingotek_admin_account_status_form', $show_fieldset);
+  $account_summary = array(
+    drupal_get_form('lingotek_admin_connection_form', $show_fieldset),
+    drupal_get_form('lingotek_admin_account_status_form', $show_fieldset),
+  );
+
+  $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, 'Account');
 
   $connected = $api->testAuthentication();
 
   if ($connected) {
-    $output[] = drupal_get_form('lingotek_admin_content_defaults_form', $show_fieldset);
-    $output[] = drupal_get_form('lingotek_admin_node_translation_settings_form', $show_fieldset);
-    $output[] = drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset);
+    $arr = array(
+      drupal_get_form('lingotek_admin_node_translation_settings_form', $show_fieldset),
+      drupal_get_form('lingotek_admin_content_defaults_form', $show_fieldset),
+    );
     if ($is_enterprise) {
-      $output[] = drupal_get_form('lingotek_admin_advanced_parsing_form', $show_fieldset);
+      $arr[] = drupal_get_form('lingotek_admin_advanced_parsing_form', $show_fieldset);
     }
-    $output[] = drupal_get_form('lingotek_admin_prefs_form', $show_fieldset);
+
+    $output['lingotek'][] = lingotek_wrap_in_fieldset($arr, 'Translate Content');
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_comment_translation_settings_form', $show_fieldset), 'Translate Comments');
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), 'Translate Configuration');
+
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), 'Preferences');
     //$output[] = drupal_get_form('lingotek_admin_language_switcher_form', $show_fieldset);
-    $output[] = drupal_get_form('lingotek_admin_utilities_form', $show_fieldset);
-    $output[] = drupal_get_form('lingotek_admin_logging_form', $show_fieldset);
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_utilities_form', $show_fieldset), 'Utilites');
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), 'Troubleshooting and Logging');
   }
 
 
 
   return $output;
+}
+
+function lingotek_wrap_in_fieldset($form, $title) {
+  return array(
+    '#type' => 'fieldset',
+    '#group' => 'lingotek',
+    '#title' => t($title),
+    '#attributes' => array('class' => array('lingotek-' . strtolower(str_replace(' ', '-', $title)))),
+    'children' => $form,
+  );
 }
 
 function lingotek_admin_language_switcher_form_submit($form, $form_state) {
@@ -1266,31 +1309,31 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
   );
 
   db_update('block')
-      ->fields(array(
-        'status' => $block['status'],
-        'weight' => $block['weight'],
-        'region' => $block['region'],
-      ))
-      ->condition('module', $block['module'])
-      ->condition('delta', $block['delta'])
-      ->condition('theme', $block['theme'])
-      ->execute();
-  
+    ->fields(array(
+      'status' => $block['status'],
+      'weight' => $block['weight'],
+      'region' => $block['region'],
+    ))
+    ->condition('module', $block['module'])
+    ->condition('delta', $block['delta'])
+    ->condition('theme', $block['theme'])
+    ->execute();
+
   //If the site does not yet have more than 1 language, drupal doesn't bootstrap
   //some language functions. So here we force this file to be loaded.
   include_once DRUPAL_ROOT . '/includes/language.inc';
-  
+
   //The array variable 'language_negotiation_language' has a entry for each detection method.
   //Thus if the max is 1 the only possible enabled method is default.
   //Note that the variable is empty on a new drupal install.
-  if($form_state['values']['enabled'] && count(variable_get('language_negotiation_language')) <= 1) {
+  if ($form_state['values']['enabled'] && count(variable_get('language_negotiation_language')) <= 1) {
     $types = array(
       LOCALE_LANGUAGE_NEGOTIATION_URL => 2,
       LOCALE_LANGUAGE_NEGOTIATION_BROWSER => 4,
     );
     language_negotiation_set(LANGUAGE_TYPE_INTERFACE, $types);
-  }  
-  
+  }
+
   // Flush cache
   cache_clear_all();
 
