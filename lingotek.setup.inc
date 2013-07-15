@@ -464,6 +464,7 @@ function lingotek_community_settings_select_form() {
 
   if ($project_count > 1) {
 
+    $sorted = asort($community_settings['project']);
     $form['lingotek_site_project'] = array(
       '#title' => t('Project'),
       '#type' => 'select',
