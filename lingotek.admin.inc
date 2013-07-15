@@ -93,7 +93,8 @@ function lingotek_admin_account_status_form_submit($form, &$form_state) {
  */
 function lingotek_admin_node_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
 
-  $setup_complete = variable_get('lingotek_setup_complete', 0);
+  //$setup_complete = variable_get('lingotek_setup_complete', 0);
+  $setup_complete = lingotek_setup_check_credentials();
   $raw_types = node_type_get_types();
   $types = array();
   $translate = variable_get('lingotek_translate_fields', array());
@@ -249,7 +250,8 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
   }
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set('lingotek_translate_fields', $translate);
-  $setup_complete = variable_get('lingotek_setup_complete', 0);
+  //$setup_complete = variable_get('lingotek_setup_complete', 0);
+  $setup_complete = lingotek_setup_check_credentials();
   if (count($operations)) {
     $batch = array(
       'title' => t('Preparing content for translation'),
@@ -257,7 +259,8 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     );
 
     batch_set($batch);
-    if (!variable_get('lingotek_setup_complete', 0)) {
+    //if (!variable_get('lingotek_setup_complete', 0)) {
+    if (!$setup_complete) {
       $redirect = 'admin/config/lingotek/additional-translation-settings';
     }
     else {
@@ -281,7 +284,8 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 function lingotek_admin_additional_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
   global $base_url;
   $api = LingotekApi::instance();
-  $setup_complete = variable_get('lingotek_setup_complete', 0);
+  //$setup_complete = variable_get('lingotek_setup_complete', 0);
+  $setup_complete = lingotek_setup_check_credentials();
   $account = LingotekAccount::instance();
   $is_enterprise = $account->isEnterprise();
   /*

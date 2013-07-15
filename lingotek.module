@@ -233,12 +233,12 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
-  $items['admin/config/lingotek/project-select'] = array(
-    'title' => 'Choose Your Project',
-    'description' => 'Select project to use.',
+  $items['admin/config/lingotek/community-settings-select'] = array(
+    'title' => 'Choose Your Project, Workflow, and TM Vault',
+    'description' => 'Select project, workflow, and TM vault to use.',
     'file' => 'lingotek.setup.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_project_select_form'),
+    'page arguments' => array('lingotek_community_settings_select_form'),
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek')
   );
@@ -1086,8 +1086,7 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
  */
 function lingotek_is_module_setup() {
 
-  $setup_complete = variable_get('lingotek_setup_complete', 0);
-  if ($setup_complete != 1) {
+  if (!lingotek_setup_check_credentials()) {
     drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go to the Setup Process
   }
 }

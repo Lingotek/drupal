@@ -220,7 +220,7 @@ function lingotek_xml_node_body($node) {
   
   foreach ($node as $key => $value) {
     $field = field_info_field($key);
-    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && $fields_desired[$key]) {
+    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && isset($fields_desired[$key]) && $fields_desired[$key]) {
       array_push($translatable, $key);
     }
   }
@@ -312,6 +312,27 @@ function lingotek_xml_node_body($node) {
   }
 
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+}
+
+/*
+ * Check variables to see if setup needs to be run
+ */
+function lingotek_setup_check_credentials() {
+  $current_community_identifier = variable_get('lingotek_community_identifier', '');
+  $current_oauth_consumer_id = variable_get('lingotek_oauth_consumer_id', '');
+  $current_oauth_consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
+  $current_login_id = variable_get('lingotek_login_id', '');
+  $current_project = variable_get('lingotek_project', '');
+  $current_vault = variable_get('lingotek_vault', '');
+  $current_workflow = variable_get('lingotek_workflow', '');
+  $translate_config = variable_get('lingotek_translate_config', '');
+  $translate_comments = variable_get('lingotek_translate_comments', '');
+
+  // Does the install already have connection credentials?
+  if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' || $translate_config === '' || $translate_comments === '') {
+    return FALSE;
+  }
+  return TRUE;
 }
 
 /**
