@@ -526,37 +526,31 @@ function lingotek_community_settings_select_form() {
  */
 function lingotek_community_settings_select_form_submit($form, $form_state) {
 
-  $project_id = $form_state['values']['lingotek_site_project'];
-  $workflow_string = $form_state['values']['lingotek_site_workflow'];
-  $vault_id = $form_state['values']['lingotek_site_vault'];
-
-/*  // This can come back as just the ProjectID, OR the ProjectID ||| WorkflowID jammed together, so check the string.
-  if (strpos($project_string, '|||')) { // Returns a position or false if not found.
-    $parts = explode('|||', $project_string);
-    $project_id = $parts[0];
-    $workflow_id = $parts[1];
+  if (isset($form_state['values']['lingotek_site_project'])) {
+    variable_set('lingotek_project', $form_state['values']['lingotek_site_project']);
   }
-  else {
-    $project_id = $project_string;
-  }*/
 
-  // This can come back as just the WorkflowID, OR the WorkflowID ||| VaultID jammed together, so check the string.
-  // Should the vault ID override what is selected, or vice-versa?  Right now it's vice-versa.
-  if (strpos($workflow_string, '|||')) {
-    $parts = explode('|||', $workflow_string);
-    $workflow_id = $parts[0];
-    $vault_id_workflow = $parts[1];
+  if (isset($form_state['values']['lingotek_site_workflow'])) {
+    $workflow_string = $form_state['values']['lingotek_site_workflow'];
+    // This can come back as just the WorkflowID, OR the WorkflowID ||| VaultID jammed together, so check the string.
+    // Should the vault ID override what is selected, or vice-versa?  Right now it's vice-versa.
+    if (strpos($workflow_string, '|||')) {
+      $parts = explode('|||', $workflow_string);
+      $workflow_id = $parts[0];
+      $vault_id_workflow = $parts[1];
+    }
+    else {
+      $workflow_id = $workflow_string;
+    }
+    /*if (isset($vault_id_workflow) && $vault_id_workflow != $vault_id)) {
+      // do something?
+    }*/
+    variable_set('lingotek_workflow', $form_state['values']['lingotek_site_workflow']);
   }
-  else {
-    $workflow_id = $workflow_string;
-  }
-  /*if (isset($vault_id_workflow) && $vault_id_workflow != $vault_id)) {
-    // do something?
-  }*/
 
-  variable_set('lingotek_project', $project_id);
-  variable_set('lingotek_workflow', $workflow_id);
-  variable_set('lingotek_vault', $vault_id);
+  if (isset($form_state['values']['lingotek_site_vault'])) {
+    variable_set('lingotek_vault', $form_state['values']['lingotek_site_vault']);
+  }
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/community-settings-select';
   drupal_set_message(t('Your Lingotek project, workflow, and vault selections have been saved.'));
