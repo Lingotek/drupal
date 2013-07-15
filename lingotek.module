@@ -1086,7 +1086,7 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
  */
 function lingotek_is_module_setup() {
 
-  if (!lingotek_setup_check_credentials()) {
+  if (lingotek_is_config_missing()) {
     drupal_goto('admin/config/lingotek/new-account'); // If something is missing - Go to the Setup Process
   }
 }
@@ -1101,7 +1101,8 @@ function lingotek_is_config_missing() {
     'lingotek_oauth_consumer_secret',
     'lingotek_login_id',
     'lingotek_project',
-    //'lingotek_vault'  //TO-DO: ensure that the project vault is actually set
+    'lingotek_workflow',
+    'lingotek_vault'
   );
   foreach ($required_variables as $required_variable) {
     $val = variable_get($required_variable, NULL);

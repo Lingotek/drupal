@@ -325,11 +325,9 @@ function lingotek_setup_check_credentials() {
   $current_project = variable_get('lingotek_project', '');
   $current_vault = variable_get('lingotek_vault', '');
   $current_workflow = variable_get('lingotek_workflow', '');
-  $translate_config = variable_get('lingotek_translate_config', '');
-  $translate_comments = variable_get('lingotek_translate_comments', '');
 
   // Does the install already have connection credentials?
-  if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '' || $translate_config === '' || $translate_comments === '') {
+  if ($current_community_identifier == '' || $current_oauth_consumer_id == '' || $current_oauth_consumer_secret == '' || $current_login_id == '' || $current_project == '' || $current_vault == '' || $current_workflow == '') {
     return FALSE;
   }
   return TRUE;

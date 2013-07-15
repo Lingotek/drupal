@@ -114,7 +114,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
 
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Entity Translation') : t('Which Entity types do you want translated?')),
+    '#title' => ($setup_complete ? t('Content types') : t('Which content types would you like to enable for translation?')),
     '#description' => ($setup_complete ? t('Choose the Entity types to be translated:') : ''),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -250,8 +250,8 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
   }
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
   variable_set('lingotek_translate_fields', $translate);
-  //$setup_complete = variable_get('lingotek_setup_complete', 0);
-  $setup_complete = lingotek_setup_check_credentials();
+  drupal_set_message(t('Your content types have been updated.'));
+
   if (count($operations)) {
     $batch = array(
       'title' => t('Preparing content for translation'),
@@ -259,22 +259,14 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     );
 
     batch_set($batch);
-    //if (!variable_get('lingotek_setup_complete', 0)) {
-    if (!$setup_complete) {
+
+    if (is_null(variable_get('lingotek_translate_comments', NULL)) || is_null(variable_get('lingotek_translate_config', NULL))) {
       $redirect = 'admin/config/lingotek/additional-translation-settings';
     }
     else {
       $redirect = LINGOTEK_MENU_LANG_BASE_URL . '/settings';
     }
-    if ($setup_complete) {
-      drupal_set_message(t('Your account status has been updated.'));
-    }
     batch_process($redirect);
-  }
-  else {
-    if ($setup_complete) {
-      drupal_set_message(t('Your account status has been updated.'));
-    }
   }
 }
 

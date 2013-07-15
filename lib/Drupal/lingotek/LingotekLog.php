@@ -24,7 +24,7 @@ class LingotekLog {
   }
 
   public static function info($msg, $data, $tag = 'info') {
-    self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
+    self::trace($msg, $data, $tag);
   }
 
   public static function error($msg, $data, $tag = 'error') {
