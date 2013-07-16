@@ -1106,13 +1106,13 @@ function lingotek_is_module_setup() {
  */
 function lingotek_is_config_missing() {
   $required_variables = array(
-    'lingotek_community_identifier',
-    'lingotek_oauth_consumer_id',
-    'lingotek_oauth_consumer_secret',
     'lingotek_login_id',
+    'lingotek_community_identifier',
     'lingotek_project',
     'lingotek_workflow',
-    'lingotek_vault'
+    'lingotek_vault',
+    'lingotek_oauth_consumer_id',
+    'lingotek_oauth_consumer_secret',
   );
   foreach ($required_variables as $required_variable) {
     $val = variable_get($required_variable, NULL);
