@@ -1010,9 +1010,9 @@ class LingotekApi {
       assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
      */
     if ($method == 'downloadDocument' || $method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
-      LingotekLog::info('<h1>@method</h1>
+      LingotekLog::api('<h1>@method</h1>
         <strong>API URL:</strong> @url
-        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params, 'api');
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
       $response_data = $response;
     }
     else {

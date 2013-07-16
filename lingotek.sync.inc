@@ -84,14 +84,16 @@ function lingotek_notifications() {
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-  LingotekLog::trace('Notification Recieved <h2>node: @node_id (@language_code)</h2>
-      <strong>doc:</strong> @document_id
-      <br /><strong>code:</strong> @language_code
-      <br /><strong>project:</strong> @project_id', array(
-    '@node_id' => $nid,
+  LingotekLog::info('Notification Received  
+      <br/><b>doc_id:</b> @document_id
+      <br/><b>code:</b> @lingotek_locale
+      <br/><b>project:</b> @project_id
+      <br/><b>node:</b> @node_id (@target_drupal_language_code)', array(
     '@document_id' => $document_id,
-    '@language_code' => $lingotek_locale,
-    '@project_id' => $project_id
+    '@lingotek_locale' => $lingotek_locale,
+    '@project_id' => $project_id,
+    '@node_id' => $nid,
+    '@target_drupal_language_code' => $target_drupal_language_code
       ), 'callback');
 
   // If there is not a node ID associated with this document, check for config chunks and comments
@@ -115,7 +117,7 @@ function lingotek_notifications() {
       $replacements['@trans_type'] = $trans_obj->id;
     }
     else {
-      LingotekLog::error('Lingotek document ID not found. Please clear the Drupal cache to refresh the autoload registry', array());
+      LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
       return drupal_json_output(array("message" => "The doc_id was not found on the site."));
     }
 

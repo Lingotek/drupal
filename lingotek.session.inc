@@ -240,23 +240,13 @@ class LingotekSession {
     }
     else {
       $this->logged_in = FALSE;
-      if (isset($data->error) && $data->error) {
-        LingotekLog::error(
-            "Unable to log in", array(
-          'params' => $params,
-          'error' => $data->error,
-          'response' => isset($response) ? $response : "",
-            ), 'session'
-        );
-      }
-      else {
-        LingotekLog::warning(
-            "Unable to log in", array(
-          'params' => $params,
-          'response' => isset($response) ? $response : "",
-            ), 'session'
-        );
-      }
+      LingotekLog::error(
+          "Unable to log in", array(
+        'params' => $params,
+        'error' => (isset($data->error) && $data->error) ? $data->error : "unknown error",
+        'response' => isset($response) ? $response : "",
+          ), 'session'
+      );
     }
   }
 
