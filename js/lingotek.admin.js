@@ -23,7 +23,11 @@ Drupal.behaviors.lingotekAdminForm = {
           $list.push($(this).val());
         }
       });
-      return Drupal.t($list.join(', '));
+      if($list.length == 0) {
+        return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+      } else {
+        return '<span style="color:green;">' + Drupal.t('Enabled') + '</span> ' + $list.length + ' ' + Drupal.t('content types');
+      }
     });
     
     $('fieldset.lingotek-translate-comments', context).drupalSetSummary(function (context) {
@@ -33,7 +37,11 @@ Drupal.behaviors.lingotekAdminForm = {
           $list.push($(this).val());
         }
       });
-      return Drupal.t($list.join(', '));
+      if($list.length == 0) {
+        return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+      } else {
+        return '<span style="color:green;">' + Drupal.t('Enabled') + ' </span> ' + $list.length + ' ' + Drupal.t('content types');
+      }
     });
 
     $('fieldset.lingotek-translate-configuration', context).drupalSetSummary(function (context) {
@@ -45,7 +53,11 @@ Drupal.behaviors.lingotekAdminForm = {
           $list.push(name);
         }
       });
-      return Drupal.t($list.join(', '));
+      if($list.length == 0) {
+        return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+      } else {
+        return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ');
+      }
     });
     
     $('fieldset.lingotek-preferences', context).drupalSetSummary(function (context) {

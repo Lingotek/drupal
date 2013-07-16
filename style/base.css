@@ -29,7 +29,8 @@ div.form-item-create-lingotek-document-workbench-moderation, div.form-item-syncM
   font-weight: normal !important;
 }*/
 
-div.form-item-lingotek-create-documents-by-default-workbench-moderation, div.form-item-wb-options {
+div.form-item.form-item-lingotek-create-documents-by-default-workbench-moderation,
+div.form-item.form-item-wb-options {
   margin-left: 50px;
 }
 

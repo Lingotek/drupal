@@ -774,64 +774,6 @@ function lingotek_content_type_choose_fields_callback($content_type) {
 }
 
 /**
- * Node Translation Settings - Ajax Callback - Checkbox Check/Uncheck
- */
-function lingotek_content_type_checkbox_callback($form, &$form_state) {
-
-  $triggered_by = $form_state['input']['_triggering_element_name'];  // IE:  type_article
-  $selected_type = substr($triggered_by, 5); // This was the content type that was selected.  IE:  article
-  $selector = '#content_fields_' . $selected_type;
-
-  $commands = array();
-
-  // A checkbox was just selected.   If it is checked, its value will be its type name.  If it was unchecked, it will be blank.
-  $checkbox_value = $form_state['input'][$triggered_by];
-
-  // If the checkbox was un-checked, deselect child checkboxes.
-  if ($checkbox_value == '') {
-    // NAME: article_SEPERATOR_body
-    // removeAttr('checked')
-    // 'td[name^=tcol]'
-    $checkbox_selector = ':checkbox[name^=' . $selected_type . '_SEPERATOR_]';
-    $link_selector = '#togglelink_' . $selected_type;
-    $commands[] = ajax_command_invoke($checkbox_selector, 'removeAttr', array('checked'));
-
-    $checkbox_selector2 = ':checkbox[name=title_swap_' . $selected_type . ']';
-    $commands[] = ajax_command_invoke($checkbox_selector2, 'removeAttr', array('checked'));
-
-    $commands[] = ajax_command_invoke($selector, 'hide');
-
-    $link = '<a id="showlink_' . $selected_type . '" href="' . url('admin/config/lingotek/content-type-choose-fields-ajax/' . $selected_type) . '" class="use-ajax">choose fields</a>';
-    $span_selector = '#showhidelink_' . $selected_type;
-    $commands[] = ajax_command_html($span_selector, $link);
-  } // END: uncheck
-  else { // If the checkbox was selected, activate the default fields.
-    //$commands[] = ajax_command_invoke( $selector, 'show' );
-    $checkbox_selector2 = ':checkbox[name=title_swap_' . $selected_type . ']';
-    $commands[] = ajax_command_invoke($checkbox_selector2, 'attr', array('checked', 'checked'));
-
-    // Grab the fields for this Content Type.
-    $fields = field_info_instances('node', $selected_type);
-    // Loop the fields, outputting them.
-    foreach ($fields as $field) {
-      $field_label = $field['label']; //  Label: Body
-      $field_machine_name = $field['field_name'];
-      $field_type = $field['widget']['type']; // Type: text_textarea_with_summary
-      $field_name = $selected_type . '_SEPERATOR_' . $field_machine_name; // Name: article_SEPERATOR_body
-      // If this is a text field, include it by default.
-      if (strpos($field_type, 'text') !== FALSE) {
-        $checkbox_selector = ':checkbox[name=' . $field_name . ']';
-        $commands[] = ajax_command_invoke($checkbox_selector, 'attr', array('checked', 'checked'));
-      }
-    } // END:  foreach  $fields
-  } // END:  checked
-  //$commands[] = ajax_command_invoke( $selector, 'toggle' );
-  //$commands[] = ajax_command_alert( 'Info: ' . $link_selector );
-
-  return array('#type' => 'ajax', '#commands' => $commands);
-}
-
-/**
  * Node Translation Settings - Form Submit
  */
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
