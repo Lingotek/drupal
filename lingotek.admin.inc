@@ -1186,34 +1186,33 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['logging'][] = array(
     '#type' => 'item',
-    '#description' => t('Help troubleshoot any issues with the module.')
-  );
-
-  $form['logging']['lingotek_api_debug'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Enable API Logging'),
-    '#description' => t('Logs the timing and request/response details of both successful and failing Lingotek API
-      calls to the Drupal <a href="@watchdog_path">watchdog</a> in category "lingotek - api".', array('@watchdog_path' => url('admin/reports/dblog'))),
-    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? 1 : 0),
+    '#description' => t('Help troubleshoot any issues with the module. The logging enabled below will be available in the') . ' ' . l('Drupal watchdog', 'admin/reports/dblog') . '.'
   );
 
   $form['logging']['lingotek_error_log'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable Error Log'),
+    '#title' => t('Error Logging'),
     '#description' => t('This prints errors and warnings to the web server\'s error logs in addition to adding them to watchdog.'),
-    '#default_value' => variable_get('lingotek_error_log', LINGOTEK_DEV ? 1 : 0),
+    '#default_value' => variable_get('lingotek_error_log', 1),
   );
 
   $form['logging']['lingotek_warning_log'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable Warnings Log'),
+    '#title' => t('Warning Logging'),
     '#description' => t('This logs any warnings in watchdog and the web server\'s error logs.'),
-    '#default_value' => variable_get('lingotek_warning_log', LINGOTEK_DEV ? 1 : 0),
+    '#default_value' => variable_get('lingotek_warning_log', 1),
+  );
+
+  $form['logging']['lingotek_api_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('API & Interaction Logging'),
+    '#description' => t('Logs the timing and request/response details of all Lingotek API calls. Additionally, interaction calls (e.g., endpoint, notifications) made back to Drupal will be logged with this enabled.'),
+    '#default_value' => variable_get('lingotek_api_debug', LINGOTEK_DEV ? 1 : 0),
   );
 
   $form['logging']['lingotek_trace_log'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable Trace Log'),
+    '#title' => t('Trace Logging'),
     '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
     '#default_value' => variable_get('lingotek_trace_log', 0),
   );
