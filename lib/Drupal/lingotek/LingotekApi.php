@@ -424,22 +424,24 @@ class LingotekApi {
    *
    * @param int $document_id
    *   The Lingotek document ID that should be downloaded.
-   * @param string $language_lingotek
+   * @param string $lingotek_locale
    *   A Lingotek language/locale code.
    *
    * @return mixed
    *   On success, a SimpleXMLElement object representing the translated document. FALSE on failure.
    *
    */
-  public function downloadDocument($document_id, $language_lingotek) {
+  public function downloadDocument($document_id, $lingotek_locale) {
     $document = FALSE;
 
     $params = array(
       'documentId' => $document_id,
-      'targetLanguage' => $language_lingotek,
+      'targetLanguage' => $lingotek_locale,
     );
 
-    if ($results = $this->request('downloadDocument', $params)) {
+    $results = $this->request('downloadDocument', $params);
+
+    if ($results) {
       try {
         // TODO: This is borrowed from the now-deprecated LingotekSession::download()
         // and could use refactoring.
@@ -977,7 +979,7 @@ class LingotekApi {
       // The thing is, if you encode the params, they just get translated back to an array by the object.  They have some type of error internal to the object code that is handling things wrong.
       // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
       $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
-      $response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
+      $response = json_decode($result['body']);
     } catch (OAuthException2 $e) {
       LingotekLog::error('Failed OAuth request.
       <br />API URL: @url
@@ -994,13 +996,12 @@ class LingotekApi {
     }
 
     $timer_results = timer_stop($timer_name);
-
     $message_params = array(
       '@url' => $api_url,
       '@method' => $method,
       '!params' => $parameters,
       '!request' => $request,
-      '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : $response,
+      '!response' => ($method == 'downloadDocument' && !isset($response->results)) ? "Zipped document" : $response,
       '@response_time' => number_format($timer_results['time']) . ' ms',
     );
 
@@ -1009,7 +1010,13 @@ class LingotekApi {
       downloadDocument - Returns misc data (no $response->results), and should always be sent back.
       assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
      */
-    if ($method == 'downloadDocument' || $method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
+    if ($method == 'downloadDocument'){
+      LingotekLog::api('<h1>@method</h1>
+        <strong>API URL:</strong> @url
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
+      $response_data = $result['body'];
+    }
+    else if ($method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
       LingotekLog::api('<h1>@method</h1>
         <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);

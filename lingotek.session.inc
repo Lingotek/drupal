@@ -150,9 +150,14 @@ class LingotekSession {
    */
   public function download($api, $params) {
     $result = LingotekApi::instance()->request($api, $params);
+    $result_decoded = json_decode($result);// non-zipped will be decoded
 
     if (!$result) {
-      LingotekLog::error('Unable to download Lingotek Document.');
+      LingotekLog::error('Unable to download Lingotek Document.', array());
+      return FALSE;
+    }
+    else if (isset($result_decoded->results)) {
+      LingotekLog::error('Download Lingotek Document Failed. !error ', array('!error' => $result));
       return FALSE;
     }
 
