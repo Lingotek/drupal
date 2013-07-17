@@ -322,14 +322,16 @@ function lingotek_admin_comment_translation_settings_form($form, &$form_state, $
   );
 
   $type_options = array();
+  $type_defaults = array();
   foreach (node_type_get_types() as $type => $type_data) {
     $type_options[$type] = $type_data->name;
+    $type_defaults[$type] = $type;
   }
   $form['comment_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_node_types'] = array(
     '#type' => 'checkboxes',
     '#options' => $type_options,
     '#multiple' => TRUE,
-    '#default_value' => variable_get('lingotek_translate_comments_node_types', array()),
+    '#default_value' => variable_get('lingotek_translate_comments_node_types', $setup_complete ? array() : $type_defaults),
   );
 
   if ($is_enterprise) {

@@ -18,29 +18,35 @@ Drupal.behaviors.lingotekAdminForm = {
     
     $('fieldset.lingotek-translate-content', context).drupalSetSummary(function (context) {
       $list = [];
+      total = 0;
       $('#edit-node-translation input').each(function( index ) {
-        if($(this).attr('id').substring(0, 9) == 'edit-type' && $(this).attr('checked') == '1') {
-          $list.push($(this).val());
+        if($(this).attr('id').substring(0, 9) == 'edit-type') {
+          if($(this).attr('checked') == '1') {
+            $list.push($(this).val());
+          }
+          total++;
         }
       });
       if($list.length == 0) {
         return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
       } else {
-        return '<span style="color:green;">' + Drupal.t('Enabled') + '</span> ' + $list.length + ' ' + Drupal.t('content types');
+        return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
       }
     });
     
     $('fieldset.lingotek-translate-comments', context).drupalSetSummary(function (context) {
       $list = [];
+      total = 0;
       $('#edit-lingotek-translate-comments-node-types input').each(function( index ) {
         if($(this).attr('checked') == '1') {
           $list.push($(this).val());
         }
+        total++;
       });
       if($list.length == 0) {
         return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
       } else {
-        return '<span style="color:green;">' + Drupal.t('Enabled') + ' </span> ' + $list.length + ' ' + Drupal.t('content types');
+        return '<span style="color:green;">' + Drupal.t('Enabled') + ' </span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
       }
     });
 
@@ -55,6 +61,8 @@ Drupal.behaviors.lingotekAdminForm = {
       });
       if($list.length == 0) {
         return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+      } else if($list.length == 5) {
+        return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: all';
       } else {
         return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ');
       }
