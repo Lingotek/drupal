@@ -446,11 +446,10 @@ function lingotek_community_settings_select_form() {
       $vault_id = array_keys($community_settings['vault'][$key[0]]);
       $current_vault = variable_get('lingotek_vault', NULL);
       if ($current_vault && $current_vault != $vault_id[0]) {
-        // Something is wrong here.  The workflow is referencing a vault that the user has no access to.
+        // Something is wrong here.  This variable references a vault that the user has no access to.
         // I don't know what to do in this case, however, or if it will ever happen.
       }
       variable_set('lingotek_vault', $vault_id[0]);
-      $var = variable_get('lingotek_vault', 0);
     }
 
     if ($project_count == 1 && $workflow_count == 1 && $vault_count == 1) {
@@ -545,7 +544,7 @@ function lingotek_community_settings_select_form_submit($form, $form_state) {
     /*if (isset($vault_id_workflow) && $vault_id_workflow != $vault_id)) {
       // do something?
     }*/
-    variable_set('lingotek_workflow', $form_state['values']['lingotek_site_workflow']);
+    variable_set('lingotek_workflow', $workflow_id);
   }
 
   if (isset($form_state['values']['lingotek_site_vault'])) {
