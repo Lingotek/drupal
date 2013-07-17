@@ -9,7 +9,7 @@ Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
 
     $('fieldset.lingotek-account', context).drupalSetSummary(function (context) {
-      return Drupal.t($('#connection_summary').val() + '<br>' + $('#account_summary').val());
+      return Drupal.t($('#account_summary').val() + ' / ' + $('#connection_summary').val());
     });
     
 //    $('fieldset.lingotek-connection-status', context).drupalSetSummary(function (context) {
@@ -46,7 +46,7 @@ Drupal.behaviors.lingotekAdminForm = {
       if($list.length == 0) {
         return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
       } else {
-        return '<span style="color:green;">' + Drupal.t('Enabled') + ' </span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
+        return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
       }
     });
 

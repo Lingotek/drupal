@@ -44,7 +44,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
 
   $form['status']['account_summary'] = array(
     '#type' => 'hidden',
-    '#value' => t('Account') . ': ' . $account_status,
+    '#value' => $account_status,
     '#attributes' => array('id' => array('account_summary')),
   );
 
@@ -318,7 +318,7 @@ function lingotek_admin_comment_translation_settings_form($form, &$form_state, $
 
   $form['comment_translation'][] = array(
     '#type' => 'item',
-    '#description' => t('Automatically translate comments on the selected node types.'),
+    '#description' => t('Automatically translate comments on the selected content types.'),
   );
 
   $type_options = array();
@@ -767,12 +767,12 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
   $edit_connection = isset($_GET['edit_connection']) || !$connected;
 
   $status_message = ($connected) ?
-      t('Status: <b style="color: green;">OK</b>') :
-      t('Status: <b style="color: red;">Not Connected</b>');
+      '<span style="color: green;">' . t('Connected') . '</span>' :
+      '<span style="color: red;">' . t('Not Connected') . '</span>';
 
   $form['connection']['connection_summary'] = array(
     '#type' => 'hidden',
-    '#value' => t('Connection') . ' ' . $status_message,
+    '#value' => $status_message,
     '#attributes' => array('id' => array('connection_summary')),
   );
 
@@ -1177,7 +1177,7 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['logging'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Troubleshooting and Logging'),
+    '#title' => t('Logging'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -1263,10 +1263,10 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
       'js' => array(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js'),
     ),
   );
-
+  
   $account_summary = array(
-    drupal_get_form('lingotek_admin_connection_form', $show_fieldset),
     drupal_get_form('lingotek_admin_account_status_form', $show_fieldset),
+    drupal_get_form('lingotek_admin_connection_form', $show_fieldset),
   );
 
   $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, 'Account');
@@ -1285,11 +1285,14 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
     $output['lingotek'][] = lingotek_wrap_in_fieldset($arr, 'Translate Content');
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_comment_translation_settings_form', $show_fieldset), 'Translate Comments');
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), 'Translate Configuration');
-
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), 'Preferences');
     //$output[] = drupal_get_form('lingotek_admin_language_switcher_form', $show_fieldset);
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_utilities_form', $show_fieldset), 'Utilites');
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), 'Troubleshooting and Logging');
+    //$output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_utilities_form', $show_fieldset), 'Utilities');
+    $logging_utilities = array(
+      drupal_get_form('lingotek_admin_logging_form', $show_fieldset),
+      drupal_get_form('lingotek_admin_utilities_form', $show_fieldset),
+    );
+    $output['lingotek'][] = lingotek_wrap_in_fieldset($logging_utilities, 'Logging & Utilities');
   }
 
 
