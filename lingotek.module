@@ -1395,7 +1395,7 @@ function lingotek_navbar() {
   //this integration with the navbar module has depencies on javascript files
   //that Responsive Theme Preview adds. Thus the integration will only show up if 
   //the Responsive Theme Preview module is enabled.
-  if(!module_exists('responsive_preview')) {
+  if(!module_exists('responsive_preview') || variable_get('language_count') <= 1) {
     return;
   }
   
