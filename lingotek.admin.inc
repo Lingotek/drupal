@@ -138,7 +138,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   $rows = array();
   
   foreach ($raw_types as $value) {
-    $fr = [];
+    $fr = array();
     foreach (field_info_instances('node', $value->type) as $field) {
       $field_label = $field['label'];
       $field_machine_name = $field['field_name'];
