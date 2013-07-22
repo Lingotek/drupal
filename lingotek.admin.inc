@@ -185,7 +185,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
 function lingotek_admin_node_translation_settings_form_submit($form, &$form_state) {
   $translate = array();
   $operations = array();
-  foreach ($form_state['values'] as $key => $value) {
+  foreach ($form_state['input'] as $key => $value) {
     
     // Look for Selected Content Types and Fields.
     if (FALSE !== strpos($key, '_SEPERATOR_')) {
@@ -196,7 +196,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
         $content_field = $parts[1];
         
         //check to make sure that the content type is enabled
-        if($form_state['values']['type_' . $content_type]) {
+        if(isset($form_state['values']['types'][$content_type])) {
           $translate[$content_type][] = $content_field;
 
           // Set this content type to be Lingotek translated.
@@ -217,7 +217,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
         $content_type = substr($key, strlen('title_swap_'));
         
         //check to make sure that the content type is enabled
-        if($form_state['values']['type_' . $content_type]) {
+        if(isset($form_state['values']['types'][$content_type])) {
           // Do the actual title replacement
           $entity_type = 'node';
           $bundle = $content_type;
