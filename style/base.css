@@ -37,3 +37,18 @@ div.form-item.form-item-wb-options {
 #edit-wb-select {
   margin-left: 50px;
 }
+
+/* Settings/Setup - Content Types Table */
+
+.lingotek-content-settings-table td div {
+  float: left;
+}
+
+.lingotek-content-settings-table td div input {
+  margin-left: 10px;
+  margin-right: -2px;
+}
+
+input.lingotek-content-settings-table.form-checkbox {
+  margin: 0px;
+}

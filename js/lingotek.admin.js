@@ -8,6 +8,30 @@
 Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
 
+    $('td:first-child .form-checkbox', context).click( function() {
+      isChecked = $(this).attr('checked');
+      $(this).parents('tr').find('.form-checkbox').each( function() {
+        $(this).attr('checked', isChecked);
+      })
+    });
+    
+    $('.field.form-checkbox', context).click( function() {
+      row = $(this).parents('tr')
+      if($(this).attr('checked')) {
+        row.find('td:first-child .form-checkbox').each( function() {
+          $(this).attr('checked', true);
+        })
+      } else {
+        count = 0;
+        row.find('.field.form-checkbox').each( function() {
+          count += $(this).attr('checked') ? 1 : 0;
+        })
+        if(count == 0) {
+          row.find('td:first-child .form-checkbox').attr('checked',false);
+        }
+      }
+    });
+
     $('fieldset.lingotek-account', context).drupalSetSummary(function (context) {
       return Drupal.t($('#account_summary').val() + ' / ' + $('#connection_summary').val());
     });

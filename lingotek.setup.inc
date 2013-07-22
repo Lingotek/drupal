@@ -715,11 +715,14 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
 //    ),
 //  );
 	
-  $form['lingotek_support_footer'] = lingotek_support_footer();
+  
 
   $output = array(
     $form
   );
+  
+  $output[] = lingotek_support_footer();
+  
   return $output;
 }
 
@@ -733,6 +736,8 @@ function lingotek_setup_language_switcher_form_submit($form, $form_state) {
  * Select the Content Types and Fields to be Translated.
  */
 function lingotek_setup_node_translation_settings_form($form, $form_state) {
+  drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
+  
   $form = lingotek_admin_node_translation_settings_form($form, $form_state);
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {

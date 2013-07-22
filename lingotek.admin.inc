@@ -111,7 +111,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
-
+  
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => ($setup_complete ? t('Translate Content') : t('Which content types do you want translated?')),
@@ -127,7 +127,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     ),
     '#submit' => array('lingotek_admin_node_translation_settings_form_submit'),
   );
-
+  
   if ($setup_complete) {
     $form['node_translation'][] = array(
       '#type' => 'item',
@@ -135,74 +135,47 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     );
   }
 
-
-  $form['node_translation']['lingotek_checkboxes_open'] = array('#markup' => '<div id="content-checkboxes" style="border: 0px solid red;">');
-  // Arrange the Types nicely.
+  $rows = array();
+  
   foreach ($raw_types as $value) {
-    $types[$value->type] = $value->name;
-    $form['node_translation']['type_' . $value->type] = array(
-      '#type' => 'checkbox',
-      '#title' => $value->name,
-      '#return_value' => $value->type,
-      '#default_value' => ( array_key_exists($value->type, $translate) || ( $setup_complete === FALSE) ) ? TRUE : FALSE,
-      '#prefix' => '<div id="content_type_' . $value->type . '">',
-      '#suffix' => '</div>' . '',
-    );
-
-    // Grab the fields for this Content Type.
-    $fields = field_info_instances('node', $value->type);
-
-    //$switch = ( array_key_exists($value->type, $translate) ) ? 'block' : 'none';
-    $switch = 'block';
-    $form['node_translation']['lingotek_' . $value->type . 'fieldlist_open'] = array(
-      '#type' => 'item',
-      '#markup' => '<div id="content_fields_' . $value->type . '" style="display: ' . $switch . ';" >',
-      '#states' => array(
-        'visible' => array(
-          ':input[name="type_' . $value->type . '"]' => array('checked' => TRUE),
-        ),
-      ),
-    );
-//    $form['node_translation']['lingotek_fieldlist_details_' . $value->type] = array('#markup' => '<div style="padding-left: 25px; padding-bottom: 5px;">Which fields would you like to include:</div>');
-
-    $title_found = FALSE; // Is there a title field present?
-    // Loop the fields, outputting them.
-    foreach ($fields as $field) {
+    $fr = [];
+    foreach (field_info_instances('node', $value->type) as $field) {
       $field_label = $field['label'];
       $field_machine_name = $field['field_name'];
       $field_type = $field['widget']['type'];
-      $field_name = $value->type . '_SEPERATOR_' . $field_machine_name;
-
-      if (($field_label == 'Title') && ($field_type == 'text_textfield')) {
-        $title_found = TRUE;
-      }
-
-      // Exclude field types we dont translate.
-      if (TRUE == array_search($field_type, $included_fields)) {
-        $form['node_translation'][$field_name] = array(
+      if (array_search($field_type, $included_fields)) {
+        $fr[$field_machine_name] = array(
           '#type' => 'checkbox',
-          '#title' => t('@fieldlabel [@fieldtype]', array('@fieldlabel' => $field_label, '@fieldtype' => $field_type)),
-          // Set if your machine type is set to translate, and your field has been flagged for translation.   OR!  If use defaults == TRUE, and your field type has text in the name somewhere
-          '#default_value' => ( ( isset($translate[$value->type]) && FALSE !== array_search($field_machine_name, $translate[$value->type]) ) || ( ( $setup_complete === FALSE) && (strpos($field_type, 'text') !== FALSE ) ) ) ? TRUE : FALSE,
-          '#attributes' => array('style' => 'margin-left: 35px;'),
+          '#title' => $field_label,
+          '#attributes' => array(
+            'id' => array('edit-form-item-' . $value->type . '-seperator-' . $field_machine_name),
+            'name' => $value->type . '_SEPERATOR_' . $field_machine_name,
+            'class' => array('field'),
+          ),
         );
+        
+        if(!empty($translate[$value->type]) && array_search($field_machine_name, $translate[$value->type]) !== FALSE) {
+          $fr[$field_machine_name]['#attributes']['checked'] = 'checked';
+        }
       }
-    } // END:  foreach field
-    // if we did NOT find a title field for the specified content type, add it manually as an option, and we can do a title swap for the user.
-    if ($title_found === FALSE) {
-      $form['node_translation']['title_swap_' . $value->type] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Title (Note: field will be created)'),
-        '#default_value' => TRUE,
-        '#attributes' => array('style' => 'margin-left: 35px;'),
-      );
     }
-
-    $form['node_translation']['lingotek_' . $value->type . 'fieldlist_close'] = array('#markup' => '</div>');
-  } // END:  foreach content type
-
-  $form['node_translation']['lingotek_checkboxes_close'] = array('#markup' => '</div>');
-
+    $rows[$value->type] = array(
+      array('data' => $value->name, 'width' => '20%'),
+      array('data' => drupal_render($fr), 'width' => '80%'),
+    );
+  }
+  
+  $form['node_translation']['types'] = array(
+    '#type' => 'tableselect',
+    '#header' => array('Content Type', 'Fields'),
+    '#options' => $rows,
+    '#attributes' => array('class' => array('lingotek-content-settings-table')),
+  );
+  
+  foreach (array_keys($translate) as $content_type) {
+    $form['node_translation']['types']['#default_value'][$content_type] = 1;
+  }
+  
   return $form;
 }
 
@@ -448,10 +421,12 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#default_value' => variable_get('lingotek_translate_config_views', 1),
   );
   
-  $form['additional_translation']['lingotek_translate_config_options']['view status'] = array(
-    '#type' => 'item',
-    '#description' => t('You can view the progress of the configuration translations on the ' . l('Translate Interface', 'admin/config/regional/translate') . ' page.'),
-  );
+  if($setup_complete) {
+    $form['additional_translation']['lingotek_translate_config_options']['view status'] = array(
+      '#type' => 'item',
+      '#description' => t('You can view the progress of the configuration translations on the ' . l('Translate Interface', 'admin/config/regional/translate') . ' page.'),
+    );
+  }
   return $form;
 }
 
