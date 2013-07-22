@@ -159,6 +159,17 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
         }
       }
     }
+    if(!isset($fr['title_field'])) {
+        $fr['title_field'] = array(
+          '#type' => 'checkbox',
+          '#title' => 'Title (Note: field will be created.)',
+          '#attributes' => array(
+            'id' => array('edit-form-item-' . $value->type . '-seperator-' . $field_machine_name),
+            'name' => 'title_swap_' . $value->type,
+            'class' => array('field'),
+          ),
+        );
+    }
     $rows[$value->type] = array(
       array('data' => $value->name, 'width' => '20%'),
       array('data' => drupal_render($fr), 'width' => '80%'),
