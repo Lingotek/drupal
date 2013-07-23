@@ -107,7 +107,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   $translate = variable_get('lingotek_translate_fields', array());
 
   // What types of fields DO we translate?
-  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea_with_summary');
+  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary');
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
@@ -136,7 +136,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   }
 
   $rows = array();
-  
+
   foreach ($raw_types as $value) {
     $fr = array();
     foreach (field_info_instances('node', $value->type) as $field) {
