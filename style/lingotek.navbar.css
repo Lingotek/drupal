@@ -92,6 +92,15 @@
   float: none;
 }
 
+#lingotek-navbar-tab .item-list ul li {
+  padding: 0px;
+  margin: 0px;
+}
+
+#lingotek-navbar-tab ul {
+  background: white;
+}
+
 
 
 

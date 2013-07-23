@@ -1408,7 +1408,6 @@ function lingotek_navbar() {
   
   foreach($links->links as $key => $link) {
     $link['attributes']['class'] = array('device', 'icon', 'icon-active');
-    $link['language'] = (object) array('language' => $key);
     $buttons[] = l($link['title'], $link['href'], $link);
   }
 
@@ -1441,6 +1440,7 @@ function lingotek_navbar() {
     '#attached' => array(
       'library' => array(
         array('lingotek', 'lingotek-navbar-switcher'),
+        array('responsive_preview', 'responsive-preview'),
       ),
     ),
     '#weight' => 300,
