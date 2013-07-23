@@ -154,7 +154,8 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
           ),
         );
         
-        if(!empty($translate[$value->type]) && array_search($field_machine_name, $translate[$value->type]) !== FALSE) {
+        $is_enabled = !empty($translate[$value->type]) && array_search($field_machine_name, $translate[$value->type]) !== FALSE;
+        if(!$setup_complete || $is_enabled) {
           $fr[$field_machine_name]['#attributes']['checked'] = 'checked';
         }
       }
@@ -169,6 +170,9 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
             'class' => array('field'),
           ),
         );
+        if(!$setup_complete) {
+          $fr['title_field']['#attributes']['checked'] = 'checked';
+        }
     }
     $rows[$value->type] = array(
       array('data' => $value->name, 'width' => '20%'),
@@ -185,6 +189,14 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   
   foreach (array_keys($translate) as $content_type) {
     $form['node_translation']['types']['#default_value'][$content_type] = 1;
+  }
+
+  if(!$setup_complete) {
+    $defaults = array();
+    foreach ($raw_types as $content_type) {
+      $defualts[$content_type->type] = 1;
+    }
+    $form['node_translation']['types']['#default_value'] = $defualts;
   }
   
   return $form;
@@ -294,7 +306,7 @@ function lingotek_admin_comment_translation_settings_form($form, &$form_state, $
       '#type' => 'actions',
       'submit' => array(
         '#type' => 'submit',
-        '#value' => t('Save')
+        '#value' => ($setup_complete ? t('Save') : t('Next')),
       )
     ),
     '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),

@@ -743,7 +743,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['node_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
@@ -786,13 +786,13 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
 }
 
 function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
-	$form['comment'] = lingotek_admin_comment_translation_settings_form($form, $form_state);
+	$form = lingotek_admin_comment_translation_settings_form($form, $form_state);
   
 	if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/comment-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['comment_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 	$form['comment_translation']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
   $form['lingotek_support_footer'] = lingotek_support_footer();
