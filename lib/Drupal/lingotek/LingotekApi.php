@@ -288,7 +288,7 @@ class LingotekApi {
       'documentDesc' => 'configuration string set "' . $chunk->cid . '", related to menus, taxonomies, views, etc.',
       'format' => $this->xmlFormat(),
       'applyWorkflow' => 'true',
-      'workflowId' => variable_get('lingotek_translate_config_chunks_workflow_id', NULL),
+      'workflowId' => variable_get('lingotek_translate_config_workflow_id', NULL),
       'sourceLanguage' => Lingotek::convertDrupal2Lingotek($chunk->language),
       'tmVaultId' => variable_get('lingotek_vault', 1),
       'content' => $chunk->documentLingotekXML(),
