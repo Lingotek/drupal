@@ -856,6 +856,13 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
 
   /**
+   * Return the workflow_id assigned for config chunks
+   */
+  public static function getWorkflowId() {
+    return variable_get('lingotek_translate_config_workflow_id', '');
+  }
+
+  /**
    * Return all textgroups from locales_source for which translation is desired
    */
   public static function getTextgroupsForTranslation() {
