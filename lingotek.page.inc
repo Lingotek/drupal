@@ -23,7 +23,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
     if (empty($phase_complete_percent)) {
       $phase_complete_percent = 0;
     }
-    $language_link = l(lingotek_language_field_lookup('native', $target->language), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url_by_phases($node, $target->phases) . '\'); return false;')));
+    $language_link = l(lingotek_language_field_lookup('native', $target->language), '', array('attributes' => array('onclick' => 'window.open(\'' . url('/node/' . $node->nid . '/lingotekworkbench/' . $target->language) . '\'); return false;')));
     $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
     $row = array(
       'language' => $language_link,
@@ -600,4 +600,12 @@ function page_sync_comment_translations($comment_id) {
   }
 
   drupal_goto();
+}
+
+/*
+ * 
+ */
+function lingotek_workbench_redirect($node, $lingotek_locale) {
+  $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale);
+  drupal_goto($translation_edit_link);
 }

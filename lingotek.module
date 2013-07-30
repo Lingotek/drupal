@@ -56,6 +56,17 @@ function lingotek_menu() {
     'type' => MENU_LOCAL_TASK
   );
 
+  $items['node/%node/lingotekworkbench/%'] = array(
+    'title' => 'Workbench',
+    'access arguments' => array(1, 'manage projects'),
+    'access callback' => 'lingotek_access', // Enterprise Only Function
+    'file' => 'lingotek.page.inc',
+    'page arguments' => array(1,3),
+    'page callback' => 'lingotek_workbench_redirect',
+    'weight' => 1,
+    'type' => MENU_CALLBACK
+  );
+  
   $items['node/%node/lingotek_dev'] = array(
     'title' => 'Lingotek Developer Tools',
     'access callback' => 'lingotek_access_dev_tools', // Enterprise Only Function

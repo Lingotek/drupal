@@ -545,7 +545,7 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
     return lingotek_get_workbench_url_by_phases($node, $phases, $label, $force);
   }
   
-  LingotekLog::error('lingotek_get_workbench_url - Specified language target not found');
+  LingotekLog::error('lingotek_get_workbench_url - Specified language target not found', $node);
 
   return '';
 }
