@@ -64,4 +64,9 @@ interface LingotekTranslatableEntity {
    *   Lingotek document. FALSE otherwise.
    */
   public function lingotekDocumentId();
+  
+  /**
+   * Return the workflow_id assigned for comments
+   */
+  public static function getWorkflowId();
 }

@@ -87,9 +87,10 @@ class LingotekApi {
     $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
 
     // populate workflow_id
-    $workflow_id = $translatable_object->getWorkflowId();
     if ($isContentNode) {
       $workflow_id = empty($workflow_id) ? lingotek_lingonode($translatable_object->nid, 'lingotek_workflow') : $workflow_id;
+    } else {
+      $workflow_id = $translatable_object->getWorkflowId();
     }
     $workflow_id = empty($workflow_id) ? variable_get('lingotek_workflow', NULL) : $workflow_id;
 

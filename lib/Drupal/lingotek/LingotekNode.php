@@ -218,4 +218,11 @@ class LingotekNode implements LingotekTranslatableEntity {
     // on LingotekNode objects, explicitly.    
   }
   
+  /**
+   * Return the workflow_id assigned for comments
+   */
+  public static function getWorkflowId() {
+    return variable_get('lingotek_workflow', '');
+  }
+  
 }
