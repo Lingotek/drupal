@@ -273,7 +273,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     batch_set($batch);
 
     if (is_null(variable_get('lingotek_translate_comments', NULL)) || is_null(variable_get('lingotek_translate_config', NULL))) {
-      $redirect = 'admin/config/lingotek/additional-translation-settings';
+      $redirect = 'admin/config/lingotek/comment-translation-settings';
     }
     else {
       $redirect = LINGOTEK_MENU_LANG_BASE_URL . '/settings';
@@ -390,7 +390,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   global $base_url;
   $api = LingotekApi::instance();
   //$setup_complete = variable_get('lingotek_setup_complete', 0);
-  $setup_complete = is_null(lingotek_is_config_missing());
+  $setup_complete = (!lingotek_is_config_missing());
   $account = LingotekAccount::instance();
   $is_enterprise = $account->isEnterprise();
 
@@ -454,7 +454,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   }
   
   if($setup_complete) {
-    $form['additional_translation']['lingotek_translate_config_options']['view status'] = array(
+    $form['additional_translation']['lingotek_translate_config_options']['view_status'] = array(
       '#type' => 'item',
       '#description' => t('You can view the progress of the configuration translations on the ' . l('Translate Interface', 'admin/config/regional/translate') . ' page.'),
     );
