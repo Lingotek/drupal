@@ -330,7 +330,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
       'docs' => $total,
       'pending' => $pending,
       'edited' => $edited,
-      'current' => $current
+      'current' => $current,
     );
   }
   else { // Otherwise Return a List of all the Active Languages

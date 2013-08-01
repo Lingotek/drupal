@@ -247,9 +247,10 @@ class LingotekSync {
       $nids = LingotekSync::getAllNodeIds();
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
-      $query->condition('language', $drupal_language_code);
+      $query->join('lingotek', 'l', 'l.nid = n.nid AND l.lingokey = \'node_sync_status\' AND l.lingovalue != \'LOCKED\'');
+      $query->condition('n.language', $drupal_language_code);
       if (count($nids)) {
-        $query->condition('nid', $nids, 'IN'); // nodes sent to lingotek
+        $query->condition('n.nid', $nids, 'IN'); // nodes sent to lingotek
       }
       $query->addExpression('COUNT(*)', 'cnt');
       $result = $query->execute()->fetchField();

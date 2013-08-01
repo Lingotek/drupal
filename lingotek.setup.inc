@@ -739,6 +739,9 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
   
   $form = lingotek_admin_node_translation_settings_form($form, $form_state);
+  $content_defaults = lingotek_admin_content_defaults_form($form, $form_state);
+  $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
+  $form['lingotek_nodes_translation_method']['#weight'] = -1;
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
@@ -809,10 +812,6 @@ function lingotek_setup_additional_translation_settings_form($form, &$form_state
   $form = lingotek_admin_additional_translation_settings_form($form, $form_state);
   $form['lingotek_support_footer'] = lingotek_support_footer();
   return $form;
-}
-
-function lingotek_setup_additional_translation_settings_form_validate($form, &$form_state) {
-  lingotek_admin_additional_translation_settings_form_validate($form, $form_state);
 }
 
 function lingotek_setup_additional_translation_settings_form_submit($form, &$form_state) {

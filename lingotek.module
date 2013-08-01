@@ -341,7 +341,7 @@ function lingotek_menu() {
 /**
  * Implements hook_menu_alter().
  */
-function lingotek_menu_alter(&$items) {
+function lingotek_menu_alter(&$items) {  
   // If the Entity Translation module is enabled alongside Lingotek,
   // allow nodes that haven't yet been associated with Lingotek to be
   // translated using Entity Translation's tools.
@@ -553,7 +553,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       'js' => array(drupal_get_path('module', 'lingotek') . '/js/lingotek.form.js'),
     ),
   );
-
+ 
 
   $form['lingotek']['et_content'] = array(
     '#type' => 'container',
@@ -598,6 +598,23 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#type' => 'item',
     '#title' => $title,
     '#description' => t("The Lingotek Translation module was developed to help you tranlate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
+  );
+  
+  $form['lingotek']['content']['lingotek_nodes_translation_method'] = array(
+    '#type' => 'radios',
+    '#title' => t('Method for storing translations'),
+    '#options' => array(
+      'field' => '<strong>Fields</strong> (Recommended) - all translations are stored in a single node',
+      'node' => '<strong>Nodes</strong>  - create a new node per language ',
+    ),
+    'field' => array(
+      '#description' => 'A newer and recommended method. It appears newer versions of Drupal will use this method.',
+    ),
+    'node' => array(
+      '#description' => 'The classical method. Use for backwards compatibility.',
+    ),
+    '#disabled' => isset($form_state['node']->nid),
+    '#default_value' => variable_get('lingotek_nodes_translation_method', 'field'),
   );
 
   $form['lingotek']['content']['create_lingotek_document'] = array(
@@ -931,6 +948,9 @@ function lingotek_upload_document($node) {
   }
   if (isset($node->lingotek_allow_community_translation)) {
     lingotek_lingonode($node->nid, 'allow_community_translation', $node->lingotek_allow_community_translation);
+  }
+  if (isset($node->lingotek_allow_community_translation)) {
+    lingotek_lingonode($node->nid, 'lingotek_nodes_translation_method', $node->lingotek_nodes_translation_method);
   }
   if (user_access('adjust auto-download node setting') && isset($node->syncMethod)) {
     lingotek_lingonode($node->nid, 'sync_method', $node->syncMethod); //auto-download
@@ -1488,4 +1508,28 @@ function lingotek_library() {
   );
 
   return $libraries;
+}
+
+function lingotek_form_alter(&$form, &$form_state, $form_id) {
+  if(substr($form_id,-9) == 'node_form') {
+    if(isset($form['#entity']->tnid) && $form['#entity']->tnid != 0 && $form['#entity']->nid != $form['#entity']->tnid) {
+      $content_type = $form['type']['#value'];
+      $lingotek_fields = variable_get('lingotek_translate_fields');
+      foreach($lingotek_fields[$content_type] as $field) {
+        $form[$field]['#disabled'] = TRUE;
+      }
+
+      $lingotek_locale = Lingotek::convertDrupal2Lingotek($form['#entity']->language);
+      $node = node_load($form['#entity']->tnid);
+      $workbench = 'node/' . $node->nid . '/lingotekworkbench/' . $lingotek_locale;
+
+      $message = 'Some fields are not editable because the translations are managed by lingotek.
+        To edit this content in the source language go to the ' . l('source node', 'node/' . $form['#entity']->tnid . '/edit') . '.';
+
+      $message .= ' <br>To make changes to this translation you can go to the ' . l('Lingotek workbench.', $workbench);
+
+
+      drupal_set_message($message);
+    }
+  }
 }

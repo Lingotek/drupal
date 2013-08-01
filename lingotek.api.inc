@@ -7,6 +7,47 @@
 $GLOBALS['_lingotek_client'] = new LingotekSession();
 
 /*
+ * This function is only used for node-based translations.
+ * 
+ * @param $node
+ *  Node in the source language
+ * @param $drupal_language_code
+ *  The language which we are dealing with
+ */
+function lingotek_get_translated_node($node, $drupal_language_code) {
+  $tset = translation_node_get_translations($node->nid);
+
+  if($node->tnid == 0) {
+    $node->tnid = $node->nid;
+    node_save($node);
+  }
+  
+  if(isset($tset[$drupal_language_code])) {
+    $localized_node = node_load($tset[$drupal_language_code]->nid);
+  } else {
+    $localized_node = new stdClass();
+    $localized_node->type = $node->type;
+    node_object_prepare($localized_node);
+    $localized_node->title = $node->title . ' (' . $drupal_language_code . ')';
+    $localized_node->tnid = $node->tnid;
+    $localized_node->language = $drupal_language_code;
+    
+    
+    $localized_node->uid = $node->uid;
+    $localized_node->name = $node->name;
+    $localized_node->comment = $node->comment;
+    $localized_node->promote = $node->promote;
+    $localized_node->sticky = $node->sticky;
+    $localized_node->status = $node->status;
+    $localized_node->create_lingotek_document = FALSE;
+    node_save($localized_node);
+    lingotek_lingonode($localized_node->nid, 'node_sync_status', 'LOCKED');
+  }
+  
+  return $localized_node;
+}
+
+/*
  * Download the translations from the Lingotek platform
  *
  * This updates a node's content with translations for target languages
@@ -48,6 +89,12 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
     LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
     return;
   }
+  
+  $node_method = lingotek_lingonode($node->nid, 'lingotek_nodes_translation_method');
+  
+  if($node_method == 'node') { //node-based translations
+    $node = lingotek_get_translated_node($node, $drupal_language_code);
+  }
 
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
 
@@ -84,7 +131,7 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
         }
       }
     }
-    else {
+    else { //this part of the xml is a field
       $drupal_field_name = $tag;
       $target_key = 'value';
       $subfield_parts = explode('__', $tag);
@@ -154,6 +201,8 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
           }
         }
       }
+      
+      cache_clear_all('field:node:' . $node->nid, 'cache_field');
 
       //Set URL alias
       $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);

@@ -79,7 +79,7 @@ Drupal.behaviors.lingotekAdminForm = {
       $('#edit-additional-translation input').each(function( index ) {
         if($(this).attr('checked') == '1') {
           name = $(this).attr('name');
-          name = name.substring(name.lastIndexOf('_') + 1, name.length);
+          name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
           $list.push(name);
         }
       });
