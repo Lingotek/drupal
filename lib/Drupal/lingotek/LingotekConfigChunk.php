@@ -178,6 +178,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         ->fields(array('i18n_status' => I18N_STRING_STATUS_CURRENT))
         ->condition('lid', self::minLid($chunk_id), '>=')
         ->condition('lid', self::maxLid($chunk_id), '<=')
+        ->condition('translation_agent_id', self::getLingotekTranslationAgentId())
         ->execute();
   }
 
@@ -748,6 +749,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         ->condition('lid', self::maxLid($chunk_id), '<=')
         ->condition('language', $language)
         ->condition('i18n_status', I18N_STRING_STATUS_CURRENT, '!=')
+        ->condition('translation_agent_id', self::getLingotekTranslationAgentId())
         ->execute();
     return $result->fetchCol();
   }
@@ -780,7 +782,36 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         ->condition('language', $target_language)
         ->condition('lid', self::minLid($chunk_id), '>=')
         ->condition('lid', self::maxLid($chunk_id), '<=')
+        ->condition('translation_agent_id', self::getLingotekTranslationAgentId())
         ->execute();
+  }
+
+  /**
+   * Get lingotek translation agent ID
+   */
+  protected static function getLingotekTranslationAgentId() {
+    $result = db_select('lingotek_translation_agent', 'lta')
+        ->fields('lta', array('id'))
+        ->condition('name', 'Lingotek')
+        ->execute();
+    return $result->fetchField();
+  }
+
+  /**
+   * Get all locales target entries that were not created by Lingotek
+   */
+  protected static function getNonLingotekLocalesTargets($document_xml, $target_language) {
+    $lids = array();
+    foreach ($document_xml as $drupal_field_name => $xml_obj) {
+      $lids[] = self::getLidFromTag($drupal_field_name);
+    }
+    $result = db_select('locales_target', 'lt')
+        ->fields('lt', array('lid'))
+        ->condition('lid', $lids, 'IN')
+        ->condition('language', $target_language)
+        ->condition('translation_agent_id', self::getLingotekTranslationAgentId(), '!=')
+        ->execute();
+    return $result->fetchCol();
   }
 
   /**
@@ -792,19 +823,25 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *    the language code under which to save the translations
    */
   public static function saveSegmentTranslations($document_xml, $target_language) {
+    $non_lingotek_locales_targets = self::getNonLingotekLocalesTargets($document_xml, $target_language);
     $rows = array();
-    $sql = 'INSERT INTO {locales_target} (lid, translation, language) VALUES ';
+    $sql = 'INSERT INTO {locales_target} (lid, translation, language, translation_agent_id) VALUES ';
     $subsql = '';
     $icount = 0;
+    $lingotek_agent = self::getLingotekTranslationAgentId();
     foreach ($document_xml as $drupal_field_name => $xml_obj) {
-      $content = (string) $xml_obj->element;
-      $content = self::unfilterPlaceholders(decode_entities($content));
       $lid = self::getLidFromTag($drupal_field_name);
-      $rows += array(":l_$icount" => $lid,
-        ":c_$icount" => $content,
-        ":lang_$icount" => $target_language);
-      $subsql .= "( :l_$icount, :c_$icount, :lang_$icount),";
-      $icount++;
+      if (!in_array($lid, $non_lingotek_locales_targets)) {
+        $content = (string) $xml_obj->element;
+        $content = self::unfilterPlaceholders(decode_entities($content));
+        $rows += array(":l_$icount" => $lid,
+          ":c_$icount" => $content,
+          ":lang_$icount" => $target_language,
+          ":agent_$icount" => $lingotek_agent,
+          );
+        $subsql .= "( :l_$icount, :c_$icount, :lang_$icount, :agent_$icount),";
+        $icount++;
+      }
     }
     $subsql = rtrim($subsql, ',');
     db_query($sql . $subsql, $rows);
