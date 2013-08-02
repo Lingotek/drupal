@@ -843,8 +843,10 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         $icount++;
       }
     }
-    $subsql = rtrim($subsql, ',');
-    db_query($sql . $subsql, $rows);
+    if (!empty($rows)) {
+      $subsql = rtrim($subsql, ',');
+      db_query($sql . $subsql, $rows);
+    }
   }
 
   /**
