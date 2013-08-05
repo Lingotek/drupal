@@ -485,10 +485,14 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   system_settings_form_submit($form, $form_state);
 
   //if any configuration options are set then config translation is enabled
-  if (variable_get('lingotek_translate_config', 0) || variable_get('lingotek_translate_config_taxonomies', 0) ||
+  if (variable_get('lingotek_translate_config_taxonomies', 0) || variable_get('lingotek_translate_config_blocks', 0) ||
       variable_get('lingotek_translate_config_menus', 0) || variable_get('lingotek_translate_config_views', 0) ||
       variable_get('lingotek_translate_config_builtins', 0)) {
     variable_set('lingotek_translate_config', TRUE);
+  }
+  else {
+    // mark lingotek_translate_config to false if no config is to be translated
+    variable_set('lingotek_translate_config', FALSE);
   }
 
   // prepare for any configuration translation, if applicable
