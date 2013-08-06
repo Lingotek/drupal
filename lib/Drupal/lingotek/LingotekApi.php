@@ -531,6 +531,24 @@ class LingotekApi {
     return $document;
   }
 
+  /**  
+   * Gets the workflow progress of the specified documents.
+   *
+   * @param int $document_id
+   *   The IDs of the Lingotek Documents to retrieve.
+   *
+   * @return mixed
+   *  The API response object with Lingotek Document data, or FALSE on error.
+   */
+  public function listDocumentProgress($document_ids) {
+    $params = array();
+    foreach ($document_ids as $document_id) {
+      $params['documentId'][] = $document_id;
+    }
+    $documents = $this->request('listDocumentProgress', $params);
+    return $documents;
+  }
+
   /**
    * Gets the workflow progress of the specified project (or list of document ids).
    *

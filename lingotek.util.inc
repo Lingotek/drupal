@@ -620,6 +620,24 @@ function lingotek_get_active_languages($get_details = FALSE) {
   return $active_languages;
 }
 
+/**
+ * Get numbered array with all node source languages
+ */
+function lingotek_get_node_source_languages() {
+  $lingo_langs = array();
+  $query = db_select('node', 'n')->distinct()
+    ->fields('n', array('language'));
+  $query = $query->execute();
+  $result = $query->fetchCol(0);
+  foreach ($result as $lang) {
+    $lingo_lang = Lingotek::convertDrupal2Lingotek($lang);
+    if ($lingo_lang) {
+      $lingo_langs[$lingo_lang] = $lingo_lang;
+    }
+  }
+  return $lingo_langs;
+}
+
 // END:  lingotek_get_active_languages()
 
 /**

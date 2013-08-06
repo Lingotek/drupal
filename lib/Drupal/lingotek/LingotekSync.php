@@ -145,21 +145,33 @@ class LingotekSync {
     $report = array(
       'download_targets_workflow_complete' => array(), // workflow complete and ready for download
       'download_targets_workflow_complete_count' => 0,
+      'download_workflow_complete_targets' => array(),
       'download_targets_workflow_incomplete' => array(), // not workflow complete (but download if wanted)
-      'download_targets_workflow_incomplete_count' => 0
+      'download_targets_workflow_incomplete_count' => 0,
+      'download_workflow_incomplete_targets' => array(),
     );
     if (empty($document_ids))
       return $report; // if no documents are PENDING, then no need to make the API call.
     $api = LingotekApi::instance();
     $response = $api->getProgressReport($project_id, $document_ids, TRUE);
 
+    if (isset($response->byDocumentIdAndTargetLocale)) {
+      $status_by_doc = $response->byDocumentIdAndTargetLocale;
+    }
+    if (isset($response->byTargetLocale)) {
+      $status_by_locale = $response->byTargetLocale;
+    }
     if (isset($response->workflowCompletedByDocumentIdAndTargetLocale)) {
       $progress_report = $response->workflowCompletedByDocumentIdAndTargetLocale;
       foreach ($progress_report as $doc_id => $target_locales) {
         foreach ($target_locales as $lingotek_locale => $workflow_completed) {
+          if (isset($status_by_doc->$doc_id) && isset($status_by_doc->$doc_id->$lingotek_locale)) {
+            $status = $status_by_doc->$doc_id->$lingotek_locale;
+          }
           $doc_target = array(
             'document_id' => $doc_id,
-            'locale' => $lingotek_locale
+            'locale' => $lingotek_locale,
+            'percent_complete' => $status,
           );
 
           if ($workflow_completed) {
@@ -599,6 +611,38 @@ class LingotekSync {
     return $nids;
   }
 
+  public static function getAllDocIds() {
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('lingovalue'))
+      ->condition('lingokey', 'document_id');
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
+  public static function getDocIdsBySource($source_language) {
+    $subquery = db_select('node', 'n')
+      ->fields('n', array('nid'))
+      ->condition('language', Lingotek::convertLingotek2Drupal($source_language));
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('lingovalue'))
+      ->condition('lingokey', 'document_id')
+      ->condition('nid', $subquery, 'IN');
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
+  public static function getDocIdsByTarget($target_language) {
+    $subquery = db_select('lingotek', 'l1')
+      ->fields('l1', array('nid'))
+      ->condition('lingokey', 'target_sync_status_' . $target_language);
+    $query = db_select('lingotek', 'l2')
+      ->fields('l2', array('lingovalue'))
+      ->condition('lingokey', 'document_id')
+      ->condition('nid', $subquery, 'IN');
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
   //lingotek_get_node_id_from_document_id
   public static function getNodeIdFromDocId($lingotek_document_id) {
     $found = FALSE;
@@ -614,6 +658,16 @@ class LingotekSync {
     }
 
     return $found;
+  }
+
+  public static function getNodeIdsFromDocIds($lingotek_document_ids) {
+    $nids = array();
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('nid'))
+      ->condition('lingokey', 'document_id')
+      ->condition('lingovalue', $lingotek_document_ids, 'IN');
+    $result = $query->execute()->fetchCol();
+    return $result;
   }
 
   public static function getDocIdFromNodeId($drupal_node_id) {

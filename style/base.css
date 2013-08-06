@@ -52,3 +52,15 @@ div.form-item.form-item-wb-options {
 input.lingotek-content-settings-table.form-checkbox {
   margin: 0px;
 }
+
+/* Bulk Grid */
+
+#lingotek-bulk-grid-form #edit-header-fieldset .form-item {
+  float:left;
+  margin-left: 15px;
+}
+
+#lingotek-bulk-grid-form #edit-filter-fieldset .form-item {
+  float:left;
+  margin-left: 15px;
+}
