@@ -3,7 +3,7 @@
 /**
  * Request wrapper class.  Prepares a request for consumption by the OAuth routines
  * 
- * @version $Id: OAuthRequest.php 174 2010-11-24 15:15:41Z brunobg@corollarium.com $
+ * @version $Id: LingotekOAuthRequest.php 174 2010-11-24 15:15:41Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 12:20:31 PM
  * 
@@ -36,7 +36,7 @@ require_once dirname(__FILE__) . '/OAuthException2.php';
 /**
  * Object to parse an incoming OAuth request or prepare an outgoing OAuth request
  */
-class OAuthRequest 
+class LingotekOAuthRequest 
 {
 	/* the realm for this request */
 	protected $realm;
@@ -103,7 +103,7 @@ class OAuthRequest
 				}
 			}
 		}
-		$headers      = OAuthRequestLogger::getAllHeaders();
+		$headers      = LingotekOAuthRequestLogger::getAllHeaders();
 		$this->method = strtoupper($method);
 		
 		// If this is a post then also check the posted variables
@@ -254,7 +254,7 @@ class OAuthRequest
 			{
 				$m = strtoupper($m);
 				$m2 = preg_replace('/[^A-Z0-9]/', '_', $m);
-				if (file_exists(dirname(__FILE__).'/signature_method/OAuthSignatureMethod_'.$m2.'.php'))
+				if (file_exists(dirname(__FILE__).'/signature_method/LingotekOAuthSignatureMethod_'.$m2.'.php'))
 				{
 					$method = $m;
 					break;
@@ -274,13 +274,13 @@ class OAuthRequest
 	 * Fetch the signature object used for calculating and checking the signature base string
 	 * 
 	 * @param string method
-	 * @return OAuthSignatureMethod object
+	 * @return LingotekOAuthSignatureMethod object
 	 */
 	function getSignatureMethod ( $method )
 	{
 		$m     = strtoupper($method);
 		$m     = preg_replace('/[^A-Z0-9]/', '_', $m);
-		$class = 'OAuthSignatureMethod_'.$m;
+		$class = 'LingotekOAuthSignatureMethod_'.$m;
 
 		if (file_exists(dirname(__FILE__).'/signature_method/'.$class.'.php'))
 		{

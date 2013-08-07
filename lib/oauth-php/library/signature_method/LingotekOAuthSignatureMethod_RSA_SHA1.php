@@ -31,9 +31,9 @@
  */
 
 
-require_once dirname(__FILE__).'/OAuthSignatureMethod.class.php';
+require_once dirname(__FILE__).'/LingotekOAuthSignatureMethod.class.php';
 
-class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod
+class LingotekOAuthSignatureMethod_RSA_SHA1 extends LingotekOAuthSignatureMethod
 {
 	public function name() 
 	{
@@ -44,7 +44,7 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod
 	/**
 	 * Fetch the public CERT key for the signature
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @return string public key
 	 */
 	protected function fetch_public_cert ( $request )
@@ -55,14 +55,14 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod
 		// (3) some sort of specific discovery code based on request
 		//
 		// either way should return a string representation of the certificate
-		throw OAuthException2("OAuthSignatureMethod_RSA_SHA1::fetch_public_cert not implemented");
+		throw OAuthException2("LingotekOAuthSignatureMethod_RSA_SHA1::fetch_public_cert not implemented");
 	}
 	
 	
 	/**
 	 * Fetch the private CERT key for the signature
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @return string private key
 	 */
 	protected function fetch_private_cert ( $request )
@@ -71,7 +71,7 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod
 		// (1) do a lookup in a table of trusted certs keyed off of consumer
 		//
 		// either way should return a string representation of the certificate
-		throw OAuthException2("OAuthSignatureMethod_RSA_SHA1::fetch_private_cert not implemented");
+		throw OAuthException2("LingotekOAuthSignatureMethod_RSA_SHA1::fetch_private_cert not implemented");
 	}
 
 
@@ -79,7 +79,7 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod
 	 * Calculate the signature using RSA-SHA1
 	 * This function is copyright Andy Smith, 2008.
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @param string base_string
 	 * @param string consumer_secret
 	 * @param string token_secret
@@ -107,7 +107,7 @@ class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod
 	/**
 	 * Check if the request signature is the same as the one calculated for the request.
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @param string base_string
 	 * @param string consumer_secret
 	 * @param string token_secret

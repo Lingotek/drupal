@@ -3,7 +3,7 @@
 /**
  * Perform a signed OAuth request with a GET, POST, PUT or DELETE operation.
  * 
- * @version $Id: OAuthRequester.php 174 2010-11-24 15:15:41Z brunobg@corollarium.com $
+ * @version $Id: LingotekOAuthRequester.php 174 2010-11-24 15:15:41Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 20, 2007 1:41:38 PM
  * 
@@ -30,11 +30,11 @@
  * THE SOFTWARE.
  */
 
-require_once dirname(__FILE__) . '/OAuthRequestSigner.php';
+require_once dirname(__FILE__) . '/LingotekOAuthRequestSigner.php';
 require_once dirname(__FILE__) . '/body/OAuthBodyContentDisposition.php';
 
 
-class OAuthRequester extends OAuthRequestSigner
+class LingotekOAuthRequester extends LingotekOAuthRequestSigner
 {
 	protected $files;
 
@@ -144,7 +144,7 @@ class OAuthRequester extends OAuthRequestSigner
 	 */
 	static function requestRequestToken ( $consumer_key, $usr_id, $params = null, $method = 'POST', $options = array(), $curl_options = array())
 	{
-		OAuthRequestLogger::start();
+		LingotekOAuthRequestLogger::start();
 
 		if (isset($options['token_ttl']) && is_numeric($options['token_ttl']))
 		{
@@ -155,7 +155,7 @@ class OAuthRequester extends OAuthRequestSigner
 		$r		= $store->getServer($consumer_key, $usr_id);
 		$uri 	= $r['request_token_uri'];
 
-		$oauth 	= new OAuthRequester($uri, $method, $params);
+		$oauth 	= new LingotekOAuthRequester($uri, $method, $params);
 		$oauth->sign($usr_id, $r, '', 'requestToken');
 		$text	= $oauth->curl_raw($curl_options);
 
@@ -194,7 +194,7 @@ class OAuthRequester extends OAuthRequestSigner
 			throw new OAuthException2('The server "'.$uri.'" did not return the oauth_token or the oauth_token_secret');
 		}
 
-		OAuthRequestLogger::flush();
+		LingotekOAuthRequestLogger::flush();
 
 		// Now we can direct a browser to the authorize_uri
 		return array(
@@ -221,7 +221,7 @@ class OAuthRequester extends OAuthRequestSigner
 	 */
 	static function requestAccessToken ( $consumer_key, $token, $usr_id, $method = 'POST', $options = array(), $curl_options = array() )
 	{
-		OAuthRequestLogger::start();
+		LingotekOAuthRequestLogger::start();
 				
 		$store	    = OAuthStore::instance();
 		$r		    = $store->getServerTokenSecrets($consumer_key, $token, 'request', $usr_id);
@@ -232,7 +232,7 @@ class OAuthRequester extends OAuthRequestSigner
 		$store->deleteServerToken($consumer_key, $r['token'], 0, true);
 
 		// Try to exchange our request token for an access token
-		$oauth 	= new OAuthRequester($uri, $method);
+		$oauth 	= new LingotekOAuthRequester($uri, $method);
 
 		if (isset($options['oauth_verifier'])) 
 		{
@@ -243,7 +243,7 @@ class OAuthRequester extends OAuthRequestSigner
 			$oauth->setParam('xoauth_token_ttl', intval($options['token_ttl']));
 		}
 
-		OAuthRequestLogger::setRequestObject($oauth);
+		LingotekOAuthRequestLogger::setRequestObject($oauth);
 
 		$oauth->sign($usr_id, $r, '', 'accessToken');
 		$text	= $oauth->curl_raw($curl_options);
@@ -281,7 +281,7 @@ class OAuthRequester extends OAuthRequestSigner
 			throw new OAuthException2('The server "'.$uri.'" did not return the oauth_token or the oauth_token_secret');
 		}
 
-		OAuthRequestLogger::flush();
+		LingotekOAuthRequestLogger::flush();
 	}
 
 
@@ -435,8 +435,8 @@ class OAuthRequester extends OAuthRequestSigner
 			$data .= "\n\n".$query;
 		}
 
-		OAuthRequestLogger::setSent($data, $body);
-		OAuthRequestLogger::setReceived($txt);
+		LingotekOAuthRequestLogger::setSent($data, $body);
+		LingotekOAuthRequestLogger::setReceived($txt);
 
 		return $txt;
 	}
