@@ -82,81 +82,93 @@ function lingotek_notifications() {
   $context = '';
 
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-  $nid = LingotekSync::getNodeIdFromDocId($document_id);
+  
+  // try 10 times if by chance we don't find the document in the database yet..
+  $attempts = 0;
+  while ($attempts < 10) {
+    $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-  LingotekLog::info('Notification Received  
-      <br/><b>doc_id:</b> @document_id
-      <br/><b>code:</b> @lingotek_locale
-      <br/><b>project:</b> @project_id
-      <br/><b>node:</b> @node_id (@target_drupal_language_code)', array(
-    '@document_id' => $document_id,
-    '@lingotek_locale' => $lingotek_locale,
-    '@project_id' => $project_id,
-    '@node_id' => $nid,
-    '@target_drupal_language_code' => $target_drupal_language_code
-      ), 'callback');
-
-  // If there is not a node ID associated with this document, check for config chunks and comments
-  // associated with the document ID
-  if (!$nid) {
-    $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
-    $replacements = array(
-      '@document' => $document_id,
-      '@language_code' => $lingotek_locale,
+    LingotekLog::info('Notification Received  
+        <br/><b>doc_id:</b> @document_id
+        <br/><b>code:</b> @lingotek_locale
+        <br/><b>project:</b> @project_id
+        <br/><b>node:</b> @node_id (@target_drupal_language_code)', array(
+      '@document_id' => $document_id,
+      '@lingotek_locale' => $lingotek_locale,
       '@project_id' => $project_id,
-    );
+      '@node_id' => $nid,
+      '@target_drupal_language_code' => $target_drupal_language_code
+        ), 'callback');
 
-    // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
-    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-      $replacements['@id'] = $trans_obj->cid;
-      $replacements['@trans_type'] = $trans_obj->cid;
-    }
-    // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
-    elseif ($trans_obj = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-      $replacements['@id'] = $trans_obj->id;
-      $replacements['@trans_type'] = $trans_obj->id;
-    }
-    else {
-      LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
-      return drupal_json_output(array("message" => "The doc_id was not found on the site."));
-    }
+    // If there is not a node ID associated with this document, check for config chunks and comments
+    // associated with the document ID
+    if (!$nid) {
+      $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
+      $replacements = array(
+        '@document' => $document_id,
+        '@language_code' => $lingotek_locale,
+        '@project_id' => $project_id,
+      );
 
-    if ($trans_obj->updateLocalContentByTarget($lingotek_locale)) {
-      LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
-            from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
-    }
-    else {
-      LingotekLog::trace('Unable to update local content for <strong>@trans_type</strong> @id based on hit
-            from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
-    }
-  }
-  else {
-    $node = lingotek_node_load_default($nid);
-    $source_language = $node->language;
-    $node_setting = lingotek_lingonode($nid, 'sync_method');
-    $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
-
-    if ($auto_download) { // download only when automatic download is enabled
-      $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-      lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
-
-      // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
-      $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
-      if (empty($target_statuses)) {
-        lingotek_lingonode($nid, 'workbench_moderate', 1);
+      // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
+      if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+        $replacements['@id'] = $trans_obj->cid;
+        $replacements['@trans_type'] = $trans_obj->cid;
       }
-      if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
-        $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
-        $trans_options = lingotek_get_workbench_moderation_transitions();
-        if ($options_index == 1) {
-          $from_state = $node->workbench_moderation['current']->state;
-          $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
-          if ($mult_trans) {
-            $trans_options[$from_state] = $mult_trans;
-          }
+      // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
+      elseif ($trans_obj = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+        $replacements['@id'] = $trans_obj->id;
+        $replacements['@trans_type'] = $trans_obj->id;
+      }
+      else {
+        if ($attempts < 10) {
+          LingotekLog::info('Did not find doc ID @doc_id yet on attempt #@attempt, retrying...', 
+              array('@attempt' => $attempts, '@doc_id' => $document_id));
+          sleep(1);
+          $attempts++;
+          continue;
         }
-        lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
-        lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
+        LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
+        return drupal_json_output(array("message" => "The doc_id was not found on the site."));
+      }
+
+      if ($trans_obj->updateLocalContentByTarget($lingotek_locale)) {
+        LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
+              from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
+      }
+      else {
+        LingotekLog::trace('Unable to update local content for <strong>@trans_type</strong> @id based on hit
+              from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
+      }
+    }
+    else {
+      $node = lingotek_node_load_default($nid);
+      $source_language = $node->language;
+      $node_setting = lingotek_lingonode($nid, 'sync_method');
+      $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
+
+      if ($auto_download) { // download only when automatic download is enabled
+        $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
+        lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
+
+        // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
+        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
+        if (empty($target_statuses)) {
+          lingotek_lingonode($nid, 'workbench_moderate', 1);
+        }
+        if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
+          $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
+          $trans_options = lingotek_get_workbench_moderation_transitions();
+          if ($options_index == 1) {
+            $from_state = $node->workbench_moderation['current']->state;
+            $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
+            if ($mult_trans) {
+              $trans_options[$from_state] = $mult_trans;
+            }
+          }
+          lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
+          lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
+        }
       }
     }
   }
