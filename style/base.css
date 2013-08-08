@@ -60,7 +60,11 @@ input.lingotek-content-settings-table.form-checkbox {
   margin-left: 15px;
 }
 
-#lingotek-bulk-grid-form #edit-filter-fieldset .form-item {
+#lingotek-bulk-grid-form #edit-filter-fieldset #edit-filters .form-item {
   float:left;
   margin-left: 15px;
+}
+
+#lingotek-bulk-grid-form #edit-filter-fieldset #edit-filter-buttons {
+  clear:both;
 }

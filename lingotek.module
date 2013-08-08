@@ -183,7 +183,7 @@ function lingotek_menu() {
   );
 
   //Tab: Bulk Grid
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid'] = array(
+/*  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid'] = array(
     'title' => 'Bulk Grid',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
@@ -202,7 +202,7 @@ function lingotek_menu() {
     //'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
   );
-
+*/
   // Batch Process Pages ----------------------------------------
   // Sync Progress Report 
   $items['lingotek/sync/report'] = array(
@@ -629,8 +629,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
 function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
 
-  $form = array();
-
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
@@ -647,7 +645,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     }
     $bulk_grid = TRUE;
   }
-  else {
+  elseif (!is_null($nids)) {
     $nids = array($nids);
   }
 
@@ -837,7 +835,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     }
     $form['lingotek']['content']['lingotek_allow_community_translation'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow Community Translation'),
+      '#title' => t('Allow Crowdsourced Translation'),
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => $allow_community_translation_default,
     );

@@ -996,7 +996,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     // Community Translation
     $form['defaults']['lingotek_allow_community_translation'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow Community Translation'),
+      '#title' => t('Allow Crowdsourced Translation'),
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => variable_get('lingotek_allow_community_translation', 0),
     );

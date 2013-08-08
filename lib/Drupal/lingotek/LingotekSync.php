@@ -486,6 +486,26 @@ class LingotekSync {
     return $nids;
   }
 
+  public static function getNodeIdsBySource($language) {
+    $sub_query = db_select('lingotek', 'l')
+      ->distinct()
+      ->fields('l', array('nid'));
+    $query = db_select('node', 'n')
+      ->fields('n', array('nid'))
+      ->condition('n.language', $language)
+      ->condition('n.nid', $sub_query, 'IN');
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
+  public static function getNodeIdsByTarget($target_language) {
+    $query = db_select('lingotek', 'l1')
+      ->fields('l1', array('nid'))
+      ->condition('lingokey', 'target_sync_status_' . $target_language);
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
   public static function getDocIdsByStatus($status) {
     $doc_ids = array();
 
@@ -683,6 +703,48 @@ class LingotekSync {
     }
 
     return $found;
+  }
+
+/**
+ * Updates the 'target_sync_progress_[lang-code]' field for every target in the lingotek table
+ * with the overall progress returned by TMS
+ *
+ * @param int array $document_ids
+ *    array of Document IDs that you want to update
+ *
+ */
+  public static function updateTargetProgress($document_ids) {
+    $api = LingotekApi::Instance();
+
+    $progress_report = $api->getProgressReport(NULL, $document_ids);
+
+    $delete_nids = array();
+    $values = array();
+    foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
+      $nid = LingotekSync::getNodeIdFromDocId($doc_id);
+      $delete_nids[] = $nid;
+      foreach ($completion as $language => $percent) {
+        $record = array(
+          'nid' => $nid,
+          'lingokey' => 'target_sync_progress_' . $language,
+          'lingovalue' => $percent,
+        );
+        $values[] = $record;
+      }
+    }
+
+    $deleted = db_delete('lingotek')
+      ->condition('nid', $delete_nids, 'IN')
+      ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
+      ->execute();
+
+    $query = db_insert('lingotek')
+      ->fields(array('nid', 'lingokey', 'lingovalue'));
+    foreach ($values as $record) {
+      $query->values($record);
+    }
+    $query->execute();
+
   }
 
   public static function updateNotifyUrl() {
