@@ -750,3 +750,58 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
   }
   return $operations;
 }
+
+/**
+ * Updates the 'target_sync_progress_[lang-code]' field for every target in the lingotek table
+ * with the overall progress returned by TMS
+ *
+ * @param int array $document_ids
+ *    array of Document IDs that you want to update
+ *
+ */
+function lingotek_update_target_progress($document_ids) {
+  $api = LingotekApi::Instance();
+
+  $progress_report = $api->getProgressReport(NULL, $document_ids);
+
+  $delete_nids_maybe = array();
+  $values = array();
+  foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
+    $nid = LingotekSync::getNodeIdFromDocId($doc_id);
+    $delete_nids_maybe[] = $nid;
+    foreach ($completion as $language => $percent) {
+      $values[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_progress_' . $language,
+        'lingovalue' => $percent,
+      );
+      $values[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_progress_last_updated_' . $language,
+        'lingovalue' => time(),
+      );
+    }
+  }
+
+  $delete_nids = db_select('lingotek', 'l')
+    ->fields('l', array('nid'))
+    ->distinct()
+    ->condition('nid', $delete_nids_maybe, 'IN')
+    ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
+    ->execute()->fetchCol();
+
+  if (!empty($delete_nids)) {
+    $deleted = db_delete('lingotek')
+      ->condition('nid', $delete_nids, 'IN')
+      ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
+      ->execute();
+  }
+
+  $query = db_insert('lingotek')
+    ->fields(array('nid', 'lingokey', 'lingovalue'));
+  foreach ($values as $record) {
+    $query->values($record);
+  }
+  $query->execute();
+
+}

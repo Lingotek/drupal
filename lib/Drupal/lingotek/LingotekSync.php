@@ -620,7 +620,7 @@ class LingotekSync {
     return $doc_ids;
   }
   
-  public static function getAllNodeIds() {
+  public static function getAllNodeIds() { // This query is broken - it also gets things without doc ids
     // all node ids having document_ids in lingotek table
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('nid'));
@@ -705,46 +705,26 @@ class LingotekSync {
     return $found;
   }
 
-/**
- * Updates the 'target_sync_progress_[lang-code]' field for every target in the lingotek table
- * with the overall progress returned by TMS
- *
- * @param int array $document_ids
- *    array of Document IDs that you want to update
- *
- */
-  public static function updateTargetProgress($document_ids) {
-    $api = LingotekApi::Instance();
+  public static function getDocIdsFromNodeIds($drupal_node_ids) {
 
-    $progress_report = $api->getProgressReport(NULL, $document_ids);
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('lingovalue'))
+      ->condition('nid', $drupal_node_ids, 'IN')
+      ->condition('lingokey', 'document_id');
+    $result = $query->execute()->fetchCol();
 
-    $delete_nids = array();
-    $values = array();
-    foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-      $nid = LingotekSync::getNodeIdFromDocId($doc_id);
-      $delete_nids[] = $nid;
-      foreach ($completion as $language => $percent) {
-        $record = array(
-          'nid' => $nid,
-          'lingokey' => 'target_sync_progress_' . $language,
-          'lingovalue' => $percent,
-        );
-        $values[] = $record;
-      }
-    }
+    return $result;
+  }
 
-    $deleted = db_delete('lingotek')
-      ->condition('nid', $delete_nids, 'IN')
-      ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
-      ->execute();
+  public static function getNodeIdsByTargetProgress($nids, $lingotek_locale) {
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('nid'))
+      ->condition('nid', $nids, 'IN')
+      ->condition('lingokey', 'target_sync_progress_' . $lingotek_locale)
+      ->condition('lingovalue', '100');
+    $result = $query->execute()->fetchCol();
 
-    $query = db_insert('lingotek')
-      ->fields(array('nid', 'lingokey', 'lingovalue'));
-    foreach ($values as $record) {
-      $query->values($record);
-    }
-    $query->execute();
-
+    return $result;
   }
 
   public static function updateNotifyUrl() {
