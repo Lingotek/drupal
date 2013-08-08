@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Server layer over the OAuthRequest handler
+ * Server layer over the LingotekOAuthRequest handler
  * 
- * @version $Id: OAuthServer.php 154 2010-08-31 18:04:41Z brunobg@corollarium.com $
+ * @version $Id: LingotekOAuthServer.php 154 2010-08-31 18:04:41Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 27, 2007 12:36:38 PM
  * 
@@ -31,10 +31,10 @@
  * THE SOFTWARE.
  */
 
-require_once 'OAuthRequestVerifier.php';
+require_once 'LingotekOAuthRequestVerifier.php';
 require_once 'OAuthSession.php';
 
-class OAuthServer extends OAuthRequestVerifier
+class LingotekOAuthServer extends LingotekOAuthRequestVerifier
 {
 	protected $session;
 	
@@ -104,7 +104,7 @@ class OAuthServer extends OAuthRequestVerifier
 	 */
 	public function requestToken ()
 	{
-		OAuthRequestLogger::start($this);
+		LingotekOAuthRequestLogger::start($this);
 		try
 		{
 			$this->verify(false);
@@ -151,7 +151,7 @@ class OAuthServer extends OAuthRequestVerifier
 			echo "OAuth Verification Failed: " . $e->getMessage();
 		}
 
-		OAuthRequestLogger::flush();
+		LingotekOAuthRequestLogger::flush();
 		return $request_token;
 	}
 	
@@ -167,7 +167,7 @@ class OAuthServer extends OAuthRequestVerifier
 	 */
 	public function authorizeVerify ()
 	{
-		OAuthRequestLogger::start($this);
+		LingotekOAuthRequestLogger::start($this);
 
 		$store = OAuthStore::instance();
 		$token = $this->getParam('oauth_token', true);
@@ -190,7 +190,7 @@ class OAuthServer extends OAuthRequestVerifier
 			else
 				$this->session->set('verify_oauth_callback', $rs['callback_url']);
 		}
-		OAuthRequestLogger::flush();
+		LingotekOAuthRequestLogger::flush();
 		return $rs;
 	}
 	
@@ -206,7 +206,7 @@ class OAuthServer extends OAuthRequestVerifier
 	 */
 	public function authorizeFinish ( $authorized, $user_id )
 	{
-		OAuthRequestLogger::start($this);
+		LingotekOAuthRequestLogger::start($this);
 
 		$token = $this->getParam('oauth_token', true);
 		$verifier = null;
@@ -231,13 +231,13 @@ class OAuthServer extends OAuthRequestVerifier
 			
 			if ($authorized)
 			{
-				OAuthRequestLogger::addNote('Authorized token "'.$token.'" for user '.$user_id.' with referrer "'.$referrer_host.'"');
+				LingotekOAuthRequestLogger::addNote('Authorized token "'.$token.'" for user '.$user_id.' with referrer "'.$referrer_host.'"');
  				// 1.0a Compatibility : create a verifier code
 				$verifier = $store->authorizeConsumerRequestToken($token, $user_id, $referrer_host);
 			}
 			else
 			{
-				OAuthRequestLogger::addNote('Authorization rejected for token "'.$token.'" for user '.$user_id."\nToken has been deleted");
+				LingotekOAuthRequestLogger::addNote('Authorization rejected for token "'.$token.'" for user '.$user_id."\nToken has been deleted");
 				$store->deleteConsumerRequestToken($token);
 			}
 			
@@ -268,7 +268,7 @@ class OAuthServer extends OAuthRequestVerifier
  				$this->redirect($oauth_callback, $params);
 			}
 		}
-		OAuthRequestLogger::flush();
+		LingotekOAuthRequestLogger::flush();
 		return $verifier;
 	}
 	
@@ -281,7 +281,7 @@ class OAuthServer extends OAuthRequestVerifier
 	 */
 	public function accessToken ()
 	{
-		OAuthRequestLogger::start($this);
+		LingotekOAuthRequestLogger::start($this);
 
 		try
 		{
@@ -323,7 +323,7 @@ class OAuthServer extends OAuthRequestVerifier
 			echo "OAuth Verification Failed: " . $e->getMessage();
 		}
 		
-		OAuthRequestLogger::flush();
+		LingotekOAuthRequestLogger::flush();
 		exit();
 	}	
 }

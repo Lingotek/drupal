@@ -978,7 +978,7 @@ class LingotekApi {
       $parameters['externalId'] = variable_get('lingotek_login_id', '');
     }
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
-    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
+    module_load_include('php', 'lingotek', 'lib/oauth-php/library/LingotekOAuthRequester');
 
     $credentials = is_null($credentials) ? array(
       'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
@@ -992,9 +992,9 @@ class LingotekApi {
     try {
       OAuthStore::instance('2Leg', $credentials);
       $api_url = $this->api_url . '/' . $method;
-      $request = @new OAuthRequester($api_url, $request_method, $parameters);
-      // There is an error right here.  The new OAuthRequester throws it, because it barfs on $parameters
-      // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in OAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/OAuthRequest.php).
+      $request = @new LingotekOAuthRequester($api_url, $request_method, $parameters);
+      // There is an error right here.  The new LingotekOAuthRequester throws it, because it barfs on $parameters
+      // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in LingotekOAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/LingotekOAuthRequest.php).
       // The thing is, if you encode the params, they just get translated back to an array by the object.  They have some type of error internal to the object code that is handling things wrong.
       // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
       $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
