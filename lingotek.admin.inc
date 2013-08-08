@@ -885,14 +885,16 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     '#title' => t('Method for storing node translations'),
     '#options' => array(
       'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
-      'node' => '<strong>Node Translation</strong>  - create a new node per language ',
+      //'node' => '<strong>Node Translation</strong>  - create a new node per language ',
     ),
     'field' => array(
       '#description' => 'A newer and recommended method. Newer versions of Drupal will probably use this method.',
     ),
+    /*
     'node' => array(
       '#description' => 'The classical method. Use for backwards compatibility.',
     ),
+    */
     '#default_value' => variable_get('lingotek_nodes_translation_method', 'field'),
   );
 
