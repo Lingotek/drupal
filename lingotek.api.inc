@@ -229,7 +229,11 @@ function lingotek_download_document(&$node, $lingotek_locale, $sync_success_stat
       $node->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
     }
   }
-  // node_save($node);
+
+  lingotek_lingonode_variable_delete($node->nid, 'target_last_downloaded_' . $lingotek_locale);
+  lingotek_lingonode($node->nid, 'target_last_downloaded_' . $lingotek_locale, time());
+
+ // node_save($node);
 }
 
 /*

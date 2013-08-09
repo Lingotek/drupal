@@ -122,6 +122,37 @@ function lingotek_lingonode_variable_delete($nid, $lingokey) {
   $query->execute();
 }
 
+/**
+ * Helper function to delete a specified variable from multiple nodes in the Lingotek table
+ *
+ * @param int array $nids
+ *    array of node ids for the variable that needs to be deleted
+ *    if a single nid is passed in, it will be converted to an array before processing
+ *
+ * @param string $lingokey
+ *    variable name to be deleted
+ *
+ * @param string $condition
+ *    additional condition checking (i.e. 'LIKE', '<' '=' '>', etc...)
+ *    defaults to '='
+ */
+function lingotek_lingonode_variable_delete_multiple($nids = array(), $lingokey, $condition = '=') {
+  if (!is_array($nids)) {
+    $nids = array($nids);
+  }
+
+  $query = db_select('lingotek', 'l') // Make sure that the variable exists in the table for every input nid
+    ->fields('l', array('nid'))
+    ->condition('nid', $nids, 'IN')
+    ->condition('lingokey', $lingokey, $condition);
+  $delete_nids = $query->execute()->fetchCol();
+
+  $delete = db_delete('lingotek') // delete for every input nid where the variable exists
+    ->condition('nid', $delete_nids, 'IN')
+    ->condition('lingokey', $lingokey, $condition)
+    ->execute();
+}
+
 /*
  * When a node is deleted, this is called to clean out the extra data from that node in the Lingotek table.
  *
@@ -877,6 +908,49 @@ function lingotek_get_content_types($ids_only = FALSE) {
     }
   }
   return $ids_only ? array_keys($types) : $types;
+}
+
+/*
+ * Custom unix timestamp formatter
+ *
+ * @param int $unix_timestamp
+ *    Unix timestamp to format
+ *
+ * @param bool $as_array
+ *    if true, return string formatted like '[number] [time interval]'.  For example, '22 hours'.
+ *    if false, returns number and time interval as an array where the array is ('number' => [number], 'interval' => [time interval]).
+ */
+function lingotek_human_readable_timestamp($unix_timestamp, $as_array = FALSE) {
+  $time = time() - $unix_timestamp;
+
+  $intervals = array(
+    31536000 => 'year',
+    2592000 => 'month',
+    604800 => 'week',
+    86400 => 'day',
+    3600 => 'hour',
+    60 => 'minute',
+    1 => 'second'
+  );
+
+  foreach ($intervals as $unit => $text) {
+    if ($time < $unit) {
+      continue;
+    }
+    $number = floor($time / $unit);
+    if ($as_array) {
+      return array('number' => $number, 'interval' => $text . (($number > 1) ? 's' : ''));
+    }
+    else {
+      return $number . ' ' . $text . (($number > 1) ? 's' : '');
+    }
+  }
+  if ($as_array) {
+    return array('number' => 0, 'interval' => 'seconds');
+  }
+  else {
+    return '0 seconds';
+  }
 }
 
 /**

@@ -721,7 +721,7 @@ class LingotekSync {
     return $result;
   }
 
-  public static function getNodeIdsByTargetProgress($nids, $lingotek_locale) {
+  public static function getNodeIdSubsetByTargetProgress($nids, $lingotek_locale) {
     $query = db_select('lingotek', 'l')
         ->fields('l', array('nid'))
         ->condition('nid', $nids, 'IN')
