@@ -755,13 +755,13 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
 }
 
 /**
- * Updates the 'target_sync_progress_[lang-code]' field for every target in the lingotek table
- * with the overall progress returned by TMS
- *
- * @param int array $document_ids
- *    array of Document IDs that you want to update
- *
- */
+* Updates the 'target_sync_progress_[lang-code]' field for every target in the lingotek table
+* with the overall progress returned by TMS
+*
+* @param int array $document_ids
+*    array of Document IDs that you want to update
+*
+*/
 function lingotek_update_target_progress($document_ids) {
   $api = LingotekApi::Instance();
 
@@ -774,19 +774,20 @@ function lingotek_update_target_progress($document_ids) {
     $delete_nids_maybe[] = $nid;
     foreach ($completion as $language => $percent) {
       $values[] = array(
-        'nid' => $nid,
-        'lingokey' => 'target_sync_progress_' . $language,
-        'lingovalue' => $percent,
-      );
+      'nid' => $nid,
+      'lingokey' => 'target_sync_progress_' . $language,
+      'lingovalue' => $percent,
+      );    
       $values[] = array(
-        'nid' => $nid,
-        'lingokey' => 'target_sync_progress_last_updated_' . $language,
-        'lingovalue' => time(),
-      );
-    }
+      'nid' => $nid,
+      'lingokey' => 'target_sync_progress_updated_' . $language,
+      'lingovalue' => time(),
+      );    
+    }     
   }
 
-  $delete_nids = db_select('lingotek', 'l')
+  lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
+  /*  $delete_nids = db_select('lingotek', 'l')
     ->fields('l', array('nid'))
     ->distinct()
     ->condition('nid', $delete_nids_maybe, 'IN')
@@ -799,7 +800,7 @@ function lingotek_update_target_progress($document_ids) {
       ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
       ->execute();
   }
-
+  */
   $query = db_insert('lingotek')
     ->fields(array('nid', 'lingokey', 'lingovalue'));
   foreach ($values as $record) {

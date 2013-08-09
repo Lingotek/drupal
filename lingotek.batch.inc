@@ -660,7 +660,7 @@ function lingotek_download_node_by_target_batch_create($nids, $target) {
   );
   $operations = array();
 
-  $complete_nids = LingotekSync::getNodeIdsByTargetProgress($nids, $target);
+  $complete_nids = LingotekSync::getNodeIdSubsetByTargetProgress($nids, $target);
 
   foreach ($nids as $nid) {
     if (in_array($nid, $complete_nids)) {

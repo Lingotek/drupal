@@ -183,7 +183,7 @@ function lingotek_menu() {
   );
 
   //Tab: Bulk Grid
-/*  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid'] = array(
     'title' => 'Bulk Grid',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
@@ -202,7 +202,7 @@ function lingotek_menu() {
     //'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
   );
-*/
+
   // Batch Process Pages ----------------------------------------
   // Sync Progress Report 
   $items['lingotek/sync/report'] = array(
