@@ -199,7 +199,14 @@ function lingotek_menu() {
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_edit_nodes',
     'page arguments' => array(),
-    //'delivery callback' => 'ajax_deliver',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/reset'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.page.inc',
+    'page callback' => 'lingotek_reset_nodes',
+    'page arguments' => array(),
     'type' => MENU_CALLBACK,
   );
 
@@ -553,7 +560,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     drupal_set_message($edit_translation_message, 'warning', FALSE);
   }
 
-    //$form = array_merge($form, lingotek_get_node_settings_form($form, $form_state));
     if (!isset($nid)) {
       $nid = NULL;
     }
@@ -641,6 +647,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
   $bulk_grid = FALSE;
   if (is_array($nids)) {
     if (count($nids) > 1) {
+      drupal_set_message(t('You will be changing the settings for @number nodes.', array('@number' => count($nids))), 'warning');
       $multiple = TRUE;
     }
     $bulk_grid = TRUE;
@@ -793,7 +800,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     }
   }
 
-  $auto_download_default = variable_get('sync_method', 1);
+  $auto_download_default = variable_get('lingotek_sync', 1);
   if (!$multiple && isset($node->nid)) {
     $auto_download_default = lingotek_variable_get(lingotek_lingonode($node->nid, 'sync_method'), 'lingotek_sync', 1);
   }

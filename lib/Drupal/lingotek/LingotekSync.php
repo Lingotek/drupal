@@ -559,6 +559,13 @@ class LingotekSync {
     db_truncate('lingotek_config_metadata')->execute();
   }
 
+  public static function disassociateNodes($document_ids = array()) {
+    $nids = self::getNodeIdsFromDocIds($document_ids);
+    db_delete('lingotek')
+      ->condition('nid', $nids, 'IN')
+      ->execute();
+  }
+
   public static function resetNodeInfoByDocId($lingotek_document_id) {
     $doc_ids = is_array($lingotek_document_id) ? $lingotek_document_id : array($lingotek_document_id);
     $count = 0;

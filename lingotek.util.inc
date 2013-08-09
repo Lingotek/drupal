@@ -147,10 +147,12 @@ function lingotek_lingonode_variable_delete_multiple($nids = array(), $lingokey,
     ->condition('lingokey', $lingokey, $condition);
   $delete_nids = $query->execute()->fetchCol();
 
-  $delete = db_delete('lingotek') // delete for every input nid where the variable exists
-    ->condition('nid', $delete_nids, 'IN')
-    ->condition('lingokey', $lingokey, $condition)
-    ->execute();
+  if (!empty($delete_nids)) {
+    $delete = db_delete('lingotek') // delete for every input nid where the variable exists
+      ->condition('nid', $delete_nids, 'IN')
+      ->condition('lingokey', $lingokey, $condition)
+      ->execute();
+  }
 }
 
 /*

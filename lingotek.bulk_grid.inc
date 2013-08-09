@@ -208,6 +208,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     $action_options = array(
       'upload' => t('Upload for Translation'),
       'download_all' => t('Download Translations for all Targets'),
+      'reset' => t('Reset Translations'),
       'edit' => t('Edit Lingotek Node Settings'),
     );
 
@@ -396,6 +397,10 @@ function lingotek_grid_action_submit($form, $form_state) {
 
       batch_set($batch);
       batch_process($redirect);
+    }
+    elseif ($action == 'reset') {
+      $_SESSION['lingotek_reset_nodes'] = $nids;
+      drupal_goto('admin/settings/lingotek/grid/reset/');
     }
     elseif ($action == 'edit') {
       $_SESSION['lingotek_edit_nodes'] = $nids;
@@ -828,6 +833,26 @@ function lingotek_get_source_ignored_rows($form, &$form_state) {
     $table_data[$row->nid] = $data;
   }
   return $table_data;
+}
+
+/**
+ * Callback function to reset translations for multiple nodes at a time
+ *
+ * Node IDs are passed through the $_SESSION variable at $_SESSION['lingotek_reset_nodes']
+ *
+ * Returns a fully rendered html form
+ */
+function lingotek_reset_nodes() {
+
+  if (isset($_SESSION['lingotek_reset_nodes'])) {
+    $nids = $_SESSION['lingotek_reset_nodes'];
+
+    return drupal_render(drupal_get_form('lingotek_node_content_reset_form', $nids, FALSE));
+  }
+  else {
+    drupal_set_message(t('No nodes were selected'), 'error');
+    return;
+  }
 }
 
 /**
