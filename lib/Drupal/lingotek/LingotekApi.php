@@ -1029,11 +1029,11 @@ class LingotekApi {
       downloadDocument - Returns misc data (no $response->results), and should always be sent back.
       assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
      */
-    if ($method == 'downloadDocument'){
+    if ($method == 'downloadDocument') {
       LingotekLog::api('<h1>@method</h1>
         <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
-      $response_data = $result['body'];
+      $response_data = isset($result) ? $result['body'] : "";
     }
     else if ($method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
       LingotekLog::api('<h1>@method</h1>

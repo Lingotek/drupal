@@ -24,14 +24,14 @@ class LingotekLog {
     return (LINGOTEK_DEV == TRUE);
   }
 
-  public static function info($msg, $data, $tag = 'info') {
-    if (!variable_get('lingotek_info_log', self::getDefault())) {
+  public static function api($msg, $data, $tag = 'api') {
+    if (!variable_get('lingotek_api_debug', self::getDefault())) {
       return;
     }
     self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
   }
 
-  public static function api($msg, $data, $tag = 'api') {
+  public static function info($msg, $data, $tag = 'info') {
     if (!variable_get('lingotek_api_debug', self::getDefault())) {
       return;
     }
