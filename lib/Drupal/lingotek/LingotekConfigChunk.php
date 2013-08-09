@@ -789,7 +789,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   /**
    * Get lingotek translation agent ID
    */
-  protected static function getLingotekTranslationAgentId() {
+  public static function getLingotekTranslationAgentId() {
     $result = db_select('lingotek_translation_agent', 'lta')
         ->fields('lta', array('id'))
         ->condition('name', 'Lingotek')

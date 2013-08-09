@@ -30,10 +30,10 @@ class LingotekSync {
 
   public static function getAllTargetStatusNotCurrent($nid) {
     $query = db_select('lingotek', 'l')
-      ->fields('l', array('lingokey', 'lingovalue'))
-      ->condition('lingokey', 'target_sync_status_%', 'LIKE')
-      ->condition('lingovalue', 'CURRENT', '!=')
-      ->condition('nid', $nid);
+        ->fields('l', array('lingokey', 'lingovalue'))
+        ->condition('lingokey', 'target_sync_status_%', 'LIKE')
+        ->condition('lingovalue', 'CURRENT', '!=')
+        ->condition('nid', $nid);
     $result = $query->execute()->fetchAll();
     return $result;
   }
@@ -102,7 +102,7 @@ class LingotekSync {
       }
     }
   }
-  
+
   public static function insertTargetEntriesForAllChunks($lingotek_locale) {
     // insert/update a target language for all chunks
     $query = db_select('lingotek_config_metadata', 'meta')
@@ -110,13 +110,13 @@ class LingotekSync {
         ->groupBy('id');
     $ids = $query->execute()->fetchCol();
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-    
-    foreach($ids as $i) {
+
+    foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
       $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $drupal_language_code);
     }
   }
-  
+
   public static function insertTargetEntriesForAllDocs($lingotek_locale) {
     self::insertTargetEntriesForAllNodes($lingotek_locale);
     self::insertTargetEntriesForAllChunks($lingotek_locale);
@@ -127,12 +127,12 @@ class LingotekSync {
     $key = 'target_sync_status_' . $lingotek_locale;
     db_delete('lingotek')->condition('lingokey', $key)->execute();
   }
-  
+
   public static function deleteTargetEntriesForAllChunks($lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     db_delete('lingotek_config_metadata')->condition('config_key', $key)->execute();
   }
-  
+
   public static function deleteTargetEntriesForAllDocs($lingotek_locale) {
     self::deleteTargetEntriesForAllNodes($lingotek_locale);
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
@@ -233,9 +233,9 @@ class LingotekSync {
     $count += self::getNodeCountByStatus($status);
     // (turned off reporting of config chunks, for now)
     /*
-    if (variable_get('lingotek_translate_config', 0)) {
+      if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getChunkCountByStatus($status);
-    }
+      }
      */
     return $count;
   }
@@ -289,7 +289,7 @@ class LingotekSync {
 
   //lingotek_count_all_targets
   public static function getTargetCountByStatus($status, $lingotek_locale) {
-    
+
     $count = 0;
 
     // get the count of nodes
@@ -297,9 +297,9 @@ class LingotekSync {
 
     // get the count of config chunks (turned off for now)
     /*
-    if (variable_get('lingotek_translate_config', 0)) {
+      if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
-    }
+      }
      */
     return $count;
   }
@@ -326,25 +326,30 @@ class LingotekSync {
   }
 
   public static function getNonWorkbenchModerationNodeIds($edited_nodes) {
-      $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
+    $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
         ->fields('wb', array('nid'));
-      $query = db_select('node_revision', 'nr')
+    $query = db_select('node_revision', 'nr')
         ->distinct(TRUE)
         ->fields('nr', array('nid'))
         ->condition('nid', $sub_query, 'NOT IN')
         ->condition('nid', $edited_nodes, 'IN');
-      $no_wb_mod = $query->execute()->fetchCol(0);
-      return $no_wb_mod;
+    $no_wb_mod = $query->execute()->fetchCol(0);
+    return $no_wb_mod;
   }
 
   protected static function getQueryCompletedConfigTranslations($drupal_codes) {
-    // return a query object that contains all fully-translated/current strings.
+    // return a query object that contains all fully-translated/current strings
+    // or ones that were not translated by Lingotek.
     // use the first addtl language as the query's base.
     $first_lang = array_shift($drupal_codes);
+    $lingotek_id = LingotekConfigChunk::getLingotekTranslationAgentId();
+    $primary_or = db_or()
+        ->condition('lt0.i18n_status', 0)
+        ->condition('lt0.translation_agent_id', $lingotek_id, '!=');
     $query = db_select('locales_target', "lt0")
         ->fields('lt0', array('lid'))
         ->condition('lt0.language', $first_lang)
-        ->condition('lt0.i18n_status', 0);
+        ->condition($primary_or);
     $addtl_joins = 0;
     foreach ($drupal_codes as $new_join) {
       // join a new instance of locales_target for each target language
@@ -352,7 +357,7 @@ class LingotekSync {
       // it is "current" (ie. i18n_status field is set to 0)
       $addtl_joins++;
       $ja = "lt$addtl_joins"; // join alias
-      $join_str = "$ja.lid=lt0.lid and $ja.language='$new_join' and $ja.i18n_status=0";
+      $join_str = "$ja.lid = lt0.lid and $ja.language = '$new_join' and ($ja.i18n_status = 0 or $ja.translation_agent_id != $lingotek_id)";
       $query->join('locales_target', $ja, $join_str);
     }
     return $query;
@@ -448,14 +453,14 @@ class LingotekSync {
       $report = array_merge($report, array(
         'upload_nids_et' => $et_nodes,
         'upload_nids_et_count' => count($et_nodes)
-          ));
+      ));
     }
     if (module_exists('workbench_moderation')) {
       $no_wb_nodes = empty($edited_nodes) ? array() : self::getNonWorkbenchModerationNodeIds($edited_nodes);
       $report = array_merge($report, array(
         'upload_nids_nowb' => $no_wb_nodes,
         'upload_nids_nowb_count' => count($no_wb_nodes)
-          ));
+      ));
     }
     // Handle configuration chunks
     if (variable_get('lingotek_translate_config')) {
@@ -464,7 +469,7 @@ class LingotekSync {
       $report = array_merge($report, array(
         'upload_config' => (array_keys($config_chunks_to_update)),
         'upload_config_count' => $num_updates,
-          ));
+      ));
     }
     return $report;
   }
@@ -488,20 +493,20 @@ class LingotekSync {
 
   public static function getNodeIdsBySource($language) {
     $sub_query = db_select('lingotek', 'l')
-      ->distinct()
-      ->fields('l', array('nid'));
+        ->distinct()
+        ->fields('l', array('nid'));
     $query = db_select('node', 'n')
-      ->fields('n', array('nid'))
-      ->condition('n.language', $language)
-      ->condition('n.nid', $sub_query, 'IN');
+        ->fields('n', array('nid'))
+        ->condition('n.language', $language)
+        ->condition('n.nid', $sub_query, 'IN');
     $result = $query->execute()->fetchCol();
     return $result;
   }
 
   public static function getNodeIdsByTarget($target_language) {
     $query = db_select('lingotek', 'l1')
-      ->fields('l1', array('nid'))
-      ->condition('lingokey', 'target_sync_status_' . $target_language);
+        ->fields('l1', array('nid'))
+        ->condition('lingokey', 'target_sync_status_' . $target_language);
     $result = $query->execute()->fetchCol();
     return $result;
   }
@@ -554,7 +559,7 @@ class LingotekSync {
   public static function disassociateAllEntities() {
     db_truncate('lingotek_entity_metadata')->execute();
   }
-  
+
   public static function disassociateAllChunks() {
     db_truncate('lingotek_config_metadata')->execute();
   }
@@ -608,18 +613,18 @@ class LingotekSync {
     $query->distinct();
     $result = $query->execute();
     $doc_ids = array_merge($doc_ids, $result->fetchCol());
-    
+
     // config-related doc IDs
     $query = db_select('lingotek_config_metadata', 'l')
-      ->fields('l', array('value'))
-      ->condition('config_key', 'document_id')
-      ->distinct();
+        ->fields('l', array('value'))
+        ->condition('config_key', 'document_id')
+        ->distinct();
     $result = $query->execute();
     $doc_ids = array_merge($doc_ids, $result->fetchCol());
-    
+
     return $doc_ids;
   }
-  
+
   public static function getAllNodeIds() { // This query is broken - it also gets things without doc ids
     // all node ids having document_ids in lingotek table
     $query = db_select('lingotek', 'l');
@@ -633,32 +638,32 @@ class LingotekSync {
 
   public static function getAllDocIds() {
     $query = db_select('lingotek', 'l')
-      ->fields('l', array('lingovalue'))
-      ->condition('lingokey', 'document_id');
+        ->fields('l', array('lingovalue'))
+        ->condition('lingokey', 'document_id');
     $result = $query->execute()->fetchCol();
     return $result;
   }
 
   public static function getDocIdsBySource($source_language) {
     $subquery = db_select('node', 'n')
-      ->fields('n', array('nid'))
-      ->condition('language', Lingotek::convertLingotek2Drupal($source_language));
+        ->fields('n', array('nid'))
+        ->condition('language', Lingotek::convertLingotek2Drupal($source_language));
     $query = db_select('lingotek', 'l')
-      ->fields('l', array('lingovalue'))
-      ->condition('lingokey', 'document_id')
-      ->condition('nid', $subquery, 'IN');
+        ->fields('l', array('lingovalue'))
+        ->condition('lingokey', 'document_id')
+        ->condition('nid', $subquery, 'IN');
     $result = $query->execute()->fetchCol();
     return $result;
   }
 
   public static function getDocIdsByTarget($target_language) {
     $subquery = db_select('lingotek', 'l1')
-      ->fields('l1', array('nid'))
-      ->condition('lingokey', 'target_sync_status_' . $target_language);
+        ->fields('l1', array('nid'))
+        ->condition('lingokey', 'target_sync_status_' . $target_language);
     $query = db_select('lingotek', 'l2')
-      ->fields('l2', array('lingovalue'))
-      ->condition('lingokey', 'document_id')
-      ->condition('nid', $subquery, 'IN');
+        ->fields('l2', array('lingovalue'))
+        ->condition('lingokey', 'document_id')
+        ->condition('nid', $subquery, 'IN');
     $result = $query->execute()->fetchCol();
     return $result;
   }
@@ -683,9 +688,9 @@ class LingotekSync {
   public static function getNodeIdsFromDocIds($lingotek_document_ids) {
     $nids = array();
     $query = db_select('lingotek', 'l')
-      ->fields('l', array('nid'))
-      ->condition('lingokey', 'document_id')
-      ->condition('lingovalue', $lingotek_document_ids, 'IN');
+        ->fields('l', array('nid'))
+        ->condition('lingokey', 'document_id')
+        ->condition('lingovalue', $lingotek_document_ids, 'IN');
     $result = $query->execute()->fetchCol();
     return $result;
   }
@@ -708,9 +713,9 @@ class LingotekSync {
   public static function getDocIdsFromNodeIds($drupal_node_ids) {
 
     $query = db_select('lingotek', 'l')
-      ->fields('l', array('lingovalue'))
-      ->condition('nid', $drupal_node_ids, 'IN')
-      ->condition('lingokey', 'document_id');
+        ->fields('l', array('lingovalue'))
+        ->condition('nid', $drupal_node_ids, 'IN')
+        ->condition('lingokey', 'document_id');
     $result = $query->execute()->fetchCol();
 
     return $result;
@@ -718,10 +723,10 @@ class LingotekSync {
 
   public static function getNodeIdsByTargetProgress($nids, $lingotek_locale) {
     $query = db_select('lingotek', 'l')
-      ->fields('l', array('nid'))
-      ->condition('nid', $nids, 'IN')
-      ->condition('lingokey', 'target_sync_progress_' . $lingotek_locale)
-      ->condition('lingovalue', '100');
+        ->fields('l', array('nid'))
+        ->condition('nid', $nids, 'IN')
+        ->condition('lingokey', 'target_sync_progress_' . $lingotek_locale)
+        ->condition('lingovalue', '100');
     $result = $query->execute()->fetchCol();
 
     return $result;
