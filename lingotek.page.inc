@@ -149,15 +149,21 @@ function lingotek_push_form_submit($form, $form_state) {
 /**
  * Form constructor for the node content reset form. (Reset Translations)
  */
-function lingotek_node_content_reset_form($form, $form_state, $node) {
+function lingotek_node_content_reset_form($form, $form_state, $nids = array(), $collapse_fieldset = TRUE) {
   $form = array();
+  if (!is_array($nids)) {
+    $nids = array($nids);
+  }
+  if (count($nids) > 1) {
+    drupal_set_message(t('You will be resetting translations for @number nodes.', array('@number' => count($nids))), 'warning');
+  }
 
   $form['reset_translations'] = array(
     '#type' => 'fieldset',
     '#title' => t('Reset Translations'),
     '#description' => t("Disassociates the node's locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the node's translation management settings to their defaults."),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsible' => $collapse_fieldset,
+    '#collapsed' => $collapse_fieldset,
   );
 
   $form['reset_translations']['submit'] = array(
@@ -167,7 +173,7 @@ function lingotek_node_content_reset_form($form, $form_state, $node) {
 
   $form['node_id'] = array(
     '#type' => 'hidden',
-    '#value' => $node->nid,
+    '#value' => json_encode($nids),
   );
 
   return $form;
@@ -177,14 +183,24 @@ function lingotek_node_content_reset_form($form, $form_state, $node) {
  * Submit handler for the lingotek_node_content_reset form.
  */
 function lingotek_node_content_reset_form_submit($form, $form_state) {
-  $drupal_node_id = $form_state['values']['node_id'];
-  $doc_id = LingotekSync::getDocIdFromNodeId($drupal_node_id);
+  $drupal_node_ids_json = json_decode($form_state['values']['node_id']);
+  $drupal_node_ids = array();
+  foreach ($drupal_node_ids_json as $nid) {
+    $drupal_node_ids[] = $nid;
+  }
+  $doc_ids = LingotekSync::getDocIdsFromNodeIds($drupal_node_ids);
 
   $api = LingotekApi::instance();
-  $api->removeDocument($doc_id);
+  $api->removeDocument($doc_ids);
 
-  $node = lingotek_node_load_default($drupal_node_id);
-  drupal_set_message(t('Translations reset for "@node_title".', array('@node_title' => $node->title)));
+  if (count($drupal_node_ids) <= 1) {
+    $node = lingotek_node_load_default($drupal_node_id);
+    drupal_set_message(t('Translations reset for "@node_title".', array('@node_title' => $node->title)));
+  }
+  else {
+    drupal_set_message(t('Translations reset for @number nodes.', array('@number' => count($drupal_node_ids))));
+    drupal_goto('admin/settings/lingotek/grid');
+  }
 }
 
 /**
@@ -355,7 +371,7 @@ function lingotek_pm($node) {
           '#markup' => drupal_render($lingotek_advanced_parsing_form),
         );
 
-        $reset_translations_form = drupal_get_form('lingotek_node_content_reset_form', $node);
+        $reset_translations_form = drupal_get_form('lingotek_node_content_reset_form', $node->nid);
         $output['reset_translations'] = array(
           '#markup' => drupal_render($reset_translations_form),
         );
