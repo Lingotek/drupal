@@ -83,9 +83,9 @@ function lingotek_notifications() {
 
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   
-  // try 10 times if by chance we don't find the document in the database yet..
+  // try 3 times if by chance we don't find the document in the database yet..
   $attempts = 0;
-  while ($attempts < 10) {
+  while ($attempts < 3) {
     $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
     if ($nid) {
@@ -126,7 +126,7 @@ function lingotek_notifications() {
         if ($attempts < 10) {
           LingotekLog::info('Did not find doc ID @doc_id yet on attempt #@attempt, retrying...', 
               array('@attempt' => $attempts, '@doc_id' => $document_id));
-          sleep(1);
+          sleep(2);
           $attempts++;
           continue;
         }

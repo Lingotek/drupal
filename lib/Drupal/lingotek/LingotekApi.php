@@ -988,6 +988,7 @@ class LingotekApi {
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
 
+    $result = NULL;
     $response = NULL;
     try {
       OAuthStore::instance('2Leg', $credentials);
@@ -1033,7 +1034,7 @@ class LingotekApi {
       LingotekLog::api('<h1>@method</h1>
         <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
-      $response_data = isset($result) ? $result['body'] : "";
+      $response_data = !empty($result) ? $result['body'] : "";
     }
     else if ($method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
       LingotekLog::api('<h1>@method</h1>
