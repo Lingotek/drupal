@@ -870,8 +870,8 @@ function lingotek_edit_nodes() {
     if (!is_array($nids)) {
       $nids = array($nids);
     }
-
-    return drupal_render(drupal_get_form('lingotek_get_node_settings_form', $nids));
+    $form = drupal_get_form('lingotek_get_node_settings_form', $nids);
+    return drupal_render($form);
   }
   else {
     drupal_set_message(t('No nodes were selected'), 'error');
