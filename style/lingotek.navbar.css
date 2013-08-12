@@ -13,7 +13,7 @@
   position: absolute;
   z-index: 1;
 }
-.navbar .bar .navbar-tab-lingotek .icon:before {
+.drupal-navbar .bar .navbar-tab-lingotek .icon:before {
   width: 27px;
 }
 .lingotek a.icon {
@@ -23,7 +23,7 @@
 }
 
 /* Toolbar icon. */
-.navbar .bar .icon.icon-lingotek {
+.drupal-navbar .bar .icon.icon-lingotek {
   margin-left: 0;
   margin-right: 0;
   padding-left: 0;
@@ -38,27 +38,27 @@
 .navbar-tab-lingotek .icon-lingotek:hover:before {
   background-position: center -22px;
 }
-.navbar .bar .navbar-tab-lingotek .icon-lingotek:before {
+.drupal-navbar .bar .navbar-tab-lingotek .icon-lingotek:before {
   left: 1em; /* LTR */
   height: 22px;
   top: 0.6667em;
 }
-.navbar .navbar-tab-lingotek.tab .options .device.icon-active {
+.drupal-navbar .navbar-tab-lingotek.tab .options .device.icon-active {
   padding-left: 2.25em;
 }
-.navbar .navbar-tab-lingotek.tab .options .device.icon-active:before {
+.drupal-navbar .navbar-tab-lingotek.tab .options .device.icon-active:before {
   background-position: -999px -999px;
 }
-.navbar .navbar-tab-lingotek.tab .options .device.icon-active.active:before {
+.drupal-navbar .navbar-tab-lingotek.tab .options .device.icon-active.active:before {
   background-position: center -110px;
 }
 @media only screen and (min-width: 16.5em) {
-  .navbar .navbar-tab-lingotek.tab .options .device.icon-active {
+  .drupal-navbar .navbar-tab-lingotek.tab .options .device.icon-active {
     padding: 0.5em 1.3333em 0.5em 2.25em;
     text-indent: 0;
     width: auto;
   }
-  .navbar .navbar-tab-lingotek.tab .options .device.icon-active:before {
+  .drupal-navbar .navbar-tab-lingotek.tab .options .device.icon-active:before {
     left: 0.667em;
   }
 }
@@ -70,7 +70,7 @@
 }
 /* At narrow screen widths, float the tab to the left so it falls in line with
  * the rest of the navbar tabs. */
-.js .navbar .bar .navbar-tab-lingotek.tab {
+.js .drupal-navbar .bar .navbar-tab-lingotek.tab {
   display: block;
   float: right; /* LTR */
   position: relative;
@@ -147,11 +147,11 @@
   font-size: 1em;
   padding: 0.5em 1.3333em
 }
-.navbar .navbar-tab-lingotek.tab .options .device {
+.drupal-navbar .navbar-tab-lingotek.tab .options .device {
   color: #777;
 }
-.navbar .navbar-tab-lingotek.tab .options .device:hover,
-.navbar .navbar-tab-lingotek.tab .options .device.active {
+.drupal-navbar .navbar-tab-lingotek.tab .options .device:hover,
+.drupal-navbar .navbar-tab-lingotek.tab .options .device.active {
   color: black;
 }
 /* Toolbar tab triangle toggle. */
