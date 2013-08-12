@@ -22,7 +22,6 @@ function lingotek_setup() {
 
 // END:  Router
 
-
 /**
  * New Account - Form
  */
@@ -172,7 +171,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
       'first_name' => $first_name,
       'last_name' => $last_name,
       'email' => $email
-        ));
+    ));
     $notify_url = lingotek_notify_url_generate();
 
     $parameters = array_merge($lead, array(
@@ -182,7 +181,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
       'company' => lingotek_get_site_name(), //currently we are not asking for this.
       'website' => $base_url,
       'lead' => json_encode($lead)
-        ));
+    ));
 
     $api = LingotekApi::instance();
     $response = $api->createCommunity($parameters, $notify_url);
@@ -401,7 +400,7 @@ function lingotek_community_settings_select_form() {
     drupal_set_message(t('Error Retrieving Account Information.'), 'error');
     drupal_goto('admin/config/lingotek/account-settings'); // Error geting projects.  Go back.
   }
-  else if ($community_settings['project'] === FALSE || $community_settings['workflow'] === FALSE || $community_settings['vault'] === FALSE) {
+  elseif ($community_settings['project'] === FALSE || $community_settings['workflow'] === FALSE || $community_settings['vault'] === FALSE) {
     drupal_set_message(t('Error Retrieving Account Information.'), 'error');
     drupal_goto('admin/config/lingotek/account-settings'); // Error geting projects.  Go back.
   }
@@ -455,7 +454,7 @@ function lingotek_community_settings_select_form() {
     if ($project_count == 1 && $workflow_count == 1 && $vault_count == 1) {
       drupal_goto('admin/config/lingotek/language-settings'); // Default path, if they only have 1 project, workflow, and vault.
     }
-    else if ($project_count < 1 || $workflow_count < 1 || $vault_count < 1) {
+    elseif ($project_count < 1 || $workflow_count < 1 || $vault_count < 1) {
       // Something went wrong here, so go back.
       drupal_goto('admin/config/lingotek/new-account');
     }
@@ -541,9 +540,9 @@ function lingotek_community_settings_select_form_submit($form, $form_state) {
     else {
       $workflow_id = $workflow_string;
     }
-    /*if (isset($vault_id_workflow) && $vault_id_workflow != $vault_id)) {
+    /* if (isset($vault_id_workflow) && $vault_id_workflow != $vault_id)) {
       // do something?
-    }*/
+      } */
     variable_set('lingotek_workflow', $workflow_id);
   }
 
@@ -678,7 +677,7 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
       'lingotek_back_button' => lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'))
     )
   );
-  
+
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/setup-language-switcher';
 
   $form['theme'] = array(
@@ -691,7 +690,7 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
     '#title' => t('Enable the default language switcher'),
     '#default_value' => TRUE //$block_enabled,
   );
-  
+
   $form['region'] = array(
     '#type' => 'select',
     '#title' => t('The region where the switcher will be displayed.'),
@@ -703,7 +702,7 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
       ),
     ),
   );
-	
+
 //  $form['detection'] = array(
 //    '#type' => 'select',
 //    '#description' => t("How to decide which language is used to display pages"),
@@ -714,15 +713,15 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
 //      ),
 //    ),
 //  );
-	
-  
+
+
 
   $output = array(
     $form
   );
-  
+
   $output[] = lingotek_support_footer();
-  
+
   return $output;
 }
 
@@ -737,7 +736,7 @@ function lingotek_setup_language_switcher_form_submit($form, $form_state) {
  */
 function lingotek_setup_node_translation_settings_form($form, $form_state) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
-  
+
   $form = lingotek_admin_node_translation_settings_form($form, $form_state);
   $content_defaults = lingotek_admin_content_defaults_form($form, $form_state);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
@@ -789,23 +788,23 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
 }
 
 function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
-	$form = lingotek_admin_comment_translation_settings_form($form, $form_state);
-  
-	if (is_array($_SESSION['lingotek_setup_path'])) {
+  $form = lingotek_admin_comment_translation_settings_form($form, $form_state);
+
+  if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/comment-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['comment_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
-	$form['comment_translation']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
+  $form['comment_translation']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
   $form['lingotek_support_footer'] = lingotek_support_footer();
-	
+
   return $form;
 }
 
 function lingotek_setup_comment_translation_settings_form_submit($form, &$form_state) {
-	lingotek_admin_comment_translation_settings_form_submit($form, $form_state);
-	drupal_goto('admin/config/lingotek/additional-translation-settings');
+  lingotek_admin_comment_translation_settings_form_submit($form, $form_state);
+  drupal_goto('admin/config/lingotek/additional-translation-settings');
 }
 
 function lingotek_setup_additional_translation_settings_form($form, &$form_state) {
@@ -976,7 +975,7 @@ function lingotek_get_community_settings_v4($login, $passwd, $community_identity
         //  $options['project'][$project->id . '|||' . $project->workflowId] = $project->name;
         //}
         //else { // Just send back the Project ID
-          $options['project'][$project->id] = $project->name;
+        $options['project'][$project->id] = $project->name;
         //}
       }
     }

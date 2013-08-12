@@ -156,7 +156,7 @@ class LingotekSession {
       LingotekLog::error('Unable to download Lingotek Document.', array());
       return FALSE;
     }
-    else if (isset($result_decoded->results)) {
+    elseif (isset($result_decoded->results)) {
       LingotekLog::error('Download Lingotek Document Failed. !error ', array('!error' => $result));
       return FALSE;
     }

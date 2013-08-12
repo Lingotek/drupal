@@ -315,7 +315,7 @@ function lingotek_pm($node) {
   
   $sync_status = lingotek_lingonode($node->nid, 'node_sync_status');
 
-  if($node->tnid != 0 && $node->tnid != $node->nid) {
+  if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
       '#markup' => 'This is a translated node. Go to the ' . l('source node', 'node/' . $node->tnid . '/lingotek_pm') . ' to manage the translations.'
     );

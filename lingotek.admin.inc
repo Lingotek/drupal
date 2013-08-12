@@ -111,7 +111,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
-  
+
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => ($setup_complete ? t('Translate Content') : t('Which content types do you want translated?')),
@@ -127,7 +127,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     ),
     '#submit' => array('lingotek_admin_node_translation_settings_form_submit'),
   );
-  
+
   if ($setup_complete) {
     $form['node_translation'][] = array(
       '#type' => 'item',
@@ -153,52 +153,52 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
             'class' => array('field'),
           ),
         );
-        
+
         $is_enabled = !empty($translate[$value->type]) && array_search($field_machine_name, $translate[$value->type]) !== FALSE;
-        if(!$setup_complete || $is_enabled) {
+        if (!$setup_complete || $is_enabled) {
           $fr[$field_machine_name]['#attributes']['checked'] = 'checked';
         }
       }
     }
-    if(!isset($fr['title_field'])) {
-        $fr['title_field'] = array(
-          '#type' => 'checkbox',
-          '#title' => 'Title (Note: field will be created.)',
-          '#attributes' => array(
-            'id' => array('edit-form-item-' . $value->type . '-seperator-' . $field_machine_name),
-            'name' => 'title_swap_' . $value->type,
-            'class' => array('field'),
-          ),
-        );
-        if(!$setup_complete) {
-          $fr['title_field']['#attributes']['checked'] = 'checked';
-        }
+    if (!isset($fr['title_field'])) {
+      $fr['title_field'] = array(
+        '#type' => 'checkbox',
+        '#title' => 'Title (Note: field will be created.)',
+        '#attributes' => array(
+          'id' => array('edit-form-item-' . $value->type . '-seperator-' . $field_machine_name),
+          'name' => 'title_swap_' . $value->type,
+          'class' => array('field'),
+        ),
+      );
+      if (!$setup_complete) {
+        $fr['title_field']['#attributes']['checked'] = 'checked';
+      }
     }
     $rows[$value->type] = array(
       array('data' => $value->name, 'width' => '20%'),
       array('data' => drupal_render($fr), 'width' => '80%'),
     );
   }
-  
+
   $form['node_translation']['types'] = array(
     '#type' => 'tableselect',
     '#header' => array('Content Type', 'Fields'),
     '#options' => $rows,
     '#attributes' => array('class' => array('lingotek-content-settings-table')),
   );
-  
+
   foreach (array_keys($translate) as $content_type) {
     $form['node_translation']['types']['#default_value'][$content_type] = 1;
   }
 
-  if(!$setup_complete) {
+  if (!$setup_complete) {
     $defaults = array();
     foreach ($raw_types as $content_type) {
       $defualts[$content_type->type] = 1;
     }
     $form['node_translation']['types']['#default_value'] = $defualts;
   }
-  
+
   return $form;
 }
 
@@ -206,14 +206,14 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
  * Node Translation Settings - Form Submit
  */
 function lingotek_admin_node_translation_settings_form_submit($form, &$form_state) {
-  
+
   //this is needed for the setup because of the field/node method selector.
   system_settings_form_submit($form, $form_state);
-  
+
   $translate = array();
   $operations = array();
   foreach ($form_state['input'] as $key => $value) {
-    
+
     // Look for Selected Content Types and Fields.
     if (FALSE !== strpos($key, '_SEPERATOR_')) {
       // And only if set to translate
@@ -221,9 +221,9 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
         $parts = explode('_SEPERATOR_', $key);
         $content_type = $parts[0];
         $content_field = $parts[1];
-        
+
         //check to make sure that the content type is enabled
-        if(isset($form_state['values']['types'][$content_type])) {
+        if (isset($form_state['values']['types'][$content_type])) {
           $translate[$content_type][] = $content_field;
 
           // Set this content type to be Lingotek translated.
@@ -242,9 +242,9 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
       // And only if set to swap
       if ($value != 0) {
         $content_type = substr($key, strlen('title_swap_'));
-        
+
         //check to make sure that the content type is enabled
-        if(isset($form_state['values']['types'][$content_type])) {
+        if (isset($form_state['values']['types'][$content_type])) {
           // Do the actual title replacement
           $entity_type = 'node';
           $bundle = $content_type;
@@ -415,12 +415,12 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     ),
     '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
   );
-  
+
   $header = array(
     'Type',
     'Description',
   );
-  
+
   $options = array(
     'lingotek_translate_config_builtins' => array(t('Built-in Interface'), t('If configuration translation is enabled, all built-in strings will be automatically translated.')),
     'lingotek_translate_config_blocks' => array(t('Blocks'), t('When enabled, all blocks will be updated automatically to be translatable in the Languages settings.')),
@@ -428,20 +428,20 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     'lingotek_translate_config_menus' => array(t('Menus'), t('When enabled, all menus will be updated to use \'Translate and Localize\' in the Multilingual Options.')),
     'lingotek_translate_config_views' => array(t('Views'), t('When enabled, all configured views will be searched for translatable strings.  Note this will not generally include translation of all results generated by each view.')),
   );
-  
+
   $defaults = array();
-  
-  foreach(array_keys($options) as $config_type) {
+
+  foreach (array_keys($options) as $config_type) {
     $defaults[$config_type] = variable_get($config_type, 1);
   }
-    
+
   $form['additional_translation']['config'] = array(
     '#type' => 'tableselect',
     '#header' => $header,
     '#options' => $options,
     '#default_value' => $defaults,
   );
-  
+
   if ($is_enterprise) {
     $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_workflow_id'] = array(
       '#type' => 'select',
@@ -451,8 +451,8 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       '#default_value' => variable_get('lingotek_translate_config_workflow_id', ''),
     );
   }
-  
-  if($setup_complete) {
+
+  if ($setup_complete) {
     $form['additional_translation']['lingotek_translate_config_options']['view_status'] = array(
       '#type' => 'item',
       '#description' => t('You can view the progress of the configuration translations on the ' . l('Translate Interface', 'admin/config/regional/translate') . ' page.'),
@@ -464,6 +464,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 /*
  * This function is not used. Should we remove it?
  */
+
 function lingotek_verify_modules_enabled($module_list) {
   $missing_modules = FALSE;
   foreach ($module_list as $mod) {
@@ -481,7 +482,7 @@ function lingotek_verify_modules_enabled($module_list) {
 
 function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state) {
   $form_state['values'] = array_merge($form_state['values'], $form_state['values']['config']);
-  
+
   system_settings_form_submit($form, $form_state);
 
   //if any configuration options are set then config translation is enabled
@@ -879,22 +880,22 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     '#type' => 'item',
     '#description' => t('Translation management defaults used when creating new nodes. At the node level, these settings can be adjusted.'),
   );
-  
+
   $form['defaults']['lingotek_nodes_translation_method'] = array(
     '#type' => 'radios',
     '#title' => t('Method for storing node translations'),
     '#options' => array(
       'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
-      //'node' => '<strong>Node Translation</strong>  - create a new node per language ',
+    //'node' => '<strong>Node Translation</strong>  - create a new node per language ',
     ),
     'field' => array(
       '#description' => 'A newer and recommended method. Newer versions of Drupal will probably use this method.',
     ),
     /*
-    'node' => array(
+      'node' => array(
       '#description' => 'The classical method. Use for backwards compatibility.',
-    ),
-    */
+      ),
+     */
     '#default_value' => variable_get('lingotek_nodes_translation_method', 'field'),
   );
 
@@ -992,7 +993,7 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
       }
     }
   }
-  
+
   if ($is_enterprise) {
 
     // Community Translation
@@ -1082,12 +1083,12 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
 }
 
 function lingotek_get_module_status($module) {
-  if(module_exists($module))
+  if (module_exists($module))
     return '<span class="admin-enabled">enabled</span>';
-  
-  if(drupal_get_path('module', $module))
+
+  if (drupal_get_path('module', $module))
     return '<span class="admin-disabled">disabled</span>';
-  
+
   return '<span class="admin-missing">missing</span>';
 }
 

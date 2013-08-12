@@ -240,7 +240,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
         $ran = TRUE;
         $operations[] = array('lingotek_sync_download_chunk_target', array($record['id'], $lingotek_locale, $sync_success_target));
       }
-      if($ran) {
+      if ($ran) {
         $operations[] = array('drupal_flush_all_caches', array());
       }
     }
