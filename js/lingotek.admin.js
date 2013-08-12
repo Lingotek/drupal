@@ -8,13 +8,19 @@
 Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
 
+    //when a content type checkbox is clicked
     $('td:first-child .form-checkbox', context).click( function() {
       isChecked = $(this).attr('checked');
       $(this).parents('tr').find('.form-checkbox').each( function() {
-        $(this).attr('checked', isChecked);
+        if(isChecked) {
+          $(this).attr('checked', isChecked);
+        } else {
+          $(this).removeAttr('checked');
+        }
       })
     });
     
+    //when a field checkbox is clicked
     $('.field.form-checkbox', context).click( function() {
       row = $(this).parents('tr')
       if($(this).attr('checked')) {
@@ -36,16 +42,13 @@ Drupal.behaviors.lingotekAdminForm = {
       return Drupal.t($('#account_summary').val() + ' / ' + $('#connection_summary').val());
     });
     
-//    $('fieldset.lingotek-connection-status', context).drupalSetSummary(function (context) {
-//      return Drupal.t();
-//    });
-    
     $('fieldset.lingotek-translate-content', context).drupalSetSummary(function (context) {
       $list = [];
       total = 0;
       $('#edit-node-translation input').each(function( index ) {
-        if($(this).attr('id').substring(0, 9) == 'edit-type') {
-          if($(this).attr('checked') == '1') {
+        var id = $(this).attr('id');
+        if(id && id.substring(0, 9) == 'edit-type') {
+          if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
             $list.push($(this).val());
           }
           total++;
@@ -62,7 +65,7 @@ Drupal.behaviors.lingotekAdminForm = {
       $list = [];
       total = 0;
       $('#edit-lingotek-translate-comments-node-types input').each(function( index ) {
-        if($(this).attr('checked') == '1') {
+        if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
           $list.push($(this).val());
         }
         total++;
@@ -77,7 +80,7 @@ Drupal.behaviors.lingotekAdminForm = {
     $('fieldset.lingotek-translate-configuration', context).drupalSetSummary(function (context) {
       $list = [];
       $('#edit-additional-translation input').each(function( index ) {
-        if($(this).attr('checked') == '1') {
+        if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
           name = $(this).attr('name');
           name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
           $list.push(name);
@@ -95,7 +98,7 @@ Drupal.behaviors.lingotekAdminForm = {
     $('fieldset.lingotek-preferences', context).drupalSetSummary(function (context) {
       $list = [];
       $('#edit-region').each(function( index ) {
-        if($(this).attr('checked') == '1') {
+        if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
           $list.push($(this).val());
         }
       });
