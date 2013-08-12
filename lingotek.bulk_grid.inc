@@ -479,13 +479,6 @@ function lingotek_get_source_rows($form, &$form_state) {
   $nids = LingotekSync::GetNodeIdsBySource($language);
 
   if (!empty($nids)) {
-    // Get global defaults and string replacements for 0, 1, 2 and NULL
-    $auto_upload_default = variable_get('lingotek_create_documents_by_default', 0);
-    $auto_download_default = variable_get('lingotek_sync', 0);
-    $url_alias_default = variable_get('lingotek_url_alias_translation', 0);
-    $aUpd_string = $auto_upload_default ? 'Auto' : 'Manual';
-    $aDownd_string = $auto_download_default ? 'Auto' : 'Manual';
-    $uAliasd_string = $url_alias_default > 0 ? ($url_alias_default == 1 ? 'Translate' : 'Use Title') : 'None';
 
     $form_state['values']['grid_header'] = array( // Define the source header
       'nid' => array('data' => 'Node ID', 'field' => 'n.nid'),
