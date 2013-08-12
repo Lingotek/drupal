@@ -160,6 +160,9 @@ class LingotekApi {
           lingotek_lingonode($translatable_object->nid, 'project_id', $project_id);
           LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
         }
+        if ($isContentNode) {
+          lingotek_lingonode($translatable_object->nid, 'last_uploaded', time());
+        }
         $success = TRUE;
       }
     }
@@ -877,6 +880,7 @@ class LingotekApi {
    */
   public function updateContentDocument($translatable_object) {
 
+    $isContentNode = FALSE;
     switch (get_class($translatable_object)) {
       case 'LingotekConfigChunk':
       case 'LingotekComment':
@@ -886,6 +890,7 @@ class LingotekApi {
         break;
       default:
         // Normal content do the regular formating.
+        $isContentNode = TRUE;
         $document_id = lingotek_lingonode($translatable_object->nid, 'document_id');
         $content = lingotek_xml_node_body($translatable_object);
         break;
@@ -922,6 +927,9 @@ class LingotekApi {
       }
       else {
         LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
+      }
+      if ($isContentNode) {
+        lingotek_lingonode($translatable_object->nid, 'last_uploaded', time());
       }
     }
 

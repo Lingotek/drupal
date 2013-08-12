@@ -304,6 +304,25 @@ class LingotekSync {
     return $count;
   }
 
+  public static function getTargetCountByDocumentIds($document_ids) {
+    if (!is_array($document_ids)) {
+      $document_ids = array($document_ids);
+    }
+    $subquery = db_select('lingotek', 'l1')
+      ->fields('l', array('nid'))
+      ->condition('l1.lingokey', 'document_id')
+      ->condition('l1.lingovalue', $document_ids, 'IN');
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('nid'));
+    $query->condition('l.lingokey', 'target_sync_progress_%', 'LIKE');
+    $query->condition('l.nid', $subquery, 'IN');
+    $query->addExpression('COUNT(l.lingokey)', 'targets');
+
+    $query->groupBy('l.nid');
+    $result = $query->execute()->fetchAllAssoc('nid');
+    return $result;
+  }
+
   public static function getETNodeIds() { // get nids for entity_translation nodes that are not lingotek pushed
     $types = lingotek_translatable_node_types(); // get all translatable node types 
     $et_content_types = array();

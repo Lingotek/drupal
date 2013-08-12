@@ -195,6 +195,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       '#default_value' => isset($_SESSION['grid_filters']['source_document_id__filter']) ? $_SESSION['grid_filters']['source_document_id__filter'] : '',
       '#title' => t('Doc ID is'),
       '#size' => 10,
+      '#suffix' => '<div style="clear:both"></div>',
     );
     $filters = array(
       'Content Type' => array('options' => node_type_get_names(), 'multiple' => TRUE),
@@ -203,11 +204,13 @@ function lingotek_bulk_grid_form($form, $form_state) {
       'Auto Download' => array('options' => array(1 => t('On'), 0 => t('Off'), 'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_sync', 0) ? 'On' : 'Off')))), 'multiple' => TRUE),
       'Crowdsourcing' => array('options' => array(1 => t('On'), 0 => t('Off'), 'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_allow_community_translation', 0) ? 'On' : 'Off')))), 'multiple' => TRUE),
       'URL Alias Translation' => array('options' => array(t('None'), t('Translate'), t('Use Title'), 'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_url_alias_translation', 0) == 2 ? 'Use Title' : variable_get('lingotek_url_alias_translation', 0) ? 'Translate' : 'None')))), 'multiple' => TRUE),
+      'Last Uploaded' => array('options' => array('1 day' => t('Less than 1 day ago'), '< 1 week' => t('Less than 1 week ago'), '>= 1 week' => t('1 week or more ago'), 'unknown' => 'Unknown'), 'multiple' => FALSE),
       'Translation Progress' => array('options' => array(0 => t('0 Percent'), 25 => t('Between 1 and 25 Percent'), 50 => t('Between 26 and 50 Percent'), 75 => t('Between 51 and 75 Percent'), 100 => t('Between 76 and 100 Percent')), 'multiple' => TRUE),
     );
     $action_options = array(
       'upload' => t('Upload for Translation'),
       'download_all' => t('Download Translations for all Targets'),
+      'sync' => t('Sync Translation Progress with Lingotek'),
       'reset' => t('Reset Translations'),
       'edit' => t('Edit Lingotek Node Settings'),
     );
@@ -232,6 +235,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       '#default_value' => isset($_SESSION['grid_filters']['target_document_id__filter']) ? $_SESSION['grid_filters']['target_document_id__filter'] : '',
       '#title' => t('Doc ID is'),
       '#size' => 10,
+      '#suffix' => '<div style="clear:both"></div>',
     );
     $filters = array(
       'Content Type' => array('options' => node_type_get_names(), 'multiple' => TRUE),
@@ -493,7 +497,8 @@ function lingotek_get_source_rows($form, &$form_state) {
       'document_id' => array('data' => 'Doc ID', 'field' => 'document_id'),
       'type' => array('data' => 'Content Type', 'field' => 'n.type'),
       'upload_status' => array('data' => 'Upload Status', 'field' => 'upload_status'),
-      'progress_percent' => array('data' => 'Translation Progress', 'field' => 'target_progress_average'),
+      'last_uploaded' => array('data' => 'Last Uploaded', 'field' => 'last_uploaded'),
+      'translate_progress' => array('data' => 'Translation Progress', 'field' => 'translate_progress'),
     );
 
     // Initialize Query and extend paginator and tablesort
@@ -532,22 +537,14 @@ function lingotek_get_source_rows($form, &$form_state) {
     // Node Upload Status
     $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\'');
       $query->addField('lingo_upload_status', 'lingovalue', 'upload_status');
+
+    // Last Uploaded Timestamp
+    $query->leftJoin('lingotek', 'lingo_last_uploaded', 'lingo_last_uploaded.nid = n.nid and lingo_last_uploaded.lingokey = \'last_uploaded\'');
+      $query->addField('lingo_last_uploaded', 'lingovalue', 'last_uploaded');
       
     // Target Progress Average
-    $query->addExpression(
-      '(SELECT SUM(lingo_translation_progress.lingovalue)
-        FROM lingotek AS lingo_translation_progress
-        WHERE lingo_translation_progress.nid = n.nid
-        AND lingo_translation_progress.lingokey LIKE \'target_sync_progress_%\'
-      )
-      /
-      (SELECT COUNT(lingo_targets.lingokey)
-        FROM lingotek AS lingo_targets
-        WHERE lingo_targets.nid = n.nid
-        AND lingo_targets.lingokey LIKE \'target_sync_status_%\'
-      )',
-      'target_progress_average'
-    );
+    $query->leftJoin('lingotek', 'lingo_translate_progress', 'lingo_translate_progress.nid = n.nid and lingo_translate_progress.lingokey = \'translation_progress\'');
+      $query->addField('lingo_translate_progress', 'lingovalue', 'translate_progress');
 
     // Filters
       //  Node ID
@@ -611,22 +608,35 @@ function lingotek_get_source_rows($form, &$form_state) {
         $or->condition('lingo_url_alias.lingovalue', NULL);
         $query->condition($or);
       }
-/*      // Translation Progress Percentage
+      // Last Uploaded
+      if (isset($filters['source_last_uploaded']) && $filters['source_last_uploaded'] != 'all') {
+        if ($filters['source_last_uploaded'] == '1 day') {
+          $query->condition('lingo_last_uploaded.lingovalue', strToTime($filters['source_last_uploaded']), '<');
+        }
+        elseif ($filters['source_last_uploaded'] == 'unknown') {
+          $query->condition('lingo_last_uploaded.lingovalue', NULL);
+        }
+        else {
+          $params = explode(' ', $filters['source_last_uploaded'], 2); // string formatted like '< 1 week', so explode with a limit of two gives us array(0 => '<', 1 => '1 week')
+          $query->condition('lingo_last_uploaded.lingovalue', strToTime($params[1]), $params[0]);
+        }
+      }
+      // Translation Progress Percentage
       if (isset($filters['source_translation_progress']) && !in_array('all', $filters['source_translation_progress'])) {
         $or = db_or();
         foreach ($filters['source_translation_progress'] as $percent) {
-        dpm($percent);
           if ($percent == 0) {
-            $or->condition('target_progress_average', $percent);
+            $or->condition('lingo_translate_progress.lingovalue', $percent);
+            $or->condition('lingo_translate_progress.lingovalue', NULL);
           }
           else {
             $range = array((int)$percent - 24, (int)$percent);
-            $or->condition('target_progress_average', $range, 'BETWEEN');
+            $or->where('CAST(lingo_translate_progress.lingovalue as UNSIGNED) BETWEEN ' . $range[0] . '  AND ' . $range[1]);
           }
         }
         $query->condition($or);
       }
-*/
+
     $table_data_raw = $query->execute()->fetchAllAssoc('nid');
 
     // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
@@ -634,8 +644,14 @@ function lingotek_get_source_rows($form, &$form_state) {
       if (is_null($row->document_id)) {
         $row->document_id = 'None';
       }
-      if (is_null($row->target_progress_average)) {
-        $row->target_progress_average = 0;
+      if (is_null($row->translate_progress)) {
+        $row->translate_progress = 0;
+      }
+      if (is_null($row->last_uploaded)) {
+        $row->last_uploaded = 'Unknown';
+      }
+      else {
+        $row->last_uploaded = lingotek_human_readable_timestamp($row->last_uploaded) . ' ago';
       }
       $title_cap = 100;
       if (strlen($row->title) > $title_cap) { // very long title names make The Grid look messy, so we cap them.
@@ -647,7 +663,8 @@ function lingotek_get_source_rows($form, &$form_state) {
         'document_id' => $row->document_id,
         'type' => $row->type,
         'upload_status' => ucfirst(strtolower($row->upload_status)),
-        'progress_percent' => lingotek_grid_create_progress_bar($row->target_progress_average),
+        'last_uploaded' => $row->last_uploaded,
+        'translate_progress' => lingotek_grid_create_progress_bar($row->translate_progress),
       );
       $table_data[$row->nid] = $data;
     }
@@ -750,6 +767,7 @@ function lingotek_get_target_rows($form, &$form_state) {
         foreach ($filters['target_target_progress'] as $percent) {
           if ($percent == 0) {
             $or->condition('lingo_target_progress.lingovalue', $percent);
+            $or->condition('lingo_target_progress.lingovalue', NULL);
           }
           else {
             $range = array((int)$percent - 24, (int)$percent);
