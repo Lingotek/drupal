@@ -88,7 +88,7 @@ class LingotekApi {
 
     // populate workflow_id
     if ($isContentNode) {
-      $workflow_id = lingotek_lingonode($translatable_object->nid, 'lingotek_workflow');
+      $workflow_id = lingotek_lingonode($translatable_object->nid, 'workflow_id');
     } else {
       $workflow_id = $translatable_object->getWorkflowId();
     }
