@@ -804,7 +804,7 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
     // Note: The Lingotek servers may easily be set in code or by setting a 'lingotek_use_stage_servers' drupal variable
     $form['connection']['lingotek_use_stage_servers'] = array(
       '#type' => 'select',
-      '#title' => t('Environment'),
+      '#title' => t('Lingotek Environment'),
       '#options' => array(
         0 => t('Production'),
         1 => t('Staging'),
