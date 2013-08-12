@@ -4,7 +4,7 @@
  * Verify the current request.  Checks if signed and if the signature is correct.
  * When correct then also figures out on behalf of which user this request is being made.
  *  
- * @version $Id: OAuthRequestVerifier.php 155 2010-09-10 18:38:33Z brunobg@corollarium.com $
+ * @version $Id: LingotekOAuthRequestVerifier.php 155 2010-09-10 18:38:33Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 4:35:03 PM
  * 
@@ -33,10 +33,10 @@
  */
 
 require_once dirname(__FILE__) . '/OAuthStore.php';
-require_once dirname(__FILE__) . '/OAuthRequest.php';
+require_once dirname(__FILE__) . '/LingotekOAuthRequest.php';
 
 
-class OAuthRequestVerifier extends OAuthRequest
+class LingotekOAuthRequestVerifier extends LingotekOAuthRequest
 {
 	private $request;
 	private $store;
@@ -65,7 +65,7 @@ class OAuthRequestVerifier extends OAuthRequest
 		$this->store = OAuthStore::instance();
 		parent::__construct($uri, $method);
 		
-		OAuthRequestLogger::start($this);
+		LingotekOAuthRequestLogger::start($this);
 	}
 	
 	
@@ -82,7 +82,7 @@ class OAuthRequestVerifier extends OAuthRequest
 		}
 		else
 		{
-			$hs = OAuthRequestLogger::getAllHeaders();
+			$hs = LingotekOAuthRequestLogger::getAllHeaders();
 			if (isset($hs['Authorization']) && strpos($hs['Authorization'], 'oauth_signature') !== false)
 			{
 				$signed = true;
@@ -107,10 +107,10 @@ class OAuthRequestVerifier extends OAuthRequest
 	{
 		if ($this->getParam('oauth_consumer_key'))
 		{
-			OAuthRequestLogger::start($this);
+			LingotekOAuthRequestLogger::start($this);
 			$this->verify($token_type);
 			$signed = true;
-			OAuthRequestLogger::flush();
+			LingotekOAuthRequestLogger::flush();
 		}
 		else
 		{

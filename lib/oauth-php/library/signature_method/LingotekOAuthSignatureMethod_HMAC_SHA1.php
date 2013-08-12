@@ -31,10 +31,10 @@
  */
 
 
-require_once dirname(__FILE__).'/OAuthSignatureMethod.class.php';
+require_once dirname(__FILE__).'/LingotekOAuthSignatureMethod.class.php';
 
 
-class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod
+class LingotekOAuthSignatureMethod_HMAC_SHA1 extends LingotekOAuthSignatureMethod
 {
 	public function name ()
 	{
@@ -46,7 +46,7 @@ class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod
 	 * Calculate the signature using HMAC-SHA1
 	 * This function is copyright Andy Smith, 2007.
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @param string base_string
 	 * @param string consumer_secret
 	 * @param string token_secret
@@ -88,7 +88,7 @@ class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod
 	/**
 	 * Check if the request signature corresponds to the one calculated for the request.
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @param string base_string	data to be signed, usually the base string, can be a request body
 	 * @param string consumer_secret
 	 * @param string token_secret

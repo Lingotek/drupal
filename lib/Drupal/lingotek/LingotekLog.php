@@ -19,19 +19,36 @@ class LingotekLog {
     WATCHDOG_INFO: Informational messages.
     WATCHDOG_DEBUG: Debug-level messages.
    */
-  private static function getDefault(){
+
+  private static function getDefault() {
     return (LINGOTEK_DEV == TRUE);
   }
 
+  public static function api($msg, $data, $tag = 'api') {
+    if (!variable_get('lingotek_api_debug', self::getDefault())) {
+      return;
+    }
+    self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
+  }
+
   public static function info($msg, $data, $tag = 'info') {
+    if (!variable_get('lingotek_api_debug', self::getDefault())) {
+      return;
+    }
     self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
   }
 
   public static function error($msg, $data, $tag = 'error') {
+    if (!variable_get('lingotek_error_log', TRUE)) {
+      return;
+    }
     self::log($msg, $data, $depth = 1, WATCHDOG_ERROR, $tag);
   }
 
   public static function warning($msg, $data, $tag = 'warning') {
+    if (!variable_get('lingotek_warning_log', TRUE)) {
+      return;
+    }
     self::log($msg, $data, $depth = 1, WATCHDOG_WARNING, $tag);
   }
 
@@ -43,17 +60,10 @@ class LingotekLog {
   }
 
   public static function format($obj) {
-    return is_string($obj)? $obj : '<pre>' . print_r($obj, TRUE) . '</pre>'; //htmlspecialchars(var_export($obj, TRUE))
+    return is_string($obj) ? $obj : '<pre>' . print_r($obj, TRUE) . '</pre>'; //htmlspecialchars(var_export($obj, TRUE))
   }
 
   public static function log($msg, $data = NULL, $depth = 0, $severity = WATCHDOG_NOTICE, $tag = '') {
-    if ($severity == WATCHDOG_WARNING && variable_get('lingotek_warning_log', self::getDefault())) {
-      return;
-    }
-    else if (strcasecmp($tag, 'api') == 0 && !variable_get('lingotek_api_debug', self::getDefault())) {
-      return;
-    }
-
     $backtrace = debug_backtrace();
     $location = $backtrace[$depth]['file'] . ':' . $backtrace[$depth]['line'];
     $function = $backtrace[$depth + 1]['function'];
@@ -65,8 +75,8 @@ class LingotekLog {
     }
     $suffix = is_string($tag) && strlen($tag) ? ' - ' . $tag : '';
     $data_array = array();
-    if(is_array($data)){
-      foreach($data as $k=>$v){
+    if (is_array($data)) {
+      foreach ($data as $k => $v) {
         $data_array[$k] = LingotekLog::format($v);
       }
     }

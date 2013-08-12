@@ -30,7 +30,7 @@
  * THE SOFTWARE.
  */
 
-abstract class OAuthSignatureMethod
+abstract class LingotekOAuthSignatureMethod
 {
 	/**
 	 * Return the name of this signature
@@ -42,7 +42,7 @@ abstract class OAuthSignatureMethod
 	/**
 	 * Return the signature for the given request
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @param string base_string
 	 * @param string consumer_secret
 	 * @param string token_secret
@@ -53,7 +53,7 @@ abstract class OAuthSignatureMethod
 	/**
 	 * Check if the request signature corresponds to the one calculated for the request.
 	 * 
-	 * @param OAuthRequest request
+	 * @param LingotekOAuthRequest request
 	 * @param string base_string	data to be signed, usually the base string, can be a request body
 	 * @param string consumer_secret
 	 * @param string token_secret

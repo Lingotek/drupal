@@ -167,9 +167,9 @@ class LingotekAccount {
       
       if (isset($response_json) && $info['http_code'] == 200) { // Did we get valid json data back?  If not, $json is NULL.
         //debug ( $json );
-        LingotekLog::info('<h1>@method</h1>
+        LingotekLog::api('<h1>@method</h1>
         <strong>API URL:</strong> @url
-        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response', $message_params, 'api');
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response', $message_params);
 
         $response_data = $response;
 

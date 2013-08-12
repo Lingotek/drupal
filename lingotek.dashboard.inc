@@ -13,7 +13,7 @@ function lingotek_dashboard() {
   lingotek_is_module_setup();
   $account = LingotekAccount::instance(); //remove?
 
-  if (lingotek_is_config_missing()) {
+  if (lingotek_is_config_missing() === TRUE) {
     $output = array();
     // Check the login ID to see if this is a Lingopoint user, if so, provide information about setting up their oauth keys.
     $login_id = variable_get('lingotek_login_id', 'community_admin');
@@ -330,7 +330,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
       'docs' => $total,
       'pending' => $pending,
       'edited' => $edited,
-      'current' => $current
+      'current' => $current,
     );
   }
   else { // Otherwise Return a List of all the Active Languages
