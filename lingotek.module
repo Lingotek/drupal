@@ -1695,6 +1695,13 @@ function lingotek_library() {
 
 function lingotek_form_alter(&$form, &$form_state, $form_id) {
   if(substr($form_id,-9) == 'node_form') {
+    
+    //disable the language field if the node is synced with lingotek
+    $document_id = lingotek_lingonode($form['#entity']->nid, 'document_id');
+    if(isset($document_id) && $document_id != 0) {
+      $form['language']['#disabled'] = TRUE;
+    }
+    
     if(isset($form['#entity']->tnid) && $form['#entity']->tnid != 0 && $form['#entity']->nid != $form['#entity']->tnid) {
       $content_type = $form['type']['#value'];
       $lingotek_fields = variable_get('lingotek_translate_fields');
