@@ -780,13 +780,14 @@ function lingotek_update_target_progress($document_ids) {
       );    
       $values[] = array(
       'nid' => $nid,
-      'lingokey' => 'target_sync_progress_updated_' . $language,
+      'lingokey' => 'target_sync_last_progress_updated_' . $language,
       'lingovalue' => time(),
       );    
     }     
   }
 
   lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
+  lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
   /*  $delete_nids = db_select('lingotek', 'l')
     ->fields('l', array('nid'))
     ->distinct()

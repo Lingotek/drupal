@@ -633,7 +633,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
 }
 
-function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
+function lingotek_get_node_settings_form(&$form, &$form_state, $nids = NULL) {
 
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
@@ -997,6 +997,7 @@ function lingotek_node_load($nodes, $types) {
  */
 function lingotek_node_update($node) {
 
+dpm($node);
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     return;
   }

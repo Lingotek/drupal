@@ -40,7 +40,6 @@ function lingotek_bulk_grid_form($form, $form_state) {
       'js' => array( // We get php errors when TableSort and AJAX are combined (see https://drupal.org/node/1833746).
                      // So we are faking it with a hidden submit button and some jQuery.
         $path_to_lingotek . '/js/lingotek.bulk_grid.js',
-        $path_to_lingotek . '/js/lingotek.form.js',
       ),
     ),
   );
@@ -54,7 +53,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   foreach ($target_languages_raw as $target_raw) {
     $target_languages[$target_raw->lingotek_locale] = array();
-    $target_languages_base[$target_raw->lingotek_locale] = $target_raw->name;
+    $target_languages_base[$target_raw->lingotek_locale] = $target_raw->name . ' (' . $target_raw->lingotek_locale . ')';
     foreach ($target_raw as $key => $value) {
       $target_languages[$target_raw->lingotek_locale][$key] = $value;
     }
@@ -62,7 +61,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   foreach ($source_languages_base as $source_language_base) {
     if (isset($target_languages[$source_language_base])) {
       // s__ added to source languages to distinguish between source and target (i.e. if English is both a source and a target)
-      $source_languages_base['s__' . $source_language_base] = $target_languages[$source_language_base]['name'];
+      $source_languages_base['s__' . $source_language_base] = $target_languages[$source_language_base]['name'] . ' (' . $source_language_base . ')';
       $source_languages[$source_language_base] = $target_languages[$source_language_base];
       unset($source_languages_base[$source_language_base]);
     }
@@ -204,6 +203,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       'Auto Download' => array('options' => array(1 => t('On'), 0 => t('Off'), 'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_sync', 0) ? 'On' : 'Off')))), 'multiple' => TRUE),
       'Crowdsourcing' => array('options' => array(1 => t('On'), 0 => t('Off'), 'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_allow_community_translation', 0) ? 'On' : 'Off')))), 'multiple' => TRUE),
       'URL Alias Translation' => array('options' => array(t('None'), t('Translate'), t('Use Title'), 'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_url_alias_translation', 0) == 2 ? 'Use Title' : variable_get('lingotek_url_alias_translation', 0) ? 'Translate' : 'None')))), 'multiple' => TRUE),
+      'Translation Progress' => array('options' => array(0 => t('0 Percent'), 25 => t('Between 1 and 25 Percent'), 50 => t('Between 26 and 50 Percent'), 75 => t('Between 51 and 75 Percent'), 100 => t('Between 76 and 100 Percent')), 'multiple' => TRUE),
     );
     $action_options = array(
       'upload' => t('Upload for Translation'),
@@ -493,6 +493,7 @@ function lingotek_get_source_rows($form, &$form_state) {
       'document_id' => array('data' => 'Doc ID', 'field' => 'document_id'),
       'type' => array('data' => 'Content Type', 'field' => 'n.type'),
       'upload_status' => array('data' => 'Upload Status', 'field' => 'upload_status'),
+      'progress_percent' => array('data' => 'Translation Progress', 'field' => 'target_progress_average'),
     );
 
     // Initialize Query and extend paginator and tablesort
@@ -531,6 +532,22 @@ function lingotek_get_source_rows($form, &$form_state) {
     // Node Upload Status
     $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\'');
       $query->addField('lingo_upload_status', 'lingovalue', 'upload_status');
+      
+    // Target Progress Average
+    $query->addExpression(
+      '(SELECT SUM(lingo_translation_progress.lingovalue)
+        FROM lingotek AS lingo_translation_progress
+        WHERE lingo_translation_progress.nid = n.nid
+        AND lingo_translation_progress.lingokey LIKE \'target_sync_progress_%\'
+      )
+      /
+      (SELECT COUNT(lingo_targets.lingokey)
+        FROM lingotek AS lingo_targets
+        WHERE lingo_targets.nid = n.nid
+        AND lingo_targets.lingokey LIKE \'target_sync_status_%\'
+      )',
+      'target_progress_average'
+    );
 
     // Filters
       //  Node ID
@@ -594,14 +611,31 @@ function lingotek_get_source_rows($form, &$form_state) {
         $or->condition('lingo_url_alias.lingovalue', NULL);
         $query->condition($or);
       }
-
-    $query->groupBy('n.nid');
+/*      // Translation Progress Percentage
+      if (isset($filters['source_translation_progress']) && !in_array('all', $filters['source_translation_progress'])) {
+        $or = db_or();
+        foreach ($filters['source_translation_progress'] as $percent) {
+        dpm($percent);
+          if ($percent == 0) {
+            $or->condition('target_progress_average', $percent);
+          }
+          else {
+            $range = array((int)$percent - 24, (int)$percent);
+            $or->condition('target_progress_average', $range, 'BETWEEN');
+          }
+        }
+        $query->condition($or);
+      }
+*/
     $table_data_raw = $query->execute()->fetchAllAssoc('nid');
 
     // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
     foreach ($table_data_raw as $row) {
       if (is_null($row->document_id)) {
         $row->document_id = 'None';
+      }
+      if (is_null($row->target_progress_average)) {
+        $row->target_progress_average = 0;
       }
       $title_cap = 100;
       if (strlen($row->title) > $title_cap) { // very long title names make The Grid look messy, so we cap them.
@@ -612,7 +646,8 @@ function lingotek_get_source_rows($form, &$form_state) {
         'title' => l($row->title, 'node/' . $row->nid),
         'document_id' => $row->document_id,
         'type' => $row->type,
-        'upload_status' => $row->upload_status,
+        'upload_status' => ucfirst(strtolower($row->upload_status)),
+        'progress_percent' => lingotek_grid_create_progress_bar($row->target_progress_average),
       );
       $table_data[$row->nid] = $data;
     }
@@ -680,7 +715,7 @@ function lingotek_get_target_rows($form, &$form_state) {
       $query->addField('lingo_download_status', 'lingovalue', 'download_status');
 
     // Add last updated timestamp to the query
-    $query->leftJoin('lingotek', 'lingo_progress_updated', 'n.nid = lingo_progress_updated.nid and lingo_progress_updated.lingokey LIKE \'target_sync_progress_updated_' . $language . '\'');
+    $query->leftJoin('lingotek', 'lingo_progress_updated', 'n.nid = lingo_progress_updated.nid and lingo_progress_updated.lingokey LIKE \'target_sync_last_progress_updated_' . $language . '\'');
       $query->addField('lingo_progress_updated', 'lingovalue', 'progress_updated');
 
     // Add last downloaded timestamp to the query
@@ -782,14 +817,13 @@ function lingotek_get_target_rows($form, &$form_state) {
       else {
         $row->last_downloaded = lingotek_human_readable_timestamp($row->last_downloaded) . ' ago';
       }
-      $style = "width:" . round($row->target_progress) . "%;";
       $data = array(
         'nid' => $row->nid,
         'title' => l($row->title, 'node/' . $row->nid),
         'document_id' => $row->document_id,
         'type' => $row->type,
   //      'workflow' => $row->workflow,
-        'target_progress' => '<div class="progress" title="' . 'Last checked ' . $row->progress_updated . '"><div class="bar" style="' . $style . '"></div><div class="percent">' . $row->target_progress . '%' . '</div></div>',
+        'target_progress' => lingotek_grid_create_progress_bar($row->target_progress),
         'progress_updated' => $row->progress_updated,
         'last_downloaded' => $row->last_downloaded,
       );
@@ -797,6 +831,12 @@ function lingotek_get_target_rows($form, &$form_state) {
     }
   }
   return $table_data;
+}
+
+function lingotek_grid_create_progress_bar($target_progress) {
+  $style = "width:" . round($target_progress) . "%;";
+  $html = '<div class="progress"><div class="bar" style="' . $style . '"></div><div class="percent">' . $target_progress . '%' . '</div></div>';
+  return $html;
 }
 
 function lingotek_get_source_ignored_rows($form, &$form_state) {
