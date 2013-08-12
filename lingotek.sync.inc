@@ -115,12 +115,12 @@ function lingotek_notifications() {
       // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
       if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements['@id'] = $trans_obj->cid;
-        $replacements['@trans_type'] = $trans_obj->cid;
+        $replacements['@trans_type'] = "ConfigChunk";
       }
       // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
       elseif ($trans_obj = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements['@id'] = $trans_obj->id;
-        $replacements['@trans_type'] = $trans_obj->id;
+        $replacements['@trans_type'] = "Comment";
       }
       else {
         if ($attempts < 10) {
