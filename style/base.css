@@ -69,18 +69,6 @@ input.lingotek-content-settings-table.form-checkbox {
   clear:both;
 }
 
-#lingotek-bulk-grid-form #edit-grid-container #progress-wrapper {
-  border: 3px 3px 3px 3px solid #040404;
-  background-color: transparent;
-  width: 125px;
-  height: 16px;
-}
-
-#lingotek-bulk-grid-form #edit-grid-container #overall-progress {
-  background: #0099FF url("../images/progress_bar.png") repeat-x;
-  height: 16px;
-}
-
 #lingotek-bulk-grid-form #edit-grid-container .progress {
   background-color: #F7F7F7;
   background-image: linear-gradient(to bottom, #F5F5F5, #F9F9F9);
@@ -94,6 +82,7 @@ input.lingotek-content-settings-table.form-checkbox {
 
 #lingotek-bulk-grid-form #edit-grid-container .progress .bar {
   -moz-box-sizing: border-box;
+  margin: 0;
   background-color: #0E90D2;
   background-image: linear-gradient(to bottom, #149BDF, #0480BE);
   background-repeat: repeat-x;
@@ -113,7 +102,7 @@ input.lingotek-content-settings-table.form-checkbox {
   position: absolute;
   width: 100%;
   text-align: center;
-  color: #000;
+  color: #333333;
   font-weight: normal;
   font-size: 90%;
 }
