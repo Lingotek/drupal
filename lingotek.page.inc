@@ -10,6 +10,7 @@
  */
 function lingotek_download_translations_form($form, $form_state, $node, $document = NULL) {
 
+  module_load_include('lingotek', 'lingotek.bulk_grid', 'inc');
   $form = array();
   
   $document_progress = LingotekApi::instance()->getDocumentProgress($document->document_id);
@@ -25,16 +26,25 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
     }
     $language_link = l(lingotek_language_field_lookup('native', $target->language), '', array('attributes' => array('onclick' => 'window.open(\'' . url('/node/' . $node->nid . '/lingotekworkbench/' . $target->language) . '\'); return false;')));
     $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
+
     $row = array(
-      'language' => $language_link,
-      'document_progress' => $target->percentComplete . '%',
-      'phase' => $current_phase->name,
-      'phase_progress' => $phase_complete_percent . '%',
-      'phase_complete' => ($current_phase->isMarkedComplete) ? '<img src="' . $icon_green_check . '" />' : '',
+      'column_1' => array('data' => $language_link, 'width' => '40%'),
+      'column_2' => array('data' => lingotek_grid_create_progress_bar($target->percentComplete), 'width' => '40%'),
+      'column_3' => array('data' => $target->percentComplete == 100 ? '<img src="' . $icon_green_check . '" />' : '', 'width' => '20%'),
+      '#attributes' => array('class' => array('bold-row')),
     );
 
     LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $target->language));
     $rows[$target->language] = $row;
+    foreach ($target->phases as $phase) {
+      $row = array(
+        'column_1' => $phase->name,
+        'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
+        'column_3' => $phase->isMarkedComplete ? '<img src="' . $icon_green_check . '" />' : '',
+        '#attributes' => array('class' => array('no-checkbox-row')),
+      );
+      $rows[$target->language . '_' . $phase->name] = $row;
+    }
   }
 
   $form['fieldset'] = array(
@@ -46,11 +56,9 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
   );
   
   $header = array(
-    'language' => t('Language'),
-    'document_progress' => t('Document Progress'),
-    'phase' => t('Phase'),
-    'phase_progress' => t('Phase Progress'),
-    'phase_complete' => t('Phase Complete'),
+    'column_1' => t('Target Language'),
+    'column_2' => t('Progress'),
+    'column_3' => t('Status'),
   );
   
   $form['fieldset']['documents'] = array(
@@ -58,6 +66,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
     '#header' => $header,
     '#options' => $rows,
     '#empty' => t('No content available.'),
+    '#after_build' => array('lingotek_remove_checkboxes'),
   );
   
   $form['fieldset']['submit'] = array(
@@ -96,6 +105,15 @@ function lingotek_download_translations_form_submit($form, $form_state) {
   
   drupal_set_message(t('Updated local translations for the selected languages: @selected_locales', array('@selected_locales' => implode(", ", $locales))));
   cache_clear_all('field:node:' . $form_state['values']['nid'], 'cache_field');
+}
+
+function lingotek_remove_checkboxes($form_element) {
+  foreach ($form_element['#options'] as $locale => $data) {
+    if (isset($data['#attributes']['class']) && in_array('no-checkbox-row', $data['#attributes']['class'])) {
+      unset($form_element[$locale]['#theme']);
+    }
+  }
+  return $form_element;
 }
 
 /**

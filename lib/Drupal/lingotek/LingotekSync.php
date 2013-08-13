@@ -13,6 +13,7 @@ class LingotekSync {
   const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
   const STATUS_EDITED = 'EDITED';    // The node has been edited, but has not been uploaded to Lingotek
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
+  const STATUS_READY = 'READY';      // The target translation is complete and ready for download
   const STATUS_LOCKED = 'LOCKED';    // A locked node should neither be uploaded nor downloaded by Lingotek
 
   public static function getTargetStatus($doc_id, $lingotek_locale) {
@@ -309,7 +310,7 @@ class LingotekSync {
       $document_ids = array($document_ids);
     }
     $subquery = db_select('lingotek', 'l1')
-      ->fields('l', array('nid'))
+      ->fields('l1', array('nid'))
       ->condition('l1.lingokey', 'document_id')
       ->condition('l1.lingovalue', $document_ids, 'IN');
     $query = db_select('lingotek', 'l');
@@ -505,6 +506,16 @@ class LingotekSync {
     return $nids;
   }
 
+  public static function getNodeIdsByStatusAndTarget($status, $target_language = '%') {
+    $query = db_select('lingotek', 'l')
+      ->distinct()
+      ->fields('l', array('nid'))
+      ->condition('lingokey', 'target_sync_status_' . $target_language, 'LIKE')
+      ->condition('lingovalue', $status);
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
   public static function getNodeIdsBySource($language) {
     $sub_query = db_select('lingotek', 'l')
       ->distinct()
@@ -646,7 +657,7 @@ class LingotekSync {
     return $doc_ids;
   }
   
-  public static function getAllNodeIds() { // This query is broken - it also gets things without doc ids
+  public static function getAllNodeIds() {
     // all node ids having document_ids in lingotek table
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('nid'));
