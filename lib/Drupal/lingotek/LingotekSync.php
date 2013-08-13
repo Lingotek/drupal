@@ -13,7 +13,8 @@ class LingotekSync {
   const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
   const STATUS_EDITED = 'EDITED';    // The node has been edited, but has not been uploaded to Lingotek
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
-  const STATUS_LOCKED = 'LOCKED';    // A locked node should neither be uploaded nor downloaded by Lingotek
+  const STATUS_DISABLED = 'DISABLED';    // A disabled node should neither be uploaded nor downloaded by Lingotek
+  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek
 
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
@@ -41,6 +42,14 @@ class LingotekSync {
   public static function setTargetStatus($node_id, $lingotek_locale, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_lingonode($node_id, $key, $status);
+  }
+  
+  public static function setAllTargetStatus($nid, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
+    $query = db_update('lingotek')
+      ->condition('nid', $nid)
+      ->condition('lingokey', 'target_sync_status%', 'LIKE')
+      ->fields(array('lingovalue' => $status))
+      ->execute();
   }
 
   public static function setNodeStatus($node_id, $status) {
@@ -259,7 +268,10 @@ class LingotekSync {
       $nids = LingotekSync::getAllNodeIds();
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
-      $query->join('lingotek', 'l', 'l.nid = n.nid AND l.lingokey = \'node_sync_status\' AND l.lingovalue != \'LOCKED\'');
+      $query->join('lingotek', 'l', 'l.nid = n.nid
+         AND l.lingokey = \'node_sync_status\'
+         AND l.lingovalue != \'' . LingotekSync::STATUS_DISABLED .  '\'
+           AND l.lingovalue != \'' . LingotekSync::STATUS_TARGET  .  '\'');
       $query->condition('n.language', $drupal_language_code);
       if (count($nids)) {
         $query->condition('n.nid', $nids, 'IN'); // nodes sent to lingotek

@@ -886,16 +886,17 @@ function lingotek_admin_content_defaults_form($form, &$form_state, $show_fieldse
     '#title' => t('Method for storing node translations'),
     '#options' => array(
       'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
-    //'node' => '<strong>Node Translation</strong>  - create a new node per language ',
+      'node' => '<strong>Node Translation</strong>  - create a new node per language ',
     ),
     'field' => array(
-      '#description' => 'A newer and recommended method. Newer versions of Drupal will probably use this method.',
+      '#description' => 'A newer and recommended method. Newer versions of Drupal are expected to use this method.',
     ),
-    /*
+    
       'node' => array(
-      '#description' => 'The classical method. Use for backwards compatibility.',
+      '#description' => 'The classical method. Use for backwards compatibility. When using this method, the module i18n_node (' . 
+        lingotek_get_module_status('i18n_node') . ') is necessary for the language switcher block to function correctly.',
       ),
-     */
+     
     '#default_value' => variable_get('lingotek_nodes_translation_method', 'field'),
   );
 

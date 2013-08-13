@@ -6,13 +6,15 @@ var lingotek = lingotek || {};
 lingotek.forms = lingotek.forms || {};
 
 (function ($) {
-
+    
     // Page setup for node add/edit forms.
     lingotek.forms.init = function() {
         $("#edit-language").change(updateVerticalTabSummary).change();
         $('#ltk-enable-from-et').bind('click',lingotek.forms.enableLtkFunc);
         $('#edit-create-lingotek-document').change(updateVerticalTabSummary);
         $('#edit-syncmethod').change(updateVerticalTabSummary);
+        $('#edit-lingotek-disabled').bind('click', updateLingotekVisibilty);
+        updateLingotekVisibilty(false);
     };
     
     lingotek.forms.enableLtkFromET = false;
@@ -26,17 +28,29 @@ lingotek.forms = lingotek.forms || {};
         return false;
     }
     
+    var updateLingotekVisibilty = function(element) {
+        var lingotekDis = $('#edit-lingotek-disabled');
+        if(lingotekDis.attr('checked') ==  'checked' || lingotekDis.attr('checked') == '1') {
+            $('#edit-content').hide();
+        } else if(element) { //the condition for element is to make sure this isn't the first run
+            $('#edit-content').show();
+        }
+    }
+    
     var updateVerticalTabSummary = function() {
         var isPushedToLingotek = !isNaN(parseInt($('#edit-document-id').val()));
         var isEntityTranslationNode = $('#ltk-entity-translation-node').val();
         //console.log('pushedToLingotek: '+isPushedToLingotek);
         //console.log('entityTranslationNode: '+isEntityTranslationNode);
         var summaryMessages = [];
-        
+                
         if(!lingotek.forms.enableLtkFromET && isEntityTranslationNode && !isPushedToLingotek) {
             summaryMessages.push(Drupal.t("Entity Translation"));
             // hide form and show entity translation explanation and button
             $('#edit-et-content').show();
+            $('#edit-lingotek-note').hide();
+            $('.form-item-lingotek-disabled').hide();
+            $('#edit-advanced').hide();
             $('#edit-content').hide();
             $('#edit-note').hide();
         }
@@ -45,6 +59,8 @@ lingotek.forms = lingotek.forms || {};
             // show form and hide entity translation explanation
             $('#edit-et-content').hide();
             $('#edit-content').show();
+            $('#edit-lingotek-note').show();
+            $('.form-item-lingotek-disabled').show();
             
             var language = $("#edit-language").val();
             var sourceLanguageSet = language != 'und'; 
@@ -58,11 +74,15 @@ lingotek.forms = lingotek.forms || {};
             if (sourceLanguageSet) {
                 $('#edit-note').hide();
                 $('#edit-content').show();
+                $('#edit-lingotek-note').show();
+                $('.form-item-lingotek-disabled').show();
             }
             else {
                 //summaryMessages.push(Drupal.t("source language unset"));
                 $('#edit-note').show();
                 $('#edit-content').hide();
+                $('#edit-lingotek-note').hide();
+                $('.form-item-lingotek-disabled').hide();
             }
         }
         

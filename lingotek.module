@@ -680,7 +680,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     ),
     '#modal' => TRUE,
   );
-
+  
   $form['lingotek']['nids'] = array(
     '#type' => 'hidden',
     '#default_value' => json_encode($nids),
@@ -723,14 +723,26 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     );
   } // END: Entity Translation Settings
 
-  $form['lingotek']['content'] = array(
-    '#type' => 'container',
-  );
-
-  $form['lingotek']['content']['note'] = array(
+  $form['lingotek']['lingotek_note'] = array(
     '#type' => 'item',
     '#title' => $title,
     '#description' => t("The Lingotek Translation module was developed to help you tranlate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
+  );
+  
+  if(isset($node->nid)) {
+    $disabled = lingotek_lingonode($node->nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED;
+  } else {
+    $disabled = FALSE;
+  }
+  
+  $form['lingotek']['lingotek_disabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Disable lingotek translation for this node',
+    '#default_value' => $disabled,
+  );
+  
+  $form['lingotek']['content'] = array(
+    '#type' => 'container',
   );
 
   $method_select_disabled = TRUE;
@@ -742,16 +754,16 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     '#title' => t('Method for storing translations'),
     '#options' => array(
       'field' => '<strong>Fields</strong> (Recommended) - all translations are stored in a single node',
-    //'node' => '<strong>Nodes</strong>  - create a new node per language ',
+      'node' => '<strong>Nodes</strong>  - create a new node per language ',
     ),
     'field' => array(
       '#description' => 'A newer and recommended method. It appears newer versions of Drupal will use this method.',
     ),
-    /*
+    
       'node' => array(
       '#description' => 'The classical method. Use for backwards compatibility.',
       ),
-     */
+     
     '#disabled' => $method_select_disabled,
     '#default_value' => variable_get('lingotek_nodes_translation_method', 'field'),
   );
@@ -902,7 +914,7 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
     if (isset($values['urlAliasTranslation'])) {
       $settings['url_alias_translation'] = $values['urlAliasTranslation'];
     }
-
+    
     foreach ($nids as $nid) {
       $operations[] = array('lingotek_update_node_settings', array($settings, array($nid)));
     }
@@ -1000,7 +1012,20 @@ function lingotek_node_update($node) {
     return;
   }
   else {
-    lingotek_upload_document($node);
+    
+    if($node->lingotek_disabled) {//the node was disabled
+      lingotek_lingonode($node->nid, 'node_sync_status', LingotekSync::STATUS_DISABLED);
+      LingotekSync::setAllTargetStatus($node->nid, LingotekSync::STATUS_DISABLED);
+      return;
+    } elseif(lingotek_lingonode($node->nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {//the node should now be enabled
+      lingotek_lingonode($node->nid, 'node_sync_status', LingotekSync::STATUS_EDITED);
+      LingotekSync::setAllTargetStatus($node->nid, LingotekSync::STATUS_PENDING);
+    }
+
+    $status = lingotek_lingonode($node->nid, 'node_sync_status');
+    if($status != LingotekSync::STATUS_DISABLED && $status != LingotekSync::STATUS_TARGET) {
+      lingotek_upload_document($node);
+    }
   }
 }
 
