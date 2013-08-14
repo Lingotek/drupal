@@ -789,8 +789,7 @@ class LingotekApi {
    */
   public function listProjects() {
     $projects = &drupal_static(__FUNCTION__);
-    dpm($projects);
-
+    
     if (!isset($projects) && $projects_raw = $this->request('listProjects')) {
       foreach ($projects_raw->projects as $project) {
         $projects[$project->id] = $project->name;

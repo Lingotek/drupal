@@ -1013,7 +1013,7 @@ function lingotek_node_update($node) {
   }
   else {
     
-    if($node->lingotek_disabled) {//the node was disabled
+    if(isset($node->lingotek_disabled) && $node->lingotek_disabled) {//the node was disabled
       lingotek_lingonode($node->nid, 'node_sync_status', LingotekSync::STATUS_DISABLED);
       LingotekSync::setAllTargetStatus($node->nid, LingotekSync::STATUS_DISABLED);
       return;
