@@ -1382,7 +1382,9 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
     language_negotiation_set(LANGUAGE_TYPE_INTERFACE, $types);
   }
 
-  variable_set('lingotek_navbar_switcher', $form_state['values']['lingotek_navbar_switcher']);
+  if(isset($form_state['values']['lingotek_navbar_switcher'])) {
+    variable_set('lingotek_navbar_switcher', $form_state['values']['lingotek_navbar_switcher']);
+  }
 
   // Flush cache
   cache_clear_all();

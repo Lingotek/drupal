@@ -47,9 +47,11 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     foreach ($lingotek_fields[$localized_node->type] as $field_name) {
       $field = $node->$field_name;
       $f = array();
-      foreach ($field[$node->language] as $key => $value) {
-        if(isset($value['format']))
-          $f[$drupal_language_code][$key]['format'] = $value['format'];
+      if(isset($field[$node->language])) {
+        foreach ($field[$node->language] as $key => $value) {
+          if(isset($value['format']))
+            $f[$drupal_language_code][$key]['format'] = $value['format'];
+        }
       }
       
       $localized_node->$field_name = $f;
