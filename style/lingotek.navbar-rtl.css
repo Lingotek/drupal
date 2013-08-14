@@ -24,7 +24,7 @@
   right: 0;
 }
 
-.navbar .bar .navbar-tab-lingotek .icon-lingotek:before {
+.drupal-navbar .bar .navbar-tab-lingotek .icon-lingotek:before {
   left: auto; /* LTR */
   right: 1em;
 }
@@ -44,7 +44,7 @@
 
 /* At narrow screen widths, float the tab to the right so it falls in line with
  * the rest of the navbar tabs. */
-.js .navbar .bar .navbar-tab-lingotek.tab {
+.js .drupal-navbar .bar .navbar-tab-lingotek.tab {
   float: left;
 }
 .navbar-tab-lingotek .lingotek-options {

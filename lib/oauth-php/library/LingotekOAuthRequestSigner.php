@@ -3,7 +3,7 @@
 /**
  * Sign requests before performing the request.
  * 
- * @version $Id: OAuthRequestSigner.php 174 2010-11-24 15:15:41Z brunobg@corollarium.com $
+ * @version $Id: LingotekOAuthRequestSigner.php 174 2010-11-24 15:15:41Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Nov 16, 2007 4:02:49 PM
  * 
@@ -33,10 +33,10 @@
 
 
 require_once dirname(__FILE__) . '/OAuthStore.php';
-require_once dirname(__FILE__) . '/OAuthRequest.php';
+require_once dirname(__FILE__) . '/LingotekOAuthRequest.php';
 
 
-class OAuthRequestSigner extends OAuthRequest
+class LingotekOAuthRequestSigner extends LingotekOAuthRequest
 {
 	protected $request;
 	protected $store;

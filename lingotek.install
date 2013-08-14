@@ -38,7 +38,11 @@ function lingotek_requirements($phase) {
  * Implements hook_install().
  */
 function lingotek_install() {
-  
+  spl_autoload_register('lingotek_auto_loader');
+  lingotek_migration_1();
+  lingotek_migration_2();
+  $sandbox = array();
+  lingotek_update_7401($sandbox);
 }
 
 /**
@@ -55,6 +59,9 @@ function lingotek_uninstall() {
 
   db_drop_field('languages', 'lingotek_enabled');
   db_drop_field('languages', 'lingotek_locale');
+  db_drop_field('locales_target', 'translation_agent_id');
+  db_drop_table('lingotek_config_metadata');
+  db_drop_table('lingotek_translation_agent');
 }
 
 /**
@@ -73,7 +80,7 @@ function lingotek_disable() {
 }
 
 /*
- * Install the database schema for the Lingotek Translation module
+ * Implements hook_schema().
  */
 
 function lingotek_schema() {
@@ -178,7 +185,62 @@ function lingotek_schema() {
     ),
   );
 
+  $schema['lingotek_translation_agent'] = array(
+    'description' => 'An assignment of IDs to agents from which translations were added.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'the ID assigned to a given translation agent.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'description' => 'The name of a given tool for adding translations.',
+        'type' => 'varchar',
+        'length' => 63,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array(
+      'id',
+    ),
+  );
+
   return $schema;
+}
+
+/*
+ * Implements hook_schema_alter().
+ */
+function lingotek_schema_alter(&$schema) {
+  // Add fields to existing schema.
+
+  $schema['languages']['fields']['lingotek_enabled'] = array(
+    'type' => 'int',
+    'description' => "Lingotek enabled",
+    'not null' => TRUE,
+    'default' => 0
+  );
+
+  $schema['languages']['fields']['lingotek_locale'] = array(
+    'type' => 'varchar',
+    'description' => "Locale mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => ''
+  );
+
+  $schema['locales_target']['fields']['translation_agent_id'] = array(
+    'type' => 'int',
+    'description' => "translation tool mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => '1', // unknown
+  );
+
+
 }
 
 /*
@@ -378,28 +440,6 @@ function lingotek_update_7211(&$sandbox) {
   return t('Upgraded lingotek table entries from drupal_codes to lingotek_locales (as needed).');
 }
 
-/*
- * Update languages table with lingotek fields
- */
-/*function lingotek_schema_alter(&$schema) {
-  // Add fields to existing schema.
-  $schema['languages']['fields']['lingotek_enabled'] = array(
-    'type' => 'int',
-    'description' => "Lingotek enabled",
-    'not null' => TRUE,
-    'default' => 0
-  );
-
-  $schema['languages']['fields']['lingotek_locale'] = array(
-    'type' => 'varchar',
-    'description' => "Locale mapping",
-    'length' => 10,
-    'not null' => TRUE,
-    'default' => ''
-  );
-}*/
-
-
 /**
  * Adds the lingotek_entity_metadata table.
  */
@@ -439,3 +479,53 @@ function lingotek_update_7213(&$sandbox) {
     return t('Granted Lingotek permissions to the administrative security role.');
   }
 }
+
+/**
+ * Adds the lingotek_translation_agent table and links it to the locales_target table
+ */
+function lingotek_update_7401(&$sandbox) {
+
+  // add the translation_agent table
+  $module = 'lingotek';
+  $table = 'lingotek_translation_agent';
+  if (!db_table_exists($table)) {
+    $schema = drupal_get_schema_unprocessed($module, $table);
+    db_create_table($table, $schema);
+    $output = t('Table @table was created.', array('@table' => $table));
+  }
+  else {
+    $output = t('The @table table already exists. No action taken.', array('@table' => $table));
+  }
+
+  // populate translation_agent table
+  $agents = array(
+    array('id' => '1', 'name' => 'unknown'),
+    array('id' => '2', 'name' => 'Drupal Translations'),
+    array('id' => '3', 'name' => 'Lingotek'),
+    );
+
+  foreach ($agents as $a) {
+    db_insert('lingotek_translation_agent')
+      ->fields(array('id' => $a['id'], 'name' => $a['name']))
+      ->execute();
+  }
+
+  $spec = array(
+    'type' => 'int',
+    'description' => "translation tool mapping",
+    'length' => 10,
+    'not null' => TRUE,
+    'default' => '1', // unknown
+  );
+  try {
+    db_add_field('locales_target', 'translation_agent_id', $spec);
+  } catch (DatabaseSchemaObjectExistsException $e) {
+    // already exists (no need to do anything)
+  }
+  drupal_static_reset('language_list');
+
+  $output .= "\n" . t('Upgraded the locales target table to have the translation_agent_id field (if not already present).');
+
+  return $output;
+}
+

@@ -235,8 +235,13 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       $query->condition('config_key', $key);
       $query->condition('value', LingotekSync::STATUS_PENDING);
       $result = $query->execute();
+      $ran = FALSE;
       while ($record = $result->fetchAssoc()) {
+        $ran = TRUE;
         $operations[] = array('lingotek_sync_download_chunk_target', array($record['id'], $lingotek_locale, $sync_success_target));
+      }
+      if ($ran) {
+        $operations[] = array('drupal_flush_all_caches', array());
       }
     }
   }
@@ -622,4 +627,53 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
   
+}
+
+function lingotek_update_target_progress_batch_create($nids) {
+  $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+  $batch = array(
+    'title' => t('Syncing Translation Progress with Lingotek'),
+  );
+  $operations = array();
+
+  $segment = array();
+  $offset = 0;
+  $offset_interval = 5;
+  do {
+    $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
+    if (!empty($segment)) {
+      $operations[] = array('lingotek_update_target_progress', array($segment));
+    }
+    $offset += $offset_interval;
+  } while (count($segment) >= $offset_interval);
+
+  $batch['operations'] = $operations;
+  $redirect = 'admin/settings/lingotek/grid';
+
+  batch_set($batch);
+  batch_process($redirect);
+}
+
+function lingotek_download_node_by_target_batch_create($nids, $target) {
+  $batch = array(
+    'title' => t('Downloading Target Translations from Lingotek'),
+  );
+  $operations = array();
+
+  $complete_nids = LingotekSync::getNodeIdSubsetByTargetProgress($nids, $target);
+
+  foreach ($nids as $nid) {
+    if (in_array($nid, $complete_nids)) {
+      $operations[] = array('lingotek_sync_download_node_target', array($nid, $target, LingotekSync::STATUS_CURRENT));
+    }
+    else {
+      $operations[] = array('lingotek_sync_download_node_target', array($nid, $target, LingotekSync::STATUS_PENDING));
+    }
+  }
+
+  $batch['operations'] = $operations;
+  $redirect = 'admin/settings/lingotek/grid';
+
+  batch_set($batch);
+  batch_process($redirect);
 }

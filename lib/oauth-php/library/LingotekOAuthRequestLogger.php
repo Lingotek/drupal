@@ -3,7 +3,7 @@
 /**
  * Log OAuth requests
  * 
- * @version $Id: OAuthRequestLogger.php 98 2010-03-08 12:48:59Z brunobg@corollarium.com $
+ * @version $Id: LingotekOAuthRequestLogger.php 98 2010-03-08 12:48:59Z brunobg@corollarium.com $
  * @author Marc Worrell <marcw@pobox.com>
  * @date  Dec 7, 2007 12:22:43 PM
  * 
@@ -31,7 +31,7 @@
  * THE SOFTWARE.
  */
 
-class OAuthRequestLogger 
+class LingotekOAuthRequestLogger 
 {
 	static private $logging			= 0;
 	static private $enable_logging	= null;
@@ -46,30 +46,30 @@ class OAuthRequestLogger
 	/**
 	 * Start any logging, checks the system configuration if logging is needed.
 	 * 
-	 * @param OAuthRequest  $request_object
+	 * @param LingotekOAuthRequest  $request_object
 	 */
 	static function start ( $request_object = null )
 	{
 		if (defined('OAUTH_LOG_REQUEST'))
 		{
-			if (is_null(OAuthRequestLogger::$enable_logging))
+			if (is_null(LingotekOAuthRequestLogger::$enable_logging))
 			{
-				OAuthRequestLogger::$enable_logging = true;
+				LingotekOAuthRequestLogger::$enable_logging = true;
 			}
-			if (is_null(OAuthRequestLogger::$store_log))
+			if (is_null(LingotekOAuthRequestLogger::$store_log))
 			{
-				OAuthRequestLogger::$store_log = true;
+				LingotekOAuthRequestLogger::$store_log = true;
 			}
 		}
 
-		if (OAuthRequestLogger::$enable_logging && !OAuthRequestLogger::$logging)
+		if (LingotekOAuthRequestLogger::$enable_logging && !LingotekOAuthRequestLogger::$logging)
 		{
-			OAuthRequestLogger::$logging        = true;
-			OAuthRequestLogger::$request_object = $request_object;
+			LingotekOAuthRequestLogger::$logging        = true;
+			LingotekOAuthRequestLogger::$request_object = $request_object;
 			ob_start();
 
 			// Make sure we flush our log entry when we stop the request (eg on an exception)
-			register_shutdown_function(array('OAuthRequestLogger','flush'));		
+			register_shutdown_function(array('LingotekOAuthRequestLogger','flush'));		
 		}
 	}
 	
@@ -81,10 +81,10 @@ class OAuthRequestLogger
 	 */
 	static function enableLogging ( $store_log = null )
 	{
-		OAuthRequestLogger::$enable_logging = true;
+		LingotekOAuthRequestLogger::$enable_logging = true;
 		if (!is_null($store_log))
 		{
-			OAuthRequestLogger::$store_log = $store_log;
+			LingotekOAuthRequestLogger::$store_log = $store_log;
 		}
 	}	
 
@@ -95,11 +95,11 @@ class OAuthRequestLogger
 	 */
 	static function flush ()
 	{
-		if (OAuthRequestLogger::$logging)
+		if (LingotekOAuthRequestLogger::$logging)
 		{
-			OAuthRequestLogger::$logging = false;
+			LingotekOAuthRequestLogger::$logging = false;
 
-			if (is_null(OAuthRequestLogger::$sent))
+			if (is_null(LingotekOAuthRequestLogger::$sent))
 			{
 				// What has been sent to the user-agent?
 				$data  = ob_get_contents();
@@ -117,10 +117,10 @@ class OAuthRequestLogger
 			else
 			{
 				// The request we sent
-				$sent  = OAuthRequestLogger::$sent;
+				$sent  = LingotekOAuthRequestLogger::$sent;
 			}
 			
-			if (is_null(OAuthRequestLogger::$received))
+			if (is_null(LingotekOAuthRequestLogger::$received))
 			{
 				// Build the request we received
 				$hs0   = self::getAllHeaders();
@@ -149,13 +149,13 @@ class OAuthRequestLogger
 			else
 			{
 				// The answer we received
-				$received  = OAuthRequestLogger::$received;
+				$received  = LingotekOAuthRequestLogger::$received;
 			}
 
 			// The request base string
-			if (OAuthRequestLogger::$request_object)
+			if (LingotekOAuthRequestLogger::$request_object)
 			{
-				$base_string = OAuthRequestLogger::$request_object->signatureBaseString();
+				$base_string = LingotekOAuthRequestLogger::$request_object->signatureBaseString();
 			}
 			else
 			{
@@ -164,23 +164,23 @@ class OAuthRequestLogger
 
 			// Figure out to what keys we want to log this request
 			$keys = array();
-			if (OAuthRequestLogger::$request_object)
+			if (LingotekOAuthRequestLogger::$request_object)
 			{
-				$consumer_key = OAuthRequestLogger::$request_object->getParam('oauth_consumer_key', true);
-				$token        = OAuthRequestLogger::$request_object->getParam('oauth_token',        true);
+				$consumer_key = LingotekOAuthRequestLogger::$request_object->getParam('oauth_consumer_key', true);
+				$token        = LingotekOAuthRequestLogger::$request_object->getParam('oauth_token',        true);
 
-				switch (get_class(OAuthRequestLogger::$request_object))
+				switch (get_class(LingotekOAuthRequestLogger::$request_object))
 				{
 				// tokens are access/request tokens by a consumer
-				case 'OAuthServer':
-				case 'OAuthRequestVerifier':
+				case 'LingotekOAuthServer':
+				case 'LingotekOAuthRequestVerifier':
 					$keys['ocr_consumer_key'] = $consumer_key;
 					$keys['oct_token']        = $token;
 					break;
 
 				// tokens are access/request tokens to a server
-				case 'OAuthRequester':
-				case 'OAuthRequestSigner':
+				case 'LingotekOAuthRequester':
+				case 'LingotekOAuthRequestSigner':
 					$keys['osr_consumer_key'] = $consumer_key;
 					$keys['ost_token']        = $token;
 					break;
@@ -188,18 +188,18 @@ class OAuthRequestLogger
 			}
 			
 			// Log the request
-			if (OAuthRequestLogger::$store_log)
+			if (LingotekOAuthRequestLogger::$store_log)
 			{
 				$store = OAuthStore::instance();
-				$store->addLog($keys, $received, $sent, $base_string, OAuthRequestLogger::$note, OAuthRequestLogger::$user_id);
+				$store->addLog($keys, $received, $sent, $base_string, LingotekOAuthRequestLogger::$note, LingotekOAuthRequestLogger::$user_id);
 			}
 			
-			OAuthRequestLogger::$log[] = array(
+			LingotekOAuthRequestLogger::$log[] = array(
 					'keys'    		=> $keys,
 					'received'		=> $received,
 					'sent'			=> $sent,
 					'base_string'	=> $base_string,
-					'note'			=> OAuthRequestLogger::$note
+					'note'			=> LingotekOAuthRequestLogger::$note
 					);
 		}
 	}
@@ -212,17 +212,17 @@ class OAuthRequestLogger
 	 */
 	static function addNote ( $note )
 	{
-		OAuthRequestLogger::$note .= $note . "\n\n";
+		LingotekOAuthRequestLogger::$note .= $note . "\n\n";
 	}
 
 	/**
 	 * Set the OAuth request object being used
 	 * 
-	 * @param OAuthRequest request_object
+	 * @param LingotekOAuthRequest request_object
 	 */
 	static function setRequestObject ( $request_object )
 	{
-		OAuthRequestLogger::$request_object = $request_object;
+		LingotekOAuthRequestLogger::$request_object = $request_object;
 	}
 
 
@@ -233,7 +233,7 @@ class OAuthRequestLogger
 	 */
 	static function setUser ( $user_id )
 	{
-		OAuthRequestLogger::$user_id = $user_id;
+		LingotekOAuthRequestLogger::$user_id = $user_id;
 	}
 	
 	
@@ -244,7 +244,7 @@ class OAuthRequestLogger
 	 */
 	static function setSent ( $request )
 	{
-		OAuthRequestLogger::$sent = $request;
+		LingotekOAuthRequestLogger::$sent = $request;
 	}
 
 	/**
@@ -254,7 +254,7 @@ class OAuthRequestLogger
 	 */
 	static function setReceived ( $reply )
 	{
-		OAuthRequestLogger::$received = $reply;
+		LingotekOAuthRequestLogger::$received = $reply;
 	}
 	
 	
@@ -265,7 +265,7 @@ class OAuthRequestLogger
 	 */
 	static function getLog ()
 	{
-		return OAuthRequestLogger::$log;
+		return LingotekOAuthRequestLogger::$log;
 	}
 
 

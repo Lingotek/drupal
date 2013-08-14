@@ -150,9 +150,14 @@ class LingotekSession {
    */
   public function download($api, $params) {
     $result = LingotekApi::instance()->request($api, $params);
+    $result_decoded = json_decode($result);// non-zipped will be decoded
 
     if (!$result) {
-      LingotekLog::error('Unable to download Lingotek Document.');
+      LingotekLog::error('Unable to download Lingotek Document.', array());
+      return FALSE;
+    }
+    elseif (isset($result_decoded->results)) {
+      LingotekLog::error('Download Lingotek Document Failed. !error ', array('!error' => $result));
       return FALSE;
     }
 
@@ -240,23 +245,13 @@ class LingotekSession {
     }
     else {
       $this->logged_in = FALSE;
-      if (isset($data->error) && $data->error) {
-        LingotekLog::error(
-            "Unable to log in", array(
-          'params' => $params,
-          'error' => $data->error,
-          'response' => isset($response) ? $response : "",
-            ), 'session'
-        );
-      }
-      else {
-        LingotekLog::warning(
-            "Unable to log in", array(
-          'params' => $params,
-          'response' => isset($response) ? $response : "",
-            ), 'session'
-        );
-      }
+      LingotekLog::error(
+          "Unable to log in", array(
+        'params' => $params,
+        'error' => (isset($data->error) && $data->error) ? $data->error : "unknown error",
+        'response' => isset($response) ? $response : "",
+          ), 'session'
+      );
     }
   }
 

@@ -87,9 +87,10 @@ class LingotekApi {
     $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
 
     // populate workflow_id
-    $workflow_id = empty($translatable_object->lingotek_workflow_id) ? NULL : $translatable_object->lingotek_workflow_id;
     if ($isContentNode) {
-      $workflow_id = empty($workflow_id) ? lingotek_lingonode($translatable_object->nid, 'lingotek_workflow') : $workflow_id;
+      $workflow_id = lingotek_lingonode($translatable_object->nid, 'workflow_id');
+    } else {
+      $workflow_id = $translatable_object->getWorkflowId();
     }
     $workflow_id = empty($workflow_id) ? variable_get('lingotek_workflow', NULL) : $workflow_id;
 
@@ -288,7 +289,7 @@ class LingotekApi {
       'documentDesc' => 'configuration string set "' . $chunk->cid . '", related to menus, taxonomies, views, etc.',
       'format' => $this->xmlFormat(),
       'applyWorkflow' => 'true',
-      'workflowId' => variable_get('lingotek_translate_config_chunks_workflow_id', NULL),
+      'workflowId' => variable_get('lingotek_translate_config_workflow_id', NULL),
       'sourceLanguage' => Lingotek::convertDrupal2Lingotek($chunk->language),
       'tmVaultId' => variable_get('lingotek_vault', 1),
       'content' => $chunk->documentLingotekXML(),
@@ -424,22 +425,24 @@ class LingotekApi {
    *
    * @param int $document_id
    *   The Lingotek document ID that should be downloaded.
-   * @param string $language_lingotek
+   * @param string $lingotek_locale
    *   A Lingotek language/locale code.
    *
    * @return mixed
    *   On success, a SimpleXMLElement object representing the translated document. FALSE on failure.
    *
    */
-  public function downloadDocument($document_id, $language_lingotek) {
+  public function downloadDocument($document_id, $lingotek_locale) {
     $document = FALSE;
 
     $params = array(
       'documentId' => $document_id,
-      'targetLanguage' => $language_lingotek,
+      'targetLanguage' => $lingotek_locale,
     );
 
-    if ($results = $this->request('downloadDocument', $params)) {
+    $results = $this->request('downloadDocument', $params);
+
+    if ($results) {
       try {
         // TODO: This is borrowed from the now-deprecated LingotekSession::download()
         // and could use refactoring.
@@ -526,6 +529,24 @@ class LingotekApi {
     }
 
     return $document;
+  }
+
+  /**  
+   * Gets the workflow progress of the specified documents.
+   *
+   * @param int $document_id
+   *   The IDs of the Lingotek Documents to retrieve.
+   *
+   * @return mixed
+   *  The API response object with Lingotek Document data, or FALSE on error.
+   */
+  public function listDocumentProgress($document_ids) {
+    $params = array();
+    foreach ($document_ids as $document_id) {
+      $params['documentId'][] = $document_id;
+    }
+    $documents = $this->request('listDocumentProgress', $params);
+    return $documents;
   }
 
   /**
@@ -957,7 +978,7 @@ class LingotekApi {
       $parameters['externalId'] = variable_get('lingotek_login_id', '');
     }
     module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthStore');
-    module_load_include('php', 'lingotek', 'lib/oauth-php/library/OAuthRequester');
+    module_load_include('php', 'lingotek', 'lib/oauth-php/library/LingotekOAuthRequester');
 
     $credentials = is_null($credentials) ? array(
       'consumer_key' => variable_get('lingotek_oauth_consumer_id', ''),
@@ -967,17 +988,18 @@ class LingotekApi {
     $timer_name = $method . '-' . microtime(TRUE);
     timer_start($timer_name);
 
+    $result = NULL;
     $response = NULL;
     try {
       OAuthStore::instance('2Leg', $credentials);
       $api_url = $this->api_url . '/' . $method;
-      $request = @new OAuthRequester($api_url, $request_method, $parameters);
-      // There is an error right here.  The new OAuthRequester throws it, because it barfs on $parameters
-      // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in OAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/OAuthRequest.php).
+      $request = @new LingotekOAuthRequester($api_url, $request_method, $parameters);
+      // There is an error right here.  The new LingotekOAuthRequester throws it, because it barfs on $parameters
+      // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in LingotekOAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/LingotekOAuthRequest.php).
       // The thing is, if you encode the params, they just get translated back to an array by the object.  They have some type of error internal to the object code that is handling things wrong.
       // I couldn't find a way to get around this without changing the library.  For now, I am just supressing the warning w/ and @ sign.
       $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
-      $response = ($method == 'downloadDocument') ? $result['body'] : json_decode($result['body']);
+      $response = json_decode($result['body']);
     } catch (OAuthException2 $e) {
       LingotekLog::error('Failed OAuth request.
       <br />API URL: @url
@@ -994,13 +1016,12 @@ class LingotekApi {
     }
 
     $timer_results = timer_stop($timer_name);
-
     $message_params = array(
       '@url' => $api_url,
       '@method' => $method,
       '!params' => $parameters,
       '!request' => $request,
-      '!response' => ($method == 'downloadDocument') ? 'Zipped Lingotek Document Data' : $response,
+      '!response' => ($method == 'downloadDocument' && !isset($response->results)) ? "Zipped document" : $response,
       '@response_time' => number_format($timer_results['time']) . ' ms',
     );
 
@@ -1009,10 +1030,16 @@ class LingotekApi {
       downloadDocument - Returns misc data (no $response->results), and should always be sent back.
       assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
      */
-    if ($method == 'downloadDocument' || $method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
-      LingotekLog::info('<h1>@method</h1>
+    if ($method == 'downloadDocument') {
+      LingotekLog::api('<h1>@method</h1>
         <strong>API URL:</strong> @url
-        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params, 'api');
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
+      $response_data = !empty($result) ? $result['body'] : "";
+    }
+    else if ($method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
+      LingotekLog::api('<h1>@method</h1>
+        <strong>API URL:</strong> @url
+        <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
       $response_data = $response;
     }
     else {
