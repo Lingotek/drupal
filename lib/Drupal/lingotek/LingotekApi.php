@@ -788,9 +788,10 @@ class LingotekApi {
    *   An array of available projects with project IDs as keys, project labels as values.
    */
   public function listProjects() {
-    $projects = array();
+    $projects = &drupal_static(__FUNCTION__);
+    dpm($projects);
 
-    if ($projects_raw = $this->request('listProjects')) {
+    if (!isset($projects) && $projects_raw = $this->request('listProjects')) {
       foreach ($projects_raw->projects as $project) {
         $projects[$project->id] = $project->name;
       }
@@ -806,9 +807,8 @@ class LingotekApi {
    *   An array of available Workflows with workflow IDs as keys, workflow labels as values.
    */
   public function listWorkflows() {
-    $workflows = array();
-
-    if ($workflows_raw = $this->request('listWorkflows')) {
+    $workflows = &drupal_static(__FUNCTION__);
+    if (!isset($workflows) && $workflows_raw = $this->request('listWorkflows')) {
       foreach ($workflows_raw->workflows as $workflow) {
         $workflows[$workflow->id] = $workflow->name;
       }
@@ -824,9 +824,9 @@ class LingotekApi {
    *   An array of available vaults.
    */
   public function listVaults() {
-    $vaults = array();
+    $vaults = &drupal_static(__FUNCTION__);
 
-    if ($vaults_raw = $this->request('listTMVaults')) {
+    if (!isset($vaults) && $vaults_raw = $this->request('listTMVaults')) {
       if (!empty($vaults_raw->personalVaults)) {
         foreach ($vaults_raw->personalVaults as $vault) {
           $vaults['Personal Vaults'][$vault->id] = $vault->name;
