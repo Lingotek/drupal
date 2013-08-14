@@ -109,6 +109,8 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   if ($node_method == 'node') { //node-based translations
     $node = lingotek_get_translated_node($source_node, $drupal_language_code);
+  } else {
+    $node = $source_node;
   }
 
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
