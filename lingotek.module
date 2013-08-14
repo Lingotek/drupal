@@ -1642,7 +1642,7 @@ function lingotek_navbar() {
   //this integration with the navbar module has depencies on javascript files
   //that Responsive Theme Preview adds. Thus the integration will only show up if 
   //the Responsive Theme Preview module is enabled.
-  if(!module_exists('responsive_preview') || variable_get('language_count') <= 1) {
+  if (!module_exists('responsive_preview') || variable_get('language_count') <= 1 || !variable_get('lingotek_navbar_switcher', true)) {
     return;
   }
   
@@ -1650,10 +1650,10 @@ function lingotek_navbar() {
   $links = language_negotiation_get_switch_links('language', $path);
   $buttons = array();
   
-  if(empty($links->links))
+  if (empty($links->links))
     return;
   
-  foreach($links->links as $key => $link) {
+  foreach ($links->links as $key => $link) {
     $link['attributes']['class'] = array('device', 'icon', 'icon-active');
     $buttons[] = l($link['title'], $link['href'], $link);
   }

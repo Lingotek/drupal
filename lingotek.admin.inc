@@ -723,6 +723,14 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#markup' => json_encode($block),
     '#attributes' => array('class' => 'description')
     ); */
+  
+  if(module_exists('navbar')) {
+    $form[$fkey]['lingotek_navbar_switcher'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable Language Switcher in the Navbar'),
+      '#default_value' => variable_get('lingotek_navbar_switcher'),
+    );
+  }
 
   return $form;
 }
@@ -1373,6 +1381,8 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
     );
     language_negotiation_set(LANGUAGE_TYPE_INTERFACE, $types);
   }
+
+  variable_set('lingotek_navbar_switcher', $form_state['values']['lingotek_navbar_switcher']);
 
   // Flush cache
   cache_clear_all();
