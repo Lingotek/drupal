@@ -78,6 +78,10 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
 function lingotek_download_document(&$source_node, $lingotek_locale, $sync_success_status = LingotekSync::STATUS_CURRENT) {
   global $_lingotek_client, $_lingotek_locale;
 
+  if (lingotek_lingonode($source_node->nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {
+    return;
+  }
+
   $document_id = lingotek_lingonode($source_node->nid, 'document_id');
   LingotekLog::trace('lingotek_download_document @doc_id (@target)', array('@doc_id' => $document_id, '@target' => $lingotek_locale));
 

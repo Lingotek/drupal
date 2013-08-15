@@ -348,6 +348,9 @@ function lingotek_sync_upload_node($nid, &$context) {
 
   LingotekLog::trace('upload node: @node_id', array('@node_id' => $nid));
 
+  if (lingotek_lingonode($nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {
+    return;
+  }
   $api = LingotekApi::instance();
   $node = lingotek_node_load_default($nid);
 

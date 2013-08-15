@@ -912,9 +912,13 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
     if (isset($values['urlAliasTranslation'])) {
       $settings['url_alias_translation'] = $values['urlAliasTranslation'];
     }
+    if (isset($values['lingotek_disabled'])) {
+      $enabled = !$values['lingotek_disabled'];
+    }
 
     foreach ($nids as $nid) {
       $operations[] = array('lingotek_update_node_settings', array($settings, array($nid)));
+      $operations[] = array('LingotekSync::setNodeEnabled', array($nid, $enabled));
     }
 
   /*  $segment = array(); // This way is almost twice as fast, but doesn't show how many nodes are being operated on.
