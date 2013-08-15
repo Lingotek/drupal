@@ -103,6 +103,48 @@ class LingotekSync {
       }
     }
   }
+
+  public static function resetTargetProgress($nid) {
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('lingokey'))
+      ->condition('nid', $nid)
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE');
+    $targets_raw = $query->execute()->fetchCol();
+    foreach ($targets_raw as $target_raw) {
+      $target = str_replace('target_sync_status_', '', $target_raw);
+      $fields[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_progress_' . $target,
+        'lingovalue' => 0,
+      );
+      $fields[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_last_progress_updated_' . $target,
+        'lingovalue' => time(),
+      );
+    }
+    $fields[] = array(
+      'nid' => $nid,
+      'lingokey' => 'translation_progress',
+      'lingovalue' => 0,
+    );
+
+    $delete = db_delete('lingotek')
+      ->condition('nid', $nid);
+    $or = db_or();
+      $or->condition('lingokey', 'target_sync_progress_%', 'LIKE');
+      $or->condition('lingokey', 'target_sync_last_progress_updated_%', 'LIKE');
+      $or->condition('lingokey', 'translation_progress');
+    $delete->condition($or)
+      ->execute();
+
+    $insert = db_insert('lingotek')
+      ->fields(array('nid', 'lingokey', 'lingovalue'));
+    foreach ($fields as $field) {
+      $insert->values($field);
+    }
+    $insert->execute();
+  }
   
   public static function insertTargetEntriesForAllChunks($lingotek_locale) {
     // insert/update a target language for all chunks

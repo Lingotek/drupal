@@ -1009,6 +1009,7 @@ function lingotek_upload_document($node) {
   // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
+  LingotekSync::resetTargetProgress($node->nid);
 
   if (isset($node->lingotek_push_once) && $node->lingotek_push_once) {
     $send_lingotek_document = 1;
