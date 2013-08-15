@@ -24,7 +24,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
     if (empty($phase_complete_percent)) {
       $phase_complete_percent = 0;
     }
-    $language_link = l(lingotek_language_field_lookup('native', $target->language), '', array('attributes' => array('onclick' => 'window.open(\'' . url('/node/' . $node->nid . '/lingotekworkbench/' . $target->language) . '\'); return false;')));
+    $language_link = l(lingotek_language_field_lookup('native', $target->language), 'node/' . $node->nid . '/lingotekworkbench/' . $target->language, array('attributes' => array('target' => '_blank')));
     $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
 
     $row = array(

@@ -69,6 +69,16 @@ input.lingotek-content-settings-table.form-checkbox {
   clear:both;
 }
 
+#lingotek-bulk-grid-form #edit-customize-table-fieldset #edit-custom-checks .form-item {
+  float:left;
+  margin-left: 15px;
+  width: 400px;
+}
+
+#lingotek-bulk-grid-form #edit-customize-table-fieldset #edit-custom-buttons {
+  clear:both;
+}
+
 .lingotek-progress {
   background-color: #F7F7F7;
   background-image: linear-gradient(to bottom, #F5F5F5, #F9F9F9);
@@ -102,7 +112,7 @@ input.lingotek-content-settings-table.form-checkbox {
   position: absolute;
   width: 100%;
   text-align: center;
-  color: #222;
+  color: #333;
   font-weight: bold;
   font-size: 100%;
   padding-top: 1px;
