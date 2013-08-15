@@ -356,6 +356,13 @@ function lingotek_pm($node) {
     return $output;
   }
   
+  if ($sync_status == LingotekSync::STATUS_DISABLED) {
+    $output[] = array(
+      '#markup' => 'The Lingotek translation service is currently disabled for this node. You can enable translation by editing this node and unchecking the option "Disable Lingotek Translation for this node"'
+    );
+    return $output;
+  }
+  
   if (class_exists('LingotekDocument')) {
     $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id'));
 

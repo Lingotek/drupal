@@ -740,7 +740,39 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
   $form = lingotek_admin_node_translation_settings_form($form, $form_state);
   $content_defaults = lingotek_admin_content_defaults_form($form, $form_state);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
-  $form['lingotek_nodes_translation_method']['#weight'] = -1;
+  $form['lingotek_nodes_translation_method']['#weight'] = -3;
+  
+  $c = db_select('node', 'n')
+    ->fields('n', array('tnid'))
+    ->condition('n.tnid', 0, '<>')
+    ->distinct()
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+  
+  $form['lingotek_overwrite_note'] = array(
+    '#type' => 'item',
+    '#title' => t('You have @count nodes with existing translations', array('@count' => $c)),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="lingotek_nodes_translation_method"]' => array('checked' => FALSE),
+      ),
+    ),
+    '#weight' => -2,
+  );
+  
+  $form['lingotek_overwrite'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Do not allow Lingotek to translate these nodes. <b>NOTE: Unchecking this option will cause Lingotek to overwrite your current translated content.</b>'),
+    '#default_value' => TRUE,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="lingotek_nodes_translation_method"]' => array('checked' => FALSE),
+      ),
+    ),
+    '#weight' => -1,
+  );
+  
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
@@ -784,7 +816,35 @@ function lingotek_content_type_choose_fields_callback($content_type) {
  */
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
   lingotek_admin_node_translation_settings_form_submit($form, $form_state);
-  drupal_goto('admin/config/lingotek/comment-translation-settings');
+  
+  if($form_state['values']['lingotek_nodes_translation_method'] == 'node' && $form_state['values']['lingotek_overwrite']) {
+    $nodes = db_select('node', 'n')
+      ->fields('n', array('nid', 'tnid'))
+      ->condition('n.tnid', 0, '<>')
+      ->execute()
+      ->fetchAll();
+    
+    $ops = array();
+    
+    foreach($nodes as $row) {
+      if($row->nid == $row->tnid) {
+        $ops[] = array('LingotekSync::setNodeEnabled', array($row->nid, FALSE));
+      } else {
+        $ops[] = array('lingotek_lingonode', array($row->nid, 'node_sync_status', LingotekSync::STATUS_TARGET));
+      }
+    }
+    
+    $batch = array(
+      'operations' => $ops,
+    );
+    
+    batch_set($batch);
+    batch_process('admin/config/lingotek/comment-translation-settings');
+    
+    dpm($nodes);
+  } else {
+    drupal_goto('admin/config/lingotek/comment-translation-settings');
+  }
 }
 
 function lingotek_setup_comment_translation_settings_form($form, &$form_state) {

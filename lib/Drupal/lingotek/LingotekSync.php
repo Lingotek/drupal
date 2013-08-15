@@ -17,6 +17,16 @@ class LingotekSync {
   const STATUS_DISABLED = 'DISABLED';    // A disabled node should neither be uploaded nor downloaded by Lingotek
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek
 
+  public static function setNodeEnabled($nid, $enabled) {
+    if($enabled) {
+      lingotek_lingonode($nid, 'node_sync_status', LingotekSync::STATUS_EDITED);
+      LingotekSync::setAllTargetStatus($nid, LingotekSync::STATUS_PENDING);
+    } else {
+      lingotek_lingonode($nid, 'node_sync_status', LingotekSync::STATUS_DISABLED);
+      LingotekSync::setAllTargetStatus($nid, LingotekSync::STATUS_DISABLED);
+    }
+  }
+  
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     if ($chunk_id = LingotekConfigChunk::getIdByDocId($doc_id)) {
@@ -105,6 +115,12 @@ class LingotekSync {
       // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Node and Target to PENDING.
       if ($record['lingovalue'] == self::STATUS_CURRENT) {
         self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_PENDING);
+      }
+      else if ($record['lingovalue'] == self::STATUS_TARGET) { 
+        
+      }
+      else if ($record['lingovalue'] == self::STATUS_DISABLED) { 
+        self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_DISABLED);
       }
       else { // Otherwise, set it to EDITED
         self::setNodeStatus($node_id, self::STATUS_EDITED);

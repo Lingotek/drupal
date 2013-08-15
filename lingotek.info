@@ -23,6 +23,7 @@ dependencies[] = i18n_variable
 dependencies[] = ctools
 dependencies[] = views
 dependencies[] = i18nviews
+dependencies[] = i18n_node
 
 files[] = lib/Drupal/lingotek/Lingotek.php
 files[] = lib/Drupal/lingotek/LingotekApi.php
