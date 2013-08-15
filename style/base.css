@@ -69,12 +69,6 @@ input.lingotek-content-settings-table.form-checkbox {
   clear:both;
 }
 
-#lingotek-bulk-grid-form #edit-customize-table-fieldset #edit-custom-checks .form-item {
-  float:left;
-  margin-left: 15px;
-  width: 400px;
-}
-
 #lingotek-bulk-grid-form #edit-customize-table-fieldset #edit-custom-buttons {
   clear:both;
 }
