@@ -224,7 +224,10 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       $key = 'target_sync_status_' . $lingotek_locale;
       $query = db_select('lingotek', 'l')->fields('l');
       $query->condition('lingokey', $key);
-      $query->condition('lingovalue', LingotekSync::STATUS_PENDING);
+      $status_or = db_or()
+        ->condition('lingovalue', LingotekSync::STATUS_PENDING)
+        ->condition('lingovalue', LingotekSync::STATUS_READY);
+      $query->condition($status_or);
       $result = $query->execute();
       while ($record = $result->fetchAssoc()) {
         $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale, $sync_success_target));
@@ -233,7 +236,10 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       $key = 'target_sync_status_' . $lingotek_locale;
       $query = db_select('lingotek_config_metadata', 'meta')->fields('meta');
       $query->condition('config_key', $key);
-      $query->condition('value', LingotekSync::STATUS_PENDING);
+      $status_or = db_or()
+        ->condition('value', LingotekSync::STATUS_PENDING)
+        ->condition('value', LingotekSync::STATUS_READY);
+      $query->condition($status_or);
       $result = $query->execute();
       $ran = FALSE;
       while ($record = $result->fetchAssoc()) {
@@ -246,11 +252,14 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
     }
   }
   elseif (is_array($download_targets)) {
+    $doc_ids = array();
+    $updates = array();
     foreach ($download_targets as $download_target) {
       $nid = LingotekSync::getNodeIdFromDocId($download_target->document_id);
       if ($nid != NULL) {
         $lingotek_locale = $download_target->locale;
-        $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale, $sync_success_target));
+        $doc_ids[] = $download_target->document_id;
+        $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale, $sync_success_target, FALSE));
       }
       else { // since no node was found associated with the document ID, check config chunks
         $cid = LingotekConfigChunk::getIdByDocId($download_target->document_id);
@@ -260,6 +269,11 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
         }
       }
     }
+    $doc_ids = array_unique($doc_ids);
+    foreach ($doc_ids as $doc_id) {
+      $updates[] = array('lingotek_get_and_update_target_progress', array($doc_ids));
+    }
+    $operations = array_merge($updates, $operations);
   }
 
   return $operations;
@@ -423,11 +437,30 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
 /**
  * Download Batch Worker Function: Download Translated Node Content
  */
-function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_success_status, &$context) {
-
-  LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
+function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_success_status, $update_progress = TRUE, &$context) {
 
   $node = lingotek_node_load_default($nid);
+  if ($node->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
+    return;
+  }
+  LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
+
+  $status = LingotekSync::getTargetStatus(LingotekSync::getDocIdFromNodeId($nid), $lingotek_locale);
+  if ($status == LingotekSync::STATUS_READY || $status == LingotekSync::STATUS_CURRENT) { // Overide sync_success_status variable because statuses will be current for all downloads
+    $sync_success_status = LingotekSync::STATUS_CURRENT;
+  }
+  else {
+    $sync_success_status = LingotekSync::STATUS_PENDING;
+  }
+
+  if ($sync_success_status != LingotekSync::STATUS_CURRENT && $update_progress) {
+    lingotek_get_and_update_target_progress(LingotekSync::getDocIdFromNodeId($nid));
+  }
+  elseif ($sync_success_status == LingotekSync::STATUS_CURRENT && $update_progress) {
+    lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
+    lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+  }
+
   lingotek_download_document($node, $lingotek_locale, $sync_success_status);
   cache_clear_all('field:node:' . $nid, 'cache_field');
   $result = TRUE; // assume TRUE until the above lingotek_download_document call is updated to return the result
@@ -645,34 +678,10 @@ function lingotek_update_target_progress_batch_create($nids) {
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
     if (!empty($segment)) {
-      $operations[] = array('lingotek_update_target_progress', array($segment));
+      $operations[] = array('lingotek_get_and_update_target_progress', array($segment));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);
-
-  $batch['operations'] = $operations;
-  $redirect = 'admin/settings/lingotek/grid';
-
-  batch_set($batch);
-  batch_process($redirect);
-}
-
-function lingotek_download_node_by_target_batch_create($nids, $target) {
-  $batch = array(
-    'title' => t('Downloading Target Translations from Lingotek'),
-  );
-  $operations = array();
-
-  $complete_nids = LingotekSync::getNodeIdSubsetByTargetProgress($nids, $target);
-
-  foreach ($nids as $nid) {
-    if (in_array($nid, $complete_nids)) {
-      $operations[] = array('lingotek_sync_download_node_target', array($nid, $target, LingotekSync::STATUS_CURRENT));
-    }
-    else {
-      $operations[] = array('lingotek_sync_download_node_target', array($nid, $target, LingotekSync::STATUS_PENDING));
-    }
-  }
 
   $batch['operations'] = $operations;
   $redirect = 'admin/settings/lingotek/grid';

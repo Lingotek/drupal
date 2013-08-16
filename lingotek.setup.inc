@@ -841,7 +841,6 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     batch_set($batch);
     batch_process('admin/config/lingotek/comment-translation-settings');
     
-    dpm($nodes);
   } else {
     drupal_goto('admin/config/lingotek/comment-translation-settings');
   }

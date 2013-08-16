@@ -387,7 +387,7 @@ function lingotek_grid_action_submit($form, $form_state) {
         $incomplete_targets = array();
 
         foreach ($target_locales as $language) { // Separate the nodes by target_sync_progress_[lang code] percentage
-          $complete_nids = LingotekSync::getNodeIdSubsetByTargetProgress($nids, $language);
+          $complete_nids = LingotekSync::getNodeIdSubsetByTargetStatusReady($nids, $language);
           $complete_doc_ids = array();
           if (!empty($complete_nids)) {
             $complete_doc_ids = LingotekSync::getDocIdsFromNodeIds($complete_nids);
@@ -405,8 +405,8 @@ function lingotek_grid_action_submit($form, $form_state) {
           'title' => t('Downloading Translations from Lingotek'),
           'operations' => array(),
         );
-        $batch['operations'] += lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT); // If target progress is at 100, download and set to current
-        $batch['operations'] += lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING); // Otherwise, download and set to pending
+        $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT)); // If target progress is at 100, download and set to current
+        $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING)); // Otherwise, download and set to pending
         $redirect = 'admin/settings/lingotek/grid';
 
         batch_set($batch);
@@ -421,8 +421,24 @@ function lingotek_grid_action_submit($form, $form_state) {
         drupal_goto('admin/settings/lingotek/grid/edit/'); // Redirect to the edit Lingotek node settings form - for multiple nodes, form defaults are global defaults
       }
       elseif ($action == 'download') { // If downloading a single target
-        $_SESSION['lingotek_download_nodes'] = count($nids);
-        lingotek_download_node_by_target_batch_create($nids, $language); // Run batch operations to download translations for this target for the selected nodes
+        $doc_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+        if ($doc_ids != NULL && !empty($doc_ids)) {
+          $_SESSION['lingotek_download_nodes'] = count($nids);
+          foreach ($doc_ids as $doc_id) {
+            $targets[] = (object) array('document_id' => $doc_id, 'locale' => $language);
+          }
+          $batch = array(
+            'title' => t('Downloading Target Translations from Lingotek'),
+            'operations' => lingotek_get_sync_download_batch_elements($targets),
+          );
+          $redirect = 'admin/settings/lingotek/grid';
+
+          batch_set($batch);
+          batch_process($redirect);
+        }
+        else {
+          drupal_set_message(t('No documents found associated with these nodes.'), 'warning');
+        }
       }
       elseif ($action == 'sync') { // If syncing the progress
         $_SESSION['lingotek_sync_nodes'] = count($nids);
@@ -432,9 +448,14 @@ function lingotek_grid_action_submit($form, $form_state) {
   }
   elseif (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'sync_all') { // If the sync all button was clicked
     $nids = LingotekSync::getNodeIdsByStatusAndTarget(LingotekSync::STATUS_PENDING);
-    $_SESSION['lingotek_sync_nodes'] = count($nids);
-    variable_set('lingotek_pending_last_updated', time());
-    lingotek_update_target_progress_batch_create($nids); // Run batch operations to sync all 'In Progress' nodes
+    if (count($nids) > 0) {
+      $_SESSION['lingotek_sync_nodes'] = count($nids);
+      variable_set('lingotek_pending_last_updated', time());
+      lingotek_update_target_progress_batch_create($nids); // Run batch operations to sync all 'In Progress' nodes
+    }
+    else {
+      drupal_set_message(t('No nodes to update'));
+    }
   }
 }
 

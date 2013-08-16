@@ -285,9 +285,10 @@ function lingotek_get_source_language_json() {
 
   $data['edited'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_EDITED);
   $data['pending'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_PENDING);
+  $data['ready'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_READY);
   $data['current'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT);
 
-  $data['docs'] = $data['edited'] + $data['pending'] + $data['current'];
+  $data['docs'] = $data['edited'] + $data['pending'] + $data['ready'] + $data['current'];
 
   return json_encode($data);
 }
@@ -320,8 +321,9 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
 
     $edited = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_EDITED, $lingotek_locale);
     $pending = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_PENDING, $lingotek_locale);
+    $ready = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_READY, $lingotek_locale);
     $current = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
-    $total = $edited + $pending + $current;
+    $total = $edited + $pending + $ready + $current;
 
     $response = array(
       'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
@@ -329,6 +331,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
       'active' => $target_is_active,
       'docs' => $total,
       'pending' => $pending,
+      'ready' => $ready,
       'edited' => $edited,
       'current' => $current,
     );
@@ -340,8 +343,9 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
       $lingotek_locale = $target->lingotek_locale; //Lingotek::convertDrupal2Lingotek($drupal_language_code)
       $edited = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_EDITED, $lingotek_locale);
       $pending = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_PENDING, $lingotek_locale);
+      $ready = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_READY, $lingotek_locale);
       $current = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
-      $total = $edited + $pending + $current;
+      $total = $edited + $pending + $ready + $current;
 
       $response[] = array(
         'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
@@ -349,6 +353,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
         'active' => $target->lingotek_enabled,
         'docs' => $total,
         'pending' => $pending,
+        'ready' => $ready,
         'edited' => $edited,
         'current' => $current
       );

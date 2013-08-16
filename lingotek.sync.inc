@@ -154,7 +154,7 @@ function lingotek_notifications() {
 
       if ($auto_download) { // download only when automatic download is enabled
         $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-        lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
+        lingotek_sync_download_node_target($nid, $lingotek_locale, $status, TRUE, $context);
 
         // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
         $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
@@ -174,6 +174,13 @@ function lingotek_notifications() {
           lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
           lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
         }
+      }
+      elseif (!$completed) {
+        lingotek_get_and_update_target_progress($document_id);
+      }
+      else {
+        lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
+        lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
     }
     break; // if the function did not continue, then the doc ID was found.
@@ -765,75 +772,77 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
 *    array of Document IDs that you want to update
 *
 */
-function lingotek_update_target_progress($document_ids) {
+function lingotek_get_and_update_target_progress($document_ids) {
   $api = LingotekApi::Instance();
+  if (!is_array($document_ids)) {
+    $document_ids = array($document_ids);
+  }
+  $project_id = variable_get('lingotek_project', NULL);
 
-  $progress_report = $api->getProgressReport(NULL, $document_ids);
+  $progress_report = $api->getProgressReport($project_id, $document_ids);
   $targets_count = LingotekSync::getTargetCountByDocumentIds($document_ids);
 
-  $delete_nids_maybe = array();
-  $values = array();
-  foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-    $nid = LingotekSync::getNodeIdFromDocId($doc_id);
-    $delete_nids_maybe[] = $nid;
-    $target_number = $targets_count[$nid]->targets;
-    $total_percentage = 0;
-    foreach ($completion as $language => $percent) {
-      $values[] = array(
-        'nid' => $nid,
-        'lingokey' => 'target_sync_progress_' . $language,
-        'lingovalue' => $percent,
-      );
-      $values[] = array(
-      'nid' => $nid,
-      'lingokey' => 'target_sync_last_progress_updated_' . $language,
-      'lingovalue' => time(),
-      );
-      $total_percentage += $percent;
-    }
-    $values[] = array(
-      'nid' => $nid,
-      'lingokey' => 'translation_progress',
-      'lingovalue' => $total_percentage / $target_number,
-    );
-  }
-  foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-    $nid = LingotekSync::getNodeIdFromDocId($doc_id);
-    foreach ($completion as $locale => $completed) {
-      $status = LingotekSync::getTargetStatus($doc_id, $locale);
-      if ($status == LingotekSync::STATUS_PENDING) {
+  if (isset($progress_report) && $progress_report->results == 'success') {
+    $delete_nids_maybe = array();
+    $values = array();
+    foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
+      $nid = LingotekSync::getNodeIdFromDocId($doc_id);
+      $delete_nids_maybe[] = $nid;
+      $target_number = $targets_count[$nid]->targets;
+      $total_percentage = 0;
+      foreach ($completion as $language => $percent) {
         $values[] = array(
           'nid' => $nid,
-          'lingokey' => 'target_sync_status_' . $locale,
-          'lingovalue' => LingotekSync::STATUS_READY,
+          'lingokey' => 'target_sync_progress_' . $language,
+          'lingovalue' => $percent,
         );
-        lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $locale);
+        $values[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_last_progress_updated_' . $language,
+        'lingovalue' => time(),
+        );
+        $total_percentage += $percent;
+
+        $status = LingotekSync::getTargetStatus($doc_id, $language);
+        if (isset($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language)) {
+          if ($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language) { // If the workflow is complete
+            if ($status != LingotekSync::STATUS_CURRENT) { // If the status is not current
+              $to_status = LingotekSync::STATUS_READY; // Set it to ready
+            }
+            else {
+              $to_status = LingotekSync::STATUS_CURRENT; // Otherwise keep it at current
+            }
+          }
+          else { // If the workflow is not complete
+            $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
+          }
+          $values[] = array(
+            'nid' => $nid,
+            'lingokey' => 'target_sync_status_' . $language,
+            'lingovalue' => $to_status,
+          );
+          lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
+        }
       }
+      $values[] = array(
+        'nid' => $nid,
+        'lingokey' => 'translation_progress',
+        'lingovalue' => $total_percentage / $target_number,
+      );
     }
-  }
 
-  lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
-  lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
-  lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'translation_progress');
-  /*  $delete_nids = db_select('lingotek', 'l')
-    ->fields('l', array('nid'))
-    ->distinct()
-    ->condition('nid', $delete_nids_maybe, 'IN')
-    ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
-    ->execute()->fetchCol();
+    lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
+    lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
+    lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'translation_progress');
 
-  if (!empty($delete_nids)) {
-    $deleted = db_delete('lingotek')
-      ->condition('nid', $delete_nids, 'IN')
-      ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
-      ->execute();
+    $query = db_insert('lingotek')
+      ->fields(array('nid', 'lingokey', 'lingovalue'));
+    foreach ($values as $record) {
+      $query->values($record);
+    }
+    $query->execute();
+
+    return $progress_report;
   }
-  */
-  $query = db_insert('lingotek')
-    ->fields(array('nid', 'lingokey', 'lingovalue'));
-  foreach ($values as $record) {
-    $query->values($record);
-  }
-  $query->execute();
 
 }
