@@ -478,6 +478,10 @@ function lingotek_permission() {
       'title' => 'Administer Lingotek',
       'description' => t('Access the administrative settings for the module.')
     ),
+    'translation' => array(
+      'title' => 'Translate',
+      'description' => t('Allow access to the "Translations" tab on nodes and the workbench links')
+    ),
     'manage projects' => array(
       'title' => 'Project Management',
       'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')

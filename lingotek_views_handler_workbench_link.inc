@@ -21,20 +21,18 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
   function construct() {
     parent::construct();
   }
-  
-  /**
-   * Implements views_object#option_definition().
-   */
-  function option_definition() {
-    $options = parent::option_definition();
-    return $options;
-  }
+
   
   /**
    * Implements views_handler#options_form().
    */
   function options_form(&$form, &$form_state) {
+  }
 
+  /**
+   * Implements views_handler#options_submit().
+   */
+  function options_submit(&$form, &$form_state) {
   }
 
   function render($values) {
@@ -43,9 +41,13 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
     $entity_type = $this->view->base_table;
     
     if($entity_type == 'node') {
-      $entity = entity_load_single($entity_type, $values->nid);
+      $entity = node_load($values->nid);
     } elseif($entity_type == 'comment') {
-      $entity = entity_load_single($entity_type, $values->cid);
+      $entity = comment_load($values->cid);
+    }
+    
+    if(!user_access('manage projects') && !user_access('translation')) {
+      return; //do not show if the user does not have correct permissions
     }
         
     if($language->language == $entity->language) {

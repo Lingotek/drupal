@@ -373,13 +373,11 @@ function lingotek_support_footer() {
  * all languages).
  */
 function lingotek_access($node, $permission) {
-  if (LingotekAccount::instance()->isEnterprise()) {
-    if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
-      if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
-        return FALSE;
-      }
-      return user_access($permission);
+  if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
+    if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
+      return FALSE;
     }
+    return user_access($permission);
   }
   return FALSE;
 }
