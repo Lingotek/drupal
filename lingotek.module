@@ -1357,6 +1357,8 @@ function lingotek_is_config_missing() {
     'lingotek_project',
     'lingotek_workflow',
     'lingotek_vault',
+    'lingotek_translate_fields',
+    'lingotek_translate_comments_node_types',
     'lingotek_oauth_consumer_id',
     'lingotek_oauth_consumer_secret',
   );
@@ -1371,6 +1373,12 @@ function lingotek_is_config_missing() {
       }
       elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
         return 'admin/config/lingotek/community-settings-select';
+      }
+      elseif ($required_variable == 'lingotek_translate_fields') {
+        return 'admin/config/lingotek/node-translation-settings';
+      }
+      elseif ($required_variable == 'lingotek_translate_comments_node_types') {
+        return 'admin/config/lingotek/comment-translation-settings';
       }
       elseif ($required_variable == 'lingotek_oauth_consumer_id' || $required_variable == 'lingotek_oauth_consumer_secret') {
         return TRUE;
@@ -1758,4 +1766,13 @@ function lingotek_form_alter(&$form, &$form_state, $form_id) {
       drupal_set_message($message);
     }
   }
+}
+
+/**
+ * Implementation of hook_views_api
+ */
+function lingotek_views_api() {
+  return array(
+    'api' => 3,
+  );
 }
