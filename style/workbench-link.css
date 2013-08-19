@@ -1,0 +1,14 @@
+.views-row {
+  position: relative;
+}
+
+.views-field-lingotek-workbench-link a {
+  position:absolute;
+  left: -25px;
+  top: 5px;
+/*  background-image: url('../images/ico_chevs_dd.png');
+  background-repeat: no-repeat;
+  background-position:center;
+  width: 30px;
+  text-indent: -9000px;*/
+}
