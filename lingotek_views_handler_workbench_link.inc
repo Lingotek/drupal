@@ -27,7 +27,6 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
    */
   function option_definition() {
     $options = parent::option_definition();
-    $options['link_text'] = array('default' => 'Edit Translation');
     return $options;
   }
   
@@ -35,11 +34,7 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
    * Implements views_handler#options_form().
    */
   function options_form(&$form, &$form_state) {
-    $form['link_text'] = array(
-      '#type' => 'textfield',
-      '#title' => 'Text to display',
-      '#default_value' => $this->options['link_text'],
-    );
+
   }
 
   function render($values) {
