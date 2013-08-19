@@ -678,6 +678,15 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
     ),
     '#modal' => TRUE,
   );
+  
+  if(isset($node->tnid) && $node->tnid != 0 && $node->tnid != $node->nid) {
+    $form['lingotek']['note'] = array(
+      '#markup' => t('This is a target node for the language code: @lang. To change
+        the Lingotek settings please edit the source node.', array('@lang' => $node->language)),
+    );
+    
+    return $form; //this is a target node and thus should not have lingotek settings
+  }
 
   $form['lingotek']['nids'] = array(
     '#type' => 'hidden',
@@ -724,7 +733,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
   $form['lingotek']['lingotek_note'] = array(
     '#type' => 'item',
     '#title' => $title,
-    '#description' => t("The Lingotek Translation module was developed to help you tranlate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
+    '#description' => t("The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
   );
   
   if(isset($node->nid)) {
