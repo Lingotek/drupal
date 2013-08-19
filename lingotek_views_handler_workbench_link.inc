@@ -27,12 +27,9 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
    * Implements views_handler#options_form().
    */
   function options_form(&$form, &$form_state) {
-  }
-
-  /**
-   * Implements views_handler#options_submit().
-   */
-  function options_submit(&$form, &$form_state) {
+    parent::options_form($form, $form_state);
+    $form['custom_label']['#default_value'] = FALSE;
+    $form['label']['#default_value'] = '';
   }
 
   function render($values) {
