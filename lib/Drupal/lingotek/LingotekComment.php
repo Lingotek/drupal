@@ -333,6 +333,23 @@ class LingotekComment implements LingotekTranslatableEntity {
         ->execute();
     }
   }
+  
+  /**
+   * Deletes a Lingotek metadata value for this item
+   * 
+   * @param string $key
+   *  The key for a name/value pair
+   */
+  public function deleteMetadataValue($key) {
+    $metadata = $this->metadata();
+    if (isset($metadata[$key])) {
+      db_delete('lingotek_entity_metadata')
+        ->condition('entity_id', $this->comment->cid)
+        ->condition('entity_type', self::DRUPAL_ENTITY_TYPE)
+        ->condition('entity_key', $key, 'LIKE')
+        ->execute();
+    }
+  }
 
   /**
    * Updates the local content with data from a Lingotek Document.

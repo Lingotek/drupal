@@ -668,6 +668,22 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
           ->execute();
     }
   }
+  
+  /**
+   * Deletes a Lingotek metadata value for this item
+   * 
+   * @param string $key
+   *  The key for a name/value pair
+   */
+  public function deleteMetadataValue($key) {
+    $metadata = $this->metadata();
+    if (isset($metadata[$key])) {
+      db_delete('lingotek_config_metadata')
+        ->condition('id', $this->cid)
+        ->condition('config_key', $key, 'LIKE')
+        ->execute();
+    }
+  }
 
   /**
    * Updates the local content with data from a Lingotek Document.

@@ -784,23 +784,37 @@ function lingotek_get_and_update_target_progress($document_ids) {
 
   if (isset($progress_report) && $progress_report->results == 'success') {
     $delete_nids_maybe = array();
-    $values = array();
+    $delete_cids_maybe = array();
+    $node_values = array();
+    $cfg_values = array();
+    $trans_obj = NULL;
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
       $nid = LingotekSync::getNodeIdFromDocId($doc_id);
-      $delete_nids_maybe[] = $nid;
-      $target_number = $targets_count[$nid]->targets;
+      // if no $nid is found for the doc ID, it must be config translation
+      if (!$nid) {
+        $trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($doc_id, NULL, $project_id);
+        if (!$trans_obj) {
+          LingotekLog::error("Lingotek doc ID '@doc_id' not found", array('@doc_id' => $doc_id));
+          continue;
+        }
+        // re-assign the chunk ID to be a node ID for now...
+        $nid = $trans_obj->cid;
+        $delete_cids_maybe[] = $nid;
+      }
+      else {
+        $delete_nids_maybe[] = $nid;
+        $target_number = $targets_count[$nid]->targets;
+      }      
       $total_percentage = 0;
       foreach ($completion as $language => $percent) {
-        $values[] = array(
-          'nid' => $nid,
-          'lingokey' => 'target_sync_progress_' . $language,
-          'lingovalue' => $percent,
-        );
-        $values[] = array(
-        'nid' => $nid,
-        'lingokey' => 'target_sync_last_progress_updated_' . $language,
-        'lingovalue' => time(),
-        );
+        if ($trans_obj) {
+          $values = &$cfg_values;
+        }
+        else {
+          $values = &$node_values;
+        }
+        $values[] = array($nid, 'target_sync_progress_' . $language, $percent);
+        $values[] = array($nid, 'target_sync_last_progress_updated_' . $language, time());
         $total_percentage += $percent;
 
         $status = LingotekSync::getTargetStatus($doc_id, $language);
@@ -816,32 +830,58 @@ function lingotek_get_and_update_target_progress($document_ids) {
           else { // If the workflow is not complete
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
-          $values[] = array(
-            'nid' => $nid,
-            'lingokey' => 'target_sync_status_' . $language,
-            'lingovalue' => $to_status,
-          );
-          lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
+          $values[] = array($nid, 'target_sync_status_' . $language, $to_status);
+          if ($trans_obj) {
+            $trans_obj->deleteMetadataValue('target_sync_status_' . $language);
+          }
+          else {
+            lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
+          }
         }
       }
-      $values[] = array(
-        'nid' => $nid,
-        'lingokey' => 'translation_progress',
-        'lingovalue' => $total_percentage / $target_number,
-      );
+      // for now just report on node translation progress...
+      if (!$trans_obj) {
+        $node_values[] = array(
+          'nid' => $nid,
+          'lingokey' => 'translation_progress',
+          'lingovalue' => $total_percentage / $target_number,
+        );
+      }
     }
 
-    lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
-    lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
-    lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'translation_progress');
-
+    if ($delete_nids_maybe) {
+      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
+      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
+      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'translation_progress');
+    }
+    if ($delete_cids_maybe) {
+      foreach ($delete_cids_maybe as $cid) {
+        $trans_obj->deleteMetadataValue('target_sync_progress_%');
+        $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
+        $trans_obj->deleteMetadataValue('translation_progress');
+      }
+    }
+    
+    // insert status info for nodes
     $query = db_insert('lingotek')
       ->fields(array('nid', 'lingokey', 'lingovalue'));
-    foreach ($values as $record) {
+    foreach ($node_values as $record) {
       $query->values($record);
     }
     $query->execute();
-
+    
+    // insert status info for config
+    foreach ($cfg_values as $record) {
+      $query = db_merge('lingotek_config_metadata')
+        ->key(array('id' => $record[0], 'config_key' => $record[1]))
+        ->fields(array(
+            'id' => $record[0],
+            'config_key' => $record[1],
+            'value' => $record[2]
+          ))
+        ->execute();
+    }
+    
     return $progress_report;
   }
 
