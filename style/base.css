@@ -65,12 +65,41 @@ input.lingotek-content-settings-table.form-checkbox {
   margin-left: 15px;
 }
 
+#modal-content #edit-filters .form-item {
+  margin-left: 15px;
+  width: 500px;
+  float: left;
+}
+
 #lingotek-bulk-grid-form #edit-filter-fieldset #edit-filter-buttons {
   clear:both;
 }
 
 #lingotek-bulk-grid-form #edit-customize-table-fieldset #edit-custom-buttons {
   clear:both;
+}
+
+#edit-filter-fieldset {
+  clear: both;
+}
+
+.form-item-actions-select {
+  clear: both;
+}
+
+.ctools-modal-set-filters, .ctools-modal-customize-table {
+  float: right;
+  font-size: 125%;
+  margin-left: 20px;
+}
+
+#grid-result-summary {
+  top: 30px;
+  position: relative;
+}
+
+#edit-grid-container .table-select-processed {
+  clear: both;
 }
 
 .lingotek-progress {

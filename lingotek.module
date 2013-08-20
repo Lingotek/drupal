@@ -59,7 +59,7 @@ function lingotek_menu() {
 
   $items['node/%node/lingotekworkbench/%'] = array(
     'title' => 'Workbench',
-    'access arguments' => array('manage projects'),
+    'access arguments' => array('translation'),
     'file' => 'lingotek.page.inc',
     'page arguments' => array(1, 3),
     'page callback' => 'lingotek_workbench_redirect',
@@ -193,6 +193,22 @@ function lingotek_menu() {
     'page arguments' => array('lingotek_bulk_grid_form')
   );
 
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/customize'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_grid_customize',
+    'page arguments' => array(),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/filters'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_filters_popup',
+    'page arguments' => array(),
+    'type' => MENU_CALLBACK,
+  );
+  
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/edit'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',

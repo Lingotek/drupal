@@ -29,7 +29,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
 
   $form['header_fieldset'] = array(
-    '#type' => 'fieldset',
+    '#type' => 'container',
     '#title' => t('Manage Node Translation'),
     '#group' => 'translation_grid',
     '#collapsible' => TRUE,
@@ -68,8 +68,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
     'Source:' => $source_languages_base,
     'Target:' => $target_languages_base,
   );
-
-
+  
+  
   // build form header
 
   // process source_target_select to keep the same visible selection
@@ -132,6 +132,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#group' => 'translation_grid',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
+    '#access' => FALSE,
   );
 
   // Container to create styleable div class
@@ -164,7 +165,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#title' => t('Show Only Items Where'),
     '#group' => 'translation_grid',
     '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
+    '#collapsed' => TRUE,
+    '#access' => FALSE,
+    '#weight' => 10,
   );
 
   // Container to create styleable div class
@@ -191,15 +194,6 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#submit' => array('lingotek_grid_clear_filters'),
   );
 
-  // Container fieldset for actions
-  $form['actions_fieldset'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Actions'),
-    '#group' => 'translation_grid',
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-
   // Populate form_state with filter values so the query can use them
   $form_state['values']['filters'] = lingotek_grid_get_filters($form_state['values']['source']);
   $form_state['values']['columns'] = lingotek_grid_get_columns($form_state['values']['source']);
@@ -212,6 +206,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   if ($form_state['values']['source']) {
     // Define source actions - keys are used to decide what action to do in the 'lingotek_grid_action_submit' function
     $action_options = array(
+      'select' => t('< Select action >'),
       'upload' => t('Upload for Translation'),
       'download_all' => t('Download Translations for all Targets'),
       'sync' => t('Sync Translation Progress with Lingotek'),
@@ -234,47 +229,53 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['filter_fieldset']['filters'] += lingotek_grid_build_filters($form_state);
   // Run query to get table rows
   $table_data = lingotek_grid_get_rows($form, $form_state);
+  
+  // Count of returned results
+  $page = pager_find_page(); // Get current page from url
 
+  $form['count'] = array(
+    '#markup' => '<span id="grid-result-summary">' . t('Showing results @first through @last.', array('@first' => ($page * $form_state['values']['limit_select'] + 1), '@last' => ($page * $form_state['values']['limit_select'] + count($table_data)))) . '</span>',
+  );
+  
   // Build actions selector
-  $form['actions_fieldset']['actions_select'] = array(
+  $form['actions_select'] = array(
     '#type' => 'select',
     '#options' => $action_options,
   );
 
   // Actions submit button
-  $form['actions_fieldset']['actions_submit'] = array(
+  $form['actions_submit'] = array(
     '#type' => 'submit',
     '#value' => t('Submit Action'),
     '#name' => 'actions_submit',
     '#submit' => array('lingotek_grid_action_submit'),
   );
-
-  // Update Workflow Progress for all 'In Progress' nodes
-  $form['actions_fieldset']['sync_all'] = array(
-    '#type' => 'submit',
-    '#value' => t('Update Status for \'In Progress\' Nodes'),
-    '#name' => 'sync_all',
-    '#submit' => array('lingotek_grid_action_submit'),
-  );
-
-  // Output time that that ^^ button was last pushed
-  $last_updated = variable_get('lingotek_pending_last_updated', NULL);
-  $form['actions_fieldset']['last_synced_time'] = array(
-    '#markup' => t('Last run @time', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never')),
-  );
-
+  
   // div container for the table and pager
   $form['grid_container'] = array(
     '#type' => 'container',
   );
 
-  if (!empty($table_data)) { // If results, render the table.  Otherwise, output 'No results were returned.'
-    // Count of returned results
-    $page = pager_find_page(); // Get current page from url
+  ctools_include('modal');
+  ctools_modal_add_js();
 
+  drupal_add_js(array(
+    'customize-table' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 450,
+        'height' => 475,
+      ),
+    ),
+  ), 'setting');
+  
+  if (!empty($table_data)) { // If results, render the table.  Otherwise, output 'No results were returned.'
     // Calculate and output the number of results shown
-    $form['grid_container']['count'] = array(
-      '#markup' => t('Showing results @first through @last.', array('@first' => ($page * $form_state['values']['limit_select'] + 1), '@last' => ($page * $form_state['values']['limit_select'] + count($table_data)))),
+    $form['grid_container']['customize'] = array(
+      '#markup' => l(t('Customize Table'), LINGOTEK_MENU_MAIN_BASE_URL . '/grid/customize', array('attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-customize-table')))),
+    );
+    $form['grid_container']['filter_popup'] = array(
+      '#markup' => l(t('Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/grid/filters', array('attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
     );
     // The actual table
     $form['grid_container']['the_grid'] = array(
@@ -292,8 +293,89 @@ function lingotek_bulk_grid_form($form, $form_state) {
       '#markup' => t('No results were returned.'),
     );
   }
+  
+  // Update Workflow Progress for all 'In Progress' nodes
+  $form['sync_all'] = array(
+    '#type' => 'submit',
+    '#value' => t('Update Status for \'In Progress\' Nodes'),
+    '#name' => 'sync_all',
+    '#submit' => array('lingotek_grid_action_submit'),
+  );
+  
+  // Output time that that ^^ button was last pushed
+  $last_updated = variable_get('lingotek_pending_last_updated', NULL);
+  $form['last_synced_time'] = array(
+    '#markup' => t('Last run @time', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never')),
+  );
 
   return $form;
+}
+
+function lingotek_filters_popup_form($form, $form_state) {  
+  $f = array();
+  $s = array();
+  $form = lingotek_bulk_grid_form($f, $s);
+  $form = $form['filter_fieldset'];
+  $form['#access'] = TRUE;
+  
+  return $form;
+}
+
+function lingotek_filters_popup($form, $form_state) {  
+  ctools_include('node.pages', 'node', '');
+  ctools_include('modal');
+  ctools_include('ajax');
+  
+  $form_state = array(
+    'ajax' => true,
+  );
+  $output = ctools_modal_form_wrapper('lingotek_filters_popup_form', $form_state);
+  
+  if (!empty($form_state['executed'])) {
+    lingotek_grid_filter_submit($form, $form_state);
+    // Create ajax command array, dismiss the modal window.
+    $commands = array();
+    $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_reload();
+    print ajax_render($commands);
+    exit;
+  }
+    
+  print ajax_render($output);
+}
+
+function lingotek_grid_customize_form($form, $form_state) {  
+  $f = array();
+  $s = array();
+  $form = lingotek_bulk_grid_form($f, $s);
+  $form = $form['customize_table_fieldset'];
+  $form['#access'] = TRUE;
+  
+  return $form;
+}
+
+function lingotek_grid_customize($form, $form_state) {
+  ctools_include('node.pages', 'node', '');
+  ctools_include('modal');
+  ctools_include('ajax');
+  
+  $form_state = array(
+    'ajax' => true,
+  );
+  $output = ctools_modal_form_wrapper('lingotek_grid_customize_form', $form_state);
+  
+  if (!empty($form_state['executed'])) {
+
+    $f = array();
+    form_execute_handlers('submit', $f, $form_state);
+    $commands = array();
+    $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_reload();
+    print ajax_render($commands);
+    exit;
+  }
+    
+  print ajax_render($output);
 }
 
 /**
