@@ -212,7 +212,7 @@ function lingotek_node_content_reset_form_submit($form, $form_state) {
   $api->removeDocument($doc_ids);
 
   if (count($drupal_node_ids) <= 1) {
-    $node = lingotek_node_load_default($drupal_node_id);
+    $node = lingotek_node_load_default($drupal_node_ids[0]);
     drupal_set_message(t('Translations reset for "@node_title".', array('@node_title' => $node->title)));
   }
   else {

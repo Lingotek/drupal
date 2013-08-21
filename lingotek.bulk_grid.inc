@@ -1145,6 +1145,16 @@ function lingotek_grid_get_rows($form, &$form_state) {
           $query->condition('lingo_document_id.lingovalue', $filters['document_id']);
         }
       }
+      
+      $array_fix = array('upload_status', 'content_type', 'auto_upload', 'auto_download',
+        'crowdsourcing', 'url_alias', 'translation_progress_percent', 'translation_status',
+        'translation_progress', 'locale_progress_percent');
+      
+      foreach($array_fix as $value) {
+        if(isset($filters[$value]) && !is_array($filters[$value])) {
+          $filters[$value] = array($filters[$value]);
+        }
+      }
 
       // Upload Status
       if (isset($columns['upload_status']) && $columns['upload_status'] && isset($filters['upload_status']) && !in_array('all', $filters['upload_status'])) {
