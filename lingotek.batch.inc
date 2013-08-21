@@ -85,9 +85,7 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   $upload_config_commands = $has_upload_config ? lingotek_get_sync_upload_config_batch_elements($upload_config) : array();
 
   $operations = array();
-  $operations[] = array('lingotek_mt_sync_set_status', array('set'));
   $operations = array_merge($operations, $download_commands, $download_commands_inc, $upload_commands, $upload_config_commands);
-  $operations[] = array('lingotek_mt_sync_set_status', array('clear'));
   $operations = array_merge($operations, $extra_operations);
 
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
@@ -109,6 +107,7 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
     );
 
     batch_set($batch);
+    lingotek_mt_sync_set_status('set'); // this status unsets itself when the dashboard is loaded on redirect
     batch_process($redirect); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
   }
   else {
@@ -507,7 +506,7 @@ function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_succe
 /**
  * Sets and clears session sync flags.
  */
-function lingotek_mt_sync_set_status($status, &$context) {
+function lingotek_mt_sync_set_status($status, &$context=NULL) {
 
   switch ($status) {
     case 'set':
