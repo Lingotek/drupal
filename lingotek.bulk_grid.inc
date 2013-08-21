@@ -290,7 +290,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
   else {
     $form['grid_container']['none'] = array(
-      '#markup' => t('No results were returned.'),
+      '#markup' => '<div class="grid-empty">' . t('No results were returned.') . '</div>',
     );
   }
   
@@ -530,9 +530,9 @@ function lingotek_grid_action_submit($form, $form_state) {
   }
   elseif (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'sync_all') { // If the sync all button was clicked
     $nids = LingotekSync::getNodeIdsByStatusAndTarget(LingotekSync::STATUS_PENDING);
+    variable_set('lingotek_pending_last_updated', time());
     if (count($nids) > 0) {
       $_SESSION['lingotek_sync_nodes'] = count($nids);
-      variable_set('lingotek_pending_last_updated', time());
       lingotek_update_target_progress_batch_create($nids); // Run batch operations to sync all 'In Progress' nodes
     }
     else {

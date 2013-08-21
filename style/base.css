@@ -98,7 +98,8 @@ input.lingotek-content-settings-table.form-checkbox {
   position: relative;
 }
 
-#edit-grid-container .table-select-processed {
+#edit-grid-container .table-select-processed,
+#edit-grid-container .grid-empty {
   clear: both;
 }
 
