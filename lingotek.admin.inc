@@ -1156,21 +1156,47 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $btn_callback_url_update = array(
     '#type' => 'submit',
-    '#value' => t('Update URL'),
+    '#value' => t('Update'),
     '#submit' => array('lingotek_notify_url_update')
+  );
+  
+  $btn_callback_refresh_api_cache = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh'),
+    '#submit' => array('lingotek_refresh_api_cache')
   );
 
   // Start: Not sure why, but without these below, the table button do not work properly
   $form['utilities'][] = array_merge($btn_reset_translations, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
 
   $rows = array(
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Reset Translations') . '<div class="description">',
+          '#prefix' => t('Refresh Project, Workflow, and Vault Information') . '<div class="description">',
+          '#markup' => t("This module locally caches the available projects, workflows, and vaults.  Use this utility whenever you need to pull down names for any newly created projects, workflows, or vaults from the Lingotek Translation Management System."),
+          '#suffix' => '</div>'
+        )),
+      array('data' => $btn_callback_refresh_api_cache),
+    ),
+    array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => t('Notification Callback URL') . '<div class="description">',
+          '#markup' => t("Update the notification callback URL.  This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.<br/>")
+          . '<br/>' . t("Current notification callback URL:") . ' <i>' . variable_get('lingotek_notify_url', 'None') . '</i>',
+          '#suffix' => '</div>'
+        )),
+      array('data' => $btn_callback_url_update),
+    ),
+    array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => t('Reset All Translations') . '<div class="description">',
           '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
           '#suffix' => '</div>'
         )),
@@ -1185,16 +1211,6 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
         )),
       array('data' => $btn_cleanup),
     ),
-    array(
-      array('data' => array(
-          '#type' => 'markup',
-          '#prefix' => t('Notification Callback URL') . '<div class="description">',
-          '#markup' => t("Update the notification callback URL.  This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.")
-          . '<br/>' . t("Current notification callback URL:") . ' <i>' . variable_get('lingotek_notify_url', 'None') . '</i>',
-          '#suffix' => '</div>'
-        )),
-      array('data' => $btn_callback_url_update),
-    )
   );
   $header = array();
   $form['utilities']['utility_table'] = array(

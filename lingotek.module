@@ -593,6 +593,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
       // Available projects.
       if ($projects = $api->listProjects()) {
+
         $form['lingotek']['content']['lingotek_project_id'] = array(
           '#type' => 'select',
           '#title' => 'Project',
@@ -1805,4 +1806,19 @@ function lingotek_views_api() {
   return array(
     'api' => 3,
   );
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Updates the local cache of commonly used values.
+ */
+function lingotek_cron() {
+
+  // remove locally cached values, so they will be refreshed next time they are needed
+  variable_del('lingotek_project_defaults');
+  variable_del('lingotek_workflow_defaults');
+  variable_del('lingotek_vaults_defaults');
+
+  LingotekLog::trace(__METHOD__ . ' ran');
 }

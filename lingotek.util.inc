@@ -115,6 +115,7 @@ function lingotek_lingonode($nid, $key = "", $value = "") {
  *    variable name to be deleted
  *
  */
+
 function lingotek_lingonode_variable_delete($nid, $lingokey) {
   $query = db_delete('lingotek');
   $query->condition('nid', $nid);
@@ -142,16 +143,16 @@ function lingotek_lingonode_variable_delete_multiple($nids = array(), $lingokey,
   }
 
   $query = db_select('lingotek', 'l') // Make sure that the variable exists in the table for every input nid
-    ->fields('l', array('nid'))
-    ->condition('nid', $nids, 'IN')
-    ->condition('lingokey', $lingokey, $condition);
+      ->fields('l', array('nid'))
+      ->condition('nid', $nids, 'IN')
+      ->condition('lingokey', $lingokey, $condition);
   $delete_nids = $query->execute()->fetchCol();
 
   if (!empty($delete_nids)) {
     $delete = db_delete('lingotek') // delete for every input nid where the variable exists
-      ->condition('nid', $delete_nids, 'IN')
-      ->condition('lingokey', $lingokey, $condition)
-      ->execute();
+        ->condition('nid', $delete_nids, 'IN')
+        ->condition('lingokey', $lingokey, $condition)
+        ->execute();
   }
 }
 
@@ -250,7 +251,7 @@ function lingotek_xml_node_body($node) {
   if ($translate && $t_array = $translate[$node->type]) {
     $fields_desired = array_combine($t_array, $t_array);
   }
-  
+
   foreach ($node as $key => $value) {
     $field = field_info_field($key);
     if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && isset($fields_desired[$key]) && $fields_desired[$key]) {
@@ -295,26 +296,26 @@ function lingotek_xml_node_body($node) {
         if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
           $element_name = $field;
           if (!is_array($element_suffix) && !empty($element_suffix)) {
-              $element_name .= '__' . $element_suffix;
+            $element_name .= '__' . $element_suffix;
           }
           $current_field = '<' . $element_name . '>';
-           /* if (!array_key_exists('value', $value)) {
+          /* if (!array_key_exists('value', $value)) {
             dpm($value);
-              //TODO add TAGs to be translatable
-                $terms = $node->$field;
-                foreach ($terms[$language] as $term) {
-                // Do something.
-                }
-              continue;
-            }*/
-            if (is_array($element_suffix)) {
-              foreach ($element_suffix as $t_key => $t_val) {
-                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
-              }
+            //TODO add TAGs to be translatable
+            $terms = $node->$field;
+            foreach ($terms[$language] as $term) {
+            // Do something.
             }
-            else {
-              $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
+            continue;
+            } */
+          if (is_array($element_suffix)) {
+            foreach ($element_suffix as $t_key => $t_val) {
+              $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
             }
+          }
+          else {
+            $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
+          }
           $current_field .= '</' . $element_name . '>';
           $content .= $current_field;
         }
@@ -322,13 +323,13 @@ function lingotek_xml_node_body($node) {
     }
   }
   /* deprecated with config translation
-  //Menus related to the page:
-  // Do we still want this? Config translation translates these items
-  $menu = menu_link_get_preferred('node/' . $node->nid);
-  $txt = $menu['link_title'];
-  if ($txt != "") {
+    //Menus related to the page:
+    // Do we still want this? Config translation translates these items
+    $menu = menu_link_get_preferred('node/' . $node->nid);
+    $txt = $menu['link_title'];
+    if ($txt != "") {
     $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
-  }*/
+    } */
 
   //URL Alias related to the page:
   $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
@@ -357,7 +358,7 @@ function lingotek_support_footer() {
         array(t('<strong>Support Hours:</strong><br>9am - 6pm MDT'),
           t('<strong>Phone:</strong><br> (801) 331-7777'),
           t('<strong>Email:</strong><br> <a href="mailto:support@lingotek.com">support@lingotek.com</a>')
-      )),
+        )),
       'attributes' => array(
         'style' => 'width:500px; margin-top: 20px;'
       )
@@ -415,10 +416,9 @@ function lingotek_access_by_plan_type($types, $permission = NULL) {
 function lingotek_access_dev_tools($node, $permission) {
   // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
   // OR when not Enterprise
-  
+
   $user_access = user_access($permission);
-  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node))
-      || !LingotekAccount::instance()->isEnterprise()) {
+  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->isEnterprise()) {
     return FALSE;
   }
   // Default: Standard user access
@@ -657,7 +657,7 @@ function lingotek_get_active_languages($get_details = FALSE) {
 function lingotek_get_node_source_languages() {
   $lingo_langs = array();
   $query = db_select('node', 'n')->distinct()
-    ->fields('n', array('language'));
+      ->fields('n', array('language'));
   $query = $query->execute();
   $result = $query->fetchCol(0);
   foreach ($result as $lang) {
@@ -815,7 +815,7 @@ function lingotek_add_missing_locales() {
   foreach ($languages as $target) {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
       $drupal_language_code = $target->language;
-      $lingotek_enabled = $target->lingotek_enabled ? $target->lingotek_enabled : (($target->language == $default_language->language) ? 0 : 1);// enable default source language by default
+      $lingotek_enabled = $target->lingotek_enabled ? $target->lingotek_enabled : (($target->language == $default_language->language) ? 0 : 1); // enable default source language by default
       $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE);
       lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled, $lingotek_locale);
       $update_static_language_list = TRUE;
@@ -856,7 +856,7 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabl
 function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
   if ($vid == NULL) {
     $query = db_select('node_revision', 'nr')
-      ->condition('nid', $nid, '=');
+        ->condition('nid', $nid, '=');
     $query->addExpression('MAX(vid)', 'max_vid');
     $vid = $query->execute()->fetchField();
   }
@@ -920,6 +920,7 @@ function lingotek_get_content_types($ids_only = FALSE) {
  *    if true, return string formatted like '[number] [time interval]'.  For example, '22 hours'.
  *    if false, returns number and time interval as an array where the array is ('number' => [number], 'interval' => [time interval]).
  */
+
 function lingotek_human_readable_timestamp($unix_timestamp, $as_array = FALSE) {
   $time = time() - $unix_timestamp;
 
@@ -993,6 +994,24 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
   lingotek_batch_identify_content(); // Identify pre-existing content (based on these new content-type settings)
   if ($show_messages) {
     drupal_set_message(t('Translatable content has been identified.'));
+  }
+}
+
+/**
+ * lingotek_refresh_api_cache utility
+ */
+function lingotek_refresh_api_cache($show_messages = TRUE) {
+  LingotekLog::trace(__METHOD__);
+
+  $api = LingotekApi::instance();
+
+  // Call methods with $reset = TRUE to update our locally cached values.
+  $api->listProjects(TRUE);
+  $api->listWorkflows(TRUE);
+  $api->listVaults(TRUE);
+
+  if ($show_messages) {
+    drupal_set_message(t('Project, workflow, and vault information has been refreshed.'));
   }
 }
 
