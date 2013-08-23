@@ -209,7 +209,7 @@ class LingotekSync {
   }
 
   public static function getDownloadableReport() {
-    $document_ids = array_unique(self::getDocIdsByStatus(self::STATUS_PENDING) + self::getDocIdsByStatus(self::STATUS_READY));
+    $document_ids = array_unique(array_merge(self::getDocIdsByStatus(self::STATUS_PENDING), self::getDocIdsByStatus(self::STATUS_READY)));
 
     $report = array(
       'download_targets_workflow_complete' => array(), // workflow complete and ready for download
