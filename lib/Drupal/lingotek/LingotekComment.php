@@ -152,28 +152,6 @@ class LingotekComment implements LingotekTranslatableEntity {
       $update_result = $this->updateLingotekDocument();
     }
 
-    // Synchronize the local content with the translations from Lingotek.
-    // We instruct the users to configure comment translation with a
-    // single-phase machine translation-only Workflow, so the updated content
-    // should be available right after our create/update document calls from above.
-    // If it isn't, Lingotek will call us back via LINGOTEK_NOTIFY_URL
-    // when machine translation for the item has finished.
-    if (!self::$content_update_in_progress) {
-      // Only update the local content if the Document is 100% complete
-      // according to Lingotek.
-
-      $document_id = $this->getMetadataValue('document_id');
-      if ($document_id) {
-        $document = $this->api->getDocument($document_id);
-        if (!empty($document->percentComplete) && $document->percentComplete == 100) {
-          $this->updateLocalContent();        
-        }
-      }
-      else {
-        LingotekLog::error('Unable to retrieve Lingotek Document ID for comment @id',
-          array('@id' => $this->comment->cid));
-      }
-    }
   }
 
   /**

@@ -1025,9 +1025,9 @@ class LingotekApi {
 
     $result = NULL;
     $response = NULL;
+    $api_url = $this->api_url . '/' . $method;
     try {
       OAuthStore::instance('2Leg', $credentials);
-      $api_url = $this->api_url . '/' . $method;
       $request = @new LingotekOAuthRequester($api_url, $request_method, $parameters);
       // There is an error right here.  The new LingotekOAuthRequester throws it, because it barfs on $parameters
       // The error:  Warning: rawurlencode() expects parameter 1 to be string, array given in LingotekOAuthRequest->urlencode() (line 619 of .../modules/lingotek/lib/oauth-php/library/LingotekOAuthRequest.php).
@@ -1036,16 +1036,13 @@ class LingotekApi {
       $result = $request->doRequest(0, array(CURLOPT_SSL_VERIFYPEER => FALSE));
       $response = json_decode($result['body']);
     } catch (OAuthException2 $e) {
-      LingotekLog::error('Failed OAuth request.
+      LingotekLog::error('Failed OAuth request. <br />Method: @method <br />Message: @message 
       <br />API URL: @url
-      <br />Message: @message. 
-      <br />Method: @name. 
       <br />Parameters: !params.
       <br />Response: !response', array(
-        '@url' => $api_url,
+        '@method' => $method,
         '@message' => $e->getMessage(),
-        //'@message' => '(stripped)',
-        '@name' => $method,
+        '@url' => $api_url,
         '!params' => ($parameters),
         '!response' => ($response)), 'api');
     }
@@ -1065,21 +1062,18 @@ class LingotekApi {
       downloadDocument - Returns misc data (no $response->results), and should always be sent back.
       assignProjectManager - Returns fails/falses if the person is already a community manager (which should be ignored)
      */
-    if ($method == 'downloadDocument') {
-      LingotekLog::api('<h1>@method</h1>
-        <strong>API URL:</strong> @url
+    if ($method == 'downloadDocument') { // Exception downloadDocument
+      LingotekLog::api('<h1>@method</h1> <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
       $response_data = !empty($result) ? $result['body'] : "";
     }
-    else if ($method == 'assignProjectManager' || (!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS)) {
-      LingotekLog::api('<h1>@method</h1>
-        <strong>API URL:</strong> @url
+    else if ((!is_null($response) && $response->results == self::RESPONSE_STATUS_SUCCESS) || $method == 'assignProjectManager') { // SUCCESS
+      LingotekLog::api('<h1>@method</h1> <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params);
       $response_data = $response;
     }
-    else {
-      LingotekLog::error('<h1>@method (Failed)</h1>
-        <strong>API URL:</strong> @url
+    else { // ERROR
+      LingotekLog::error('<h1>@method (Failed)</h1> <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params, 'api');
     }
 

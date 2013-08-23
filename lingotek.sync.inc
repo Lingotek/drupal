@@ -88,19 +88,14 @@ function lingotek_notifications() {
   while ($attempts < 3) {
     $nid = LingotekSync::getNodeIdFromDocId($document_id);
 
-    if ($nid) {
-      LingotekLog::info('Notification Received  
-          <br/><b>doc_id:</b> @document_id
-          <br/><b>code:</b> @lingotek_locale
-          <br/><b>project:</b> @project_id
-          <br/><b>node:</b> @node_id (@target_drupal_language_code)', array(
+    LingotekLog::info('[notify] <br/><b>doc_id:</b> @document_id <br/><b>code:</b> @lingotek_locale <br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
         '@document_id' => $document_id,
         '@lingotek_locale' => $lingotek_locale,
         '@project_id' => $project_id,
-        '@node_id' => $nid,
-        '@target_drupal_language_code' => $target_drupal_language_code
+        '@node_id' => $nid ? $nid : "NA",
+        '@target_drupal_language_code' => $target_drupal_language_code,
+        '@completed' => $completed
           ), 'callback');
-    }
 
     // If there is not a node ID associated with this document, check for config chunks and comments
     // associated with the document ID
