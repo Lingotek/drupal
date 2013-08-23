@@ -40,14 +40,14 @@ function lingotek_perform_action(nid, action) {
     $(id).trigger('click');
     $(id).attr('href', url);
     $('.modal-header .close').click( function() {
-      location.reload(); 
+      location.reload();
     });
   }
   
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
       $('input#edit-submit-changes.form-submit').hide();
-      $('#edit-header-fieldset .form-item select').change(function() {
+      $('#edit-limit-select').change(function() {
         $('input#edit-submit-changes.form-submit').trigger('click');
       });
       

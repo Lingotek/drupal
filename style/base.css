@@ -76,16 +76,28 @@ input.lingotek-content-settings-table.form-checkbox {
   left: 225px;
 }
 
-.ctools-modal-set-filters, .ctools-modal-customize-table {
+.lingotek-action {
   float: right;
   font-size: 125%;
   margin-left: 20px;
   margin-top: 30px;
 }
 
+.lingotek-action:hover {
+  color: #00348D;
+  text-decoration: none;
+}
+
 #grid-result-summary {
-  top: 30px;
-  position: relative;
+  color: #666;
+}
+
+#page-limit {
+  text-align: center;
+}
+
+.form-item-limit-select {
+  display: inline;
 }
 
 #edit-grid-container .table-select-processed,

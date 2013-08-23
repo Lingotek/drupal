@@ -124,8 +124,8 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
   // Tab: Bulk Management
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'] = array(
-    'title' => 'Bulk Management',
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/sync'] = array(
+    'title' => 'Sync',
     'type' => MENU_LOCAL_TASK,
     'weight' => 4,
     'access arguments' => array('administer lingotek'),
@@ -134,7 +134,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_form_bulk_sync')
   );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'];
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'];
 
   // Content Update Notifications Callback
   $items[LINGOTEK_NOTIFY_URL] = array(
@@ -182,8 +182,8 @@ function lingotek_menu() {
   );
 
   //Tab: Bulk Grid
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid'] = array(
-    'title' => 'Bulk Grid',
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'] = array(
+    'title' => 'Manage',
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
     'access arguments' => array('administer lingotek'),
@@ -192,9 +192,16 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_bulk_grid_form')
   );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/grid'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid'];
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'];
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/customize'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/list'] = array(
+    'title' => 'Manage',
+    'description' => 'Bulk grid of content translations',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -8,
+  );
+  
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_grid_customize',
@@ -202,7 +209,7 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/filters'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_filters_popup',
@@ -210,7 +217,15 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
   
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/edit/%'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_grid_update',
+    'page arguments' => array(),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_edit_nodes',
@@ -218,7 +233,7 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/reset/%'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_reset_nodes',

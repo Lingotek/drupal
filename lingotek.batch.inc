@@ -683,7 +683,7 @@ function lingotek_update_target_progress_batch_create($nids) {
   } while (count($segment) >= $offset_interval);
 
   $batch['operations'] = $operations;
-  $redirect = 'admin/settings/lingotek/grid';
+  $redirect = 'admin/settings/lingotek/manage/list';
 
   batch_set($batch);
   batch_process($redirect);
