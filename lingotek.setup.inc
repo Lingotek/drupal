@@ -693,7 +693,7 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
 
   $form['region'] = array(
     '#type' => 'select',
-    '#title' => t('The region where the switcher will be displayed.'),
+    '#description' => t('The region where the switcher will be displayed.'),
     '#options' => $block_regions,
     '#default_value' => $default_region_value,
     '#states' => array(

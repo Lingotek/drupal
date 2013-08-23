@@ -654,8 +654,8 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
   $ls_select_region = array(
     '#type' => 'select',
-    '#title' => t('The region where the switcher will be displayed.'),
-    //'#description' => 'When enabled, the region to be displayed in.',
+    //'#title' => t('The region where the switcher will be displayed.'),
+    '#description' => 'The region where the switcher will be displayed.',
     '#options' => $block_regions,
     '#default_value' => $default_region_value,
     '#states' => array(
