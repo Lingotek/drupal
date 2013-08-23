@@ -210,19 +210,19 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
   
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/edit'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/edit/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_edit_nodes',
-    'page arguments' => array(),
+    'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/reset'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/grid/reset/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_reset_nodes',
-    'page arguments' => array(),
+    'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
 
@@ -655,6 +655,10 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
 function lingotek_get_node_settings_form($form, &$form_state, $nids = NULL) {
 
+  if(isset($form_state['nids'])) {
+    $nids = $form_state['nids'];
+  }
+    
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
@@ -964,8 +968,14 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
     $batch['operations'] = $operations;
     $redirect = 'admin/settings/lingotek/grid';
 
-    batch_set($batch);
-    batch_process($redirect);
+//    batch_set($batch);
+//    batch_process($redirect);
+    
+    //We cannot do batch operations here anymore because it is now in modal window, so we will emulate the process.
+    //As long as we aren't affecting hundreds of nodes we should be fine.
+    foreach($operations as $op) {
+      call_user_func_array($op[0],$op[1]);
+    }
   }
 }
 

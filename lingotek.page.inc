@@ -168,16 +168,20 @@ function lingotek_push_form_submit($form, $form_state) {
  * Form constructor for the node content reset form. (Reset Translations)
  */
 function lingotek_node_content_reset_form($form, $form_state, $nids = array(), $collapse_fieldset = TRUE) {
+  $type = 'fieldset';
+  
+  if(isset($form_state['nids'])) {
+    $nids = $form_state['nids'];
+    $type = 'item';
+  }
+  
   $form = array();
   if (!is_array($nids)) {
     $nids = array($nids);
   }
-  if (count($nids) > 1) {
-    drupal_set_message(t('You will be resetting translations for @number nodes.', array('@number' => count($nids))), 'warning');
-  }
 
   $form['reset_translations'] = array(
-    '#type' => 'fieldset',
+    '#type' => $type,
     '#title' => t('Reset Translations'),
     '#description' => t("Disassociates the node's locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the node's translation management settings to their defaults."),
     '#collapsible' => $collapse_fieldset,
@@ -217,7 +221,7 @@ function lingotek_node_content_reset_form_submit($form, $form_state) {
   }
   else {
     drupal_set_message(t('Translations reset for @number nodes.', array('@number' => count($drupal_node_ids))));
-    drupal_goto('admin/settings/lingotek/grid');
+//    drupal_goto('admin/settings/lingotek/grid');
   }
 }
 

@@ -60,37 +60,27 @@ input.lingotek-content-settings-table.form-checkbox {
   margin-left: 15px;
 }
 
-#lingotek-bulk-grid-form #edit-filter-fieldset #edit-filters .form-item {
-  float:left;
-  margin-left: 15px;
-}
-
 #modal-content #edit-filters .form-item {
   margin-left: 15px;
   width: 500px;
   float: left;
 }
 
-#lingotek-bulk-grid-form #edit-filter-fieldset #edit-filter-buttons {
-  clear:both;
-}
-
-#lingotek-bulk-grid-form #edit-customize-table-fieldset #edit-custom-buttons {
-  clear:both;
-}
-
-#edit-filter-fieldset {
+#modal-content #edit-filter-buttons {
   clear: both;
 }
 
 .form-item-actions-select {
-  clear: both;
+  /*clear: both;*/
+  position: relative;
+  left: 225px;
 }
 
 .ctools-modal-set-filters, .ctools-modal-customize-table {
   float: right;
   font-size: 125%;
   margin-left: 20px;
+  margin-top: 30px;
 }
 
 #grid-result-summary {
@@ -101,6 +91,57 @@ input.lingotek-content-settings-table.form-checkbox {
 #edit-grid-container .table-select-processed,
 #edit-grid-container .grid-empty {
   clear: both;
+}
+
+.language-icon {
+  background-color:#80a49e;
+  border-radius: 3px;
+  margin-right: 3px;
+  padding: 2px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: white;
+}
+
+.language-icon.target-pending {
+  background-color: darkred;
+}
+
+.language-icon.target-current {
+  background-color:#48C;
+}
+
+.language-icon.target-ready {
+  background-color:#59ad1a
+}
+
+.language-icon.target-edited {
+  background-color:#999;
+}
+
+#edit-grid-container i {
+  font-size: 150%;
+}
+
+#edit-grid-container i.lingotek-disabled {
+  color: #AAA;
+}
+
+.upload-button {
+  color: #338;
+  cursor: pointer;
+}
+
+.upload-button:hover {
+  color: #99B;
+}
+
+.node-configuration {
+  color: #48C;
+}
+
+#edit-settings-link, #reset-translations-link {
+  display: none;
 }
 
 .lingotek-progress {
