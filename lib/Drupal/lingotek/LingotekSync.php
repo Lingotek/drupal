@@ -209,7 +209,7 @@ class LingotekSync {
   }
 
   public static function getDownloadableReport() {
-    $document_ids = array_unique(array_merge(self::getDocIdsByStatus(self::STATUS_PENDING), self::getDocIdsByStatus(self::STATUS_READY)));
+    $document_ids = array_unique(array_merge(self::getDocIdsByStatus(self::STATUS_PENDING, FALSE), self::getDocIdsByStatus(self::STATUS_READY, FALSE)));
 
     $report = array(
       'download_targets_workflow_complete' => array(), // workflow complete and ready for download
@@ -559,7 +559,7 @@ class LingotekSync {
 
   public static function getUploadableReport() {
     // Handle nodes
-    $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED);
+    $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED, TRUE);
     $report = array(
       'upload_nids' => $edited_nodes,
       'upload_nids_count' => count($edited_nodes)
@@ -597,9 +597,14 @@ class LingotekSync {
     return $report;
   }
 
-  public static function getNodeIdsByStatus($status) {
+  public static function getNodeIdsByStatus($status, $source) {
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('nid'));
+    if($source) {
+      $query->condition('lingokey', 'node_sync_status');
+    } else {
+      $query->condition('lingokey', 'target_sync_status_%', 'LIKE');
+    }
     $query->condition('lingovalue', $status);
     $query->distinct();
     $result = $query->execute();
@@ -637,11 +642,11 @@ class LingotekSync {
     return $result;
   }
 
-  public static function getDocIdsByStatus($status) {
+  public static function getDocIdsByStatus($status, $source) {
     $doc_ids = array();
 
     // retrieve document IDs from nodes
-    $nids = self::getNodeIdsByStatus($status);
+    $nids = self::getNodeIdsByStatus($status, $source);
     if (!empty($nids)) {
       $query = db_select('lingotek', 'l');
       $query->fields('l', array('lingovalue'));
