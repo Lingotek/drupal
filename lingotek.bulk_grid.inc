@@ -11,11 +11,14 @@ function lingotek_bulk_grid_form($form, $form_state) {
    * Here we store or retrieve the GET parameters so that the state of the table is maintained when leaving and coming back
    * Also makes it so the state is not lost when performing bulk actions
    */
-  if(count($_GET) == 1 && isset($_SESSION['grid_custom_parameters'])) {
-    unset($_SESSION['grid_custom_parameters']['q']);
+  if(count($_GET) == 1 && isset($_SESSION['grid_custom_parameters']) && !empty($_SESSION['grid_custom_parameters'])) {
+    $_SESSION['grid_custom_parameters']['preventloop'] = TRUE;
     drupal_goto('admin/settings/lingotek/grid', array('query' => $_SESSION['grid_custom_parameters']));
   } else {
     $_SESSION['grid_custom_parameters'] = $_GET;
+    if($_SESSION['grid_custom_parameters']['q']) {
+      unset($_SESSION['grid_custom_parameters']['q']);
+    }
   }
   
   $path_to_lingotek = drupal_get_path('module', 'lingotek');
