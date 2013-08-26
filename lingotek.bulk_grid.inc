@@ -183,18 +183,20 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => '<span id="grid-result-summary">' . t('Showing results @first through @last.', array('@first' => ($page * $form_state['values']['limit_select'] + 1), '@last' => ($page * $form_state['values']['limit_select'] + count($table_data)))) . '</span>',
   );
 
-  $form['limit_select'] = array(
-    '#type' => 'select',
-    '#prefix' => '<div id="page-limit">',
-    '#suffix' =>  t(' results per page') . '</div>',
-    '#options' => array(
-      10 => '10',
-      25 => '25',
-      50 => '50',
-      100 => '100',
-    ),
-    '#default_value' => $limit,
-  );
+  if(count($table_data) >= 10) {
+    $form['limit_select'] = array(
+      '#type' => 'select',
+      '#prefix' => '<div id="page-limit">',
+      '#suffix' =>  t(' results per page') . '</div>',
+      '#options' => array(
+        10 => '10',
+        25 => '25',
+        50 => '50',
+        100 => '100',
+      ),
+      '#default_value' => $limit,
+    );
+  }
 
   return $form;
 }
@@ -489,6 +491,11 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('URL Alias Translation'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'url_alias_translation' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'url_alias_translation' . $suffix] : in_array('url_alias_translation', $columns['defaults']),
     ),
+    'changed' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Last Modified'),
+      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'changed' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'changed' . $suffix] : in_array('changed', $columns['defaults']),
+    ),
     'last_uploaded' => array(
       '#type' => 'checkbox',
       '#title' => t('Time Last Uploaded'),
@@ -597,6 +604,7 @@ function lingotek_grid_define_columns() {
       'configuration',
       'document_id',
       'url_alias_translation',
+      'changed',
       'last_uploaded',
       'translation_progress_percent',
       'actions',
@@ -608,6 +616,7 @@ function lingotek_grid_define_columns() {
       'configuration',
       'content_type',
       'actions',
+      'changed',
     ),
   );
   $columns['columns'] = array_combine($columns['columns'], $columns['columns']);
@@ -622,30 +631,40 @@ function lingotek_grid_define_columns() {
  *    The full list of filters is later filtered so that there is exactly one column for every filter
  */
 function lingotek_grid_build_filters($form_state) {
-  $prefix = '';
-  $suffix = '__filter';
+  $languages = language_list();
+  $source_languages = array('all' => 'All Languages');
+  foreach($languages as $code => $language) {
+    $source_languages[$code] = $language->name . ' (' . $language->lingotek_locale . ')';
+  }
+  
   $filters = array(
     'nid' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'nid' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'nid' . $suffix] : '',
+      '#default_value' => isset($_SESSION['grid_filters']['nid']) ? $_SESSION['grid_filters']['nid'] : '',
       '#title' => t('Node ID is'),
       '#size' => 8,
     ),
     'document_id' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'document_id' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'document_id' . $suffix] : '',
+      '#default_value' => isset($_SESSION['grid_filters']['document_id']) ? $_SESSION['grid_filters']['document_id'] : '',
       '#title' => t('Doc ID is'),
       '#size' => 10,
     ),
+    'source_language' => array(
+      '#type' => 'select',
+      '#default_value' => isset($_SESSION['grid_filters']['source_language']) ? $_SESSION['grid_filters']['source_language'] : 'all',
+      '#title' => t('Source Language'),
+      '#options' => $source_languages,
+    ),
     'title' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'title' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'title' . $suffix] : '',
+      '#default_value' => isset($_SESSION['grid_filters']['title']) ? $_SESSION['grid_filters']['title'] : '',
       '#title' => t('Title Includes'),
       '#size' => 30,
     ),
     'upload_status' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'upload_status' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'upload_status' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['upload_status']) ? $_SESSION['grid_filters']['upload_status'] : 'all',
       '#title' => t('Upload Status'),
       '#options' => array(
         'all' => t('All'),
@@ -657,14 +676,14 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'content_type' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'content_type' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'content_type' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
       '#title' => t('Content Type'),
       '#options' => array('all' => t('All')) + node_type_get_names(),
       '#multiple' => TRUE
     ),
     'translation_status' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'translation_status' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'translation_status' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['translation_status']) ? $_SESSION['grid_filters']['translation_status'] : 'all',
       '#title' => t('Translation Status'),
       '#options' => array(
         'all' => t('All'),
@@ -676,7 +695,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'translation_progress' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'translation_progress' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'translation_progress' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['translation_progress']) ? $_SESSION['grid_filters']['translation_progress'] : 'all',
       '#title' => t('Translation Progress'),
       '#options' => array(
         'all' => t('All'),
@@ -690,7 +709,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'auto_upload' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'auto_upload' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'auto_upload' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['auto_upload']) ? $_SESSION['grid_filters']['auto_upload'] : 'all',
       '#title' => t('Auto Upload'),
       '#options' => array(
         'all' => t('All'),
@@ -702,7 +721,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'auto_download' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'auto_download' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'auto_download' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['auto_download']) ? $_SESSION['grid_filters']['auto_download'] : 'all',
       '#title' => t('Auto Download'),
       '#options' => array(
         'all' => t('All'),
@@ -714,7 +733,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'crowdsourcing' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'crowdsourcing' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'crowdsourcing' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['crowdsourcing']) ? $_SESSION['grid_filters']['crowdsourcing'] : 'all',
       '#title' => t('Crowdsourcing'),
       '#options' => array(
         'all' => t('All'),
@@ -726,7 +745,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'url_alias_translation' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'url_alias_translation' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'url_alias_translation' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['url_alias_translation']) ? $_SESSION['grid_filters']['url_alias_translation'] : 'all',
       '#title' => t('URL Alias Translation'),
       '#options' => array(
         'all' => t('All'),
@@ -739,7 +758,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'last_uploaded' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'last_uploaded' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'last_uploaded' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['last_uploaded']) ? $_SESSION['grid_filters']['last_uploaded'] : 'all',
       '#title' => t('Last Uploaded'),
       '#options' => array(
         'all' => t('All'),
@@ -752,7 +771,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'locale_progress_percent' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'locale_progress_percent' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'locale_progress_percent' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['locale_progress_percent']) ? $_SESSION['grid_filters']['locale_progress_percent'] : 'all',
       '#title' => t('Target Progress Percentage'),
       '#options' => array(
         'all' => t('All'),
@@ -766,7 +785,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'progress_updated' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'progress_updated' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'progress_updated' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['progress_updated']) ? $_SESSION['grid_filters']['progress_updated'] : 'all',
       '#title' => t('Progress Updated'),
       '#options' => array(
         'all' => t('All'),
@@ -779,7 +798,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'translation_progress_percent' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'translation_progress_percent' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'translation_progress_percent' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['translation_progress_percent']) ? $_SESSION['grid_filters']['translation_progress_percent'] : 'all',
       '#title' => t('Translation Progress Percentage'),
       '#options' => array(
         'all' => t('All'),
@@ -793,7 +812,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
     'last_downloaded' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters'][$prefix . 'last_downloaded' . $suffix]) ? $_SESSION['grid_filters'][$prefix . 'last_downloaded' . $suffix] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters']['last_downloaded']) ? $_SESSION['grid_filters']['last_downloaded'] : 'all',
       '#title' => t('Last Downloaded'),
       '#options' => array(
         'all' => t('All'),
@@ -806,7 +825,7 @@ function lingotek_grid_build_filters($form_state) {
     ),
   );
 
-  return lingotek_grid_process_elements($filters, $prefix, $suffix); // Add prefix and suffix to the name of each filter element
+  return lingotek_grid_process_elements($filters, '', '__filter'); // Add prefix and suffix to the name of each filter element
 }
 
 /**
@@ -885,15 +904,13 @@ function lingotek_grid_get_rows($form, &$form_state) {
     $header = array( // Define the tentative source header
       'nid' => array('data' => t('Node ID'), 'field' => 'n.nid'),
       'content_type' => array('data' => t('Content Type'), 'field' => 'n.type'),
-      'title' => array('data' => t('Title'), 'field' => 'n.title', 'sort' => 'asc'),
+      'title' => array('data' => t('Title'), 'field' => 'n.title'),
       'language' => array('data' => t('Source Uploaded'), 'field' => 'upload_status'),
       'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
       'configuration' => array('data' => t('Configuration')),
       'document_id' => array('data' => t('Doc ID'), 'field' => 'document_id'),
-      'auto_upload' => array('data' => t('Auto Upload'), 'field' => 'auto_upload'),
-      'auto_download' => array('data' => t('Auto Download'), 'field' => 'auto_download'),
-      'crowdsourcing' => array('data' => t('Crowdsourcing'), 'field' => 'crowdsourcing'),
       'url_alias_translation' => array('data' => t('URL Alias'), 'field' => 'url_alias'),
+      'changed' => array('data' => t('Last Modified'), 'field' => 'changed', 'sort' => 'desc'),
       'last_uploaded' => array('data' => t('Last Uploaded'), 'field' => 'last_uploaded'),
       'translation_progress_percent' => array('data' => t('Workflow Progress'), 'field' => 'translation_progress_percent'),
       'actions' => array('data' => t('Actions')),
@@ -920,7 +937,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
     $query->orderByHeader($form_state['values']['grid_header']);
 
     // Node Title and Name of Content Type (type)
-    $query->fields('n', array('nid', 'title', 'type', 'language'));
+    $query->fields('n', array('nid', 'title', 'type', 'language', 'changed'));
       if ($source && $language != 'all') {
         $query->condition('n.language', Lingotek::convertLingotek2Drupal($language));
       }
@@ -1022,7 +1039,11 @@ function lingotek_grid_get_rows($form, &$form_state) {
           $filters[$value] = array($filters[$value]);
         }
       }
-
+      // Source Language
+      if (isset($filters['source_language']) && $filters['source_language'] != 'all') {
+        $query->condition('n.language', $filters['source_language']);
+      }
+      
       // Upload Status
       if (isset($columns['upload_status']) && $columns['upload_status'] && isset($filters['upload_status']) && !in_array('all', $filters['upload_status'])) {
         $query->condition('lingo_upload_status.lingovalue', $filters['upload_status'], 'IN');
@@ -1304,6 +1325,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
         'auto_download' => $row->auto_download ? t('On') : (is_null($row->auto_download) ? $download_default : t('Off')),
         'crowdsourcing' => $row->crowdsourcing ? t('On') : (is_null($row->crowdsourcing) ? $crowdsourcing_default : t('Off')),
         'url_alias_translation' => $row->url_alias ? ($row->url_alias == 1 ? t('Translate') : t('Use Title')) : (is_null($row->url_alias) ? $url_alias_default : t('Off')),
+        'changed' => $row->changed ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->changed))) : t('Never'),
         'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
         'locale_progress_percent' => $row->locale_progress_percent ? lingotek_grid_create_progress_bar($row->locale_progress_percent) : lingotek_grid_create_progress_bar(0),
         'progress_updated' => $row->progress_updated ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->progress_updated))) : t('Never'),

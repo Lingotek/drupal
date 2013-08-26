@@ -71,9 +71,8 @@ input.lingotek-content-settings-table.form-checkbox {
 }
 
 .form-item-actions-select {
-  /*clear: both;*/
   position: relative;
-  left: 225px;
+  top: 10px;
 }
 
 .lingotek-action {
