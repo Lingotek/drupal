@@ -134,7 +134,7 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_form_bulk_sync')
   );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/sync'];
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/sync'];
 
   // Content Update Notifications Callback
   $items[LINGOTEK_NOTIFY_URL] = array(
