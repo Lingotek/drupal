@@ -541,6 +541,7 @@ function lingotek_grid_update() {
   }
   else {
     drupal_set_message(t('No nodes to update'));
+    drupal_goto('admin/settings/lingotek/manage/list');
   }
 }
 
