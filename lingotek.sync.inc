@@ -141,7 +141,7 @@ function lingotek_notifications() {
     else {
       $node = lingotek_node_load_default($nid);
       $source_language = $node->language;
-      $node_setting = lingotek_lingonode($nid, 'sync_method');
+      $node_setting = $node->lingotek['sync_method'];
       $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
       if ($completed) {
         LingotekSync::setTargetStatus($nid, $lingotek_locale, LingotekSync::STATUS_READY);
@@ -157,7 +157,7 @@ function lingotek_notifications() {
           lingotek_lingonode($nid, 'workbench_moderate', 1);
         }
         if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
-          $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
+          $options_index = $node->lingotek['sync_method_workbench_moderation'];
           $trans_options = lingotek_get_workbench_moderation_transitions();
           if ($options_index == 1) {
             $from_state = $node->workbench_moderation['current']->state;

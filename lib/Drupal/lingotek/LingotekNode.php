@@ -135,7 +135,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    *   Lingotek document. FALSE otherwise.
    */
   public function lingotekDocumentId() {
-    return lingotek_lingonode($this->node->nid, 'document_id');
+    return $this->node->lingotek['document_id'];
   }
   
   /**
@@ -222,7 +222,8 @@ class LingotekNode implements LingotekTranslatableEntity {
    * Return the workflow_id assigned for comments
    */
   public static function getWorkflowId() {
-    return variable_get('lingotek_workflow', '');
+    //this method is not used
+    return $this->node->lingotek['workflow_id'];
   }
   
 }

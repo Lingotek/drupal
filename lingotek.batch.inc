@@ -368,7 +368,7 @@ function lingotek_sync_upload_node($nid, &$context) {
   $node = lingotek_node_load_default($nid);
 
   // Push this node for translation.
-  if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
+  if ($existing_document = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL) {
     // Update an existing Lingotek Document.
     $result = $api->updateContentDocument($node);
   }

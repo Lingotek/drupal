@@ -29,7 +29,10 @@ function lingotek_perform_action(nid, action) {
     nids = [];
     $('#edit-grid-container .form-checkbox').each(function() {
       if($(this).attr('checked')) {
-        nids.push($(this).val());
+        val = $(this).val();
+        if(val != 'on') {
+          nids.push(val);
+        }
       }
     });
     

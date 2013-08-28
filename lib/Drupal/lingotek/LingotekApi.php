@@ -72,27 +72,10 @@ class LingotekApi {
     // see if the node is a true content node (false if config chunk or etc.)
     $isContentNode = (property_exists($translatable_object, "nid") && $translatable_object->nid ? TRUE : FALSE);
 
-    // populate project_id
-    $project_id = empty($translatable_object->lingotek_project_id) ? NULL : $translatable_object->lingotek_project_id;
-    if ($isContentNode) {
-      $project_id = empty($project_id) ? lingotek_lingonode($translatable_object->nid, 'project_id') : $project_id;
-    }
-    $project_id = empty($project_id) ? variable_get('lingotek_project', NULL) : $project_id;
-
-    // populate vault_id
-    $vault_id = empty($translatable_object->lingotek_vault_id) ? NULL : $translatable_object->lingotek_vault_id;
-    if ($isContentNode) {
-      $vault_id = empty($vault_id) ? lingotek_lingonode($translatable_object->nid, 'vault_id') : $vault_id;
-    }
-    $vault_id = empty($vault_id) ? variable_get('lingotek_vault', 1) : $vault_id;
-
-    // populate workflow_id
-    if ($isContentNode) {
-      $workflow_id = lingotek_lingonode($translatable_object->nid, 'workflow_id');
-    } else {
-      $workflow_id = $translatable_object->getWorkflowId();
-    }
-    $workflow_id = empty($workflow_id) ? variable_get('lingotek_workflow', NULL) : $workflow_id;
+    $node = $translatable_object;
+    $project_id = $isContentNode ? $node->lingotek['project_id'] : $translatable_object->lingotek_project_id;
+    $vault_id = $isContentNode ? $node->lingotek['vault_id'] : $translatable_object->lingotek_vault_id;
+    $workflow_id = $isContentNode ? $node->lingotek['workflow_id'] : $translatable_object->lingotek_workflow_id;
 
     $node_language = (property_exists($translatable_object, 'language') ? $translatable_object->language : NULL);
     if (is_object($node_language)) {  // Allow language attributes to be objects (e.g., config chunks)
@@ -157,7 +140,6 @@ class LingotekApi {
         }
         else {
           lingotek_lingonode($translatable_object->nid, 'document_id', $result->id);
-          lingotek_lingonode($translatable_object->nid, 'project_id', $project_id);
           LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
         }
         if ($isContentNode) {
@@ -918,7 +900,7 @@ class LingotekApi {
       default:
         // Normal content do the regular formating.
         $isContentNode = TRUE;
-        $document_id = lingotek_lingonode($translatable_object->nid, 'document_id');
+        $document_id = $translatable_object->lingotek['document_id'];
         $content = lingotek_xml_node_body($translatable_object);
         break;
     };

@@ -549,10 +549,70 @@ function lingotek_community_settings_select_form_submit($form, $form_state) {
   if (isset($form_state['values']['lingotek_site_vault'])) {
     variable_set('lingotek_vault', $form_state['values']['lingotek_site_vault']);
   }
+  
+  lingotek_setup_default_profiles();
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/community-settings-select';
   drupal_set_message(t('Your Lingotek project, workflow, and vault selections have been saved.'));
   drupal_goto('admin/config/lingotek/language-settings'); // Move to Source Language Select Step. 
+}
+
+function lingotek_setup_default_profiles() {
+  $profiles[] = (object) array(
+    'name' => 'Automatic',
+    'lingotek_nodes_translation_method' => 'field',
+    'create_lingotek_document' => 1,
+    'sync_method' => 1,
+    'allow_community_translation' => 0,
+    'url_alias_translation' => 0,
+    'sync_method_workbench_moderation' => 'no_moderation',
+    'create_lingotek_document_workbench_moderation' => 'published',
+    'project_id' => variable_get('lingotek_project'),
+    'workflow_id' => variable_get('lingotek_workflow'),
+    'vault_id' => variable_get('lingotek_vault'),
+  );
+  $profiles[] = (object) array(
+    'name' => 'Manual',
+    'lingotek_nodes_translation_method' => 'field',
+    'create_lingotek_document' => 0,
+    'sync_method' => 0,
+    'allow_community_translation' => 0,
+    'url_alias_translation' => 0,
+    'sync_method_workbench_moderation' => 'no_moderation',
+    'create_lingotek_document_workbench_moderation' => 'published',
+    'project_id' => variable_get('lingotek_project'),
+    'workflow_id' => variable_get('lingotek_workflow'),
+    'vault_id' => variable_get('lingotek_vault'),
+  );
+  $workflows = array_flip(LingotekApi::instance()->listWorkflows());
+  $profiles[] = (object) array(
+    'name' => 'Human Translation',
+    'lingotek_nodes_translation_method' => 'field',
+    'create_lingotek_document' => 1,
+    'sync_method' => 1,
+    'allow_community_translation' => 0,
+    'url_alias_translation' => 0,
+    'sync_method_workbench_moderation' => 'no_moderation',
+    'create_lingotek_document_workbench_moderation' => 'published',
+    'project_id' => variable_get('lingotek_project'),
+    'workflow_id' => $workflows['Translation Only'],
+    'vault_id' => variable_get('lingotek_vault'),
+  );
+  $profiles[] = (object) array(
+    'name' => 'Machine + Crowdsourced',
+    'lingotek_nodes_translation_method' => 'field',
+    'create_lingotek_document' => 1,
+    'sync_method' => 1,
+    'allow_community_translation' => 1,
+    'url_alias_translation' => 0,
+    'sync_method_workbench_moderation' => 'no_moderation',
+    'create_lingotek_document_workbench_moderation' => 'published',
+    'project_id' => variable_get('lingotek_project'),
+    'workflow_id' => variable_get('lingotek_workflow'),
+    'vault_id' => variable_get('lingotek_vault'),
+  );
+  
+  variable_set('lingotek_profiles', $profiles);
 }
 
 /**
@@ -738,7 +798,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
 
   $form = lingotek_admin_node_translation_settings_form($form, $form_state);
-  $content_defaults = lingotek_admin_content_defaults_form($form, $form_state);
+  $content_defaults = lingotek_admin_profile_form($form, $form_state);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
   $form['lingotek_nodes_translation_method']['#weight'] = -3;
   

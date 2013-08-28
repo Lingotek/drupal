@@ -149,10 +149,10 @@ function lingotek_push_form($form, $form_state, $node) {
 function lingotek_push_form_submit($form, $form_state) {
   $node = lingotek_node_load_default($form_state['values']['node_id']);
   $api = LingotekApi::instance();
-  if (lingotek_lingonode($node->nid, 'sync_method') == 1 && module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
+  if ($node->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     lingotek_lingonode($node->nid, 'workbench_moderate', '0');
   }
-  if ($existing_document = lingotek_lingonode($node->nid, 'document_id')) {
+  if ($existing_document = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : '') {
     // Update an existing Lingotek Document.
     $api->updateContentDocument($node);
   }
@@ -350,7 +350,7 @@ function lingotek_pm($node) {
 
   $output = array();
   
-  $sync_status = lingotek_lingonode($node->nid, 'node_sync_status');
+  $sync_status = $node->lingotek['node_sync_status'];
 
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
@@ -361,18 +361,18 @@ function lingotek_pm($node) {
   
   if ($sync_status == LingotekSync::STATUS_DISABLED) {
     $output[] = array(
-      '#markup' => 'The Lingotek translation service is currently disabled for this node. You can enable translation by editing this node and unchecking the option "Disable Lingotek Translation for this node"'
+      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and unchecking the option to "Disable Lingotek Translation for this node"'
     );
     return $output;
   }
   
   if (class_exists('LingotekDocument')) {
-    $document = LingotekDocument::load(lingotek_lingonode($node->nid, 'document_id'));
+    $document = LingotekDocument::load($node->lingotek['document_id']);
 
     if (lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
 
       $node_pushed = lingotek_node_pushed($node);
-      $node_auto_upload = (lingotek_lingonode($node->nid, 'create_lingotek_document'));
+      $node_auto_upload = ($node->lingotek['create_lingotek_document']);
       if (!$node_pushed || !$node_auto_upload) {
         $content_push_form = drupal_get_form('lingotek_push_form', $node);
         $output['content_push'] = array(

@@ -53,6 +53,10 @@ input.lingotek-content-settings-table.form-checkbox {
   margin: 0px;
 }
 
+#lingotek-profiles {
+  width: auto;
+}
+
 /* Bulk Grid */
 
 #lingotek-bulk-grid-form #edit-header-fieldset .form-item {

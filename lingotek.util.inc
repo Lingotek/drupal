@@ -24,6 +24,38 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
   }
 }
 
+function lingotek_node_populate(&$node) {  
+  if (isset($node->nid)) {
+//    $profile_fields = lingotek_get_profile_fields();
+//
+//    $result = db_select('lingotek', 'n')
+//      ->fields('n', array('lingokey', 'lingovalue'))
+//      ->condition('n.nid', $node->nid)
+//      ->execute();
+//    $node->lingotek = array();
+//
+//    $lingotek_values = $result->fetchAllKeyed();
+//
+//    if ($lingotek_values['profile'] != -1) {
+//      $profile = (array) variable_get('lingotek_profiles')[$lingotek_values['profile']];
+//      $lingotek_values = array_replace($lingotek_values, $profile);
+//    }
+//    
+//    unset($lingotek_values['name']);
+//    $node->lingotek = $lingotek_values;
+  }
+  else if(lingotek_supported_type ($node->type)) {
+    $profile_id = variable_get('lingotek_entity_profiles')['node'][$node->type];
+    $lingotek_values = (array) variable_get('lingotek_profiles')[$profile_id];
+    $lingotek_values['profile'] = $profile_id;
+    
+    unset($lingotek_values['name']);
+    $node->lingotek = $lingotek_values;
+  }
+  
+  return $node;
+}
+
 /*
  * Helper function, for storing additional information with a Node.
  * Example usage (GET):
@@ -45,6 +77,15 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
  */
 
 function lingotek_lingonode($nid, $key = "", $value = "") {
+  $profile_fields = lingotek_get_profile_fields(FALSE);
+  if (array_search($key, $profile_fields)) {
+    $profile = lingotek_lingonode($nid, 'profile');
+    if ($profile != -1) {
+      $profiles = variable_get('lingotek_profiles');
+      return $profiles[$profile]->$key;
+    }
+  }
+  
   if ($nid == 'all') {
     $lingo_node = array();
     $result = db_select('lingotek', 'n')->fields('n', array(db_escape_field('nid'), db_escape_field('lingokey'), db_escape_field('lingovalue')))->execute();
@@ -165,17 +206,6 @@ function lingotek_lingonode_variable_delete_multiple($nids = array(), $lingokey,
 
 function lingotek_lingonode_delete($nid) {
   db_delete('lingotek')->condition('nid', $nid)->execute();
-}
-
-/**
- * Run this on nodes you aren't sure if they've been initialized yet for use with Lingotek.
- */
-function lingotek_node_init_default($node) {
-  if (lingotek_lingonode($node->nid, 'document_id') === FALSE) {
-    LingotekLog::trace("lingotek_node_init_default", array('nid' => $node->nid, 'language' => $node->language));
-    LingotekApi::instance()->addContentDocument($node, TRUE);
-    lingotek_lingonode($node->nid, 'phase_template_id', variable_get('lingotek_phase_template', 2));
-  }
 }
 
 /*
@@ -332,7 +362,7 @@ function lingotek_xml_node_body($node) {
     } */
 
   //URL Alias related to the page:
-  $url_alias_translation = lingotek_variable_get(lingotek_lingonode($node->nid, 'url_alias_translation'), 'lingotek_url_alias_translation', 1);
+  $url_alias_translation = $node->lingotek['url_alias_translation'];
   if ($url_alias_translation == 1) {
     $conditions = array('source' => 'node/' . $node->nid);
     if ($node->language != LANGUAGE_NONE) {
@@ -454,9 +484,7 @@ function lingotek_managed_by_entity_translation($type) {
  *   Boolean value.
  */
 function lingotek_node_pushed($node) {
-  $lingonode = lingotek_lingonode($node->nid, 'document_id');
-  $pushed_to_lingotek = $lingonode !== FALSE; //!empty($lingonode);
-  return $pushed_to_lingotek;
+  return isset($node->lingotek['document_id']) && !empty($node->lingotek['document_id']);
 }
 
 /**
