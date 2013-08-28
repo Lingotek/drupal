@@ -574,7 +574,7 @@ function lingotek_admin_prepare_builtins($use_drupal_translations = TRUE) {
 }
 
 function lingotek_admin_add_module_index_job($module, &$context) {
-  $context['message'] = t('Gathering translatable strings in @type: @name', array($module->type, $module->name));
+  $context['message'] = t('Gathering translatable strings in @type: @name', array('@type' => $module->type, '@name' => $module->name));
   $real_uri = $_SERVER['REQUEST_URI']; // save the real URI in order to record module names for the location
   module_load_include('inc', 'potx', 'potx');
   // translations *not* available from localize.drupal.org
