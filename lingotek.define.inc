@@ -69,3 +69,10 @@ define('LINGOTEK_CONFIG_MAX_SOURCE_LENGTH', 4096);
 define('LINGOTEK_I18N_ENABLED_VALUE', 1);
 define('LINGOTEK_TAXONOMY_LOCALIZE_VALUE', 1);
 define('LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE', 5);
+
+/**
+ * Defines STDIN, STDOUT, STDERR in case they're not already defined by PHP
+ */
+lingotek_define('STDIN', fopen('php://stdin', 'r'));
+lingotek_define('STDOUT', fopen('php://stdout', 'w'));
+lingotek_define('STDERR', fopen('php://stderr', 'w'));

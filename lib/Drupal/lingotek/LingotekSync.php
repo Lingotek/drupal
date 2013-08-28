@@ -545,7 +545,7 @@ class LingotekSync {
     $result = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('id', 'id'))
         ->condition('config_key', 'target_sync_status_%', 'LIKE')
-        ->condition('value', self::STATUS_PENDING)
+        ->condition('value', array(self::STATUS_PENDING, self::STATUS_READY), 'IN')
         ->distinct()
         ->execute();
     return $result->fetchAllKeyed();
