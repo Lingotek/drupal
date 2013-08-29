@@ -108,6 +108,12 @@ input.lingotek-content-settings-table.form-checkbox {
   clear: both;
 }
 
+#edit-custom-columns {
+    columns:100px 2;
+    -webkit-columns:100px 2;
+    -moz-columns:100px 2;
+}
+
 .language-icon {
   background-color:#80a49e;
   border-radius: 3px;

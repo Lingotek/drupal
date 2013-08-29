@@ -147,9 +147,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
   drupal_add_js(array(
     'customize-table' => array(
       'modalSize' => array(
-        'type' => 'fixed',
-        'width' => 450,
-        'height' => 525,
+        //'type' => 'fixed',
+        //'width' => 200,
+        //'height' => 200,
       ),
     ),
   ), 'setting');
@@ -273,7 +273,7 @@ function lingotek_grid_customize_form($form, $form_state) {
   // Submit customized columns button
   $form['customize_table_fieldset']['custom_buttons']['custom_submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit Customization'),
+    '#value' => t('Save'),
     '#submit' => array('lingotek_grid_filter_submit'),
   );
 

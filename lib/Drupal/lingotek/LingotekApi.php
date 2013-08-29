@@ -829,7 +829,7 @@ class LingotekApi {
    * @return array
    *   An array of available vaults.
    */
-  public function listVaults($reset = FALSE) {
+  public function listVaults($reset = FALSE, $show_public_vaults = FALSE) {
     $vaults = variable_get('lingotek_vaults_defaults', array());
 
     if (!empty($vaults) && $reset == FALSE) {
@@ -850,7 +850,7 @@ class LingotekApi {
         }
       }
 
-      if (!empty($vaults_raw->publicVaults)) {
+      if ($show_public_vaults && !empty($vaults_raw->publicVaults)) {
         foreach ($vaults_raw->publicVaults as $vault) {
           $vaults['Public Vaults'][$vault->id] = $vault->name;
         }

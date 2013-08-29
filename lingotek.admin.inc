@@ -1694,7 +1694,8 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $is_enterprise = $account->isEnterprise();
 
   //autocreate profiles for upgraded sites
-  if (empty(variable_get('lingotek_profiles'))) {
+  $lingotek_profiles = variable_get('lingotek_profiles', array());
+  if (empty($lingotek_profiles)) {
     module_load_include('inc', 'lingotek', 'lingotek.setup');
     lingotek_setup_default_profiles();
   }
