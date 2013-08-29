@@ -1053,6 +1053,17 @@ function lingotek_set_priority() {
 }
 
 /**
+ * Gets the default node parameters related to Lingotek
+ */
+function lingotek_get_default_node_params() {
+  return array(
+    'workflow_id' => variable_get('lingotek_workflow', 'undefined'),
+    'project_id' => variable_get('lingotek_project', 'undefined'),
+    'vault_id' => variable_get('lingotek_vault', 'undefined'),
+  );
+}
+
+/**
  * Sets the global defaults for the Lingotek Translation module
  */
 function lingotek_set_defaults() {

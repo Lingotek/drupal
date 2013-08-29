@@ -1089,7 +1089,14 @@ function lingotek_node_delete($node) {
  * Implements hook_node_load().
  */
 function lingotek_node_load($nodes, $types) {
-  foreach ($nodes as $node) {
+  
+  $lingotek_defaults = lingotek_get_default_node_params();
+  foreach ($nodes as &$node) {
+    if (!isset($node->lingotek)) {
+      $node->lingotek = array();
+    }
+    $node->lingotek = array_merge($node->lingotek, $lingotek_defaults);
+    
     // translate node titles for workbench moderation 'View draft' node tab
     if (module_exists('workbench_moderation') && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->vid) {
       // Workbench Moderation calls two node saves if viewing a draft, so we have to
@@ -1104,38 +1111,32 @@ function lingotek_node_load($nodes, $types) {
     ->condition('n.nid', array_keys($nodes), 'IN')
     ->condition('n.lingokey', 'target_%', 'NOT LIKE')
     ->execute();
-  
 
   foreach ($result as $record) {
     $n = $nodes[$record->nid];
-    if (!isset($n->lingotek)) {
-      $n->lingotek = array();
-    }
     $n->lingotek[$record->lingokey] = $record->lingovalue;
   }
   
   $profile_fields = lingotek_get_profile_fields();
   
-  foreach ($nodes as $node) {
-    if (!isset($n->lingotek['profile'])) {
-      if (isset($n->lingotek['document_id'])) {
-        $n->lingotek['profile'] = -1;
+  foreach ($nodes as &$node) {
+    if (!isset($node->lingotek['profile'])) {
+      if (isset($node->lingotek['document_id'])) {
+        $node->lingotek['profile'] = -1;
       }
-      elseif (!isset($n->nid) && lingotek_supported_type($node->type)) {
+      elseif (!isset($node->nid) && lingotek_supported_type($node->type)) {
         $entity_profiles = variable_get('lingotek_entity_profiles');
-        $n->lingotek['profile'] = $entity_profiles['node'][$node->type];
+        $node->lingotek['profile'] = $entity_profiles['node'][$node->type];
       }
     }
         
-    if (isset($n->lingotek['profile']) && $n->lingotek['profile'] != -1) {
+    if (isset($node->lingotek['profile']) && $node->lingotek['profile'] != -1) {
       $profiles = variable_get('lingotek_profiles', array());
-      $profile = (array) $profiles[$n->lingotek['profile']];
+      $profile = (array) $profiles[$nodes->lingotek['profile']];
       unset($profile['name']);
-      $n->lingotek = array_replace($n->lingotek, $profile);
+      $node->lingotek = array_replace($node->lingotek, $profile);
     }
   }
-
-  return $node;
 }
 
 /**
