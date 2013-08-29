@@ -1053,14 +1053,19 @@ function lingotek_set_priority() {
 }
 
 /**
- * Gets the default node parameters related to Lingotek
+ * Gets the default profile info, mapped by entity type
  */
-function lingotek_get_default_node_params() {
-  return array(
-    'workflow_id' => variable_get('lingotek_workflow', 'undefined'),
-    'project_id' => variable_get('lingotek_project', 'undefined'),
-    'vault_id' => variable_get('lingotek_vault', 'undefined'),
-  );
+function lingotek_load_profile_defaults($entity_type) {
+  $profile_defaults = variable_get('lingotek_profiles', array());
+  $entity_profile_defaults = variable_get('lingotek_entity_profiles', array());
+  $profile_map = array();
+  if (array_key_exists($entity_type, $entity_profile_defaults)) {
+    foreach ($entity_profile_defaults[$entity_type] as $k => $v) {
+      $profile_map[$k] = $profile_defaults[$v];
+    }
+    return $profile_map;
+  }
+  return array();
 }
 
 /**

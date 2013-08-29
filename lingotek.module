@@ -1090,12 +1090,17 @@ function lingotek_node_delete($node) {
  */
 function lingotek_node_load($nodes, $types) {
   
-  $lingotek_defaults = lingotek_get_default_node_params();
+  $node_profile_defaults = lingotek_load_profile_defaults('node'); // return assoc array by node type
+  
   foreach ($nodes as &$node) {
-    if (!isset($node->lingotek)) {
-      $node->lingotek = array();
+    if (!isset($node->lingotek) && array_key_exists($node->type, $node_profile_defaults)) {
+      $node->lingotek = (array) $node_profile_defaults[$node->type];
     }
-    $node->lingotek = array_merge($node->lingotek, $lingotek_defaults);
+    else {
+      // no default for this entity type, so set to first profile found
+      $default_profiles = variable_get('lingotek_profiles', array());
+      $node->lingotek = (array) $default_profiles[0];
+    }
     
     // translate node titles for workbench moderation 'View draft' node tab
     if (module_exists('workbench_moderation') && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->vid) {
@@ -1105,7 +1110,6 @@ function lingotek_node_load($nodes, $types) {
       title_entity_sync('node', $node);
     }
   }
-  
   $result = db_select('lingotek', 'n')
     ->fields('n', array('nid', 'lingokey', 'lingovalue'))
     ->condition('n.nid', array_keys($nodes), 'IN')
@@ -1116,7 +1120,7 @@ function lingotek_node_load($nodes, $types) {
     $n = $nodes[$record->nid];
     $n->lingotek[$record->lingokey] = $record->lingovalue;
   }
-  
+
   $profile_fields = lingotek_get_profile_fields();
   
   foreach ($nodes as &$node) {
@@ -1132,7 +1136,7 @@ function lingotek_node_load($nodes, $types) {
         
     if (isset($node->lingotek['profile']) && $node->lingotek['profile'] != -1) {
       $profiles = variable_get('lingotek_profiles', array());
-      $profile = (array) $profiles[$nodes->lingotek['profile']];
+      $profile = (array) $profiles[$node->lingotek['profile']];
       unset($profile['name']);
       $node->lingotek = array_replace($node->lingotek, $profile);
     }
