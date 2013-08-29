@@ -920,23 +920,12 @@ function lingotek_setup_additional_translation_settings_form($form, &$form_state
 
 function lingotek_setup_additional_translation_settings_form_submit($form, &$form_state) {
   // WTD: process the submitted options
-  lingotek_admin_additional_translation_settings_form_submit($form, $form_state);
-  array_pop($_SESSION['messages']['status']);
-
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
-
+  
   $operations = array();
   $operations[] = array('lingotek_cleanup_utility', array(FALSE));
-
-  $batch = array(
-    'title' => t('Preparing additional translation settings'),
-    'operations' => $operations
-  );
-
-  batch_set($batch);
-  drupal_set_message(t('You have completed setup successfully!'));
-  $redirect = LINGOTEK_MENU_LANG_BASE_URL;
-  batch_process($redirect);
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
+  
+  lingotek_admin_additional_translation_settings_form_submit($form, $form_state, $additional_operations=$operations);
 }
 
 /**

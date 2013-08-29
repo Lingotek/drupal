@@ -555,7 +555,7 @@ function lingotek_verify_modules_enabled($module_list) {
   return TRUE;
 }
 
-function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state) {
+function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=NULL) {
   $form_state['values'] = array_merge($form_state['values'], $form_state['values']['config']);
 
   system_settings_form_submit($form, $form_state);
@@ -585,44 +585,41 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
     lingotek_admin_prepare_views();
   }
   if (variable_get('lingotek_translate_config_builtins')) {
-    if (variable_get('lingotek_module_translation_from_drupal', 0)) {
-      lingotek_admin_prepare_builtins($use_drupal_translations = TRUE);
-    }
-    else {
-      lingotek_admin_prepare_builtins($use_drupal_translations = FALSE);
-    }
+    lingotek_admin_prepare_builtins($additional_operations);
   }
 }
 
-function lingotek_admin_prepare_builtins($use_drupal_translations = TRUE) {
-  // search for all new built-in strings using the potx module, and add
-  // them to the locales_source table for lingotek to translate
-  $batch = array();
-    
-  // first attempt to pull translations using l10n_update module
-  $modules_list = lingotek_admin_get_enabled_modules();
-
-  if ($use_drupal_translations) {
+function lingotek_admin_load_l10n_update_batch($modules) {
+      
+    // attempt to pull translations using l10n_update module
     module_load_include('inc', 'l10n_update', 'l10n_update.batch');
-    list($translated_modules, $updates) = lingotek_check_for_l10n_translations($modules_list);
+    $updates = lingotek_check_for_l10n_translations($modules);
     if ($updates) {
       $batch = l10n_update_batch_multiple($updates, variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP));
+      $batch['title'] = t('Checking for available translations from Drupal');
+      $batch['init_message'] = t('Checking for translations...');
+      $batch['finished'] = 'lingotek_admin_module_indexing_finished';
+      $batch['error_message'] = t('String-gathering process has encountered an error.');
+      $batch['file'] = drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc';
+      batch_set($batch);
     }
-    $batch['title'] = t('Checking for available translations from Drupal, and gathering other translatable strings');
-    $batch['init_message'] = t('Checking for translations...');
-  }
-  else {
-     $batch = array(
-      'operations' => array(),
-      'title' => t('Gathering translatable strings from all enabled modules'),
-      'init_message' => t('Preparing list of modules to be searched for built-in strings...'),
-      'progress_message' => t('Processed @current out of @total.'),
-    );
-  }
-  // common batch mods to reflect the additional jobs...
-  $batch['finished'] = 'lingotek_admin_module_indexing_finished';
-  $batch['error_message'] = t('String-gathering process has encountered an error.');
-  $batch['file'] = drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc';
+}
+
+function lingotek_admin_prepare_builtins($additional_operations=array()) {
+  
+  // search for all new built-in strings using the potx module, and add
+  // them to the locales_source table for lingotek to translate
+  $modules_list = lingotek_admin_get_enabled_modules();
+
+  $batch = array(
+    'operations' => $additional_operations,
+    'title' => t('Gathering translatable strings from all enabled modules'),
+    'init_message' => t('Preparing list of modules to be searched for built-in strings...'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'finished' => 'lingotek_admin_module_indexing_finished',
+    'error_message' => t('String-gathering process has encountered an error.'),
+    'file' => drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc',
+  );
     
   $indexed_modules = variable_get('lingotek_translate_config_indexed_modules'); // modules previously scanned
   if (!$indexed_modules) {
@@ -637,6 +634,7 @@ function lingotek_admin_prepare_builtins($use_drupal_translations = TRUE) {
   if (isset($batch['operations']) && count($batch['operations'] > 0)) {
     $batch['operations'][] = array('lingotek_admin_index_plural_targets', array());
     batch_set($batch);
+    batch_process('admin/settings/lingotek');
   }
 }
 
@@ -662,13 +660,17 @@ function lingotek_admin_save_queued_strings() {
 
   foreach ($_potx_strings as $k => $v) {
     // handle format_plural
-    list($singular, $plural) = explode("\0", $k);
-    locale($singular, $context=NULL, $langcode='und');    
-    if ($plural) {
+    if (strpos($k, "\0")) {
+      list($singular, $plural) = explode("\0", $k);
+      locale($singular, $context=NULL, $langcode='und');    
       $single_lid = LingotekConfigChunk::getLidBySource($singular);
       locale($plural, $context=NULL, $langcode='und');
       $plural_lid = LingotekConfigChunk::getLidBySource($plural);
       $plural_map[$plural_lid] = array('plid' => $single_lid, 'plural' => 1);
+    }
+    else {
+      // handle regular t-function content
+      locale($k, $context=NULL, $langcode='und');
     }
   }
   // TODO: do something with the _potx_install strings
@@ -722,7 +724,7 @@ function lingotek_check_for_l10n_translations($modules) {
       $updates = _l10n_update_prepare_updates($updates);
     }
   }
-  return array($available, $updates);
+  return $updates;
 }
 
 function lingotek_admin_module_indexing_finished($success, $results) {

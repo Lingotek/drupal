@@ -256,6 +256,7 @@ function lingotek_sync_endpoint() {
 function lingotek_form_bulk_sync($form, $form_state) {
 
   global $base_url;
+  module_load_include('admin.inc', 'lingotek');
   $submit_functions = array('lingotek_form_bulk_sync_submit');
   $report = LingotekSync::getReport();
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
@@ -364,12 +365,31 @@ function lingotek_form_bulk_sync($form, $form_state) {
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
-        '#title' => $cf_included_str . ' (<span id="upload-config-total">' . $report['upload_config_count'] . ' ' . format_plural($report['upload_config_count'], 'set', 'sets') . ' ' . t('of additions/changes') . '</span>)',
+        '#title' => $cf_included_str 
+            . ' (<span id="upload-config-total">' 
+            . $report['upload_config_count'] . ' ' 
+            . format_plural($report['upload_config_count'], 'set', 'sets') 
+            . ' ' . t('of additions/changes') . '</span>)',
         '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_config_count'] == 0,
       );
+      $additional_desc = '';
       if (count($config_types_excluded)) {
-        $form['upload']['upload_config']['#description'] = t('(You can also enable translation for') . ' ' . $cf_excluded_str . ' ' . t('in the Additional Translation tab of the') . ' <a href="' . $base_url . '/admin/settings/lingotek/settings">' . t('Lingotek Settings') . '</a>)';
+        $additional_desc .= t('(You can also enable translation for') 
+            . ' ' . $cf_excluded_str . ' ' 
+            . t('in the Additional Translation tab of the') 
+            . ' <a href="' . $base_url . '/admin/settings/lingotek/settings">' 
+            . t('Lingotek Settings') . '</a>)<br>';
+      }
+      $modules = lingotek_admin_get_enabled_modules();
+      if ($updates = lingotek_check_for_l10n_translations($modules)) {
+        $additional_desc .= format_plural(
+            count($updates), 
+            'You have 1 pending localization import from Drupal included in this step.', 
+            'You have @count pending localization imports from Drupal included in this step.');
+      }
+      if ($additional_desc) {
+        $form['upload']['upload_config']['#description'] = $additional_desc;
       }
     }
   }
