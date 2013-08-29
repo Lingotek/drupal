@@ -45,8 +45,10 @@ function lingotek_node_populate(&$node) {
 //    $node->lingotek = $lingotek_values;
   }
   else if(lingotek_supported_type ($node->type)) {
-    $profile_id = variable_get('lingotek_entity_profiles')['node'][$node->type];
-    $lingotek_values = (array) variable_get('lingotek_profiles')[$profile_id];
+    $entity_profiles = variable_get('lingotek_entity_profiles');
+    $profile_id = $entity_profiles['node'][$node->type];
+    $profiles = variable_get('lingotek_profiles');
+    $lingotek_values = (array) $profiles[$profile_id];
     $lingotek_values['profile'] = $profile_id;
     
     unset($lingotek_values['name']);

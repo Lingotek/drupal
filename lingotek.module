@@ -957,7 +957,8 @@ function lingotek_node_save($node) {
 
     lingotek_lingonode($node->nid, 'profile', $node->lingotek['profile']);
     
-    $profile = (array) variable_get('lingotek_profiles')[$node->lingotek['profile']];
+    $profiles = variable_get('lingotek_profiles', array());
+    $profile = (array) $profiles[$node->lingotek['profile']];
     unset($profile['name']);
     $node->lingotek = array_replace($node->lingotek, $profile);
     
@@ -1127,7 +1128,8 @@ function lingotek_node_load($nodes, $types) {
     }
         
     if (isset($n->lingotek['profile']) && $n->lingotek['profile'] != -1) {
-      $profile = (array) variable_get('lingotek_profiles')[$n->lingotek['profile']];
+      $profiles = variable_get('lingotek_profiles', array());
+      $profile = (array) $profiles[$n->lingotek['profile']];
       unset($profile['name']);
       $n->lingotek = array_replace($n->lingotek, $profile);
     }
