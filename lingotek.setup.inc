@@ -584,22 +584,8 @@ function lingotek_setup_default_profiles() {
     'workflow_id' => variable_get('lingotek_workflow'),
     'vault_id' => variable_get('lingotek_vault'),
   );
-  $workflows = array_flip(LingotekApi::instance()->listWorkflows());
   $profiles[] = (object) array(
-    'name' => 'Human Translation',
-    'lingotek_nodes_translation_method' => 'field',
-    'create_lingotek_document' => 1,
-    'sync_method' => 1,
-    'allow_community_translation' => 0,
-    'url_alias_translation' => 0,
-    'sync_method_workbench_moderation' => 'no_moderation',
-    'create_lingotek_document_workbench_moderation' => 'published',
-    'project_id' => variable_get('lingotek_project'),
-    'workflow_id' => $workflows['Translation Only'],
-    'vault_id' => variable_get('lingotek_vault'),
-  );
-  $profiles[] = (object) array(
-    'name' => 'Machine + Crowdsourced',
+    'name' => 'Automatic + Crowdsourced',
     'lingotek_nodes_translation_method' => 'field',
     'create_lingotek_document' => 1,
     'sync_method' => 1,
