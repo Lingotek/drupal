@@ -528,10 +528,3 @@ function lingotek_update_7401(&$sandbox) {
 
   return $output;
 }
-
-/*
- * Adds default profiles
- */
-function lingotek_update_7403(&$sandbox) {
-  lingotek_setup_default_profiles();
-}

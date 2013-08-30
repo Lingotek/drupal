@@ -478,10 +478,15 @@ class LingotekComment implements LingotekTranslatableEntity {
     return $property;
   }
   
-  /**
-   * Return the workflow_id assigned for comments
-   */
-  public static function getWorkflowId() {
+  public function getWorkflowId() {
     return variable_get('lingotek_translate_comments_workflow_id', '');
+  }
+  
+  public function getProjectId() {
+    return variable_get('lingotek_project', '');
+  }
+  
+   public function getVaultId() {
+    return variable_get('lingotek_vault', '');
   }
 }

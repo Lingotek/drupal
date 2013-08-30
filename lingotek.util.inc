@@ -24,40 +24,6 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
   }
 }
 
-function lingotek_node_populate(&$node) {  
-  if (isset($node->nid)) {
-//    $profile_fields = lingotek_get_profile_fields();
-//
-//    $result = db_select('lingotek', 'n')
-//      ->fields('n', array('lingokey', 'lingovalue'))
-//      ->condition('n.nid', $node->nid)
-//      ->execute();
-//    $node->lingotek = array();
-//
-//    $lingotek_values = $result->fetchAllKeyed();
-//
-//    if ($lingotek_values['profile'] != -1) {
-//      $profile = (array) variable_get('lingotek_profiles')[$lingotek_values['profile']];
-//      $lingotek_values = array_replace($lingotek_values, $profile);
-//    }
-//    
-//    unset($lingotek_values['name']);
-//    $node->lingotek = $lingotek_values;
-  }
-  else if(lingotek_supported_type ($node->type)) {
-    $entity_profiles = variable_get('lingotek_entity_profiles');
-    $profile_id = $entity_profiles['node'][$node->type];
-    $profiles = variable_get('lingotek_profiles');
-    $lingotek_values = (array) $profiles[$profile_id];
-    $lingotek_values['profile'] = $profile_id;
-    
-    unset($lingotek_values['name']);
-    $node->lingotek = $lingotek_values;
-  }
-  
-  return $node;
-}
-
 /*
  * Helper function, for storing additional information with a Node.
  * Example usage (GET):
@@ -79,14 +45,6 @@ function lingotek_node_populate(&$node) {
  */
 
 function lingotek_lingonode($nid, $key = "", $value = "") {
-  $profile_fields = lingotek_get_profile_fields(FALSE);
-  if (array_search($key, $profile_fields)) {
-    $profile = lingotek_lingonode($nid, 'profile');
-    if ($profile != -1) {
-      $profiles = variable_get('lingotek_profiles');
-      return $profiles[$profile]->$key;
-    }
-  }
   
   if ($nid == 'all') {
     $lingo_node = array();
@@ -465,8 +423,10 @@ function lingotek_access_dev_tools($node, $permission) {
  */
 function lingotek_supported_type($type) {
   $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) == LINGOTEK_ENABLED;
+  $fields = variable_get('lingotek_translate_fields');
+  $lingotek_supported_setting = isset($fields[$type]);
   $entity_translation_managed = lingotek_managed_by_entity_translation($type);
-  return $lingotek_supported_explicitly || $entity_translation_managed; //we also support entity_translation managed content
+  return ($lingotek_supported_explicitly && $lingotek_supported_setting) || $entity_translation_managed; //we also support entity_translation managed content
 }
 
 /**
@@ -1056,12 +1016,14 @@ function lingotek_set_priority() {
  * Gets the default profile info, mapped by entity type
  */
 function lingotek_load_profile_defaults($entity_type) {
-  $profile_defaults = variable_get('lingotek_profiles', array());
+  $profile_defaults = lingotek_get_profiles();
   $entity_profile_defaults = variable_get('lingotek_entity_profiles', array());
   $profile_map = array();
   if (array_key_exists($entity_type, $entity_profile_defaults)) {
     foreach ($entity_profile_defaults[$entity_type] as $k => $v) {
       $profile_map[$k] = $profile_defaults[$v];
+      $profile_map[$k]['profile'] = $v;
+      unset($profile_map[$k]['name']);
     }
     return $profile_map;
   }

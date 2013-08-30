@@ -889,7 +889,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   public function getEntityType() {
     return self::DRUPAL_ENTITY_TYPE;
   }
-
+  
   /**
    * Magic get for access to chunk and chunk properties.
    */
@@ -914,11 +914,16 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     return substr($tag, self::TAG_PREFIX_LENGTH);
   }
 
-  /**
-   * Return the workflow_id assigned for config chunks
-   */
-  public static function getWorkflowId() {
+  public function getWorkflowId() {
     return variable_get('lingotek_translate_config_workflow_id', '');
+  }
+  
+  public function getProjectId() {
+    return variable_get('lingotek_project', '');
+  }
+  
+   public function getVaultId() {
+    return variable_get('lingotek_vault', '');
   }
 
   /**

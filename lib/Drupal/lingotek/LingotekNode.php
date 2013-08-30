@@ -31,6 +31,8 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   protected $api = NULL;
   
+  public $language = '';
+
   /**
    * Constructor.
    *
@@ -41,6 +43,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   private function __construct($node) {
     $this->node = $node;
+    $this->language = $node->language;
   }
   
   /**
@@ -218,12 +221,15 @@ class LingotekNode implements LingotekTranslatableEntity {
     // on LingotekNode objects, explicitly.    
   }
   
-  /**
-   * Return the workflow_id assigned for comments
-   */
-  public static function getWorkflowId() {
-    //this method is not used
+  public function getWorkflowId() {
     return $this->node->lingotek['workflow_id'];
   }
   
+  public function getProjectId() {
+    return $this->node->lingotek['project_id'];
+  }
+  
+  public function getVaultId() {
+    return $this->node->lingotek['vault_id'];
+  }
 }

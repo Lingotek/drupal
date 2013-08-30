@@ -642,8 +642,9 @@ function lingotek_grid_build_filters($form_state) {
   $profiles = array();
   $profiles['all'] = 'All';
   
-  foreach(variable_get('lingotek_profiles') as $key => $p) {
-    $profiles[$key] = $p->name;
+  $profile_defaults = lingotek_get_profiles();
+  foreach($profile_defaults as $key => $p) {
+    $profiles[$key] = $p['name'];
   }
   
   $filters = array(
@@ -1240,7 +1241,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
     $url_alias_default = t('Default (@default)', array('@default' => variable_get('lingotek_url_alias_translation', 0) ? (variable_get('lingotek_url_alias_translation', 0) == 1 ? 'Translate' : 'Use Title') : 'Off'));
 
     $languages = language_list();
-    $profiles = variable_get('lingotek_profiles');
+    $profiles = lingotek_get_profiles();
     
     // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
     foreach ($table_data_raw as $row) {
@@ -1322,7 +1323,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
       if(!isset($row->profile) || $row->profile == -1) {
         $configuration = 'Custom ' .$configuration;
       } else {
-        $configuration = $profiles[$row->profile]->name;
+        $configuration = $profiles[$row->profile]['name'];
       }
       
       $source = '<span style="white-space: nowrap;">' . $icon . ' ' . $languages[$row->language]->name . '</span>';

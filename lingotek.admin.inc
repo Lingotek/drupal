@@ -108,7 +108,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   
   $profile_options = array();
   foreach ($profiles as $key => $profile) {
-    $profile_options[$key] = $profile->name;
+    $profile_options[$key] = $profile['name'];
   }
   
   $entity_profiles = variable_get('lingotek_entity_profiles');
@@ -290,11 +290,6 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     // Look for any profiles
     if (FALSE !== strpos($key, 'profile_')) {
       $content_type = substr($key, strlen('profile_'));
-                  
-      if(!isset($entity_profiles_old['node'][$content_type]) || $entity_profiles_old['node'][$content_type] != $value) {
-        lingotek_admin_profile_content_type_switch($content_type, $entity_profiles_old['node'][$content_type], $value);
-      }
-      
       $entity_profiles['node'][$content_type] = $value;
     }
   }
@@ -319,30 +314,6 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     }
     batch_process($redirect);
   }
-}
-
-function lingotek_admin_profile_content_type_switch($content_type, $old_profile, $new_profile) {
-  $operations = array();
-
-  $query = db_select('node', 'n');
-  $query->fields('n', array('nid'));
-  $query->addJoin('INNER', 'lingotek', 'l', 'n.nid = l.nid');
-  $query->condition('n.type', $content_type);
-  $query->condition('l.lingokey', 'profile');
-  $query->condition('l.lingovalue', '-1', '<>');
-  
-  $result = $query->execute();
-  
-  foreach($result as $record) {
-    $operations[] = array('lingotek_node_profile_switch', array($record->nid, $new_profile));
-  }
-  
-  $batch = array(
-    'title' => 'Updating Profiles',
-    'operations' => $operations,
-  );
-    
-  batch_set($batch);
 }
 
 function lingotek_admin_profile_usage($id) {
@@ -1156,7 +1127,7 @@ function lingotek_admin_connection_form_submit($form, &$form_state) {
 }
 
 function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALSE) {
-  $profiles = variable_get('lingotek_profiles');
+  $profiles = lingotek_get_profiles();
   
   $form['header'] = array(
     '#type' => 'item',
@@ -1177,7 +1148,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     
     $count = lingotek_admin_profile_usage($key);
     
-    $rows[] = array($profile->name, $count . ' ' . format_plural($count, 'node', 'nodes'), $edit_link);
+    $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes'), $edit_link);
   }
     
   $variables = array(
@@ -1490,10 +1461,10 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 function lingotek_admin_profile_form_submit($form, &$form_state) {  
   if ($form_state['values']['op'] == 'Save') {
     $profiles = variable_get('lingotek_profiles');
-    $profile = new stdClass();
+    $profile = array();
 
     foreach (lingotek_get_profile_fields(TRUE) as $key) {
-      $profile->$key = $form_state['values'][$key];
+      $profile['key'] = $form_state['values'][$key];
     }
 
     if (module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
@@ -1502,7 +1473,7 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
         if ($form_state['values']['sync_method_workbench_moderation'] == 'increment') {
           foreach ($states as $state) {
             if (isset($form_state['input']['lingotek_sync_wb_select_' . $state])) {
-              $profile->{'lingotek_sync_wb_select_' . $state} = $form_state['input']['lingotek_sync_wb_select_' . $state];
+              $profile['lingotek_sync_wb_select_' . $state] = $form_state['input']['lingotek_sync_wb_select_' . $state];
             }
           }
         }
@@ -1694,13 +1665,6 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $api = LingotekApi::instance();
   $site = variable_get('site_name', 'Drupal Site');
   $is_enterprise = $account->isEnterprise();
-
-  //autocreate profiles for upgraded sites
-  $lingotek_profiles = variable_get('lingotek_profiles', array());
-  if (empty($lingotek_profiles)) {
-    module_load_include('inc', 'lingotek', 'lingotek.setup');
-    lingotek_setup_default_profiles();
-  }
 
   //$form_short_id values:  config, logging, utilities, language_switcher
   $form_id = "lingotek_admin_{$form_short_id}_form";

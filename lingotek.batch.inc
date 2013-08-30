@@ -379,7 +379,9 @@ function lingotek_sync_upload_node($nid, &$context) {
   }
   else {
     // Create a new Lingotek Document.
-    $result = $api->addContentDocument($node, TRUE);
+    $ln = LingotekNode::load($node);
+    lingotek_node_save_readonly($node);
+    $result = $api->addContentDocument($ln, TRUE);
   }
 
   if ($result) {

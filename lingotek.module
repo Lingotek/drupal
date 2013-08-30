@@ -580,11 +580,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   }
   else {
     $node = $form['#node'];
-    lingotek_node_populate($node);
+    $profile_default = lingotek_load_profile_defaults('node');
+    $node->lingotek = lingotek_get_global_profile();
+    $node->lingotek = array_merge($node->lingotek, $profile_default[$node->type]);
   }
-  
-  
-  
+    
   global $language;
 
   $drupal_language_code = $language->language;
@@ -781,11 +781,11 @@ function lingotek_get_node_settings_form($form, &$form_state, $node) {
     '#default_value' => isset($node->lingotek['node_sync_status']) ? ($node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED) : FALSE,
   );
   
-  $profiles = variable_get('lingotek_profiles');
+  $profiles = lingotek_get_profiles();
   
   $profile_options = array();
   foreach ($profiles as $key => $profile) {
-    $profile_options[$key] = $profile->name;
+    $profile_options[$key] = $profile['name'];
   }
   
   $profile_options['-1'] = 'Custom';
@@ -930,13 +930,18 @@ function lingotek_node_save($node) {
     return;
   }
   
-  if ($node->lingotek['profile'] == -1) {
-    db_delete('lingotek')
-      ->condition('nid', $node->nid)
-      ->condition('lingokey', array_keys($node->lingotek), 'IN')
-      ->execute();    
-    
-    $ignore = array('et_content', 'lingotek_push_once', 'lingotek_disabled', 'advanced');
+  if(!empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
+    return;
+  }
+  
+  $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
+  db_delete('lingotek')
+    ->condition('nid', $node->nid)
+    ->condition('lingokey', lingotek_get_profile_fields($has_not_been_uploaded, TRUE), 'IN')
+    ->execute();
+
+  if ($node->lingotek['profile'] == -1) { // Custom Profile
+    $ignore = array('et_content', 'lingotek_push_once', 'lingotek_disabled', 'advanced', 'profile');
     $query = db_insert('lingotek')->fields(array('nid', 'lingokey', 'lingovalue'));
     
     foreach ($node->lingotek as $key => $value) {
@@ -944,36 +949,15 @@ function lingotek_node_save($node) {
         $query->values(array($node->nid, $key, $value));
       }
     }
-    
     $query->execute();
   }
-  elseif (empty($node->tnid) || ($node->nid == $node->tnid)) { //check to make sure it is not a target node
-    $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
-    
-    db_delete('lingotek')
-      ->condition('nid', $node->nid)
-      ->condition('lingokey', lingotek_get_profile_fields($has_not_been_uploaded, TRUE), 'IN')
-      ->execute();
-
-    lingotek_lingonode($node->nid, 'profile', $node->lingotek['profile']);
-    
-    $profiles = variable_get('lingotek_profiles', array());
-    $profile = (array) $profiles[$node->lingotek['profile']];
-    unset($profile['name']);
-    $node->lingotek = array_replace($node->lingotek, $profile);
-    
-    $query = db_insert('lingotek')->fields(array('nid', 'lingokey', 'lingovalue'));
-        
-    if ($has_not_been_uploaded) {
-      $search = lingotek_get_profile_fields(TRUE, FALSE);
-      
-      foreach ($node->lingotek as $key => $value) {
-        if (array_search($key, $search)) {
-          $query->values(array($node->nid, $key, $value));
-        }
-      }
-
-      $query->execute();
+  else { // Specific Profile
+    $node_defaults = lingotek_load_profile_defaults('node');
+    $profile_overridden = ($node_defaults[$node->type]['profile'] != $node->lingotek['profile']);
+    if($profile_overridden) {
+      lingotek_lingonode($node->nid, 'profile', $node->lingotek['profile']);
+    } else {
+      lingotek_lingonode_variable_delete($node->nid, 'profile');
     }
   }
   
@@ -985,6 +969,13 @@ function lingotek_node_save($node) {
     $node->lingotek['node_sync_status'] = LingotekSync::STATUS_EDITED;
     LingotekSync::setNodeEnabled($node->nid, TRUE);
   }
+}
+
+function lingotek_node_save_readonly($node) {
+  lingotek_lingonode($node->nid, 'project_id', $node->lingotek['project_id']);
+  lingotek_lingonode($node->nid, 'vault_id', $node->lingotek['vault_id']);
+  lingotek_lingonode($node->nid, 'workflow_id', $node->lingotek['workflow_id']);
+  lingotek_lingonode($node->nid, 'lingotek_nodes_translation_method', $node->lingotek['lingotek_nodes_translation_method']);
 }
 
 function lingotek_get_node_settings_form_submit($form, $form_state) {
@@ -1031,6 +1022,50 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
 //      call_user_func_array($op[0], $op[1]);
 //    }
   }
+}
+
+
+function lingotek_get_global_profile() {
+  return array(
+    'name' => '',
+    'document_id' => NULL,
+    'lingotek_nodes_translation_method' => 'field',
+    'create_lingotek_document' => 1,
+    'sync_method' => 1,
+    'allow_community_translation' => 0,
+    'url_alias_translation' => 0,
+    'node_sync_status' => LingotekSync::STATUS_EDITED,
+    'sync_method_workbench_moderation' => 'no_moderation',
+    'create_lingotek_document_workbench_moderation' => 'published',
+    'project_id' => variable_get('lingotek_project'),
+    'workflow_id' => variable_get('lingotek_workflow'),
+    'vault_id' => variable_get('lingotek_vault'),
+  );
+}
+
+function lingotek_get_profiles() {
+  $profiles = variable_get('lingotek_profiles', array());
+  
+  if (empty($profiles)) {
+    $profiles[] = array(
+      'name' => 'Automatic',
+      'create_lingotek_document' => 1,
+      'sync_method' => 1,
+    );
+    $profiles[] = array(
+      'name' => 'Manual',
+      'create_lingotek_document' => 0,
+      'sync_method' => 0,
+    );
+    $profiles[] = array(
+      'name' => 'Automatic + Crowdsourced',
+      'create_lingotek_document' => 1,
+      'sync_method' => 1,
+      'allow_community_translation' => 1,
+    );
+    variable_set('lingotek_profiles', $profiles);
+  }
+  return $profiles;
 }
 
 /**
@@ -1089,17 +1124,24 @@ function lingotek_node_delete($node) {
  * Implements hook_node_load().
  */
 function lingotek_node_load($nodes, $types) {
-  
+  $global_profile = lingotek_get_global_profile();
   $node_profile_defaults = lingotek_load_profile_defaults('node'); // return assoc array by node type
+  $profiles_list = lingotek_get_profiles();
+  
+  $result = db_select('lingotek', 'n')
+      ->fields('n', array('nid', 'lingokey', 'lingovalue'))
+      ->condition('n.nid', array_keys($nodes), 'IN')
+      ->condition('n.lingokey', 'target_%', 'NOT LIKE')
+      ->execute();
+  
+  $node_lingovalues = array();
+  foreach ($result as $record) {
+    $node_lingovalues[$record->nid][$record->lingokey] = $record->lingovalue;
+  }
   
   foreach ($nodes as &$node) {
-    if (!isset($node->lingotek) && array_key_exists($node->type, $node_profile_defaults)) {
-      $node->lingotek = (array) $node_profile_defaults[$node->type];
-    }
-    else {
-      // no default for this entity type, so set to first profile found
-      $default_profiles = variable_get('lingotek_profiles', array());
-      $node->lingotek = (array) $default_profiles[0];
+    if (!lingotek_supported_type($node->type)) {
+      continue;
     }
     
     // translate node titles for workbench moderation 'View draft' node tab
@@ -1109,36 +1151,25 @@ function lingotek_node_load($nodes, $types) {
       drupal_static_reset('title_entity_sync');
       title_entity_sync('node', $node);
     }
-  }
-  $result = db_select('lingotek', 'n')
-    ->fields('n', array('nid', 'lingokey', 'lingovalue'))
-    ->condition('n.nid', array_keys($nodes), 'IN')
-    ->condition('n.lingokey', 'target_%', 'NOT LIKE')
-    ->execute();
-
-  foreach ($result as $record) {
-    $n = $nodes[$record->nid];
-    $n->lingotek[$record->lingokey] = $record->lingovalue;
-  }
-
-  $profile_fields = lingotek_get_profile_fields();
-  
-  foreach ($nodes as &$node) {
-    if (!isset($node->lingotek['profile'])) {
-      if (isset($node->lingotek['document_id'])) {
-        $node->lingotek['profile'] = -1;
-      }
-      elseif (!isset($node->nid) && lingotek_supported_type($node->type)) {
-        $entity_profiles = variable_get('lingotek_entity_profiles');
-        $node->lingotek['profile'] = $entity_profiles['node'][$node->type];
-      }
+    
+    // Node profile inheritance heirarchy
+    // Step 1: get global profile
+    $node->lingotek = $global_profile;
+    // Step 2: add default profiles
+    if (array_key_exists($node->type, $node_profile_defaults)) {
+      $node->lingotek = array_merge($node->lingotek, $node_profile_defaults[$node->type]);
     }
-        
-    if (isset($node->lingotek['profile']) && $node->lingotek['profile'] != -1) {
-      $profiles = variable_get('lingotek_profiles', array());
-      $profile = (array) $profiles[$node->lingotek['profile']];
-      unset($profile['name']);
-      $node->lingotek = array_replace($node->lingotek, $profile);
+    // Step 3: add node-specific profile
+    if (isset($node_lingovalues[$node->nid]['profile'])) {
+      $node->lingotek = array_merge($node->lingotek, $profiles_list[$node_lingovalues[$node->nid]['profile']]);
+    }
+    // Step 4: add node-specific overrides
+    if (isset($node_lingovalues[$node->nid])) {
+      $node->lingotek = array_merge($node->lingotek, $node_lingovalues[$node->nid]);
+    }
+    // Step 5: recognize custom profile
+    if (isset($node_lingovalues[$node->nid]['create_lingotek_document'])) {
+      $node->lingotek['profile'] = -1;
     }
   }
 }
@@ -1155,6 +1186,7 @@ function lingotek_node_update($node) {
   }
   else {
     if (!isset($node->lingotek['node_sync_status']) || ($node->lingotek['node_sync_status'] != LingotekSync::STATUS_DISABLED && $node->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET)) {
+      $node = node_load($node->nid);
       lingotek_upload_document($node);
     }
   }
@@ -1210,7 +1242,9 @@ function lingotek_upload_document($node) {
     LingotekLog::trace('lingotek_node_update FIRST RUN ONLY', array("nid" => $node->nid, "language" => $node->language));
 
     if ($send_lingotek_document) {
-      if (LingotekApi::instance()->addContentDocument($node, TRUE)) {
+      lingotek_node_save_readonly($node);
+      $ln = LingotekNode::load($node);
+      if (LingotekApi::instance()->addContentDocument($ln, TRUE)) {
         drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
       }
       else {
@@ -1906,11 +1940,4 @@ function lingotek_cron() {
   variable_del('lingotek_vaults_defaults');
 
   LingotekLog::trace(__METHOD__ . ' ran');
-}
-
-function lingotek_node_profile_switch($nid, $new_profile) {
-//  $n = node_load($nid);
-//  $n->lingotek['profile'] = $new_profile;
-//  node_save($n);
-  lingotek_lingonode($nid, 'profile', $new_profile);
 }

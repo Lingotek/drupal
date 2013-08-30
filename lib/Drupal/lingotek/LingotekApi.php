@@ -73,9 +73,9 @@ class LingotekApi {
     $isContentNode = (property_exists($translatable_object, "nid") && $translatable_object->nid ? TRUE : FALSE);
 
     $node = $translatable_object;
-    $project_id = $isContentNode ? $node->lingotek['project_id'] : $translatable_object->lingotek_project_id;
-    $vault_id = $isContentNode ? $node->lingotek['vault_id'] : $translatable_object->lingotek_vault_id;
-    $workflow_id = $isContentNode ? $node->lingotek['workflow_id'] : $translatable_object->lingotek_workflow_id;
+    $project_id = $translatable_object->getProjectId();
+    $vault_id = $translatable_object->getVaultId();
+    $workflow_id = $translatable_object->getWorkflowId();
 
     $node_language = (property_exists($translatable_object, 'language') ? $translatable_object->language : NULL);
     if (is_object($node_language)) {  // Allow language attributes to be objects (e.g., config chunks)

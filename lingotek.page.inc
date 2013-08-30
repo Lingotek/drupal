@@ -158,7 +158,9 @@ function lingotek_push_form_submit($form, $form_state) {
   }
   else {
     // Create a new Lingotek Document.
-    $api->addContentDocument($node, TRUE);
+    lingotek_node_save_readonly($node);
+    $ln = LingotekNode::load($node);
+    $api->addContentDocument($ln, TRUE);
   }
 
   drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));
