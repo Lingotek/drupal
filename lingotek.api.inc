@@ -87,11 +87,10 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
   $use_source = isset($source_node->lingotek['use_source']) ? $source_node->lingotek['use_source'] : variable_get('lingotek_use_source', FALSE);
-  $use_source = ($use_source) ? 'TRUE' : 'FALSE';// API expects a string, not boolean
+  $use_source = ($use_source) ? 'TRUE' : 'FALSE'; // API expects a string, not boolean
 
-  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale); //lingotek_lookup_language_by_locale($lingotek_locale)->language
-  $params = array
-    (
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+  $params = array(
     'documentId' => $document_id,
     'targetLanguage' => $lingotek_locale,
     'useSource' => $use_source,
