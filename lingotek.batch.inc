@@ -292,7 +292,7 @@ function lingotek_batch_identify_content($front = FALSE) {
   $existing_nids = $result->fetchCol();
   $operations = array();
 
-  foreach (lingotek_get_content_types(TRUE) as $type) {
+  foreach (lingotek_get_content_types() as $type) {
 
     $nodes = node_load_multiple(array(), array('type' => $type));
 

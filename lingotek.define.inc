@@ -50,11 +50,6 @@ else {
 lingotek_define('LINGOTEK_DEV', variable_get('lingotek_dev', FALSE));
 
 /**
- * Identifies a content type which has Lingotek translation enabled.
- */
-define('LINGOTEK_ENABLED', 'lingotek');
-
-/**
  * Defines the path URLs
  */
 define('LINGOTEK_MENU_LANG_BASE_URL', 'admin/config/regional/lingotek');

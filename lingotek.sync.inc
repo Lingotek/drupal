@@ -170,11 +170,21 @@ function lingotek_notifications() {
           lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
         }
       }
-      elseif (!$completed) {
+      
+      if (!$completed) {
         lingotek_get_and_update_target_progress($document_id);
       }
       else {
         lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
+        
+        $query = db_select('lingotek');
+        $query->addExpression('AVG(lingovalue)');
+        
+        $total = $query->condition('lingokey', 'target_sync_progress_%', 'LIKE')
+          ->condition('nid', $nid)
+          ->execute()->fetchField();
+        lingotek_lingonode($nid, 'translation_progress', $total);
+          
         lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
     }

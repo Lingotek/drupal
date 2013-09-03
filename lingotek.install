@@ -528,3 +528,30 @@ function lingotek_update_7401(&$sandbox) {
 
   return $output;
 }
+
+/*
+ * Removes the "Lingotek Translatable" option from each field
+ */
+function lingotek_update_7403(&$sandbox) {
+  if(empty(variable_get('lingotek_translate_fields'))) {
+    
+    $types = _node_types_build()->types;
+    $translate_fields = array();
+
+    foreach($types as $t) {
+      $translation_setting = variable_get('language_content_type_' . $t->type);
+      if($translation_setting == 'lingotek') {
+        variable_set('language_content_type_' . $t->type, "1");
+        $fields = field_info_instances("node", $t->type);
+        foreach($fields as $field_name => $instance) {
+          $field = field_info_field($field_name);
+          if($field['translatable'] && $field['lingotek_translatable'] == 1) {
+            $translate_fields[$t->type][] = $field_name;
+          }
+        }
+      }
+    }
+  
+    variable_set('lingotek_translate_fields', $translate_fields);
+  }
+}

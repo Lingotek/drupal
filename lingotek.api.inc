@@ -20,7 +20,10 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
 
   if ($node->tnid == 0) {
     $node->tnid = $node->nid;
-    node_save($node);
+    db_update('node')
+      ->fields(array('tnid' => $node->nid))
+      ->condition('nid', $node->nid)
+      ->execute();
   }
 
   if (isset($tset[$drupal_language_code])) {
@@ -85,17 +88,17 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
   $document_id = $source_node->lingotek['document_id'];
   LingotekLog::trace('lingotek_download_document @doc_id (@target)', array('@doc_id' => $document_id, '@target' => $lingotek_locale));
 
-  //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
-  $use_source = isset($source_node->lingotek['use_source']) ? $source_node->lingotek['use_source'] : variable_get('lingotek_use_source', FALSE);
-  $use_source = ($use_source) ? 'TRUE' : 'FALSE'; // API expects a string, not boolean
 
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   $params = array(
     'documentId' => $document_id,
     'targetLanguage' => $lingotek_locale,
-    'useSource' => $use_source,
   );
-
+  
+  //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
+  if(!empty(variable_get('lingotek_use_source'))) {
+    $params['useSource'] = variable_get('lingotek_use_source');
+  }
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
   try {

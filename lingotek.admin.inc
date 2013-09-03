@@ -104,7 +104,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   $raw_types = node_type_get_types();
   $types = array();
   $translate = variable_get('lingotek_translate_fields', array());
-  $profiles = variable_get('lingotek_profiles');
+  $profiles = lingotek_get_profiles();
   
   $profile_options = array();
   foreach ($profiles as $key => $profile) {
@@ -234,7 +234,6 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
   $operations = array();
   
   $entity_profiles = array();
-  $entity_profiles_old = variable_get('lingotek_entity_profiles');
   
   foreach ($form_state['input'] as $key => $value) {
 
@@ -251,7 +250,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
           $translate[$content_type][] = $content_field;
 
           // Set this content type to be Lingotek translated.
-          variable_set('language_content_type_' . $content_type, LINGOTEK_ENABLED);
+          variable_set('language_content_type_' . $content_type, '1');
           // Set this field to 'translatable'.
           // Update the field via the Field API (Instead of the direct db_update)
           $field = field_info_field($content_field);
@@ -1463,8 +1462,9 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
     $profiles = variable_get('lingotek_profiles');
     $profile = array();
 
-    foreach (lingotek_get_profile_fields(TRUE) as $key) {
-      $profile['key'] = $form_state['values'][$key];
+    $profile[$key]['name'] = $form_state['values']['name'];
+    foreach (lingotek_get_profile_fields(TRUE, TRUE) as $key) {
+      $profile[$key] = $form_state['values'][$key];
     }
 
     if (module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
