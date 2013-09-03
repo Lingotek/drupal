@@ -1228,7 +1228,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   if (module_exists('workbench_moderation')) {
     $workbench_moderation_enabled = TRUE;
   }
-
+  
   $form['defaults']['profile_id'] = array(
     '#type' => 'value',
     '#value' => $form_state['values']['profile_id'],
@@ -1254,7 +1254,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#description' => 'The classical method. Use for backwards compatibility.',
     ),
      
-    '#default_value' => $form_state['values']['lingotek_nodes_translation_method'],
+    '#default_value' => isset($form_state['values']['lingotek_nodes_translation_method']) ? $form_state['values']['lingotek_nodes_translation_method'] : 'field',
   );
 
   // Upload

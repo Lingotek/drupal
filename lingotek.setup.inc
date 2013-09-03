@@ -741,8 +741,10 @@ function lingotek_setup_language_switcher_form_submit($form, $form_state) {
 function lingotek_setup_node_translation_settings_form($form, $form_state) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
 
+  $fs['values'] = lingotek_get_global_profile();
+  $fs['values']['profile_id'] = -1;
   $form = lingotek_admin_node_translation_settings_form($form, $form_state);
-  $content_defaults = lingotek_admin_profile_form($form, $form_state);
+  $content_defaults = lingotek_admin_profile_form($form, $fs);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
   $form['lingotek_nodes_translation_method']['#weight'] = -3;
   

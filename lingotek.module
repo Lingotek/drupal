@@ -582,7 +582,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $node = $form['#node'];
     $profile_default = lingotek_load_profile_defaults('node');
     $node->lingotek = lingotek_get_global_profile();
-    $node->lingotek = array_merge($node->lingotek, $profile_default[$node->type]);
+    if(isset($profile_default[$node->type])) {
+      $node->lingotek = array_merge($node->lingotek, $profile_default[$node->type]);
+    } else {
+      $node->lingotek['profile'] = 0;
+    }
   }
     
   global $language;
@@ -953,7 +957,7 @@ function lingotek_node_save($node) {
   }
   else { // Specific Profile
     $node_defaults = lingotek_load_profile_defaults('node');
-    $profile_overridden = ($node_defaults[$node->type]['profile'] != $node->lingotek['profile']);
+    $profile_overridden = (!isset($node_defaults[$node->type]['profile']) || $node_defaults[$node->type]['profile'] != $node->lingotek['profile']);
     if($profile_overridden) {
       lingotek_lingonode($node->nid, 'profile', $node->lingotek['profile']);
     } else {

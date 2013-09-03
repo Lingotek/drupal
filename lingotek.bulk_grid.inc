@@ -641,6 +641,7 @@ function lingotek_grid_build_filters($form_state) {
   
   $profiles = array();
   $profiles['all'] = 'All';
+  $profiles['-1'] = 'Custom';
   
   $profile_defaults = lingotek_get_profiles();
   foreach($profile_defaults as $key => $p) {

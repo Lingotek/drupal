@@ -70,9 +70,14 @@ lingotek.forms = lingotek.forms || {};
             var sourceLanguageSet = language != 'und'; 
             var autoUpload = $('#edit-lingotek-create-lingotek-document').is(":checked");
             var autoDownload = $('#edit-lingotek-syncmethod').is(":checked");
-            
-            summaryMessages.push( autoUpload ? Drupal.t("auto-upload") : Drupal.t("manual upload"));
-            summaryMessages.push( autoDownload ? Drupal.t("auto-download") : Drupal.t("manual download"));
+            var custom = $('#edit-lingotek-profile').val() == -1;
+                        
+            if(custom) {
+              summaryMessages.push( autoUpload ? Drupal.t("auto-upload") : Drupal.t("manual upload"));
+              summaryMessages.push( autoDownload ? Drupal.t("auto-download") : Drupal.t("manual download"));
+            } else {
+              summaryMessages.push($('#edit-lingotek-profile option:selected').text());
+            }
             
             // Source language set or not
             if (sourceLanguageSet) {
