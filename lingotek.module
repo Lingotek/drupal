@@ -114,7 +114,6 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/%'] = array(
-    'title' => 'Translation Profile Management',
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.admin.inc',
@@ -681,7 +680,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   );
 }
 
-function lingotek_get_node_settings_form($form, &$form_state, $node) {
+function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
 
   $bulk_grid = FALSE;
   $multiple = FALSE;
@@ -689,12 +688,15 @@ function lingotek_get_node_settings_form($form, &$form_state, $node) {
   if (isset($form_state['nids'])) {
     $nids = $form_state['nids'];
     $bulk_grid = TRUE;
-    $multiple = count(nids) > 1;
+    $multiple = count($nids) > 1;
     if (!$multiple) {
       $node = lingotek_node_load_default(reset($nids));
     }
     else {
       drupal_set_message(t('You will be changing the settings for @number nodes.', array('@number' => count($nids))), 'warning');
+      $node = new stdClass();
+      $node->lingotek = lingotek_get_global_profile();
+      $node->lingotek['profile'] = 0;
     }
   }
     
@@ -791,12 +793,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node) {
   foreach ($profiles as $key => $profile) {
     $profile_options[$key] = $profile['name'];
   }
-  
   $profile_options['-1'] = 'Custom';
-  
-  $entity_profiles = variable_get('lingotek_entity_profiles');
-  $content_type_default = isset($entity_profiles['node'][$node->type]) ? $entity_profiles['node'][$node->type] : 0;
-    
   $form['lingotek']['profile'] = array(
     '#type' => 'select',
     '#title' => 'Translation Profile',

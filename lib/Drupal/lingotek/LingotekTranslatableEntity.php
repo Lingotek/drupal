@@ -70,4 +70,8 @@ interface LingotekTranslatableEntity {
   public function getProjectId();
   
   public function getVaultId();
+  
+  public function getTitle();
+  
+  public function getDescription();
 }

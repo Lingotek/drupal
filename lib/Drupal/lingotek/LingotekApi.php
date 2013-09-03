@@ -91,11 +91,10 @@ class LingotekApi {
         'sourceLanguage' => $source_language,
         'tmVaultId' => $vault_id,
       );
+      $parameters['documentName'] = $translatable_object->getTitle();
+      $parameters['documentDesc'] = $translatable_object->getDescription();
+      $parameters['content'] = $translatable_object->documentLingotekXML();
       if (get_class($translatable_object) == 'LingotekConfigChunk') {
-        $parameters['documentName'] = $translatable_object->getTitle();
-        $parameters['documentDesc'] = $translatable_object->getDescription();
-        $parameters['content'] = $translatable_object->documentLingotekXML();
-        $parameters['note'] = 'configuration file #' . $translatable_object->cid;
         $cid = $translatable_object->getId();
         if (!$cid) {
           $cid = '(new/unassigned)';
@@ -103,9 +102,6 @@ class LingotekApi {
         $parameters['note'] = 'config chunk #' . $cid;
       }
       else {
-        $parameters['content'] = lingotek_xml_node_body($translatable_object);
-        $parameters['documentName'] = $translatable_object->title;
-        $parameters['documentDesc'] = $translatable_object->title;
         $parameters['note'] = url('node/' . $translatable_object->nid, array('absolute' => TRUE, 'alias' => TRUE));
       }
 

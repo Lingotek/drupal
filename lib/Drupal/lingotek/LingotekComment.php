@@ -486,7 +486,15 @@ class LingotekComment implements LingotekTranslatableEntity {
     return variable_get('lingotek_project', '');
   }
   
-   public function getVaultId() {
+  public function getVaultId() {
     return variable_get('lingotek_vault', '');
+  }
+  
+  public function getTitle() {
+    return $this->comment->title;
+  }
+  
+  public function getDescription() {
+    return $this->comment->title;
   }
 }

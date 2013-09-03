@@ -232,4 +232,12 @@ class LingotekNode implements LingotekTranslatableEntity {
   public function getVaultId() {
     return $this->node->lingotek['vault_id'];
   }
+  
+  public function getTitle() {
+    return $this->node->title;
+  }
+  
+  public function getDescription() {
+    return $this->node->title;
+  }
 }

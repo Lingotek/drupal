@@ -1242,7 +1242,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['defaults']['lingotek_nodes_translation_method'] = array(
     '#type' => 'radios',
-    '#title' => t('Method for storing node translations'),
+    '#title' => t('Translation Storage'),
     '#options' => array(
       'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
       'node' => '<strong>Node Translation</strong>  - create a new node per language ',

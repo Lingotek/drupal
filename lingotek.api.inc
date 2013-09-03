@@ -110,10 +110,10 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
     LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
     return;
   }
-
+  
   $node_method = $source_node->lingotek['lingotek_nodes_translation_method'];
   $url_alias_translation = $source_node->lingotek['url_alias_translation'];
-  
+
   if ($node_method == 'node') { //node-based translations
     $node = lingotek_get_translated_node($source_node, $drupal_language_code);
   } else {

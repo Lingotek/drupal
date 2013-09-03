@@ -12,7 +12,7 @@ lingotek.forms = lingotek.forms || {};
         $("#edit-lingotek-language").change(updateVerticalTabSummary).change();
         $('#ltk-enable-from-et').bind('click',lingotek.forms.enableLtkFunc);
         $('#edit-lingotek-create-lingotek-document').change(updateVerticalTabSummary);
-        $('#edit-lingotek-syncmethod').change(updateVerticalTabSummary);
+        $('#edit-lingotek-sync-method').change(updateVerticalTabSummary);
         $('#edit-lingotek-profile').change(updateVerticalTabSummary);
         $('#edit-lingotek-lingotek-disabled').bind('click', updateVerticalTabSummary);
         updateVerticalTabSummary();
@@ -69,7 +69,7 @@ lingotek.forms = lingotek.forms || {};
             var language = $("#edit-lingotek-language").val();
             var sourceLanguageSet = language != 'und'; 
             var autoUpload = $('#edit-lingotek-create-lingotek-document').is(":checked");
-            var autoDownload = $('#edit-lingotek-syncmethod').is(":checked");
+            var autoDownload = $('#edit-lingotek-sync-method').is(":checked");
             var custom = $('#edit-lingotek-profile').val() == -1;
                         
             if(custom) {
