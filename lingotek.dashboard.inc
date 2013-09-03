@@ -108,7 +108,7 @@ function lingotek_get_dashboard_code() {
     ';
 
   $endpoint = $base_url . '/lingotek/target'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
-  $sync_url = $base_url . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
+  $sync_url = $base_url . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/manage/sync'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
 
   $output .= sprintf($script,
       // lingotek 
