@@ -816,7 +816,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * Get all locales target entries that were not created by Lingotek
    */
   protected static function getNonLingotekLocalesTargets($document_xml, $target_language) {
-    $lids = array();
+    $lids = array(-1); // seed lids for proper query handling on empty case
     foreach ($document_xml as $drupal_field_name => $xml_obj) {
       $lids[] = self::getLidFromTag($drupal_field_name);
     }
