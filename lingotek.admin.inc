@@ -678,7 +678,7 @@ function lingotek_admin_index_plural_targets(&$context=NULL) {
       ->fields('t', array('lid', 'plid', 'plural'))
       ->condition('plid', 0, '!=')
       ->execute()
-      ->fetchAll('lid');
+      ->fetchAll();
   if ($plurals) {
     $plural_map = variable_get('lingotek_config_plural_mapping', array());
     foreach ($plurals as $p) {
