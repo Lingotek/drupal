@@ -569,6 +569,12 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   if (variable_get('lingotek_translate_config_builtins')) {
     lingotek_admin_prepare_builtins($additional_operations);
   }
+  if (count(batch_get())) {
+    batch_process('admin/settings/lingotek');
+  }
+  else {
+    drupal_goto('admin/settings/lingotek');
+  }
 }
 
 function lingotek_admin_load_l10n_update_batch($modules) {
@@ -618,7 +624,6 @@ function lingotek_admin_prepare_builtins($additional_operations=array()) {
   if (isset($batch['operations']) && count($batch['operations'] > 0)) {
     $batch['operations'][] = array('lingotek_admin_index_plural_targets', array());
     batch_set($batch);
-    batch_process('admin/settings/lingotek');
   }
 }
 
