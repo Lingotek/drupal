@@ -542,18 +542,30 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   }
 
   // prepare for any configuration translation, if applicable
+  $config_groups = array();
   if (variable_get('lingotek_translate_config_blocks', 0)) {
     lingotek_admin_prepare_blocks();
+    $config_groups['blocks'] = 'blocks';
   }
   if (variable_get('lingotek_translate_config_taxonomies', 0)) {
     lingotek_admin_prepare_taxonomies();
+    $config_groups['taxonomies'] = 'taxonomies';
   }
   if (variable_get('lingotek_translate_config_menus', 0)) {
     lingotek_admin_prepare_menus();
+    $config_groups['menus'] = 'menus';
   }
   if (variable_get('lingotek_translate_config_views', 0)) {
     lingotek_admin_prepare_views();
+    $config_groups['views'] = 'views';
   }
+  // refresh all strings for each config type
+  if (count($config_groups)) {
+    module_load_include('admin.inc', 'i18n_string');
+    $config_refresh_batch = i18n_string_refresh_batch($config_groups, $delete = FALSE);
+    batch_set($config_refresh_batch);
+  }
+  
   if (variable_get('lingotek_translate_config_builtins')) {
     lingotek_admin_prepare_builtins($additional_operations);
   }
@@ -595,6 +607,8 @@ function lingotek_admin_prepare_builtins($additional_operations=array()) {
   if (!$indexed_modules) {
     $indexed_modules = array();
   }
+  
+  // index modules that have not yet been indexed
   foreach ($modules_list as $module) {
     if (!array_key_exists($module->name, $indexed_modules)) {
       $batch['operations'][] = array('lingotek_admin_add_module_index_job', array($module));
@@ -618,6 +632,7 @@ function lingotek_admin_add_module_index_job($module, &$context) {
   $path = DRUPAL_ROOT . '/' . drupal_get_path('module', $module->name);
   $files = _potx_explore_dir($path = $path);
   foreach ($files as $file) {
+    set_time_limit(LINGOTEK_FILE_PROCESS_TIMEOUT);
     _potx_process_file($file); // populates the global variables '$potx_strings' and '$potx_install'
   }
   lingotek_admin_save_queued_strings();
@@ -1690,7 +1705,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
     drupal_get_form('lingotek_admin_account_status_form', $show_fieldset),
     drupal_get_form('lingotek_admin_connection_form', $show_fieldset),
   );
-
+  
   $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, 'Account');
 
   $connected = $api->testAuthentication();

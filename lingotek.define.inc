@@ -71,3 +71,8 @@ define('LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE', 5);
 lingotek_define('STDIN', fopen('php://stdin', 'r'));
 lingotek_define('STDOUT', fopen('php://stdout', 'w'));
 lingotek_define('STDERR', fopen('php://stderr', 'w'));
+
+/**
+ * Define file-processing timeout
+ */
+lingotek_define('LINGOTEK_FILE_PROCESS_TIMEOUT', 120);
