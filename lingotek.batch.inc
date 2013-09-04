@@ -366,6 +366,10 @@ function lingotek_sync_upload_node($nid, &$context) {
 
   LingotekLog::trace('upload node: @node_id', array('@node_id' => $nid));
 
+  if ($context) {
+    $context['message'] = t('Uploading node @nid for translation', array('@nid' => $nid));
+  }
+  
   if (lingotek_lingonode($nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {
     return;
   }
@@ -408,6 +412,10 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
 
   LingotekLog::trace('upload config chunk: @chunk_id', array('@chunk_id' => $cid));
 
+    if ($context) {
+    $context['message'] = t('Uploading configuration set @cid for translation', array('@cid' => $cid));
+  }
+  
   $api = LingotekApi::instance();
   $chunk = LingotekSync::getConfigChunk($cid);
 
@@ -445,6 +453,10 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
  */
 function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_success_status, $update_progress = TRUE, &$context) {
 
+  if ($context) {
+    $context['message'] = t('Downloading "@locale" translation for node @nid', array('@locale' => $lingotek_locale, '@nid' => $nid));
+  }
+  
   $node = lingotek_node_load_default($nid);
   if ($node->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
     return;
@@ -488,6 +500,10 @@ function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_succes
 }
 
 function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_success_status, &$context) {
+  
+  if ($context) {
+    $context['message'] = t('Downloading "@locale" translation for configuration set #@cid', array('@locale' => $lingotek_locale, '@cid' => $cid));
+  }
   
   LingotekLog::trace('download chunk: @chunk_id (@language)', array('@chunk_id' => $cid, '@language' => $lingotek_locale));
   $trans_obj = LingotekConfigChunk::loadById($cid);
