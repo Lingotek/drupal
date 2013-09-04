@@ -180,8 +180,10 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
   $form_state['values']['limit_select'] = $limit;
   
+  $results_first = ($page * $form_state['values']['limit_select']) + 1;
+  $results_last = $results_first + count($table_data) - 1;
   $form['count'] = array(
-    '#markup' => '<span id="grid-result-summary">' . t('Showing results @first through @last.', array('@first' => ($page * $form_state['values']['limit_select']), '@last' => ($page * $form_state['values']['limit_select'] + count($table_data)))) . '</span>',
+    '#markup' => '<span id="grid-result-summary">' . t('Displaying @first - @last', array('@first' => $results_first, '@last' => $results_last)) . '</span>',
   );
 
   if(count($table_data) >= 10) {
