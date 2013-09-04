@@ -96,9 +96,9 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
   );
   
   //CAREFUL of alternate values for $use_source, must be string 'TRUE' for api, not boolean
-  if(!empty(variable_get('lingotek_use_source'))) {
-    $params['useSource'] = variable_get('lingotek_use_source');
-  }
+  $use_source = isset($source_node->lingotek['use_source']) ? $source_node->lingotek['use_source'] : variable_get('lingotek_use_source', FALSE);
+  $params['useSource'] = ($use_source) ? 'TRUE' : 'FALSE'; // API expects a string, not boolean
+
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
   try {
