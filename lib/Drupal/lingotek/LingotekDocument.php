@@ -35,7 +35,7 @@ class LingotekDocument {
    *   A Lingotek Document ID.
    */
   public function __construct($document_id) {
-    $this->document_id = intval($document_id);
+    $this->document_id = $document_id;
   }
   
   /**
@@ -155,7 +155,7 @@ class LingotekDocument {
    *   A loaded LingotekDocument object.
    */
   public static function load($document_id) {
-    $document_id = intval($document_id);
+    $document_id = $document_id;
     if (empty($documents[$document_id])) {
       $document = new LingotekDocument($document_id);
       $document->setApi(LingotekApi::instance());

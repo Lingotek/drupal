@@ -115,10 +115,10 @@ class LingotekApi {
         $parameters['targetAsJSON'] = Lingotek::availableLanguageTargetsWithoutSourceAsJSON($source_language);
 
         $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
-        $result = $this->request('addContentDocumentWithTargets', $parameters);
+        $result = $this->request('addContentDocumentWithTargetsAsync', $parameters);
       }
       else {
-        $result = $this->request('addContentDocument', $parameters);
+        $result = $this->request('addContentDocumentAsync', $parameters);
       }
 
       if ($result) {
@@ -177,7 +177,7 @@ class LingotekApi {
 
     $parameters = $this->getCreateWithTargetsParams($entity);
 
-    if ($result = $this->request('addContentDocumentWithTargets', $parameters)) {
+    if ($result = $this->request('addContentDocumentWithTargetsAsync', $parameters)) {
       $entity->setMetadataValue('document_id', $result->id);
 
       // Comments and Config Chunks are associated with the "default" Lingotek project.

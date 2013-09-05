@@ -12,11 +12,12 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
   module_load_include('lingotek', 'lingotek.bulk_grid', 'inc');
   $form = array();
-  
+
   $document_progress = LingotekApi::instance()->getDocumentProgress($document->document_id);
   $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
   
   $rows = array();
+
   foreach ($document_progress->translationTargets as $target) {
     $current_phase = $document->currentPhase($target->id);
     
