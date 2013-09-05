@@ -318,6 +318,8 @@ function lingotek_admin_profile_usage($id) {
   $query->fields('n', array('nid'));
   $query->leftJoin('lingotek', 'l_profile', 'n.nid = l_profile.nid  and l_profile.lingokey = \'profile\'');
   $query->leftJoin('lingotek', 'l_auto_upload', 'n.nid = l_auto_upload.nid  and l_auto_upload.lingokey = \'create_lingotek_document\'');
+  $query->leftJoin('lingotek', 'l_status', 'n.nid = l_status.nid  and l_status.lingokey = \'node_sync_status\'');
+  $query->condition('l_status.lingovalue', 'TARGET', '<>');
   $or = lingotek_profile_condition('n', 'l_auto_upload', 'l_profile' , $id);
   $query->condition($or);
   
