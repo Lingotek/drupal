@@ -204,7 +204,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     '#header' => array(t('Content Type'), t('Fields'), t('Translation Profile *')),
     '#options' => $rows,
     '#attributes' => array('class' => array('lingotek-content-settings-table')),
-    '#suffix' => '* Note that changing the profile will update existing nodes for all settings except the project, workflow, vault and the transation method (e.g. node/field)',
+    '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
   );
 
   foreach (array_keys($translate) as $content_type) {
@@ -460,9 +460,24 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     'Type',
     'Description',
   );
-
+  
+  $fr = array(
+    '#id' => 'lingotek_module_translation_from_drupal',
+    '#type' => 'checkbox',
+    '#title' => t('Use Drupal community module translations when available from') . ' ' . l('localize.drupal.org', 'http://localize.drupal.org', array('attributes' => array('target' => '_blank'))),
+    '#attributes' => array(
+            'id' => array('lingotek_module_translation_from_drupal'),
+            'name' => 'lingotek_module_translation_from_drupal',
+            'class' => array('field'),
+          ),
+  );
+  
+  if (variable_get('lingotek_module_translation_from_drupal', 1)) {
+    $fr['#attributes']['checked'] = 'checked';
+  }
+  
   $options = array(
-    'lingotek_translate_config_builtins' => array(t('Built-in Interface'), t('When enabled, all built-in strings will be automatically translated.')),
+    'lingotek_translate_config_builtins' => array(t('Built-in Interface'), t('When enabled, all built-in strings will be automatically translated.') . drupal_render($fr)),
     'lingotek_translate_config_blocks' => array(t('Blocks'), t('When enabled, all blocks will be updated automatically to be translatable in the Languages settings.')),
     'lingotek_translate_config_taxonomies' => array(t('Taxonomies'), t('When enabled, all taxonomies will be updated automatically to use translation mode \'Localize\' in the Multilingual Options.')),
     'lingotek_translate_config_menus' => array(t('Menus'), t('When enabled, all menus will be updated to use \'Translate and Localize\' in the Multilingual Options.')),
@@ -482,13 +497,6 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#default_value' => $defaults,
   );
   
-  $form['additional_translation']['lingotek_module_translation_from_drupal'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Drupal Community Module Translations'),
-    '#description' => t('Automatically download and use all available translations of your enabled modules provided by the Drupal community at') . ' <a target="_blank" href="http://localize.drupal.org">localize.drupal.org</a>.',
-    '#default_value' => variable_get('lingotek_module_translation_from_drupal', 1),
-  );
-
   if ($is_enterprise) {
     $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_workflow_id'] = array(
       '#type' => 'select',
@@ -531,6 +539,9 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   $form_state['values'] = array_merge($form_state['values'], $form_state['values']['config']);
 
   system_settings_form_submit($form, $form_state);
+
+  $lingotek_module_translation_from_drupal = isset($form_state['input']['lingotek_module_translation_from_drupal']) ? $form_state['input']['lingotek_module_translation_from_drupal'] : 0;
+  variable_set('lingotek_module_translation_from_drupal', $lingotek_module_translation_from_drupal);
 
   //if any configuration options are set then config translation is enabled
   if (variable_get('lingotek_translate_config_taxonomies', 0) || variable_get('lingotek_translate_config_blocks', 0) ||

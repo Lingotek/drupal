@@ -22,6 +22,10 @@ Drupal.behaviors.lingotekAdminForm = {
     
     //when a field checkbox is clicked
     $('.field.form-checkbox', context).click( function() {
+      if($(this).attr("name") == "lingotek_module_translation_from_drupal") {
+        return;
+      }
+      
       row = $(this).parents('tr')
       if($(this).attr('checked')) {
         row.find('td:first-child .form-checkbox').each( function() {
@@ -81,19 +85,28 @@ Drupal.behaviors.lingotekAdminForm = {
 
       $('fieldset.lingotek-translate-configuration', context).drupalSetSummary(function (context) {
         $list = [];
+        max = 5;
+        extra_text = "";
         $('#edit-additional-translation input').each(function( index ) {
           if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
             name = $(this).attr('name');
-            name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
-            $list.push(name);
+            
+            if(name.indexOf("config") != -1){
+                name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
+                $list.push(name);
+            }
+            else {
+                extra_text = " +&nbsp;community";
+            }
+            
           }
         });
-        if($list.length == 0) {
-          return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
-        } else if($list.length == 5) {
-          return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: all';
+        if ($list.length === 0 && extra_text.length === 0) {
+            return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+        } else if ($list.length === max) {
+            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: all' + extra_text;
         } else {
-          return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ');
+            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ') + extra_text;
         }
       });
 
