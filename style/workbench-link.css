@@ -1,4 +1,4 @@
-.views-row {
+.views-field {
   position: relative;
 }
 
@@ -11,4 +11,10 @@
   background-position:center;
   width: 30px;
   text-indent: -9000px;*/
+}
+
+a.translation-link {
+  position:absolute;
+  left: -25px;
+  top: 5px;
 }

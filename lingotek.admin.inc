@@ -1003,6 +1003,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
   $lang_negotiation_info = locale_language_negotiation_info();
   $general_detection_config_url = substr($lang_negotiation_info['locale-url']['config'], 0, strrpos($lang_negotiation_info['locale-url']['config'], "/"));
 
+  $form[$fkey]['lingotek_views_edit_links'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show links to edit translations in all views'),
+    '#default_value' => variable_get('lingotek_views_edit_links'),
+    '#description' => 'The user must have the "Translation" or "Manage Projects" permission'
+  );
+  
   $form[$fkey][] = array(
     '#type' => 'item',
     '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'

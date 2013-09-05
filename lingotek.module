@@ -1889,3 +1889,32 @@ function lingotek_cron() {
 
   LingotekLog::trace(__METHOD__ . ' ran');
 }
+
+function lingotek_views_post_execute(&$view) {
+  global $language;
+  
+  if ((user_access('manage projects') || user_access('translation')) && variable_get('lingotek_views_edit_links')) {
+    $included = FALSE;
+
+ 
+    foreach ($view->result as &$row) {
+      if (isset($row->nid)) {
+        foreach ($row as $name => &$field) {
+          if (substr($name, 0, 5) == 'field' && !is_string($field) && isset($field[0])) {
+            $included = TRUE;
+            $text = '<img src="' . base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_chevs_dd.png" >'; 
+            $url = 'node/' . $row->{$view->base_field} . '/lingotekworkbench/' . Lingotek::convertDrupal2Lingotek($language->language);
+            $tooltip = 'Edit this translation';
+            $edit = l($text, $url, array('attributes' => array('target' => '_blank', 'title' => $tooltip, 'class' => array('translation-link')), 'html' => TRUE));
+            $field[0]['rendered']['#markup'] = $edit . $field[0]['rendered']['#markup'];
+            break;
+          }
+        }
+      }
+    }
+
+    if ($included) {
+      drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/workbench-link.css', array('group' => CSS_DEFAULT));
+    }
+  }
+}

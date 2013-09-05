@@ -662,6 +662,13 @@ function page_sync_comment_translations($comment_id) {
  * 
  */
 function lingotek_workbench_redirect($node, $lingotek_locale) {
-  $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale);
-  drupal_goto($translation_edit_link);
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+  
+  if($node->language == $drupal_language_code) {
+    drupal_goto('node/' . $node->nid . '/edit');
+  }
+  else {
+    $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale);
+    drupal_goto($translation_edit_link);
+  }
 }
