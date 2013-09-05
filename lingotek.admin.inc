@@ -562,11 +562,11 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   }
   if (variable_get('lingotek_translate_config_taxonomies', 0)) {
     lingotek_admin_prepare_taxonomies();
-    $config_groups['taxonomies'] = 'taxonomies';
+    $config_groups['taxonomy'] = 'taxonomy';
   }
   if (variable_get('lingotek_translate_config_menus', 0)) {
     lingotek_admin_prepare_menus();
-    $config_groups['menus'] = 'menus';
+    $config_groups['menu'] = 'menu';
   }
   if (variable_get('lingotek_translate_config_views', 0)) {
     lingotek_admin_prepare_views();
@@ -577,16 +577,28 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
     module_load_include('admin.inc', 'i18n_string');
     $config_refresh_batch = i18n_string_refresh_batch($config_groups, $delete = FALSE);
     batch_set($config_refresh_batch);
-  }
-  
+  }  
   if (variable_get('lingotek_translate_config_builtins')) {
     lingotek_admin_prepare_builtins($additional_operations);
   }
+  
+  // if this function is being called as part of the setup process, continue to
+  // the dashboard to make sure they get a language configured.  Otherwise,
+  // put them back to the settings page when finished.
+  if (is_array($_SESSION['lingotek_setup_path'])) {
+    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
+      $final_destination = 'admin/settings/lingotek';
+    }
+    else {
+      $final_destination = 'admin/settings/lingotek/settings';
+    }
+  }
+  
   if (count(batch_get())) {
-    batch_process('admin/settings/lingotek');
+    batch_process($final_destination);
   }
   else {
-    drupal_goto('admin/settings/lingotek');
+    drupal_goto($final_destination);
   }
 }
 
