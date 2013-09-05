@@ -1078,27 +1078,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
       }
       
       if (isset($filters['profile']) && $filters['profile'] != 'all') {
-        $types = array();
-        foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
-          if($profile['profile'] == $filters['profile']) {
-            $types[] = $content_type;
-          }
-        }        
-        $or = db_or();
-        
-        if(!empty($types)) {
-          $an = db_and();
-          $an->condition('n.type', $types, 'IN');
-          $an->condition('lingo_auto_upload.lingovalue', NULL);
-          $an->condition('lingo_profile.lingovalue', NULL);
-          $or->condition($an);
-        }
-
-        if($filters['profile'] == -1) {
-          $or->isNotNull('lingo_auto_upload.lingovalue');
-        } else {
-          $or->condition('lingo_profile.lingovalue', $filters['profile']);
-        }
+        $or = lingotek_profile_condition('n', 'lingo_auto_upload', 'lingo_profile' , $filters['profile']);
         
         $query->condition($or);
       }

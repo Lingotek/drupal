@@ -1120,3 +1120,30 @@ function lingotek_migration_3() {
   //drupal_set_message("fields updated");
   return $ret;
 }
+
+function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
+  $or = db_or();
+  
+  if($profile_id == -1) {
+    $or->isNotNull($table_auto_upload . '.lingovalue');
+    return $or;
+  }
+  
+  $types = array();
+  foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
+    if($profile['profile'] == $profile_id) {
+      $types[] = $content_type;
+    }
+  }        
+  
+  if(!empty($types)) {
+    $an = db_and();
+    $an->condition($node_table . '.type', $types, 'IN');
+    $an->condition($table_auto_upload . '.lingovalue', NULL);
+    $an->condition($table_profile . '.lingovalue', NULL);
+    $or->condition($an);
+  }
+  $or->condition($table_profile . '.lingovalue', $profile_id);
+  
+  return $or;
+}

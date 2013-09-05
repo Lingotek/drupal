@@ -318,9 +318,11 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 function lingotek_admin_profile_usage($id) {
   $query = db_select('node', 'n');
   $query->fields('n', array('nid'));
-  $query->addJoin('INNER', 'lingotek', 'l', 'n.nid = l.nid');
-  $query->condition('l.lingokey', 'profile');
-  $query->condition('l.lingovalue', '' . $id);
+  $query->leftJoin('lingotek', 'l_profile', 'n.nid = l_profile.nid  and l_profile.lingokey = \'profile\'');
+  $query->leftJoin('lingotek', 'l_auto_upload', 'n.nid = l_auto_upload.nid  and l_auto_upload.lingokey = \'create_lingotek_document\'');
+  $or = lingotek_profile_condition('n', 'l_auto_upload', 'l_profile' , $id);
+  $query->condition($or);
+  
   return $query->countQuery()->execute()->fetchField();
 }
 
@@ -1169,6 +1171,9 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     
     $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes'), $edit_link);
   }
+  
+  $custom_count = lingotek_admin_profile_usage(-1);
+  $rows[] = array('Custom', $custom_count . ' ' . format_plural($custom_count, 'node', 'nodes'), '');
     
   $variables = array(
     'header' => $headers,
