@@ -127,10 +127,6 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     '#group' => 'administrative_settings',
     'actions' => array(
       '#type' => 'actions',
-      'submit' => array(
-        '#type' => 'submit',
-        '#value' => ($setup_complete ? t('Save') : t('Next')),
-      )
     ),
     '#submit' => array('lingotek_admin_node_translation_settings_form_submit'),
   );
@@ -218,6 +214,11 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     }
     $form['node_translation']['types']['#default_value'] = $defualts;
   }
+  
+  $form['node_translation']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
 
   return $form;
 }
@@ -350,7 +351,7 @@ function lingotek_admin_comment_translation_settings_form($form, &$form_state, $
       '#type' => 'actions',
       'submit' => array(
         '#type' => 'submit',
-        '#value' => ($setup_complete ? t('Save') : t('Next')),
+        '#value' => t('Save'),
       )
     ),
     '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
@@ -477,7 +478,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   }
   
   $options = array(
-    'lingotek_translate_config_builtins' => array(t('Built-in Interface'), t('When enabled, all built-in strings will be automatically translated.') . drupal_render($fr)),
+    'lingotek_translate_config_builtins' => array(t('Built-in Interface'), t('When enabled, all built-in strings will be automatically translated.  (Note: this will search all enabled modules for translatable strings, which can take several minutes to process.)') . drupal_render($fr)),
     'lingotek_translate_config_blocks' => array(t('Blocks'), t('When enabled, all blocks will be updated automatically to be translatable in the Languages settings.')),
     'lingotek_translate_config_taxonomies' => array(t('Taxonomies'), t('When enabled, all taxonomies will be updated automatically to use translation mode \'Localize\' in the Multilingual Options.')),
     'lingotek_translate_config_menus' => array(t('Menus'), t('When enabled, all menus will be updated to use \'Translate and Localize\' in the Multilingual Options.')),
