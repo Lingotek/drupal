@@ -223,6 +223,35 @@ function watchdog_format_object($object) {
   return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
 }
 
+function lingotek_oneoff_translate($node) {
+  // TODO: Run checks on this if necessary
+  // (It appears this is currently unnecessary, as all nodes
+  // that make it to this point are already requested for
+  // translation.)
+  return TRUE;
+}
+
+function lingotek_get_translatable_field_types() {
+  // What types of fields DO we translate?
+  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary');
+  if (module_exists('link')) {
+    $included_fields[] = 'link_field';
+  }
+  return $included_fields;
+}
+
+function lingotek_get_translatable_fields_by_content_type($type) {
+  $all_fields = field_info_instances('node', $type);
+  $translatable_field_types = lingotek_get_translatable_field_types();
+  $desired_fields = array();
+  foreach ($all_fields as $field_name => $field_info) {
+    if (in_array($field_info['widget']['type'], $translatable_field_types)) {
+      $desired_fields[$field_name] = $field_name;
+    }
+  }
+  return $desired_fields;
+}
+
 /**
  * Return the xml representation of the source content for a node.
  *
@@ -239,6 +268,9 @@ function lingotek_xml_node_body($node) {
   $fields_desired = array();
   if ($translate && $t_array = $translate[$node->type]) {
     $fields_desired = array_combine($t_array, $t_array);
+  }
+  else if (lingotek_oneoff_translate($node)) {
+    $fields_desired = lingotek_get_translatable_fields_by_content_type($node->type);
   }
 
   foreach ($node as $key => $value) {

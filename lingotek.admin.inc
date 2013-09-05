@@ -114,10 +114,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   $entity_profiles = variable_get('lingotek_entity_profiles');
 
   // What types of fields DO we translate?
-  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary');
-  if (module_exists('link')) {
-    $included_fields[] = 'link_field';
-  }
+  $translatable_field_types = lingotek_get_translatable_field_types();
 
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
@@ -146,7 +143,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
       $field_label = $field['label'];
       $field_machine_name = $field['field_name'];
       $field_type = $field['widget']['type'];
-      if (array_search($field_type, $included_fields)) {
+      if (array_search($field_type, $translatable_field_types)) {
         $fr[$field_machine_name] = array(
           '#type' => 'checkbox',
           '#title' => $field_label,
