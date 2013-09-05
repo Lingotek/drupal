@@ -933,6 +933,11 @@ function lingotek_node_save($node) {
   }
   
   $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
+  
+  if(lingotek_managed_by_entity_translation($node->type) && $has_not_been_uploaded && $node->lingotek['lingotek_push_once'] == 0) {
+    return;
+  }
+    
   db_delete('lingotek')
     ->condition('nid', $node->nid)
     ->condition('lingokey', lingotek_get_profile_fields($has_not_been_uploaded, TRUE), 'IN')

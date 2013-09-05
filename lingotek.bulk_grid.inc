@@ -242,6 +242,7 @@ function lingotek_filters_popup() {
   ctools_include('modal');
   ctools_include('ajax');
   
+  $form = array();
   $form_state = array(
     'ajax' => true,
   );
