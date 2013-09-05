@@ -460,17 +460,17 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   );
   
   $fr = array(
-    '#id' => 'lingotek_module_translation_from_drupal',
+    '#id' => 'lingotek_use_translation_from_drupal',
     '#type' => 'checkbox',
-    '#title' => t('Use Drupal community module translations when available from') . ' ' . l('localize.drupal.org', 'http://localize.drupal.org', array('attributes' => array('target' => '_blank'))),
+    '#title' => t('Use Drupal community translations when available from') . ' ' . l('localize.drupal.org', 'http://localize.drupal.org', array('attributes' => array('target' => '_blank'))),
     '#attributes' => array(
-            'id' => array('lingotek_module_translation_from_drupal'),
-            'name' => 'lingotek_module_translation_from_drupal',
+            'id' => array('lingotek_use_translation_from_drupal'),
+            'name' => 'lingotek_use_translation_from_drupal',
             'class' => array('field'),
           ),
   );
   
-  if (variable_get('lingotek_module_translation_from_drupal', 1)) {
+  if (variable_get('lingotek_use_translation_from_drupal', 1)) {
     $fr['#attributes']['checked'] = 'checked';
   }
   
@@ -538,8 +538,8 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 
   system_settings_form_submit($form, $form_state);
 
-  $lingotek_module_translation_from_drupal = isset($form_state['input']['lingotek_module_translation_from_drupal']) ? $form_state['input']['lingotek_module_translation_from_drupal'] : 0;
-  variable_set('lingotek_module_translation_from_drupal', $lingotek_module_translation_from_drupal);
+  $lingotek_use_translation_from_drupal = isset($form_state['input']['lingotek_use_translation_from_drupal']) ? $form_state['input']['lingotek_use_translation_from_drupal'] : 0;
+  variable_set('lingotek_use_translation_from_drupal', $lingotek_use_translation_from_drupal);
 
   //if any configuration options are set then config translation is enabled
   if (variable_get('lingotek_translate_config_taxonomies', 0) || variable_get('lingotek_translate_config_blocks', 0) ||

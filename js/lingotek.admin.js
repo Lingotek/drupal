@@ -22,7 +22,7 @@ Drupal.behaviors.lingotekAdminForm = {
     
     //when a field checkbox is clicked
     $('.field.form-checkbox', context).click( function() {
-      if($(this).attr("name") == "lingotek_module_translation_from_drupal") {
+      if($(this).attr("name") == "lingotek_use_translation_from_drupal") {
         return;
       }
       
@@ -87,6 +87,15 @@ Drupal.behaviors.lingotekAdminForm = {
         $list = [];
         max = 5;
         extra_text = "";
+        
+        //uncheck lingotek_use_translation_from_drupal when builtin is not checked
+        $ltk_use_translation = $('#lingotek_use_translation_from_drupal');
+        if ($('#edit-config-lingotek-translate-config-builtins').is(':checked')) {
+            $ltk_use_translation.removeAttr('disabled');
+        } else {
+            $ltk_use_translation.removeAttr('checked').attr('disabled',true);
+        }
+
         $('#edit-additional-translation input').each(function( index ) {
           if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
             name = $(this).attr('name');
@@ -95,10 +104,10 @@ Drupal.behaviors.lingotekAdminForm = {
                 name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
                 $list.push(name);
             }
-            else {
-                extra_text = " +&nbsp;community";
+            else if (name === 'lingotek_use_translation_from_drupal') {
+                extra_text = "+";
+                $list[$list.length-1] += extra_text;
             }
-            
           }
         });
         if ($list.length === 0 && extra_text.length === 0) {
@@ -106,7 +115,7 @@ Drupal.behaviors.lingotekAdminForm = {
         } else if ($list.length === max) {
             return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: all' + extra_text;
         } else {
-            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ') + extra_text;
+            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ');
         }
       });
 
