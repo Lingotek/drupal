@@ -1026,6 +1026,14 @@ class LingotekApi {
     }
 
     $timer_results = timer_stop($timer_name);
+    
+    // cleanup parameters so that the logs aren't too long
+    if(isset($parameters['fprmFileContents'])) {
+      $parameters['fprmFileContents'] = 'removed for brevity';
+    }
+    if(isset($parameters['secondaryFprmFileContents'])) {
+      $parameters['secondaryFprmFileContents'] = 'removed for brevity';
+    }
     $message_params = array(
       '@url' => $api_url,
       '@method' => $method,

@@ -972,6 +972,15 @@ function lingotek_node_save($node) {
     $node->lingotek['node_sync_status'] = LingotekSync::STATUS_EDITED;
     LingotekSync::setNodeEnabled($node->nid, TRUE);
   }
+  
+  //This reloads the lingovalues to ensure that the proper defaults and hierarchy are used.
+  //We clear out the lingovalues first, then wrap in an array, call the lingotek load function, and then unwrap from array.
+  unset($node->lingotek);
+  $nodes = array($node->nid => $node);
+  $types = array($node->type);
+  lingotek_node_load($nodes, $types);
+  $node = $nodes[$node->nid];
+  return $node;
 }
 
 function lingotek_node_save_readonly($node) {
@@ -1192,7 +1201,6 @@ function lingotek_node_update($node) {
   }
   else {
     if (!isset($node->lingotek['node_sync_status']) || ($node->lingotek['node_sync_status'] != LingotekSync::STATUS_DISABLED && $node->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET)) {
-      $node = node_load($node->nid);
       lingotek_upload_document($node);
     }
   }
