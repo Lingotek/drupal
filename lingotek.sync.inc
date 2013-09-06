@@ -812,6 +812,7 @@ function lingotek_get_and_update_target_progress($document_ids) {
   $project_id = variable_get('lingotek_project', NULL);
 
   $progress_report = $api->getProgressReport($project_id, $document_ids);
+
   $targets_count = LingotekSync::getTargetCountByDocumentIds($document_ids);
 
   if (isset($progress_report) && $progress_report->results == 'success') {
@@ -915,6 +916,16 @@ function lingotek_get_and_update_target_progress($document_ids) {
     }
     
     return $progress_report;
+  }
+  else {
+    $error_message = "API Error(s): <ul>";
+    if (is_array($progress_report->errors)) {
+      foreach ($progress_report->errors as $error) {
+        $error_message .= "<li>".$error."</li>";
+      }
+    }
+    $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
+    drupal_set_message($error_message, 'error');
   }
 
 }

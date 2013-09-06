@@ -1053,8 +1053,8 @@ class LingotekApi {
     else { // ERROR
       LingotekLog::error('<h1>@method (Failed)</h1> <strong>API URL:</strong> @url
         <br /><strong>Response Time:</strong> @response_time<br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response<br/><strong>Full Request:</strong> !request', $message_params, 'api');
+      $response_data = $response;
     }
-
     return $response_data;
   }
 
