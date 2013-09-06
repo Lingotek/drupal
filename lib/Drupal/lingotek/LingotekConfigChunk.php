@@ -166,6 +166,10 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     );
     return $result->fetchCol();
   }
+  
+  public function getSourceLocale() {
+    return $this->language->lingotek_locale;
+  }
 
   /**
    * Set all segments for a given chunk ID to CURRENT status

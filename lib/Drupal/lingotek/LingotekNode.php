@@ -16,6 +16,10 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   protected $node;
   
+  /**
+   * The Drupal entity type associated with this class
+   */
+  const DRUPAL_ENTITY_TYPE = 'node';
   
   /**
    * Lingotek Lingonode properties.
@@ -43,6 +47,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   private function __construct($node) {
     $this->node = $node;
+    $this->nid = $node->nid;
     $this->language = $node->language;
   }
   
@@ -239,5 +244,29 @@ class LingotekNode implements LingotekTranslatableEntity {
   
   public function getDescription() {
     return $this->node->title;
+  }
+  
+    /**
+   * Return the Drupal Entity type
+   *
+   * @return string
+   *   The entity type associated with this object
+   */
+  public function getEntityType() {
+    return self::DRUPAL_ENTITY_TYPE;
+  }
+
+  /**
+   * Return the node ID
+   *
+   * @return int
+   *   The ID associated with this object
+   */
+  public function getId() {
+    return $this->node->nid;
+  }
+  
+  public function getSourceLocale() {
+    return Lingotek::convertDrupal2Lingotek($this->node->language);
   }
 }

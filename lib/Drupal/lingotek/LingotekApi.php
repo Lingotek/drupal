@@ -69,19 +69,11 @@ class LingotekApi {
     global $_lingotek_locale;
     $success = FALSE;
 
-    // see if the node is a true content node (false if config chunk or etc.)
-    $isContentNode = (property_exists($translatable_object, "nid") && $translatable_object->nid ? TRUE : FALSE);
-
-    $node = $translatable_object;
     $project_id = $translatable_object->getProjectId();
     $vault_id = $translatable_object->getVaultId();
     $workflow_id = $translatable_object->getWorkflowId();
 
-    $node_language = (property_exists($translatable_object, 'language') ? $translatable_object->language : NULL);
-    if (is_object($node_language)) {  // Allow language attributes to be objects (e.g., config chunks)
-      $node_language = $node_language->language;
-    }
-    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node_language);
+    $source_lingotek_locale = $translatable_object->getSourceLocale();
     $source_language = isset($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
 
     if ($project_id) {
@@ -102,7 +94,7 @@ class LingotekApi {
         $parameters['note'] = 'config chunk #' . $cid;
       }
       else {
-        $parameters['note'] = url('node/' . $translatable_object->nid, array('absolute' => TRUE, 'alias' => TRUE));
+        $parameters['note'] = url($translatable_object->getEntityType() . '/' . $translatable_object->getId(), array('absolute' => TRUE, 'alias' => TRUE));
       }
 
       if (!empty($workflow_id)) {
@@ -135,12 +127,12 @@ class LingotekApi {
           LingotekConfigChunk::setSegmentStatusToCurrentById($translatable_object->getId());
         }
         else {
-          lingotek_lingonode($translatable_object->nid, 'document_id', $result->id);
+          // node assumed (based on two functions below...
+          lingotek_lingonode($translatable_object->getId(), 'document_id', $result->id);
           LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
+          lingotek_lingonode($translatable_object->getId(), 'last_uploaded', time());
         }
-        if ($isContentNode) {
-          lingotek_lingonode($translatable_object->nid, 'last_uploaded', time());
-        }
+          
         $success = TRUE;
       }
     }

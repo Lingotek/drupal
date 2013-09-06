@@ -497,4 +497,9 @@ class LingotekComment implements LingotekTranslatableEntity {
   public function getDescription() {
     return $this->comment->title;
   }
+  
+  public function getSourceLocale() {
+    return Lingotek::convertDrupal2Lingotek($this->comment->language);
+  }
+  
 }
