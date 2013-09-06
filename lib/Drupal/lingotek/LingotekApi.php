@@ -65,7 +65,7 @@ class LingotekApi {
    * @param object $translatable_object
    *   A Drupal node object or lingotek ConfigChunk object
    */
-  public function addContentDocument($translatable_object, $with_targets = FALSE) {
+  public function addContentDocument(LingotekTranslatableEntity $translatable_object, $with_targets = FALSE) {
     global $_lingotek_locale;
     $success = FALSE;
 

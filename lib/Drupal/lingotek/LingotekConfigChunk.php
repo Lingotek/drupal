@@ -116,7 +116,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The title of the current chunk
    */
   public function getTitle() {
-    return 'drupal_config_' . $this->min_lid . '-' . $this->max_lid;
+    return 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';
   }
 
   /**
