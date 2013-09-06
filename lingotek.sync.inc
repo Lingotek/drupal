@@ -20,7 +20,7 @@ function lingotek_notify_url_generate($security_token = NULL) {
       variable_set('lingotek_notify_security_token', $security_token);
     }
   }
-  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}&security_token=' . $security_token;
+  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_uuid}&doc_idx={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}&security_token=' . $security_token;
 }
 
 /**
@@ -54,7 +54,8 @@ function lingotek_notify_url_check() {
  */
 function lingotek_notifications() {
 
-  $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;
+  $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;// uuid
+  $document_idx = ( isset($_GET['doc_idx']) ) ? $_GET['doc_idx'] : NULL;// this is the deprecated document number
   $lingotek_locale = ( isset($_GET['target_code']) ) ? $_GET['target_code'] : NULL;
   $project_id = ( isset($_GET['project_id']) ) ? $_GET['project_id'] : NULL;
   $completed = ( isset($_GET['completed']) ) ? $_GET['completed'] : 1;
@@ -68,7 +69,7 @@ function lingotek_notifications() {
     }
   }
 
-  if (!isset($document_id) || !isset($lingotek_locale)) {
+  if ((!isset($document_id) && !isset($document_idx)) || !isset($lingotek_locale)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
   }
 
@@ -87,8 +88,14 @@ function lingotek_notifications() {
   $attempts = 0;
   while ($attempts < 3) {
     $nid = LingotekSync::getNodeIdFromDocId($document_id);
+    if(!$nid) { // check for the old style document_id
+      $nid = LingotekSync::getNodeIdFromDocId($document_idx);
+      if($nid){
+        $document_id = $document_idx;
+      }
+    }
 
-    LingotekLog::info('[notify] <br/><b>doc_id:</b> @document_id <br/><b>code:</b> @lingotek_locale <br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
+    LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
         '@document_id' => $document_id,
         '@lingotek_locale' => $lingotek_locale,
         '@project_id' => $project_id,

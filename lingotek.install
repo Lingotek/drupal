@@ -556,3 +556,10 @@ function lingotek_update_7403(&$sandbox) {
     variable_set('lingotek_translate_fields', $translate_fields);
   }
 }
+
+/*
+ * Update the Callback signature
+ */
+function lingotek_update_7404(&$sandbox) {
+  LingotekSync::updateNotifyUrl();
+}
