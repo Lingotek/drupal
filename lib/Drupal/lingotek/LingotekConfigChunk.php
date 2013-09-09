@@ -126,7 +126,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The description of the current chunk
    */
   public function getDescription() {
-    return 'Drupal configuration strings (locales source table) between ' . $this->min_lid . ' and ' . $this->max_lid . '.';
+    return 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';//'Drupal configuration strings (locales source table) between ' . $this->min_lid . ' and ' . $this->max_lid . '.';
   }
 
   /**
