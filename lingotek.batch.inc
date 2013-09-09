@@ -275,7 +275,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
     }
     $doc_ids = array_unique($doc_ids);
     foreach ($doc_ids as $doc_id) {
-      $updates[] = array('lingotek_get_and_update_target_progress', array($doc_ids));
+      //$updates[] = array('lingotek_get_and_update_target_progress', array($doc_ids));
     }
     $operations = array_merge($updates, $operations);
   }
@@ -472,7 +472,7 @@ function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_succes
   }
 
   if ($sync_success_status != LingotekSync::STATUS_CURRENT && $update_progress) {
-    lingotek_get_and_update_target_progress(LingotekSync::getDocIdFromNodeId($nid));
+    //lingotek_get_and_update_target_progress(LingotekSync::getDocIdFromNodeId($nid));
   }
   elseif ($sync_success_status == LingotekSync::STATUS_CURRENT && $update_progress) {
     lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
@@ -700,7 +700,7 @@ function lingotek_update_target_progress_batch_create($nids) {
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
     if (!empty($segment)) {
-      $operations[] = array('lingotek_get_and_update_target_progress', array($segment));
+      //$operations[] = array('lingotek_get_and_update_target_progress', array($segment));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);
