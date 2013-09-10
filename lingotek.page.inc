@@ -129,10 +129,11 @@ function lingotek_remove_checkboxes($form_element) {
 function lingotek_push_form($form, $form_state, $node) {
   $form = array();
 
+  $last_uploaded_message = isset($node->lingotek['last_uploaded']) ? ' (' . t('Last uploaded @human_readable_timestamp ago.', array('@human_readable_timestamp' => lingotek_human_readable_timestamp($node->lingotek['last_uploaded']))) . ')' : '';
   $form['content_push'] = array(
     '#type' => 'fieldset',
     '#title' => t('Upload'),
-    '#description' => t("Upload this node's content to Lingotek for translation."),
+    '#description' => t("Upload this node's content to Lingotek for translation.") . $last_uploaded_message,
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
@@ -357,8 +358,16 @@ function lingotek_publish_form_submit($form, $form_state) {
 function lingotek_pm($node) {
   // Display all of the appropriate node management sections (e.g., Upload, Download, Publish)
 
-  $output = array();
-
+  $output = array(
+    '#attached' => array(
+      'css' => array(
+        '//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css' => array(
+          'type' => 'external',
+        ),
+      ),
+    ),
+  );
+  
   $sync_status = $node->lingotek['node_sync_status'];
 
   // node translation support
@@ -416,8 +425,14 @@ function lingotek_pm($node) {
         // Document not found (may still be importing)
         // Import Status (check and report on import status)
         $status = $document->getImportStatus();
+
+        $message = t('The current status of this document is:').' <i>'. t('@status', array('@status' => $status)) . '</i><br/>' . l('<i class="icon-refresh"></i> Refresh Status', '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => 'Refresh', 'onclick' => array('location.reload();return false;'))));
+        drupal_set_message($message, 'warning');
+
         $output[] = array(
-          '#markup' => t('The current status of this document is: @status', array('@status' => $status))
+          '#type' => 'item',
+          '#title' => 'Import Status',
+          '#markup' => $message,
         );
       }
       
