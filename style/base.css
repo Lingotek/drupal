@@ -11,6 +11,14 @@
   background-image: url("../images/ico_chevs_dd.png");
 }
 
+.ltk-icon {
+}
+
+.ltk-icon:hover {
+    text-decoration: none;
+    color: #00348D;
+}
+
 /*#lingotek-navbar-tab {
   margin-top: 8px;
   color: black;

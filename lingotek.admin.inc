@@ -1518,9 +1518,11 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
     $profiles = variable_get('lingotek_profiles');
     $profile = array();
 
-    $profile[$key]['name'] = $form_state['values']['name'];
+    $profile['name'] = $form_state['values']['name'];
     foreach (lingotek_get_profile_fields(TRUE, TRUE) as $key) {
-      $profile[$key] = $form_state['values'][$key];
+      if (isset($form_state['values'][$key])) {
+        $profile[$key] = $form_state['values'][$key];
+      }
     }
 
     if (module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
