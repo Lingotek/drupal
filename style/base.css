@@ -21,7 +21,7 @@
   height: 23px;
 }*/
 
-div.form-item-create-lingotek-document-workbench-moderation, div.form-item-syncMethod-wb {
+div.form-item-create-lingotek-document-workbench-moderation, div.form-item-sync-method-workbench-moderation {
   margin-left: 50px;
 }
 
@@ -74,9 +74,16 @@ input.lingotek-content-settings-table.form-checkbox {
   clear: both;
 }
 
-.form-item-actions-select {
-  position: relative;
-  top: 10px;
+.form-item.form-item-actions-select {
+  padding: 0px;
+}
+
+.form-item-actions-select label, .form-item-search label {
+  display: inline;
+}
+
+.form-item-search-type, .form-item-search, .form-item-search-submit {
+  display: inline;
 }
 
 .lingotek-action {
@@ -140,7 +147,12 @@ input.lingotek-content-settings-table.form-checkbox {
   background-color:#999;
 }
 
-#edit-grid-container i {
+.no-localized-title, .no-localized-title a {
+  color: #444;
+  /*font-style: italic;*/
+}
+
+.lingotek-node-actions, .lingotek-language-source i {
   font-size: 150%;
 }
 

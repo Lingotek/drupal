@@ -641,7 +641,7 @@ function page_sync_comment_translations($comment_id) {
         else {
           LingotekLog::error('Unable to retrieve the status of the lingotek document: @id while updating
             comment @comment_id', array('@id' => $lingotek_document_id, '@comment_id' => $comment_id), WATCHDOG_ERROR);
-
+          
           drupal_set_message(t('An error occurred. Local translations for the comment were not updated.'), 'error');
         }
       }
@@ -661,14 +661,29 @@ function page_sync_comment_translations($comment_id) {
 /*
  * 
  */
-function lingotek_workbench_redirect($node, $lingotek_locale) {
+function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   
-  if($node->language == $drupal_language_code) {
-    drupal_goto('node/' . $node->nid . '/edit');
-  }
-  else {
-    $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale);
-    drupal_goto($translation_edit_link);
+  if ($entity_type == 'node') {
+    $node = node_load($id);
+    
+    if ($node->language == $drupal_language_code) {
+      drupal_goto('node/' . $node->nid . '/edit');
+    }
+    else {
+      $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale);
+      drupal_goto($translation_edit_link);
+    }
+  } else if ($entity_type == 'comment') {
+    $comment = comment_load($id);
+    
+    if ($comment->language == $drupal_language_code) {
+    }
+    else {  
+      $lingotek_comment = LingotekComment::load($comment);
+      
+      $translation_edit_link = lingotek_get_workbench_url($lingotek_comment->lingotekDocumentId(), $lingotek_locale);
+      drupal_goto($translation_edit_link);
+    }
   }
 }

@@ -590,7 +590,7 @@ function lingotek_get_translation_target($translation_target_id) {
  * @return string
  *   Either a link pointing the the url, or the url itself if $label is FALSE
  */
-function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $force = FALSE) {
+function lingotek_get_workbench_url($document_id, $lingotek_locale, $label = FALSE, $force = FALSE) {
 
   if ($lingotek_locale === FALSE) {
     return "";
@@ -598,7 +598,6 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
 
   $api = LingotekApi::instance();
 
-  $document_id = lingotek_lingonode($node->nid, 'document_id');
   $targets = lingotek_get_document_targets($document_id, TRUE); //Make sure we get the current phases for the links and not out of date ones (so caches don't combine)
 
   if (count($targets) == 0) {
@@ -613,7 +612,7 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
     $target = $api->getTranslationTarget($translation_target->id);
     $phases = ($target) ? $target->phases : array();
 
-    return lingotek_get_workbench_url_by_phases($node, $phases, $label, $force);
+    return lingotek_get_workbench_url_by_phases($document_id, $phases, $label, $force);
   }
 
   LingotekLog::error('lingotek_get_workbench_url - Specified language target not found', $node);
@@ -639,7 +638,7 @@ function lingotek_get_workbench_url($node, $lingotek_locale, $label = FALSE, $fo
  * @return string
  *   Either a link pointing the the url, or the url itself if $label is FALSE
  */
-function lingotek_get_workbench_url_by_phases($node, $phases, $label = FALSE, $force = FALSE) {
+function lingotek_get_workbench_url_by_phases($document_id, $phases, $label = FALSE, $force = FALSE) {
 
   $phase_id = -1;
   $which_phase = 0;
@@ -659,7 +658,6 @@ function lingotek_get_workbench_url_by_phases($node, $phases, $label = FALSE, $f
 
   $l = '';
   if ($phase_id != -1) {
-    $document_id = lingotek_lingonode($node->nid, 'document_id');
     if ($document_id && $workbench_url = LingotekApi::instance()->getWorkbenchLink($document_id, $phase_id)) {
       if ($label === FALSE) {
         $l = $workbench_url;
@@ -669,10 +667,11 @@ function lingotek_get_workbench_url_by_phases($node, $phases, $label = FALSE, $f
         if ($label === TRUE) {
           $label = lingotek_get_phase_name($phase_id);
         }
+        $nid = LingotekSync::getNodeIdFromDocId($document_id);
         $l = l($label, '', array('attributes' => array(
             'onclick' => 'window.open(\'' . $path . '\'); return false;',
-            'onmouseover' => 'jQuery("#node-' . $node->nid . '").addClass("lingotek-highlight");',
-            'onmouseout' => 'jQuery("#node-' . $node->nid . '").removeClass("lingotek-highlight");',
+            'onmouseover' => 'jQuery("#node-' . $nid . '").addClass("lingotek-highlight");',
+            'onmouseout' => 'jQuery("#node-' . $nid . '").removeClass("lingotek-highlight");',
         )));
       }
     }

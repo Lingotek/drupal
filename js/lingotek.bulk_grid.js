@@ -18,11 +18,6 @@ function lingotek_perform_action(nid, action) {
       count += isChecked ? 1 : 0;
     });
 
-    if (count > 0) {
-      $('.form-item-actions-select').show();
-    } else {
-      $('.form-item-actions-select').hide();
-    }
   }
   
   function lingotekTriggerModal(id, nids) {
@@ -49,13 +44,6 @@ function lingotek_perform_action(nid, action) {
   
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
-      $('input#edit-submit-changes.form-submit').hide();
-      $('#edit-limit-select').change(function() {
-        $('input#edit-submit-changes.form-submit').trigger('click');
-      });
-      
-      $('.form-item-actions-select').hide();
-      
       
       $('.select-all').change(function() {
         lingotekUpdateActionVisibilty();

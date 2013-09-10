@@ -1223,7 +1223,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
 }
 
 function lingotek_admin_profile_manage($profile_id) {  
-  $profiles = variable_get('lingotek_profiles');
+  $profiles = lingotek_get_profiles();
   
   if ($profile_id == 'add') {
     $profile = (object) array(
@@ -1238,7 +1238,8 @@ function lingotek_admin_profile_manage($profile_id) {
     $profile_id = key($profiles) + 1; //set the id to one more than the last
   }
   else {
-     $profile = $profiles[$profile_id];
+     $profile = lingotek_get_global_profile();
+     $profile = array_merge($profile, $profiles[$profile_id]);
   }
   
   ctools_include('node.pages', 'node', '');

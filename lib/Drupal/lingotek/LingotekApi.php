@@ -223,8 +223,9 @@ class LingotekApi {
    *   An array of API parameter values.
    */
   protected function getCommentCreateWithTargetsParams(LingotekComment $comment) {
-
-    $source_language = Lingotek::convertDrupal2Lingotek($comment->language);
+    global $language;
+    
+    $source_language = Lingotek::convertDrupal2Lingotek($comment->language != 'und' ? $comment->language : $language->language);
     $parameters = array(
       'projectId' => variable_get('lingotek_project', NULL),
       'documentName' => 'comment - ' . $comment->cid,
