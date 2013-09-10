@@ -529,8 +529,8 @@ function lingotek_update_7401(&$sandbox) {
   return $output;
 }
 
-/*
- * Removes the "Lingotek Translatable" option from each field
+/**
+ * Removes the deprecated "Lingotek Translatable" option from each field
  */
 function lingotek_update_7403(&$sandbox) {
   $translate_fields = variable_get('lingotek_translate_fields');
@@ -557,8 +557,8 @@ function lingotek_update_7403(&$sandbox) {
   }
 }
 
-/*
- * Update the Callback signature
+/**
+ * Upgrade the callback URL signature
  */
 function lingotek_update_7404(&$sandbox) {
   LingotekSync::updateNotifyUrl();

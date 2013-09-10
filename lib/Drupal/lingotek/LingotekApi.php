@@ -66,7 +66,6 @@ class LingotekApi {
    *   A Drupal node object or lingotek ConfigChunk object
    */
   public function addContentDocument(LingotekTranslatableEntity $translatable_object, $with_targets = FALSE) {
-    global $_lingotek_locale;
     $success = FALSE;
 
     $project_id = $translatable_object->getProjectId();
@@ -957,7 +956,7 @@ class LingotekApi {
       $consumer_key = variable_get('lingotek_oauth_consumer_id', '');
       $consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
       if (!empty($consumer_key) && !empty($consumer_secret)) {
-        $valid_connection = ($this->request('listTMVaults')) ? TRUE : FALSE; // replace with faster call
+        $valid_connection = ($this->request('validateApiKeys')) ? TRUE : FALSE;
       }
       else {
         $valid_connection = FALSE;
