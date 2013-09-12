@@ -19,8 +19,6 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
   if ($document_progress->results == 'success') {
 
-    $icon_green_check = base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_tick_17x.png';
-
     $rows = array();
 
     foreach ($document_progress->translationTargets as $target) {
@@ -36,7 +34,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       $row = array(
         'column_1' => array('data' => $language_link, 'width' => '40%'),
         'column_2' => array('data' => lingotek_grid_create_progress_bar($target->percentComplete), 'width' => '40%'),
-        'column_3' => array('data' => $target->percentComplete == 100 ? '<img src="' . $icon_green_check . '" />' : '', 'width' => '20%'),
+        'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="icon-check-sign ltk-workflow-check" title="'.t('Workflow complete').'"></i>' : '<i class="icon-check-empty ltk-workflow-check"></i>', 'width' => '20%'
         '#attributes' => array('class' => array('bold-row')),
       );
 
@@ -46,7 +44,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $row = array(
           'column_1' => $phase->name,
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
-          'column_3' => $phase->isMarkedComplete ? '<img src="' . $icon_green_check . '" />' : '',
+          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-workflow-check" title="'.t('Workflow complete').'"></i>':'<i class="icon-check-empty ltk-workflow-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
         );
         $rows[$target->language . '_' . $phase->name] = $row;
@@ -426,14 +424,17 @@ function lingotek_pm($node) {
         // Import Status (check and report on import status)
         $status = $document->getImportStatus();
 
-        $message = t('The current status of this document is:').' <i>'. t('@status', array('@status' => $status)) . '</i><br/>' . l('<i class="icon-refresh"></i> Refresh Status', '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => 'Refresh', 'onclick' => array('location.reload();return false;'))));
-        drupal_set_message($message, 'warning');
+        $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="icon-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
+        drupal_set_message(t('Content Import Status:') . $message, 'status');
 
-        $output[] = array(
-          '#type' => 'item',
-          '#title' => 'Import Status',
-          '#markup' => $message,
+        $output['import_status'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Content Import Status'),
+          '#description' => $message,
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
         );
+      
       }
       
       $reset_translations_form = drupal_get_form('lingotek_node_content_reset_form', $node->nid);

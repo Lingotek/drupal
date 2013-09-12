@@ -232,3 +232,8 @@ input.lingotek-content-settings-table.form-checkbox {
 .bold-row td {
   background-color: #CCCCCC
 }
+
+.ltk-workflow-check {
+    color: green;
+    font-size: 150%;
+}
