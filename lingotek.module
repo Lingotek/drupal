@@ -1129,8 +1129,10 @@ function lingotek_node_view($node, $view_mode) {
     }
   }
   
-  global $language;
-  $node->content['lingotek_link']['#markup'] = lingotek_workbench_icon('node', $node->nid, Lingotek::convertDrupal2Lingotek($language->language));
+  if(isset($node->lingotek['document_id']) && !empty($node->lingotek['document_id'])) {
+    global $language;
+    $node->content['lingotek_link']['#markup'] = lingotek_workbench_icon('node', $node->nid, Lingotek::convertDrupal2Lingotek($language->language));
+  }
 }
 
 function lingotek_node_presave($node) {
