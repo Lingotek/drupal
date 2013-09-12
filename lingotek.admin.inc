@@ -326,6 +326,13 @@ function lingotek_admin_profile_usage($id) {
   return $query->countQuery()->execute()->fetchField();
 }
 
+function lingotek_admin_profile_usage_by_types($id) {
+  $profile_mapping = variable_get('lingotek_entity_profiles');
+  $profile_usage = array_count_values($profile_mapping['node']);
+  
+  return isset($profile_usage[$id]) ? $profile_usage[$id] : 0;
+}
+
 /**
  * Additional translation form
  */
@@ -1198,8 +1205,9 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     $edit_link =  l(t('Edit'), LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key, array('attributes' => array('class' => array('ctools-use-modal'))));
     
     $count = lingotek_admin_profile_usage($key);
+    $count_types = lingotek_admin_profile_usage_by_types($key);
     
-    $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes'), $edit_link);
+    $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes') . ',' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types'), $edit_link);
   }
   
   $custom_count = lingotek_admin_profile_usage(-1);
@@ -1495,14 +1503,15 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#type' => 'submit',
     '#value' => 'Save',
   );
-  if(lingotek_admin_profile_usage($form_state['values']['profile_id']) == 0) {
+  $profile_id = $form_state['values']['profile_id'];
+  if(lingotek_admin_profile_usage($profile_id) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0) {
     $form['defaults']['delete'] = array(
       '#type' => 'submit',
       '#value' => 'Delete',
     );
   } else {
     $form['delete'] = array(
-      '#markup' => 'You cannot delete this profile until no nodes use it.',
+      '#markup' => 'You cannot delete this profile until no nodes or content types use it.',
     );
   }
   $form['defaults']['cancel'] = array(
