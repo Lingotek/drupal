@@ -623,7 +623,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
     LingotekSync::setTargetStatus($node->nid, $lingotek_locale, LingotekSync::STATUS_PENDING); //set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native', $lingotek_locale) . " (" . $drupal_language_code . ")";
-    $translation_edit_link = lingotek_get_workbench_url($node, $lingotek_locale, t('Edit Translation: @language_text', array('@language_text' => $language_text)));
+    $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale, t('Edit Translation: @language_text', array('@language_text' => $language_text)));
     $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
     $edit_translation_message .= "<br/>" . $translation_edit_link;
     drupal_set_message($edit_translation_message, 'warning', FALSE);
@@ -1117,7 +1117,7 @@ function lingotek_node_view($node, $view_mode) {
   if ($view_mode == 'full' && $community_translation_allowed && $lingotek_document_id && lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
 
     if ($language->language != $node->language) {
-      $link = lingotek_get_workbench_url($node, $language->lingotek_locale, t('Help make it better.'));
+      $link = lingotek_get_workbench_url($node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
       if ($link != '') {
         $message = t('The translation of @title is still being worked on.', array('@title' => '"' . $node->title . '"')) . " ";
         $message .= $link . '&nbsp;';
