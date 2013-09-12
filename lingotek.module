@@ -203,7 +203,7 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'];
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/list'] = array(
-    'title' => 'Manage',
+    'title' => 'Content',
     'description' => 'Bulk grid of content translations',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -8,
