@@ -1095,12 +1095,6 @@ function lingotek_get_profiles() {
       'create_lingotek_document' => 0,
       'sync_method' => 0,
     );
-    $profiles[] = array(
-      'name' => 'Automatic + Crowdsourced',
-      'create_lingotek_document' => 1,
-      'sync_method' => 1,
-      'allow_community_translation' => 1,
-    );
     variable_set('lingotek_profiles', $profiles);
   }
   return $profiles;
