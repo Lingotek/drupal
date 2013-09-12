@@ -404,7 +404,7 @@ function lingotek_pm($node) {
         $output[] = array(
           '#markup' => drupal_render($download_form),
         );
-
+        
         if ($document->hasPhasesToComplete()) {
           // Add the mark as complete table if there are complete-eligible phrases.
           $drupal_phase_complete_from = drupal_get_form('lingotek_mark_phases_complete', $node, $document);
@@ -710,14 +710,19 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
     }
   } else if ($entity_type == 'comment') {
     $comment = comment_load($id);
-    
     if ($comment->language == $drupal_language_code) {
+      drupal_goto('comment/' . $comment->cid . '/edit');
     }
     else {  
       $lingotek_comment = LingotekComment::load($comment);
       
       $translation_edit_link = lingotek_get_workbench_url($lingotek_comment->lingotekDocumentId(), $lingotek_locale);
-      drupal_goto($translation_edit_link);
+      if(!empty($translation_edit_link)) {
+        drupal_goto($translation_edit_link);
+      }
+      else {
+        drupal_goto('comment/' . $comment->cid . '/edit');
+      }
     }
   }
 }

@@ -6,6 +6,10 @@
   position: relative;
 }
 
+.node {
+  position: relative;
+}
+
 .views-field-lingotek-workbench-link a {
   position:absolute;
   left: -25px;
@@ -30,6 +34,8 @@ a.translation-link {
   top: 10px;
 }
 
-.comment {
-  overflow: visible !important;
+.node a.translation-link {
+  right: 40px;
+  left: auto;
+  top: 5px;
 }
