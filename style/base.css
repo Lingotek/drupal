@@ -118,9 +118,14 @@ input.lingotek-content-settings-table.form-checkbox {
   display: inline;
 }
 
-#edit-grid-container .table-select-processed,
-#edit-grid-container .grid-empty {
+#edit-grid-container .table-select-processed {
   clear: both;
+}
+#edit-grid-container > .grid-empty {
+  clear: both;
+  padding: 25px;
+  background: #f3f3f3;
+  border: #aaa;
 }
 
 #edit-custom-columns {

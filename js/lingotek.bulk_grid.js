@@ -10,16 +10,6 @@ function lingotek_perform_action(nid, action) {
 }
   
 (function ($) {
-  function lingotekUpdateActionVisibilty() {
-    var count = 0;
-
-    $('#edit-grid-container .form-checkbox').each(function() {
-      var isChecked = $(this).attr('checked');
-      count += isChecked ? 1 : 0;
-    });
-
-  }
-  
   function lingotekTriggerModal(id, nids) {
     nids = [];
     $('#edit-grid-container .form-checkbox').each(function() {
@@ -31,24 +21,23 @@ function lingotek_perform_action(nid, action) {
       }
     });
     
-    $('#edit-actions-select').val('select');
-    url = $(id).attr('href');
-    ob = Drupal.ajax[url];
-    ob.element_settings.url = ob.options.url = ob.url = url + '/' + nids.join(',');
-    $(id).trigger('click');
-    $(id).attr('href', url);
-    $('.modal-header .close').click( function() {
-      location.reload();
-    });
+    if(nids.length > 0) {
+      $('#edit-actions-select').val('select');
+      url = $(id).attr('href');
+      ob = Drupal.ajax[url];
+      ob.element_settings.url = ob.options.url = ob.url = url + '/' + nids.join(',');
+      $(id).trigger('click');
+      $(id).attr('href', url);
+      $('.modal-header .close').click( function() {
+        location.reload();
+      });
+    } else {
+      $("#lingotek-console").html('<div class="messages warning"><h2 class="element-invisible">Select a node</h2>You must select at least one node to do this action.</div>');
+    }
   }
   
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
-      
-      $('.select-all').change(function() {
-        lingotekUpdateActionVisibilty();
-      });
-      
             
       $('input#edit-actions-submit.form-submit').hide();
       $('#edit-actions-select').change(function() {
@@ -63,8 +52,8 @@ function lingotek_perform_action(nid, action) {
         }
       });
       
-      $('#edit-grid-container .form-checkbox').change(function() {
-        lingotekUpdateActionVisibilty();
+      $('#edit-limit-select').change(function() {
+        $('#edit-search-submit.form-submit').trigger('click');
       });
   }
 };
