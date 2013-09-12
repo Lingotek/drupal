@@ -1131,21 +1131,24 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
     $query->condition($or);
   }
+  else {
+    //  Title Field
+    if (isset($filters['title']) && $filters['title'] != '') {
+      $query->condition('n.nid', $title_query, 'IN');
+    }
+
+    // Body Field
+    if (isset($filters['body']) && $filters['body'] != '') {
+      $query->condition('n.nid', $body_query, 'IN');
+    }
+  }
 
   //  Node ID
   if (isset($filters['nid']) && $filters['nid'] != '') {
     $query->condition('n.nid', $filters['nid']);
   }
 
-  //  Title Field
-  if (isset($filters['title']) && $filters['title'] != '') {
-    $query->condition('n.nid', $title_query, 'IN');
-  }
 
-  // Body Field
-  if (isset($filters['body']) && $filters['body'] != '') {
-    $query->condition('n.nid', $body_query, 'IN');
-  }
 
   // Lingotek Document ID
   if (isset($filters['document_id']) && $filters['document_id'] != '') {
