@@ -34,7 +34,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       $row = array(
         'column_1' => array('data' => $language_link, 'width' => '40%'),
         'column_2' => array('data' => lingotek_grid_create_progress_bar($target->percentComplete), 'width' => '40%'),
-        'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="icon-check-sign ltk-workflow-check" title="'.t('Workflow complete').'"></i>' : '<i class="icon-check-empty ltk-workflow-check"></i>', 'width' => '20%'
+        'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="icon-check-sign ltk-complete-check" title="'.t('Workflow complete').'"></i>' : '<i class="icon-check-empty ltk-complete-check"></i>', 'width' => '20%'
         '#attributes' => array('class' => array('bold-row')),
       );
 
@@ -44,7 +44,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $row = array(
           'column_1' => $phase->name,
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
-          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-workflow-check" title="'.t('Workflow complete').'"></i>':'<i class="icon-check-empty ltk-workflow-check"></i>',
+          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-complete-check" title="'.t('Phase complete').'"></i>':'<i class="icon-check-empty ltk-complete-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
         );
         $rows[$target->language . '_' . $phase->name] = $row;

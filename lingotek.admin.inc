@@ -1207,7 +1207,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     $count = lingotek_admin_profile_usage($key);
     $count_types = lingotek_admin_profile_usage_by_types($key);
     
-    $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes') . ',' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types'), $edit_link);
+    $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes') . ' &sdot;  ' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . '', $edit_link);
   }
   
   $custom_count = lingotek_admin_profile_usage(-1);

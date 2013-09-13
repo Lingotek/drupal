@@ -392,18 +392,21 @@ function lingotek_form_bulk_sync($form, $form_state) {
       );
       $additional_desc = '';
       if (count($config_types_excluded)) {
-        $additional_desc .= t('(You can also enable translation for') 
-            . ' ' . $cf_excluded_str . ' ' 
-            . t('in the Additional Translation tab of the') 
-            . ' <a href="' . $base_url . '/admin/settings/lingotek/settings">' 
-            . t('Lingotek Settings') . '</a>)<br>';
+        $additional_desc .= t('(You can also enable translation for')
+            . ' ' . $cf_excluded_str . ' '
+            . t('within') . ' ' . t('Translation Configuration in') . ' '
+            . l('Lingotek Settings', 'admin/settings/lingotek/settings')
+            . ')<br/>';
       }
-      $modules = lingotek_admin_get_enabled_modules();
-      if ($updates = lingotek_check_for_l10n_translations($modules)) {
-        $additional_desc .= format_plural(
-            count($updates), 
+      if (variable_get('lingotek_use_translation_from_drupal')) {
+        $modules = lingotek_admin_get_enabled_modules();
+        $updates = lingotek_check_for_l10n_translations($modules);
+        if (!empty($updates)) {
+          $additional_desc .= format_plural(
+              count($updates), 
             'You have 1 pending localization import from Drupal included in this step.', 
             'You have @count pending localization imports from Drupal included in this step.');
+        }
       }
       if ($additional_desc) {
         $form['upload']['upload_config']['#description'] = $additional_desc;
