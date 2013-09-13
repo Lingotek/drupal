@@ -153,6 +153,9 @@ class LingotekDocument {
       elseif ($status === self::IMPORT_STATUS__ERROR) {
         $status_message = $status . " (" . $response->process->error . ")";
       }
+      else {
+        $status_message = $status;
+      }
     }
     elseif ($response->results == 'fail') {
       $status = self::IMPORT_STATUS__ERROR;

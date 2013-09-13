@@ -700,7 +700,7 @@ function lingotek_update_target_progress_batch_create($nids) {
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
     if (!empty($segment)) {
-      //$operations[] = array('lingotek_get_and_update_target_progress', array($segment));
+      $operations[] = array('lingotek_get_and_update_target_progress', array($segment));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);

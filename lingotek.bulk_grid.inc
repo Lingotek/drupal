@@ -28,19 +28,19 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   // Output success messages for actions
   if (isset($_SESSION['lingotek_edit_nodes'])) {
-    drupal_set_message(t('Settings changed for @number node(s).', array('@number' => count($_SESSION['lingotek_edit_nodes']))));
+    drupal_set_message(format_plural($_SESSION['lingotek_edit_nodes'], 'Settings changed for one node.', 'Settings changed for @count nodes.'));
     unset($_SESSION['lingotek_edit_nodes']);
   }
   if (isset($_SESSION['lingotek_upload_nodes'])) {
-    drupal_set_message(t('@number node(s) uploaded to Lingotek successfully.', array('@number' => $_SESSION['lingotek_upload_nodes'])));
+    drupal_set_message(format_plural($_SESSION['lingotek_upload_nodes'], 'One node uploaded to Lingotek successfully.', '@count nodes uploaded to Lingotek successfully.'));
     unset($_SESSION['lingotek_upload_nodes']);
   }
   if (isset($_SESSION['lingotek_download_nodes'])) {
-    drupal_set_message(t('@number node(s) downloaded from Lingotek successfully.', array('@number' => $_SESSION['lingotek_download_nodes'])));
+    drupal_set_message(format_plural($_SESSION['lingotek_download_nodes'], 'One translation downloaded successfully.', '@count translations downloaded successfully.'));
     unset($_SESSION['lingotek_download_nodes']);
   }
   if (isset($_SESSION['lingotek_sync_nodes'])) {
-    drupal_set_message(t('Target progress synced for @number node(s).', array('@number' => $_SESSION['lingotek_sync_nodes'])));
+    drupal_set_message(format_plural($_SESSION['lingotek_sync_nodes'], 'Target progress synced for one node.', 'Target progress synced for @count nodes.'));
     unset($_SESSION['lingotek_sync_nodes']);
   }
   
@@ -81,14 +81,13 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['filter_popup'] = array(
     '#markup' => l('<i class="icon-search icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
   );
-  $form['refresh'] = array(
-    '#markup' => l('<i class="icon-refresh icon-2x"></i>', '', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => 'Refresh', 'onclick' => array('location.reload();return false;')))),
-  );
-  
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
   $message = t('Last updated @time', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
+  $form['refresh'] = array(
+    '#markup' => l('<i class="icon-refresh icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
+  );
   $form['lingotek_update'] = array(
-    '#markup' => l('<i class="icon-cloud-download icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('title' => $message, 'class' => array('lingotek-action')))),
+    '#markup' => l('<i class="icon-cloud-download icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => 'Download completed translations', 'class' => array('lingotek-action')))),
   );
   
   $form['edit_settings'] = array(
@@ -617,6 +616,45 @@ function lingotek_grid_update() {
     drupal_set_message(t('No nodes to update'));
     drupal_goto('admin/settings/lingotek/manage/list');
   }
+}
+
+function lingotek_grid_download_ready() {
+  $targets = LingotekSync::getTargetsByStatus(LingotekSync::STATUS_READY);
+  //dvz($targets,TRUE);
+  $sync_success_target = LingotekSync::STATUS_CURRENT;
+
+  if (count($targets) > 0) {
+    $operations = array();
+    foreach ($targets as $target) {
+      $operations[] = array('lingotek_sync_download_node_target', array($target['nid'], $target['locale'], $sync_success_target, FALSE));
+    }
+    $redirect = 'admin/settings/lingotek/manage';
+    $batch = array(
+      'title' => t('Downloading Translations'),
+      'finished' => 'lingotek_grid_download_ready_finished',
+    );
+    $batch['operations'] = $operations;
+    batch_set($batch);
+    batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
+  }
+  else {
+    drupal_set_message(t('No nodes to update'));
+    drupal_goto('admin/settings/lingotek/manage/list');
+  }
+}
+
+function lingotek_grid_download_ready_finished($success, $results, $operations) {
+  // The 'success' parameter means no fatal PHP errors were detected. All
+  // other error management should be handled using 'results'.
+  if ($success) {
+    $successful_downloads = isset($results['downloads']) ? $results['downloads'] : 0;
+    $message = format_plural($successful_downloads, 'One translation successfully downloaded.', '@count translations successfully downloaded.');
+  }
+  else {
+    $message = t('Finished with an error.');
+  }
+  //drupal_set_message($message);
+  $_SESSION['lingotek_download_nodes'] = $results['downloads'];
 }
 
 /**

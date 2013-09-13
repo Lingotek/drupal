@@ -207,6 +207,46 @@ class LingotekSync {
     self::deleteTargetEntriesForAllNodes($lingotek_locale);
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
   }
+  
+  
+  /**
+   * getDocIdTargetsByStatus
+   * 
+   * @param status (e.g., LingotekSync::READY)
+   * 
+   * @return an array of associate arrays.  Each associate array will have a 'nid' (e.g., 5), 'locale' (e.g., 'de_DE'), and optionally 'doc_id' (e.g., 46677222-b5ec-47d5-880e-24632feffaf5)
+   */
+  public static function getTargetsByStatus($status, $include_doc_ids = FALSE) {
+    $target_language_search = '%';
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('nid', 'lingokey', 'lingovalue'));
+    $query->condition('lingokey', 'target_sync_status_' . $target_language_search, 'LIKE');
+    $query->condition('lingovalue', $status);
+    $result = $query->execute();
+    $records = $result->fetchAll(); //$result->fetchAllAssoc('nid');
+
+     // build nid_doc_map (if needed)
+    if ($include_doc_ids) {
+      $nid_doc_map = array();
+      foreach ($records as $record) {
+        if (!key_exists($record->nid, $nid_doc_map)) {
+          $doc_id = self::getDocIdFromNodeId($record->nid);
+          $nid_doc_map[$record->nid] = $doc_id;
+        }
+      }
+    }
+    $targets = array();
+    foreach ($records as $record) {
+      $doc_target = array(
+        'nid' => $record->nid,
+        'doc_id' => $include_doc_ids ? $nid_doc_map[$record->nid] : NULL,
+        'locale' => str_replace('target_sync_status_', '', $record->lingokey)
+      );
+      $targets[] = $doc_target;
+    }
+
+    return $targets;
+  }
 
   public static function getDownloadableReport() {
     $document_ids = array_unique(array_merge(self::getDocIdsByStatus(self::STATUS_PENDING, FALSE), self::getDocIdsByStatus(self::STATUS_READY, FALSE)));
