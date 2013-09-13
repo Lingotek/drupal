@@ -328,8 +328,9 @@ function lingotek_admin_profile_usage($id) {
 
 function lingotek_admin_profile_usage_by_types($id) {
   $profile_mapping = variable_get('lingotek_entity_profiles');
-  $profile_usage = array_count_values($profile_mapping['node']);
-  
+  $profile_mapping_associations = isset($profile_mapping['node']) ? $profile_mapping['node'] : array();
+  $profile_usage = array_count_values($profile_mapping_associations);
+
   return isset($profile_usage[$id]) ? $profile_usage[$id] : 0;
 }
 
