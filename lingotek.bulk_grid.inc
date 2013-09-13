@@ -84,10 +84,10 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
   $message = t('Last updated @time', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
   $form['refresh'] = array(
-    '#markup' => l('<i class="icon-refresh icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
+    '#markup' => l('<i class="icon-refresh icon-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
   );
   $form['lingotek_update'] = array(
-    '#markup' => l('<i class="icon-cloud-download icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => 'Download completed translations', 'class' => array('lingotek-action')))),
+    '#markup' => l('<i class="icon-cloud-download icon-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => 'Download completed translations', 'class' => array('lingotek-action')))),
   );
   
   $form['edit_settings'] = array(
@@ -239,6 +239,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
         25 => '25',
         50 => '50',
         100 => '100',
+        250 => '250',
+        500 => '500',
       ),
       '#default_value' => $limit,
     );

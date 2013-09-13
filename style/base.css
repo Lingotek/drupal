@@ -153,7 +153,7 @@ input.lingotek-content-settings-table.form-checkbox {
 }
 
 .language-icon.target-ready {
-  background-color:#59ad1a
+  background-color:#59ad1a;
 }
 
 .language-icon.target-edited {
@@ -236,4 +236,12 @@ input.lingotek-content-settings-table.form-checkbox {
 .ltk-complete-check {
     color: green;
     font-size: 150%;
+}
+
+.ltk-download {
+    color: #59ad1a;
+}
+
+.ltk-refresh {
+    color: darkred;
 }
