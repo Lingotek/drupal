@@ -73,9 +73,6 @@ input.lingotek-content-settings-table.form-checkbox {
 }
 
 #modal-content #edit-filters .form-item {
-  margin-left: 15px;
-  width: 500px;
-  float: left;
 }
 
 #modal-content #edit-filter-buttons {
@@ -99,10 +96,11 @@ input.lingotek-content-settings-table.form-checkbox {
   font-size: 125%;
   margin-left: 20px;
   margin-top: 30px;
+  color: #666;
 }
 
 .lingotek-action:hover {
-  color: #00348D;
+  color: #333;
   text-decoration: none;
 }
 
@@ -145,7 +143,7 @@ input.lingotek-content-settings-table.form-checkbox {
 }
 
 .language-icon.target-pending {
-  background-color: darkred;
+  background-color: #CE2029;
 }
 
 .language-icon.target-current {
@@ -160,6 +158,29 @@ input.lingotek-content-settings-table.form-checkbox {
   background-color:#999;
 }
 
+.ltk-complete-check {
+    color: green;
+    font-size: 150%;
+}
+
+.ltk-download {
+    color: #59ad1a;
+}
+.ltk-download:hover {
+    color: green;
+}
+
+.ltk-refresh {
+    color: #CE2029;
+}
+.ltk-refresh:hover {
+    color: darkred;
+}
+
+.ltk-muted {
+    color: #666;
+}
+
 .no-localized-title, .no-localized-title a {
   color: #444;
   /*font-style: italic;*/
@@ -167,6 +188,15 @@ input.lingotek-content-settings-table.form-checkbox {
 
 .lingotek-node-actions, .lingotek-language-source i {
   font-size: 150%;
+}
+.lingotek-node-actions a:hover {
+    text-decoration: none;
+    color: #00348D;
+}
+
+a.ltk-action:hover {
+    text-decoration: none;
+    color: #00348D;
 }
 
 #edit-grid-container i.lingotek-disabled {
@@ -233,15 +263,3 @@ input.lingotek-content-settings-table.form-checkbox {
   background-color: #CCCCCC
 }
 
-.ltk-complete-check {
-    color: green;
-    font-size: 150%;
-}
-
-.ltk-download {
-    color: #59ad1a;
-}
-
-.ltk-refresh {
-    color: darkred;
-}

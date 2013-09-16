@@ -50,7 +50,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   // Define source actions - keys are used to decide what action to do in the 'lingotek_grid_action_submit' function
   $action_options = array(
-    'select' => t('< Select Action >'),
+    'select' => t('Select an action'),
     'upload' => t('Upload for Translation'),
     'sync' => t('Sync Translation Progress with Lingotek'),
     'reset' => t('Reset Translations'),
@@ -78,9 +78,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['customize'] = array(
     '#markup' => l('<i class="icon-list-alt icon-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => 'Customize Table', 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
   );
-  $form['filter_popup'] = array(
+  /*$form['filter_popup'] = array(
     '#markup' => l('<i class="icon-search icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
-  );
+  );*/
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
   $message = t('Last updated @time', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
   $form['refresh'] = array(
@@ -101,7 +101,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
-    '#title' => t('Search') . ': ',
+    '#title' => l('<i class="icon-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Advanced Search', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters','ltk-action')))) . ' ' . t('Search') . ': ',
     '#size' => 30,
   );
 
@@ -154,7 +154,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['actions_select'] = array(
     '#type' => 'select',
     '#options' => $action_options,
-    '#title' => 'Actions: ',
+    '#title' => '<i class="icon-asterisk ltk-muted"></i>' . ' ' . t('Actions') . ': ',
   );
 
   // Actions submit button
@@ -444,7 +444,7 @@ function lingotek_grid_action_submit($form, $form_state) {
     if (isset($form_state['values']['actions_select'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
       $action = $form_state['values']['actions_select']; // Get the action
       if (count($nids) <= 0) { // Select a node
-          drupal_set_message(t('You must select a node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
+        drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
       elseif ($action == 'upload') { // If uploading
         $_SESSION['lingotek_upload_nodes'] = count($nids);
@@ -615,7 +615,7 @@ function lingotek_grid_update() {
     lingotek_update_target_progress_batch_create($nids); // Run batch operations to sync all 'In Progress' nodes
   }
   else {
-    drupal_set_message(t('No nodes to update'));
+    drupal_set_message(t('No translations are in-progress.'));
     drupal_goto('admin/settings/lingotek/manage/list');
   }
 }
@@ -640,7 +640,7 @@ function lingotek_grid_download_ready() {
     batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
   }
   else {
-    drupal_set_message(t('No nodes to update'));
+    drupal_set_message(t('No translations are ready for download.'));
     drupal_goto('admin/settings/lingotek/manage/list');
   }
 }
@@ -780,7 +780,13 @@ function lingotek_grid_build_filters($form_state) {
       '#title' => t('Source Language'),
       '#options' => $source_languages,
     ),
-    'title' => array(
+    'profile' => array(
+      '#type' => 'select',
+      '#default_value' => isset($_SESSION['grid_filters']['profile']) ? $_SESSION['grid_filters']['profile'] : 'all',
+      '#title' => t('Translation Profile'),
+      '#options' => $profiles,
+    ),
+    /*'title' => array(
       '#type' => 'textfield',
       '#default_value' => isset($_SESSION['grid_filters']['title']) ? $_SESSION['grid_filters']['title'] : '',
       '#title' => t('Title Includes'),
@@ -791,7 +797,7 @@ function lingotek_grid_build_filters($form_state) {
       '#default_value' => isset($_SESSION['grid_filters']['body']) ? $_SESSION['grid_filters']['body'] : '',
       '#title' => t('Body Includes'),
       '#size' => 30,
-    ),
+    ),*/
     'upload_status' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['upload_status']) ? $_SESSION['grid_filters']['upload_status'] : 'all',
@@ -802,22 +808,16 @@ function lingotek_grid_build_filters($form_state) {
         LingotekSync::STATUS_CURRENT => t('In Sync'),
         LingotekSync::STATUS_DISABLED => t('Disabled'),
       ),
-      '#multiple' => TRUE,
+      '#multiple' => FALSE,
     ),
     'content_type' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
-      '#title' => t('Content Type'),
+      '#title' => t('Content Type(s)'),
       '#options' => array('all' => t('All')) + node_type_get_names(),
       '#multiple' => TRUE
     ),
-    'profile' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['profile']) ? $_SESSION['grid_filters']['profile'] : 'all',
-      '#title' => t('Profile'),
-      '#options' => $profiles,
-    ),
-    'translation_status' => array(
+    /*'translation_status' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['translation_status']) ? $_SESSION['grid_filters']['translation_status'] : 'all',
       '#title' => t('Translation Status'),
@@ -842,7 +842,7 @@ function lingotek_grid_build_filters($form_state) {
         'disabled' => t('Disabled'),
       ),
       '#multiple' => TRUE
-    ),
+    ),*/
 //    'auto_upload' => array(
 //      '#type' => 'select',
 //      '#default_value' => isset($_SESSION['grid_filters']['auto_upload']) ? $_SESSION['grid_filters']['auto_upload'] : 'all',
@@ -892,7 +892,7 @@ function lingotek_grid_build_filters($form_state) {
 //      ),
 //      '#multiple' => TRUE
 //    ),
-    'last_uploaded' => array(
+/*    'last_uploaded' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['last_uploaded']) ? $_SESSION['grid_filters']['last_uploaded'] : 'all',
       '#title' => t('Last Uploaded'),
@@ -931,7 +931,7 @@ function lingotek_grid_build_filters($form_state) {
         'unknown' => t('Unknown'),
       ),
       '#multiple' => FALSE
-    ),
+    ),*/
 //    'translation_progress_percent' => array(
 //      '#type' => 'select',
 //      '#default_value' => isset($_SESSION['grid_filters']['translation_progress_percent']) ? $_SESSION['grid_filters']['translation_progress_percent'] : 'all',
@@ -946,7 +946,7 @@ function lingotek_grid_build_filters($form_state) {
 //      ),
 //      '#multiple' => TRUE
 //    ),
-    'last_downloaded' => array(
+/*    'last_downloaded' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['last_downloaded']) ? $_SESSION['grid_filters']['last_downloaded'] : 'all',
       '#title' => t('Last Downloaded'),
@@ -958,7 +958,7 @@ function lingotek_grid_build_filters($form_state) {
         'unknown' => t('Unknown'),
       ),
       '#multiple' => FALSE
-    ),
+    ),*/
   );
 
   return lingotek_grid_process_elements($filters, '', '__filter'); // Add prefix and suffix to the name of each filter element
@@ -1543,14 +1543,16 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
     LingotekSync::STATUS_DISABLED => 'Disabled',
   );
-  
-  foreach($locales as $key => $original_locale) {
+  //dpm("LOCALES");  dpm($locales);  dpm($languages);
+  foreach ($locales as $key => $original_locale) {
     $locale = $convert ? Lingotek::convertLingotek2Drupal($original_locale) : $original_locale;
-    $status = $statuses[$key];
-    $css_class = 'target-' . $status;
-    $tip = $languages[$locale]->name . ' - ' . $legend[strtoupper($status)];
-   
-    $html .= l($locale, 'node/' . $nid . '/lingotekworkbench/' . $original_locale, array('attributes' => array('target' => '_blank','title' => $tip, 'class' => array('language-icon', $css_class))));
+    if ($locale) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
+      $status = $statuses[$key];
+      $css_class = 'target-' . $status;
+      $tip = $languages[$locale]->name . ' - ' . $legend[strtoupper($status)];
+
+      $html .= l($locale, 'node/' . $nid . '/lingotekworkbench/' . $original_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
+    }
   }
   
   return $html;

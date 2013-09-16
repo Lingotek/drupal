@@ -32,7 +32,8 @@ function lingotek_perform_action(nid, action) {
         location.reload();
       });
     } else {
-      $("#lingotek-console").html('<div class="messages warning"><h2 class="element-invisible">Select a node</h2>You must select at least one node to do this action.</div>');
+      var $console = $('#console').length ? $('#console') : $("#lingotek-console");
+      $console.html('<div class="messages warning"><h2 class="element-invisible">Warning message</h2>You must select at least one node to perform this action.</div>');
     }
   }
   
