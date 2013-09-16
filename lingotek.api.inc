@@ -82,7 +82,7 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
   global $_lingotek_client, $_lingotek_locale;
 
   if ($source_node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED) {
-    return;
+    return FALSE;
   }
 
   $document_id = $source_node->lingotek['document_id'];
@@ -101,11 +101,12 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
+
   try {
     $xml = new SimpleXMLElement($text);
   } catch (Exception $e) {
     LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
-    return;
+    return FALSE;
   }
   
   $node_method = $source_node->lingotek['lingotek_nodes_translation_method'];
@@ -247,7 +248,8 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   lingotek_lingonode_variable_delete($node->nid, 'target_last_downloaded_' . $lingotek_locale);
   lingotek_lingonode($node->nid, 'target_last_downloaded_' . $lingotek_locale, time());
-
+  
+  return TRUE;
  // node_save($node);
 }
 

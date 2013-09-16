@@ -31,14 +31,6 @@ function lingotek_bulk_grid_form($form, $form_state) {
     drupal_set_message(format_plural($_SESSION['lingotek_edit_nodes'], 'Settings changed for one node.', 'Settings changed for @count nodes.'));
     unset($_SESSION['lingotek_edit_nodes']);
   }
-  if (isset($_SESSION['lingotek_upload_nodes'])) {
-    drupal_set_message(format_plural($_SESSION['lingotek_upload_nodes'], 'One node uploaded to Lingotek successfully.', '@count nodes uploaded to Lingotek successfully.'));
-    unset($_SESSION['lingotek_upload_nodes']);
-  }
-  if (isset($_SESSION['lingotek_download_nodes'])) {
-    drupal_set_message(format_plural($_SESSION['lingotek_download_nodes'], 'One translation downloaded successfully.', '@count translations downloaded successfully.'));
-    unset($_SESSION['lingotek_download_nodes']);
-  }
   if (isset($_SESSION['lingotek_sync_nodes'])) {
     drupal_set_message(format_plural($_SESSION['lingotek_sync_nodes'], 'Target progress synced for one node.', 'Target progress synced for @count nodes.'));
     unset($_SESSION['lingotek_sync_nodes']);
@@ -82,12 +74,12 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l('<i class="icon-search icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
   );*/
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
-  $message = t('Last updated @time', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
+  $message = t('Check in-progress translation statuses (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
   $form['refresh'] = array(
     '#markup' => l('<i class="icon-refresh icon-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
   );
   $form['lingotek_update'] = array(
-    '#markup' => l('<i class="icon-cloud-download icon-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => 'Download completed translations', 'class' => array('lingotek-action')))),
+    '#markup' => l('<i class="icon-cloud-download icon-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => 'Download complete translations', 'class' => array('lingotek-action')))),
   );
   
   $form['edit_settings'] = array(
@@ -447,9 +439,10 @@ function lingotek_grid_action_submit($form, $form_state) {
         drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
       elseif ($action == 'upload') { // If uploading
-        $_SESSION['lingotek_upload_nodes'] = count($nids);
+        //$_SESSION['lingotek_upload_nodes'] = count($nids);
         $batch = array(
           'title' => t('Uploading Nodes To Lingotek'),
+          'finished' => 'lingotek_sync_upload_node_finished'
         );
         $operations = lingotek_get_sync_upload_batch_elements($nids);
         $batch['operations'] = $operations;
@@ -459,7 +452,6 @@ function lingotek_grid_action_submit($form, $form_state) {
         batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
       }
       elseif (substr($action, 0, 8) == 'download') { // If downloading all targets
-        $_SESSION['lingotek_download_nodes'] = count($nids);
         $lang = substr($action, 9, 10);
         $target_locales = ($lang == 'all') ? lingotek_get_target_locales() : array($lang);
         $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
@@ -484,6 +476,7 @@ function lingotek_grid_action_submit($form, $form_state) {
         $batch = array(
           'title' => t('Downloading Translations from Lingotek'),
           'operations' => array(),
+          'finished' => 'lingotek_sync_download_target_finished'
         );
         $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT)); // If target progress is at 100, download and set to current
         $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING)); // Otherwise, download and set to pending
@@ -633,7 +626,7 @@ function lingotek_grid_download_ready() {
     $redirect = 'admin/settings/lingotek/manage';
     $batch = array(
       'title' => t('Downloading Translations'),
-      'finished' => 'lingotek_grid_download_ready_finished',
+      'finished' => 'lingotek_sync_download_target_finished',
     );
     $batch['operations'] = $operations;
     batch_set($batch);
@@ -643,20 +636,6 @@ function lingotek_grid_download_ready() {
     drupal_set_message(t('No translations are ready for download.'));
     drupal_goto('admin/settings/lingotek/manage/list');
   }
-}
-
-function lingotek_grid_download_ready_finished($success, $results, $operations) {
-  // The 'success' parameter means no fatal PHP errors were detected. All
-  // other error management should be handled using 'results'.
-  if ($success) {
-    $successful_downloads = isset($results['downloads']) ? $results['downloads'] : 0;
-    $message = format_plural($successful_downloads, 'One translation successfully downloaded.', '@count translations successfully downloaded.');
-  }
-  else {
-    $message = t('Finished with an error.');
-  }
-  //drupal_set_message($message);
-  $_SESSION['lingotek_download_nodes'] = $results['downloads'];
 }
 
 /**
@@ -1539,7 +1518,7 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
   $legend = array(
     LingotekSync::STATUS_PENDING => 'In Progress',
     LingotekSync::STATUS_READY => 'Ready to Download',
-    LingotekSync::STATUS_CURRENT => 'Completed',
+    LingotekSync::STATUS_CURRENT => 'Current',
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
     LingotekSync::STATUS_DISABLED => 'Disabled',
   );

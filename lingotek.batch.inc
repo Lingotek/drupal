@@ -405,6 +405,18 @@ function lingotek_sync_upload_node($nid, &$context) {
   //$context['results'][] = t('Uploaded: Node #@nid', array('@nid' => $nid));
 }
 
+function lingotek_sync_upload_node_finished($success, $results, $operations) {
+  if ($success) {
+    $count = isset($results['uploads']) ? $results['uploads'] : 0;
+    $message = format_plural($count, 'One node uploaded to Lingotek.', '@count nodes uploaded to Lingotek.');
+    $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? '<br/>(' . format_plural($count, 'node id', 'node ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
+  }
+  else {
+    $message = t('Finished with an error.');
+  }
+  drupal_set_message($message);
+}
+
 /**
  * Upload Batch Worker Function: Upload Config Chunk for Translation
  */
@@ -479,9 +491,8 @@ function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_succes
     lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
   }
 
-  lingotek_download_document($node, $lingotek_locale, $sync_success_status);
+  $result = lingotek_download_document($node, $lingotek_locale, $sync_success_status);
   cache_clear_all('field:node:' . $nid, 'cache_field');
-  $result = TRUE; // assume TRUE until the above lingotek_download_document call is updated to return the result
 
   if ($result) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
@@ -524,6 +535,17 @@ function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_succe
     }
     $context['results']['download_fail_chunk_targets'][] = array("cid" => $cid, "locale" => $lingotek_locale);
   }
+}
+
+function lingotek_sync_download_target_finished($success, $results, $operations) {
+  if ($success) {
+    $count = isset($results['downloads']) ? $results['downloads'] : 0;
+    $message = format_plural($count, 'One translation downloaded.', '@count translations downloaded.');
+  }
+  else {
+    $message = t('Finished with an error.');
+  }
+  drupal_set_message($message);
 }
 
 /**
