@@ -14,9 +14,7 @@ lingotek.forms = lingotek.forms || {};
         $('#edit-lingotek-create-lingotek-document').change(updateVerticalTabSummary);
         $('#edit-lingotek-sync-method').change(updateVerticalTabSummary);
         $('#edit-lingotek-profile').change(updateVerticalTabSummary);
-        $('#edit-lingotek-lingotek-disabled').bind('click', updateVerticalTabSummary);
         updateVerticalTabSummary();
-//        updateLingotekVisibilty(false);
     };
     
     lingotek.forms.enableLtkFromET = false;
@@ -30,15 +28,6 @@ lingotek.forms = lingotek.forms || {};
         return false;
     }
     
-//    var updateLingotekVisibilty = function(element) {
-//        var lingotekDis = $('#edit-lingotek-lingotek-disabled');
-//        if(lingotekDis.attr('checked') ==  'checked' || lingotekDis.attr('checked') == '1') {
-//            $('#edit-lingotek-content').hide();
-//        } else if(element) { //the condition for element is to make sure this isn't the first run
-//            $('#edit-lingotek-content').show();
-//        }
-//    }
-    
     var updateVerticalTabSummary = function() {
         var isPushedToLingotek = !isNaN(parseInt($('#edit-lingotek-document-id').val()));
         var isEntityTranslationNode = $('#ltk-entity-translation-node').val();
@@ -51,7 +40,6 @@ lingotek.forms = lingotek.forms || {};
             // hide form and show entity translation explanation and button
             $('#edit-lingotek-et-content').show();
             $('#edit-lingotek-lingotek-note').hide();
-            $('.form-item-lingotek-lingotek-disabled').hide();
             $('.form-item-lingotek-profile').hide();
             $('#edit-lingotek-advanced').hide();
             $('#edit-lingotek-content').hide();
@@ -63,14 +51,13 @@ lingotek.forms = lingotek.forms || {};
             $('#edit-lingotek-et-content').hide();
             $('#edit-lingotek-content').show();
             $('#edit-lingotek-lingotek-note').show();
-            $('.form-item-lingotek-lingotek-disabled').show();
             $('.form-item-lingotek-profile').show();
             
             var language = $("#edit-lingotek-language").val();
             var sourceLanguageSet = language != 'und'; 
             var autoUpload = $('#edit-lingotek-create-lingotek-document').is(":checked");
             var autoDownload = $('#edit-lingotek-sync-method').is(":checked");
-            var custom = $('#edit-lingotek-profile').val() == -1;
+            var custom = $('#edit-lingotek-profile').val() == 'CUSTOM';
                         
             if(custom) {
               summaryMessages.push( autoUpload ? Drupal.t("auto-upload") : Drupal.t("manual upload"));
@@ -96,13 +83,7 @@ lingotek.forms = lingotek.forms || {};
                 $('.form-item-lingotek-profile').hide();
             }
             
-            var lingotekDis = $('#edit-lingotek-lingotek-disabled');
-            if(lingotekDis.attr('checked') ==  'checked' || lingotekDis.attr('checked') == '1') {
-              $('#edit-lingotek-content').hide();
-              $('.form-item-lingotek-profile').hide();
-            }
-            
-            if($('#edit-lingotek-profile').val() != '-1') {
+            if($('#edit-lingotek-profile').val() != 'CUSTOM') {
               $('#edit-lingotek-content').hide();
               $('#edit-lingotek-advanced').hide();
             }

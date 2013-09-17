@@ -51,10 +51,11 @@ Drupal.behaviors.lingotekAdminForm = {
       $('fieldset.lingotek-translate-content', context).drupalSetSummary(function (context) {
         $list = [];
         total = 0;
-        $('#edit-node-translation input').each(function( index ) {
-          var id = $(this).attr('id');
-          if(id && id.substring(0, 9) == 'edit-type') {
-            if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
+        $('#edit-node-translation select').each(function( index ) {
+          var name = $(this).attr('name');
+          if(name && name.substring(0, 7) == 'profile') {
+            
+            if($(this).val() != 'DISABLED') {
               $list.push($(this).val());
             }
             total++;

@@ -17,6 +17,9 @@ class LingotekSync {
   const STATUS_DISABLED = 'DISABLED';    // A disabled node should neither be uploaded nor downloaded by Lingotek
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek
 
+  const PROFILE_CUSTOM = 'CUSTOM';
+  const PROFILE_DISABLED = 'DISABLED';
+
   public static function setNodeEnabled($nid, $enabled) {
     if($enabled) {
       if (lingotek_lingonode($nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {

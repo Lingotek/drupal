@@ -454,8 +454,8 @@ function lingotek_access_dev_tools($node, $permission) {
  */
 function lingotek_supported_type($type) {
   $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) != '0';
-  $fields = variable_get('lingotek_translate_fields');
-  $lingotek_supported_setting = isset($fields[$type]);
+  $setting = variable_get('lingotek_entity_profiles');
+  $lingotek_supported_setting = isset($setting['node'][$type]) && $setting['node'][$type] != LingotekSync::PROFILE_DISABLED;
   $entity_translation_managed = lingotek_managed_by_entity_translation($type);
   return ($lingotek_supported_explicitly && $lingotek_supported_setting) || $entity_translation_managed; //we also support entity_translation managed content
 }
@@ -1044,7 +1044,7 @@ function lingotek_load_profile_defaults($entity_type) {
   $profile_map = array();
   if (array_key_exists($entity_type, $entity_profile_defaults)) {
     foreach ($entity_profile_defaults[$entity_type] as $k => $v) {
-      $profile_map[$k] = $profile_defaults[$v];
+      $profile_map[$k] = is_numeric($v) ? $profile_defaults[$v] : array();
       $profile_map[$k]['profile'] = $v;
       unset($profile_map[$k]['name']);
     }

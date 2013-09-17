@@ -183,6 +183,13 @@ function lingotek_bulk_grid_form($form, $form_state) {
         //'height' => 200,
       ),
     ),
+    'set-filters' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 500,
+        'height' => 500,
+      ),
+    ),
   ), 'setting');
   
   if (!empty($table_data)) { // If results, render the table.  Otherwise, output 'No results were returned.'
@@ -733,7 +740,8 @@ function lingotek_grid_build_filters($form_state) {
   
   $profiles = array();
   $profiles['all'] = 'All';
-  $profiles['-1'] = 'Custom';
+  $profiles[LingotekSync::PROFILE_CUSTOM] = 'Custom';
+  $profiles[LingotekSync::PROFILE_DISABLED] = 'Custom';
   
   $profile_defaults = lingotek_get_profiles();
   foreach($profile_defaults as $key => $p) {
@@ -1450,7 +1458,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
     if (!isset($row->profile)) {
       if (isset($row->auto_upload)) {
-        $row->profile = -1;
+        $row->profile = LingotekSync::PROFILE_CUSTOM;
       }
       else {
         $profile_mapping = lingotek_load_profile_defaults('node');
@@ -1458,8 +1466,11 @@ function lingotek_grid_get_rows($form, &$form_state) {
       }
     }
 
-    if ($row->profile == -1) {
+    if ($row->profile == LingotekSync::PROFILE_CUSTOM) {
       $configuration = t('Custom') . ' <span class="node-configuration">' . $configuration . '</span>';
+    }
+    else if ($row->profile == LingotekSync::PROFILE_DISABLED) {
+      $configuration = t('Disabled');
     }
     else {
       $configuration = $profiles[$row->profile]['name'];
