@@ -576,7 +576,8 @@ function lingotek_update_7404(&$sandbox) {
     }
   }
 
-  if(empty(variable_get('lingotek_entity_profiles'))) {
+  $entity_profiles = variable_get('lingotek_entity_profiles');
+  if(empty($entity_profiles)) {
     $fields = variable_get('lingotek_translate_fields');
 
     $entity_profiles = array();
