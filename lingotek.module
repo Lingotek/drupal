@@ -261,7 +261,7 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.page.inc',
-    'page callback' => 'lingotek_reset_nodes',
+    'page callback' => 'lingotek_disassociate_nodes',
     'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
@@ -269,7 +269,7 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/delete/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.page.inc',
-    'page callback' => 'lingotek_reset_nodes',
+    'page callback' => 'lingotek_disassociate_nodes',
     'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );

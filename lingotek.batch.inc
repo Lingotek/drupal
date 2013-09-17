@@ -317,9 +317,9 @@ function lingotek_batch_identify_content($front = FALSE) {
 }
 
 /**
- * Batch Create: Lingotek Reset Content
+ * Batch Create: Lingotek Disassociate Translations
  */
-function lingotek_batch_reset_content() {
+function lingotek_batch_disassociate_content() {
   $doc_ids = LingotekSync::getAllLocalDocIds();
   $api = LingotekApi::instance();
   $operations = array();
@@ -327,12 +327,12 @@ function lingotek_batch_reset_content() {
   /*
     //one at a time
     foreach ($doc_ids as $doc_id) {
-    $operations[] = array('lingotek_batch_reset_content_worker', array($api, $doc_id));
+    $operations[] = array('lingotek_batch_disassociate_content_worker', array($api, $doc_id));
     }
    */
 
   // all at once
-  $operations[] = array('lingotek_batch_reset_content_worker', array($api, $doc_ids));
+  $operations[] = array('lingotek_batch_disassociate_content_worker', array($api, $doc_ids));
 
 
   $operations[] = array('LingotekSync::disassociateAllNodes', array());
@@ -344,14 +344,14 @@ function lingotek_batch_reset_content() {
   drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
 
   $batch = array(
-    'title' => t('Resetting Translations'),
+    'title' => t('Disassociating Translations'),
     'operations' => $operations,
   );
 
   batch_set($batch);
 }
 
-function lingotek_batch_reset_content_worker($api, $doc_id) {
+function lingotek_batch_disassociate_content_worker($api, $doc_id) {
   return $api->removeDocument($doc_id);
 }
 
@@ -409,7 +409,7 @@ function lingotek_sync_upload_node_finished($success, $results, $operations) {
   if ($success) {
     $count = isset($results['uploads']) ? $results['uploads'] : 0;
     $message = format_plural($count, 'One node uploaded to Lingotek.', '@count nodes uploaded to Lingotek.');
-    $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? '<br/>(' . format_plural($count, 'node id', 'node ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
+    $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'node id', 'node ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
   }
   else {
     $message = t('Finished with an error.');

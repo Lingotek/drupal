@@ -1577,10 +1577,10 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       //'#group' => 'administrative_settings',
   );
 
-  $btn_reset_translations = array(
+  $btn_disassociate_translations = array(
     '#type' => 'submit',
-    '#value' => t('Reset translations'),
-    '#submit' => array('lingotek_batch_reset_content'),
+    '#value' => t('Disassociate all'),
+    '#submit' => array('lingotek_batch_disassociate_content'),
     '#attributes' => array(
       'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
     ),
@@ -1605,7 +1605,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   );
 
   // Start: Not sure why, but without these below, the table button do not work properly
-  $form['utilities'][] = array_merge($btn_reset_translations, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
@@ -1634,11 +1634,11 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Reset All Translations') . '<div class="description">',
+          '#prefix' => t('Disassociate All Translations') . '<div class="description">',
           '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
           '#suffix' => '</div>'
         )),
-      array('data' => $btn_reset_translations)
+      array('data' => $btn_disassociate_translations)
     ),
     array(
       array('data' => array(

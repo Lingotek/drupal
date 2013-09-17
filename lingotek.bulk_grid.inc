@@ -32,7 +32,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     unset($_SESSION['lingotek_edit_nodes']);
   }
   if (isset($_SESSION['lingotek_sync_nodes'])) {
-    drupal_set_message(format_plural($_SESSION['lingotek_sync_nodes'], 'Target progress synced for one node.', 'Target progress synced for @count nodes.'));
+    drupal_set_message(format_plural($_SESSION['lingotek_sync_nodes'], 'Target translations progress checked and updated (for one node).', 'Target translations progress checked and updated (for @count nodes).'));
     unset($_SESSION['lingotek_sync_nodes']);
   }
   
@@ -43,11 +43,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
   // Define source actions - keys are used to decide what action to do in the 'lingotek_grid_action_submit' function
   $action_options = array(
     'select' => t('Select an action'),
-    'upload' => t('Upload for Translation'),
-    'sync' => t('Sync Translation Progress with Lingotek'),
-    'reset' => t('Reset Translations'),
+    'upload' => t('Upload Source for Translation'),
+    'sync' => t('Check Progress of Target Translations'),
+    'reset' => t('Disassociate Translations'),
 //    'delete' => t('Delete Nodes'),
-    'edit' => t('Edit Lingotek Node Settings'),
+    'edit' => t('Edit Translation Settings'),
     'Download' => array('download_all' => t('Download Translations for all Targets')),
   );
 
@@ -86,8 +86,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l('Edit Settings', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit', array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
 
   );
-  $form['reset_translations'] = array(
-    '#markup' => l('Reset Translations', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset', array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+  $form['disassociate_translations'] = array(
+    '#markup' => l('Disassociate Translations', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset', array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
   );
   
   $form['search'] = array(
@@ -427,19 +427,20 @@ function lingotek_grid_filter_submit($form, $form_state) {
  */
 function lingotek_grid_action_submit($form, $form_state) {
   $nids = array();
+
   if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'actions_submit') { // If submitting an action
     foreach ($form_state['values']['the_grid'] as $value) {
       if ($value != 0) {
         $nids[] = $value;
       }
     }
+    
     if (isset($form_state['values']['actions_select'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
       $action = $form_state['values']['actions_select']; // Get the action
       if (count($nids) <= 0) { // Select a node
         drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
       elseif ($action == 'upload') { // If uploading
-        //$_SESSION['lingotek_upload_nodes'] = count($nids);
         $batch = array(
           'title' => t('Uploading Nodes To Lingotek'),
           'finished' => 'lingotek_sync_upload_node_finished'
@@ -486,12 +487,12 @@ function lingotek_grid_action_submit($form, $form_state) {
         batch_process($redirect); // Run the batch operations
       }
       elseif ($action == 'delete') { // If resetting translations
-        $_SESSION['lingotek_reset_nodes'] = $nids;
-        drupal_goto('admin/settings/lingotek/manage/delete/'); // Redirect to the reset translations form to do so
+        $_SESSION['lingotek_disassociate_nodes'] = $nids;
+        drupal_goto('admin/settings/lingotek/manage/delete/'); // Redirect to the disassociate translations form to do so
       }
       elseif ($action == 'reset') { // If resetting translations
-        $_SESSION['lingotek_reset_nodes'] = $nids;
-        drupal_goto('admin/settings/lingotek/manage/reset/'); // Redirect to the reset translations form to do so
+        $_SESSION['lingotek_disassociate_nodes'] = $nids;
+        drupal_goto('admin/settings/lingotek/manage/reset/'); // Redirect to the disassociate translations form to do so
       }
       elseif ($action == 'edit') { // If editing node settings
         $_SESSION['lingotek_edit_nodes'] = $nids;
@@ -615,7 +616,6 @@ function lingotek_grid_update() {
 
 function lingotek_grid_download_ready() {
   $targets = LingotekSync::getTargetsByStatus(LingotekSync::STATUS_READY);
-  //dvz($targets,TRUE);
   $sync_success_target = LingotekSync::STATUS_CURRENT;
 
   if (count($targets) > 0) {
@@ -1522,7 +1522,7 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
     LingotekSync::STATUS_DISABLED => 'Disabled',
   );
-  //dpm("LOCALES");  dpm($locales);  dpm($languages);
+
   foreach ($locales as $key => $original_locale) {
     $locale = $convert ? Lingotek::convertLingotek2Drupal($original_locale) : $original_locale;
     if ($locale) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
@@ -1553,17 +1553,17 @@ function lingotek_grid_create_progress_bar($progress) {
 }
 
 /**
- * Callback function to reset translations for multiple nodes at a time
+ * Callback function to disassociate translations for multiple nodes at a time
  *
- * Node IDs are passed through the $_SESSION variable at $_SESSION['lingotek_reset_nodes']
+ * Node IDs are passed through the $_SESSION variable at $_SESSION['lingotek_disassociate_nodes']
  *
  * Returns a fully rendered html form
  */
-function lingotek_reset_nodes($nids) {
+function lingotek_disassociate_nodes($nids) {
   $nids = explode(',',$nids);
   
   if (count($nids) > 1) {
-    drupal_set_message(t('You will be resetting translations for @number nodes.', array('@number' => count($nids))), 'warning');
+    drupal_set_message(t('You will be disassociating translations for @number nodes.', array('@number' => count($nids))), 'warning');
   }
   
   ctools_include('node.pages', 'node', '');
@@ -1574,7 +1574,7 @@ function lingotek_reset_nodes($nids) {
     'ajax' => true,
     'nids' => $nids,
   );
-  $output = ctools_modal_form_wrapper('lingotek_node_content_reset_form', $form_state);
+  $output = ctools_modal_form_wrapper('lingotek_node_disassociate_form', $form_state);
   
   if (!empty($form_state['executed'])) {
     // Create ajax command array, dismiss the modal window.
