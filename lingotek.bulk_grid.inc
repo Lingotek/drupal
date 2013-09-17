@@ -1571,9 +1571,11 @@ function lingotek_grid_create_progress_bar($progress) {
  * Returns a fully rendered html form
  */
 function lingotek_disassociate_nodes($nids) {
+  $second_run = !empty($form_state['executed']);
+  
   $nids = explode(',',$nids);
   
-  if (count($nids) > 1) {
+  if (count($nids) > 1 && !$second_run) {
     drupal_set_message(t('You will be disassociating translations for @number nodes.', array('@number' => count($nids))), 'warning');
   }
   

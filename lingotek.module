@@ -716,6 +716,8 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 }
 
 function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {  
+  $second_run = isset($form_state['input']['op']);
+  
   $bulk_grid = FALSE;
   $multiple = FALSE;
   
@@ -727,7 +729,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       $node = lingotek_node_load_default(reset($nids));
     }
     else {
-      drupal_set_message(t('You will be changing the settings for @number nodes.', array('@number' => count($nids))), 'warning');
+      if(!$second_run) {
+        drupal_set_message(t('You will be changing the settings for @number nodes.', array('@number' => count($nids))), 'warning');
+      }
       $node = new stdClass();
       $node->lingotek = lingotek_get_global_profile();
       $node->lingotek['profile'] = 0;
