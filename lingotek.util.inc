@@ -1188,3 +1188,46 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
   $url = $entity_type . '/' . $id . '/lingotekworkbench/' . $lingotek_locale;
   return l($text, $url, array('attributes' => array('class' => array('translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
 }
+
+function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
+  $aReturn = array();
+
+  foreach ($aArray1 as $mKey => $mValue) {
+    if (!is_array($mValue) && substr($mKey, 0, 4) == 'safe') {
+      continue;
+    }
+      
+    if (array_key_exists($mKey, $aArray2)) {
+      if (is_array($mValue)) {
+        $aRecursiveDiff = lingotekArrayRecursiveDiff($mValue, $aArray2[$mKey]);
+        if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
+      } else {
+        if ($mValue != $aArray2[$mKey]) {
+          $aReturn[$mKey] = $mValue;
+        }
+      }
+    } else {
+      $aReturn[$mKey] = $mValue;
+    }
+  }
+  return $aReturn;
+} 
+
+function lingotek_node_compare($node1, $node2) {
+  if ($node1->type != $node2->type)
+    return array('different_types');
+  
+  $fields = variable_get('lingotek_translate_fields');
+  $fields = $fields[$node1->type];
+  
+  foreach ($fields as $field) {
+    $diff1 = lingotekArrayRecursiveDiff($node1->{$field}, $node2->{$field});
+    $diff2 = lingotekArrayRecursiveDiff($node2->{$field}, $node1->{$field});
+    if(!empty($diff1))
+      return $diff1;
+    if(!empty($diff2))
+      return $diff2;
+  }
+  
+  return 0;
+}

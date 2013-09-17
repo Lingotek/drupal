@@ -984,10 +984,13 @@ function lingotek_node_save($node) {
   else if (!$disabled_selected && $disabled) {
     LingotekSync::setNodeEnabled($node->nid, TRUE);
   }
+  
+  $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
+  $remove[] = 'profile';
     
   db_delete('lingotek')
     ->condition('nid', $node->nid)
-    ->condition('lingokey', lingotek_get_profile_fields($has_not_been_uploaded, TRUE), 'IN')
+    ->condition('lingokey', $remove, 'IN')
     ->execute();
 
   if ($node->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
@@ -1227,11 +1230,19 @@ function lingotek_node_update($node) {
   $node = lingotek_node_save($node);
   
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
-    return;
+    if ($node->is_new) {
+      lingotek_workbench_moderation_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
+    } else {
+      return;
+    }
   }
   else {
     if (!isset($node->lingotek['node_sync_status']) || ($node->lingotek['node_sync_status'] != LingotekSync::STATUS_DISABLED && $node->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET)) {
-      lingotek_upload_document($node);
+      $old_node = node_load($node->nid);
+      $diff = lingotek_node_compare($node, $old_node);
+      if ($diff != 0) {
+        lingotek_upload_document($node);
+      }
     }
   }
 }
@@ -1310,7 +1321,9 @@ function lingotek_upload_document($node) {
     $is_syncing = ( isset($_SESSION['lingotek_sync_in_progress']) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
 
     if ($send_lingotek_document && $path_match === FALSE && $is_syncing === FALSE) {
-      LingotekApi::instance()->updateContentDocument($node); //LingotekNode::load($node));
+      if (LingotekApi::instance()->updateContentDocument($node)) {
+        drupal_set_message(t('Updated version of <em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
+      }
     }
     else {
       lingotek_lingonode($node->nid, 'node_sync_status', LingotekSync::STATUS_EDITED);
@@ -1690,9 +1703,14 @@ function lingotek_field_language_alter(&$display_language, $context) {
  * Otherwise override upload
  */
 function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
+  //Do not run unless this node has been properly loaded.
+  if (!array_key_exists('document_id', $node->lingotek)) {
+    return; 
+  }
+  
   // Check global and node-specific settings
   // if this node is managed by lingotek, add lingotek wb variables
-  if ((isset($node->lingotek_push_once) && $node->lingotek_push_once) || lingotek_node_pushed($node) || !lingotek_managed_by_entity_translation($node->type)) {
+  if ((isset($node->lingotek_push_once) && $node->lingotek_push_once) || lingotek_node_pushed($node) || isset($node->is_new) || !lingotek_managed_by_entity_translation($node->type)) {
     $def_state = $node->lingotek['create_lingotek_document_workbench_moderation'];
     $states = lingotek_get_workbench_moderation_states();
 
