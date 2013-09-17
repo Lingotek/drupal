@@ -545,35 +545,15 @@ function lingotek_permission() {
     ),
     'translation' => array(
       'title' => 'Translate',
-      'description' => t('Allow access to the "Translations" tab on nodes and the workbench links')
+      'description' => t('Access to the translate content (e.g., the "Translations" tab will be available on nodes, comments will be translatable)')
     ),
     'manage projects' => array(
       'title' => 'Project Management',
       'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')
     ),
-    'adjust auto-download node setting' => array(
-      'title' => 'Synchronization Method',
-      'description' => t('Allow node-level setting of setting the synchronization method')
-    ),
-    'translate url aliases' => array(
-      'title' => 'URL Alias Translation',
-      'description' => t('Allow node-level setting of setting the URL alias translation')
-    ),
     'use lingotek developer tools' => array(
       'title' => 'Developer',
       'description' => t('Access developer tools useful for detailed information and debugging')
-    ),
-    'access lingotek utilities' => array(
-      'title' => t('Access Lingotek Utilities'),
-      'description' => t('Access admin-only utility pages.')
-    ),
-    'access per-item lingotek project selection' => array(
-      'title' => t('Per-item Project Selection'),
-      'description' => t('Access the Lingotek Project selector on content creation forms.')
-    ),
-    'access per-item lingotek vault selection' => array(
-      'title' => t('Per-item Vault Selection'),
-      'description' => t('Access the Lingotek TM Vault selector on content creation forms.')
     ),
   );
   return $permissions;
@@ -658,7 +638,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
           '#description' => t('Select the translation project with which this item should be associated.'),
           '#default_value' => $node->lingotek['project_id'],
           '#options' => $projects,
-          '#access' => user_access('access per-item lingotek project selection'),
         );
       }
 
@@ -670,7 +649,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
           '#description' => t('Choose the Workflow to associate with this content item.'),
           '#default_value' => $node->lingotek['workflow_id'],
           '#options' => $workflows,
-          '#access' => user_access('access per-item lingotek project selection'),
         );
       }
 
@@ -682,7 +660,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
           '#description' => t('Choose the TM vault to associate with this content item.'),
           '#default_value' => $node->lingotek['vault_id'],
           '#options' => $vaults,
-          '#access' => user_access('access per-item lingotek vault selection'),
         );
       }
     } // END:  Document not created yet
@@ -902,7 +879,6 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#type' => 'checkbox',
     '#title' => t('Download Translations Automatically'),
     '#default_value' => $node->lingotek['sync_method'],
-    '#access' => user_access('adjust auto-download node setting'),
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
 
@@ -940,15 +916,13 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     );
 
     // URL Alias Translation.
-    if (user_access('translate url aliases')) {
-      $form['lingotek']['url_alias_translation'] = array(
-        '#type' => 'select',
-        '#title' => t('URL Alias Translation'),
-        '#default_value' => $node->lingotek['url_alias_translation'],
-        '#options' => lingotek_get_url_alias_translations(),
-        '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, define a path pattern, and check "Enable Lingotek Translation" for the Title field.'),
-      );
-    }
+    $form['lingotek']['url_alias_translation'] = array(
+      '#type' => 'select',
+      '#title' => t('URL Alias Translation'),
+      '#default_value' => $node->lingotek['url_alias_translation'],
+      '#options' => lingotek_get_url_alias_translations(),
+      '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, define a path pattern, and check "Enable Lingotek Translation" for the Title field.'),
+    );
   }
 
   if ($bulk_grid) {
