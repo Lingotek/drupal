@@ -1193,7 +1193,7 @@ function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
   $aReturn = array();
 
   foreach ($aArray1 as $mKey => $mValue) {
-    if (!is_array($mValue) && substr($mKey, 0, 4) == 'safe') {
+    if ( (!is_array($mValue) && substr($mKey, 0, 4) == 'safe') || $mValue == NULL) {
       continue;
     }
       
@@ -1229,5 +1229,5 @@ function lingotek_node_compare($node1, $node2) {
       return $diff2;
   }
   
-  return 0;
+  return array();
 }

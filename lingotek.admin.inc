@@ -186,7 +186,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     $fr2['profile_' . $value->name] = array(
       '#type' => 'select',
       '#options' => $profile_options,
-      '#value' => isset($entity_profiles['node'][$value->type]) ? $entity_profiles['node'][$value->type] : 0,
+      '#value' => isset($entity_profiles['node'][$value->type]) ? $entity_profiles['node'][$value->type] : LingotekSync::PROFILE_DISABLED,
       '#attributes' => array(
         'id' => array('edit-form-item-profile-' . $value->type),
         'name' => 'profile_' . $value->type,

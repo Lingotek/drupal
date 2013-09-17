@@ -715,8 +715,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   );
 }
 
-function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
-
+function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {  
   $bulk_grid = FALSE;
   $multiple = FALSE;
   
@@ -1080,8 +1079,8 @@ function lingotek_get_global_profile() {
     'name' => '',
     'document_id' => NULL,
     'lingotek_nodes_translation_method' => 'field',
-    'create_lingotek_document' => 1,
-    'sync_method' => 1,
+    'create_lingotek_document' => 0,
+    'sync_method' => 0,
     'allow_community_translation' => 0,
     'url_alias_translation' => 0,
     'node_sync_status' => LingotekSync::STATUS_EDITED,
@@ -1240,7 +1239,7 @@ function lingotek_node_update($node) {
     if (!isset($node->lingotek['node_sync_status']) || ($node->lingotek['node_sync_status'] != LingotekSync::STATUS_DISABLED && $node->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET)) {
       $old_node = node_load($node->nid);
       $diff = lingotek_node_compare($node, $old_node);
-      if ($diff != 0) {
+      if (!empty($diff) || isset($node->is_new)) {
         lingotek_upload_document($node);
       }
     }
@@ -1251,7 +1250,7 @@ function lingotek_upload_document($node) {
   if (!lingotek_supported_type($node->type) || !Lingotek::isSupportedLanguage($node->language)) {
     return;
   }  
-
+  
 // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.
   $send_lingotek_document = NULL;
@@ -1321,9 +1320,7 @@ function lingotek_upload_document($node) {
     $is_syncing = ( isset($_SESSION['lingotek_sync_in_progress']) ) ? $_SESSION['lingotek_sync_in_progress'] : FALSE;
 
     if ($send_lingotek_document && $path_match === FALSE && $is_syncing === FALSE) {
-      if (LingotekApi::instance()->updateContentDocument($node)) {
-        drupal_set_message(t('Updated version of <em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $node->title)));
-      }
+      LingotekApi::instance()->updateContentDocument($node);
     }
     else {
       lingotek_lingonode($node->nid, 'node_sync_status', LingotekSync::STATUS_EDITED);
@@ -1704,7 +1701,7 @@ function lingotek_field_language_alter(&$display_language, $context) {
  */
 function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
   //Do not run unless this node has been properly loaded.
-  if (!array_key_exists('document_id', $node->lingotek)) {
+  if (!isset($node->lingotek) || !array_key_exists('document_id', $node->lingotek)) {
     return; 
   }
   
