@@ -1200,9 +1200,6 @@ function lingotek_node_load($nodes, $types) {
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
-  if (!lingotek_supported_type($node->type)) {//ensure that this node type is enabled (supported)
-    return;
-  }
   if(!empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
     return;
   }
@@ -1218,11 +1215,7 @@ function lingotek_node_update($node) {
   }
   else {
     if (!isset($node->lingotek['node_sync_status']) || ($node->lingotek['node_sync_status'] != LingotekSync::STATUS_DISABLED && $node->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET)) {
-      $old_node = node_load($node->nid);
-      $diff = lingotek_node_compare($node, $old_node);
-      if (!empty($diff) || isset($node->is_new)) {
-        lingotek_upload_document($node);
-      }
+      lingotek_upload_document($node);
     }
   }
 }
@@ -1231,6 +1224,14 @@ function lingotek_upload_document($node) {
   if (!lingotek_supported_type($node->type) || !Lingotek::isSupportedLanguage($node->language)) {
     return;
   }  
+
+  if (!isset($node->is_new)) {
+    $old_node = node_load($node->nid);
+    $diff = lingotek_node_compare($node, $old_node);
+    if(empty($diff)) {
+      return; //node has no changes.
+    }
+  }
   
 // If the user explicitly requested that this item not be pushed to Lingotek, set the Lingonode property so that the
   // edit form default can be set appropriately on subsequent edits.

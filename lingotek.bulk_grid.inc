@@ -616,7 +616,7 @@ function lingotek_grid_update() {
     lingotek_update_target_progress_batch_create($nids); // Run batch operations to sync all 'In Progress' nodes
   }
   else {
-    drupal_set_message(t('No translations are in-progress.'));
+    drupal_set_message(t('There are no in-progress translations to check.'));
     drupal_goto('admin/settings/lingotek/manage/list');
   }
 }
@@ -640,7 +640,7 @@ function lingotek_grid_download_ready() {
     batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
   }
   else {
-    drupal_set_message(t('No translations are ready for download.'));
+    drupal_set_message(t('There are no translations ready for download.'));
     drupal_goto('admin/settings/lingotek/manage/list');
   }
 }
