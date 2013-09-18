@@ -182,11 +182,14 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
         $fr['title_field']['#attributes']['checked'] = 'checked';
       }
     }
+    
+    $default_profile = $setup_complete ? LingotekSync::PROFILE_DISABLED : 0;
+    
     $fr2 = array();
     $fr2['profile_' . $value->name] = array(
       '#type' => 'select',
       '#options' => $profile_options,
-      '#value' => isset($entity_profiles['node'][$value->type]) ? $entity_profiles['node'][$value->type] : LingotekSync::PROFILE_DISABLED,
+      '#value' => isset($entity_profiles['node'][$value->type]) ? $entity_profiles['node'][$value->type] : $default_profile,
       '#attributes' => array(
         'id' => array('edit-form-item-profile-' . $value->type),
         'name' => 'profile_' . $value->type,

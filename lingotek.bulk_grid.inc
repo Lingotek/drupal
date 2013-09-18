@@ -44,7 +44,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $action_options = array(
     'select' => t('Select an action'),
     'upload' => t('Upload Source for Translation'),
-    'sync' => t('Check Progress of Target Translations'),
+    'sync' => t('Check Progress of Translations'),
     'reset' => t('Disassociate Translations'),
 //    'delete' => t('Delete Nodes'),
     'edit' => t('Edit Translation Settings'),
