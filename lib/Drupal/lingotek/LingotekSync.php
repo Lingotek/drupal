@@ -94,7 +94,7 @@ class LingotekSync {
     // Set the Node to EDITED.
     self::setNodeStatus($node->nid, $node_status);
 
-    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language, FALSE);
+    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language, TRUE);
 
     // Loop though each target language, and set that target to EDITED.
     $languages = Lingotek::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale);
