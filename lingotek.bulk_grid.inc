@@ -32,7 +32,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     unset($_SESSION['lingotek_edit_nodes']);
   }
   if (isset($_SESSION['lingotek_sync_nodes'])) {
-    drupal_set_message(format_plural($_SESSION['lingotek_sync_nodes'], 'Target translations progress checked and updated (for one node).', 'Target translations progress checked and updated (for @count nodes).'));
+    drupal_set_message(format_plural($_SESSION['lingotek_sync_nodes'], 'Target translations progress checked and updated for one node.', 'Target translations progress checked and updated for @count nodes.'));
     unset($_SESSION['lingotek_sync_nodes']);
   }
   
