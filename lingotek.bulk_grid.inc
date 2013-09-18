@@ -48,7 +48,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     'reset' => t('Disassociate Translations'),
 //    'delete' => t('Delete Nodes'),
     'edit' => t('Edit Translation Settings'),
-    'Download' => array('download_all' => t('Download Translations for all Targets')),
+    'Download' => array('download_all' => t('Download All Translations')),
   );
 
   $target_languages_raw = language_list('language');
