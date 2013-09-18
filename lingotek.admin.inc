@@ -1601,7 +1601,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $btn_disassociate_translations = array(
     '#type' => 'submit',
-    '#value' => t('Disassociate all'),
+    '#value' => t('Disassociate'),
     '#submit' => array('lingotek_batch_disassociate_content'),
     '#attributes' => array(
       'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
@@ -1610,7 +1610,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $btn_cleanup = array(
     '#type' => 'submit',
-    '#value' => t('Run cleanup'),
+    '#value' => t('Cleanup'),
     '#submit' => array('lingotek_cleanup_utility')
   );
 
@@ -1646,7 +1646,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Notification Callback URL') . '<div class="description">',
+          '#prefix' => t('Update Notification Callback URL') . '<div class="description">',
           '#markup' => t("Update the notification callback URL.  This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.<br/>")
           . '<br/>' . t("Current notification callback URL:") . ' <i>' . variable_get('lingotek_notify_url', 'None') . '</i>',
           '#suffix' => '</div>'
@@ -1656,20 +1656,20 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Disassociate All Translations') . '<div class="description">',
-          '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
+          '#prefix' => t('Cleanup and Identify Translatable Content') . '<div class="description">',
+          '#markup' => t("The cleanup utility identifies translatable content and processes all existing data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
           '#suffix' => '</div>'
         )),
-      array('data' => $btn_disassociate_translations)
+      array('data' => $btn_cleanup),
     ),
     array(
       array('data' => array(
           '#type' => 'markup',
-          '#prefix' => t('Cleanup') . '<div class="description">',
-          '#markup' => t("The cleanup utility identifies translatable content and processes all existing field data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
+          '#prefix' => t('Disassociate All Translations') . ' <i>' . t('(use with caution)') . '</i>' . '<div class="description">',
+          '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
           '#suffix' => '</div>'
         )),
-      array('data' => $btn_cleanup),
+      array('data' => $btn_disassociate_translations)
     ),
   );
   $header = array();

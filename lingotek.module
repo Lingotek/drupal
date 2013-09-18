@@ -1200,6 +1200,9 @@ function lingotek_node_load($nodes, $types) {
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
+  if (!lingotek_supported_type($node->type)) {//ensure that this node type is enabled (supported)
+    return;
+  }
   if(!empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
     return;
   }

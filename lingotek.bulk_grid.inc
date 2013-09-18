@@ -741,7 +741,7 @@ function lingotek_grid_build_filters($form_state) {
   $profiles = array();
   $profiles['all'] = 'All';
   $profiles[LingotekSync::PROFILE_CUSTOM] = 'Custom';
-  $profiles[LingotekSync::PROFILE_DISABLED] = 'Custom';
+  $profiles[LingotekSync::PROFILE_DISABLED] = 'Disabled';
   
   $profile_defaults = lingotek_get_profiles();
   foreach($profile_defaults as $key => $p) {
