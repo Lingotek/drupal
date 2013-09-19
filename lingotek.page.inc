@@ -379,7 +379,7 @@ function lingotek_pm($node) {
   // node disabled support
   if ($sync_status == LingotekSync::STATUS_DISABLED) {
     $output[] = array(
-      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a profile (e.g. "Automatic").'
+      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").'
     );
     return $output;
   }
