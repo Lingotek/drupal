@@ -1090,6 +1090,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
   $query->addField('lingo_document_id', 'lingovalue', 'document_id');
 
   // Node Upload Status
+//  $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\' and lingo_upload_status.lingovalue <> \''. LingotekSync::STATUS_TARGET . '\'');
   $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\'');
   $query->condition('lingo_upload_status.lingovalue', LingotekSync::STATUS_TARGET, '<>');
   $query->addField('lingo_upload_status', 'lingovalue', 'upload_status');
@@ -1387,6 +1388,8 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
   $languages = language_list();
   $profiles = lingotek_get_profiles();
+  
+  $types = _node_types_build()->types;
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
   foreach ($table_data_raw as $row) {
@@ -1488,9 +1491,9 @@ function lingotek_grid_get_rows($form, &$form_state) {
     }
 
 
-    $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ' . $languages[$row->language]->name . '</span>';
+    $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ' . ($row->language == 'und' ? 'Language Undefined' : $languages[$row->language]->name) . '</span>';
 
-    if ($row->upload_status == LingotekSync::STATUS_EDITED) {
+    if (empty($row->upload_status) || $row->upload_status == LingotekSync::STATUS_EDITED) {
       $source = '<span title="Upload Now" class="upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $row->nid . ',\'upload\')">' . $source . '</span>';
     }
 
@@ -1513,7 +1516,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
       'configuration' => $configuration,
       'document_id' => $row->document_id ? : t('N/A'),
       'upload_status' => $row->upload_status ? : t('N/A'),
-      'content_type' => $row->type ? : t('??'),
+      'content_type' => $types[$row->type]->name ? : t('??'),
 //        'translation_status' => $row->upload_status ?: t('N/A'),
 //        'translation_progress' => $translation_progress ?: t('N/A'),
       'auto_upload' => $row->auto_upload ? t('On') : (is_null($row->auto_upload) ? $upload_default : t('Off')),

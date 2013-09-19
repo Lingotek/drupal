@@ -392,10 +392,7 @@ function lingotek_support_footer() {
  * all languages).
  */
 function lingotek_access($node, $permission) {
-  if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
-    if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
-      return FALSE;
-    }
+  if (Lingotek::isSupportedLanguage($node->language) && node_access('update', $node) && $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
     return user_access($permission);
   }
   return FALSE;
@@ -453,8 +450,11 @@ function lingotek_supported_type($type) {
   $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) != '0';
   $setting = variable_get('lingotek_entity_profiles');
   $lingotek_supported_setting = isset($setting['node'][$type]) && $setting['node'][$type] != LingotekSync::PROFILE_DISABLED;
-  $entity_translation_managed = lingotek_managed_by_entity_translation($type);
-  return ($lingotek_supported_explicitly && $lingotek_supported_setting) || $entity_translation_managed; //we also support entity_translation managed content
+  return ($lingotek_supported_explicitly && $lingotek_supported_setting);
+}
+
+function lingotek_supported_node($node) {
+  return $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED;
 }
 
 /**

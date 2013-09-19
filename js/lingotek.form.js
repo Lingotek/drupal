@@ -9,7 +9,7 @@ lingotek.forms = lingotek.forms || {};
     
     // Page setup for node add/edit forms.
     lingotek.forms.init = function() {
-        $("#edit-lingotek-language").change(updateVerticalTabSummary).change();
+        $("#edit-language").change(updateVerticalTabSummary).change();
         $('#ltk-enable-from-et').bind('click',lingotek.forms.enableLtkFunc);
         $('#edit-lingotek-create-lingotek-document').change(updateVerticalTabSummary);
         $('#edit-lingotek-sync-method').change(updateVerticalTabSummary);
@@ -53,7 +53,7 @@ lingotek.forms = lingotek.forms || {};
             $('#edit-lingotek-lingotek-note').show();
             $('.form-item-lingotek-profile').show();
             
-            var language = $("#edit-lingotek-language").val();
+            var language = $("#edit-language").val();
             var sourceLanguageSet = language != 'und'; 
             var autoUpload = $('#edit-lingotek-create-lingotek-document').is(":checked");
             var autoDownload = $('#edit-lingotek-sync-method').is(":checked");

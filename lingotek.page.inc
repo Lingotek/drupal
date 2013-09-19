@@ -384,7 +384,7 @@ function lingotek_pm($node) {
     return $output;
   }
 
-  if (lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
+  if (lingotek_supported_node($node) && Lingotek::isSupportedLanguage($node->language)) {
 
     if (($node->lingotek['node_sync_status'] == LingotekSync::STATUS_EDITED)) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);

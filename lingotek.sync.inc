@@ -277,7 +277,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
   $submit_functions = array('lingotek_form_bulk_sync_submit');
   $report = LingotekSync::getReport();
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
-
   // Upload
   $form['upload'] = array(
     '#type' => 'fieldset',
