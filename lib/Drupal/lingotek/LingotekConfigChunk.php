@@ -116,7 +116,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The title of the current chunk
    */
   public function getTitle() {
-    return 'drupal_config_' . $this->min_lid . '-' . $this->max_lid;
+    return 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';
   }
 
   /**
@@ -126,7 +126,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The description of the current chunk
    */
   public function getDescription() {
-    return 'Drupal configuration strings (locales source table) between ' . $this->min_lid . ' and ' . $this->max_lid . '.';
+    return 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';//'Drupal configuration strings (locales source table) between ' . $this->min_lid . ' and ' . $this->max_lid . '.';
   }
 
   /**
@@ -165,6 +165,10 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         )
     );
     return $result->fetchCol();
+  }
+  
+  public function getSourceLocale() {
+    return $this->language->lingotek_locale;
   }
 
   /**
@@ -586,7 +590,6 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   the original input less any additional reference tags added prior to upload
    */
   public static function unfilterPlaceholders($segment_text) {
-    // WTD: this regex needs to be verified to align with all possible variable names
     $pattern = '/<\/?drupalvar>/';
     $replacement = '';
     return preg_replace($pattern, $replacement, $segment_text);
@@ -666,6 +669,22 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
           ->condition('id', $this->cid)
           ->condition('config_key', $key)
           ->execute();
+    }
+  }
+  
+  /**
+   * Deletes a Lingotek metadata value for this item
+   * 
+   * @param string $key
+   *  The key for a name/value pair
+   */
+  public function deleteMetadataValue($key) {
+    $metadata = $this->metadata();
+    if (isset($metadata[$key])) {
+      db_delete('lingotek_config_metadata')
+        ->condition('id', $this->cid)
+        ->condition('config_key', $key, 'LIKE')
+        ->execute();
     }
   }
 
@@ -801,7 +820,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * Get all locales target entries that were not created by Lingotek
    */
   protected static function getNonLingotekLocalesTargets($document_xml, $target_language) {
-    $lids = array();
+    $lids = array(-1); // seed lids for proper query handling on empty case
     foreach ($document_xml as $drupal_field_name => $xml_obj) {
       $lids[] = self::getLidFromTag($drupal_field_name);
     }
@@ -824,8 +843,9 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    */
   public static function saveSegmentTranslations($document_xml, $target_language) {
     $non_lingotek_locales_targets = self::getNonLingotekLocalesTargets($document_xml, $target_language);
+    $plural_mapping = variable_get('lingotek_config_plural_mapping', array());
     $rows = array();
-    $sql = 'INSERT INTO {locales_target} (lid, translation, language, translation_agent_id) VALUES ';
+    $sql = 'INSERT INTO {locales_target} (lid, translation, language, plid, plural, translation_agent_id) VALUES ';
     $subsql = '';
     $icount = 0;
     $lingotek_agent = self::getLingotekTranslationAgentId();
@@ -834,12 +854,16 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
       if (!in_array($lid, $non_lingotek_locales_targets)) {
         $content = (string) $xml_obj->element;
         $content = self::unfilterPlaceholders(decode_entities($content));
-        $rows += array(":l_$icount" => $lid,
+        $plural_lid = array_key_exists($lid, $plural_mapping);
+        $rows += array(
+          ":l_$icount" => $lid,
           ":c_$icount" => $content,
           ":lang_$icount" => $target_language,
+          ":plid_$icount" => ($plural_lid ? $plural_mapping[$lid]['plid'] : 0),
+          ":plural_$icount" => ($plural_lid ? $plural_mapping[$lid]['plural'] : 0),
           ":agent_$icount" => $lingotek_agent,
           );
-        $subsql .= "( :l_$icount, :c_$icount, :lang_$icount, :agent_$icount),";
+        $subsql .= "( :l_$icount, :c_$icount, :lang_$icount, :plid_$icount, :plural_$icount, :agent_$icount),";
         $icount++;
       }
     }
@@ -869,7 +893,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   public function getEntityType() {
     return self::DRUPAL_ENTITY_TYPE;
   }
-
+  
   /**
    * Magic get for access to chunk and chunk properties.
    */
@@ -894,11 +918,16 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     return substr($tag, self::TAG_PREFIX_LENGTH);
   }
 
-  /**
-   * Return the workflow_id assigned for config chunks
-   */
-  public static function getWorkflowId() {
+  public function getWorkflowId() {
     return variable_get('lingotek_translate_config_workflow_id', '');
+  }
+  
+  public function getProjectId() {
+    return variable_get('lingotek_project', '');
+  }
+  
+   public function getVaultId() {
+    return variable_get('lingotek_vault', '');
   }
 
   /**
@@ -922,6 +951,14 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
       $textgroups[] = 'views';
     }
     return $textgroups;
+  }
+  
+  public static function getLidBySource($source_string) {
+    return db_select('locales_source', 's')
+        ->fields('s', array('lid'))
+        ->condition('s.source', $source_string)
+        ->execute()
+        ->fetchField();
   }
 
 }

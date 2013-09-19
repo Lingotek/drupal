@@ -23,6 +23,9 @@ dependencies[] = i18n_variable
 dependencies[] = ctools
 dependencies[] = views
 dependencies[] = i18nviews
+dependencies[] = i18n_node
+dependencies[] = l10n_update
+dependencies[] = potx
 
 files[] = lib/Drupal/lingotek/Lingotek.php
 files[] = lib/Drupal/lingotek/LingotekApi.php
@@ -39,5 +42,8 @@ files[] = lib/Drupal/lingotek/LingotekTranslatableEntity.php
 files[] = tests/lingotek.base.test
 files[] = tests/lingotek.access.test
 files[] = tests/lingotek.advanced_parsing.test
+files[] = tests/lingotek.setup.test
+
+files[] = lingotek_views_handler_workbench_link.inc
 
 stylesheets[all][] = style/base.css

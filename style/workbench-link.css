@@ -1,0 +1,41 @@
+.views-field {
+  position: relative;
+}
+
+.comment {
+  position: relative;
+}
+
+.node {
+  position: relative;
+}
+
+.views-field-lingotek-workbench-link a {
+  position:absolute;
+  left: -25px;
+  top: 5px;
+/*  background-image: url('../images/ico_chevs_dd.png');
+  background-repeat: no-repeat;
+  background-position:center;
+  width: 30px;
+  text-indent: -9000px;*/
+}
+
+a.translation-link {
+  position:absolute;
+  left: -25px;
+  top: 5px;
+  z-index: 100;
+}
+
+.comment a.translation-link {
+  right: 10px;
+  left: auto;
+  top: 10px;
+}
+
+.node a.translation-link {
+  right: 40px;
+  left: auto;
+  top: 5px;
+}

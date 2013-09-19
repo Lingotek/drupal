@@ -11,6 +11,14 @@
   background-image: url("../images/ico_chevs_dd.png");
 }
 
+.ltk-icon {
+}
+
+.ltk-icon:hover {
+    text-decoration: none;
+    color: #00348D;
+}
+
 /*#lingotek-navbar-tab {
   margin-top: 8px;
   color: black;
@@ -21,7 +29,7 @@
   height: 23px;
 }*/
 
-div.form-item-create-lingotek-document-workbench-moderation, div.form-item-syncMethod-wb {
+div.form-item-create-lingotek-document-workbench-moderation, div.form-item-sync-method-workbench-moderation {
   margin-left: 50px;
 }
 
@@ -53,6 +61,10 @@ input.lingotek-content-settings-table.form-checkbox {
   margin: 0px;
 }
 
+#lingotek-profiles {
+  width: auto;
+}
+
 /* Bulk Grid */
 
 #lingotek-bulk-grid-form #edit-header-fieldset .form-item {
@@ -60,16 +72,155 @@ input.lingotek-content-settings-table.form-checkbox {
   margin-left: 15px;
 }
 
-#lingotek-bulk-grid-form #edit-filter-fieldset #edit-filters .form-item {
-  float:left;
-  margin-left: 15px;
+#modal-content #edit-filters .form-item {
 }
 
-#lingotek-bulk-grid-form #edit-filter-fieldset #edit-filter-buttons {
-  clear:both;
+#modal-content #edit-filter-buttons {
+  clear: both;
 }
 
-#lingotek-bulk-grid-form #edit-grid-container .progress {
+.form-item.form-item-actions-select {
+  padding: 0px;
+}
+
+.form-item-actions-select label, .form-item-search label {
+  display: inline;
+}
+
+.form-item-search-type, .form-item-search, .form-item-search-submit {
+  display: inline;
+}
+
+.lingotek-action {
+  float: right;
+  font-size: 125%;
+  margin-left: 20px;
+  margin-top: 30px;
+  color: #666;
+}
+
+.lingotek-action:hover {
+  color: #333;
+  text-decoration: none;
+}
+
+#grid-result-summary {
+  color: #666;
+}
+
+#page-limit {
+  text-align: center;
+}
+
+.form-item-limit-select {
+  display: inline;
+}
+
+#edit-grid-container .table-select-processed {
+  clear: both;
+}
+#edit-grid-container > .grid-empty {
+  clear: both;
+  padding: 25px;
+  background: #f3f3f3;
+  border: #aaa;
+}
+
+#edit-custom-columns {
+    columns:100px 2;
+    -webkit-columns:100px 2;
+    -moz-columns:100px 2;
+}
+
+.language-icon {
+  background-color:#80a49e;
+  border-radius: 3px;
+  margin-right: 3px;
+  padding: 2px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: white;
+}
+
+.language-icon.target-pending {
+  background-color: #CE2029;
+}
+
+.language-icon.target-current {
+  background-color:#48C;
+}
+
+.language-icon.target-ready {
+  background-color:#59ad1a;
+}
+
+.language-icon.target-edited {
+  background-color:#999;
+}
+
+.ltk-complete-check {
+    color: green;
+    font-size: 150%;
+}
+
+.ltk-download {
+    color: #59ad1a;
+}
+.ltk-download:hover {
+    color: green;
+}
+
+.ltk-refresh {
+    color: #CE2029;
+}
+.ltk-refresh:hover {
+    color: darkred;
+}
+
+.ltk-muted {
+    color: #666;
+}
+
+.no-localized-title, .no-localized-title a {
+  color: #444;
+  /*font-style: italic;*/
+}
+
+.lingotek-node-actions, .lingotek-language-source i {
+  font-size: 150%;
+}
+.lingotek-node-actions a:hover {
+    text-decoration: none;
+    color: #00348D;
+}
+
+a.ltk-action:hover {
+    text-decoration: none;
+    color: #00348D;
+}
+
+#edit-grid-container i.lingotek-disabled {
+  color: #AAA;
+}
+
+.upload-button {
+  color: #338;
+  cursor: pointer;
+}
+
+.upload-button:hover {
+  color: #99B;
+}
+
+.node-configuration {
+  color: #48C;
+}
+
+#edit-settings-link, #reset-translations-link {
+  display: none;
+}
+
+.lingotek-progress {
   background-color: #F7F7F7;
   background-image: linear-gradient(to bottom, #F5F5F5, #F9F9F9);
   background-repeat: repeat-x;
@@ -80,7 +231,7 @@ input.lingotek-content-settings-table.form-checkbox {
   position: relative;
 }
 
-#lingotek-bulk-grid-form #edit-grid-container .progress .bar {
+.lingotek-progress .bar {
   -moz-box-sizing: border-box;
   margin: 0;
   background-color: #0E90D2;
@@ -98,11 +249,17 @@ input.lingotek-content-settings-table.form-checkbox {
 }
 
 
-#lingotek-bulk-grid-form #edit-grid-container .progress .percent {
+.lingotek-progress .percent {
   position: absolute;
   width: 100%;
   text-align: center;
   color: #333333;
-  font-weight: normal;
-  font-size: 90%;
+  font-weight: bold;
+  font-size: 100%;
+  padding-top: 1px;
 }
+
+.bold-row td {
+  background-color: #CCCCCC
+}
+

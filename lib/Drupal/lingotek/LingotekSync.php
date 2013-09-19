@@ -13,8 +13,25 @@ class LingotekSync {
   const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
   const STATUS_EDITED = 'EDITED';    // The node has been edited, but has not been uploaded to Lingotek
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
-  const STATUS_LOCKED = 'LOCKED';    // A locked node should neither be uploaded nor downloaded by Lingotek
+  const STATUS_READY = 'READY';      // The target translation is complete and ready for download
+  const STATUS_DISABLED = 'DISABLED';    // A disabled node should neither be uploaded nor downloaded by Lingotek
+  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek
 
+  const PROFILE_CUSTOM = 'CUSTOM';
+  const PROFILE_DISABLED = 'DISABLED';
+
+  public static function setNodeEnabled($nid, $enabled) {
+    if($enabled) {
+      if (lingotek_lingonode($nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {
+        lingotek_lingonode($nid, 'node_sync_status', LingotekSync::STATUS_EDITED);
+        LingotekSync::setAllTargetStatus($nid, LingotekSync::STATUS_PENDING);
+      }
+    } else {
+      lingotek_lingonode($nid, 'node_sync_status', LingotekSync::STATUS_DISABLED);
+      LingotekSync::setAllTargetStatus($nid, LingotekSync::STATUS_DISABLED);
+    }
+  }
+  
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     if ($chunk_id = LingotekConfigChunk::getIdByDocId($doc_id)) {
@@ -30,10 +47,10 @@ class LingotekSync {
 
   public static function getAllTargetStatusNotCurrent($nid) {
     $query = db_select('lingotek', 'l')
-        ->fields('l', array('lingokey', 'lingovalue'))
-        ->condition('lingokey', 'target_sync_status_%', 'LIKE')
-        ->condition('lingovalue', 'CURRENT', '!=')
-        ->condition('nid', $nid);
+      ->fields('l', array('lingokey', 'lingovalue'))
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE')
+      ->condition('lingovalue', 'CURRENT', '!=')
+      ->condition('nid', $nid);
     $result = $query->execute()->fetchAll();
     return $result;
   }
@@ -41,6 +58,14 @@ class LingotekSync {
   public static function setTargetStatus($node_id, $lingotek_locale, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_lingonode($node_id, $key, $status);
+  }
+  
+  public static function setAllTargetStatus($nid, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
+    $query = db_update('lingotek')
+      ->condition('nid', $nid)
+      ->condition('lingokey', 'target_sync_status%', 'LIKE')
+      ->fields(array('lingovalue' => $status))
+      ->execute();
   }
 
   public static function setNodeStatus($node_id, $status) {
@@ -69,7 +94,7 @@ class LingotekSync {
     // Set the Node to EDITED.
     self::setNodeStatus($node->nid, $node_status);
 
-    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language, FALSE);
+    $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($node->language, TRUE);
 
     // Loop though each target language, and set that target to EDITED.
     $languages = Lingotek::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale);
@@ -96,6 +121,12 @@ class LingotekSync {
       if ($record['lingovalue'] == self::STATUS_CURRENT) {
         self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_PENDING);
       }
+      else if ($record['lingovalue'] == self::STATUS_TARGET) { 
+        
+      }
+      else if ($record['lingovalue'] == self::STATUS_DISABLED) { 
+        self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_DISABLED);
+      }
       else { // Otherwise, set it to EDITED
         self::setNodeStatus($node_id, self::STATUS_EDITED);
         self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_EDITED);
@@ -103,6 +134,48 @@ class LingotekSync {
     }
   }
 
+  public static function resetTargetProgress($nid) {
+    $query = db_select('lingotek', 'l')
+      ->fields('l', array('lingokey'))
+      ->condition('nid', $nid)
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE');
+    $targets_raw = $query->execute()->fetchCol();
+    foreach ($targets_raw as $target_raw) {
+      $target = str_replace('target_sync_status_', '', $target_raw);
+      $fields[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_progress_' . $target,
+        'lingovalue' => 0,
+      );
+      $fields[] = array(
+        'nid' => $nid,
+        'lingokey' => 'target_sync_last_progress_updated_' . $target,
+        'lingovalue' => time(),
+      );
+    }
+    $fields[] = array(
+      'nid' => $nid,
+      'lingokey' => 'translation_progress',
+      'lingovalue' => 0,
+    );
+
+    $delete = db_delete('lingotek')
+      ->condition('nid', $nid);
+    $or = db_or();
+      $or->condition('lingokey', 'target_sync_progress_%', 'LIKE');
+      $or->condition('lingokey', 'target_sync_last_progress_updated_%', 'LIKE');
+      $or->condition('lingokey', 'translation_progress');
+    $delete->condition($or)
+      ->execute();
+
+    $insert = db_insert('lingotek')
+      ->fields(array('nid', 'lingokey', 'lingovalue'));
+    foreach ($fields as $field) {
+      $insert->values($field);
+    }
+    $insert->execute();
+  }
+  
   public static function insertTargetEntriesForAllChunks($lingotek_locale) {
     // insert/update a target language for all chunks
     $query = db_select('lingotek_config_metadata', 'meta')
@@ -137,10 +210,49 @@ class LingotekSync {
     self::deleteTargetEntriesForAllNodes($lingotek_locale);
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
   }
+  
+  
+  /**
+   * getDocIdTargetsByStatus
+   * 
+   * @param status (e.g., LingotekSync::READY)
+   * 
+   * @return an array of associate arrays.  Each associate array will have a 'nid' (e.g., 5), 'locale' (e.g., 'de_DE'), and optionally 'doc_id' (e.g., 46677222-b5ec-47d5-880e-24632feffaf5)
+   */
+  public static function getTargetsByStatus($status, $include_doc_ids = FALSE) {
+    $target_language_search = '%';
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('nid', 'lingokey', 'lingovalue'));
+    $query->condition('lingokey', 'target_sync_status_' . $target_language_search, 'LIKE');
+    $query->condition('lingovalue', $status);
+    $result = $query->execute();
+    $records = $result->fetchAll(); //$result->fetchAllAssoc('nid');
+
+     // build nid_doc_map (if needed)
+    if ($include_doc_ids) {
+      $nid_doc_map = array();
+      foreach ($records as $record) {
+        if (!key_exists($record->nid, $nid_doc_map)) {
+          $doc_id = self::getDocIdFromNodeId($record->nid);
+          $nid_doc_map[$record->nid] = $doc_id;
+        }
+      }
+    }
+    $targets = array();
+    foreach ($records as $record) {
+      $doc_target = array(
+        'nid' => $record->nid,
+        'doc_id' => $include_doc_ids ? $nid_doc_map[$record->nid] : NULL,
+        'locale' => str_replace('target_sync_status_', '', $record->lingokey)
+      );
+      $targets[] = $doc_target;
+    }
+
+    return $targets;
+  }
 
   public static function getDownloadableReport() {
-    $project_id = variable_get('lingotek_project', NULL);
-    $document_ids = LingotekSync::getDocIdsByStatus(LingotekSync::STATUS_PENDING);
+    $document_ids = array_unique(array_merge(self::getDocIdsByStatus(self::STATUS_PENDING, FALSE), self::getDocIdsByStatus(self::STATUS_READY, FALSE)));
 
     $report = array(
       'download_targets_workflow_complete' => array(), // workflow complete and ready for download
@@ -152,9 +264,31 @@ class LingotekSync {
     );
     if (empty($document_ids))
       return $report; // if no documents are PENDING, then no need to make the API call.
-    $api = LingotekApi::instance();
-    $response = $api->getProgressReport($project_id, $document_ids, TRUE);
+    $response = lingotek_get_and_update_target_progress($document_ids);
 
+    $locales = lingotek_get_target_locales();
+    foreach ($document_ids as $document_id) {
+      foreach ($locales as $locale) {
+        $target_status = self::getTargetStatus($document_id, $locale);
+        if (isset($response->byDocumentIdAndTargetLocale->$document_id->$locale)) {
+          $doc_target = array(
+            'document_id' => $document_id,
+            'locale' => $locale,
+            'percent_complete' => $response->byDocumentIdAndTargetLocale->$document_id->$locale,
+          );
+          if ($target_status == self::STATUS_READY) {
+            $report['download_targets_workflow_complete'][] = $doc_target;
+            $report['download_targets_workflow_complete_count']++;
+          }
+          elseif ($target_status == self::STATUS_PENDING) {
+            $report['download_targets_workflow_incomplete'][] = $doc_target;
+            $report['download_targets_workflow_incomplete_count']++;
+          }
+        }
+      }
+    }
+
+    /*
     if (isset($response->byDocumentIdAndTargetLocale)) {
       $status_by_doc = $response->byDocumentIdAndTargetLocale;
     }
@@ -174,8 +308,10 @@ class LingotekSync {
             'percent_complete' => $status,
           );
 
-          if ($workflow_completed) {
-            if (self::getTargetStatus($doc_id, $lingotek_locale) == self::STATUS_PENDING) {
+          $target_status = self::getTargetStatus($doc_id, $lingotek_locale);
+
+          if ($workflow_completed && $target_status != self::STATUS_EDITED && $target_status != self::STATUS_DISABLED) {
+            if ($target_status == self::STATUS_READY || $target_status == self::STATUS_PENDING) {
               $report['download_targets_workflow_complete'][] = $doc_target;
               $report['download_targets_workflow_complete_count']++;
             }
@@ -183,13 +319,14 @@ class LingotekSync {
               // Target already downloaded
             }
           }
-          else {
+          elseif (!$workflow_completed) {
             $report['download_targets_workflow_incomplete'][] = $doc_target;
             $report['download_targets_workflow_incomplete_count']++;
           }
         }
       }
     }
+    */
     return $report;
   }
 
@@ -233,9 +370,9 @@ class LingotekSync {
     $count += self::getNodeCountByStatus($status);
     // (turned off reporting of config chunks, for now)
     /*
-      if (variable_get('lingotek_translate_config', 0)) {
+    if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getChunkCountByStatus($status);
-      }
+    }
      */
     return $count;
   }
@@ -259,7 +396,10 @@ class LingotekSync {
       $nids = LingotekSync::getAllNodeIds();
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
-      $query->join('lingotek', 'l', 'l.nid = n.nid AND l.lingokey = \'node_sync_status\' AND l.lingovalue != \'LOCKED\'');
+      $query->join('lingotek', 'l', 'l.nid = n.nid
+         AND l.lingokey = \'node_sync_status\'
+         AND l.lingovalue != \'' . LingotekSync::STATUS_DISABLED .  '\'
+           AND l.lingovalue != \'' . LingotekSync::STATUS_TARGET  .  '\'');
       $query->condition('n.language', $drupal_language_code);
       if (count($nids)) {
         $query->condition('n.nid', $nids, 'IN'); // nodes sent to lingotek
@@ -297,11 +437,30 @@ class LingotekSync {
 
     // get the count of config chunks (turned off for now)
     /*
-      if (variable_get('lingotek_translate_config', 0)) {
+    if (variable_get('lingotek_translate_config', 0)) {
       $count += self::getTargetChunkCountByStatus($status, $lingotek_locale);
-      }
+    }
      */
     return $count;
+  }
+
+  public static function getTargetCountByDocumentIds($document_ids) {
+    if (!is_array($document_ids)) {
+      $document_ids = array($document_ids);
+    }
+    $subquery = db_select('lingotek', 'l1')
+      ->fields('l1', array('nid'))
+      ->condition('l1.lingokey', 'document_id')
+      ->condition('l1.lingovalue', $document_ids, 'IN');
+    $query = db_select('lingotek', 'l');
+    $query->fields('l', array('nid'));
+    $query->condition('l.lingokey', 'target_sync_status_%', 'LIKE');
+    $query->condition('l.nid', $subquery, 'IN');
+    $query->addExpression('COUNT(l.lingokey)', 'targets');
+
+    $query->groupBy('l.nid');
+    $result = $query->execute()->fetchAllAssoc('nid');
+    return $result;
   }
 
   public static function getETNodeIds() { // get nids for entity_translation nodes that are not lingotek pushed
@@ -429,7 +588,7 @@ class LingotekSync {
     $result = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('id', 'id'))
         ->condition('config_key', 'target_sync_status_%', 'LIKE')
-        ->condition('value', self::STATUS_PENDING)
+        ->condition('value', array(self::STATUS_PENDING, self::STATUS_READY), 'IN')
         ->distinct()
         ->execute();
     return $result->fetchAllKeyed();
@@ -443,7 +602,7 @@ class LingotekSync {
 
   public static function getUploadableReport() {
     // Handle nodes
-    $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED);
+    $edited_nodes = self::getNodeIdsByStatus(self::STATUS_EDITED, TRUE);
     $report = array(
       'upload_nids' => $edited_nodes,
       'upload_nids_count' => count($edited_nodes)
@@ -481,14 +640,29 @@ class LingotekSync {
     return $report;
   }
 
-  public static function getNodeIdsByStatus($status) {
+  public static function getNodeIdsByStatus($status, $source) {
     $query = db_select('lingotek', 'l');
     $query->fields('l', array('nid'));
+    if($source) {
+      $query->condition('lingokey', 'node_sync_status');
+    } else {
+      $query->condition('lingokey', 'target_sync_status_%', 'LIKE');
+    }
     $query->condition('lingovalue', $status);
     $query->distinct();
     $result = $query->execute();
     $nids = $result->fetchCol();
     return $nids;
+  }
+
+  public static function getNodeIdsByStatusAndTarget($status, $target_language = '%') {
+    $query = db_select('lingotek', 'l')
+      ->distinct()
+      ->fields('l', array('nid'))
+      ->condition('lingokey', 'target_sync_status_' . $target_language, 'LIKE')
+      ->condition('lingovalue', $status);
+    $result = $query->execute()->fetchCol();
+    return $result;
   }
 
   public static function getNodeIdsBySource($language) {
@@ -511,11 +685,11 @@ class LingotekSync {
     return $result;
   }
 
-  public static function getDocIdsByStatus($status) {
+  public static function getDocIdsByStatus($status, $source) {
     $doc_ids = array();
 
     // retrieve document IDs from nodes
-    $nids = self::getNodeIdsByStatus($status);
+    $nids = self::getNodeIdsByStatus($status, $source);
     if (!empty($nids)) {
       $query = db_select('lingotek', 'l');
       $query->fields('l', array('lingovalue'));
@@ -728,12 +902,12 @@ class LingotekSync {
     return $result;
   }
 
-  public static function getNodeIdSubsetByTargetProgress($nids, $lingotek_locale) {
+  public static function getNodeIdSubsetByTargetStatusReady($nids, $lingotek_locale) {
     $query = db_select('lingotek', 'l')
         ->fields('l', array('nid'))
         ->condition('nid', $nids, 'IN')
-        ->condition('lingokey', 'target_sync_progress_' . $lingotek_locale)
-        ->condition('lingovalue', '100');
+        ->condition('lingokey', 'target_sync_status_' . $lingotek_locale)
+        ->condition('lingovalue', LingotekSync::STATUS_READY);
     $result = $query->execute()->fetchCol();
 
     return $result;

@@ -16,6 +16,10 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   protected $node;
   
+  /**
+   * The Drupal entity type associated with this class
+   */
+  const DRUPAL_ENTITY_TYPE = 'node';
   
   /**
    * Lingotek Lingonode properties.
@@ -31,6 +35,8 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   protected $api = NULL;
   
+  public $language = '';
+
   /**
    * Constructor.
    *
@@ -41,6 +47,8 @@ class LingotekNode implements LingotekTranslatableEntity {
    */
   private function __construct($node) {
     $this->node = $node;
+    $this->nid = $node->nid;
+    $this->language = $node->language;
   }
   
   /**
@@ -135,7 +143,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    *   Lingotek document. FALSE otherwise.
    */
   public function lingotekDocumentId() {
-    return lingotek_lingonode($this->node->nid, 'document_id');
+    return $this->node->lingotek['document_id'];
   }
   
   /**
@@ -218,11 +226,47 @@ class LingotekNode implements LingotekTranslatableEntity {
     // on LingotekNode objects, explicitly.    
   }
   
-  /**
-   * Return the workflow_id assigned for comments
-   */
-  public static function getWorkflowId() {
-    return variable_get('lingotek_workflow', '');
+  public function getWorkflowId() {
+    return $this->node->lingotek['workflow_id'];
   }
   
+  public function getProjectId() {
+    return $this->node->lingotek['project_id'];
+  }
+  
+  public function getVaultId() {
+    return $this->node->lingotek['vault_id'];
+  }
+  
+  public function getTitle() {
+    return $this->node->title;
+  }
+  
+  public function getDescription() {
+    return $this->node->title;
+  }
+  
+    /**
+   * Return the Drupal Entity type
+   *
+   * @return string
+   *   The entity type associated with this object
+   */
+  public function getEntityType() {
+    return self::DRUPAL_ENTITY_TYPE;
+  }
+
+  /**
+   * Return the node ID
+   *
+   * @return int
+   *   The ID associated with this object
+   */
+  public function getId() {
+    return $this->node->nid;
+  }
+  
+  public function getSourceLocale() {
+    return Lingotek::convertDrupal2Lingotek($this->node->language);
+  }
 }

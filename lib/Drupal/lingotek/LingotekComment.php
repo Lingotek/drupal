@@ -152,28 +152,6 @@ class LingotekComment implements LingotekTranslatableEntity {
       $update_result = $this->updateLingotekDocument();
     }
 
-    // Synchronize the local content with the translations from Lingotek.
-    // We instruct the users to configure comment translation with a
-    // single-phase machine translation-only Workflow, so the updated content
-    // should be available right after our create/update document calls from above.
-    // If it isn't, Lingotek will call us back via LINGOTEK_NOTIFY_URL
-    // when machine translation for the item has finished.
-    if (!self::$content_update_in_progress) {
-      // Only update the local content if the Document is 100% complete
-      // according to Lingotek.
-
-      $document_id = $this->getMetadataValue('document_id');
-      if ($document_id) {
-        $document = $this->api->getDocument($document_id);
-        if (!empty($document->percentComplete) && $document->percentComplete == 100) {
-          $this->updateLocalContent();        
-        }
-      }
-      else {
-        LingotekLog::error('Unable to retrieve Lingotek Document ID for comment @id',
-          array('@id' => $this->comment->cid));
-      }
-    }
   }
 
   /**
@@ -333,6 +311,23 @@ class LingotekComment implements LingotekTranslatableEntity {
         ->execute();
     }
   }
+  
+  /**
+   * Deletes a Lingotek metadata value for this item
+   * 
+   * @param string $key
+   *  The key for a name/value pair
+   */
+  public function deleteMetadataValue($key) {
+    $metadata = $this->metadata();
+    if (isset($metadata[$key])) {
+      db_delete('lingotek_entity_metadata')
+        ->condition('entity_id', $this->comment->cid)
+        ->condition('entity_type', self::DRUPAL_ENTITY_TYPE)
+        ->condition('entity_key', $key, 'LIKE')
+        ->execute();
+    }
+  }
 
   /**
    * Updates the local content with data from a Lingotek Document.
@@ -483,10 +478,28 @@ class LingotekComment implements LingotekTranslatableEntity {
     return $property;
   }
   
-  /**
-   * Return the workflow_id assigned for comments
-   */
-  public static function getWorkflowId() {
+  public function getWorkflowId() {
     return variable_get('lingotek_translate_comments_workflow_id', '');
   }
+  
+  public function getProjectId() {
+    return variable_get('lingotek_project', '');
+  }
+  
+  public function getVaultId() {
+    return variable_get('lingotek_vault', '');
+  }
+  
+  public function getTitle() {
+    return $this->comment->title;
+  }
+  
+  public function getDescription() {
+    return $this->comment->title;
+  }
+  
+  public function getSourceLocale() {
+    return Lingotek::convertDrupal2Lingotek($this->comment->language);
+  }
+  
 }

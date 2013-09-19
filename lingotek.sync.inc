@@ -20,7 +20,7 @@ function lingotek_notify_url_generate($security_token = NULL) {
       variable_set('lingotek_notify_security_token', $security_token);
     }
   }
-  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}&security_token=' . $security_token;
+  return $base_url . '/?q=' . LINGOTEK_NOTIFY_URL . '&doc_id={document_uuid}&doc_idx={document_id}&target_code={target_language}&completed={completed}&project_id={project_id}&security_token=' . $security_token;
 }
 
 /**
@@ -54,7 +54,8 @@ function lingotek_notify_url_check() {
  */
 function lingotek_notifications() {
 
-  $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;
+  $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;// uuid
+  $document_idx = ( isset($_GET['doc_idx']) ) ? $_GET['doc_idx'] : NULL;// this is the deprecated document number
   $lingotek_locale = ( isset($_GET['target_code']) ) ? $_GET['target_code'] : NULL;
   $project_id = ( isset($_GET['project_id']) ) ? $_GET['project_id'] : NULL;
   $completed = ( isset($_GET['completed']) ) ? $_GET['completed'] : 1;
@@ -68,7 +69,7 @@ function lingotek_notifications() {
     }
   }
 
-  if (!isset($document_id) || !isset($lingotek_locale)) {
+  if ((!isset($document_id) && !isset($document_idx)) || !isset($lingotek_locale)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
   }
 
@@ -87,20 +88,21 @@ function lingotek_notifications() {
   $attempts = 0;
   while ($attempts < 3) {
     $nid = LingotekSync::getNodeIdFromDocId($document_id);
+    if(!$nid) { // check for the old style document_id
+      $nid = LingotekSync::getNodeIdFromDocId($document_idx);
+      if($nid){
+        $document_id = $document_idx;
+      }
+    }
 
-    if ($nid) {
-      LingotekLog::info('Notification Received  
-          <br/><b>doc_id:</b> @document_id
-          <br/><b>code:</b> @lingotek_locale
-          <br/><b>project:</b> @project_id
-          <br/><b>node:</b> @node_id (@target_drupal_language_code)', array(
+    LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
         '@document_id' => $document_id,
         '@lingotek_locale' => $lingotek_locale,
         '@project_id' => $project_id,
-        '@node_id' => $nid,
-        '@target_drupal_language_code' => $target_drupal_language_code
+        '@node_id' => $nid ? $nid : "NA",
+        '@target_drupal_language_code' => $target_drupal_language_code,
+        '@completed' => $completed
           ), 'callback');
-    }
 
     // If there is not a node ID associated with this document, check for config chunks and comments
     // associated with the document ID
@@ -146,12 +148,15 @@ function lingotek_notifications() {
     else {
       $node = lingotek_node_load_default($nid);
       $source_language = $node->language;
-      $node_setting = lingotek_lingonode($nid, 'sync_method');
+      $node_setting = $node->lingotek['sync_method'];
       $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
+      if ($completed) {
+        LingotekSync::setTargetStatus($nid, $lingotek_locale, LingotekSync::STATUS_READY);
+      }
 
       if ($auto_download) { // download only when automatic download is enabled
         $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-        lingotek_sync_download_node_target($nid, $lingotek_locale, $status, $context);
+        lingotek_sync_download_node_target($nid, $lingotek_locale, $status, TRUE, $context);
 
         // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
         $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
@@ -159,7 +164,7 @@ function lingotek_notifications() {
           lingotek_lingonode($nid, 'workbench_moderate', 1);
         }
         if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
-          $options_index = lingotek_variable_get(lingotek_lingonode($nid, 'sync_method_workbench_moderation'), 'lingotek_sync_workbench_moderation', 0);
+          $options_index = $node->lingotek['sync_method_workbench_moderation'];
           $trans_options = lingotek_get_workbench_moderation_transitions();
           if ($options_index == 1) {
             $from_state = $node->workbench_moderation['current']->state;
@@ -171,6 +176,23 @@ function lingotek_notifications() {
           lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
           lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
         }
+      }
+      
+      if (!$completed) {
+        lingotek_get_and_update_target_progress($document_id);
+      }
+      else {
+        lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
+        
+        $query = db_select('lingotek');
+        $query->addExpression('AVG(lingovalue)');
+        
+        $total = $query->condition('lingokey', 'target_sync_progress_%', 'LIKE')
+          ->condition('nid', $nid)
+          ->execute()->fetchField();
+        lingotek_lingonode($nid, 'translation_progress', $total);
+          
+        lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
     }
     break; // if the function did not continue, then the doc ID was found.
@@ -251,6 +273,7 @@ function lingotek_sync_endpoint() {
 function lingotek_form_bulk_sync($form, $form_state) {
 
   global $base_url;
+  module_load_include('admin.inc', 'lingotek');
   $submit_functions = array('lingotek_form_bulk_sync_submit');
   $report = LingotekSync::getReport();
   $upload_count_total = $report['upload_nids_count'] + (isset($report['upload_nids_et_count']) ? $report['upload_nids_et_count'] : 0) + (isset($report['upload_config_count']) ? $report['upload_config_count'] : 0);
@@ -359,12 +382,34 @@ function lingotek_form_bulk_sync($form, $form_state) {
       $form['upload']['upload_config_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_config']));
       $form['upload']['upload_config'] = array(
         '#type' => 'checkbox',
-        '#title' => $cf_included_str . ' (<span id="upload-config-total">' . $report['upload_config_count'] . ' ' . format_plural($report['upload_config_count'], 'set', 'sets') . ' ' . t('of additions/changes') . '</span>)',
+        '#title' => $cf_included_str 
+            . ' (<span id="upload-config-total">' 
+            . $report['upload_config_count'] . ' ' 
+            . format_plural($report['upload_config_count'], 'set', 'sets') 
+            . ' ' . t('of additions/changes') . '</span>)',
         '#default_value' => $report['upload_config_count'] == 0 ? 0 : 1,
         '#disabled' => $report['upload_config_count'] == 0,
       );
+      $additional_desc = '';
       if (count($config_types_excluded)) {
-        $form['upload']['upload_config']['#description'] = t('(You can also enable translation for') . ' ' . $cf_excluded_str . ' ' . t('in the Additional Translation tab of the') . ' <a href="' . $base_url . '/admin/settings/lingotek/settings">' . t('Lingotek Settings') . '</a>)';
+        $additional_desc .= t('(You can also enable translation for')
+            . ' ' . $cf_excluded_str . ' '
+            . t('within') . ' ' . t('Translation Configuration in') . ' '
+            . l('Lingotek Settings', 'admin/settings/lingotek/settings')
+            . ')<br/>';
+      }
+      if (variable_get('lingotek_use_translation_from_drupal')) {
+        $modules = lingotek_admin_get_enabled_modules();
+        $updates = lingotek_check_for_l10n_translations($modules);
+        if (!empty($updates)) {
+          $additional_desc .= format_plural(
+              count($updates), 
+            'You have 1 pending localization import from Drupal included in this step.', 
+            'You have @count pending localization imports from Drupal included in this step.');
+        }
+      }
+      if ($additional_desc) {
+        $form['upload']['upload_config']['#description'] = $additional_desc;
       }
     }
   }
@@ -762,50 +807,128 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
 *    array of Document IDs that you want to update
 *
 */
-function lingotek_update_target_progress($document_ids) {
+function lingotek_get_and_update_target_progress($document_ids) {
   $api = LingotekApi::Instance();
-
-  $progress_report = $api->getProgressReport(NULL, $document_ids);
-
-  $delete_nids_maybe = array();
-  $values = array();
-  foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-    $nid = LingotekSync::getNodeIdFromDocId($doc_id);
-    $delete_nids_maybe[] = $nid;
-    foreach ($completion as $language => $percent) {
-      $values[] = array(
-      'nid' => $nid,
-      'lingokey' => 'target_sync_progress_' . $language,
-      'lingovalue' => $percent,
-      );    
-      $values[] = array(
-      'nid' => $nid,
-      'lingokey' => 'target_sync_progress_updated_' . $language,
-      'lingovalue' => time(),
-      );    
-    }     
+  if (!is_array($document_ids)) {
+    $document_ids = array($document_ids);
   }
+  $project_id = variable_get('lingotek_project', NULL);
 
-  lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
-  /*  $delete_nids = db_select('lingotek', 'l')
-    ->fields('l', array('nid'))
-    ->distinct()
-    ->condition('nid', $delete_nids_maybe, 'IN')
-    ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
-    ->execute()->fetchCol();
+  $progress_report = $api->getProgressReport($project_id, $document_ids);
 
-  if (!empty($delete_nids)) {
-    $deleted = db_delete('lingotek')
-      ->condition('nid', $delete_nids, 'IN')
-      ->condition('lingokey', 'target_sync_progress_%', 'LIKE')
-      ->execute();
+  $targets_count = LingotekSync::getTargetCountByDocumentIds($document_ids);
+
+  if (isset($progress_report) && $progress_report->results == 'success') {
+    $delete_nids_maybe = array();
+    $delete_cids_maybe = array();
+    $node_values = array();
+    $cfg_values = array();
+    $trans_obj = NULL;
+    foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
+      $nid = LingotekSync::getNodeIdFromDocId($doc_id);
+      // if no $nid is found for the doc ID, it must be config translation
+      if (!$nid) {
+        $trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($doc_id, NULL, $project_id);
+        if (!$trans_obj) {
+          LingotekLog::error("Lingotek doc ID '@doc_id' not found", array('@doc_id' => $doc_id));
+          continue;
+        }
+        // re-assign the chunk ID to be a node ID for now...
+        $nid = $trans_obj->cid;
+        $delete_cids_maybe[] = $nid;
+      }
+      else {
+        $delete_nids_maybe[] = $nid;
+        $target_number = $targets_count[$nid]->targets;
+      }      
+      $total_percentage = 0;
+      foreach ($completion as $language => $percent) {
+        if ($trans_obj) {
+          $values = &$cfg_values;
+        }
+        else {
+          $values = &$node_values;
+        }
+        $values[] = array($nid, 'target_sync_progress_' . $language, $percent);
+        $values[] = array($nid, 'target_sync_last_progress_updated_' . $language, time());
+        $total_percentage += $percent;
+
+        $status = LingotekSync::getTargetStatus($doc_id, $language);
+        if (isset($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language)) {
+          if ($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language) { // If the workflow is complete
+            if ($status != LingotekSync::STATUS_CURRENT) { // If the status is not current
+              $to_status = LingotekSync::STATUS_READY; // Set it to ready
+            }
+            else {
+              $to_status = LingotekSync::STATUS_CURRENT; // Otherwise keep it at current
+            }
+          }
+          else { // If the workflow is not complete
+            $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
+          }
+          $values[] = array($nid, 'target_sync_status_' . $language, $to_status);
+          if ($trans_obj) {
+            $trans_obj->deleteMetadataValue('target_sync_status_' . $language);
+          }
+          else {
+            lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
+          }
+        }
+      }
+      // for now just report on node translation progress...
+      if (!$trans_obj) {
+        $node_values[] = array(
+          'nid' => $nid,
+          'lingokey' => 'translation_progress',
+          'lingovalue' => $total_percentage / $target_number,
+        );
+      }
+    }
+
+    if ($delete_nids_maybe) {
+      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
+      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
+      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'translation_progress');
+    }
+    if ($delete_cids_maybe) {
+      foreach ($delete_cids_maybe as $cid) {
+        $trans_obj->deleteMetadataValue('target_sync_progress_%');
+        $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
+        $trans_obj->deleteMetadataValue('translation_progress');
+      }
+    }
+    
+    // insert status info for nodes
+    $query = db_insert('lingotek')
+      ->fields(array('nid', 'lingokey', 'lingovalue'));
+    foreach ($node_values as $record) {
+      $query->values($record);
+    }
+    $query->execute();
+    
+    // insert status info for config
+    foreach ($cfg_values as $record) {
+      $query = db_merge('lingotek_config_metadata')
+        ->key(array('id' => $record[0], 'config_key' => $record[1]))
+        ->fields(array(
+            'id' => $record[0],
+            'config_key' => $record[1],
+            'value' => $record[2]
+          ))
+        ->execute();
+    }
+    
+    return $progress_report;
   }
-  */
-  $query = db_insert('lingotek')
-    ->fields(array('nid', 'lingokey', 'lingovalue'));
-  foreach ($values as $record) {
-    $query->values($record);
+  else {
+    $error_message = "API Error(s): <ul>";
+    if (is_array($progress_report->errors)) {
+      foreach ($progress_report->errors as $error) {
+        $error_message .= "<li>".$error."</li>";
+      }
+    }
+    $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
+    drupal_set_message($error_message, 'error');
   }
-  $query->execute();
 
 }
