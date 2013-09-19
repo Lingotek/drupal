@@ -465,6 +465,17 @@ function lingotek_grid_action_submit($form, $form_state) {
         $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
         $complete_targets = array();
         $incomplete_targets = array();
+        
+        // We need to check all pending nodes to see if they are READY so that in the end the status is correct.
+        $pending_document_ids = array();
+        foreach ($document_ids as $doc_id) {
+          $status = lingotek_lingonode($doc_id, 'node_sync_status');
+          if ($status != LingotekSync::CURRENT && $status != LingotekSync::READY) {
+            $pending_document_ids[] = $doc_id;
+          }
+        }
+        lingotek_get_and_update_target_progress($pending_document_ids);
+        
 
         foreach ($target_locales as $language) { // Separate the nodes by target_sync_progress_[lang code] percentage
           $complete_nids = LingotekSync::getNodeIdSubsetByTargetStatusReady($nids, $language);

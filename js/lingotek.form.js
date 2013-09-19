@@ -22,7 +22,7 @@ lingotek.forms = lingotek.forms || {};
     lingotek.forms.enableLtkFunc = function(){
         lingotek.forms.enableLtkFromET = true;
         $('#ltk-push-once').attr('default_value',1);
-        $('#ltk-push-oncee').attr('value',1);
+        $('#ltk-push-once').attr('value',1);
         $('#ltk-push-once').attr('checked','checked');
         updateVerticalTabSummary();
         return false;

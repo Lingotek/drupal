@@ -238,7 +238,7 @@ function lingotek_node_disassociate_form_submit($form, $form_state) {
 function lingotek_publish_form($form, $form_state, $node) {
   $form = array();
 
-  if (module_exists('entity_translation')) {
+  if (module_exists('entity_translation') && lingotek_managed_by_entity_translation($node->type)) {
 
     $handler = entity_translation_get_handler('node', $node);
     $languages = entity_translation_languages();

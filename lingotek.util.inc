@@ -265,18 +265,15 @@ function lingotek_xml_node_body($node) {
   $translatable = array();
 
   $translate = variable_get('lingotek_translate_fields', array());
-  $fields_desired = array();
-  if ($translate && $t_array = $translate[$node->type]) {
-    $fields_desired = array_combine($t_array, $t_array);
-  }
-  else if (lingotek_oneoff_translate($node)) {
+  $fields_desired = isset($translate[$node->type]) ? $translate[$node->type] : array();
+  if (empty($fields_desired) && lingotek_oneoff_translate($node)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($node->type);
   }
-
-  foreach ($node as $key => $value) {
-    $field = field_info_field($key);
-    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && isset($fields_desired[$key]) && $fields_desired[$key]) {
-      array_push($translatable, $key);
+  
+  foreach ($fields_desired as $value) {
+    $field = field_info_field($value);
+    if (isset($field)) {
+      array_push($translatable, $value);
     }
   }
 

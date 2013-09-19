@@ -771,7 +771,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#attributes' => array('id' => 'ltk-entity-translation-node')
     );
 
-    $form['lingotek']['lingotek_push_once'] = array(
+    $form['lingotek_push_once'] = array(
       '#type' => 'checkbox',
       '#default_value' => 0,
       '#attributes' => array('id' => 'ltk-push-once', 'style' => 'display: none')
@@ -949,7 +949,7 @@ function lingotek_node_save($node) {
   
   $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
   
-  if(lingotek_managed_by_entity_translation($node->type) && $has_not_been_uploaded && $node->lingotek['lingotek_push_once'] == 0) {
+  if(lingotek_managed_by_entity_translation($node->type) && $has_not_been_uploaded && $node->lingotek_push_once == 0) {
     return $node;
   }
   
@@ -1214,21 +1214,23 @@ function lingotek_node_update($node) {
     }
   }
   else {
-    if (!isset($node->lingotek['node_sync_status']) || ($node->lingotek['node_sync_status'] != LingotekSync::STATUS_DISABLED && $node->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET)) {
-      lingotek_upload_document($node);
-    }
+    lingotek_upload_document($node);
   }
 }
 
 function lingotek_upload_document($node) {  
   if (!lingotek_supported_type($node->type) || !Lingotek::isSupportedLanguage($node->language)) {
     return;
-  }  
+  }
 
-  if (!isset($node->is_new)) {
+  if (isset($node->lingotek['node_sync_status']) && ($node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED || $node->lingotek['node_sync_status'] == LingotekSync::STATUS_TARGET)) {
+    return;
+  }
+
+  if (isset($node->lingotek['document_id'])) {
     $old_node = node_load($node->nid);
     $diff = lingotek_node_compare($node, $old_node);
-    if(empty($diff)) {
+    if(empty($diff) && $node->lingotek['node_sync_status'] == 'CURRENT') {
       return; //node has no changes.
     }
   }
