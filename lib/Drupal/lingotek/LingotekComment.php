@@ -208,7 +208,7 @@ class LingotekComment implements LingotekTranslatableEntity {
 
     foreach ($this->comment as $key => $value) {
       $field = field_info_field($key);
-      if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+      if (isset($field)) {
         array_push($translatable, $key);
       }
     }
@@ -391,7 +391,7 @@ class LingotekComment implements LingotekTranslatableEntity {
       }
 
       $field = field_info_field($drupal_field_name);
-      if (!empty($field['lingotek_translatable'])) {
+      if (!empty($field)) {
         $comment_field = &$this->comment->$drupal_field_name;
         $index = 0;
         foreach ($content as $text) {
