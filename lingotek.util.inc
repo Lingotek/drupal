@@ -863,27 +863,6 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabl
 }
 
 /**
- * Lingotek custom wrapper function for node_load
- *
- * This is needed because the Lingotek module should translate only the most current revision of any node
- *
- * @param $nid entity_id of node to load
- *
- * @return $node most current revision of the node at $nid
- */
-function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
-  if ($vid == NULL) {
-    $query = db_select('node_revision', 'nr')
-        ->condition('nid', $nid, '=');
-    $query->addExpression('MAX(vid)', 'max_vid');
-    $vid = $query->execute()->fetchField();
-  }
-
-  $node = node_load($nid, $vid, $reset);
-  return $node;
-}
-
-/**
  * Get only the languages that are lingotek_enabled
  */
 function lingotek_get_target_locales($codes_only = TRUE) {

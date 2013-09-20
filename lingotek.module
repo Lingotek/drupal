@@ -599,7 +599,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     if(isset($profile_default[$node->type])) {
       $node->lingotek = array_merge($node->lingotek, $profile_default[$node->type]);
     } else {
-      $node->lingotek['profile'] = 0;
+      $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
     }
   }
     
@@ -697,6 +697,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   
   $bulk_grid = FALSE;
   $multiple = FALSE;
+  //$new_node = isset($node->nid) ? 0 : 1;
   
   if (isset($form_state['nids'])) {
     $nids = $form_state['nids'];
@@ -711,10 +712,10 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       }
       $node = new stdClass();
       $node->lingotek = lingotek_get_global_profile();
-      $node->lingotek['profile'] = 0;
+      $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;// Note: Consider making this default 'Automatic' (after it is a fixed profile; can't be deleted)
     }
   }
-    
+  
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
@@ -1146,7 +1147,6 @@ function lingotek_node_load($nodes, $types) {
       drupal_static_reset('title_entity_sync');
       title_entity_sync('node', $node);
     }
-    
     // Node profile inheritance heirarchy
     // Step 1: get global profile
     $node->lingotek = $global_profile;
@@ -1167,6 +1167,27 @@ function lingotek_node_load($nodes, $types) {
       $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
     }
   }
+}
+
+/**
+ * Lingotek custom wrapper function for node_load
+ *
+ * This is needed because the Lingotek module should translate only the most current revision of any node
+ *
+ * @param $nid entity_id of node to load
+ *
+ * @return $node most current revision of the node at $nid
+ */
+function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
+  if ($vid == NULL) {
+    $query = db_select('node_revision', 'nr')
+        ->condition('nid', $nid, '=');
+    $query->addExpression('MAX(vid)', 'max_vid');
+    $vid = $query->execute()->fetchField();
+  }
+
+  $node = node_load($nid, $vid, $reset);
+  return $node;
 }
 
 /**
