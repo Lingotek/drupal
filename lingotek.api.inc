@@ -160,7 +160,7 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
         $target_key = $subfield_parts[1];
       }
       $field = field_info_field($drupal_field_name);
-      if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1) {
+      if (isset($field)) {
         $node_field = & $node->$drupal_field_name;
         $index = 0;
         if (module_exists('link') && $field['type'] == 'link_field') {

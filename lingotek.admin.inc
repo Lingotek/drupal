@@ -270,7 +270,6 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
           // Update the field via the Field API (Instead of the direct db_update)
           $field = field_info_field($content_field);
           $field['translatable'] = 1;
-          $field['lingotek_translatable'] = 1;
           field_update_field($field);
         }
       }
@@ -295,7 +294,6 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
             $translate[$content_type][] = 'title_field';
             $field = field_info_field('title_field');
             $field['translatable'] = 1;
-            $field['lingotek_translatable'] = 1; // Ensure the title field is flagged for Lingotek translation.
             $operations[] = array('field_update_field', array($field)); //field_update_field($field);
           }
         }
@@ -434,12 +432,10 @@ function lingotek_admin_comment_translation_settings_form_submit($form, &$form_s
     }
 
     $field = field_info_field('subject_field');
-    $field['lingotek_translatable'] = TRUE;
     $field['translatable'] = TRUE;
     field_update_field($field);
 
     $field = field_info_field('comment_body');
-    $field['lingotek_translatable'] = TRUE;
     $field['translatable'] = TRUE;
     field_update_field($field);
 

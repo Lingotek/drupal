@@ -238,7 +238,7 @@ function lingotek_node_disassociate_form_submit($form, $form_state) {
 function lingotek_publish_form($form, $form_state, $node) {
   $form = array();
 
-  if (module_exists('entity_translation')) {
+  if (module_exists('entity_translation') && lingotek_managed_by_entity_translation($node->type)) {
 
     $handler = entity_translation_get_handler('node', $node);
     $languages = entity_translation_languages();
@@ -379,12 +379,12 @@ function lingotek_pm($node) {
   // node disabled support
   if ($sync_status == LingotekSync::STATUS_DISABLED) {
     $output[] = array(
-      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a profile (e.g. "Automatic").'
+      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").'
     );
     return $output;
   }
 
-  if (lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
+  if (lingotek_supported_node($node) && Lingotek::isSupportedLanguage($node->language)) {
 
     if (($node->lingotek['node_sync_status'] == LingotekSync::STATUS_EDITED)) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);

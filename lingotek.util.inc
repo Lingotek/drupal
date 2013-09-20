@@ -265,18 +265,15 @@ function lingotek_xml_node_body($node) {
   $translatable = array();
 
   $translate = variable_get('lingotek_translate_fields', array());
-  $fields_desired = array();
-  if ($translate && $t_array = $translate[$node->type]) {
-    $fields_desired = array_combine($t_array, $t_array);
-  }
-  else if (lingotek_oneoff_translate($node)) {
+  $fields_desired = isset($translate[$node->type]) ? $translate[$node->type] : array();
+  if (empty($fields_desired) && lingotek_oneoff_translate($node)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($node->type);
   }
-
-  foreach ($node as $key => $value) {
-    $field = field_info_field($key);
-    if (isset($field) && array_key_exists('lingotek_translatable', $field) && $field['lingotek_translatable'] == 1 && isset($fields_desired[$key]) && $fields_desired[$key]) {
-      array_push($translatable, $key);
+  
+  foreach ($fields_desired as $value) {
+    $field = field_info_field($value);
+    if (isset($field)) {
+      array_push($translatable, $value);
     }
   }
 
@@ -395,10 +392,7 @@ function lingotek_support_footer() {
  * all languages).
  */
 function lingotek_access($node, $permission) {
-  if (Lingotek::isSupportedLanguage($node->language) && lingotek_supported_type($node->type) && node_access('update', $node)) {
-    if (lingotek_managed_by_entity_translation($node->type) && !lingotek_node_pushed($node)) {
-      return FALSE;
-    }
+  if (Lingotek::isSupportedLanguage($node->language) && node_access('update', $node) && $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
     return user_access($permission);
   }
   return FALSE;
@@ -456,8 +450,11 @@ function lingotek_supported_type($type) {
   $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) != '0';
   $setting = variable_get('lingotek_entity_profiles');
   $lingotek_supported_setting = isset($setting['node'][$type]) && $setting['node'][$type] != LingotekSync::PROFILE_DISABLED;
-  $entity_translation_managed = lingotek_managed_by_entity_translation($type);
-  return ($lingotek_supported_explicitly && $lingotek_supported_setting) || $entity_translation_managed; //we also support entity_translation managed content
+  return ($lingotek_supported_explicitly && $lingotek_supported_setting);
+}
+
+function lingotek_supported_node($node) {
+  return $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED;
 }
 
 /**
@@ -863,27 +860,6 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabl
       ->condition('language', $drupal_language_code)
       ->execute();
   return $lingotek_locale;
-}
-
-/**
- * Lingotek custom wrapper function for node_load
- *
- * This is needed because the Lingotek module should translate only the most current revision of any node
- *
- * @param $nid entity_id of node to load
- *
- * @return $node most current revision of the node at $nid
- */
-function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
-  if ($vid == NULL) {
-    $query = db_select('node_revision', 'nr')
-        ->condition('nid', $nid, '=');
-    $query->addExpression('MAX(vid)', 'max_vid');
-    $vid = $query->execute()->fetchField();
-  }
-
-  $node = node_load($nid, $vid, $reset);
-  return $node;
 }
 
 /**

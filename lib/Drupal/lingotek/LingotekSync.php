@@ -762,6 +762,7 @@ class LingotekSync {
   public static function removeNodeInfoByNodeId($nid) {
     $query = db_delete('lingotek');
     $query->condition('nid', $nid);
+    $query->condition('lingokey', 'profile', '<>');
     $result = $query->execute();
   }
 
