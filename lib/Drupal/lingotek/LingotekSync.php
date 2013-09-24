@@ -268,6 +268,9 @@ class LingotekSync {
 
     $locales = lingotek_get_target_locales();
     foreach ($document_ids as $document_id) {
+      if (!$document_id) {
+        continue;
+      }
       foreach ($locales as $locale) {
         $target_status = self::getTargetStatus($document_id, $locale);
         if (isset($response->byDocumentIdAndTargetLocale->$document_id->$locale)) {
