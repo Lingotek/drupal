@@ -1547,6 +1547,15 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
     LingotekSync::STATUS_DISABLED => 'Disabled',
   );
+  $default_link = 'node/' . $nid . '/lingotekworkbench/';
+  $manual_link = 'node/' . $nid . '/lingotek_pm/';
+  $link_map = array(
+    LingotekSync::STATUS_PENDING => $default_link,
+    LingotekSync::STATUS_READY => $default_link,
+    LingotekSync::STATUS_CURRENT => $default_link,
+    LingotekSync::STATUS_EDITED => $manual_link,
+    LingotekSync::STATUS_DISABLED => $manual_link,
+  );
 
   foreach ($locales as $key => $original_locale) {
     $locale = $convert ? Lingotek::convertLingotek2Drupal($original_locale) : $original_locale;
@@ -1555,7 +1564,7 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
       $css_class = 'target-' . $status;
       $tip = $languages[$locale]->name . ' - ' . $legend[strtoupper($status)];
 
-      $html .= l($locale, 'node/' . $nid . '/lingotekworkbench/' . $original_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
+      $html .= l($locale, $link_map[strtoupper($status)] . $original_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
     }
   }
   
