@@ -706,7 +706,9 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
   
   if ($entity_type == 'node') {
     // clear any residual nodes built out before the lingotek document_id was stored
-    cache_clear_all($id, 'cache_entity_node');
+    if (module_exists('entitycache')) {
+      cache_clear_all($id, 'cache_entity_node');
+    }
     $node = node_load($id);
     
     if ($node->language == $drupal_language_code) {
