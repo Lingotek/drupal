@@ -808,6 +808,9 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
 */
 function lingotek_get_and_update_target_progress($document_ids) {
   $api = LingotekApi::Instance();
+  if (empty($document_ids)) {
+    return;
+  }
   if (!is_array($document_ids)) {
     $document_ids = array($document_ids);
   }

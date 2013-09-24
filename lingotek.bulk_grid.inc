@@ -492,17 +492,19 @@ function lingotek_grid_action_submit($form, $form_state) {
             }
           }
         }
-        $batch = array(
-          'title' => t('Downloading Translations from Lingotek'),
-          'operations' => array(),
-          'finished' => 'lingotek_sync_download_target_finished'
-        );
-        $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT)); // If target progress is at 100, download and set to current
-        $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING)); // Otherwise, download and set to pending
-        $redirect = 'admin/settings/lingotek/manage';
+        if (!empty($complete_targets)) {
+          $batch = array(
+            'title' => t('Downloading Translations from Lingotek'),
+            'operations' => array(),
+            'finished' => 'lingotek_sync_download_target_finished'
+          );
+          $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT)); // If target progress is at 100, download and set to current
+          $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING)); // Otherwise, download and set to pending
+          $redirect = 'admin/settings/lingotek/manage';
 
-        batch_set($batch);
-        batch_process($redirect); // Run the batch operations
+          batch_set($batch);
+          batch_process($redirect); // Run the batch operations
+        }
       }
       elseif ($action == 'delete') { // If resetting translations
         $_SESSION['lingotek_disassociate_nodes'] = $nids;

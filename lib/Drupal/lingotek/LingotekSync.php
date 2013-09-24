@@ -448,6 +448,9 @@ class LingotekSync {
   }
 
   public static function getTargetCountByDocumentIds($document_ids) {
+    if (empty($document_ids)) {
+      return;
+    }
     if (!is_array($document_ids)) {
       $document_ids = array($document_ids);
     }
