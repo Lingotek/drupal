@@ -377,7 +377,9 @@ function lingotek_sync_upload_node($nid, &$context) {
   $node = lingotek_node_load_default($nid);
 
   // clear any node caching by entitycache module
-  cache_clear_all($nid, 'cache_entity_node');
+  if (module_exists('entitycache')) {
+    cache_clear_all($nid, 'cache_entity_node');
+  }
 
   // Push this node for translation.
   if ($existing_document = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL) {

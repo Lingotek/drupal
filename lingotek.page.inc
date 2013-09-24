@@ -156,7 +156,9 @@ function lingotek_push_form_submit($form, $form_state) {
   $node = lingotek_node_load_default($form_state['values']['node_id']);
 
   // clear any caching from entitycache module
-  cache_clear_all($node->nid, 'cache_entity_node');
+  if (module_exists('entitycache')) {
+    cache_clear_all($node->nid, 'cache_entity_node');
+  }
 
   $api = LingotekApi::instance();
   if ($node->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
