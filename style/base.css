@@ -139,7 +139,7 @@ input.lingotek-content-settings-table.form-checkbox {
   padding: 2px;
   padding-left: 5px;
   padding-right: 5px;
-  color: white;
+  color: white !important;
 }
 
 .language-icon.target-pending {

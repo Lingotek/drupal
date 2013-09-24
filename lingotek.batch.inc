@@ -370,11 +370,12 @@ function lingotek_sync_upload_node($nid, &$context) {
     $context['message'] = t('Uploading node @nid for translation', array('@nid' => $nid));
   }
   
-  if (lingotek_lingonode($nid, 'node_sync_status') == LingotekSync::STATUS_DISABLED) {
-    return;
-  }
   $api = LingotekApi::instance();
   $node = lingotek_node_load_default($nid);
+
+  if ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED || $node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED) {
+    return;
+  }
 
   // clear any node caching by entitycache module
   if (module_exists('entitycache')) {

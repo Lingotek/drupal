@@ -470,7 +470,7 @@ function lingotek_grid_action_submit($form, $form_state) {
         $pending_document_ids = array();
         foreach ($document_ids as $doc_id) {
           $status = lingotek_lingonode($doc_id, 'node_sync_status');
-          if ($status != LingotekSync::CURRENT && $status != LingotekSync::READY) {
+          if ($status != LingotekSync::STATUS_CURRENT && $status != LingotekSync::STATUS_READY) {
             $pending_document_ids[] = $doc_id;
           }
         }
@@ -573,11 +573,6 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Translation Progress'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'translation_progress' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'translation_progress' . $suffix] : in_array('translation_progress', $columns['defaults']),
     ),
-    'url_alias_translation' => array(
-      '#type' => 'checkbox',
-      '#title' => t('URL Alias Translation'),
-      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'url_alias_translation' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'url_alias_translation' . $suffix] : in_array('url_alias_translation', $columns['defaults']),
-    ),
     'changed' => array(
       '#type' => 'checkbox',
       '#title' => t('Last Modified'),
@@ -636,10 +631,19 @@ function lingotek_grid_download_ready() {
   $targets = LingotekSync::getTargetsByStatus(LingotekSync::STATUS_READY);
   $sync_success_target = LingotekSync::STATUS_CURRENT;
 
-  if (count($targets) > 0) {
+  if (!empty($targets)) {
+
+    $nids = array();
+    foreach($targets as $target){
+      $nids[] = $target['nid'];
+    }
+    $nodes = node_load_multiple($nids);
+    
     $operations = array();
     foreach ($targets as $target) {
-      $operations[] = array('lingotek_sync_download_node_target', array($target['nid'], $target['locale'], $sync_success_target, FALSE));
+      if($nodes[$target['nid']]->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) { // exclude nodes with PROFILE_DISABLED
+        $operations[] = array('lingotek_sync_download_node_target', array($target['nid'], $target['locale'], $sync_success_target, FALSE));
+      }
     }
     $redirect = 'admin/settings/lingotek/manage';
     $batch = array(
@@ -715,7 +719,6 @@ function lingotek_grid_define_columns() {
       'translations',
       'configuration',
       'document_id',
-      'url_alias_translation',
       'changed',
       'last_uploaded',
       'translation_progress_percent',
@@ -841,55 +844,6 @@ function lingotek_grid_build_filters($form_state) {
       ),
       '#multiple' => TRUE
     ),*/
-//    'auto_upload' => array(
-//      '#type' => 'select',
-//      '#default_value' => isset($_SESSION['grid_filters']['auto_upload']) ? $_SESSION['grid_filters']['auto_upload'] : 'all',
-//      '#title' => t('Auto Upload'),
-//      '#options' => array(
-//        'all' => t('All'),
-//        1 => t('On'),
-//        0 => t('Off'),
-//        'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_create_documents_by_default', 0) ? 'On' : 'Off'))),
-//      ),
-//      '#multiple' => TRUE
-//    ),
-//    'auto_download' => array(
-//      '#type' => 'select',
-//      '#default_value' => isset($_SESSION['grid_filters']['auto_download']) ? $_SESSION['grid_filters']['auto_download'] : 'all',
-//      '#title' => t('Auto Download'),
-//      '#options' => array(
-//        'all' => t('All'),
-//        1 => t('On'),
-//        0 => t('Off'),
-//        'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_sync', 0) ? 'On' : 'Off')))
-//      ),
-//      '#multiple' => TRUE
-//    ),
-//    'crowdsourcing' => array(
-//      '#type' => 'select',
-//      '#default_value' => isset($_SESSION['grid_filters']['crowdsourcing']) ? $_SESSION['grid_filters']['crowdsourcing'] : 'all',
-//      '#title' => t('Crowdsourcing'),
-//      '#options' => array(
-//        'all' => t('All'),
-//        1 => t('On'),
-//        0 => t('Off'),
-//        'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_allow_community_translation', 0) ? 'On' : 'Off')))
-//      ),
-//      '#multiple' => TRUE
-//    ),
-//    'url_alias_translation' => array(
-//      '#type' => 'select',
-//      '#default_value' => isset($_SESSION['grid_filters']['url_alias_translation']) ? $_SESSION['grid_filters']['url_alias_translation'] : 'all',
-//      '#title' => t('URL Alias Translation'),
-//      '#options' => array(
-//        'all' => t('All'),
-//        t('None'),
-//        t('Translate'),
-//        t('Use Title'),
-//        'default' => t('Default (@default)', array('@default' => (variable_get('lingotek_url_alias_translation', 0) == 2 ? 'Use Title' : variable_get('lingotek_url_alias_translation', 0) ? 'Translate' : 'None')))
-//      ),
-//      '#multiple' => TRUE
-//    ),
 /*    'last_uploaded' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['last_uploaded']) ? $_SESSION['grid_filters']['last_uploaded'] : 'all',
@@ -1036,7 +990,6 @@ function lingotek_grid_get_rows($form, &$form_state) {
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
     'configuration' => array('data' => t('Profile')),
     'document_id' => array('data' => t('Doc ID'), 'field' => 'document_id'),
-    'url_alias_translation' => array('data' => t('URL Alias'), 'field' => 'url_alias'),
     'changed' => array('data' => t('Last Modified'), 'field' => 'changed', 'sort' => 'desc'),
     'last_uploaded' => array('data' => t('Last Uploaded'), 'field' => 'last_uploaded'),
 //      'translation_progress_percent' => array('data' => t('Workflow Progress'), 'field' => 'translation_progress_percent'),
@@ -1066,8 +1019,6 @@ function lingotek_grid_get_rows($form, &$form_state) {
   // Node Title and Name of Content Type (type)
   $query->fields('n', array('nid', 'title', 'type', 'language', 'changed'));
 
-  $query->addExpression("(SELECT COUNT(nid) FROM lingotek WHERE nid=n.nid AND lingokey LIKE 'target_sync_status_%' AND lingovalue='PENDING')", 't_pending_c');
-  $query->addExpression("(SELECT COUNT(nid) FROM lingotek WHERE nid=n.nid AND lingokey LIKE 'target_sync_status_%' AND lingovalue='READY')", 't_ready_c');
   $query->addExpression("(SELECT COUNT(nid) FROM lingotek WHERE nid=n.nid AND lingokey LIKE 'target_sync_status_%' AND lingovalue='CURRENT')", 't_current_c');
 
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(lingokey, 20, 10)) FROM lingotek WHERE nid=n.nid AND lingokey LIKE 'target_sync_status_%' AND lingovalue='PENDING')", 't_pending');
@@ -1090,30 +1041,14 @@ function lingotek_grid_get_rows($form, &$form_state) {
   $query->addField('lingo_document_id', 'lingovalue', 'document_id');
 
   // Node Upload Status
-//  $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\' and lingo_upload_status.lingovalue <> \''. LingotekSync::STATUS_TARGET . '\'');
-  $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\'');
-  $query->condition('lingo_upload_status.lingovalue', LingotekSync::STATUS_TARGET, '<>');
+  $query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\' and lingo_upload_status.lingovalue <> \''. LingotekSync::STATUS_TARGET . '\'');
+  //$query->leftJoin('lingotek', 'lingo_upload_status', 'lingo_upload_status.nid = n.nid and lingo_upload_status.lingokey = \'node_sync_status\'');
+  //$query->condition('lingo_upload_status.lingovalue', LingotekSync::STATUS_TARGET, '<>');
   $query->addField('lingo_upload_status', 'lingovalue', 'upload_status');
 
   // Profile Settings
   $query->leftJoin('lingotek', 'lingo_profile', 'lingo_profile.nid = n.nid and lingo_profile.lingokey = \'profile\'');
   $query->addField('lingo_profile', 'lingovalue', 'profile');
-
-  // Auto Upload Settings
-  $query->leftJoin('lingotek', 'lingo_auto_upload', 'lingo_auto_upload.nid = n.nid and lingo_auto_upload.lingokey = \'create_lingotek_document\'');
-  $query->addField('lingo_auto_upload', 'lingovalue', 'auto_upload');
-
-  // Auto Download Settings
-  $query->leftJoin('lingotek', 'lingo_auto_download', 'lingo_auto_download.nid = n.nid and lingo_auto_download.lingokey = \'sync_method\'');
-  $query->addField('lingo_auto_download', 'lingovalue', 'auto_download');
-
-  // Community Translation Settings
-  $query->leftJoin('lingotek', 'lingo_crowdsourcing', 'lingo_crowdsourcing.nid = n.nid and lingo_crowdsourcing.lingokey = \'allow_community_translation\'');
-  $query->addField('lingo_crowdsourcing', 'lingovalue', 'crowdsourcing');
-
-  // URL Alias Translation Settings
-  $query->leftJoin('lingotek', 'lingo_url_alias', 'lingo_url_alias.nid = n.nid and lingo_url_alias.lingokey = \'url_alias_translation\'');
-  $query->addField('lingo_url_alias', 'lingovalue', 'url_alias');
 
   // Last Uploaded Timestamp
   $query->leftJoin('lingotek', 'lingo_last_uploaded', 'lingo_last_uploaded.nid = n.nid and lingo_last_uploaded.lingokey = \'last_uploaded\'');
@@ -1229,46 +1164,6 @@ function lingotek_grid_get_rows($form, &$form_state) {
     $query->condition($or);
   }
 
-  // Auto Upload
-  if (isset($filters['auto_upload']) && !in_array('all', $filters['auto_upload'])) {
-    $or = db_or();
-    if (in_array('default', $filters['auto_upload'])) {
-      $or->condition('lingo_auto_upload.lingovalue', NULL);
-    }
-    $or->condition('lingo_auto_upload.lingovalue', $filters['auto_upload'], 'IN');
-    $query->condition($or);
-  }
-
-  // Auto Download
-  if (isset($filters['auto_download']) && !in_array('all', $filters['auto_download'])) {
-    $or = db_or();
-    if (in_array('default', $filters['auto_download'])) {
-      $or->condition('lingo_auto_download.lingovalue', NULL);
-    }
-    $or->condition('lingo_auto_download.lingovalue', $filters['auto_download'], 'IN');
-    $query->condition($or);
-  }
-
-  // Community Translation
-  if (isset($filters['crowdsourcing']) && !in_array('all', $filters['crowdsourcing'])) {
-    $or = db_or();
-    if (in_array('default', $filters['crowdsourcing'])) {
-      $or->condition('lingo_community.lingovalue', $filters['crowdsourcing'], 'IN');
-    }
-    $or->condition('lingo_community.lingovalue', NULL);
-    $query->condition($or);
-  }
-
-  // URL Alias Translation
-  if (isset($filters['url_alias']) && !in_array('all', $filters['url_alias'])) {
-    $or = db_or();
-    if (in_array('default', $filters['url_alias'])) {
-      $or->condition('lingo_url_alias.lingovalue', $filters['url_alias'], 'IN');
-    }
-    $or->condition('lingo_url_alias.lingovalue', NULL);
-    $query->condition($or);
-  }
-
   // Last Uploaded
   if (isset($filters['last_uploaded']) && $filters['last_uploaded'] != 'all') {
     if ($filters['last_uploaded'] == '1 day') {
@@ -1379,12 +1274,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
   // END FILTERS
   // Execute the query
   $table_data_raw = $query->execute()->fetchAllAssoc('nid');
-
-  // Set strings used for renaming some of the lingotek settings when the settings are null in the database
-  $upload_default = t('Default (@default)', array('@default' => variable_get('lingotek_create_documents_by_default', 0) ? 'On' : 'Off'));
-  $download_default = t('Default (@default)', array('@default' => variable_get('lingotek_sync', 1) ? 'On' : 'Off'));
-  $crowdsourcing_default = t('Default (@default)', array('@default' => variable_get('lingotek_allow_community_translation', 0) ? 'On' : 'Off'));
-  $url_alias_default = t('Default (@default)', array('@default' => variable_get('lingotek_url_alias_translation', 0) ? (variable_get('lingotek_url_alias_translation', 0) == 1 ? 'Translate' : 'Use Title') : 'Off'));
+  lingotek_node_load($table_data_raw, array());
 
   $languages = language_list();
   $profiles = lingotek_get_profiles();
@@ -1402,6 +1292,9 @@ function lingotek_grid_get_rows($form, &$form_state) {
     }
     $translation_progress = NULL;
     $icon = '';
+    if ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+      $row->upload_status = LingotekSync::STATUS_DISABLED;
+    }
     if (!is_null($row->upload_status)) {
       if (isset($row->upload_status)) {
         $translation_status = $row->upload_status;
@@ -1460,34 +1353,24 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
     $disabled = $row->upload_status == LingotekSync::STATUS_DISABLED ? ' lingotek-disabled' : '';
 
-    if ($row->auto_upload) {
+    if ($row->lingotek['create_lingotek_document']) {
       $configuration .= '<i class="icon-arrow-up' . $disabled . '" title="Automatic Upload"></i> ';
     }
-    if ($row->auto_download) {
+    if ($row->lingotek['sync_method']) {
       $configuration .= '<i class="icon-arrow-down' . $disabled . '" title="Automatic Download"></i> ';
     }
-    if ($row->crowdsourcing) {
+    if ($row->lingotek['allow_community_translation']) {
       $configuration .= '<i class="icon-globe' . $disabled . '" title="Crowdsourcing Enabled"></i> ';
     }
 
-    if (!isset($row->profile)) {
-      if (isset($row->auto_upload)) {
-        $row->profile = LingotekSync::PROFILE_CUSTOM;
-      }
-      else {
-        $profile_mapping = lingotek_load_profile_defaults('node');
-        $row->profile = $profile_mapping[$row->type]['profile'];
-      }
-    }
-
-    if ($row->profile == LingotekSync::PROFILE_CUSTOM) {
+    if ($row->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
       $configuration = t('Custom') . ' <span class="node-configuration">' . $configuration . '</span>';
     }
-    else if ($row->profile == LingotekSync::PROFILE_DISABLED) {
+    else if ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
       $configuration = t('Disabled');
     }
     else {
-      $configuration = $profiles[$row->profile]['name'];
+      $configuration = $profiles[$row->lingotek['profile']]['name'];
     }
 
 
@@ -1515,14 +1398,9 @@ function lingotek_grid_get_rows($form, &$form_state) {
       'translations' => $translations,
       'configuration' => $configuration,
       'document_id' => $row->document_id ? : t('N/A'),
-      'upload_status' => $row->upload_status ? : t('N/A'),
       'content_type' => $types[$row->type]->name ? : t('??'),
 //        'translation_status' => $row->upload_status ?: t('N/A'),
 //        'translation_progress' => $translation_progress ?: t('N/A'),
-      'auto_upload' => $row->auto_upload ? t('On') : (is_null($row->auto_upload) ? $upload_default : t('Off')),
-      'auto_download' => $row->auto_download ? t('On') : (is_null($row->auto_download) ? $download_default : t('Off')),
-      'crowdsourcing' => $row->crowdsourcing ? t('On') : (is_null($row->crowdsourcing) ? $crowdsourcing_default : t('Off')),
-      'url_alias_translation' => $row->url_alias ? ($row->url_alias == 1 ? t('Translate') : t('Use Title')) : (is_null($row->url_alias) ? $url_alias_default : t('Off')),
       'changed' => $row->changed ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->changed))) : t('Never'),
       'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
 //        'locale_progress_percent' => $row->locale_progress_percent ? lingotek_grid_create_progress_bar($row->locale_progress_percent) : lingotek_grid_create_progress_bar(0),

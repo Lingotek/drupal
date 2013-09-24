@@ -3,3 +3,4 @@
 !.gitignore
 config.php
 temp
+/nbproject/private/
