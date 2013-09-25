@@ -233,7 +233,7 @@ function lingotek_oneoff_translate($node) {
 
 function lingotek_get_translatable_field_types() {
   // What types of fields DO we translate?
-  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary');
+  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary', 'field_collection_embed');
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
@@ -269,7 +269,7 @@ function lingotek_xml_node_body($node) {
   if (empty($fields_desired) && lingotek_oneoff_translate($node)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($node->type);
   }
-  
+
   foreach ($fields_desired as $value) {
     $field = field_info_field($value);
     if (isset($field)) {
@@ -277,15 +277,44 @@ function lingotek_xml_node_body($node) {
     }
   }
 
-  $content = '';
-  foreach ($translatable as $field) {
-    $language = $node->language;
-    if (!array_key_exists($language, $node->$field)) {
-      $language = LANGUAGE_NONE;
+  $content = lingotek_xml_fields($node, $translatable, $node->language);
+
+  /* deprecated with config translation
+    //Menus related to the page:
+    // Do we still want this? Config translation translates these items
+    $menu = menu_link_get_preferred('node/' . $node->nid);
+    $txt = $menu['link_title'];
+    if ($txt != "") {
+    $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
+    } */
+
+  //URL Alias related to the page:
+  $url_alias_translation = $node->lingotek['url_alias_translation'];
+  if ($url_alias_translation == 1) {
+    $conditions = array('source' => 'node/' . $node->nid);
+    if ($node->language != LANGUAGE_NONE) {
+      $conditions['language'] = $node->language;
     }
+    $path = path_load($conditions);
+    if ($path !== FALSE) {
+      $url = $path['alias'];
+      $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+    }
+  }
+
+  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+}
+
+function lingotek_xml_fields($node, $translatable, $language) {
+  $content = '';
+  
+  foreach ($translatable as $field) {
     $text = & $node->$field;
+
+    $field_language = array_key_exists($language, $node->$field) ? $language : LANGUAGE_NONE;
+
     // Deal with not being initialized right, such as pre-existing titles.
-    if (!array_key_exists($language, $node->$field) || !array_key_exists(0, $text[$language])) {
+    if (!array_key_exists($field_language, $node->$field) || !array_key_exists(0, $text[$field_language])) {
       continue;
     }
 
@@ -310,9 +339,25 @@ function lingotek_xml_node_body($node) {
           continue;
         }
       }
-      foreach ($text[$language] as $delta) {
+      foreach ($text[$field_language] as $delta) {
         if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
           $element_name = $field;
+          if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
+            $current_field = '<' . $element_name . '>';
+            $entity = entity_load_single('field_collection_item', $delta['value']);
+            $sub_fields = field_info_instances('field_collection_item', $field);
+            $translatable_field_types = lingotek_get_translatable_field_types();
+            $translatable_sub_fields = array();
+            foreach ($sub_fields as $sub_field => $f) {
+              if (in_array($f['widget']['type'], $translatable_field_types)) {
+                $translatable_sub_fields[] = $sub_field;
+              }
+            }
+            $current_field .= lingotek_xml_fields($entity, $translatable_sub_fields, $field_language);
+            $current_field .= '</' . $element_name . '>';
+            $content .= $current_field;
+            continue;
+          }
           if (!is_array($element_suffix) && !empty($element_suffix)) {
             $element_name .= '__' . $element_suffix;
           }
@@ -340,30 +385,8 @@ function lingotek_xml_node_body($node) {
       }
     }
   }
-  /* deprecated with config translation
-    //Menus related to the page:
-    // Do we still want this? Config translation translates these items
-    $menu = menu_link_get_preferred('node/' . $node->nid);
-    $txt = $menu['link_title'];
-    if ($txt != "") {
-    $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
-    } */
 
-  //URL Alias related to the page:
-  $url_alias_translation = $node->lingotek['url_alias_translation'];
-  if ($url_alias_translation == 1) {
-    $conditions = array('source' => 'node/' . $node->nid);
-    if ($node->language != LANGUAGE_NONE) {
-      $conditions['language'] = $node->language;
-    }
-    $path = path_load($conditions);
-    if ($path !== FALSE) {
-      $url = $path['alias'];
-      $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
-    }
-  }
-
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+  return $content;
 }
 
 /**

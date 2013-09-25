@@ -1585,6 +1585,24 @@ function lingotek_entity_info_alter(&$entity_info) {
   if (variable_get('lingotek_translate_comments', FALSE)) {
     $entity_info['comment']['translation']['lingotek'] = TRUE;
   }
+  if (isset($entity_info['field_collection_item'])) {
+    $entity_info['field_collection_item']['translation']['lingotek'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+  */
+function lingotek_entity_presave($entity, $type) {
+  /*global $language;
+  if ($type == 'field_collection_item') {
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists('und', $value)) {
+        $entity->{$key}[$language->language] = $value['und'];
+        unset($entity->{$key}['und']);
+      }
+    }
+  }*/
 }
 
 /**
