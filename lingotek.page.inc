@@ -92,6 +92,12 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
  */
 function lingotek_download_translations_form_submit($form, $form_state) {
   $nid = $form_state['values']['nid'];
+
+  // clear any caching from entitycache module
+  if (module_exists('entitycache')) {
+    cache_clear_all($nid, 'cache_entity_node');
+  }
+
   $document_id = lingotek_lingonode($nid, 'document_id');
 
   $locales = array();
