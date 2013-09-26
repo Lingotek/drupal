@@ -988,7 +988,7 @@ function lingotek_get_module_info($field = NULL) {
 /**
  * Clean-up utility
  */
-function lingotek_cleanup_utility($show_messages = TRUE) {
+function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) {
   LingotekLog::trace(__METHOD__);
 
   lingotek_set_priority();
@@ -998,7 +998,7 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
   lingotek_migration_3();
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
 
-  lingotek_field_language_data_cleanup_batch_create();
+  $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
   if ($show_messages) {
     drupal_set_message(t('The field data cleanup utility completed.'));
   }
@@ -1006,6 +1006,10 @@ function lingotek_cleanup_utility($show_messages = TRUE) {
   lingotek_batch_identify_content(); // Identify pre-existing content (based on these new content-type settings)
   if ($show_messages) {
     drupal_set_message(t('Translatable content has been identified.'));
+  }
+  
+  if ($cleanup_batch && is_array($cleanup_batch)) {
+    return $cleanup_batch;
   }
 }
 

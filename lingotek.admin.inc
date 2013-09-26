@@ -6,6 +6,7 @@
  */
 include_once('lingotek.session.inc');
 module_load_include('batch.inc', 'l10n_update');
+module_load_include('admin.inc', 'i18n_string');
 
 /**
  * Form constructor for the administration form.
@@ -556,7 +557,7 @@ function lingotek_verify_modules_enabled($module_list) {
   return TRUE;
 }
 
-function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=NULL) {
+function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=array()) {
   $form_state['values'] = array_merge($form_state['values'], $form_state['values']['config']);
 
   system_settings_form_submit($form, $form_state);
@@ -595,9 +596,11 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   }
   // refresh all strings for each config type
   if (count($config_groups)) {
-    module_load_include('admin.inc', 'i18n_string');
+    // combine string refresh operations with other additional operations
     $config_refresh_batch = i18n_string_refresh_batch($config_groups, $delete = FALSE);
-    batch_set($config_refresh_batch);
+    if (isset($config_refresh_batch['operations'])) {
+      $additional_operations = array_merge($additional_operations, $config_refresh_batch['operations']);
+    }
   }
   if (variable_get('lingotek_translate_config_builtins')) {
     lingotek_admin_prepare_builtins($additional_operations);
@@ -650,7 +653,6 @@ function lingotek_admin_prepare_builtins($additional_operations=array()) {
     'title' => t('Gathering translatable strings from all enabled modules'),
     'init_message' => t('Preparing list of modules to be searched for built-in strings...'),
     'progress_message' => t('Processed @current out of @total.'),
-    'finished' => 'lingotek_admin_module_indexing_finished',
     'error_message' => t('String-gathering process has encountered an error.'),
     'file' => drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc',
   );

@@ -10,10 +10,10 @@
  * 
  * Creates a batch to cleanup nodes with data in an 'und' language field.
  *
- * @param bool $front
+ * @param bool $autoset_batch
  * If this batch was NOT created from a form_submit() handler, then pass in TRUE
  */
-function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
+function lingotek_field_language_data_cleanup_batch_create($autoset_batch = FALSE) {
   LingotekLog::trace(__METHOD__);
   $operations = array();
   $entity_type = 'node';
@@ -59,9 +59,12 @@ function lingotek_field_language_data_cleanup_batch_create($front = FALSE) {
       'file' => 'lingotek.batch.inc'
     );
 
-    batch_set($batch);
-    if ($front) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+    if ($autoset_batch) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+      batch_set($batch);
       batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+    }
+    else {
+      return $batch;
     }
   } // END:  if operations
 }
