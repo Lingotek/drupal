@@ -194,6 +194,10 @@ function lingotek_notifications() {
           
         lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
+      // clear any caching from entitycache module to allow the new translation to show immediately
+      if (module_exists('entitycache')) {
+        cache_clear_all($nid, 'cache_entity_node');
+      }
     }
     break; // if the function did not continue, then the doc ID was found.
   }
