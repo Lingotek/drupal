@@ -360,9 +360,9 @@ function lingotek_form_bulk_sync($form, $form_state) {
       $config_types = array(
         'lingotek_translate_config_builtins' => t('Include built-in interface data'),
         'lingotek_translate_config_blocks' => t('blocks'),
-        'lingotek_translate_config_taxonomies' => t('taxonomies'),
         'lingotek_translate_config_menus' => t('menus'),
         'lingotek_translate_config_views' => t('views'),
+        'lingotek_translate_config_taxonomies' => t('taxonomy vocabularies & terms'),
       );
       $config_types_included = array();
       $config_types_excluded = array();

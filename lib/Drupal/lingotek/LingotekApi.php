@@ -259,7 +259,7 @@ class LingotekApi {
     $parameters = array(
       'projectId' => variable_get('lingotek_project', NULL),
       'documentName' => 'config - ' . $chunk->cid,
-      'documentDesc' => 'configuration string set "' . $chunk->cid . '", related to menus, taxonomies, views, etc.',
+      'documentDesc' => 'configuration string set "' . $chunk->cid . '", related to menus, views, taxonomy vocabularies & terms, etc.',
       'format' => $this->xmlFormat(),
       'applyWorkflow' => 'true',
       'workflowId' => variable_get('lingotek_translate_config_workflow_id', NULL),
