@@ -589,3 +589,13 @@ function lingotek_update_7404(&$sandbox) {
     variable_set('lingotek_entity_profiles', $entity_profiles);
   }
 }
+
+/**
+ * Merges lingotek table into lingotek_entity_metadata table
+ */
+function lingotek_update_7405(&$sandbox) {
+  db_query("INSERT INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)
+SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
+FROM lingotek");
+  db_query("DROP TABLE lingotek");
+}

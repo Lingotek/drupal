@@ -202,13 +202,21 @@ function lingotek_menu() {
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'];
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/list'] = array(
-    'title' => 'Content',
-    'description' => 'Bulk grid of content translations',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => -8,
-  );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/list'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/list'];
+  $entity_types = lingotek_managed_entity_types();
+  foreach ($entity_types as $machine_name => $entity_type) {
+    $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name] = array(
+      'title' => $entity_type['label'],
+      'description' => 'Bulk grid of content translations',
+      'type' => $machine_name == 'node' ? MENU_DEFAULT_LOCAL_TASK : MENU_LOCAL_TASK,
+      'weight' => -8,
+      'access arguments' => array('administer lingotek'),
+      'description' => 'Bulk grid of content translations',
+      'file' => 'lingotek.bulk_grid.inc',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('lingotek_bulk_grid_form')
+    );
+    $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/' . $machine_name] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name];
+  }
   
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize'] = array(
     'access arguments' => array('administer lingotek'),
@@ -914,7 +922,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
 /*
  * This is not a hook. This is a helper function to save all lingotek related data.
  */
-function lingotek_node_save($node) {
+function lingotek_node_save($node, $entity_type) {
   if (!lingotek_supported_type($node->type) && $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
     return $node;
   }
@@ -929,43 +937,45 @@ function lingotek_node_save($node) {
   else if (!$disabled_selected && $disabled) {
     LingotekSync::setNodeEnabled($node->nid, TRUE);
   }
+
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
   
   $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
   $remove[] = 'profile';
     
-  db_delete('lingotek')
-    ->condition('nid', $node->nid)
-    ->condition('lingokey', $remove, 'IN')
+  db_delete('lingotek_entity_metadata')
+    ->condition('entity_id', $id)
+    ->condition('entity_key', $remove, 'IN')
     ->execute();
 
   if ($node->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
     $ignore = array('et_content', 'lingotek_push_once', 'lingotek_disabled', 'advanced', 'node_sync_status', 'document_id');
-    $query = db_insert('lingotek')->fields(array('nid', 'lingokey', 'lingovalue'));
+    $query = db_insert('lingotek_entity_metadata')->fields(array('entity_id', 'entity_key', 'value'));
     
     foreach ($node->lingotek as $key => $value) {
       if (array_search($key, $ignore) === FALSE) {
-        $query->values(array($node->nid, $key, $value));
+        $query->values(array($id, $key, $value));
       }
     }
     $query->execute();
   }
   else { // Specific Profile
     $node_defaults = lingotek_load_profile_defaults('node');
-    $profile_overridden = (!isset($node_defaults[$node->type]['profile']) || $node_defaults[$node->type]['profile'] != $node->lingotek['profile']);
+    $profile_overridden = (!isset($node_defaults[$bundle]['profile']) || $node_defaults[$bundle]['profile'] != $node->lingotek['profile']);
     if($profile_overridden) {
-      lingotek_lingonode($node->nid, 'profile', $node->lingotek['profile']);
+      lingotek_lingonode($id, 'profile', $node->lingotek['profile']);
     } else {
-      lingotek_lingonode_variable_delete($node->nid, 'profile');
+      lingotek_lingonode_variable_delete($id, 'profile');
     }
   }
   
   //This reloads the lingovalues to ensure that the proper defaults and hierarchy are used.
   //We clear out the lingovalues first, then wrap in an array, call the lingotek load function, and then unwrap from array.
   unset($node->lingotek);
-  $nodes = array($node->nid => $node);
-  $types = array($node->type);
-  lingotek_node_load($nodes, $types);
-  $node = $nodes[$node->nid];
+  $nodes = array($id => $node);
+  $types = array($bundle);
+  lingotek_entity_load($nodes, $entity_type);
+  $node = $nodes[$id];
   return $node;
 }
 
@@ -1105,43 +1115,37 @@ function lingotek_node_insert($node) {
 }
 
 /**
- * Implements hook_node_delete().
+ * Implements hook_entity_load().
  */
-function lingotek_node_delete($node) {
-  $doc_id = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL;
-  if (is_numeric($doc_id)) {
-    $api = LingotekApi::instance();
-    $api->removeDocument($doc_id, FALSE);
+function lingotek_entity_load($entities, $entity_type) {
+  if (empty($entities)) {
+    return;
   }
-  LingotekSync::removeNodeInfoByNodeId($node->nid);
-}
 
-/**
- * Implements hook_node_load().
- */
-function lingotek_node_load($nodes, $types) {
   $global_profile = lingotek_get_global_profile();
-  $node_profile_defaults = lingotek_load_profile_defaults('node'); // return assoc array by node type
+  $node_profile_defaults = lingotek_load_profile_defaults($entity_type); // return assoc array by node type
   $profiles_list = lingotek_get_profiles();
   
-  $result = db_select('lingotek', 'n')
-      ->fields('n', array('nid', 'lingokey', 'lingovalue'))
-      ->condition('n.nid', array_keys($nodes), 'IN')
-      ->condition('n.lingokey', 'target_%', 'NOT LIKE')
+  $result = db_select('lingotek_entity_metadata', 'l')
+      ->fields('l', array('entity_id', 'entity_key', 'value'))
+      ->condition('l.entity_id', array_keys($entities), 'IN')
+      ->condition('l.entity_type', $entity_type)
+      ->condition('l.entity_key', 'target_%', 'NOT LIKE')
       ->execute();
   
-  $node_lingovalues = array();
+  $values = array();
   foreach ($result as $record) {
-    $node_lingovalues[$record->nid][$record->lingokey] = $record->lingovalue;
+    $values[$record->entity_id][$record->entity_key] = $record->value;
   }
   
-  foreach ($nodes as &$node) {
-//    if (!lingotek_supported_type($node->type)) {
+  foreach ($entities as &$entity) {
+//    if (!lingotek_supported_type($entity->type)) {
 //      continue;
 //    }
-    
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
     // translate node titles for workbench moderation 'View draft' node tab
-    if (module_exists('workbench_moderation') && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->vid) {
+    if ($entity_type == 'node' && module_exists('workbench_moderation') && isset($entity->workbench_moderation['published']) && $entity->workbench_moderation['published']->vid != $vid) {
       // Workbench Moderation calls two node saves if viewing a draft, so we have to
       // clear this cache in order for the translated title fields to be loaded
       drupal_static_reset('title_entity_sync');
@@ -1149,22 +1153,22 @@ function lingotek_node_load($nodes, $types) {
     }
     // Node profile inheritance heirarchy
     // Step 1: get global profile
-    $node->lingotek = $global_profile;
+    $entity->lingotek = $global_profile;
     // Step 2: add default profiles
-    if (array_key_exists($node->type, $node_profile_defaults)) {
-      $node->lingotek = array_merge($node->lingotek, $node_profile_defaults[$node->type]);
+    if (array_key_exists($bundle, $node_profile_defaults)) {
+      $entity->lingotek = array_merge($entity->lingotek, $node_profile_defaults[$bundle]);
     }
     // Step 3: add node-specific profile
-    if (isset($node_lingovalues[$node->nid]['profile']) && is_numeric($node_lingovalues[$node->nid]['profile'])) {
-      $node->lingotek = array_merge($node->lingotek, $profiles_list[$node_lingovalues[$node->nid]['profile']]);
+    if (isset($values[$id]['profile']) && is_numeric($values[$id]['profile'])) {
+      $entity->lingotek = array_merge($entity->lingotek, $profiles_list[$values[$id]['profile']]);
     }
     // Step 4: add node-specific overrides
-    if (isset($node_lingovalues[$node->nid])) {
-      $node->lingotek = array_merge($node->lingotek, $node_lingovalues[$node->nid]);
+    if (isset($values[$id])) {
+      $entity->lingotek = array_merge($entity->lingotek, $values[$id]);
     }
     // Step 5: if no profile, then disabled.
-    if (!isset($node->lingotek['profile'])) {
-      $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
+    if (!isset($entity->lingotek['profile'])) {
+      $entity->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
     }
   }
 }
@@ -1198,7 +1202,7 @@ function lingotek_node_update($node) {
     return;
   }
   
-  $node = lingotek_node_save($node);
+  $node = lingotek_node_save($node, 'node');
   
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     if ($node->is_new) {

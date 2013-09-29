@@ -737,7 +737,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
 
   $fs['values'] = lingotek_get_global_profile();
   $fs['values']['profile_id'] = LingotekSync::PROFILE_CUSTOM;
-  $form = lingotek_admin_node_translation_settings_form($form, $form_state);
+  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'node');
   $content_defaults = lingotek_admin_profile_form($form, $fs);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
   $form['lingotek_nodes_translation_method']['#weight'] = -3;
@@ -750,28 +750,30 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
     ->execute()
     ->fetchField();
   
-  $form['lingotek_overwrite_note'] = array(
-    '#type' => 'item',
-    '#title' => t('You have @count nodes with existing translations', array('@count' => $c)),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="lingotek_nodes_translation_method"]' => array('checked' => FALSE),
+  if ($c > 0) {
+    $form['lingotek_overwrite_note'] = array(
+      '#type' => 'item',
+      '#title' => t('You have @count nodes with existing translations', array('@count' => $c)),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="lingotek_nodes_translation_method"]' => array('checked' => FALSE),
+        ),
       ),
-    ),
-    '#weight' => -2,
-  );
-  
-  $form['lingotek_overwrite'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Do not allow Lingotek to translate these nodes. <b>NOTE: Unchecking this option will cause Lingotek to overwrite your current translated content.</b>'),
-    '#default_value' => TRUE,
-    '#states' => array(
-      'visible' => array(
-        ':input[name="lingotek_nodes_translation_method"]' => array('checked' => FALSE),
+      '#weight' => -2,
+    );
+    
+    $form['lingotek_overwrite'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Do not allow Lingotek to translate these nodes. <b>NOTE: Unchecking this option will cause Lingotek to overwrite your current translated content.</b>'),
+      '#default_value' => TRUE,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="lingotek_nodes_translation_method"]' => array('checked' => FALSE),
+        ),
       ),
-    ),
-    '#weight' => -1,
-  );
+      '#weight' => -1,
+    );
+  }
   
   $form['node_translation']['actions']['submit'] = array(
     '#type' => 'submit',
@@ -787,33 +789,6 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
-}
-
-/**
- * Node Translation Settings - Ajax Callback 1 (Primary)
- */
-function lingotek_content_type_choose_fields_callback($content_type) {
-
-  $selector = '#content_fields_' . $content_type;
-  $commands = array();
-
-  // <span id="showhidelink_' .$value->type .'"><a id="showlink_' .$value->type .'" 
-  // The CHOOSE FIELDS text is currently shown, switch to HIDE FIELDS
-  if (in_array('showlink_' . $content_type, $_REQUEST['ajax_html_ids'])) {
-    $link = '<a id="hidelink_' . $content_type . '" href="' . url('admin/config/lingotek/content-type-choose-fields-ajax/' . $content_type) . '" class="use-ajax">hide fields</a>';
-    $span_selector = '#showhidelink_' . $content_type;
-    $commands[] = ajax_command_html($span_selector, $link);
-  }
-  if (in_array('hidelink_' . $content_type, $_REQUEST['ajax_html_ids'])) {
-    $link = '<a id="showlink_' . $content_type . '" href="' . url('admin/config/lingotek/content-type-choose-fields-ajax/' . $content_type) . '" class="use-ajax">choose fields</a>';
-    $span_selector = '#showhidelink_' . $content_type;
-    $commands[] = ajax_command_html($span_selector, $link);
-  }
-
-  $commands[] = ajax_command_invoke($selector, 'toggle');
-  //$commands[] = ajax_command_alert( 'Hiding: ' .$data  );
-
-  return ajax_deliver(array('#type' => 'ajax', '#commands' => $commands));
 }
 
 /**

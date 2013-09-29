@@ -153,7 +153,7 @@ class LingotekNode implements LingotekTranslatableEntity {
    *   The XML document representing the entity's translatable content.
    */
   public function documentLingotekXML() {
-    return lingotek_xml_node_body($this->node);
+    return lingotek_xml_node_body('node', $this->node);
   }  
   
   /**

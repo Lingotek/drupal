@@ -204,60 +204,7 @@ class LingotekComment implements LingotekTranslatableEntity {
    *   The XML document representing the entity's translatable content.
    */
   public function documentLingotekXML() {
-    $translatable = array();
-
-    foreach ($this->comment as $key => $value) {
-      $field = field_info_field($key);
-      if (isset($field)) {
-        array_push($translatable, $key);
-      }
-    }
-
-    $content = '';
-    foreach ($translatable as $field) {
-      $language = $this->comment->language;
-      if (!array_key_exists($language, $this->comment->$field)) {
-        $language = LANGUAGE_NONE;
-      }
-      $text = $this->comment->$field;
-      // Deal with not being initialized right, such as pre-existing titles.
-      if (!array_key_exists($language, $this->comment->$field) || !array_key_exists(0, $text[$language])) {
-        continue;
-      }
-
-      // We may split compound Drupal fields into several Lingotek fields.
-      $target_keys = array(
-        'value' => '', // Most text fields
-        'summary' => 'summary' // "Long text with summary" fields have this sub-field value as well.
-      );
-
-      // Create fields from all target keys.
-      foreach ($target_keys as $target_key => $element_suffix) {
-        if (!empty($text[$language][0][$target_key])) {
-          $element_name = $field;
-          if (!empty($element_suffix)) {
-            $element_name .= '__' . $element_suffix;
-          }
-
-          $current_field = '<' . $element_name . '>';
-
-          foreach ($text[$language] as $key => $value) {
-            // TODO: This isn't a very robust check for text fields.
-            // Switch to using field metadata looking for known text field types?
-            if (!array_key_exists('value', $value)) {
-              continue;
-            }
-
-            $current_field .= '<element><![CDATA[' . $value[$target_key] . ']]></element>' . "\n";
-          }
-
-          $current_field .= '</' . $element_name . '>';
-          $content .= $current_field . "\n";
-        }
-      }
-    }
-
-    return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+    return lingotek_xml_node_body('comment', $this->comment);
   }
 
   /**
