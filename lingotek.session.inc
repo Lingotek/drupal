@@ -22,6 +22,7 @@ class LingotekSession {
   public $key;
   public $password;
   private $logged_in = FALSE;
+  private $last_login_msg = '';
   private $headers = array();
   //API calls that don't need to log in.
   private $sessionless = array('login', 'keyLogin');
@@ -56,6 +57,13 @@ class LingotekSession {
    */
   public function isLoggedIn() {
     return $this->logged_in;
+  }
+
+  /*
+   * Returns message received from last login attempt
+   */
+  public function getLastLoginMsg() {
+    return $this->last_login_msg;
   }
 
   /*
@@ -114,6 +122,12 @@ class LingotekSession {
         )
     );
 
+    if (isset($response->error)) {
+      $this->last_login_msg = $response->error;
+    }
+    else {
+      $this->last_login_msg = "";
+    }
     if ($returnJson) {
       if (isset($response->data) && ($json = json_decode($response->data)) && $json->results == "success") {
         return $json;
@@ -123,7 +137,7 @@ class LingotekSession {
             'API @api FAILED', array(
           '@api' => $api,
           'params' => $params,
-          'error' => isset($response->error) ? $response->error : "",
+          'error' => $this->last_login_msg,
           'response' => isset($json) ? $json : "",
           'logged_in' => $this->logged_in,
             ), 'api');
@@ -237,19 +251,37 @@ class LingotekSession {
       $login = 'keyLogin';
     }
 
+    $error = 'unknown error';
+    $success = FALSE;
+    $response = array();
     $data = $this->request($login, $params, NULL, FALSE);
+    if (isset($data->data)) {
+      $response = json_decode($data->data);
+      if (isset($response->results) && $response->results == "success") {
+        $success = TRUE;
+        $error = '';
+      }
+      else if (isset($response->results) && $response->results == "fail") {
+        $error = $response->error;
+      }
+    }
+    else if (isset($data->error)) {
+      $error = $data->error;
+    }
 
-    if (!isset($data->error) && ($response = json_decode($data->data)) && $response->results == "success") {
+    if ($success) {
       $this->headers = array("Cookie" => $data->headers['set-cookie']);
       $this->logged_in = TRUE;
+      $this->last_login_msg = '';
     }
     else {
       $this->logged_in = FALSE;
+      $this->last_login_msg = $error;
       LingotekLog::error(
           "Unable to log in", array(
         'params' => $params,
-        'error' => (isset($data->error) && $data->error) ? $data->error : "unknown error",
-        'response' => isset($response) ? $response : "",
+        'error' => $error,
+        'response' => json_encode($response),
           ), 'session'
       );
     }
