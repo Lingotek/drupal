@@ -311,7 +311,7 @@ function lingotek_get_guid() {
 function lingotek_get_target_status($lingotek_locale = NULL) {
 
   $response = array();
-  $target_languages = Lingotek::availableLanguageTargets();
+  $target_languages = Lingotek::availableLanguageTargets(NULL, TRUE);
 
   // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
   if (!is_null($lingotek_locale)) {
@@ -350,7 +350,7 @@ function lingotek_get_target_status($lingotek_locale = NULL) {
       $response[] = array(
         'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
         'dcode' => $drupal_language_code,
-        'active' => $target->lingotek_enabled,
+        'active' => $target->enabled, //lingotek_enabled,
         'docs' => $total,
         'pending' => $pending,
         'ready' => $ready,

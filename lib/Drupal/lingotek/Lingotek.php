@@ -370,10 +370,10 @@ class Lingotek {
       if ($target_language->lingotek_locale == $lingotek_locale_to_exclude)
         continue;
       $language = (is_string($pluck_field) && isset($target_language->$pluck_field)) ? $target_language->$pluck_field : $target_language;
-      if ($include_all && $target_language->enabled) { // include all languages enabled (not necessarily lingotek_enabled)
+      if (!$include_all && $target_language->enabled) { // include all languages enabled
         $languages[] = $language;
       }
-      else if ($target_language->lingotek_enabled) { // include default language for free
+      else if ($include_all) { // include all languages (including disabled)
         $languages[] = $language;
       }
     }
