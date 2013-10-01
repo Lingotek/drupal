@@ -721,11 +721,7 @@ function lingotek_delete_target_language($lingotek_locale) {
   if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
 
     if (Lingotek::convertDrupal2Lingotek(language_default()->language, FALSE) <> $lingotek_locale) {
-      db_update('languages')
-          ->fields(array(
-            'enabled' => 0,
-            //'lingotek_enabled' => 0,
-          ))
+      db_delete('languages')
           ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
           ->execute();
       LingotekLog::info("Target language removed: @lingotek_locale"
