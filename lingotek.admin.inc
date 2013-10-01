@@ -107,6 +107,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
 
   $types = array();
   $translate = variable_get('lingotek_translate_fields', array());
+  $translate = isset($translate[$entity_type]) ? $translate[$entity_type] : array();
   $profiles = lingotek_get_profiles();
 
   $profile_options = array();
@@ -128,7 +129,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
 
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Translate Content') : t('Which content types do you want translated?')),
+    '#title' => ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?')),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -253,7 +254,8 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     variable_set('lingotek_nodes_translation_method', $form_state['values']['lingotek_nodes_translation_method']);
   }
 
-  $translate = array();
+  $translate = variable_get('lingotek_translate_fields', array());
+  unset($translate[$entity_type]);
   $operations = array();
 
   $entity_profiles = variable_get('lingotek_entity_profiles', array());
@@ -270,7 +272,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 
         //check to make sure that the content type is enabled
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
-          $translate[$content_type][] = $content_field;
+          $translate[$entity_type][$content_type][] = $content_field;
 
           // Set this content type to be Lingotek translated.
           variable_set('language_content_type_' . $content_type, '1');
@@ -298,7 +300,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
           if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
             //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
             $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
-            $translate[$content_type][] = $legacy_field . '_field';
+            $translate[$entity_type][$content_type][] = $legacy_field . '_field';
             $field = field_info_field($legacy_field . '_field');
             $field['translatable'] = 1;
             $operations[] = array('field_update_field', array($field)); //field_update_field($field);

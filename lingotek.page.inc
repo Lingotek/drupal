@@ -166,20 +166,7 @@ function lingotek_push_form_submit($form, $form_state) {
     cache_clear_all($node->nid, 'cache_entity_node');
   }
 
-  $api = LingotekApi::instance();
-  if ($node->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
-    lingotek_lingonode($node->nid, 'workbench_moderate', '0');
-  }
-  if ($existing_document = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : '') {
-    // Update an existing Lingotek Document.
-    $api->updateContentDocument($node);
-  }
-  else {
-    // Create a new Lingotek Document.
-    lingotek_node_save_readonly($node);
-    $ln = LingotekNode::load($node);
-    $api->addContentDocument($ln, TRUE);
-  }
+  lingotek_upload_document($node, 'node');
 
   drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));
 }
@@ -233,6 +220,7 @@ function lingotek_node_disassociate_form_submit($form, $form_state) {
 
   $api = LingotekApi::instance();
   $api->removeDocument($doc_ids);
+  lingotek_keystore_delete_all_multiple('node', $drupal_node_ids);
 
   if (count($drupal_node_ids) <= 1) {
     $node = lingotek_node_load_default($drupal_node_ids[0]);
@@ -389,7 +377,7 @@ function lingotek_pm($node) {
   }
 
   // node disabled support
-  if ($sync_status == LingotekSync::STATUS_DISABLED) {
+  if ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
     $output[] = array(
       '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").'
     );
@@ -530,7 +518,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
     lingotek_lingonode($form_state['values']['node_id'], 'use_advanced_parsing', 1);
     $target_node = lingotek_node_load_default($form_state['values']['node_id']);
     if ($target_node->nid) {
-      if (LingotekApi::instance()->updateContentDocument(LingotekNode::load($target_node))) {
+      if (LingotekApi::instance()->updateContentDocument(LingotekEntity::load($target_node))) {
         drupal_set_message(t('This node has been upgraded to use advanced content parsing.'));
       }
       else {

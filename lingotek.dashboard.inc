@@ -41,11 +41,6 @@ function lingotek_dashboard() {
     return $output;
   }
 
-  // As a backup fail safe, the dashboard loading should clear the sync flag if its still set.
-  if (isset($_SESSION['lingotek_sync_in_progress'])) {
-    unset($_SESSION['lingotek_sync_in_progress']);
-  }
-
   return array(
     'dashboard' => array(
       '#type' => 'markup',

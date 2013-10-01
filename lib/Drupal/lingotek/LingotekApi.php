@@ -138,16 +138,9 @@ class LingotekApi {
     return $success;
   }
 
-  public function removeDocument($document_id, $reset_node = TRUE) {
+  public function removeDocument($document_id) {
     $success = FALSE;
-    if ($document_id && (is_numeric($document_id) || is_array($document_id))) {
-      // Remove node info from lingotek table (and reset for upload when reset_node is TRUE)
-      if ($reset_node) {
-        LingotekSync::resetNodeInfoByDocId($document_id);
-      }
-      else {
-        LingotekSync::removeNodeInfoByDocId($document_id);
-      }
+    if ($document_id) {
       $result = $this->request('removeDocument', array('documentId' => $document_id));
       if ($result) {
         $success = TRUE;
@@ -197,13 +190,12 @@ class LingotekApi {
     $parameters = array();
 
     switch (get_class($entity)) {
-      case 'LingotekComment':
+      case 'LingotekEntity':
         $parameters = $this->getCommentCreateWithTargetsParams($entity);
         break;
       case 'LingotekConfigChunk':
         $parameters = $this->getConfigChunkCreateWithTargetsParams($entity);
         break;
-      case 'LingotekNode':
       default:
         throw new Exception("createContentDocumentWithTargets not implemented for type '" . get_class($entity) . "'.");
         break;

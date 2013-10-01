@@ -24,6 +24,10 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
   }
 }
 
+function lingotek_lingonode($nid, $key = "", $value = "") {
+  return lingotek_keystore('node', $nid, $key, $value);
+}
+
 /*
  * Helper function, for storing additional information with a Node.
  * Example usage (GET):
@@ -44,7 +48,7 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
  *  in the database.  Returns FALSE if no value is found.
  */
 
-function lingotek_lingonode($entity_type, $nid, $key = "", $value = "") {
+function lingotek_keystore($entity_type, $nid, $key = "", $value = "") {
   if ($nid == 'all') {
     $lingo_node = array();
     $result = db_select('lingotek_entity_metadata', 'n')
@@ -102,7 +106,7 @@ function lingotek_lingonode($entity_type, $nid, $key = "", $value = "") {
         db_escape_field('value') => $value,
       );
 
-      if (lingotek_lingonode($entity_type, $nid, $key) === FALSE) { //Insert
+      if (lingotek_keystore($entity_type, $nid, $key) === FALSE) { //Insert
         drupal_write_record('lingotek_entity_metadata', $row);
         return "$nid : $key => $value INSERTED";
       }
@@ -118,6 +122,10 @@ function lingotek_lingonode($entity_type, $nid, $key = "", $value = "") {
   }
 }
 
+function lingotek_lingonode_variable_delete($nid, $lingokey) {
+  lingotek_keystore_delete('node', $nid, $lingokey);
+}
+
 /*
  * Helper function to delete a specified variable from the Lingotek table
  *
@@ -129,12 +137,16 @@ function lingotek_lingonode($entity_type, $nid, $key = "", $value = "") {
  *
  */
 
-function lingotek_lingonode_variable_delete($entity_type, $nid, $lingokey) {
+function lingotek_keystore_delete($entity_type, $id, $key) {
   $query = db_delete('lingotek_entity_metadata');
   $query->condition('entity_type', $entity_type);
-  $query->condition('entity_id', $nid);
-  $query->condition('entity_key', $lingokey);
+  $query->condition('entity_id', $id);
+  $query->condition('entity_key', $key);
   $query->execute();
+}
+
+function lingotek_lingonode_variable_delete_multiple( $nids = array(), $lingokey, $condition = '=') {
+  lingotek_keystore_delete_multiple('node', $nids, $lingokey, $condition);
 }
 
 /**
@@ -151,7 +163,7 @@ function lingotek_lingonode_variable_delete($entity_type, $nid, $lingokey) {
  *    additional condition checking (i.e. 'LIKE', '<' '=' '>', etc...)
  *    defaults to '='
  */
-function lingotek_lingonode_variable_delete_multiple($entity_type, $nids = array(), $lingokey, $condition = '=') {
+function lingotek_keystore_delete_multiple($entity_type, $nids = array(), $lingokey, $condition = '=') {
   if (!is_array($nids)) {
     $nids = array($nids);
   }
@@ -178,11 +190,20 @@ function lingotek_lingonode_variable_delete_multiple($entity_type, $nids = array
  * @param $nid
  *  NodeId.
  */
+function lingotek_lingonode_delete($nid) {
+  lingotek_lingonode_delete('node', $nid);
+}
 
-function lingotek_lingonode_delete($entity_id, $nid) {
+function lingotek_keystore_delete_all($entity_type, $id) {
   db_delete('lingotek_entity_metadata')
     ->condition('entity_type', $entity_type)
-    ->condition('entity_id', $nid)->execute();
+    ->condition('entity_id', $id)->execute();
+}
+
+function lingotek_keystore_delete_all_multiple($entity_type, $ids) {
+  db_delete('lingotek_entity_metadata')
+    ->condition('entity_type', $entity_type)
+    ->condition('entity_id', $ids, 'IN')->execute();
 }
 
 /*
@@ -191,17 +212,6 @@ function lingotek_lingonode_delete($entity_id, $nid) {
 
 function lingotek_unselected($var) {
   return ($var != "0");
-}
-
-/*
- * Create and return an empty default node
- */
-
-function lingotek_empty_node() {
-  $node = new stdClass();
-  $node->nid = -2;
-  $node->language = LANGUAGE_NONE;
-  return $node;
 }
 
 /*
@@ -482,6 +492,11 @@ function lingotek_access_dev_tools($node, $permission) {
   return $user_access;
 }
 
+function lingotek_enabled_bundle($entity_type, $bundle) {
+  $setting = variable_get('lingotek_entity_profiles');
+  return isset($setting[$entity_type][$bundle]) && $setting[$entity_type][$bundle] != LingotekSync::PROFILE_DISABLED;
+}
+
 /**
  * Returns whether the given node type has support for translations.
  *
@@ -490,9 +505,7 @@ function lingotek_access_dev_tools($node, $permission) {
  */
 function lingotek_supported_type($type) {
   $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) != '0';
-  $setting = variable_get('lingotek_entity_profiles');
-  $lingotek_supported_setting = isset($setting['node'][$type]) && $setting['node'][$type] != LingotekSync::PROFILE_DISABLED;
-  return ($lingotek_supported_explicitly && $lingotek_supported_setting);
+  return ($lingotek_supported_explicitly && lingotek_enabled_bundle('node', $type));
 }
 
 function lingotek_supported_node($node) {
@@ -1235,16 +1248,13 @@ function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
   return $aReturn;
 } 
 
-function lingotek_node_compare($node1, $node2) {
-  if ($node1->type != $node2->type)
-    return array('different_types');
-  
+function lingotek_entity_compare($entity1, $entity2, $entity_type, $bundle) {
   $fields = variable_get('lingotek_translate_fields');
-  $fields = $fields[$node1->type];
+  $fields = $fields[$bundle];
   
   foreach ($fields as $field) {
-    $diff1 = lingotekArrayRecursiveDiff($node1->{$field}, $node2->{$field});
-    $diff2 = lingotekArrayRecursiveDiff($node2->{$field}, $node1->{$field});
+    $diff1 = lingotekArrayRecursiveDiff($entity1->{$field}, $entity2->{$field});
+    $diff2 = lingotekArrayRecursiveDiff($entity2->{$field}, $entity1->{$field});
     if(!empty($diff1))
       return $diff1;
     if(!empty($diff2))
@@ -1259,4 +1269,42 @@ function lingotek_managed_entity_types() {
   $exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
   $exclude = array_flip($exclude);
   return array_diff_key($types, $exclude);
+}
+
+/**
+ * Update Lingotek table settings for a node.
+ * 
+ * @param array $settings
+ *    Associative array of lingokey => lingovalue
+ *
+ * @param array $node
+ *    Array of node objects like what is returned by node_load_multiple()
+ *
+ */
+function lingotek_update_node_settings($settings, $nids) {
+  foreach ($nids as $nid) {
+    foreach ($settings as $setting => $value) {
+      lingotek_lingonode($nid, $setting, $value);
+    }
+  }
+}
+
+/**
+ * Gets a list of fields with translation enabled.
+ *
+ * @return array
+ *   An array of the machine names for translatable fields in the system.
+ */
+function lingotek_translatable_node_fields() {
+  $fields = field_info_fields();
+  $translatable_fields = array();
+  foreach ($fields as $field_id => $field) {
+    foreach ($field['bundles'] as $type => $instance) {
+      if (field_is_translatable($type, $field)) {
+        $translatable_fields[] = $field['field_name'];
+      }
+    }
+  }
+
+  return $translatable_fields;
 }

@@ -370,9 +370,9 @@ class LingotekComment implements LingotekTranslatableEntity {
     }
     
     // This avoids an infitinite loop when hooks resulting from comment_save() are invoked.
-    self::$content_update_in_progress = TRUE;
+    $this->comment->lingotek['skipsave'] = TRUE;
     comment_save($this->comment);
-    self::$content_update_in_progress = FALSE;
+    unset($this->comment->lingotek['skipsave']);
     $this->comment = comment_load($this->comment->cid);
     
     return TRUE;

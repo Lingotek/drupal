@@ -84,37 +84,6 @@ function lingotek_disable() {
  */
 
 function lingotek_schema() {
-  $schema['lingotek'] = array(
-    'description' => 'Table for storing node related data.',
-    'fields' => array(
-      'nid' => array(
-        'description' => 'The primary identifier for a node',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'lingokey' => array(
-        'description' => 'Key in key/value pairs',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'lingovalue' => array(
-        'description' => 'Value of the specified key',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-    ),
-    'primary key' => array(
-      'nid',
-      'lingokey',
-    ),
-  );
-
   $schema['lingotek_entity_metadata'] = array(
     'description' => 'Stores Lingotek-related metadata about Drupal entities.',
     'fields' => array(
@@ -591,11 +560,11 @@ function lingotek_update_7404(&$sandbox) {
 }
 
 /**
- * Merges lingotek table into lingotek_entity_metadata table
+ * Makes lingotek handle entities better.
  */
 function lingotek_update_7405(&$sandbox) {
   db_query("INSERT INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
 FROM lingotek");
-  db_query("DROP TABLE lingotek");
+  //db_query("DROP TABLE lingotek");
 }

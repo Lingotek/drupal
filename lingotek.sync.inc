@@ -114,13 +114,14 @@ function lingotek_notifications() {
         '@project_id' => $project_id,
       );
 
+      LingotekLog::error('Test', LingotekEntity::loadByLingotekDocumentId($document_id, $source_language, $project_id));
       // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
       if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements['@id'] = $trans_obj->cid;
         $replacements['@trans_type'] = "ConfigChunk";
       }
       // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
-      elseif ($trans_obj = LingotekComment::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+      elseif ($trans_obj = LingotekEntity::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements['@id'] = $trans_obj->id;
         $replacements['@trans_type'] = "Comment";
       }
@@ -184,11 +185,12 @@ function lingotek_notifications() {
       else {
         lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
         
-        $query = db_select('lingotek');
-        $query->addExpression('AVG(lingovalue)');
+        $query = db_select('lingotek_entity_metadata');
+        $query->condition('entity_type', 'node');
+        $query->addExpression('AVG(value)');
         
-        $total = $query->condition('lingokey', 'target_sync_progress_%', 'LIKE')
-          ->condition('nid', $nid)
+        $total = $query->condition('entity_key', 'target_sync_progress_%', 'LIKE')
+          ->condition('entity_id', $nid)
           ->execute()->fetchField();
         lingotek_lingonode($nid, 'translation_progress', $total);
           
@@ -884,9 +886,9 @@ function lingotek_get_and_update_target_progress($document_ids) {
       // for now just report on node translation progress...
       if (!$trans_obj) {
         $node_values[] = array(
-          'nid' => $nid,
-          'lingokey' => 'translation_progress',
-          'lingovalue' => $total_percentage / $target_number,
+          'entity_id' => $nid,
+          'entity_key' => 'translation_progress',
+          'value' => $total_percentage / $target_number,
         );
       }
     }
@@ -905,8 +907,8 @@ function lingotek_get_and_update_target_progress($document_ids) {
     }
     
     // insert status info for nodes
-    $query = db_insert('lingotek')
-      ->fields(array('nid', 'lingokey', 'lingovalue'));
+    $query = db_insert('lingotek_entity_metadata')
+      ->fields(array('entity_id', 'entity_key', 'value'));
     foreach ($node_values as $record) {
       $query->values($record);
     }
