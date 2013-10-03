@@ -1110,7 +1110,6 @@ function lingotek_node_insert($node) {
 function lingotek_node_delete($node) {
   $doc_id = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL;
   $api = LingotekApi::instance();
-  dpm($doc_id);
   $api->removeDocument($doc_id, FALSE);
   LingotekSync::removeNodeInfoByNodeId($node->nid);
 }
