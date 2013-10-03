@@ -352,7 +352,7 @@ function lingotek_admin_profile_usage_by_types($id) {
     $profile_usage['DISABLED'] = 0;
   }
   foreach ($node_bundles as $bundle) {
-    if (!array_key_exists($bundle, $profile_mapping['node'])) {
+    if (isset($profile_mapping['node']) && !array_key_exists($bundle, $profile_mapping['node'])) {
       $profile_usage['DISABLED']++;
     }
   }
