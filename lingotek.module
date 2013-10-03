@@ -1120,6 +1120,10 @@ function lingotek_node_delete($node) {
  * Implements hook_node_load().
  */
 function lingotek_node_load($nodes, $types) {
+  if (empty($nodes)) {
+    return;
+  }
+
   $global_profile = lingotek_get_global_profile();
   $node_profile_defaults = lingotek_load_profile_defaults('node'); // return assoc array by node type
   $profiles_list = lingotek_get_profiles();
