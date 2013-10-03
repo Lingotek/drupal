@@ -140,7 +140,7 @@ class LingotekApi {
 
   public function removeDocument($document_id, $reset_node = TRUE) {
     $success = FALSE;
-    if ($document_id && (is_numeric($document_id) || is_array($document_id))) {
+    if ($document_id) {
       // Remove node info from lingotek table (and reset for upload when reset_node is TRUE)
       if ($reset_node) {
         LingotekSync::resetNodeInfoByDocId($document_id);
