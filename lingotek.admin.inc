@@ -346,6 +346,16 @@ function lingotek_admin_profile_usage_by_types($id) {
   $profile_mapping = variable_get('lingotek_entity_profiles');
   $profile_mapping_associations = isset($profile_mapping['node']) ? $profile_mapping['node'] : array();
   $profile_usage = array_count_values($profile_mapping_associations);
+  $node_info = entity_get_info('node');
+  $node_bundles = array_keys($node_info['bundles']);
+  if(!isset($profile_usage['DISABLED'])) {
+    $profile_usage['DISABLED'] = 0;
+  }
+  foreach ($node_bundles as $bundle) {
+    if (!array_key_exists($bundle, $profile_mapping['node'])) {
+      $profile_usage['DISABLED']++;
+    }
+  }
 
   return isset($profile_usage[$id]) ? $profile_usage[$id] : 0;
 }
