@@ -209,11 +209,11 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
     $doc_ids = array();
     $updates = array();
     foreach ($download_targets as $download_target) {
-      $nid = LingotekSync::getNodeIdFromDocId($download_target->document_id);
+      list($nid, $entity_type) = LingotekSync::getEntityIdFromDocId($download_target->document_id);
       if ($nid != NULL) {
         $lingotek_locale = $download_target->locale;
         $doc_ids[] = $download_target->document_id;
-        $operations[] = array('lingotek_sync_download_node_target', array($nid, $lingotek_locale, $sync_success_target, FALSE));
+        $operations[] = array('lingotek_sync_download_entity_target', array($entity_type, $nid, $lingotek_locale, $sync_success_target, FALSE));
       }
       else { // since no node was found associated with the document ID, check config chunks
         $cid = LingotekConfigChunk::getIdByDocId($download_target->document_id);
@@ -443,12 +443,12 @@ function lingotek_sync_download_entity_target($entity_type, $id, $lingotek_local
     //lingotek_get_and_update_target_progress(LingotekSync::getDocIdFromNodeId($nid));
   }
   elseif ($sync_success_status == LingotekSync::STATUS_CURRENT && $update_progress) {
-    lingotek_lingonode($id, 'target_sync_progress_' . $lingotek_locale, 100);
-    lingotek_lingonode($id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+    lingotek_keystore($entity_type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
+    lingotek_keystore($entity_type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
   }
 
-  $result = lingotek_entity_download($node, 'node', $lingotek_locale, $sync_success_status);
-  cache_clear_all('field:node:' . $id, 'cache_field');
+  $result = lingotek_entity_download($entity, $entity_type, $lingotek_locale, $sync_success_status);
+  cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
 
   if ($result) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;

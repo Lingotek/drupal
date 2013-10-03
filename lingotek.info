@@ -30,7 +30,6 @@ dependencies[] = potx
 files[] = lib/Drupal/lingotek/Lingotek.php
 files[] = lib/Drupal/lingotek/LingotekApi.php
 files[] = lib/Drupal/lingotek/LingotekAccount.php
-files[] = lib/Drupal/lingotek/LingotekComment.php
 files[] = lib/Drupal/lingotek/LingotekConfigChunk.php
 files[] = lib/Drupal/lingotek/LingotekDocument.php
 files[] = lib/Drupal/lingotek/LingotekLog.php

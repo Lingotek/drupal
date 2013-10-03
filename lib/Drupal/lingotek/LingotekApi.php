@@ -69,8 +69,6 @@ class LingotekApi {
     $success = FALSE;
 
     $project_id = $translatable_object->getProjectId();
-    $vault_id = $translatable_object->getVaultId();
-    $workflow_id = $translatable_object->getWorkflowId();
 
     $source_lingotek_locale = $translatable_object->getSourceLocale();
     $source_language = isset($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
@@ -80,25 +78,13 @@ class LingotekApi {
         'projectId' => $project_id,
         'format' => $this->xmlFormat(),
         'sourceLanguage' => $source_language,
-        'tmVaultId' => $vault_id,
+        'tmVaultId' => $translatable_object->getVaultId(),
       );
-      $parameters['documentName'] = $translatable_object->getTitle();
+      $parameters['documentName'] = $translatable_object->getDocumentName();
       $parameters['documentDesc'] = $translatable_object->getDescription();
       $parameters['content'] = $translatable_object->documentLingotekXML();
-      if (get_class($translatable_object) == 'LingotekConfigChunk') {
-        $cid = $translatable_object->getId();
-        if (!$cid) {
-          $cid = '(new/unassigned)';
-        }
-        $parameters['note'] = 'config chunk #' . $cid;
-      }
-      else {
-        $parameters['note'] = url($translatable_object->getEntityType() . '/' . $translatable_object->getId(), array('absolute' => TRUE, 'alias' => TRUE));
-      }
-
-      if (!empty($workflow_id)) {
-        $parameters['workflowId'] = $workflow_id;
-      }
+      $parameters['note'] = $translatable_object->getNote();
+      $parameters['workflowId'] = $translatable_object->getWorkflowId();
 
       $this->addAdvancedParameters($parameters, $translatable_object);
 
@@ -126,10 +112,12 @@ class LingotekApi {
           LingotekConfigChunk::setSegmentStatusToCurrentById($translatable_object->getId());
         }
         else {
+          
           // node assumed (based on two functions below...
-          lingotek_lingonode($translatable_object->getId(), 'document_id', $result->id);
+          $entity_type = $translatable_object->getEntityType();
+          lingotek_keystore($entity_type, $translatable_object->getId(), 'document_id', $result->id);
           LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
-          lingotek_lingonode($translatable_object->getId(), 'last_uploaded', time());
+          lingotek_keystore($entity_type, $translatable_object->getId(), 'last_uploaded', time());
         }
           
         $success = TRUE;
@@ -168,7 +156,7 @@ class LingotekApi {
       // Nodes can have their projects selected on a per-node basis, and will need
       // separate consideration if addContentDocumentWithTargets is used for them
       // in the future.
-      if (in_array(get_class($entity), array('LingotekComment', 'LingotekConfigChunk'))) {
+      if (in_array(get_class($entity), array('LingotekConfigChunk'))) {
         $entity->setMetadataValue('project_id', variable_get('lingotek_project'));
       }
       $success = TRUE;
@@ -200,38 +188,6 @@ class LingotekApi {
         throw new Exception("createContentDocumentWithTargets not implemented for type '" . get_class($entity) . "'.");
         break;
     };
-
-    return $parameters;
-  }
-
-  /**
-   * Gets the comment-specific parameters for use in a createContentDocumentWithTargets API call.
-   *
-   * @param LingotekComment
-   *   The comment entity to be translated.
-   *
-   * @return array
-   *   An array of API parameter values.
-   */
-  protected function getCommentCreateWithTargetsParams(LingotekComment $comment) {
-    global $language;
-    
-    $source_language = Lingotek::convertDrupal2Lingotek($comment->language != 'und' ? $comment->language : $language->language);
-    $parameters = array(
-      'projectId' => variable_get('lingotek_project', NULL),
-      'documentName' => 'comment - ' . $comment->cid,
-      'documentDesc' => 'comment ' . $comment->cid . ' on node ' . $comment->nid,
-      'format' => $this->xmlFormat(),
-      'applyWorkflow' => 'true',
-      'workflowId' => variable_get('lingotek_translate_comments_workflow_id', NULL),
-      'sourceLanguage' => $source_language,
-      'tmVaultId' => variable_get('lingotek_vault', 1),
-      'content' => $comment->documentLingotekXML(),
-      'targetAsJSON' => Lingotek::availableLanguageTargetsWithoutSourceAsJSON($source_language),
-      'note' => url('node/' . $comment->nid, array('absolute' => TRUE, 'alias' => TRUE))
-    );
-
-    $this->addAdvancedParameters($parameters, $comment);
 
     return $parameters;
   }
@@ -869,7 +825,6 @@ class LingotekApi {
    */
   public function updateContentDocument($translatable_object) {
 
-    $isContentNode = FALSE;
     switch (get_class($translatable_object)) {
       case 'LingotekConfigChunk':
       case 'LingotekComment':
@@ -879,9 +834,9 @@ class LingotekApi {
         break;
       default:
         // Normal content do the regular formating.
-        $isContentNode = TRUE;
-        $document_id = $translatable_object->lingotek['document_id'];
-        $content = lingotek_xml_node_body($translatable_object);
+        $entity = $translatable_object->getEntity();
+        $document_id = $entity->lingotek['document_id'];
+        $content = lingotek_xml_node_body($translatable_object->getEntityType(), $entity);
         break;
     };
 
@@ -916,8 +871,6 @@ class LingotekApi {
       }
       else {
         LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
-      }
-      if ($isContentNode) {
         lingotek_lingonode($translatable_object->nid, 'last_uploaded', time());
       }
     }

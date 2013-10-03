@@ -288,6 +288,10 @@ class LingotekEntity implements LingotekTranslatableEntity {
     return $this->getTitle();
   }
   
+  public function getEntity() {
+    return $this->entity;
+  }
+  
     /**
    * Return the Drupal Entity type
    *
@@ -305,10 +309,27 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   The ID associated with this object
    */
   public function getId() {
-    return $this->entity->nid;
+    list($id, $vid, $bundle) = entity_extract_ids($this->entity_type, $this->entity);
+    return $id;
   }
   
   public function getSourceLocale() {
     return Lingotek::convertDrupal2Lingotek($this->entity->language);
+  }
+  
+  public function getDocumentName() {
+    if ($this->entity_type == 'node') {
+      return $this->getTitle();
+    } else {
+      return $this->getEntityType() . ' - ' . $this->getId();
+    }
+  }
+  
+  public function getNote() {
+    if ($this->entity_type == 'node' || $this->entity_type == 'comment') {
+      url('node/' . $entity->nid, array('absolute' => TRUE, 'alias' => TRUE));
+    }
+    
+    return '';
   }
 }

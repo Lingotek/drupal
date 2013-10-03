@@ -268,8 +268,8 @@ function lingotek_get_translatable_field_types() {
   return $included_fields;
 }
 
-function lingotek_get_translatable_fields_by_content_type($type) {
-  $all_fields = field_info_instances('node', $type);
+function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
+  $all_fields = field_info_instances($entity_type, $type);
   $translatable_field_types = lingotek_get_translatable_field_types();
   $desired_fields = array();
   foreach ($all_fields as $field_name => $field_info) {
@@ -294,9 +294,9 @@ function lingotek_xml_node_body($entity_type, $entity) {
 
   $translate = variable_get('lingotek_translate_fields', array());
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-  $fields_desired = isset($translate[$bundle]) ? $translate[$bundle] : array();
+  $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
   if (empty($fields_desired) && lingotek_oneoff_translate($entity)) {
-    $fields_desired = lingotek_get_translatable_fields_by_content_type($bundle);
+    $fields_desired = lingotek_get_translatable_fields_by_content_type($entity_type, $bundle);
   }
 
   foreach ($fields_desired as $value) {
@@ -392,7 +392,6 @@ function lingotek_xml_fields($node, $translatable, $language) {
           }
           $current_field = '<' . $element_name . '>';
           /* if (!array_key_exists('value', $value)) {
-            dpm($value);
             //TODO add TAGs to be translatable
             $terms = $node->$field;
             foreach ($terms[$language] as $term) {

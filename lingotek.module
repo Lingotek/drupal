@@ -890,7 +890,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  */
 
 function lingotek_entity_save($entity, $entity_type) {
-  if (isset($entity->lingotek['skipsave']) || isset($entity->lingotek_upload_override)) {
+  if (isset($entity->lingotek_upload_override)) {
     return $entity;
   }
 
@@ -912,7 +912,7 @@ function lingotek_entity_save($entity, $entity_type) {
       ->execute();
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
-    $ignore = array('et_content', 'lingotek_push_once', 'lingotek_disabled', 'advanced', 'node_sync_status', 'document_id', 'skipsave');
+    $ignore = array('et_content', 'lingotek_push_once', 'lingotek_disabled', 'advanced', 'node_sync_status', 'document_id');
     $query = db_insert('lingotek_entity_metadata')->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
 
     foreach ($entity->lingotek as $key => $value) {
@@ -1111,10 +1111,10 @@ function lingotek_entity_prepare($entity, $entity_type, $bundle) {
  */
 function lingotek_entity_load_single($entity_type, $entity_id) {
   if ($entity_type == 'node') {
-    $entity = lingotek_node_load_default($id);
+    $entity = lingotek_node_load_default($entity_id);
   } else {
-    $entities = entity_load($type, array($id));
-    $entity = $entities[$id];
+    $entities = entity_load($entity_type, array($entity_id));
+    $entity = $entities[$entity_id];
   }
   
   return $entity;
@@ -1252,22 +1252,24 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $message = TRUE
 }
 
 function lingotek_entity_upload($entity, $entity_type, $message = TRUE) {
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  LingotekSync::resetTargetProgress($entity_type, $id);
+  
   //this condition is here temporarily until we have better entity support
   if ($entity_type == 'node') {
-    LingotekSync::resetTargetProgress($entity->nid);
-  }
+    
 
-  // if workbench moderation is enabled for this node and it is being sent, set flag to be moderated
-  // prevents moderation from happening for every downloaded language
-  if ($entity->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($entity->workbench_moderation)) {
-    if ($send_lingotek_document == 1) {
-      lingotek_lingonode($entity->nid, 'workbench_moderate', 0);
+    // if workbench moderation is enabled for this node and it is being sent, set flag to be moderated
+    // prevents moderation from happening for every downloaded language
+    if ($entity->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($entity->workbench_moderation)) {
+      lingotek_lingonode($id, 'workbench_moderate', 0);
     }
   }
 
-  if (!(isset($entity->skip_status_updates) && $entity->skip_status_updates)) {
-    LingotekSync::setNodeAndTargetsStatus($entity, LingotekSync::STATUS_EDITED, LingotekSync::STATUS_EDITED);
-  }
+//  if (!(isset($entity->skip_status_updates) && $entity->skip_status_updates)) {
+//    LingotekSync::setNodeAndTargetsStatus($entity, LingotekSync::STATUS_EDITED, LingotekSync::STATUS_EDITED);
+//  }
 
   // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
   if (!isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id'])) {
@@ -1285,7 +1287,8 @@ function lingotek_entity_upload($entity, $entity_type, $message = TRUE) {
     }
   }
   else {
-    LingotekApi::instance()->updateContentDocument($entity);
+    $ln = LingotekEntity::load($entity, $entity_type);
+    LingotekApi::instance()->updateContentDocument($ln);
   }
 }
 
@@ -1322,7 +1325,7 @@ function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, $syn
   $params['useSource'] = ($use_source) ? 'TRUE' : 'FALSE'; // API expects a string, not boolean
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
-
+  
   try {
     $xml = new SimpleXMLElement($text);
   } catch (Exception $e) {
@@ -1340,24 +1343,27 @@ function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, $syn
     $storage_entity = $entity;
   }
 
-  lingotek_process_entity_xml($xml, $storage_entity, 'node', $drupal_language_code, $url_alias_translation);
-
-  //Fix for pathauto expecting the form:
-  $storage_entity->path = path_load(array('source' => 'node/' . $storage_entity->nid, 'language' => $storage_entity->language));
-  $storage_entity->path['alias'] = isset($storage_entity->path['alias']) ? $storage_entity->path['alias'] : '';
-  $storage_entity->path['pathauto'] = 0;
+  lingotek_process_entity_xml($xml, $storage_entity, $entity_type, $drupal_language_code, $url_alias_translation);
 
   LingotekSync::setTargetStatus($entity->nid, $lingotek_locale, $sync_success_status); //slightly pre-emptive, but certainly more cohesive
-  //Fix for workbench_moderation changing node state after translation download
-  if (module_exists('workbench_moderation')) {
-    if (isset($storage_entity->workbench_moderation)) {
-      $storage_entity->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
+  
+  if ($entity_type == 'node') {
+    //Fix for pathauto expecting the form:
+    $storage_entity->path = path_load(array('source' => 'node/' . $storage_entity->nid, 'language' => $storage_entity->language));
+    $storage_entity->path['alias'] = isset($storage_entity->path['alias']) ? $storage_entity->path['alias'] : '';
+    $storage_entity->path['pathauto'] = 0;
+
+    //Fix for workbench_moderation changing node state after translation download
+    if (module_exists('workbench_moderation')) {
+      if (isset($storage_entity->workbench_moderation)) {
+        $storage_entity->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
+      }
     }
+
+    lingotek_keystore_variable_delete($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale);
+    lingotek_keystore($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale, time());
   }
-
-  lingotek_lingonode_variable_delete($entity->nid, 'target_last_downloaded_' . $lingotek_locale);
-  lingotek_lingonode($entity->nid, 'target_last_downloaded_' . $lingotek_locale, time());
-
+    
   return TRUE;
   // node_save($node);
 }

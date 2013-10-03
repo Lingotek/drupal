@@ -92,6 +92,10 @@ interface LingotekTranslatableEntity {
 
   public function getDescription();
   
+  public function getDocumentName();
+  
+  public function getNote();
+  
   /*
    * Returns the source locale for the translatable entity
    */

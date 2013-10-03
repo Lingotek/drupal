@@ -130,35 +130,38 @@ class LingotekSync {
     }
   }
 
-  public static function resetTargetProgress($nid) {
+  public static function resetTargetProgress($entity_type, $id) {
     $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_key'))
-      ->condition('entity_type', 'node')
-      ->condition('entity_id', $nid)
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_id', $id)
       ->condition('entity_key', 'target_sync_status_%', 'LIKE');
     $targets_raw = $query->execute()->fetchCol();
     foreach ($targets_raw as $target_raw) {
       $target = str_replace('target_sync_status_', '', $target_raw);
       $fields[] = array(
-        'entity_id' => $nid,
+        'entity_type' => $entity_type,
+        'entity_id' => $id,
         'entity_key' => 'target_sync_progress_' . $target,
         'value' => 0,
       );
       $fields[] = array(
-        'entity_id' => $nid,
+        'entity_type' => $entity_type,
+        'entity_id' => $id,
         'entity_key' => 'target_sync_last_progress_updated_' . $target,
         'value' => time(),
       );
     }
     $fields[] = array(
-      'entity_id' => $nid,
+      'entity_type' => $entity_type,
+      'entity_id' => $id,
       'entity_key' => 'translation_progress',
       'value' => 0,
     );
 
     $delete = db_delete('lingotek_entity_metadata')
-      ->condition('entity_type', 'node')
-      ->condition('entity_id', $nid);
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_id', $id);
     $or = db_or();
       $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
       $or->condition('entity_key', 'target_sync_last_progress_updated_%', 'LIKE');
@@ -167,7 +170,7 @@ class LingotekSync {
       ->execute();
 
     $insert = db_insert('lingotek_entity_metadata')
-      ->fields(array('entity_id', 'entity_key', 'value'));
+      ->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
     foreach ($fields as $field) {
       $insert->values($field);
     }

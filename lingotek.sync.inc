@@ -141,7 +141,7 @@ function lingotek_notifications() {
       }
     }
     else {
-      $entity = lingotek_entity_load_single($type, $entity_id);
+      $entity = lingotek_entity_load_single($type, $id);
       $source_language = $entity->language;
       if ($completed) {
         LingotekSync::setTargetStatus($id, $lingotek_locale, LingotekSync::STATUS_READY);
@@ -149,25 +149,28 @@ function lingotek_notifications() {
 
       if ($entity->lingotek['sync_method']) { // download only when automatic download is enabled
         $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-        lingotek_sync_download_node_target($id, $lingotek_locale, $status, TRUE, $context);
+        lingotek_sync_download_entity_target($type, $id, $lingotek_locale, $status, TRUE, $context);
 
-        // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
-        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($id);
-        if (empty($target_statuses)) {
-          lingotek_lingonode($id, 'workbench_moderate', 1);
-        }
-        if (module_exists('workbench_moderation') && isset($entity->workbench_moderation) && lingotek_lingonode($id, 'workbench_moderate') == 1) {
-          $options_index = $entity->lingotek['sync_method_workbench_moderation'];
-          $trans_options = lingotek_get_workbench_moderation_transitions();
-          if ($options_index == 1) {
-            $from_state = $entity->workbench_moderation['current']->state;
-            $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
-            if ($mult_trans) {
-              $trans_options[$from_state] = $mult_trans;
-            }
+        if ($type == 'node' && module_exists('workbench_moderation')) {
+          // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
+          $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($id);
+          if (empty($target_statuses)) {
+            lingotek_keystore($type, $id, 'workbench_moderate', 1);
           }
-          lingotek_workbench_moderation_moderate($id, $options_index, $trans_options); // moderate if all languages have been downloaded
-          lingotek_lingonode_variable_delete($id, 'workbench_moderate');
+          
+          if (isset($entity->workbench_moderation) && lingotek_lingonode($id, 'workbench_moderate') == 1) {
+            $options_index = $entity->lingotek['sync_method_workbench_moderation'];
+            $trans_options = lingotek_get_workbench_moderation_transitions();
+            if ($options_index == 1) {
+              $from_state = $entity->workbench_moderation['current']->state;
+              $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
+              if ($mult_trans) {
+                $trans_options[$from_state] = $mult_trans;
+              }
+            }
+            lingotek_workbench_moderation_moderate($id, $options_index, $trans_options); // moderate if all languages have been downloaded
+            lingotek_lingonode_variable_delete($id, 'workbench_moderate');
+          }
         }
       }
       
@@ -175,7 +178,7 @@ function lingotek_notifications() {
         lingotek_get_and_update_target_progress($document_id);
       }
       else {
-        lingotek_lingonode($id, 'target_sync_progress_' . $lingotek_locale, 100);
+        lingotek_keystore($type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
         
         $query = db_select('lingotek_entity_metadata');
         $query->condition('entity_type', 'node');
@@ -184,9 +187,9 @@ function lingotek_notifications() {
         $total = $query->condition('entity_key', 'target_sync_progress_%', 'LIKE')
           ->condition('entity_id', $id)
           ->execute()->fetchField();
-        lingotek_lingonode($id, 'translation_progress', $total);
+        lingotek_keystore($type, $id, 'translation_progress', $total);
           
-        lingotek_lingonode($id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+        lingotek_keystore($type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
       // clear any caching from entitycache module to allow the new translation to show immediately
       if (module_exists('entitycache')) {

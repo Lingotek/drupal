@@ -67,7 +67,9 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
   return $localized_node;
 }
 
-function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
+function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  
   $delta = 0;
   $last_tag = NULL;
   foreach ($xml as $tag => $content) {
@@ -81,9 +83,9 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
       $target = check_plain($content);
 
       //URL Alias related to the page:
-      $conditions = array('source' => 'node/' . $node->nid);
-      if ($node->language != LANGUAGE_NONE) {
-        $conditions['language'] = $node->language;
+      $conditions = array('source' => 'node/' . $id);
+      if ($entity->language != LANGUAGE_NONE) {
+        $conditions['language'] = $entity->language;
       }
       $path = path_load($conditions);
       if ($path !== FALSE) {
@@ -111,7 +113,7 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
       }
       $field = field_info_field($drupal_field_name);
       if (isset($field)) {
-        $node_field = & $node->$drupal_field_name;
+        $node_field = & $entity->$drupal_field_name;
         $index = 0;
         if (module_exists('link') && $field['type'] == 'link_field') {
           $target_key = array(
@@ -124,9 +126,9 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         }
         $insert_array = array(
           'entity_type' => $entity_type,
-          'bundle' => $node->type,
-          'entity_id' => $node->nid,
-          'revision_id' => $node->vid,
+          'bundle' => $bundle,
+          'entity_id' => $id,
+          'revision_id' => $vid,
           'language' => $drupal_language_code,
           'delta' => $delta,
           'deleted' => '0',
@@ -134,23 +136,23 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
 
         if (module_exists('field_collection') && $field['type'] == 'field_collection') {
-          $entity = (object) array(
+          $sub_entity = (object) array(
             'type' => $drupal_field_name,
-            'nid' => $node_field[$node->language][$delta]['value'],
-            'vid' => $node_field[$node->language][$delta]['revision_id'],
+            'nid' => $node_field[$entity->language][$delta]['value'],
+            'vid' => $node_field[$entity->language][$delta]['revision_id'],
           );
-          lingotek_process_entity_xml($content, $entity, 'field_collection_item', $drupal_language_code);
+          lingotek_process_entity_xml($content, $sub_entity, 'field_collection_item', $drupal_language_code);
           $db_field_name = $field['field_name'] . '_value';
           $db_revision_field_name = $field['field_name'] . '_revision_id';
           $insert_array['language'] = $drupal_language_code;
-          $insert_array[$db_field_name] = $node_field[$node->language][$delta]['value'];
-          $insert_array[$db_revision_field_name] = $node_field[$node->language][$delta]['revision_id'];
+          $insert_array[$db_field_name] = $node_field[$entity->language][$delta]['value'];
+          $insert_array[$db_revision_field_name] = $node_field[$entity->language][$delta]['revision_id'];
           foreach ($field_names as $table) {
             db_update($table)
               ->fields(array(
-                'language' => $node->language,
+                'language' => $entity->language,
               ))
-              ->condition('entity_id', $node->nid)
+              ->condition('entity_id', $id)
               ->condition('language', 'und')
               ->execute();
           }
@@ -165,11 +167,11 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             $db_field_name = $field['field_name'] . '_' . $array_key;
             $insert_array[$db_field_name] = decode_entities($text);
             //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
-            if (array_key_exists($node->language, $node_field)) {
-              if (array_key_exists('format', $node_field[$node->language][0])) {
+            if (array_key_exists($entity->language, $node_field)) {
+              if (array_key_exists('format', $node_field[$entity->language][0])) {
                 //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
                 $format_db_field_name = $field['field_name'] . '_format';
-                $insert_array[$format_db_field_name] = $node_field[$node->language][0]['format'];
+                $insert_array[$format_db_field_name] = $node_field[$entity->language][0]['format'];
               }
             }
             $index++;
@@ -177,7 +179,7 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         }
         // put fields into both field_data_ and field_revision_ tables
         // if published version (in node table) is as current as most current revision (in node_revision table)
-        if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
+        if ($entity_type == 'node' && isset($entity->workbench_moderation) && isset($entity->workbench_moderation['published']) && $entity->workbench_moderation['published']->vid != $entity->workbench_moderation['current']->vid) {
           $only_write_revisions = 1;
           unset($field_names[$only_write_revisions]);
         }
@@ -199,13 +201,13 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         }
       }
 
-      cache_clear_all('field:' . $entity_type . ':' . $node->nid, 'cache_field');
+      cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
 
       //Set URL alias
-      if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $node->language != LANGUAGE_NONE) {
+      if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
         module_load_include('inc', 'pathauto');
-        $uri = entity_uri('node', $node);
-        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node), $node->type, $drupal_language_code);
+        $uri = entity_uri('node', $entity);
+        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $entity), $entity->type, $drupal_language_code);
       }
     }
     $last_tag = $tag;
