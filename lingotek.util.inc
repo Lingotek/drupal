@@ -1154,19 +1154,14 @@ function lingotek_migration_3() {
 function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
   $or = db_or();
   
-  if($profile_id == -1) {
-    $or->isNotNull($table_auto_upload . '.lingovalue');
-    return $or;
-  }
-  
   $fields = variable_get('lingotek_translate_fields');
   $types = array();
   foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
-    if($profile['profile'] == $profile_id && isset($fields[$content_type])) {
+    if($profile['profile'] == (string)$profile_id && isset($fields[$content_type])) {
       $types[] = $content_type;
     }
-  }  
-
+  }
+  
   if(!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
