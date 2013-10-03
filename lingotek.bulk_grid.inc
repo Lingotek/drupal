@@ -1374,7 +1374,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
 
     $configuration = '';
 
-    $disabled = $row->upload_status == LingotekSync::STATUS_DISABLED ? ' lingotek-disabled' : '';
+    $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED ? ' lingotek-disabled' : '';
 
     if ($row->lingotek['create_lingotek_document']) {
       $configuration .= '<i class="icon-arrow-up' . $disabled . '" title="Automatic Upload"></i> ';
@@ -1446,7 +1446,6 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
     LingotekSync::STATUS_READY => 'Ready to Download',
     LingotekSync::STATUS_CURRENT => 'Current',
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
-    LingotekSync::STATUS_DISABLED => 'Disabled',
   );
   $default_link = 'node/' . $nid . '/lingotekworkbench/';
   $manual_link = 'node/' . $nid . '/lingotek_pm/';
@@ -1455,7 +1454,6 @@ function lingotek_lang_icons($languages, $locales, $statuses, $nid = NULL, $conv
     LingotekSync::STATUS_READY => $default_link,
     LingotekSync::STATUS_CURRENT => $default_link,
     LingotekSync::STATUS_EDITED => $manual_link,
-    LingotekSync::STATUS_DISABLED => $manual_link,
   );
 
   foreach ($locales as $key => $original_locale) {

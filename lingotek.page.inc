@@ -166,7 +166,7 @@ function lingotek_push_form_submit($form, $form_state) {
     cache_clear_all($node->nid, 'cache_entity_node');
   }
 
-  lingotek_upload_document($node, 'node');
+  lingotek_entity_upload($node, 'node');
 
   drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));
 }

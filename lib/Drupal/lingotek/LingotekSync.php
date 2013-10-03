@@ -787,7 +787,7 @@ class LingotekSync {
   }
   
   public static function getNodeIdFromDocId($lingotek_document_id) {
-    list($id, $type) = getEntityIdFromDocId($lingotek_document_id);
+    list($id, $type) = LingotekSync::getEntityIdFromDocId($lingotek_document_id);
     return $id;
   }
 

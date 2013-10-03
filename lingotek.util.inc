@@ -1094,8 +1094,6 @@ function lingotek_load_profile_defaults($entity_type) {
 function lingotek_set_defaults() {
   LingotekLog::trace(__METHOD__);
   $defaults = array(
-    'lingotek_sync' => 1, // auto-download
-    'lingotek_create_documents_by_default' => 1, // auto-upload
     'lingotek_advanced_parsing' => TRUE
   );
 
@@ -1191,11 +1189,6 @@ function lingotek_migration_3() {
 function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
   $or = db_or();
   
-  if($profile_id == -1) {
-    $or->isNotNull($table_auto_upload . '.value');
-    return $or;
-  }
-  
   $fields = variable_get('lingotek_translate_fields');  
   $types = array();
   foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
@@ -1207,7 +1200,6 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   if(!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
-    $an->condition($table_auto_upload . '.value', NULL);
     $an->condition($table_profile . '.value', NULL);
     $or->condition($an);
   }

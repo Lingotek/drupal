@@ -184,7 +184,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       $query->condition($status_or);
       $result = $query->execute();
       while ($record = $result->fetchAssoc()) {
-        $operations[] = array('lingotek_sync_download_node_target', array($record['nid'], $lingotek_locale, $sync_success_target));
+        $operations[] = array('lingotek_sync_download_node_target', array($record['entity_id'], $lingotek_locale, $sync_success_target));
       }
       // get all config chunks that have pending translations
       $key = 'target_sync_status_' . $lingotek_locale;
@@ -422,11 +422,11 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
 function lingotek_sync_download_entity_target($entity_type, $id, $lingotek_locale, $sync_success_status, $update_progress = TRUE, &$context) {
 
   if ($context) {
-    $context['message'] = t('Downloading "@locale" translation for node @nid', array('@locale' => $lingotek_locale, '@nid' => $id));
+    $context['message'] = t('Downloading "@locale" translation for entity @type @id', array('@locale' => $lingotek_locale, '@type' => $entity_type, '@id' => $id));
   }
   
-  $node = lingotek_node_load_default($id);
-  if ($node->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
+  $entity = lingotek_entity_load_single($entity_type, $id);
+  if ($entity->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
     return;
   }
   LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $id, '@language' => $lingotek_locale));

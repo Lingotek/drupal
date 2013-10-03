@@ -141,12 +141,7 @@ function lingotek_notifications() {
       }
     }
     else {
-      if ($type == 'node') {
-        $entity = lingotek_node_load_default($id);
-      } else {
-        $entities = entity_load($type, array($id));
-        $entity = $entities[$id];
-      }
+      $entity = lingotek_entity_load_single($type, $entity_id);
       $source_language = $entity->language;
       if ($completed) {
         LingotekSync::setTargetStatus($id, $lingotek_locale, LingotekSync::STATUS_READY);
@@ -215,32 +210,6 @@ function lingotek_notifications() {
   ));
 
   drupal_json_output($response);
-}
-
-/**
- * The main function responsible for syncing node/document translation.
- * 
- * */
-function lingotek_sync() {
-  $parameters = $_GET;
-  $method = $_SERVER['REQUEST_METHOD'];
-  $status = "200";
-  $test = isset($parameters['test']) && $parameters['test'] && strcmp($parameters['test'], 'false') != 0 ? TRUE : FALSE;
-  $request = array(
-    'test' => $test,
-    'method' => $method,
-    'parameters' => $parameters
-  );
-  $request['upload_nids_as_json'] = $upload_nids = isset($parameters['upload_nids']) ? json_decode($parameters['upload_nids']) : NULL;
-  $request['upload_config_as_json'] = $upload_config = isset($parameters['upload_config']) ? json_decode($parameters['upload_config']) : NULL;
-  $request['download_targets_as_json'] = $download_targets = isset($parameters['download_targets_as_json']) ? json_decode($parameters['download_targets_as_json']) : NULL;
-
-  if ($test) {
-    lingotek_json_output_cors($request, $status, array('methods_allowed' => 'GET,POST'));
-  }
-  else {
-    lingotek_sync_batch_create($upload_nids, $upload_config, $download_targets);
-  }
 }
 
 /**
@@ -531,13 +500,12 @@ function lingotek_form_bulk_sync($form, $form_state) {
             ),
           ),
         );
-        $default_override = variable_get('lingotek_sync', 0) ? 0 : 1;
         $form['download']['download_locales_wb']['wb_override_defaults'] = array(
           '#type' => 'checkbox',
           '#prefix' => t('<b>Your configuration of the Workbench Moderation module has multiple transition paths.</b>'),
           '#title' => 'Override defaults',
           '#description' => t('Recommended if defaults have not been set in admin->lingotek->settings->content defaults'),
-          '#default_value' => $default_override,
+          '#default_value' => 0,
         );
         $form['download']['download_locales_wb']['wb_select'] = array(
           '#type' => 'container',

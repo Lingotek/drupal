@@ -289,7 +289,7 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek'),
     'description' => 'Lingotek Sync Endpoint',
     'file' => 'lingotek.sync.inc',
-    'page callback' => 'lingotek_sync_endpoint', //'lingotek_sync'
+    'page callback' => 'lingotek_sync_endpoint',
   );
 
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/identify-content'] = array(
@@ -1105,6 +1105,21 @@ function lingotek_entity_prepare($entity, $entity_type, $bundle) {
   }
 }
 
+/*
+ * The function entity_load_single is not in core but rather in the entity module
+ * which we currently do not have as a dependency.
+ */
+function lingotek_entity_load_single($entity_type, $entity_id) {
+  if ($entity_type == 'node') {
+    $entity = lingotek_node_load_default($id);
+  } else {
+    $entities = entity_load($type, array($id));
+    $entity = $entities[$id];
+  }
+  
+  return $entity;
+}
+
 /**
  * Implements hook_entity_load().
  */
@@ -1222,8 +1237,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $message = TRUE
   }
 
   if (isset($entity->lingotek['document_id'])) {
-    $old_entity_array = entity_load($entity_type, array($node->{$id}));
-    $old_entity = $old_entity_array[$id];
+    $old_entity = entity_load_unchanged($entity_type, $node->{$id});
     $diff = lingotek_entity_compare($entity, $old_entity, $entity_type, $bundle);
     if (empty($diff) && $entity->lingotek['node_sync_status'] == 'CURRENT') {
       return; //node has no changes.
