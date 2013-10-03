@@ -1024,7 +1024,7 @@ function lingotek_get_global_profile() {
   return array(
     'name' => '',
     'document_id' => NULL,
-    'lingotek_nodes_translation_method' => 'field',
+    'lingotek_nodes_translation_method' => variable_get('lingotek_nodes_translation_method'),
     'create_lingotek_document' => 0,
     'sync_method' => 0,
     'allow_community_translation' => 0,
