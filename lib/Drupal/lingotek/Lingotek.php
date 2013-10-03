@@ -362,18 +362,18 @@ class Lingotek {
    * @return array
    *   An array of Lingotek language codes.
    */
-  public static function availableLanguageTargets($pluck_field = NULL, $include_all = FALSE, $lingotek_locale_to_exclude = NULL) {
-    //lingotek_add_missing_locales();
+  public static function availableLanguageTargets($pluck_field = NULL, $include_disabled = FALSE, $lingotek_locale_to_exclude = NULL) {
+    lingotek_add_missing_locales();
     $languages = array();
+
     foreach (language_list() as $target_language) {
-      
       if ($target_language->lingotek_locale == $lingotek_locale_to_exclude)
         continue;
       $language = (is_string($pluck_field) && isset($target_language->$pluck_field)) ? $target_language->$pluck_field : $target_language;
-      if (!$include_all && $target_language->enabled) { // include all languages enabled
+      if ($target_language->enabled) { // include all languages enabled
         $languages[] = $language;
       }
-      else if ($include_all) { // include all languages (including disabled)
+      else if ($include_disabled) { // include all languages (including disabled)
         $languages[] = $language;
       }
     }
