@@ -87,26 +87,26 @@ function lingotek_notifications() {
   // try 3 times if by chance we don't find the document in the database yet..
   $attempts = 0;
   while ($attempts < 3) {
-    $nid = LingotekSync::getNodeIdFromDocId($document_id);
-    if(!$nid) { // check for the old style document_id
-      $nid = LingotekSync::getNodeIdFromDocId($document_idx);
-      if($nid){
+    list($id, $type) = LingotekSync::getEntityIdFromDocId($document_id);
+    if(!$id) { // check for the old style document_id
+      list($id, $type) = LingotekSync::getEntityIdFromDocId($document_idx);
+      if($id){
         $document_id = $document_idx;
       }
     }
 
-    LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
+    LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>entity:</b> @entity_type @entity_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
         '@document_id' => $document_id,
         '@lingotek_locale' => $lingotek_locale,
         '@project_id' => $project_id,
-        '@node_id' => $nid ? $nid : "NA",
+        '@entity_id' => $id ? $id : "NA",
+        '@entity_type' => $type ? $type : "NA",
         '@target_drupal_language_code' => $target_drupal_language_code,
         '@completed' => $completed
           ), 'callback');
 
-    // If there is not a node ID associated with this document, check for config chunks and comments
-    // associated with the document ID
-    if (!$nid) {
+    // If there is not a entity ID associated with this document, check for config chunks
+    if (!$id) {
       $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
       $replacements = array(
         '@document' => $document_id,
@@ -114,16 +114,10 @@ function lingotek_notifications() {
         '@project_id' => $project_id,
       );
 
-      LingotekLog::error('Test', LingotekEntity::loadByLingotekDocumentId($document_id, $source_language, $project_id));
       // Look for and sync a config chunk if one is associated with the passed Lingotek Document ID.
       if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
         $replacements['@id'] = $trans_obj->cid;
         $replacements['@trans_type'] = "ConfigChunk";
-      }
-      // Look for and sync a comment if one is associated with the passed Lingotek Document ID.
-      elseif ($trans_obj = LingotekEntity::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-        $replacements['@id'] = $trans_obj->id;
-        $replacements['@trans_type'] = "Comment";
       }
       else {
         if ($attempts < 10) {
@@ -147,35 +141,38 @@ function lingotek_notifications() {
       }
     }
     else {
-      $node = lingotek_node_load_default($nid);
-      $source_language = $node->language;
-      $node_setting = $node->lingotek['sync_method'];
-      $auto_download = $node_setting !== FALSE ? $node_setting : variable_get('lingotek_sync', TRUE);
+      if ($type == 'node') {
+        $entity = lingotek_node_load_default($id);
+      } else {
+        $entities = entity_load($type, array($id));
+        $entity = $entities[$id];
+      }
+      $source_language = $entity->language;
       if ($completed) {
-        LingotekSync::setTargetStatus($nid, $lingotek_locale, LingotekSync::STATUS_READY);
+        LingotekSync::setTargetStatus($id, $lingotek_locale, LingotekSync::STATUS_READY);
       }
 
-      if ($auto_download) { // download only when automatic download is enabled
+      if ($entity->lingotek['sync_method']) { // download only when automatic download is enabled
         $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-        lingotek_sync_download_node_target($nid, $lingotek_locale, $status, TRUE, $context);
+        lingotek_sync_download_node_target($id, $lingotek_locale, $status, TRUE, $context);
 
         // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
-        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
+        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($id);
         if (empty($target_statuses)) {
-          lingotek_lingonode($nid, 'workbench_moderate', 1);
+          lingotek_lingonode($id, 'workbench_moderate', 1);
         }
-        if (module_exists('workbench_moderation') && isset($node->workbench_moderation) && lingotek_lingonode($nid, 'workbench_moderate') == 1) {
-          $options_index = $node->lingotek['sync_method_workbench_moderation'];
+        if (module_exists('workbench_moderation') && isset($entity->workbench_moderation) && lingotek_lingonode($id, 'workbench_moderate') == 1) {
+          $options_index = $entity->lingotek['sync_method_workbench_moderation'];
           $trans_options = lingotek_get_workbench_moderation_transitions();
           if ($options_index == 1) {
-            $from_state = $node->workbench_moderation['current']->state;
+            $from_state = $entity->workbench_moderation['current']->state;
             $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
             if ($mult_trans) {
               $trans_options[$from_state] = $mult_trans;
             }
           }
-          lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options); // moderate if all languages have been downloaded
-          lingotek_lingonode_variable_delete($nid, 'workbench_moderate');
+          lingotek_workbench_moderation_moderate($id, $options_index, $trans_options); // moderate if all languages have been downloaded
+          lingotek_lingonode_variable_delete($id, 'workbench_moderate');
         }
       }
       
@@ -183,34 +180,34 @@ function lingotek_notifications() {
         lingotek_get_and_update_target_progress($document_id);
       }
       else {
-        lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
+        lingotek_lingonode($id, 'target_sync_progress_' . $lingotek_locale, 100);
         
         $query = db_select('lingotek_entity_metadata');
         $query->condition('entity_type', 'node');
         $query->addExpression('AVG(value)');
         
         $total = $query->condition('entity_key', 'target_sync_progress_%', 'LIKE')
-          ->condition('entity_id', $nid)
+          ->condition('entity_id', $id)
           ->execute()->fetchField();
-        lingotek_lingonode($nid, 'translation_progress', $total);
+        lingotek_lingonode($id, 'translation_progress', $total);
           
-        lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+        lingotek_lingonode($id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
       // clear any caching from entitycache module to allow the new translation to show immediately
       if (module_exists('entitycache')) {
-        cache_clear_all($nid, 'cache_entity_node');
+        cache_clear_all($id, 'cache_entity_node');
       }
     }
     break; // if the function did not continue, then the doc ID was found.
   }
 
-  $found = $nid || (isset($trans_obj) && $trans_obj) ? TRUE : FALSE;
+  $found = $id || (isset($trans_obj) && $trans_obj) ? TRUE : FALSE;
 
   $response = $found ? array_merge($_GET, array(
         'target_drupal_language_code' => $target_drupal_language_code,
         'source_language' => $source_language,
         'type' => isset($trans_obj) ? $trans_obj->getEntityType() : 'node',
-        'id' => isset($trans_obj) ? $trans_obj->getId() : $nid,
+        'id' => isset($trans_obj) ? $trans_obj->getId() : $id,
         'found' => $found,
         'download' => $found && isset($trans_obj) && $trans_obj->getEntityType() == 'comment' ? TRUE : (isset($auto_download) && $auto_download == TRUE)
       )) : array_merge($_GET, array(

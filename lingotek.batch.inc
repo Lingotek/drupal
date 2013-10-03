@@ -419,19 +419,19 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
 /**
  * Download Batch Worker Function: Download Translated Node Content
  */
-function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_success_status, $update_progress = TRUE, &$context) {
+function lingotek_sync_download_entity_target($entity_type, $id, $lingotek_locale, $sync_success_status, $update_progress = TRUE, &$context) {
 
   if ($context) {
-    $context['message'] = t('Downloading "@locale" translation for node @nid', array('@locale' => $lingotek_locale, '@nid' => $nid));
+    $context['message'] = t('Downloading "@locale" translation for node @nid', array('@locale' => $lingotek_locale, '@nid' => $id));
   }
   
-  $node = lingotek_node_load_default($nid);
+  $node = lingotek_node_load_default($id);
   if ($node->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
     return;
   }
-  LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $nid, '@language' => $lingotek_locale));
+  LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $id, '@language' => $lingotek_locale));
 
-  $status = LingotekSync::getTargetStatus(LingotekSync::getDocIdFromNodeId($nid), $lingotek_locale);
+  $status = LingotekSync::getTargetStatus(LingotekSync::getDocIdFromNodeId($id), $lingotek_locale);
   if ($status == LingotekSync::STATUS_READY || $status == LingotekSync::STATUS_CURRENT) { // Overide sync_success_status variable because statuses will be current for all downloads
     $sync_success_status = LingotekSync::STATUS_CURRENT;
   }
@@ -443,26 +443,26 @@ function lingotek_sync_download_node_target($nid, $lingotek_locale, $sync_succes
     //lingotek_get_and_update_target_progress(LingotekSync::getDocIdFromNodeId($nid));
   }
   elseif ($sync_success_status == LingotekSync::STATUS_CURRENT && $update_progress) {
-    lingotek_lingonode($nid, 'target_sync_progress_' . $lingotek_locale, 100);
-    lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+    lingotek_lingonode($id, 'target_sync_progress_' . $lingotek_locale, 100);
+    lingotek_lingonode($id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
   }
 
   $result = lingotek_entity_download($node, 'node', $lingotek_locale, $sync_success_status);
-  cache_clear_all('field:node:' . $nid, 'cache_field');
+  cache_clear_all('field:node:' . $id, 'cache_field');
 
   if ($result) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
     if (!isset($context['results']['downloaded_node_targets']) || !is_array($context['results']['downloaded_node_targets'])) {
       $context['results']['downloaded_node_targets'] = array();
     }
-    $context['results']['downloaded_node_targets'][] = array("nid" => $nid, "locale" => $lingotek_locale);
+    $context['results']['downloaded_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
   }
   else {
     $context['results']['download_fails'] = isset($context['results']['download_fails']) && is_numeric($context['results']['download_fails']) ? $context['results']['download_fails'] + 1 : 1;
     if (!isset($context['results']['download_fail_node_targets']) || !is_array($context['results']['download_fail_node_targets'])) {
       $context['results']['download_fail_node_targets'] = array();
     }
-    $context['results']['download_fail_node_targets'][] = array("nid" => $nid, "locale" => $lingotek_locale);
+    $context['results']['download_fail_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
   }
 }
 

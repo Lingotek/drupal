@@ -43,6 +43,11 @@ class LingotekSync {
     return $result;
   }
 
+  public static function setEntityTargetStatus($entity_type, $entity_id, $lingotek_locale, $status) {
+    $key = 'target_sync_status_' . $lingotek_locale;
+    return lingotek_keystore($entity_type, $entity_id, $key, $status);
+  }
+  
   public static function setTargetStatus($node_id, $lingotek_locale, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_lingonode($node_id, $key, $status);
@@ -761,22 +766,29 @@ class LingotekSync {
     return $nids;
   }
 
-  //lingotek_get_node_id_from_document_id
-  public static function getNodeIdFromDocId($lingotek_document_id) {
+  public static function getEntityIdFromDocId($lingotek_document_id, $entity_type = NULL) {
     $found = FALSE;
     $key = 'document_id';
 
     $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
-    $query->condition('entity_type', 'node');
+    if ($entity_type) {
+      $query->condition('entity_type', $entity_type);
+    }
     $query->condition('entity_key', $key);
     $query->condition('value', $lingotek_document_id);
     $result = $query->execute();
 
     if ($record = $result->fetchAssoc()) {
       $found = $record['entity_id'];
+      $type = $record['entity_type'];
     }
 
-    return $found;
+    return array($found, $type);
+  }
+  
+  public static function getNodeIdFromDocId($lingotek_document_id) {
+    list($id, $type) = getEntityIdFromDocId($lingotek_document_id);
+    return $id;
   }
 
   public static function getNodeIdsFromDocIds($lingotek_document_ids) {
