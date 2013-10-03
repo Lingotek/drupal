@@ -32,14 +32,14 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
-    'actions' => array(
+    /*'actions' => array(
       '#type' => 'actions',
       'submit' => array(
         '#type' => 'submit',
         '#value' => t('Update account status')
       )
     ),
-    '#submit' => array('lingotek_admin_account_status_form_submit')
+    '#submit' => array('lingotek_admin_account_status_form_submit')*/
   );
 
   $form['status']['account_summary'] = array(
@@ -70,7 +70,7 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array(t('External ID:'), variable_get('lingotek_login_id', '')),
         array(t('Project ID:'), variable_get('lingotek_project', '')),
         array(t('Vault ID:'), variable_get('lingotek_vault', '')),
-        array(t('Notify URL:'), variable_get('lingotek_notify_url', '')),
+        array(t('Notify URL:'), '<span title="' . variable_get('lingotek_notify_url', '') . '">' . truncate_utf8(variable_get('lingotek_notify_url', ''), 45, FALSE, TRUE) . '</span>'),
   )))
   );
 
@@ -1542,7 +1542,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     );
   } else {
     $form['delete'] = array(
-      '#markup' => 'You cannot delete this profile until no nodes or content types use it.',
+      '#markup' => 'You can only delete this profile when there are no nodes or content types using it.',
     );
   }
   $form['defaults']['cancel'] = array(
