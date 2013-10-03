@@ -66,6 +66,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => '<div id="lingotek-console"></div>',
   );
   
+  $form['entity_type'] = array(
+    '#type' => 'hidden',
+    '#value' => $entity_type,
+  );
+  
   // Run query to get table rows
   $table_data = lingotek_grid_get_rows($entity_type, $form, $form_state);
   
@@ -439,6 +444,8 @@ function lingotek_grid_filter_submit($form, $form_state) {
  */
 function lingotek_grid_action_submit($form, $form_state) {
   $nids = array();
+  
+  $entity_type = $form_state['values']['entity_type'];
 
   if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'actions_submit') { // If submitting an action
     foreach ($form_state['values']['the_grid'] as $value) {
@@ -457,9 +464,9 @@ function lingotek_grid_action_submit($form, $form_state) {
           'title' => t('Uploading Nodes To Lingotek'),
           'finished' => 'lingotek_sync_upload_node_finished'
         );
-        $operations = lingotek_get_sync_upload_batch_elements($nids);
+        $operations = lingotek_get_sync_upload_batch_elements($entity_type, $nids);
         $batch['operations'] = $operations;
-        $redirect = 'admin/settings/lingotek/manage';
+        $redirect = current_path();
 
         batch_set($batch);
         batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
@@ -467,7 +474,7 @@ function lingotek_grid_action_submit($form, $form_state) {
       elseif (substr($action, 0, 8) == 'download') { // If downloading all targets
         $lang = substr($action, 9, 10);
         $target_locales = ($lang == 'all') ? lingotek_get_target_locales() : array($lang);
-        $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+        $document_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $nids);
         $complete_targets = array();
         $incomplete_targets = array();
         
@@ -479,14 +486,14 @@ function lingotek_grid_action_submit($form, $form_state) {
             $pending_document_ids[] = $doc_id;
           }
         }
-        lingotek_get_and_update_target_progress($pending_document_ids);
+        lingotek_get_and_update_target_progress($entity_type, $pending_document_ids);
         
 
         foreach ($target_locales as $language) { // Separate the nodes by target_sync_progress_[lang code] percentage
-          $complete_nids = LingotekSync::getNodeIdSubsetByTargetStatusReady($nids, $language);
+          $complete_nids = LingotekSync::getEntityIdSubsetByTargetStatusReady($entity_type, $nids, $language);
           $complete_doc_ids = array();
           if (!empty($complete_nids)) {
-            $complete_doc_ids = LingotekSync::getDocIdsFromNodeIds($complete_nids);
+            $complete_doc_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $complete_nids);
           }
           foreach ($document_ids as $doc_id) {
             if (in_array($doc_id, $complete_doc_ids)) { // If workflow completed, create target json
@@ -505,7 +512,7 @@ function lingotek_grid_action_submit($form, $form_state) {
           );
           $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT)); // If target progress is at 100, download and set to current
           $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING)); // Otherwise, download and set to pending
-          $redirect = 'admin/settings/lingotek/manage';
+          $redirect = current_path();
 
           batch_set($batch);
           batch_process($redirect); // Run the batch operations
@@ -622,7 +629,8 @@ function lingotek_grid_build_column_checkboxes($form_state) {
 }
 
 function lingotek_grid_update() {
-  $nids = LingotekSync::getNodeIdsByStatusAndTarget(LingotekSync::STATUS_PENDING);
+  $nids = LingotekSync::getEntityIdsByStatusAndTarget('node', LingotekSync::STATUS_PENDING);
+  $nids = array_merge($nids, LingotekSync::getEntityIdsByStatusAndTarget('comment', LingotekSync::STATUS_PENDING));
   variable_set('lingotek_pending_last_updated', time());
   if (count($nids) > 0) {
     $_SESSION['lingotek_sync_nodes'] = count($nids);

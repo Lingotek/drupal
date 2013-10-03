@@ -84,8 +84,8 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   // Grab the Nodes that need to be Downloaded & Uploaded.  These are batch operation arrays.
   $download_commands = $has_download ? lingotek_get_sync_download_batch_elements($download_targets, LingotekSync::STATUS_CURRENT) : array();
   $download_commands_inc = $has_download_incomplete ? lingotek_get_sync_download_batch_elements($download_targets_incomplete, LingotekSync::STATUS_PENDING) : array();
-  $upload_commands = $has_upload ? lingotek_get_sync_upload_batch_elements($upload_nids) : array();
-  $upload_config_commands = $has_upload_config ? lingotek_get_sync_upload_config_batch_elements($upload_config) : array();
+  $upload_commands = $has_upload ? lingotek_get_sync_upload_batch_elements('node', $upload_nids) : array();
+  $upload_config_commands = $has_upload_config ? lingotek_get_sync_upload_config_batch_elements('node', $upload_config) : array();
 
   $operations = array();
   $operations = array_merge($operations, $download_commands, $download_commands_inc, $upload_commands, $upload_config_commands);
@@ -126,13 +126,13 @@ function lingotek_sync_batch_finished($success, $results, $operations) {
 /**
  * Sync - Upload Batch Elements:  Creates the batch elements for nodes/documents that need to be uploaded.
  */
-function lingotek_get_sync_upload_batch_elements($upload_nids = array()) {
+function lingotek_get_sync_upload_batch_elements($entity_type, $upload_nids = array()) {
 
   $operations = array();
 
   if (is_array($upload_nids)) {
     foreach ($upload_nids as $nid) {
-      $operations[] = array('lingotek_sync_upload_node', array($nid));
+      $operations[] = array('lingotek_sync_upload_node', array($entity_type, $nid));
     }
   }
 
@@ -312,51 +312,41 @@ function lingotek_batch_disassociate_content_worker($api, $doc_id) {
 /**
  * Upload Batch Worker Function: Upload Node for Translation
  */
-function lingotek_sync_upload_node($nid, &$context) {
+function lingotek_sync_upload_node($entity_type, $entity_id, &$context) {
 
-  LingotekLog::trace('upload node: @node_id', array('@node_id' => $nid));
+  LingotekLog::trace('upload node: @node_id', array('@node_id' => $entity_id));
 
   if ($context) {
-    $context['message'] = t('Uploading node @nid for translation', array('@nid' => $nid));
+    $context['message'] = t('Uploading node @nid for translation', array('@nid' => $entity_id));
   }
   
   $api = LingotekApi::instance();
-  $node = lingotek_node_load_default($nid);
+  $entity = lingotek_entity_load_single($entity_type, $entity_id);
 
-  if ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED || $node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED) {
+  if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
     return;
   }
 
   // clear any node caching by entitycache module
   if (module_exists('entitycache')) {
-    cache_clear_all($nid, 'cache_entity_node');
+    cache_clear_all($entity_id, 'cache_entity_node');
   }
-
-  // Push this node for translation.
-  if ($existing_document = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL) {
-    // Update an existing Lingotek Document.
-    $result = $api->updateContentDocument($node);
-  }
-  else {
-    // Create a new Lingotek Document.
-    $ln = LingotekEntity::load($node);
-    lingotek_node_save_readonly($node);
-    $result = $api->addContentDocument($ln, TRUE);
-  }
+  
+  $result = lingotek_entity_upload($entity, $entity_type);
 
   if ($result) {
     $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     if (!isset($context['results']['uploaded_nids']) || !is_array($context['results']['uploaded_nids'])) {
       $context['results']['uploaded_nids'] = array();
     }
-    $context['results']['uploaded_nids'][] = $nid;
+    $context['results']['uploaded_nids'][] = $entity_id;
   }
   else {
     $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
     if (!isset($context['results']['upload_fail_nids']) || !is_array($context['results']['upload_fail_nids'])) {
       $context['results']['upload_fail_nids'] = array();
     }
-    $context['results']['upload_fail_nids'][] = $nid;
+    $context['results']['upload_fail_nids'][] = $entity_id;
   }
   //$context['results'][] = t('Uploaded: Node #@nid', array('@nid' => $nid));
 }
@@ -648,8 +638,8 @@ function lingotek_field_language_data_cleanup_batch_finished($success, $results,
   
 }
 
-function lingotek_update_target_progress_batch_create($nids) {
-  $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+function lingotek_update_target_progress_batch_create($entity_type, $nids) {
+  $document_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $nids);
   $batch = array(
     'title' => t('Syncing Translation Progress with Lingotek'),
   );
@@ -661,7 +651,7 @@ function lingotek_update_target_progress_batch_create($nids) {
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
     if (!empty($segment)) {
-      $operations[] = array('lingotek_get_and_update_target_progress', array($segment));
+      $operations[] = array('lingotek_get_and_update_target_progress', $entity_type, array($segment));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);

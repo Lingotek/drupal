@@ -965,4 +965,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     return 'config - ' . $this->cid;
   }
   
+  public function getNote() {
+    return '';
+  }
 }

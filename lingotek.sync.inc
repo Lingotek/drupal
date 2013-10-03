@@ -780,7 +780,7 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
 *    array of Document IDs that you want to update
 *
 */
-function lingotek_get_and_update_target_progress($document_ids) {
+function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
   $api = LingotekApi::Instance();
   if (empty($document_ids)) {
     return;

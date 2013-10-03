@@ -669,13 +669,13 @@ class LingotekSync {
     return $nids;
   }
 
-  public static function getNodeIdsByStatusAndTarget($status, $target_language = '%') {
+  public static function getEntityIdsByStatusAndTarget($entity_type, $status, $target_language = '%') {
     $query = db_select('lingotek_entity_metadata', 'l')
       ->distinct()
-      ->addField('l', 'entity_id', 'nid')
-      ->condition('entity_type', 'node')
+      ->condition('entity_type', $entity_type)
       ->condition('entity_key', 'target_sync_status_' . $target_language, 'LIKE')
       ->condition('value', $status);
+    $query->addField('l', 'entity_id', 'nid');
     $result = $query->execute()->fetchCol();
     return $result;
   }
@@ -770,7 +770,6 @@ class LingotekSync {
   }
 
   public static function getEntityIdFromDocId($lingotek_document_id, $entity_type = NULL) {
-    $found = FALSE;
     $key = 'document_id';
 
     $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
@@ -780,7 +779,10 @@ class LingotekSync {
     $query->condition('entity_key', $key);
     $query->condition('value', $lingotek_document_id);
     $result = $query->execute();
-
+    
+    $found = FALSE;
+    $type = FALSE;
+    
     if ($record = $result->fetchAssoc()) {
       $found = $record['entity_id'];
       $type = $record['entity_type'];
@@ -821,10 +823,10 @@ class LingotekSync {
     return $found;
   }
 
-  public static function getDocIdsFromNodeIds($drupal_node_ids) {
+  public static function getDocIdsFromEntityIds($entity_type, $drupal_node_ids) {
 
     $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
-    $query->condition('entity_type', 'node');
+    $query->condition('entity_type', $entity_type);
     $query->condition('entity_id', $drupal_node_ids, 'IN');
     $query->condition('entity_key', 'document_id');
     $result = $query->execute()->fetchCol();
@@ -832,9 +834,10 @@ class LingotekSync {
     return $result;
   }
 
-  public static function getNodeIdSubsetByTargetStatusReady($nids, $lingotek_locale) {
+  public static function getEntityIdSubsetByTargetStatusReady($entity_type, $nids, $lingotek_locale) {
     $query = db_select('lingotek_entity_metadata', 'l')
         ->fields('l', array('entity_id'))
+        ->condition('entity_type', $entity_type)
         ->condition('entity_id', $nids, 'IN')
         ->condition('entity_key', 'target_sync_status_' . $lingotek_locale)
         ->condition('value', LingotekSync::STATUS_READY);

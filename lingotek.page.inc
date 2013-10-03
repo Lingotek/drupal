@@ -216,7 +216,7 @@ function lingotek_node_disassociate_form_submit($form, $form_state) {
   foreach ($drupal_node_ids_json as $nid) {
     $drupal_node_ids[] = $nid;
   }
-  $doc_ids = LingotekSync::getDocIdsFromNodeIds($drupal_node_ids);
+  $doc_ids = LingotekSync::getDocIdsFromEntityIds('node', $drupal_node_ids);
 
   $api = LingotekApi::instance();
   $api->removeDocument($doc_ids);
