@@ -184,7 +184,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       $query->condition($status_or);
       $result = $query->execute();
       while ($record = $result->fetchAssoc()) {
-        $operations[] = array('lingotek_sync_download_node_target', array($record['entity_id'], $lingotek_locale, $sync_success_target));
+        $operations[] = array('lingotek_entity_download', array($record['entity_id'], 'node', $lingotek_locale));
       }
       // get all config chunks that have pending translations
       $key = 'target_sync_status_' . $lingotek_locale;
@@ -209,11 +209,11 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
     $doc_ids = array();
     $updates = array();
     foreach ($download_targets as $download_target) {
-      list($nid, $entity_type) = LingotekSync::getEntityIdFromDocId($download_target->document_id);
-      if ($nid != NULL) {
+      list($id, $entity_type) = LingotekSync::getEntityIdFromDocId($download_target->document_id);
+      if ($id != NULL) {
         $lingotek_locale = $download_target->locale;
         $doc_ids[] = $download_target->document_id;
-        $operations[] = array('lingotek_sync_download_entity_target', array($entity_type, $nid, $lingotek_locale, $sync_success_target, FALSE));
+        $operations[] = array('lingotek_sync_download_entity_target', array($id, $entity_type, $lingotek_locale, $sync_success_target, FALSE));
       }
       else { // since no node was found associated with the document ID, check config chunks
         $cid = LingotekConfigChunk::getIdByDocId($download_target->document_id);
@@ -403,56 +403,6 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
       $context['results']['upload_fail_cids'] = array();
     }
     $context['results']['upload_fail_cids'][] = $cid;
-  }
-}
-
-/**
- * Download Batch Worker Function: Download Translated Node Content
- */
-function lingotek_sync_download_entity_target($entity_type, $id, $lingotek_locale, $sync_success_status, $update_progress = TRUE, &$context) {
-
-  if ($context) {
-    $context['message'] = t('Downloading "@locale" translation for entity @type @id', array('@locale' => $lingotek_locale, '@type' => $entity_type, '@id' => $id));
-  }
-  
-  $entity = lingotek_entity_load_single($entity_type, $id);
-  if ($entity->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
-    return;
-  }
-  LingotekLog::trace('download node: @node_id (@language)', array('@node_id' => $id, '@language' => $lingotek_locale));
-
-  $status = LingotekSync::getTargetStatus(LingotekSync::getDocIdFromNodeId($id), $lingotek_locale);
-  if ($status == LingotekSync::STATUS_READY || $status == LingotekSync::STATUS_CURRENT) { // Overide sync_success_status variable because statuses will be current for all downloads
-    $sync_success_status = LingotekSync::STATUS_CURRENT;
-  }
-  else {
-    $sync_success_status = LingotekSync::STATUS_PENDING;
-  }
-
-  if ($sync_success_status != LingotekSync::STATUS_CURRENT && $update_progress) {
-    //lingotek_get_and_update_target_progress(LingotekSync::getDocIdFromNodeId($nid));
-  }
-  elseif ($sync_success_status == LingotekSync::STATUS_CURRENT && $update_progress) {
-    lingotek_keystore($entity_type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
-    lingotek_keystore($entity_type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
-  }
-
-  $result = lingotek_entity_download($entity, $entity_type, $lingotek_locale, $sync_success_status);
-  cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
-
-  if ($result) {
-    $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
-    if (!isset($context['results']['downloaded_node_targets']) || !is_array($context['results']['downloaded_node_targets'])) {
-      $context['results']['downloaded_node_targets'] = array();
-    }
-    $context['results']['downloaded_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
-  }
-  else {
-    $context['results']['download_fails'] = isset($context['results']['download_fails']) && is_numeric($context['results']['download_fails']) ? $context['results']['download_fails'] + 1 : 1;
-    if (!isset($context['results']['download_fail_node_targets']) || !is_array($context['results']['download_fail_node_targets'])) {
-      $context['results']['download_fail_node_targets'] = array();
-    }
-    $context['results']['download_fail_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
   }
 }
 

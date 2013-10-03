@@ -149,7 +149,10 @@ function lingotek_notifications() {
 
       if ($entity->lingotek['sync_method']) { // download only when automatic download is enabled
         $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-        lingotek_sync_download_entity_target($type, $id, $lingotek_locale, $status, TRUE, $context);
+        if ($completed) {
+          lingotek_keystore($entity_type, $trans_obj->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_READY); 
+        }
+        $trans_obj->updateLocalContentByTarget($lingotek_locale);
 
         if ($type == 'node' && module_exists('workbench_moderation')) {
           // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options

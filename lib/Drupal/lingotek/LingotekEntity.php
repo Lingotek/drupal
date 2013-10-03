@@ -247,7 +247,11 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function updateLocalContent() {
-    
+    $document = $api->getDocument($document_id);
+
+    foreach ($document->translationTargets as $target) {
+      lingotek_entity_download($this->entity, $this->entity_type, $lingotek_locale);
+    }
   }
   
   /**
@@ -327,7 +331,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   
   public function getNote() {
     if ($this->entity_type == 'node' || $this->entity_type == 'comment') {
-      url('node/' . $entity->nid, array('absolute' => TRUE, 'alias' => TRUE));
+      url('node/' . $this->entity->nid, array('absolute' => TRUE, 'alias' => TRUE));
     }
     
     return '';
