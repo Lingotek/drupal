@@ -319,23 +319,6 @@ function lingotek_update_7201(&$sandbox) {
 }
 
 /**
- * Ensure the Administrator role is granted newly-introduced permissions.
- */
-function lingotek_update_7202(&$sandbox) {
-  if ($rid = variable_get('user_admin_role', 0)) {
-    $new_permisions = array(
-      'access lingotek utilities',
-      'access per-item lingotek project selection',
-      'access per-item lingotek vault selection'
-    );
-
-    user_role_grant_permissions($rid, $new_permisions);
-
-    return t('Granted new Lingotek permissions to the administrative security role.');
-  }
-}
-
-/**
  * Install default FPRM configuration data to support advanced content parsing.
  */
 function lingotek_update_7203(&$sandbox) {
@@ -467,11 +450,8 @@ function lingotek_update_7213(&$sandbox) {
     $permissions = array(
       'administer lingotek',
       'manage projects',
-      'adjust auto-download node setting',
-      'translate url aliases',
-      'access lingotek utilities',
-      'access per-item lingotek project selection',
-      'access per-item lingotek vault selection'
+      'translation',
+      'use lingotek developer tools'
     );
 
     user_role_grant_permissions($rid, $permissions);
