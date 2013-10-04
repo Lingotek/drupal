@@ -385,7 +385,7 @@ class Lingotek {
   }
 
   public static function availableLanguageTargetsWithoutSourceAsJSON($source_lingotek_locale) {
-    return drupal_json_encode(self::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale));
+    return drupal_json_encode(array_values(self::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale)));
   }
 
 }
