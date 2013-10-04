@@ -343,7 +343,7 @@ function lingotek_batch_disassociate_content() {
   $operations[] = array('LingotekSync::disassociateAllChunks', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 
-  $operations[] = array('lingotek_cleanup_utility', array(FALSE)); // identify translatable content
+  $operations[] = array('lingotek_cleanup_utility', array(FALSE, FALSE)); // identify translatable content
   drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
 
   $batch = array(
@@ -352,6 +352,7 @@ function lingotek_batch_disassociate_content() {
   );
 
   batch_set($batch);
+  batch_process('admin/settings/lingotek/settings');
 }
 
 function lingotek_batch_disassociate_content_worker($api, $doc_id) {

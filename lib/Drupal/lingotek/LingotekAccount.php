@@ -38,8 +38,13 @@ class LingotekAccount {
     $this->planType = self::UNKNOWN;
 
     // Load the Current Account Status from Cached local Drupal information.
-    $current_status = variable_get('lingotek_account_status', NULL);
-    $current_plan_type = variable_get('lingotek_account_plan_type', NULL);
+    //$current_status = variable_get('lingotek_account_status', NULL);
+    //$current_plan_type = variable_get('lingotek_account_plan_type', NULL);
+
+    // assume an standard active account avoid call to billing
+    $current_status = variable_get('lingotek_account_status', self::ACTIVE);
+    $current_plan_type = variable_get('lingotek_account_plan_type', 'standard');
+
     if (isset($current_status) && isset($current_plan_type)) {
       $this->setStatus($current_status);
       $this->setPlanType($current_plan_type);
