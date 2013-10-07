@@ -225,9 +225,9 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   if (!$setup_complete) {
     $defaults = array();
     foreach ($raw_types as $content_type) {
-      $defualts[$content_type->type] = 1;
+      $defaults[$content_type->type] = 1;
     }
-    $form['node_translation']['types']['#default_value'] = $defualts;
+    $form['node_translation']['types']['#default_value'] = $defaults;
   }
 
   $form['node_translation']['actions']['submit'] = array(
@@ -619,13 +619,11 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   // if this function is being called as part of the setup process, continue to
   // the dashboard to make sure they get a language configured.  Otherwise,
   // put them back to the settings page when finished.
-  if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
-      $final_destination = 'admin/settings/lingotek';
-    }
-    else {
-      $final_destination = 'admin/settings/lingotek/settings';
-    }
+  $final_destination = 'admin/settings/lingotek/settings';
+  if (  isset($_SESSION['lingotek_setup_path']) 
+        && is_array($_SESSION['lingotek_setup_path'])
+        && end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
+    $final_destination = 'admin/settings/lingotek';
   }
 
   if (count(batch_get())) {
