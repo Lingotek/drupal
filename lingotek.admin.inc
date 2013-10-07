@@ -973,13 +973,6 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#submit' => array('lingotek_admin_prefs_form_submit')
   );
 
-  $form['prefs']['lingotek_hide_tlmi'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide top-level menu item'),
-    '#description' => t('When hidden, the module can still be accessed under <i>Configuration &gt; Regional and language</i>'),
-    '#default_value' => variable_get('lingotek_hide_tlmi', 0),
-  );
-
   $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
 
   $query = db_select('block', 'b');
@@ -1048,13 +1041,6 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
   $lang_negotiation_info = locale_language_negotiation_info();
   $general_detection_config_url = substr($lang_negotiation_info['locale-url']['config'], 0, strrpos($lang_negotiation_info['locale-url']['config'], "/"));
 
-  $form[$fkey]['lingotek_views_edit_links'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Show links to edit translations in all views'),
-    '#default_value' => variable_get('lingotek_views_edit_links'),
-    '#description' => 'The user must have the "Translation" or "Manage Projects" permission'
-  );
-
   $form[$fkey][] = array(
     '#type' => 'item',
     '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'
@@ -1084,10 +1070,24 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
   if (module_exists('navbar')) {
     $form[$fkey]['lingotek_navbar_switcher'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Enable Language Switcher in the Navbar'),
+      '#title' => t('Enable the language switcher in the navbar'),
       '#default_value' => variable_get('lingotek_navbar_switcher'),
     );
   }
+
+  $form['prefs']['lingotek_hide_tlmi'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide top-level menu item'),
+    '#description' => t('When hidden, the module can still be accessed under <i>Configuration &gt; Regional and language</i>'),
+    '#default_value' => variable_get('lingotek_hide_tlmi', 0),
+  );
+
+  $form[$fkey]['lingotek_views_edit_links'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show links to edit translations in views'),
+    '#default_value' => variable_get('lingotek_views_edit_links'),
+    '#description' => 'The user must have the "Translation" or "Manage Projects" permission'
+  );
 
   return $form;
 }
