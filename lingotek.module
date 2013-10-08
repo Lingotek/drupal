@@ -1206,7 +1206,7 @@ function lingotek_node_update($node) {
   $node = lingotek_node_save($node);
   
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
-    if ($node->is_new) {
+    if (isset($node->is_new) && $node->is_new) {
       lingotek_workbench_moderation_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
     } else {
       return;
@@ -1958,5 +1958,14 @@ function lingotek_views_post_execute(&$view) {
     if ($included) {
       drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/workbench-link.css', array('group' => CSS_DEFAULT));
     }
+  }
+}
+
+/*
+ * Implements hook_l10n_update
+ */
+function lingotek_l10n_update_projects_alter(&$projects) {
+  if (variable_get('lingotek_use_translation_from_drupal', 0) != 1) {
+    $projects = array();
   }
 }

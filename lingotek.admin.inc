@@ -579,7 +579,6 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
     variable_set('l10n_update_rebuild_projects', 1);
   } else {
     variable_del('l10n_update_rebuild_projects');
-    db_truncate('l10n_update_project')->execute();
   }
 
   //if any configuration options are set then config translation is enabled
