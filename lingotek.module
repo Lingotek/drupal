@@ -915,10 +915,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  * This is not a hook. This is a helper function to save all lingotek related data.
  */
 function lingotek_node_save($node) {
-  if (!lingotek_supported_type($node->type) && $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
-    return $node;
-  }
-  
+
   $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
   
   $disabled_selected = ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED);
@@ -1196,7 +1193,13 @@ function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
-  if(!empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
+  // check to make sure Lingotek is enabled and supporting the given node type or profile
+  if ( !lingotek_supported_type($node->type)
+       && (!isset($node->lingotek) || $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED)) {
+    return;
+  }
+  //check to make sure it is not a target node
+  if(!empty($node->tnid) && ($node->nid != $node->tnid)) {
     return;
   }
   
