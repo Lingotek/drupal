@@ -1372,7 +1372,13 @@ function lingotek_grid_get_rows($form, &$form_state) {
       $configuration = t('Disabled');
     }
     else {
-      $configuration = $profiles[$row->lingotek['profile']]['name'];
+      $profile_key = $row->lingotek['profile']; //dpm($profile_key); dpm($profiles);
+      if (array_key_exists($profile_key, $profiles)) {
+        $configuration = $profiles[$profile_key]['name'];
+      }
+      else {
+        $configuration = t('Unknown');// profile id does not exist in profiles (this state should be unobtainable)
+      }
     }
 
 

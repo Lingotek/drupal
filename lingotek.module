@@ -1162,7 +1162,7 @@ function lingotek_node_load($nodes, $types) {
       $node->lingotek = array_merge($node->lingotek, $node_lingovalues[$node->nid]);
     }
     // Step 5: if no profile, then disabled.
-    if (!isset($node->lingotek['profile'])) {
+    if (!isset($node->lingotek['profile']) || empty($node->lingotek['profile'])) {
       $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
     }
   }
