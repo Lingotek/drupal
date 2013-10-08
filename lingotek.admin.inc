@@ -647,8 +647,8 @@ function lingotek_admin_load_l10n_update_batch($modules) {
     $updates = lingotek_check_for_l10n_translations($modules);
     if ($updates) {
       $batch = l10n_update_batch_multiple($updates, variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP));
-      $batch['title'] = t('Checking for available translations from Drupal');
-      $batch['init_message'] = t('Checking for translations...');
+      $batch['title'] = t('Syncing Content and Translations');
+      $batch['init_message'] = t('Checking for community translations from Drupal...');
       $batch['finished'] = 'lingotek_admin_module_indexing_finished';
       $batch['error_message'] = t('String-gathering process has encountered an error.');
       $batch['file'] = drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc';
