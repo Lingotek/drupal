@@ -182,11 +182,10 @@ class LingotekSync {
         ->fields('meta', array('id'))
         ->groupBy('id');
     $ids = $query->execute()->fetchCol();
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
 
     foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
-      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $drupal_language_code);
+      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
   }
 
