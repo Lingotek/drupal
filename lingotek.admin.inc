@@ -575,6 +575,13 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   $lingotek_use_translation_from_drupal = isset($form_state['input']['lingotek_use_translation_from_drupal']) ? $form_state['input']['lingotek_use_translation_from_drupal'] : 0;
   variable_set('lingotek_use_translation_from_drupal', $lingotek_use_translation_from_drupal);
 
+  if ($lingotek_use_translation_from_drupal) {
+    variable_set('l10n_update_rebuild_projects', 1);
+  } else {
+    variable_del('l10n_update_rebuild_projects');
+    db_truncate('l10n_update_project')->execute();
+  }
+
   //if any configuration options are set then config translation is enabled
   if (variable_get('lingotek_translate_config_taxonomies', 0) || variable_get('lingotek_translate_config_blocks', 0) ||
       variable_get('lingotek_translate_config_menus', 0) || variable_get('lingotek_translate_config_views', 0) ||
