@@ -215,7 +215,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   $form['node_translation']['types'] = array(
     '#type' => 'markup',
     '#markup' => theme('table', $variables),
-    '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
+    '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and storage method (e.g. node/field)',
   );
 
   foreach (array_keys($translate) as $content_type) {
@@ -1229,6 +1229,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     'Actions',
   );
 
+  $total_count_with_profiles = 0;
   $rows = array();
 
   foreach ($profiles as $key => $profile) {
@@ -1236,6 +1237,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
 
     $count = lingotek_admin_profile_usage($key);
     $count_types = lingotek_admin_profile_usage_by_types($key);
+    $total_count_with_profiles += $count;
 
     $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes') . ' &sdot;  ' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . '', $edit_link);
   }
@@ -1244,7 +1246,8 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $custom_count_types = lingotek_admin_profile_usage_by_types(LingotekSync::PROFILE_CUSTOM);
   $rows[] = array(t('Custom'), $custom_count . ' ' . format_plural($custom_count, 'node', 'nodes') . ' &sdot; ' . $custom_count_types . ' ' . format_plural($count_types, 'content type', 'content types'), '');
 
-  $disabled_count = lingotek_admin_profile_usage(LingotekSync::PROFILE_DISABLED);
+  $total_node_count = current(db_query("SELECT COUNT(DISTINCT(n.nid)) FROM {node} n WHERE n.status=1")->fetchCol());
+  $disabled_count = ($total_node_count - ($total_count_with_profiles + $custom_count)); // lingotek_admin_profile_usage(LingotekSync::PROFILE_DISABLED);
   $disabled_count_types = lingotek_admin_profile_usage_by_types(LingotekSync::PROFILE_DISABLED);
   $rows[] = array(t('Disabled'), $disabled_count . ' ' . format_plural($disabled_count, 'node', 'nodes') . ' &sdot; ' . $disabled_count_types . ' ' . format_plural($disabled_count_types, 'content type', 'content types'), '');
 
