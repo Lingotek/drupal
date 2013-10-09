@@ -182,11 +182,10 @@ class LingotekSync {
         ->fields('meta', array('id'))
         ->groupBy('id');
     $ids = $query->execute()->fetchCol();
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
 
     foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
-      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $drupal_language_code);
+      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
   }
 
@@ -197,8 +196,13 @@ class LingotekSync {
 
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes
   public static function deleteTargetEntriesForAllNodes($lingotek_locale) {
-    $key = 'target_sync_status_' . $lingotek_locale;
-    db_delete('lingotek')->condition('lingokey', $key)->execute();
+    $keys = array(
+      'target_sync_status_' . $lingotek_locale,
+      'target_sync_last_progress_updated_' . $lingotek_locale,
+      'target_sync_progress_' . $lingotek_locale,
+      'target_last_downloaded_' . $lingotek_locale,
+    );
+    db_delete('lingotek')->condition('lingokey', $keys, 'IN')->execute();
   }
 
   public static function deleteTargetEntriesForAllChunks($lingotek_locale) {
@@ -268,9 +272,12 @@ class LingotekSync {
 
     $locales = lingotek_get_target_locales();
     foreach ($document_ids as $document_id) {
+      if (!$document_id) {
+        continue;
+      }
       foreach ($locales as $locale) {
-        $target_status = self::getTargetStatus($document_id, $locale);
         if (isset($response->byDocumentIdAndTargetLocale->$document_id->$locale)) {
+          $target_status = self::getTargetStatus($document_id, $locale);
           $doc_target = array(
             'document_id' => $document_id,
             'locale' => $locale,
@@ -445,6 +452,9 @@ class LingotekSync {
   }
 
   public static function getTargetCountByDocumentIds($document_ids) {
+    if (empty($document_ids)) {
+      return;
+    }
     if (!is_array($document_ids)) {
       $document_ids = array($document_ids);
     }

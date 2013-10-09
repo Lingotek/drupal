@@ -92,6 +92,12 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
  */
 function lingotek_download_translations_form_submit($form, $form_state) {
   $nid = $form_state['values']['nid'];
+
+  // clear any caching from entitycache module
+  if (module_exists('entitycache')) {
+    cache_clear_all($nid, 'cache_entity_node');
+  }
+
   $document_id = lingotek_lingonode($nid, 'document_id');
 
   $locales = array();
@@ -154,6 +160,12 @@ function lingotek_push_form($form, $form_state, $node) {
  */
 function lingotek_push_form_submit($form, $form_state) {
   $node = lingotek_node_load_default($form_state['values']['node_id']);
+
+  // clear any caching from entitycache module
+  if (module_exists('entitycache')) {
+    cache_clear_all($node->nid, 'cache_entity_node');
+  }
+
   $api = LingotekApi::instance();
   if ($node->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     lingotek_lingonode($node->nid, 'workbench_moderate', '0');
@@ -699,6 +711,10 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   
   if ($entity_type == 'node') {
+    // clear any residual nodes built out before the lingotek document_id was stored
+    if (module_exists('entitycache')) {
+      cache_clear_all($id, 'cache_entity_node');
+    }
     $node = node_load($id);
     
     if ($node->language == $drupal_language_code) {

@@ -194,6 +194,10 @@ function lingotek_notifications() {
           
         lingotek_lingonode($nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
       }
+      // clear any caching from entitycache module to allow the new translation to show immediately
+      if (module_exists('entitycache')) {
+        cache_clear_all($nid, 'cache_entity_node');
+      }
     }
     break; // if the function did not continue, then the doc ID was found.
   }
@@ -356,9 +360,9 @@ function lingotek_form_bulk_sync($form, $form_state) {
       $config_types = array(
         'lingotek_translate_config_builtins' => t('Include built-in interface data'),
         'lingotek_translate_config_blocks' => t('blocks'),
-        'lingotek_translate_config_taxonomies' => t('taxonomies'),
         'lingotek_translate_config_menus' => t('menus'),
         'lingotek_translate_config_views' => t('views'),
+        'lingotek_translate_config_taxonomies' => t('taxonomy vocabularies & terms'),
       );
       $config_types_included = array();
       $config_types_excluded = array();
@@ -808,6 +812,9 @@ function lingotek_post_download_workbench_moderation($options_index, $document_i
 */
 function lingotek_get_and_update_target_progress($document_ids) {
   $api = LingotekApi::Instance();
+  if (empty($document_ids)) {
+    return;
+  }
   if (!is_array($document_ids)) {
     $document_ids = array($document_ids);
   }

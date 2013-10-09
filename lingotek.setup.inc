@@ -290,9 +290,9 @@ function lingotek_setup_account_settings_form_submit($form, $form_state) {
   //debug( $password );
   // Validate the Account - Can we Login?
   // These are V4 Basic Auth API Calls for Legacy Users
-  $communities = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
-  if ($communities === FALSE) {
-    drupal_set_message(t('Invalid login or password.'), 'error');
+  list($success, $msg) = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
+  if ($success == FALSE) {
+    drupal_set_message($msg, 'error');
   }
   else {
     // Login Successful:  Valid Account
@@ -316,14 +316,15 @@ function lingotek_community_select_form() {
   $form = array();
 
   // V3 API Calls for Legacy Users
-  $communities = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
+  list($success, $msg) = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
 
-  if ($communities === FALSE) {
+  if ($success == FALSE) {
 
-    drupal_set_message(t('Invalid login or password.'), 'error');
+    drupal_set_message($msg, 'error');
     drupal_goto('admin/config/lingotek/account-settings'); // Shouldnt be here.  So something messed up.  Go back.
   }
   else {
+    $communities = $msg;
     $count = count($communities);
     if ($count == 1) { // Just one community, use that.
       $community_keys = array_keys($communities);
@@ -353,18 +354,18 @@ function lingotek_community_select_form() {
     '#required' => TRUE,
   );
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
+
+  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next')
+  );
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
@@ -501,18 +502,18 @@ function lingotek_community_settings_select_form() {
     );
   }
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-settings-select') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
+
+  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next')
+  );
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
@@ -598,18 +599,18 @@ function lingotek_setup_language_settings_form() {
     '#required' => TRUE,
   );
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
+
+  $form['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next')
+  );
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
@@ -701,17 +702,18 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
     ),
   );
 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/setup-language-switcher') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
   }
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next')
+  );
 
   $output = array(
     $form
@@ -773,17 +775,20 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
     '#weight' => -1,
   );
   
-  $form['node_translation']['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['node_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['node_translation']['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
   }
+
+  unset($form['node_translation']['actions']['submit']);
+  $form['node_translation']['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next')
+  );
+
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -859,14 +864,19 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['comment_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['comment_translation']['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
+
   }
   $form['comment_translation']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
-  $form['lingotek_support_footer'] = lingotek_support_footer();
 
+  unset($form['comment_translation']['actions']['submit']);
   $form['comment_translation']['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next'),
   );
+
+  $form['lingotek_support_footer'] = lingotek_support_footer();
+
   return $form;
 }
 
@@ -883,9 +893,12 @@ function lingotek_setup_additional_translation_settings_form($form, &$form_state
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['additional_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['additional_translation']['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
+
   }
   $form['additional_translation']['#submit'] = 'lingotek_setup_additional_translation_settings_form_submit';
 
+  unset($form['additional_translation']['actions']['submit']);
   $form['additional_translation']['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Finish'),
@@ -899,7 +912,10 @@ function lingotek_setup_additional_translation_settings_form_submit($form, &$for
   // WTD: process the submitted options
   
   $operations = array();
-  $operations[] = array('lingotek_cleanup_utility', array(FALSE));
+  $cleanup_batch = lingotek_cleanup_utility(FALSE, FALSE); // return the batch, rather than autoset to execute
+  if ($cleanup_batch && isset($cleanup_batch['operations'])) {
+    $operations = array_merge($operations, $cleanup_batch['operations']);
+  }
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
   
   lingotek_admin_additional_translation_settings_form_submit($form, $form_state, $additional_operations=$operations);
@@ -951,11 +967,13 @@ function lingotek_setup_node_updates_form($form, $form_state) {
   $form['lingotek_middle_spacer'] = array('#markup' => '<div>&nbsp;</div>');
 
   $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'));
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next')
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'));
 
   return $form;
 }
@@ -1004,7 +1022,7 @@ function lingotek_get_communities_v4($login, $passwd, $url) {
   $options = array();
 
   if (!$client->canLogIn()) {
-    return FALSE;
+    return array(FALSE, t('Failed to connect to the Lingotek service: @error', array('@error' => $client->getLastLoginMsg())));
   }
 
   $list_communities = $client->request("listCommunities", array());
@@ -1014,7 +1032,7 @@ function lingotek_get_communities_v4($login, $passwd, $url) {
     }
   }
 
-  return $options;
+  return array(TRUE, $options);
 }
 
 /*

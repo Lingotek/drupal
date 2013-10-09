@@ -118,6 +118,30 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
     $node = $source_node;
   }
 
+  lingotek_process_entity_xml($xml, $node, 'node', $drupal_language_code, $url_alias_translation);
+
+  //Fix for pathauto expecting the form:
+  $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
+  $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
+  $node->path['pathauto'] = 0;
+
+  LingotekSync::setTargetStatus($source_node->nid, $lingotek_locale, $sync_success_status); //slightly pre-emptive, but certainly more cohesive
+  $node->lingotek_upload_override = 0; // ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
+  //Fix for workbench_moderation changing node state after translation download
+  if (module_exists('workbench_moderation')) {
+    if (isset($node->workbench_moderation)) {
+      $node->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
+    }
+  }
+
+  lingotek_lingonode_variable_delete($node->nid, 'target_last_downloaded_' . $lingotek_locale);
+  lingotek_lingonode($node->nid, 'target_last_downloaded_' . $lingotek_locale, time());
+
+  return TRUE;
+ // node_save($node);
+}
+
+function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
   $delta = 0;
   $last_tag = NULL;
   foreach ($xml as $tag => $content) {
@@ -173,7 +197,7 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
           $target_key = array($target_key);
         }
         $insert_array = array(
-          'entity_type' => 'node',
+          'entity_type' => $entity_type,
           'bundle' => $node->type,
           'entity_id' => $node->nid,
           'revision_id' => $node->vid,
@@ -181,22 +205,51 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
           'delta' => $delta,
           'deleted' => '0',
         );
-        foreach ($content as $text) {
-          $array_key = $target_key[$index];
-          $db_field_name = $field['field_name'] . '_' . $array_key;
-          $insert_array[$db_field_name] = decode_entities($text);
-          //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
-          if (array_key_exists($node->language, $node_field)) {
-            if (array_key_exists('format', $node_field[$node->language][0])) {
-              //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
-              $format_db_field_name = $field['field_name'] . '_format';
-              $insert_array[$format_db_field_name] = $node_field[$node->language][0]['format'];
-            }
+        $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
+
+        if (module_exists('field_collection') && $field['type'] == 'field_collection') {
+          $entity = (object) array(
+            'type' => $drupal_field_name,
+            'nid' => $node_field[$node->language][$delta]['value'],
+            'vid' => $node_field[$node->language][$delta]['revision_id'],
+          );
+          lingotek_process_entity_xml($content, $entity, 'field_collection_item', $drupal_language_code);
+          $db_field_name = $field['field_name'] . '_value';
+          $db_revision_field_name = $field['field_name'] . '_revision_id';
+          $insert_array['language'] = $drupal_language_code;
+          $insert_array[$db_field_name] = $node_field[$node->language][$delta]['value'];
+          $insert_array[$db_revision_field_name] = $node_field[$node->language][$delta]['revision_id'];
+          foreach ($field_names as $table) {
+            db_update($table)
+              ->fields(array(
+                'language' => $node->language,
+              ))
+              ->condition('entity_id', $node->nid)
+              ->condition('language', 'und')
+              ->execute();
           }
-          $index++;
         }
-        $field_names = array('field_revision_' . $field['field_name']);
-        $field_names[] = 'field_data_' . $field['field_name']; // put fields into both field_data_ and field_revision_ tables
+        else {
+          foreach ($content as $text) {
+            if ($field['translatable'] != 1 && $entity_type == 'field_collection_item') {
+              $field['translatable'] = 1;
+              field_update_field($field);
+            }
+            $array_key = $target_key[$index];
+            $db_field_name = $field['field_name'] . '_' . $array_key;
+            $insert_array[$db_field_name] = decode_entities($text);
+            //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
+            if (array_key_exists($node->language, $node_field)) {
+              if (array_key_exists('format', $node_field[$node->language][0])) {
+                //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
+                $format_db_field_name = $field['field_name'] . '_format';
+                $insert_array[$format_db_field_name] = $node_field[$node->language][0]['format'];
+              }
+            }
+            $index++;
+          }
+        }
+        // put fields into both field_data_ and field_revision_ tables
         // if published version (in node table) is as current as most current revision (in node_revision table)
         if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
           $only_write_revisions = 1;
@@ -220,7 +273,7 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
         }
       }
 
-      cache_clear_all('field:node:' . $node->nid, 'cache_field');
+      cache_clear_all('field:' . $entity_type . ':' . $node->nid, 'cache_field');
 
       //Set URL alias
       if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $node->language != LANGUAGE_NONE) {
@@ -231,26 +284,6 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
     }
     $last_tag = $tag;
   }
-
-  //Fix for pathauto expecting the form:
-  $node->path = path_load(array('source' => 'node/' . $node->nid, 'language' => $node->language));
-  $node->path['alias'] = isset($node->path['alias']) ? $node->path['alias'] : '';
-  $node->path['pathauto'] = 0;
-
-  LingotekSync::setTargetStatus($source_node->nid, $lingotek_locale, $sync_success_status); //slightly pre-emptive, but certainly more cohesive
-  $node->lingotek_upload_override = 0; // ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
-  //Fix for workbench_moderation changing node state after translation download
-  if (module_exists('workbench_moderation')) {
-    if (isset($node->workbench_moderation)) {
-      $node->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
-    }
-  }
-
-  lingotek_lingonode_variable_delete($node->nid, 'target_last_downloaded_' . $lingotek_locale);
-  lingotek_lingonode($node->nid, 'target_last_downloaded_' . $lingotek_locale, time());
-  
-  return TRUE;
- // node_save($node);
 }
 
 /*

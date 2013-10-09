@@ -140,7 +140,7 @@ class LingotekApi {
 
   public function removeDocument($document_id, $reset_node = TRUE) {
     $success = FALSE;
-    if ($document_id && (is_numeric($document_id) || is_array($document_id))) {
+    if ($document_id) {
       // Remove node info from lingotek table (and reset for upload when reset_node is TRUE)
       if ($reset_node) {
         LingotekSync::resetNodeInfoByDocId($document_id);
@@ -259,7 +259,7 @@ class LingotekApi {
     $parameters = array(
       'projectId' => variable_get('lingotek_project', NULL),
       'documentName' => 'config - ' . $chunk->cid,
-      'documentDesc' => 'configuration string set "' . $chunk->cid . '", related to menus, taxonomies, views, etc.',
+      'documentDesc' => 'configuration string set "' . $chunk->cid . '", related to menus, views, taxonomy vocabularies & terms, etc.',
       'format' => $this->xmlFormat(),
       'applyWorkflow' => 'true',
       'workflowId' => variable_get('lingotek_translate_config_workflow_id', NULL),

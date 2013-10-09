@@ -915,10 +915,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  * This is not a hook. This is a helper function to save all lingotek related data.
  */
 function lingotek_node_save($node) {
-  if (!lingotek_supported_type($node->type) && $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
-    return $node;
-  }
-  
+
   $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
   
   $disabled_selected = ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED);
@@ -1024,7 +1021,7 @@ function lingotek_get_global_profile() {
   return array(
     'name' => '',
     'document_id' => NULL,
-    'lingotek_nodes_translation_method' => 'field',
+    'lingotek_nodes_translation_method' => variable_get('lingotek_nodes_translation_method'),
     'create_lingotek_document' => 0,
     'sync_method' => 0,
     'allow_community_translation' => 0,
@@ -1109,10 +1106,8 @@ function lingotek_node_insert($node) {
  */
 function lingotek_node_delete($node) {
   $doc_id = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL;
-  if (is_numeric($doc_id)) {
-    $api = LingotekApi::instance();
-    $api->removeDocument($doc_id, FALSE);
-  }
+  $api = LingotekApi::instance();
+  $api->removeDocument($doc_id, FALSE);
   LingotekSync::removeNodeInfoByNodeId($node->nid);
 }
 
@@ -1120,6 +1115,10 @@ function lingotek_node_delete($node) {
  * Implements hook_node_load().
  */
 function lingotek_node_load($nodes, $types) {
+  if (empty($nodes)) {
+    return;
+  }
+
   $global_profile = lingotek_get_global_profile();
   $node_profile_defaults = lingotek_load_profile_defaults('node'); // return assoc array by node type
   $profiles_list = lingotek_get_profiles();
@@ -1163,7 +1162,7 @@ function lingotek_node_load($nodes, $types) {
       $node->lingotek = array_merge($node->lingotek, $node_lingovalues[$node->nid]);
     }
     // Step 5: if no profile, then disabled.
-    if (!isset($node->lingotek['profile'])) {
+    if (!isset($node->lingotek['profile']) || !strlen($node->lingotek['profile'])) {
       $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
     }
   }
@@ -1194,14 +1193,20 @@ function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
  * Implements hook_node_update().
  */
 function lingotek_node_update($node) {
-  if(!empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
+  // check to make sure Lingotek is enabled and supporting the given node type or profile
+  if ( !lingotek_supported_type($node->type)
+       && (!isset($node->lingotek) || $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED)) {
+    return;
+  }
+  //check to make sure it is not a target node
+  if(!empty($node->tnid) && ($node->nid != $node->tnid)) {
     return;
   }
   
   $node = lingotek_node_save($node);
   
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
-    if ($node->is_new) {
+    if (isset($node->is_new) && $node->is_new) {
       lingotek_workbench_moderation_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
     } else {
       return;
@@ -1585,6 +1590,24 @@ function lingotek_entity_info_alter(&$entity_info) {
   if (variable_get('lingotek_translate_comments', FALSE)) {
     $entity_info['comment']['translation']['lingotek'] = TRUE;
   }
+  if (isset($entity_info['field_collection_item'])) {
+    $entity_info['field_collection_item']['translation']['lingotek'] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+  */
+function lingotek_entity_presave($entity, $type) {
+  /*global $language;
+  if ($type == 'field_collection_item') {
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists('und', $value)) {
+        $entity->{$key}[$language->language] = $value['und'];
+        unset($entity->{$key}['und']);
+      }
+    }
+  }*/
 }
 
 /**
@@ -1935,5 +1958,14 @@ function lingotek_views_post_execute(&$view) {
     if ($included) {
       drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/workbench-link.css', array('group' => CSS_DEFAULT));
     }
+  }
+}
+
+/*
+ * Implements hook_l10n_update
+ */
+function lingotek_l10n_update_projects_alter(&$projects) {
+  if (variable_get('lingotek_use_translation_from_drupal', 0) != 1) {
+    $projects = array();
   }
 }

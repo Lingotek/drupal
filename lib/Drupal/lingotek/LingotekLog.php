@@ -31,32 +31,32 @@ class LingotekLog {
     self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
   }
 
-  public static function info($msg, $data, $tag = 'info') {
+  public static function info($msg, $data, $tag = '') {
     if (!variable_get('lingotek_api_debug', self::getDefault())) {
       return;
     }
     self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
   }
 
-  public static function error($msg, $data, $tag = 'error') {
+  public static function error($msg, $data, $tag = '') {
     if (!variable_get('lingotek_error_log', TRUE)) {
       return;
     }
     self::log($msg, $data, $depth = 1, WATCHDOG_ERROR, $tag);
   }
 
-  public static function warning($msg, $data, $tag = 'warning') {
+  public static function warning($msg, $data, $tag = '') {
     if (!variable_get('lingotek_warning_log', TRUE)) {
       return;
     }
     self::log($msg, $data, $depth = 1, WATCHDOG_WARNING, $tag);
   }
 
-  public static function trace($msg, $data = NULL, $tag = 'trace') {
+  public static function trace($msg, $data = NULL, $tag = '') {
     if (!variable_get('lingotek_trace_log', FALSE)) {
       return;
     }
-    self::log($msg, $data, $depth = 1, WATCHDOG_INFO, $tag);
+    self::log($msg, $data, $depth = 1, WATCHDOG_DEBUG, $tag);
   }
 
   public static function format($obj) {
@@ -73,7 +73,6 @@ class LingotekLog {
     if (isset($data)) {
       $data_output = json_encode($data);
     }
-    $suffix = is_string($tag) && strlen($tag) ? ' - ' . $tag : '';
     $data_array = array();
     if (is_array($data)) {
       foreach ($data as $k => $v) {
@@ -81,8 +80,8 @@ class LingotekLog {
       }
     }
     watchdog
-        ('lingotek' . $suffix, format_string($msg, $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /></div>', array(
-      '%msg' => $msg,
+        ('lingotek', format_string($msg, $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /></div>', array(
+      '%msg' => ($tag ? $tag . ": " . $msg : $msg),
       '%data' => $data_output,
       '%location' => $location,
       '%function' => $function,

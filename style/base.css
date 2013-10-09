@@ -50,11 +50,7 @@ div.form-item.form-item-wb-options {
 
 .lingotek-content-settings-table td div {
   float: left;
-}
-
-.lingotek-content-settings-table td div input {
-  margin-left: 10px;
-  margin-right: -2px;
+  padding-right: 15px !important;
 }
 
 input.lingotek-content-settings-table.form-checkbox {
@@ -139,7 +135,7 @@ input.lingotek-content-settings-table.form-checkbox {
   padding: 2px;
   padding-left: 5px;
   padding-right: 5px;
-  color: white;
+  color: #fff !important;
 }
 
 .language-icon.target-pending {
