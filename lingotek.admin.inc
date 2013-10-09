@@ -1542,14 +1542,18 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#value' => 'Save',
   );
   $profile_id = $form_state['values']['profile_id'];
-  if(lingotek_admin_profile_usage($profile_id) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0) {
+  $first_custom_id = 2;
+  $is_custom_profile_id = $profile_id >= $first_custom_id;
+  if (lingotek_admin_profile_usage($profile_id) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0 && $is_custom_profile_id) {
     $form['defaults']['delete'] = array(
       '#type' => 'submit',
       '#value' => 'Delete',
     );
-  } else {
+  }
+  else {
+    $markup = $is_custom_profile_id ? t('You can only delete this profile when there are no nodes or content types using it.') : t('This profile cannot be deleted.');
     $form['delete'] = array(
-      '#markup' => 'You can only delete this profile when there are no nodes or content types using it.',
+      '#markup' => '<span class="ltk-muted" style="font-style: italic;">' . $markup . '</span>',
     );
   }
   $form['defaults']['cancel'] = array(
