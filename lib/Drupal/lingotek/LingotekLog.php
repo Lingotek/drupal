@@ -80,8 +80,8 @@ class LingotekLog {
       }
     }
     watchdog
-        ('lingotek', format_string($msg, $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /></div>', array(
-      '%msg' => ($tag ? $tag . ": " . $msg : $msg),
+        ('lingotek', format_string((empty($tag) ? $msg : '[' . $tag . '] ' . $msg), $data_array) . ' <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /><b>MESSAGE:</b> %msg <br /><b>DATA:</b> %data <br /></div>', array(
+      '%msg' => $msg,
       '%data' => $data_output,
       '%location' => $location,
       '%function' => $function,
