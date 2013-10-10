@@ -1111,6 +1111,21 @@ function lingotek_node_delete($node) {
   LingotekSync::removeNodeInfoByNodeId($node->nid);
 }
 
+/*
+ * The function entity_load_single is not in core but rather in the entity module
+ * which we currently do not have as a dependency.
+ */
+function lingotek_entity_load_single($entity_type, $entity_id) {
+  if ($entity_type == 'node') {
+    $entity = lingotek_node_load_default($entity_id);
+  } else {
+    $entities = entity_load($entity_type, array($entity_id));
+    $entity = $entities[$entity_id];
+  }
+
+  return $entity;
+}
+
 /**
  * Implements hook_node_load().
  */
@@ -1207,7 +1222,7 @@ function lingotek_node_update($node) {
   
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     if (isset($node->is_new) && $node->is_new) {
-      lingotek_workbench_moderation_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
+      lingotek_workbench_mdoeration_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
     } else {
       return;
     }
@@ -1227,9 +1242,13 @@ function lingotek_upload_document($node) {
   }
 
   if (isset($node->lingotek['document_id'])) {
-    $old_node = node_load($node->nid);
-    $diff = lingotek_node_compare($node, $old_node);
-    if(empty($diff) && $node->lingotek['node_sync_status'] == 'CURRENT') {
+    $xml = lingotek_xml_node_body($node);
+    $hash = md5($xml);
+    $oldhash = lingotek_lingonode($node->nid, 'hash');
+    lingotek_lingonode($node->nid, 'hash', $hash);
+    $diff = strcmp($hash, $oldhash);
+
+    if($diff == 0 && $node->lingotek['node_sync_status'] == 'CURRENT') {
       return; //node has no changes.
     }
   }
@@ -1441,7 +1460,7 @@ function lingotek_is_config_missing() {
     'lingotek_project',
     'lingotek_workflow',
     'lingotek_vault',
-    'lingotek_translate_fields',
+    'lingotek_enabled_fields',
     'lingotek_translate_comments_node_types',
     'lingotek_oauth_consumer_id',
     'lingotek_oauth_consumer_secret',
@@ -1458,7 +1477,7 @@ function lingotek_is_config_missing() {
       elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
         return 'admin/config/lingotek/community-settings-select';
       }
-      elseif ($required_variable == 'lingotek_translate_fields') {
+      elseif ($required_variable == 'lingotek_enabled_fields') {
         return 'admin/config/lingotek/node-translation-settings';
       }
       elseif ($required_variable == 'lingotek_translate_comments_node_types') {
@@ -1858,8 +1877,8 @@ function lingotek_form_alter(&$form, &$form_state, $form_id) {
 
     if (isset($form['#entity']->tnid) && $form['#entity']->tnid != 0 && $form['#entity']->nid != $form['#entity']->tnid) {
       $content_type = $form['type']['#value'];
-      $lingotek_fields = variable_get('lingotek_translate_fields');
-      foreach ($lingotek_fields[$content_type] as $field) {
+      $lingotek_fields = variable_get('lingotek_enabled_fields');
+      foreach ($lingotek_fields['node'][$content_type] as $field) {
         $form[$field]['#disabled'] = TRUE;
       }
 

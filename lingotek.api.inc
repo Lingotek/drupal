@@ -46,8 +46,8 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     $localized_node->status = $node->status;
     $localized_node->create_lingotek_document = FALSE;
     
-    $lingotek_fields = variable_get('lingotek_translate_fields');
-    foreach ($lingotek_fields[$localized_node->type] as $field_name) {
+    $lingotek_fields = variable_get('lingotek_enabled_fields');
+    foreach ($lingotek_fields['node'][$localized_node->type] as $field_name) {
       $field = $node->$field_name;
       $f = array();
       if(isset($field[$node->language])) {
@@ -101,7 +101,7 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
-
+  
   try {
     $xml = new SimpleXMLElement($text);
   } catch (Exception $e) {
@@ -208,26 +208,18 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
 
         if (module_exists('field_collection') && $field['type'] == 'field_collection') {
-          $entity = (object) array(
-            'type' => $drupal_field_name,
-            'nid' => $node_field[$node->language][$delta]['value'],
-            'vid' => $node_field[$node->language][$delta]['revision_id'],
-          );
-          lingotek_process_entity_xml($content, $entity, 'field_collection_item', $drupal_language_code);
+          $field_collection_id = $node_field['und'][$delta]['value'];
+          $collections = entity_load('field_collection_item', array($field_collection_id));
+          $field_collection_item = $collections[$field_collection_id];
+          $field_collection_item->nid = $field_collection_item->item_id;
+          $field_collection_item->vid = $field_collection_item->revision_id;
+            
+          lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $drupal_language_code);
           $db_field_name = $field['field_name'] . '_value';
           $db_revision_field_name = $field['field_name'] . '_revision_id';
           $insert_array['language'] = $drupal_language_code;
           $insert_array[$db_field_name] = $node_field[$node->language][$delta]['value'];
           $insert_array[$db_revision_field_name] = $node_field[$node->language][$delta]['revision_id'];
-          foreach ($field_names as $table) {
-            db_update($table)
-              ->fields(array(
-                'language' => $node->language,
-              ))
-              ->condition('entity_id', $node->nid)
-              ->condition('language', 'und')
-              ->execute();
-          }
         }
         else {
           foreach ($content as $text) {
@@ -248,27 +240,28 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             }
             $index++;
           }
-        }
-        // put fields into both field_data_ and field_revision_ tables
-        // if published version (in node table) is as current as most current revision (in node_revision table)
-        if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
-          $only_write_revisions = 1;
-          unset($field_names[$only_write_revisions]);
-        }
-        foreach ($field_names as $field_name) {
-          // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
-          try {
-            drupal_write_record($field_name, $insert_array);
-          } catch (PDOException $e) {
-            $primary_keys = array(
-              'entity_type',
-              'entity_id',
-              'revision_id',
-              'deleted',
-              'delta',
-              'language',
-            );
-            drupal_write_record($field_name, $insert_array, $primary_keys);
+          
+          // put fields into both field_data_ and field_revision_ tables
+          // if published version (in node table) is as current as most current revision (in node_revision table)
+          if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
+            $only_write_revisions = 1;
+            unset($field_names[$only_write_revisions]);
+          }
+          foreach ($field_names as $field_name) {
+            // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
+            try {
+              drupal_write_record($field_name, $insert_array);
+            } catch (PDOException $e) {
+              $primary_keys = array(
+                'entity_type',
+                'entity_id',
+                'revision_id',
+                'deleted',
+                'delta',
+                'language',
+              );
+              drupal_write_record($field_name, $insert_array, $primary_keys);
+            }
           }
         }
       }

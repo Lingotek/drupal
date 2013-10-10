@@ -223,14 +223,6 @@ function watchdog_format_object($object) {
   return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
 }
 
-function lingotek_oneoff_translate($node) {
-  // TODO: Run checks on this if necessary
-  // (It appears this is currently unnecessary, as all nodes
-  // that make it to this point are already requested for
-  // translation.)
-  return TRUE;
-}
-
 function lingotek_get_translatable_field_types() {
   // What types of fields DO we translate?
   $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary', 'field_collection_embed');
@@ -252,6 +244,17 @@ function lingotek_get_translatable_fields_by_content_type($type) {
   return $desired_fields;
 }
 
+function lingotek_get_enabled_fields($entity_type, $bundle) {
+  $translate = variable_get('lingotek_enabled_fields', array());
+  $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
+  if (empty($fields_desired)) {
+    //this won't work for anything more than nodes yet
+    $fields_desired = lingotek_get_translatable_fields_by_content_type($bundle);
+  }
+
+  return $fields_desired;
+}
+
 /**
  * Return the xml representation of the source content for a node.
  *
@@ -264,11 +267,7 @@ function lingotek_get_translatable_fields_by_content_type($type) {
 function lingotek_xml_node_body($node) {
   $translatable = array();
 
-  $translate = variable_get('lingotek_translate_fields', array());
-  $fields_desired = isset($translate[$node->type]) ? $translate[$node->type] : array();
-  if (empty($fields_desired) && lingotek_oneoff_translate($node)) {
-    $fields_desired = lingotek_get_translatable_fields_by_content_type($node->type);
-  }
+  $fields_desired = lingotek_get_enabled_fields('node', $node->type);
 
   foreach ($fields_desired as $value) {
     $field = field_info_field($value);
@@ -344,12 +343,13 @@ function lingotek_xml_fields($node, $translatable, $language) {
           $element_name = $field;
           if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
             $current_field = '<' . $element_name . '>';
-            $entity = entity_load_single('field_collection_item', $delta['value']);
+            $enabled_fields = variable_get('lingotek_enabled_fields');
+            $entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
             $sub_fields = field_info_instances('field_collection_item', $field);
             $translatable_field_types = lingotek_get_translatable_field_types();
             $translatable_sub_fields = array();
             foreach ($sub_fields as $sub_field => $f) {
-              if (in_array($f['widget']['type'], $translatable_field_types)) {
+              if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field])) {
                 $translatable_sub_fields[] = $sub_field;
               }
             }
@@ -569,6 +569,22 @@ function lingotek_get_source_language() {
 }
 
 // END:  lingotek_get_source_language()
+
+
+function lingotek_managed_entity_types() {
+  $types = entity_get_info();
+//  $exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
+//  $exclude = array_flip($exclude);
+//  return array_diff_key($types, $exclude);
+  $enabled = array('node', 'field_collection_item');
+  $enabled = array_flip($enabled);
+
+  if ($types['field_collection_item']) {
+    $types['field_collection_item']['label'] = 'Field Collection';
+  }
+
+  return array_intersect_key($types, $enabled);
+}
 
 /**
  * Content node types linked to 'translatable' fields.
@@ -1208,23 +1224,4 @@ function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
     }
   }
   return $aReturn;
-} 
-
-function lingotek_node_compare($node1, $node2) {
-  if ($node1->type != $node2->type)
-    return array('different_types');
-  
-  $fields = variable_get('lingotek_translate_fields');
-  $fields = $fields[$node1->type];
-  
-  foreach ($fields as $field) {
-    $diff1 = lingotekArrayRecursiveDiff($node1->{$field}, $node2->{$field});
-    $diff2 = lingotekArrayRecursiveDiff($node2->{$field}, $node1->{$field});
-    if(!empty($diff1))
-      return $diff1;
-    if(!empty($diff2))
-      return $diff2;
-  }
-  
-  return array();
 }

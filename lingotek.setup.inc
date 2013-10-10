@@ -739,7 +739,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
 
   $fs['values'] = lingotek_get_global_profile();
   $fs['values']['profile_id'] = LingotekSync::PROFILE_CUSTOM;
-  $form = lingotek_admin_node_translation_settings_form($form, $form_state);
+  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'node');
   $content_defaults = lingotek_admin_profile_form($form, $fs);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
   $form['lingotek_nodes_translation_method']['#weight'] = -3;

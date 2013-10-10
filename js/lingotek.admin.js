@@ -9,11 +9,11 @@ Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
 
     //when a content type checkbox is clicked
-    $('td:first-child .form-checkbox', context).click( function() {
-      isChecked = $(this).attr('checked');
+    $('.form-select', context).change( function() {
+      isEnabled = $(this).val() != 'DISABLED';
       $(this).parents('tr').find('.form-checkbox').each( function() {
-        if(isChecked) {
-          $(this).attr('checked', isChecked);
+        if(isEnabled) {
+          $(this).attr('checked', isEnabled);
         } else {
           $(this).removeAttr('checked');
         }
@@ -48,10 +48,10 @@ Drupal.behaviors.lingotekAdminForm = {
         return Drupal.t($('#account_summary').val() + ' / ' + $('#connection_summary').val());
       });
 
-      $('fieldset.lingotek-translate-content', context).drupalSetSummary(function (context) {
+      $('fieldset.lingotek-translate-nodes', context).drupalSetSummary(function (context) {
         $list = [];
         total = 0;
-        $('#edit-node-translation select').each(function( index ) {
+        $('fieldset.lingotek-translate-nodes select').each(function( index ) {
           var name = $(this).attr('name');
           if(name && name.substring(0, 7) == 'profile') {
             
@@ -68,14 +68,36 @@ Drupal.behaviors.lingotekAdminForm = {
         }
       });
 
+      if ($('fieldset.lingotek-translate-field-collections').length) {
+        $('fieldset.lingotek-translate-field-collections', context).drupalSetSummary(function (context) {
+          $list = [];
+          total = 0;
+          $('fieldset.lingotek-translate-field-collections select').each(function( index ) {
+            var name = $(this).attr('name');
+            if(name && name.substring(0, 7) == 'profile') {
+
+              if($(this).val() != 'DISABLED') {
+                $list.push($(this).val());
+              }
+              total++;
+            }
+          });
+          if($list.length == 0) {
+            return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+          } else {
+            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
+          }
+        });
+      }
+
       $('fieldset.lingotek-translate-comments', context).drupalSetSummary(function (context) {
         $list = [];
         total = 0;
         $('#edit-lingotek-translate-comments-node-types input').each(function( index ) {
           if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
-            $list.push($(this).val());
-          }
-          total++;
+              $list.push($(this).val());
+            }
+            total++;
         });
         if($list.length == 0) {
           return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
