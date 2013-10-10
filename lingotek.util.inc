@@ -934,7 +934,8 @@ function lingotek_get_target_languages($codes_only = TRUE) {
  */
 
 function lingotek_get_content_types() {
-  return array_keys(variable_get('lingotek_translate_fields'));
+  $fields = variable_get('lingotek_enabled_fields');
+  return array_keys($fields['node']);
 }
 
 /*
@@ -1174,10 +1175,10 @@ function lingotek_migration_3() {
 function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
   $or = db_or();
   
-  $fields = variable_get('lingotek_translate_fields');
+  $fields = variable_get('lingotek_enabled_fields');
   $types = array();
   foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
-    if($profile['profile'] == (string)$profile_id && isset($fields[$content_type])) {
+    if($profile['profile'] == (string)$profile_id && isset($fields['node'][$content_type])) {
       $types[] = $content_type;
     }
   }

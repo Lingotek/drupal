@@ -117,6 +117,13 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   $profile_options[LingotekSync::PROFILE_CUSTOM] = 'Custom';
   $profile_options[LingotekSync::PROFILE_DISABLED] = 'Disabled';
 
+  if ($entity_type == 'field_collection_item') {
+    $profile_options = array(
+      'ENABLED' => 'Enabled',
+      LingotekSync::PROFILE_DISABLED => 'Disabled',
+    );
+  }
+
   $entity_profiles = variable_get('lingotek_entity_profiles');
 
   // What types of fields DO we translate?

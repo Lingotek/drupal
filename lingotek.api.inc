@@ -208,9 +208,11 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
 
         if (module_exists('field_collection') && $field['type'] == 'field_collection') {
-          $field_collection_id = $node_field['und'][$delta]['value'];
-          $collections = entity_load('field_collection_item', array($field_collection_id));
-          $field_collection_item = $collections[$field_collection_id];
+          $default = language_default();
+          $default_language = $default->language;
+          $field_collection_id = isset($node_field['und'][$delta]['value']) ? $node_field['und'][$delta]['value'] : $node_field[$default_language][$delta]['value'];
+          $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
+          $field_collection_item->type = $field;
           $field_collection_item->nid = $field_collection_item->item_id;
           $field_collection_item->vid = $field_collection_item->revision_id;
             
@@ -231,7 +233,7 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             $db_field_name = $field['field_name'] . '_' . $array_key;
             $insert_array[$db_field_name] = decode_entities($text);
             //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
-            if (array_key_exists($node->language, $node_field)) {
+            if (isset($node->language) && array_key_exists($node->language, $node_field)) {
               if (array_key_exists('format', $node_field[$node->language][0])) {
                 //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
                 $format_db_field_name = $field['field_name'] . '_format';
