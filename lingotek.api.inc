@@ -212,16 +212,18 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
           $default_language = $default->language;
           $field_collection_id = isset($node_field['und'][$delta]['value']) ? $node_field['und'][$delta]['value'] : $node_field[$default_language][$delta]['value'];
           $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
-          $field_collection_item->type = $field;
+          $field_collection_item->type = $field['field_name'];
+          $field_collection_item->language = $node->language;
           $field_collection_item->nid = $field_collection_item->item_id;
           $field_collection_item->vid = $field_collection_item->revision_id;
-            
+
           lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $drupal_language_code);
           $db_field_name = $field['field_name'] . '_value';
           $db_revision_field_name = $field['field_name'] . '_revision_id';
           $insert_array['language'] = $drupal_language_code;
-          $insert_array[$db_field_name] = $node_field[$node->language][$delta]['value'];
-          $insert_array[$db_revision_field_name] = $node_field[$node->language][$delta]['revision_id'];
+          $lang = isset($node_field[$node->language][$delta]['value']) ? $node->language : 'und';
+          $insert_array[$db_field_name] = $node_field[$lang][$delta]['value'];
+          $insert_array[$db_revision_field_name] = $node_field[$lang][$delta]['revision_id'];
         }
         else {
           foreach ($content as $text) {
@@ -249,21 +251,35 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             $only_write_revisions = 1;
             unset($field_names[$only_write_revisions]);
           }
-          foreach ($field_names as $field_name) {
-            // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
-            try {
-              drupal_write_record($field_name, $insert_array);
-            } catch (PDOException $e) {
-              $primary_keys = array(
-                'entity_type',
-                'entity_id',
-                'revision_id',
-                'deleted',
-                'delta',
-                'language',
-              );
-              drupal_write_record($field_name, $insert_array, $primary_keys);
-            }
+        }
+
+        foreach ($field_names as $field_name) {
+          // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
+          try {
+            drupal_write_record($field_name, $insert_array);
+          } catch (PDOException $e) {
+            $primary_keys = array(
+              'entity_type',
+              'entity_id',
+              'revision_id',
+              'deleted',
+              'delta',
+              'language',
+            );
+            drupal_write_record($field_name, $insert_array, $primary_keys);
+          }
+        }
+
+        if ($entity_type == 'field_collection_item') {
+          $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
+          foreach ($field_names as $table) {
+            db_update($table)
+                ->fields(array(
+                  'language' => $node->language,
+                ))
+                ->condition('entity_id', $node->nid)
+                ->condition('language', 'und')
+                ->execute();
           }
         }
       }
