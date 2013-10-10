@@ -621,6 +621,9 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   if (variable_get('lingotek_translate_config_builtins')) {
     lingotek_admin_prepare_builtins($additional_operations);
   }
+  else {
+    lingotek_admin_setup_nonbuiltins_batch($additional_operations);
+  }
 
   // if this function is being called as part of the setup process, continue to
   // the dashboard to make sure they get a language configured.  Otherwise,
@@ -638,6 +641,18 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   else {
     drupal_goto($final_destination);
   }
+}
+
+function lingotek_admin_setup_nonbuiltins_batch($operations) {
+  $batch = array(
+    'operations' => $operations,
+    'title' => 'Identifying translatable content',
+    'init_message' => t('Completing setup process'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'error_message' => t('An error has occurred during setup.  Please review the log for more information.'),
+    'file' => drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc',
+  );
+  batch_set($batch);
 }
 
 function lingotek_admin_load_l10n_update_batch($modules) {
