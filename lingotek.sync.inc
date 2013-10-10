@@ -49,6 +49,52 @@ function lingotek_notify_url_check() {
   }
 }
 
+function lingotek_get_trans_obj($document_id, $document_idx) {
+  // Adding a delay in the update.  Without the delay all the different language updates hit at once, causing node lock issues as multiple languages try to update the same node at once.
+  $min = 0;
+  $max = 3;
+  $sleep = rand($min, $max);
+  sleep($sleep);
+
+  // try 3 times if by chance we don't find the document in the database yet..
+  $attempts = 0;
+  while ($attempts < 3) {
+    list($id, $type) = LingotekSync::getEntityIdFromDocId($document_id);
+    if (!$id) { // check for the old style document_id
+      list($id, $type) = LingotekSync::getEntityIdFromDocId($document_idx);
+      if ($id){
+        $document_id = $document_idx;
+      }
+    }
+    
+    if ($id) {
+      $entity = lingotek_entity_load_single($type, $id);
+      $trans_obj = new LingotekEntity($entity, $type);
+      $source_language = $entity->language;
+      continue;
+    }
+
+    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
+      $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
+      $replacements['@id'] = $trans_obj->cid;
+      $replacements['@trans_type'] = "ConfigChunk";
+      $replacements = array(
+        '@document' => $document_id,
+        '@language_code' => $lingotek_locale,
+        '@project_id' => $project_id,
+      );
+      continue;
+    }
+
+    LingotekLog::info('Did not find doc ID @doc_id yet on attempt #@attempt, retrying...', 
+        array('@attempt' => $attempts, '@doc_id' => $document_id));
+    sleep(2);
+    $attempts++;
+  }
+  
+  return $trans_obj;
+}
+
 /**
  * Registers the site translation notfication callback.
  */
@@ -72,65 +118,25 @@ function lingotek_notifications() {
   if ((!isset($document_id) && !isset($document_idx)) || !isset($lingotek_locale)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
   }
-
-  // Adding a delay in the update.  Without the delay all the different language updates hit at once, causing node lock issues as multiple languages try to update the same node at once.
-  $min = 0;
-  $max = 3;
-  $sleep = rand($min, $max);
-  sleep($sleep);
-
+  
   include_once('lingotek.batch.inc');
-  $context = '';
 
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
   
-  // try 3 times if by chance we don't find the document in the database yet..
-  $attempts = 0;
-  while ($attempts < 3) {
-    list($id, $type) = LingotekSync::getEntityIdFromDocId($document_id);
-    if (!$id) { // check for the old style document_id
-      list($id, $type) = LingotekSync::getEntityIdFromDocId($document_idx);
-      if ($id){
-        $document_id = $document_idx;
-      }
-    }
-    
-    if ($id) {
-      $entity = lingotek_entity_load_single($type, $id);
-      $source_language = $entity->language;
-      if ($completed) {
-        LingotekSync::setTargetStatus($id, $lingotek_locale, LingotekSync::STATUS_READY);
-      }
+  $trans_obj = lingotek_get_trans_obj($document_id, $document_idx);
 
-      if ($entity->lingotek['sync_method']) { // download only when automatic download is enabled
-        $status = $completed ? LingotekSync::STATUS_CURRENT : LingotekSync::STATUS_PENDING;
-        if ($completed) {
-          lingotek_keystore($entity_type, $trans_obj->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_READY); 
-        }
-      }
-      continue;
-    }
-
-    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-      $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
-      $replacements['@id'] = $trans_obj->cid;
-      $replacements['@trans_type'] = "ConfigChunk";
-      $replacements = array(
-        '@document' => $document_id,
-        '@language_code' => $lingotek_locale,
-        '@project_id' => $project_id,
-      );
-      continue;
-    }
-
-    LingotekLog::info('Did not find doc ID @doc_id yet on attempt #@attempt, retrying...', 
-        array('@attempt' => $attempts, '@doc_id' => $document_id));
-    sleep(2);
-    $attempts++;
-  }
-  
   if ($trans_obj) {
-    if ($trans_obj->updateLocalContentByTarget($lingotek_locale)) {
+    $trans_obj->preDownload();
+    
+    $replacements = array(
+      '@trans_type' => get_class($trans_obj),
+      '@document' => $document_id,
+      '@language_code' => $lingotek_locale,
+      '@project_id' => $project_id,
+      '@id' => $trans_obj->getId(),
+    );
+    
+    if ($trans_obj->download($lingotek_locale)) {
       LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
     }
@@ -139,61 +145,11 @@ function lingotek_notifications() {
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
     }
     
-    if ($type == 'node' && module_exists('workbench_moderation')) {
-      // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
-      $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($id);
-      if (empty($target_statuses)) {
-        lingotek_keystore($type, $id, 'workbench_moderate', 1);
-      }
-
-      if (isset($entity->workbench_moderation) && lingotek_lingonode($id, 'workbench_moderate') == 1) {
-        $options_index = $entity->lingotek['sync_method_workbench_moderation'];
-        $trans_options = lingotek_get_workbench_moderation_transitions();
-        if ($options_index == 1) {
-          $from_state = $entity->workbench_moderation['current']->state;
-          $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
-          if ($mult_trans) {
-            $trans_options[$from_state] = $mult_trans;
-          }
-        }
-        lingotek_workbench_moderation_moderate($id, $options_index, $trans_options); // moderate if all languages have been downloaded
-        lingotek_lingonode_variable_delete($id, 'workbench_moderate');
-      }
-    }
-    
-    if ($type == 'node') {
-      if (!$completed) {
-        lingotek_get_and_update_target_progress($document_id);
-      }
-      else {
-        lingotek_keystore($type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
-
-        $query = db_select('lingotek_entity_metadata');
-        $query->condition('entity_type', 'node');
-        $query->addExpression('AVG(value)');
-
-        $total = $query->condition('entity_key', 'target_sync_progress_%', 'LIKE')
-          ->condition('entity_id', $id)
-          ->execute()->fetchField();
-        lingotek_keystore($type, $id, 'translation_progress', $total);
-
-        lingotek_keystore($type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
-      }
-      // clear any caching from entitycache module to allow the new translation to show immediately
-      if (module_exists('entitycache')) {
-        cache_clear_all($id, 'cache_entity_node');
-      }
-    }
+    $trans_obj->postDownload();
     
   } else {
     LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
     return drupal_json_output(array("message" => "The doc_id was not found on the site."));
-  }
-      
-      
-
-    }
-    break; // if the function did not continue, then the doc ID was found.
   }
   
   LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>entity:</b> @entity_type @entity_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(

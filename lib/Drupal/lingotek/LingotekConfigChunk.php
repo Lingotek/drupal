@@ -719,7 +719,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function updateLocalContentByTarget($lingotek_locale) {
+  public function download($lingotek_locale) {
     $metadata = $this->metadata();
     $document_id = $metadata['document_id'];
 

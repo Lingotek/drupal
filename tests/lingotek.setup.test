@@ -1,6 +1,6 @@
 <?php
 
-class LingotekTestCase extends TranslationTestCase {
+class LingotekTestCase extends DrupalWebTestCase  {
 
   public $admin_user;
 
@@ -13,9 +13,9 @@ class LingotekTestCase extends TranslationTestCase {
   }
 
   public function setUp() {
-    parent::setUp();
-    module_enable(array('lingotek'), TRUE);
-    $this->resetAll();
+    parent::setUp('lingotek');
+//    module_enable(array('lingotek'), TRUE);
+//    $this->resetAll();
 
     $perm = array_keys(lingotek_permission());
     $perm[] = 'create article content';
@@ -204,7 +204,8 @@ class LingotekTestCase extends TranslationTestCase {
     
     $option = $element[0]->option[1];
     if(!empty($option)) {
-      $str = (string) $option->attributes()['value'];
+      $attr = $option->attributes();
+      $str = (string) $attr['value'];
     }
     
     return $str;

@@ -406,8 +406,7 @@ class LingotekSync {
       $query->join('lingotek_entity_metadata', 'l', 'l.entity_id = n.nid
         AND l.entity_type = \'node\'
         AND l.entity_key = \'node_profile\'
-         AND l.value != \'' . LingotekSync::STATUS_DISABLED .  '\'
-           AND l.value != \'' . LingotekSync::STATUS_TARGET  .  '\'');
+           AND l.value != \'DISABLED\'');
       $query->condition('n.language', $drupal_language_code);
       if (count($nids)) {
         $query->condition('n.nid', $nids, 'IN'); // nodes sent to lingotek

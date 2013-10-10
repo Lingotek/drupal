@@ -247,10 +247,12 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function updateLocalContent() {
-    $document = $api->getDocument($document_id);
+    if ($this->entity->lingotek['sync_method']) {
+      $document = $api->getDocument($document_id);
 
-    foreach ($document->translationTargets as $target) {
-      lingotek_entity_download($this->entity, $this->entity_type, $lingotek_locale);
+      foreach ($document->translationTargets as $target) {
+        lingotek_entity_download($this->entity, $this->entity_type, $lingotek_locale);
+      }
     }
   }
   
@@ -262,7 +264,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function updateLocalContentByTarget($lingotek_locale) {
+  public function download($lingotek_locale) {
     // Necessary to fully implement the interface, but we don't do anything
     // on LingotekNode objects, explicitly.
     lingotek_entity_download($this->entity, $this->entity_type, $lingotek_locale);
@@ -335,5 +337,62 @@ class LingotekEntity implements LingotekTranslatableEntity {
     }
     
     return '';
+  }
+  
+  public function preDownload($lingotek_locale, $completed) {
+    if ($completed) {
+      lingotek_keystore($this->getEntityType(), $this->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_READY); 
+    }
+  }
+  
+  public function postDownload($lingotek_locale, $completed) {
+    $type = $this->getEntityType();
+    $entity = $this->getEntity();
+    
+    if ($type == 'node') {
+      if (module_exists('workbench_moderation')) {
+        // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
+        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($id);
+        if (empty($target_statuses)) {
+          lingotek_keystore($type, $id, 'workbench_moderate', 1);
+        }
+
+        if (isset($entity->workbench_moderation) && lingotek_lingonode($id, 'workbench_moderate') == 1) {
+          $options_index = $entity->lingotek['sync_method_workbench_moderation'];
+          $trans_options = lingotek_get_workbench_moderation_transitions();
+          if ($options_index == 1) {
+            $from_state = $entity->workbench_moderation['current']->state;
+            $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
+            if ($mult_trans) {
+              $trans_options[$from_state] = $mult_trans;
+            }
+          }
+          lingotek_workbench_moderation_moderate($id, $options_index, $trans_options); // moderate if all languages have been downloaded
+          lingotek_lingonode_variable_delete($id, 'workbench_moderate');
+        }
+      }
+
+      if (!$completed) {
+        lingotek_get_and_update_target_progress($document_id);
+      }
+      else {
+        lingotek_keystore($type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
+
+        $query = db_select('lingotek_entity_metadata');
+        $query->condition('entity_type', 'node');
+        $query->addExpression('AVG(value)');
+
+        $total = $query->condition('entity_key', 'target_sync_progress_%', 'LIKE')
+          ->condition('entity_id', $id)
+          ->execute()->fetchField();
+        lingotek_keystore($type, $id, 'translation_progress', $total);
+
+        lingotek_keystore($type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+      }
+      // clear any caching from entitycache module to allow the new translation to show immediately
+      if (module_exists('entitycache')) {
+        cache_clear_all($id, 'cache_entity_node');
+      }
+    }
   }
 }
