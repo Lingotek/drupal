@@ -232,7 +232,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
 
   if ($entity_type == 'field_collection_item') {
-    $header = array(t('Collection Name'), t('Status'), t('Fields'));
+    $header = array(t('Collection Name'), t('Status *'), t('Fields'));
   }
 
   $variables = array(
@@ -248,7 +248,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   );
 
   if ($entity_type == 'field_collection_item') {
-    $form['node_translation']['types']['#suffix'] = 'Note: Field collections will be uploaded and downloaded at the same time as their parent.';
+    $form['node_translation']['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
   }
 
   $form['node_translation']['actions']['submit'] = array(
