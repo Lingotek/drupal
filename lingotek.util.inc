@@ -579,7 +579,7 @@ function lingotek_managed_entity_types() {
   $enabled = array('node', 'field_collection_item');
   $enabled = array_flip($enabled);
 
-  if ($types['field_collection_item']) {
+  if (module_exists('field_collection') && $types['field_collection_item']) {
     $types['field_collection_item']['label'] = 'Field Collection';
   }
 
