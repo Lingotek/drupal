@@ -230,6 +230,10 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
 
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
 
+  if ($entity_type == 'field_collection_item') {
+    $header[1] = t('Status');
+  }
+
   $variables = array(
     'header' => $header,
     'rows' => $rows,
@@ -241,6 +245,10 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     '#markup' => theme('table', $variables),
     '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
   );
+
+  if ($entity_type == 'field_collection_item') {
+    unset($form['node_translation']['types']['#suffix']);
+  }
 
   $form['node_translation']['actions']['submit'] = array(
     '#type' => 'submit',
