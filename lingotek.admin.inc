@@ -122,6 +122,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
       'ENABLED' => 'Enabled',
       LingotekSync::PROFILE_DISABLED => 'Disabled',
     );
+    $entity_type_info['label'] = 'Field Collection';
   }
 
   $entity_profiles = variable_get('lingotek_entity_profiles');
@@ -149,7 +150,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   if ($setup_complete) {
     $form['node_translation'][] = array(
       '#type' => 'item',
-      '#description' => t('Choose the content types to be translated:'),
+      '#description' => t('Choose what you want translated:'),
     );
   }
 
@@ -231,7 +232,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
 
   if ($entity_type == 'field_collection_item') {
-    $header[1] = t('Status');
+    $header = array(t('Collection Name'), t('Status'), t('Fields'));
   }
 
   $variables = array(
@@ -247,7 +248,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   );
 
   if ($entity_type == 'field_collection_item') {
-    unset($form['node_translation']['types']['#suffix']);
+    $form['node_translation']['types']['#suffix'] = 'Note: Field collections will be uploaded and downloaded at the same time as their parent.';
   }
 
   $form['node_translation']['actions']['submit'] = array(
