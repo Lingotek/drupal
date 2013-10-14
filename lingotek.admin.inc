@@ -830,6 +830,10 @@ function lingotek_admin_module_indexing_finished($success, $results) {
     // Summarize results of added, updated, deleted and skiped translations.
     // Added, updated and deleted are summarized per language to be displayed accordingly.
     foreach ($results as $result) {
+      // convert to array as needed
+      if (is_a($result, 'stdClass')) {
+        $result = get_object_vars($result);
+      }
       if (isset($result['fail'])) {
         // Collect project names of the failed imports.
         $project_fail[$result['file']->name] = $result['file']->name;
