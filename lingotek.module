@@ -1222,7 +1222,7 @@ function lingotek_node_update($node) {
   
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     if (isset($node->is_new) && $node->is_new) {
-      lingotek_workbench_mdoeration_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
+      lingotek_workbench_moderation_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
     } else {
       return;
     }
