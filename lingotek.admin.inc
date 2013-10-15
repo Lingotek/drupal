@@ -98,13 +98,16 @@ function lingotek_admin_account_status_form_submit($form, &$form_state) {
 /**
  * Content translation form
  */
-function lingotek_admin_node_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
+function lingotek_admin_node_translation_settings_form($form, &$form_state, $entity_type,  $show_fieldset = FALSE) {
 
   //$setup_complete = variable_get('lingotek_setup_complete', 0);
   $setup_complete = (!lingotek_is_config_missing());
-  $raw_types = node_type_get_types();
+  $entity_type_info = entity_get_info($entity_type);
+  $bundles = $entity_type_info['bundles'];
+
   $types = array();
-  $translate = variable_get('lingotek_translate_fields', array());
+  $translate = variable_get('lingotek_enabled_fields', array());
+  $translate = isset($translate[$entity_type]) ? $translate[$entity_type] : array();
   $profiles = lingotek_get_profiles();
 
   $profile_options = array();
@@ -114,14 +117,27 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   $profile_options[LingotekSync::PROFILE_CUSTOM] = 'Custom';
   $profile_options[LingotekSync::PROFILE_DISABLED] = 'Disabled';
 
+  if ($entity_type == 'field_collection_item') {
+    $profile_options = array(
+      'ENABLED' => 'Enabled',
+      LingotekSync::PROFILE_DISABLED => 'Disabled',
+    );
+    $entity_type_info['label'] = 'Field Collection';
+  }
+
   $entity_profiles = variable_get('lingotek_entity_profiles');
 
   // What types of fields DO we translate?
   $translatable_field_types = lingotek_get_translatable_field_types();
 
+  $form['entity_type'] = array(
+    '#type' => 'hidden',
+    '#value' => $entity_type,
+  );
+
   $form['node_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Translate Content') : t('Which content types do you want translated?')),
+    '#title' => ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?')),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -134,15 +150,15 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
   if ($setup_complete) {
     $form['node_translation'][] = array(
       '#type' => 'item',
-      '#description' => t('Choose the content types to be translated:'),
+      '#description' => t('Choose what you want translated:'),
     );
   }
 
   $rows = array();
 
-  foreach ($raw_types as $value) {
+  foreach ($bundles as $bundle_name => $bundle) {
     $fr = array();
-    foreach (field_info_instances('node', $value->type) as $field) {
+    foreach (field_info_instances($entity_type, $bundle_name) as $field) {
       $field_label = $field['label'];
       $field_machine_name = $field['field_name'];
       $field_type = $field['widget']['type'];
@@ -151,32 +167,41 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
           '#type' => 'checkbox',
           '#title' => $field_label,
           '#attributes' => array(
-            'id' => array('edit-form-item-' . $value->type . '-seperator-' . $field_machine_name),
-            'name' => $value->type . '_SEPERATOR_' . $field_machine_name,
+            'id' => array('edit-form-item-' . $bundle_name . '-seperator-' . $field_machine_name),
+            'name' => $bundle_name . '_SEPERATOR_' . $field_machine_name,
             'class' => array('field'),
-          ),
-          '#id' => 'edit-form-item-' . $value->type . '-seperator-' . $field_machine_name,
+          ),  
+          '#id' => 'edit-form-item-' . $bundle_name . '-seperator-' . $field_machine_name,
           '#states' => array(
             'invisible' => array(
-              ':input[name="profile_' . $value->type . '"]' => array('value' => 'DISABLED'),
+              ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
             ),
           ),
         );
 
-        $is_enabled = !empty($translate[$value->type]) && array_search($field_machine_name, $translate[$value->type]) !== FALSE;
+        $is_enabled = !empty($translate[$bundle_name]) && array_search($field_machine_name, $translate[$bundle_name]) !== FALSE;
         if (!$setup_complete || $is_enabled) {
           $fr[$field_machine_name]['#attributes']['checked'] = 'checked';
         }
       }
     }
-    if (!isset($fr['title_field'])) {
+    $missing_title = !isset($fr['title_field']) && $entity_type == 'node';
+    $missing_subject = !isset($fr['subject_field']) && $entity_type == 'comment';
+    if ($missing_title || $missing_subject) {
+      $message = $entity_type == 'node' ? 'Title (Note: field will be created.)' : 'Subject (Note: field will be created.)';
       $fr['title_field'] = array(
         '#type' => 'checkbox',
-        '#title' => 'Title (Note: field will be created.)',
+        '#title' => $message,
         '#attributes' => array(
-          'id' => array('edit-form-item-' . $value->type . '-seperator-' . $field_machine_name),
-          'name' => 'title_swap_' . $value->type,
+          'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
+          'name' => 'title_swap_' . $bundle_name,
           'class' => array('field'),
+        ),
+        '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
+        '#states' => array(
+          'invisible' => array(
+            ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
+          ),
         ),
       );
       if (!$setup_complete) {
@@ -187,24 +212,28 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     $default_profile = $setup_complete ? LingotekSync::PROFILE_DISABLED : 0;
     
     $fr2 = array();
-    $fr2['profile_' . $value->name] = array(
+    $fr2['profile_' . $bundle_name] = array(
       '#type' => 'select',
       '#options' => $profile_options,
-      '#value' => isset($entity_profiles['node'][$value->type]) ? $entity_profiles['node'][$value->type] : $default_profile,
+      '#value' => isset($entity_profiles[$entity_type][$bundle_name]) ? $entity_profiles[$entity_type][$bundle_name] : $default_profile,
       '#attributes' => array(
-        'id' => array('edit-form-item-profile-' . $value->type),
-        'name' => 'profile_' . $value->type,
+        'id' => array('edit-form-item-profile-' . $bundle_name),
+        'name' => 'profile_' . $bundle_name,
         'class' => array('field'),
       ),
     );
-    $rows[$value->type] = array(
-      array('data' => $value->name, 'width' => '20%'),
+    $rows[$bundle_name] = array(
+      array('data' => $bundle['label'], 'width' => '20%'),
       array('data' => drupal_render($fr2)),
       array('data' => drupal_render($fr), 'width' => '65%'),
     );
   }
 
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+
+  if ($entity_type == 'field_collection_item') {
+    $header = array(t('Collection Name'), t('Status *'), t('Fields'));
+  }
 
   $variables = array(
     'header' => $header,
@@ -218,16 +247,8 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
     '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
   );
 
-  foreach (array_keys($translate) as $content_type) {
-    $form['node_translation']['types']['#default_value'][$content_type] = 1;
-  }
-
-  if (!$setup_complete) {
-    $defaults = array();
-    foreach ($raw_types as $content_type) {
-      $defaults[$content_type->type] = 1;
-    }
-    $form['node_translation']['types']['#default_value'] = $defaults;
+  if ($entity_type == 'field_collection_item') {
+    $form['node_translation']['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
   }
 
   $form['node_translation']['actions']['submit'] = array(
@@ -243,13 +264,17 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $sho
  */
 function lingotek_admin_node_translation_settings_form_submit($form, &$form_state) {
 
-  //this is needed for the setup because of the field/node method selector.
-  system_settings_form_submit($form, $form_state);
+  $entity_type = $form_state['input']['entity_type'];
 
-  $translate = array();
+  if (isset($form_state['values']['lingotek_nodes_translation_method'])) {
+    variable_set('lingotek_nodes_translation_method', $form_state['values']['lingotek_nodes_translation_method']);
+  }
+
+  $translate = variable_get('lingotek_enabled_fields', array());
+  unset($translate[$entity_type]);
   $operations = array();
 
-  $entity_profiles = array();
+  $entity_profiles = variable_get('lingotek_entity_profiles', array());
 
   foreach ($form_state['input'] as $key => $value) {
 
@@ -263,7 +288,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 
         //check to make sure that the content type is enabled
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
-          $translate[$content_type][] = $content_field;
+          $translate[$entity_type][$content_type][] = $content_field;
 
           // Set this content type to be Lingotek translated.
           variable_set('language_content_type_' . $content_type, '1');
@@ -284,16 +309,15 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
         //check to make sure that the content type is enabled
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
           // Do the actual title replacement
-          $entity_type = 'node';
           $bundle = $content_type;
-          $legacy_field = 'title';
+          $legacy_field = $entity_type == 'node' ? 'title' : 'subject';
 
           // Use the Title module to migrate the content.
           if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
             //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
             $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
-            $translate[$content_type][] = 'title_field';
-            $field = field_info_field('title_field');
+            $translate[$entity_type][$content_type][] = $legacy_field . '_field';
+            $field = field_info_field($legacy_field . '_field');
             $field['translatable'] = 1;
             $operations[] = array('field_update_field', array($field)); //field_update_field($field);
           }
@@ -303,11 +327,11 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     // Look for any profiles
     if (FALSE !== strpos($key, 'profile_')) {
       $content_type = substr($key, strlen('profile_'));
-      $entity_profiles['node'][$content_type] = $value;
+      $entity_profiles[$entity_type][$content_type] = $value;
     }
   }
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
-  variable_set('lingotek_translate_fields', $translate);
+  variable_set('lingotek_enabled_fields', $translate);
   variable_set('lingotek_entity_profiles', $entity_profiles);
   drupal_set_message(t('Your content types have been updated.'));
 
@@ -621,6 +645,9 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   if (variable_get('lingotek_translate_config_builtins')) {
     lingotek_admin_prepare_builtins($additional_operations);
   }
+  else {
+    lingotek_admin_setup_nonbuiltins_batch($additional_operations);
+  }
 
   // if this function is being called as part of the setup process, continue to
   // the dashboard to make sure they get a language configured.  Otherwise,
@@ -638,6 +665,18 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   else {
     drupal_goto($final_destination);
   }
+}
+
+function lingotek_admin_setup_nonbuiltins_batch($operations) {
+  $batch = array(
+    'operations' => $operations,
+    'title' => 'Identifying translatable content',
+    'init_message' => t('Completing setup process'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'error_message' => t('An error has occurred during setup.  Please review the log for more information.'),
+    'file' => drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc',
+  );
+  batch_set($batch);
 }
 
 function lingotek_admin_load_l10n_update_batch($modules) {
@@ -791,6 +830,10 @@ function lingotek_admin_module_indexing_finished($success, $results) {
     // Summarize results of added, updated, deleted and skiped translations.
     // Added, updated and deleted are summarized per language to be displayed accordingly.
     foreach ($results as $result) {
+      // convert to array as needed
+      if (is_a($result, 'stdClass')) {
+        $result = get_object_vars($result);
+      }
       if (isset($result['fail'])) {
         // Collect project names of the failed imports.
         $project_fail[$result['file']->name] = $result['file']->name;
@@ -1092,7 +1135,14 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#type' => 'checkbox',
     '#title' => t('Show links to edit translations in views'),
     '#default_value' => variable_get('lingotek_views_edit_links'),
-    '#description' => 'The user must have the "Translation" or "Manage Projects" permission'
+    '#description' => t('The user must have the "Translation" or "Manage Projects" permission'),
+  );
+
+  $form[$fkey]['lingotek_account_plan_type'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Enterprise Features'),
+    '#default_value' => (variable_get('lingotek_account_plan_type') == 'enterprise' ? 1 : 0),
+    '#description' => t('Some features may not be available without an ') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">enterprise license</a>&nbsp;' . t(' of the Lingotek TMS. Call 801.331.7777 for details.'),
   );
 
   return $form;
@@ -1100,6 +1150,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
 function lingotek_admin_prefs_form_submit($form, &$form_state) {
   lingotek_admin_language_switcher_form_submit($form, $form_state);
+  $form_state['values']['lingotek_account_plan_type'] = ($form['prefs']['lingotek_account_plan_type']['#checked'] ? 'enterprise' : 'standard');
   system_settings_form_submit($form, $form_state);
   menu_rebuild();
 }
@@ -1229,6 +1280,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     'Actions',
   );
 
+  $total_count_with_profiles = 0;
   $rows = array();
 
   foreach ($profiles as $key => $profile) {
@@ -1236,6 +1288,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
 
     $count = lingotek_admin_profile_usage($key);
     $count_types = lingotek_admin_profile_usage_by_types($key);
+    $total_count_with_profiles += $count;
 
     $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes') . ' &sdot;  ' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . '', $edit_link);
   }
@@ -1244,7 +1297,8 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $custom_count_types = lingotek_admin_profile_usage_by_types(LingotekSync::PROFILE_CUSTOM);
   $rows[] = array(t('Custom'), $custom_count . ' ' . format_plural($custom_count, 'node', 'nodes') . ' &sdot; ' . $custom_count_types . ' ' . format_plural($count_types, 'content type', 'content types'), '');
 
-  $disabled_count = lingotek_admin_profile_usage(LingotekSync::PROFILE_DISABLED);
+  $total_node_count = current(db_query("SELECT COUNT(DISTINCT(n.nid)) FROM {node} n WHERE n.status=1")->fetchCol());
+  $disabled_count = ($total_node_count - ($total_count_with_profiles + $custom_count)); // lingotek_admin_profile_usage(LingotekSync::PROFILE_DISABLED);
   $disabled_count_types = lingotek_admin_profile_usage_by_types(LingotekSync::PROFILE_DISABLED);
   $rows[] = array(t('Disabled'), $disabled_count . ' ' . format_plural($disabled_count, 'node', 'nodes') . ' &sdot; ' . $disabled_count_types . ' ' . format_plural($disabled_count_types, 'content type', 'content types'), '');
 
@@ -1539,14 +1593,18 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#value' => 'Save',
   );
   $profile_id = $form_state['values']['profile_id'];
-  if(lingotek_admin_profile_usage($profile_id) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0) {
+  $first_custom_id = 2;
+  $is_custom_profile_id = $profile_id >= $first_custom_id;
+  if (lingotek_admin_profile_usage($profile_id) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0 && $is_custom_profile_id) {
     $form['defaults']['delete'] = array(
       '#type' => 'submit',
       '#value' => 'Delete',
     );
-  } else {
+  }
+  else {
+    $markup = $is_custom_profile_id ? t('You can only delete this profile when there are no nodes or content types using it.') : t('This profile cannot be deleted.');
     $form['delete'] = array(
-      '#markup' => 'You can only delete this profile when there are no nodes or content types using it.',
+      '#markup' => '<span class="ltk-muted" style="font-style: italic;">' . $markup . '</span>',
     );
   }
   $form['defaults']['cancel'] = array(
@@ -1798,14 +1856,23 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $connected = $api->testAuthentication();
 
   if ($connected) {
-    $arr = array(
+    /*$arr = array(
       drupal_get_form('lingotek_admin_node_translation_settings_form', $show_fieldset),
     );
     if ($is_enterprise) {
       $arr[] = drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE);
+    }*/
+
+    foreach (lingotek_managed_entity_types() as $machine_name => $entity_type) {
+      $entity_types[] = $machine_name;
+      $entity_settings = drupal_get_form('lingotek_admin_node_translation_settings_form', $machine_name, $show_fieldset);
+      $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @types', array('@type' => $entity_type['label'])));
     }
 
-    $output['lingotek'][] = lingotek_wrap_in_fieldset($arr, 'Translate Content');
+    $arr['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE), 'Advanced Content Parsing');
+
+    //$output['lingotek'][] = lingotek_wrap_in_fieldset($arr, 'Translate Content');
+    
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_comment_translation_settings_form', $show_fieldset), 'Translate Comments');
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), 'Translate Configuration');
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), 'Translation Profiles');

@@ -95,7 +95,7 @@ function lingotek_notifications() {
       }
     }
 
-    LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
+    LingotekLog::info('<b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>node:</b> @node_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
         '@document_id' => $document_id,
         '@lingotek_locale' => $lingotek_locale,
         '@project_id' => $project_id,

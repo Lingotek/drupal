@@ -569,3 +569,15 @@ function lingotek_update_7404(&$sandbox) {
     variable_set('lingotek_entity_profiles', $entity_profiles);
   }
 }
+
+/**
+ * Makes lingotek handle entities better.
+ */
+function lingotek_update_7406(&$sandbox) {
+  $translate_fields = variable_get('lingotek_translate_fields');
+
+  $enabled_fields = array('node' => $translate_fields);
+
+  variable_set('lingotek_enabled_fields', $enabled_fields);
+  variable_del('lingotek_translate_fields');
+}

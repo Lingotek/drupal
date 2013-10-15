@@ -46,8 +46,8 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     $localized_node->status = $node->status;
     $localized_node->create_lingotek_document = FALSE;
     
-    $lingotek_fields = variable_get('lingotek_translate_fields');
-    foreach ($lingotek_fields[$localized_node->type] as $field_name) {
+    $lingotek_fields = variable_get('lingotek_enabled_fields');
+    foreach ($lingotek_fields['node'][$localized_node->type] as $field_name) {
       $field = $node->$field_name;
       $f = array();
       if(isset($field[$node->language])) {
@@ -101,7 +101,7 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   //Get the finished document
   $text = $_lingotek_client->download("downloadDocument", $params);
-
+  
   try {
     $xml = new SimpleXMLElement($text);
   } catch (Exception $e) {
@@ -208,26 +208,22 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
         $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
 
         if (module_exists('field_collection') && $field['type'] == 'field_collection') {
-          $entity = (object) array(
-            'type' => $drupal_field_name,
-            'nid' => $node_field[$node->language][$delta]['value'],
-            'vid' => $node_field[$node->language][$delta]['revision_id'],
-          );
-          lingotek_process_entity_xml($content, $entity, 'field_collection_item', $drupal_language_code);
+          $default = language_default();
+          $default_language = $default->language;
+          $field_collection_id = isset($node_field['und'][$delta]['value']) ? $node_field['und'][$delta]['value'] : $node_field[$default_language][$delta]['value'];
+          $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
+          $field_collection_item->type = $field['field_name'];
+          $field_collection_item->language = $node->language;
+          $field_collection_item->nid = $field_collection_item->item_id;
+          $field_collection_item->vid = $field_collection_item->revision_id;
+
+          lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $drupal_language_code);
           $db_field_name = $field['field_name'] . '_value';
           $db_revision_field_name = $field['field_name'] . '_revision_id';
           $insert_array['language'] = $drupal_language_code;
-          $insert_array[$db_field_name] = $node_field[$node->language][$delta]['value'];
-          $insert_array[$db_revision_field_name] = $node_field[$node->language][$delta]['revision_id'];
-          foreach ($field_names as $table) {
-            db_update($table)
-              ->fields(array(
-                'language' => $node->language,
-              ))
-              ->condition('entity_id', $node->nid)
-              ->condition('language', 'und')
-              ->execute();
-          }
+          $lang = isset($node_field[$node->language][$delta]['value']) ? $node->language : 'und';
+          $insert_array[$db_field_name] = $node_field[$lang][$delta]['value'];
+          $insert_array[$db_revision_field_name] = $node_field[$lang][$delta]['revision_id'];
         }
         else {
           foreach ($content as $text) {
@@ -239,7 +235,7 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             $db_field_name = $field['field_name'] . '_' . $array_key;
             $insert_array[$db_field_name] = decode_entities($text);
             //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
-            if (array_key_exists($node->language, $node_field)) {
+            if (isset($node->language) && array_key_exists($node->language, $node_field)) {
               if (array_key_exists('format', $node_field[$node->language][0])) {
                 //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
                 $format_db_field_name = $field['field_name'] . '_format';
@@ -248,13 +244,15 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             }
             $index++;
           }
+          
+          // put fields into both field_data_ and field_revision_ tables
+          // if published version (in node table) is as current as most current revision (in node_revision table)
+          if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
+            $only_write_revisions = 1;
+            unset($field_names[$only_write_revisions]);
+          }
         }
-        // put fields into both field_data_ and field_revision_ tables
-        // if published version (in node table) is as current as most current revision (in node_revision table)
-        if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
-          $only_write_revisions = 1;
-          unset($field_names[$only_write_revisions]);
-        }
+
         foreach ($field_names as $field_name) {
           // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
           try {
@@ -269,6 +267,19 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
               'language',
             );
             drupal_write_record($field_name, $insert_array, $primary_keys);
+          }
+        }
+
+        if ($entity_type == 'field_collection_item') {
+          $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
+          foreach ($field_names as $table) {
+            db_update($table)
+                ->fields(array(
+                  'language' => $node->language,
+                ))
+                ->condition('entity_id', $node->nid)
+                ->condition('language', 'und')
+                ->execute();
           }
         }
       }
