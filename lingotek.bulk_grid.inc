@@ -1015,6 +1015,9 @@ function lingotek_grid_get_rows($form, &$form_state) {
   $query = db_select('node', 'n')
       ->extend('PagerDefault')
       ->extend('TableSort');
+
+  $query->innerJoin('node', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
+
   $query->limit($limit);
   $query->orderByHeader($form_state['values']['grid_header']);
 
