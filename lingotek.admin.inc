@@ -1135,7 +1135,14 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#type' => 'checkbox',
     '#title' => t('Show links to edit translations in views'),
     '#default_value' => variable_get('lingotek_views_edit_links'),
-    '#description' => 'The user must have the "Translation" or "Manage Projects" permission'
+    '#description' => t('The user must have the "Translation" or "Manage Projects" permission'),
+  );
+
+  $form[$fkey]['lingotek_account_plan_type'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Enterprise Features'),
+    '#default_value' => (variable_get('lingotek_account_plan_type') == 'enterprise' ? 1 : 0),
+    '#description' => t('Some features may not be available without an ') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">enterprise license</a>&nbsp;' . t(' of the Lingotek TMS. Call 801.331.7777 for details.'),
   );
 
   return $form;
@@ -1143,6 +1150,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
 function lingotek_admin_prefs_form_submit($form, &$form_state) {
   lingotek_admin_language_switcher_form_submit($form, $form_state);
+  $form_state['values']['lingotek_account_plan_type'] = ($form['prefs']['lingotek_account_plan_type']['#checked'] ? 'enterprise' : 'standard');
   system_settings_form_submit($form, $form_state);
   menu_rebuild();
 }
