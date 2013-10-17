@@ -1614,19 +1614,46 @@ function lingotek_entity_info_alter(&$entity_info) {
   }
 }
 
+function lingotek_normalize_field_collection_language($entity, $from_language_none = TRUE) {
+    $host = $entity->hostEntity();
+    $max_field_collection_depth = 10;
+    // bubble up to the true parent to get its language,
+    // which adds support for deeply nested entity collections
+    for ($i = 0; $i < $max_field_collection_depth; $i++) {
+      if ($host instanceof FieldCollectionItemEntity) {
+        $host = $host->hostEntity();
+      }
+    }
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
+        if ($from_language_none) {
+          $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
+        }
+        else {
+          $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
+        }
+      }
+    }
+}
+
+/**
+ * Implements hook_entity_load().
+  */
+function lingotek_entity_load($entities, $type) {
+  if ($type == 'field_collection_item') {
+    foreach ($entities as $e) {
+      lingotek_normalize_field_collection_language($e);
+    }
+  }
+}
+
 /**
  * Implements hook_entity_presave().
   */
 function lingotek_entity_presave($entity, $type) {
-  /*global $language;
   if ($type == 'field_collection_item') {
-    foreach ($entity as $key => $value) {
-      if (is_array($value) && array_key_exists('und', $value)) {
-        $entity->{$key}[$language->language] = $value['und'];
-        unset($entity->{$key}['und']);
-      }
-    }
-  }*/
+    lingotek_normalize_field_collection_language($entity, FALSE);
+  }
 }
 
 /**
