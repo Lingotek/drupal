@@ -113,14 +113,26 @@ class LingotekSession {
       $timeout = self::DEFAULT_API_TIMEOUT;
     }
 
-    $response = drupal_http_request(
-        $this->url . "/" . $api, array(
+    $api_url = $this->url . "/" . $api;
+    $params = array(
       'headers' => $this->headers,
       'method' => 'POST',
       'data' => $query,
       'timeout' => $timeout,
-        )
+        );
+    $response = drupal_http_request($api_url, $params);
+    
+    $message_params = array(
+      '@url' => $api_url,
+      'api' => 'api-session',
+      '@method' => $api,
+      '!params' => $params,
+      '!request' => array(),
+      '!response' => $response
     );
+    
+    LingotekLog::api('<h1>@method</h1> <strong>API URL:</strong> @url
+        <br /><strong>Request Params</strong>: !params<br /><strong>Response:</strong> !response', $message_params);
 
     if (isset($response->error)) {
       $this->last_login_msg = $response->error;

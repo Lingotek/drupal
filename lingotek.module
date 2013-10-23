@@ -337,12 +337,12 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
-  $items['admin/config/lingotek/community-settings-select'] = array(
+  $items['admin/config/lingotek/project-vault-select'] = array(
     'title' => 'Choose Your Project, Workflow, and TM Vault',
-    'description' => 'Select project, workflow, and TM vault to use.',
+    'description' => 'Select project, workflow, and translation memory vault to use.',
     'file' => 'lingotek.setup.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_community_settings_select_form'),
+    'page arguments' => array('lingotek_project_vault_select_form'),
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek')
   );
@@ -1475,7 +1475,7 @@ function lingotek_is_config_missing() {
         return 'admin/config/lingotek/community-select';
       }
       elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
-        return 'admin/config/lingotek/community-settings-select';
+        return 'admin/config/lingotek/project-vault-select';
       }
       elseif ($required_variable == 'lingotek_enabled_fields') {
         return 'admin/config/lingotek/node-translation-settings';

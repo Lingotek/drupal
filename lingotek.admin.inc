@@ -1247,7 +1247,7 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
       '#markup' => theme('table', array('header' => array(), 'rows' => array(
           array('TMS:', LINGOTEK_API_SERVER),
           array('GMC:', LINGOTEK_GMC_SERVER),
-          array('Billing:', LINGOTEK_BILLING_SERVER),
+        //array('Billing:', LINGOTEK_BILLING_SERVER),
         //array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
         //array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
     )))
