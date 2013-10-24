@@ -508,12 +508,6 @@ function lingotek_project_vault_select_form() {
       ':input[name="project_new_or_existing"]' => array('value' => 0)
     ),
   );
-  /*$form['vault_existing_or_new'][0]['#states'] = array(
-    'checked' => array(
-      ':input[name="project_new_or_existing"]' => array('value' => 1)
-    ),
-  );*/
-
 
   $form['vault_existing'] = array(
     '#type' => 'select',
@@ -566,14 +560,14 @@ function lingotek_project_vault_select_form() {
 
 /**
  * Project Select Screen - Form Submit
- 
+ */
 function lingotek_project_vault_select_form_submit($form, $form_state) {
-  $auto_provision_project = false;
+  $auto_provision_project = FALSE;
   $params = array();
-  
+
   // Project
   if($form_state['values']['project_new_or_existing']){ // new
-    $auto_provision_project = true;
+    $auto_provision_project = TRUE;
     $project_name = $form_state['values']['project_new'];
     $params['projectName'] = $project_name;
   }
@@ -583,6 +577,8 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
     $workflow_id = $lingotek_community_data->project->{$project_id}->workflowId;
     variable_set('lingotek_project', $project_id);
     variable_set('lingotek_workflow', $workflow_id);
+    variable_set('lingotek_translate_comments_workflow_id', $workflow_id);
+    variable_set('lingotek_translate_config_workflow_id', $workflow_id);
   }
   
   // Vault
@@ -601,7 +597,7 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
     $params['callbackUrl'] = $notify_url;
     $api = LingotekApi::instance();
     $response = $api->request('autoProvisionProject', $params);
-    
+
     if($response->results == 'success'){
       $project_id = $response->project_id;
       $workflow_id = $response->workflow_id;
