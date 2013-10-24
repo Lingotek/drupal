@@ -1142,7 +1142,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#type' => 'checkbox',
     '#title' => t('Enable Enterprise Features'),
     '#default_value' => (variable_get('lingotek_account_plan_type') == 'enterprise' ? 1 : 0),
-    '#description' => t('Some features may not be available without an ') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">enterprise license</a>&nbsp;' . t(' of the Lingotek TMS. Call 801.331.7777 for details.'),
+    '#description' => t('Some features may not be available without an') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">Enterprise license</a>&nbsp;' . t('for the Lingotek TMS. Call 801.331.7777 for details.'),
   );
 
   return $form;
