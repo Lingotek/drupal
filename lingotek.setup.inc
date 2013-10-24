@@ -431,15 +431,20 @@ function lingotek_project_vault_select_form() {
     asort($community_settings['project']);
     
     $project_already_set = !is_null(variable_get('lingotek_project', NULL));
-    
+    $projects_count = count($community_settings['project']);
+
+    $project_options = array(
+        1 => t('New') . (!$project_already_set ? ' <i>(' . t('recommended') . ')</i>' : ''),
+        0 => t('Existing') . ($project_already_set ? ' <i>(' . t('recommended') . ')</i>' : '')
+      );
+    if($projects_count == 0){
+      unset($project_options[0]);
+    }
     $form['project_new_or_existing'] = array(
       '#type' => 'radios',
       '#title' => t('Project'),
       '#default_value' => $project_already_set ? 0 : 1,
-      '#options' => array(
-        1 => t('New') . (!$project_already_set ? ' <i>(' . t('recommended') . ')</i>' : ''),
-        0 => t('Existing') . ($project_already_set ? ' <i>(' . t('recommended') . ')</i>' : '')
-      ),
+      '#options' => $project_options,
       //'#description' => t('The Lingotek Project that you would like to use for this site.'),
       '#required' => TRUE,
       //'#attributes' => array('onclick' => "(function(){ console.log($); alert('hi'); })();"),
@@ -494,14 +499,21 @@ function lingotek_project_vault_select_form() {
     '#title' => t('Vault'),
     '#default_value' => 0,
     '#options' => array(0 => t('Existing') . ' <i>(' . t('recommended') . ')</i>', 1 => t('New')),
-    '#description' => t('The Translation Memory (TM) vault where translations are saved.'),
-    '#required' => TRUE,
-    /*'#states' => array(
-        'disabled' => array(
-          ':input[name="project_new_or_existing"]' => array('value' => 0)
-        )
-      )*/
+    //'#description' => t('The Translation Memory (TM) vault where translations are saved.'),
+    '#required' => TRUE
   );
+
+  $form['vault_existing_or_new'][1]['#states'] = array(
+    'invisible' => array(
+      ':input[name="project_new_or_existing"]' => array('value' => 0)
+    ),
+  );
+  /*$form['vault_existing_or_new'][0]['#states'] = array(
+    'checked' => array(
+      ':input[name="project_new_or_existing"]' => array('value' => 1)
+    ),
+  );*/
+
 
   $form['vault_existing'] = array(
     '#type' => 'select',
@@ -554,7 +566,7 @@ function lingotek_project_vault_select_form() {
 
 /**
  * Project Select Screen - Form Submit
- */
+ 
 function lingotek_project_vault_select_form_submit($form, $form_state) {
   $auto_provision_project = false;
   $params = array();
