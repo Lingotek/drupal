@@ -741,7 +741,8 @@ class LingotekApi {
         'externalId' => $externalId
       );
 
-      if ($output = $this->request('getWorkbenchLink', $params)) {
+      $output = $this->request('getWorkbenchLink', $params);
+      if ($output && isset($output->url)) {
         $links[$static_id] = $url = $output->url;
       }
       else {
