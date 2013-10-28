@@ -916,6 +916,10 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  */
 function lingotek_node_save($node) {
 
+  if(!isset($node->lingotek)) {
+    // load default lingotek settings when alternate node creation paths are employed (e.g., commons)
+    lingotek_node_load(array($node),array());
+  }
   $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
   
   $disabled_selected = ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED);
