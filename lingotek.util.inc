@@ -1013,7 +1013,10 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   lingotek_migration_2();
   lingotek_migration_3();
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
-
+  if (module_exists('field_collection')) {
+    lingotek_fix_field_collection_languages(); // a temp solution, setting 'und' values for field collections
+  }
+  
   $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
   if ($show_messages) {
     drupal_set_message(t('The field data cleanup utility completed.'));
@@ -1027,6 +1030,76 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   if ($cleanup_batch && is_array($cleanup_batch)) {
     return $cleanup_batch;
   }
+}
+
+function lingotek_fix_field_collection_languages() {
+
+  $language = language_default();
+  $langcode = $language->language;
+  $fc_str = 'field_collection_item';
+ 
+  $bundles = field_info_bundles($fc_str);
+  foreach ($bundles as $bundle_key => $bundle_val) {
+   
+    $instances = field_info_instances($fc_str, $bundle_key);
+   
+    foreach ($instances as $instance_key => $instance_val) {
+     
+      $query = new EntityFieldQuery;
+     
+      $fc_full_entities = $query
+        ->entityCondition('entity_type', $fc_str)
+        ->entityCondition('bundle', $bundle_key)
+        ->entityCondition('deleted', 0)
+        ->fieldLanguageCondition($instance_key, $langcode)
+        ->execute();
+     
+      if (empty($fc_full_entities)) {
+        continue;
+      }
+      
+      $fc_und_entities = $query
+        ->entityCondition('entity_type', $fc_str)
+        ->entityCondition('bundle', $bundle_key)
+        ->entityCondition('deleted', 0)
+        ->fieldLanguageCondition($instance_key, LANGUAGE_NONE)
+        ->execute();
+     
+      foreach ($fc_full_entities[$fc_str] as $fc_key => $fc_obj) {
+       
+        // if the entity isn't in the list of entities that have 'und', then add it!
+        if (!array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
+          // add an entry with the new langcode to the database
+          $entity = entity_load($fc_str, array($fc_obj->item_id));
+          foreach ($entity[$fc_obj->item_id]->{$instance_key}[$langcode] as $delta => $delta_content) {
+            try {
+              db_insert('field_data_' . $instance_key)
+                  ->fields( array(
+                    'entity_type' => $fc_str,
+                    'bundle' => $bundle_key,
+                    'entity_id' => $fc_obj->item_id,
+                    'revision_id' => $fc_obj->revision_id,
+                    'language' => LANGUAGE_NONE,
+                    'delta' => $delta,
+                    $instance_key . '_value' => $delta_content['value'],
+                  ))
+                  ->execute();
+            }
+            catch (Exception $e) {
+              // pass, as that delta probably already has the value
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  
+  // find the difference between all entities and the und ones
+  // for each table:
+    // find all entries containing the default language but no 'und' language
+    // for each entry:
+      // insert a corresponding 'und' line
 }
 
 /**
