@@ -1068,25 +1068,36 @@ function lingotek_fix_field_collection_languages() {
       foreach ($fc_full_entities[$fc_str] as $fc_key => $fc_obj) {
        
         // if the entity isn't in the list of entities that have 'und', then add it!
-        if (!array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
+        if (empty($fc_und_entities) || !array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
           // add an entry with the new langcode to the database
-          $entity = entity_load($fc_str, array($fc_obj->item_id));
+          $entity = entity_load($fc_str, array($fc_obj->item_id));          
           foreach ($entity[$fc_obj->item_id]->{$instance_key}[$langcode] as $delta => $delta_content) {
             try {
-              db_insert('field_data_' . $instance_key)
-                  ->fields( array(
+              $submission = array(
                     'entity_type' => $fc_str,
                     'bundle' => $bundle_key,
                     'entity_id' => $fc_obj->item_id,
                     'revision_id' => $fc_obj->revision_id,
                     'language' => LANGUAGE_NONE,
                     'delta' => $delta,
-                    $instance_key . '_value' => $delta_content['value'],
-                  ))
+                    );
+              foreach ($delta_content as $dc_key => $dc_val) {
+                if ($dc_key == 'safe_value') { // this is just a sanitized version of value, which we don't need
+                  continue;
+                }
+                if (is_array($dc_val)) {
+                  $submission[$instance_key . '_' . $dc_key] = serialize($dc_val);
+                }
+                else {
+                  $submission[$instance_key . '_' . $dc_key] = $dc_val;
+                }
+              }
+              db_insert('field_data_' . $instance_key)
+                  ->fields($submission)
                   ->execute();
             }
             catch (Exception $e) {
-              // pass, as that delta probably already has the value
+              // pass, as one or more deltas probably already have the undefined language set
             }
           }
         }
