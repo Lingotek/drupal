@@ -1014,7 +1014,8 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   lingotek_migration_3();
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
   if (module_exists('field_collection')) {
-    lingotek_fix_field_collection_languages(); // a temp solution, setting 'und' values for field collections
+    lingotek_add_default_lang_to_field_collections(); // a temp solution, setting 'und' values for field collections
+    lingotek_add_neutral_lang_to_field_collections();
   }
   
   $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
@@ -1032,10 +1033,28 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   }
 }
 
-function lingotek_fix_field_collection_languages() {
+function lingotek_add_default_lang_to_field_collections() {
+  lingotek_fix_field_collection_languages($to_lang_neutral=FALSE);
+}
+
+function lingotek_add_neutral_lang_to_field_collections() {
+  lingotek_fix_field_collection_languages($to_lang_neutral=TRUE);
+}
+
+function lingotek_fix_field_collection_languages($to_lang_neutral=TRUE) {
 
   $language = language_default();
   $langcode = $language->language;
+
+  if ($to_lang_neutral == TRUE) {
+    $from_lang = $langcode;
+    $to_lang = LANGUAGE_NONE;
+  }
+  else {
+    $from_lang = LANGUAGE_NONE;
+    $to_lang = $langcode;
+  }
+  
   $fc_str = 'field_collection_item';
  
   $bundles = field_info_bundles($fc_str);
@@ -1051,7 +1070,7 @@ function lingotek_fix_field_collection_languages() {
         ->entityCondition('entity_type', $fc_str)
         ->entityCondition('bundle', $bundle_key)
         ->entityCondition('deleted', 0)
-        ->fieldLanguageCondition($instance_key, $langcode)
+        ->fieldLanguageCondition($instance_key, $from_lang)
         ->execute();
      
       if (empty($fc_full_entities)) {
@@ -1062,7 +1081,7 @@ function lingotek_fix_field_collection_languages() {
         ->entityCondition('entity_type', $fc_str)
         ->entityCondition('bundle', $bundle_key)
         ->entityCondition('deleted', 0)
-        ->fieldLanguageCondition($instance_key, LANGUAGE_NONE)
+        ->fieldLanguageCondition($instance_key, $to_lang)
         ->execute();
      
       foreach ($fc_full_entities[$fc_str] as $fc_key => $fc_obj) {
@@ -1071,14 +1090,14 @@ function lingotek_fix_field_collection_languages() {
         if (empty($fc_und_entities) || !array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
           // add an entry with the new langcode to the database
           $entity = entity_load($fc_str, array($fc_obj->item_id));          
-          foreach ($entity[$fc_obj->item_id]->{$instance_key}[$langcode] as $delta => $delta_content) {
+          foreach ($entity[$fc_obj->item_id]->{$instance_key}[$from_lang] as $delta => $delta_content) {
             try {
               $submission = array(
                     'entity_type' => $fc_str,
                     'bundle' => $bundle_key,
                     'entity_id' => $fc_obj->item_id,
                     'revision_id' => $fc_obj->revision_id,
-                    'language' => LANGUAGE_NONE,
+                    'language' => $to_lang,
                     'delta' => $delta,
                     );
               foreach ($delta_content as $dc_key => $dc_val) {
