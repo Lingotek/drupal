@@ -1329,3 +1329,26 @@ function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
   }
   return $aReturn;
 }
+
+function lingotek_list_entities_with_language($entity_type, $bundle, $language) {
+  $ids = array();
+  $fields = field_info_instances($entity_type, $bundle);
+  foreach ($fields as $name => $field_info) {
+    $ids = $ids + lingotek_list_entities_with_field_in_language($entity_type, $bundle, $name, $language);
+  }
+
+  return $ids;
+}
+
+function lingotek_list_entities_with_field_in_language($entity_type, $bundle, $field, $language) {
+  $query = new EntityFieldQuery;
+
+  $entities = $query
+      ->entityCondition('entity_type', $entity_type)
+      ->entityCondition('bundle', $bundle)
+      ->entityCondition('deleted', 0)
+      ->fieldLanguageCondition('body', $language)
+      ->execute();
+
+  return isset($entities['node']) ? array_keys($entities['node']) : array();
+}
