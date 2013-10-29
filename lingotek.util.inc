@@ -1013,7 +1013,11 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   lingotek_migration_2();
   lingotek_migration_3();
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
-
+  if (module_exists('field_collection')) {
+    lingotek_add_default_lang_to_field_collections(); // a temp solution, setting 'und' values for field collections
+    lingotek_add_neutral_lang_to_field_collections();
+  }
+  
   $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
   if ($show_messages) {
     drupal_set_message(t('The field data cleanup utility completed.'));
@@ -1027,6 +1031,105 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   if ($cleanup_batch && is_array($cleanup_batch)) {
     return $cleanup_batch;
   }
+}
+
+function lingotek_add_default_lang_to_field_collections() {
+  lingotek_fix_field_collection_languages($to_lang_neutral=FALSE);
+}
+
+function lingotek_add_neutral_lang_to_field_collections() {
+  lingotek_fix_field_collection_languages($to_lang_neutral=TRUE);
+}
+
+function lingotek_fix_field_collection_languages($to_lang_neutral=TRUE) {
+
+  $language = language_default();
+  $langcode = $language->language;
+
+  if ($to_lang_neutral == TRUE) {
+    $from_lang = $langcode;
+    $to_lang = LANGUAGE_NONE;
+  }
+  else {
+    $from_lang = LANGUAGE_NONE;
+    $to_lang = $langcode;
+  }
+  
+  $fc_str = 'field_collection_item';
+ 
+  $bundles = field_info_bundles($fc_str);
+  foreach ($bundles as $bundle_key => $bundle_val) {
+   
+    $instances = field_info_instances($fc_str, $bundle_key);
+   
+    foreach ($instances as $instance_key => $instance_val) {
+     
+      $query = new EntityFieldQuery;
+     
+      $fc_full_entities = $query
+        ->entityCondition('entity_type', $fc_str)
+        ->entityCondition('bundle', $bundle_key)
+        ->entityCondition('deleted', 0)
+        ->fieldLanguageCondition($instance_key, $from_lang)
+        ->execute();
+     
+      if (empty($fc_full_entities)) {
+        continue;
+      }
+      
+      $fc_und_entities = $query
+        ->entityCondition('entity_type', $fc_str)
+        ->entityCondition('bundle', $bundle_key)
+        ->entityCondition('deleted', 0)
+        ->fieldLanguageCondition($instance_key, $to_lang)
+        ->execute();
+     
+      foreach ($fc_full_entities[$fc_str] as $fc_key => $fc_obj) {
+       
+        // if the entity isn't in the list of entities that have 'und', then add it!
+        if (empty($fc_und_entities) || !array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
+          // add an entry with the new langcode to the database
+          $entity = entity_load($fc_str, array($fc_obj->item_id));          
+          foreach ($entity[$fc_obj->item_id]->{$instance_key}[$from_lang] as $delta => $delta_content) {
+            try {
+              $submission = array(
+                    'entity_type' => $fc_str,
+                    'bundle' => $bundle_key,
+                    'entity_id' => $fc_obj->item_id,
+                    'revision_id' => $fc_obj->revision_id,
+                    'language' => $to_lang,
+                    'delta' => $delta,
+                    );
+              foreach ($delta_content as $dc_key => $dc_val) {
+                if ($dc_key == 'safe_value') { // this is just a sanitized version of value, which we don't need
+                  continue;
+                }
+                if (is_array($dc_val)) {
+                  $submission[$instance_key . '_' . $dc_key] = serialize($dc_val);
+                }
+                else {
+                  $submission[$instance_key . '_' . $dc_key] = $dc_val;
+                }
+              }
+              db_insert('field_data_' . $instance_key)
+                  ->fields($submission)
+                  ->execute();
+            }
+            catch (Exception $e) {
+              // pass, as one or more deltas probably already have the undefined language set
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  
+  // find the difference between all entities and the und ones
+  // for each table:
+    // find all entries containing the default language but no 'und' language
+    // for each entry:
+      // insert a corresponding 'und' line
 }
 
 /**

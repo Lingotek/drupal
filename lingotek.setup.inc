@@ -67,6 +67,7 @@ function lingotek_setup_new_account_form() {
   );
 
   $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next') // Create Account
@@ -286,11 +287,9 @@ function lingotek_setup_account_settings_form() {
 function lingotek_setup_account_settings_form_submit($form, $form_state) {
   $login_id = $form_state['values']['lingotek_lid'];
   $password = $form_state['values']['lingotek_pid'];
-  //debug( $login_id );
-  //debug( $password );
-  // Validate the Account - Can we Login?
-  // These are V4 Basic Auth API Calls for Legacy Users
-  list($success, $msg) = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
+
+  // Validate the Account
+  list($success, $msg) = lingotek_list_community_integrations($login_id, $password);
   if ($success == FALSE) {
     drupal_set_message($msg, 'error');
   }
@@ -315,8 +314,7 @@ function lingotek_community_select_form() {
 
   $form = array();
 
-  // V3 API Calls for Legacy Users
-  list($success, $msg) = lingotek_get_communities_v4($login_id, $password, LINGOTEK_API_SERVER . '/lingopoint/api/4');
+  list($success, $msg) = lingotek_list_community_integrations($login_id, $password);
 
   if ($success == FALSE) {
 
@@ -324,15 +322,17 @@ function lingotek_community_select_form() {
     drupal_goto('admin/config/lingotek/account-settings'); // Shouldnt be here.  So something messed up.  Go back.
   }
   else {
-    $communities = $msg;
-    $count = count($communities);
+    $community_integrations = $msg;
+
+    $count = count($community_integrations);
     if ($count == 1) { // Just one community, use that.
-      $community_keys = array_keys($communities);
-      $community_id = array_pop($community_keys);
-      variable_set('lingotek_community_identifier', $community_id);
-      drupal_goto('admin/config/lingotek/community-settings-select'); // Default path, if they only have 1 community.
+      $ci = array_pop($community_integrations);
+      variable_set('lingotek_community_identifier', $ci->community_id);
+      variable_set('lingotek_oauth_consumer_id', $ci->key);
+      variable_set('lingotek_oauth_consumer_secret', $ci->secret);
+      drupal_goto('admin/config/lingotek/project-vault-select'); // Default path, if they belong to one community.
     }
-    elseif ($count > 1) { // More then 1 community
+    elseif ($count > 1) { // More than 1 community
       // Stay on this page
     }
     else {
@@ -342,18 +342,30 @@ function lingotek_community_select_form() {
     }
   } // END:  Community Select Paths
 
-  $form['lingotek_user_directions_1'] = array('#markup' => '<p>Your account is associated with multiple Lingotek communities.</p><p>Which community should we associate your Drupal site with?</p>');
-  $form['lingotek_top_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  $form['lingotek_user_directions_1'] = array(
+    '#markup' => '<p>Your account is associated with multiple Lingotek communities.</p>
+    <p>Select the community to associate this site with:</p>');
+  $community_options = array();
+  foreach($community_integrations as $ci){
+    $community_options[$ci->community_id] = $ci->community_name.' ('.$ci->community_id.')';
+  }
 
   $form['lingotek_site_community'] = array(
     '#title' => t('Community'),
     '#type' => 'select',
-    '#options' => $communities,
+    '#options' => $community_options,//array_combine(array_keys($communities),array_keys($communities)),
     //'#default_value' => ,
     //'#description' => t( '' ),
     '#required' => TRUE,
   );
+  
+  $form['lingotek_communities'] = array(
+    '#type' => 'hidden',
+    '#value' => json_encode($community_integrations)
+  );
 
+  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
+  
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-select') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
@@ -361,7 +373,6 @@ function lingotek_community_select_form() {
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next')
@@ -378,26 +389,27 @@ function lingotek_community_select_form() {
  * Community Select Screen - Form Submit
  */
 function lingotek_community_select_form_submit($form, $form_state) {
-  $community_identity = $form_state['values']['lingotek_site_community'];
-  variable_set('lingotek_community_identifier', $community_identity);
+  $community_selected = $form_state['values']['lingotek_site_community'];
+  variable_set('lingotek_community_identifier', $community_selected);
+  $communities = (array)json_decode($form_state['values']['lingotek_communities']);
+  $community = $communities[$community_selected];
+  variable_set('lingotek_oauth_consumer_id', $community->key);
+  variable_set('lingotek_oauth_consumer_secret', $community->secret);
 
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/community-select';
-  drupal_set_message(t('Your Lingotek Community Settings have been saved.'));
-  drupal_goto('admin/config/lingotek/community-settings-select'); // Move to Project Select Step.
+
+  drupal_set_message(t('Your site has been securely connected to your community (@community).', array('@community' => $community_selected)));
+  drupal_goto('admin/config/lingotek/project-vault-select'); // Move to Project Select Step.
 }
 
 /**
  * Project Select Screen (for Current Users) - Form Layout
  */
-function lingotek_community_settings_select_form() {
-  $login_id = variable_get('lingotek_login_id', '');
-  $password = variable_get('lingotek_password', '');
-
+function lingotek_project_vault_select_form() {
   $form = array();
 
-  // V3 API Call for Legacy Users
   $community_identity = variable_get('lingotek_community_identifier', NULL);
-  $community_settings = lingotek_get_community_settings_v4($login_id, $password, $community_identity, LINGOTEK_API_SERVER . '/lingopoint/api/4');
+  list($community_settings, $full_community_data) = lingotek_get_community_settings($community_identity, TRUE);
 
   if ($community_settings === FALSE) {
     drupal_set_message(t('Error Retrieving Account Information.'), 'error');
@@ -407,77 +419,66 @@ function lingotek_community_settings_select_form() {
     drupal_set_message(t('Error Retrieving Account Information.'), 'error');
     drupal_goto('admin/config/lingotek/account-settings'); // Error geting projects.  Go back.
   }
-  else {
 
-    // PROJECTS
-    $project_count = count($community_settings['project']);
-    if ($project_count == 1) {
-      // If there is just 1 Project, Auto-Select it.  Then move on to the next step.
-      $project_id = '';
-      $project_keys = array_keys($community_settings['project']);
-      $project_id = array_pop($project_keys);
-      variable_set('lingotek_project', $project_id);
+  $form['lingotek_user_directions'] = array('#markup' => '<p>Select or create the default project and vault that you would like to use.</p>');
+  $form['lingotek_community_data'] = array(
+    '#type' => 'hidden',
+    '#value' => json_encode($full_community_data)
+  );
+
+  // Project
+
+    asort($community_settings['project']);
+    
+    $project_already_set = !is_null(variable_get('lingotek_project', NULL));
+    $projects_count = count($community_settings['project']);
+
+    $project_options = array(
+        1 => t('New') . (!$project_already_set ? ' <i>(' . t('recommended') . ')</i>' : ''),
+        0 => t('Existing') . ($project_already_set ? ' <i>(' . t('recommended') . ')</i>' : '')
+      );
+    if($projects_count == 0){
+      unset($project_options[0]);
     }
-
-    // WORKFLOWS
-    $workflow_count = count($community_settings['workflow']);
-    if ($workflow_count == 1) {
-      // If there is just 1 Workflow, Auto-Select it.  Then move on to the next step.
-      $workflow_keys = array_keys($workflow_settings['workflow']);
-      $workflow_string = array_pop($workflow_keys);
-      // This can come back as the workflow_id ||| vault_id mashed together, so check it first
-      if (strpos($workflow_string, '|||')) {
-        $parts = explode('|||', $workflow_string);
-        $workflow_id = $parts[0];
-        $vault_id = $parts[1];
-      }
-      else {
-        $workflow_id = $workflow_string;
-      }
-      variable_set('lingotek_workflow', $workflow_id);
-      if (isset($vault_id)) { // If the vault id is passed back, and there is only one workflow choice, pick the associated vault by default
-        variable_set('lingotek_vault', $vault_id);
-      }
-    }
-
-    // VAULTS
-    $vault_count = count($community_settings['vault']);
-    if ($vault_count == 1) {
-      // If there is just 1 Vault, Auto-Select it.  Then move on to the next step.
-      $key = array_keys($community_settings['vault']);
-      $vault_id = array_keys($community_settings['vault'][$key[0]]);
-      $current_vault = variable_get('lingotek_vault', NULL);
-      if ($current_vault && $current_vault != $vault_id[0]) {
-        // Something is wrong here.  This variable references a vault that the user has no access to.
-        // I don't know what to do in this case, however, or if it will ever happen.
-      }
-      variable_set('lingotek_vault', $vault_id[0]);
-    }
-
-    if ($project_count == 1 && $workflow_count == 1 && $vault_count == 1) {
-      drupal_goto('admin/config/lingotek/language-settings'); // Default path, if they only have 1 project, workflow, and vault.
-    }
-    elseif ($project_count < 1 || $workflow_count < 1 || $vault_count < 1) {
-      // Something went wrong here, so go back.
-      drupal_goto('admin/config/lingotek/new-account');
-    }
-  }
-
-  $form['lingotek_user_directions'] = array('#markup' => '<p>Your account is associated with multiple projects, workflows, or vaults.</p><p>Select the defaults that you would like to use below</p>');
-
-  if ($project_count > 1) {
-
-    $sorted = asort($community_settings['project']);
-    $form['lingotek_site_project'] = array(
+    $form['project_new_or_existing'] = array(
+      '#type' => 'radios',
       '#title' => t('Project'),
+      '#default_value' => $project_already_set ? 0 : 1,
+      '#options' => $project_options,
+      //'#description' => t('The Lingotek Project that you would like to use for this site.'),
+      '#required' => TRUE,
+      //'#attributes' => array('onclick' => "(function(){ console.log($); alert('hi'); })();"),
+    );
+    
+    $form['project_new'] = array(
+      '#type' => 'textfield',
+      //'#title' => t('Project Name'),
+      '#default_value' => lingotek_get_site_name(),
+      '#description' => t('The name of the project where content will be uploaded'),
+      '#size' => 20,
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="project_new_or_existing"]' => array('value' => 0)
+        )
+      )
+    );
+    
+    $form['project_existing'] = array(
       '#type' => 'select',
+      //'#title' => t('Project Selection'),
       '#options' => $community_settings['project'],
       '#default_value' => variable_get('lingotek_project', NULL),
-      '#description' => t('The Lingotek Project with which translations will be associated.'),
-      '#required' => TRUE,
+      '#description' => t('Note: ALL documents uploaded to the project, including documents not from this site, will be affected by actions taken on this site (e.g., adding languages)'),
+      '#states' => array(
+        'invisible' => array(
+          ':input[name="project_new_or_existing"]' => array('value' => 1)
+        ),
+      )
     );
-  }
 
+  // Workflow (assume project default for workflow)
+    
+  /*
   if ($workflow_count > 1) {
 
     $form['lingotek_site_workflow'] = array(
@@ -489,31 +490,66 @@ function lingotek_community_settings_select_form() {
       '#required' => TRUE,
     );
   }
+  */
+  
+  // Vault
 
-  if ($vault_count > 1) {
+  $form['vault_existing_or_new'] = array(
+    '#type' => 'radios',
+    '#title' => t('Vault'),
+    '#default_value' => 0,
+    '#options' => array(0 => t('Existing') . ' <i>(' . t('recommended') . ')</i>', 1 => t('New')),
+    //'#description' => t('The Translation Memory (TM) vault where translations are saved.'),
+    '#required' => TRUE
+  );
 
-    $form['lingotek_site_vault'] = array(
-      '#title' => t('Vault'),
-      '#type' => 'select',
-      '#options' => $community_settings['vault'],
-      '#default_value' => variable_get('lingotek_vault', NULL),
-      '#description' => t('The Translation Memory Vault where translations are saved.'),
-      '#required' => TRUE,
-    );
-  }
+  $form['vault_existing_or_new'][1]['#states'] = array(
+    'invisible' => array(
+      ':input[name="project_new_or_existing"]' => array('value' => 0)
+    ),
+  );
 
+  $form['vault_existing'] = array(
+    '#type' => 'select',
+    '#options' => $community_settings['vault'],
+    '#default_value' => variable_get('lingotek_vault', NULL),
+    '#description' => t('Using a shared TM vault allows translations to be re-used.'),
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="vault_existing_or_new"]' => array('value' => 1)
+      ),
+    )
+  );
+  
+  $form['vault_new'] = array(
+    '#type' => 'textfield',
+    //'#title' => t('Vault'),
+    '#default_value' => lingotek_get_site_name(),
+    '#description' => t('The name of the vault where translation memory will be stored'),
+    '#size' => 20,
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="vault_existing_or_new"]' => array('value' => 0)
+      )
+    )
+  );
+
+  
+
+  // submit, etc.
+    
   if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/community-settings-select') {
+    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/project-vault-select') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next')
   );
+  //$form['#submit'] = 'lingotek_project_vault_select_form_submit';
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
@@ -525,38 +561,59 @@ function lingotek_community_settings_select_form() {
 /**
  * Project Select Screen - Form Submit
  */
-function lingotek_community_settings_select_form_submit($form, $form_state) {
+function lingotek_project_vault_select_form_submit($form, $form_state) {
+  $auto_provision_project = FALSE;
+  $params = array();
 
-  if (isset($form_state['values']['lingotek_site_project'])) {
-    variable_set('lingotek_project', $form_state['values']['lingotek_site_project']);
+  // Project
+  if($form_state['values']['project_new_or_existing']){ // new
+    $auto_provision_project = TRUE;
+    $project_name = $form_state['values']['project_new'];
+    $params['projectName'] = $project_name;
   }
-
-  if (isset($form_state['values']['lingotek_site_workflow'])) {
-    $workflow_string = $form_state['values']['lingotek_site_workflow'];
-    // This can come back as just the WorkflowID, OR the WorkflowID ||| VaultID jammed together, so check the string.
-    // Should the vault ID override what is selected, or vice-versa?  Right now it's vice-versa.
-    if (strpos($workflow_string, '|||')) {
-      $parts = explode('|||', $workflow_string);
-      $workflow_id = $parts[0];
-      $vault_id_workflow = $parts[1];
-    }
-    else {
-      $workflow_id = $workflow_string;
-    }
-    /* if (isset($vault_id_workflow) && $vault_id_workflow != $vault_id)) {
-      // do something?
-      } */
+  else { // existing
+    $project_id = $form_state['values']['project_existing'];
+    $lingotek_community_data = json_decode($form_state['values']['lingotek_community_data']);
+    $workflow_id = $lingotek_community_data->project->{$project_id}->workflowId;
+    variable_set('lingotek_project', $project_id);
     variable_set('lingotek_workflow', $workflow_id);
-    variable_set('lingotek_translate_config_workflow_id', $workflow_id);
     variable_set('lingotek_translate_comments_workflow_id', $workflow_id);
-  }
-
-  if (isset($form_state['values']['lingotek_site_vault'])) {
-    variable_set('lingotek_vault', $form_state['values']['lingotek_site_vault']);
+    variable_set('lingotek_translate_config_workflow_id', $workflow_id);
   }
   
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/community-settings-select';
-  drupal_set_message(t('Your Lingotek project, workflow, and vault selections have been saved.'));
+  // Vault
+  if($form_state['values']['vault_existing_or_new']){ // new
+    $vault_name = $form_state['values']['vault_new'];
+    $params['tmVaultName'] = $vault_name;
+  }
+  else { // existing
+    $vault_id = $form_state['values']['vault_existing'];
+    variable_set('lingotek_vault', $vault_id);
+    $params['tmVaultId'] = $vault_id;
+  }
+  
+  if($auto_provision_project){
+    $notify_url = lingotek_notify_url_generate();
+    $params['callbackUrl'] = $notify_url;
+    $api = LingotekApi::instance();
+    $response = $api->request('autoProvisionProject', $params);
+
+    if($response->results == 'success'){
+      $project_id = $response->project_id;
+      $workflow_id = $response->workflow_id;
+      $vault_id = $response->tm_vault_id;
+      variable_set('lingotek_project', $project_id);
+      variable_set('lingotek_workflow', $workflow_id);
+      variable_set('lingotek_translate_comments_workflow_id', $workflow_id);
+      variable_set('lingotek_translate_config_workflow_id', $workflow_id);
+      variable_set('lingotek_vault', $vault_id);
+      variable_set('lingotek_integration_method', $response->integration_method_id);
+      variable_set('lingotek_notify_url', $notify_url);
+    }
+  }
+  
+  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/project-vault-select';
+  drupal_set_message(t('Your Lingotek project, workflow, and vault selections have been setup and saved.'));
   drupal_goto('admin/config/lingotek/language-settings'); // Move to Source Language Select Step. 
 }
 
@@ -606,7 +663,6 @@ function lingotek_setup_language_settings_form() {
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next')
@@ -707,7 +763,6 @@ function lingotek_setup_language_switcher_form($form, $form_state) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
-    $form['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
   }
 
   $form['submit'] = array(
@@ -780,7 +835,6 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['node_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
-    $form['node_translation']['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
   }
 
   unset($form['node_translation']['actions']['submit']);
@@ -864,8 +918,6 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['comment_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
-    $form['comment_translation']['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
-
   }
   $form['comment_translation']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
 
@@ -893,8 +945,6 @@ function lingotek_setup_additional_translation_settings_form($form, &$form_state
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['additional_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
-    $form['additional_translation']['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;</span>');
-
   }
   $form['additional_translation']['#submit'] = 'lingotek_setup_additional_translation_settings_form_submit';
 
@@ -966,8 +1016,6 @@ function lingotek_setup_node_updates_form($form, $form_state) {
 
   $form['lingotek_middle_spacer'] = array('#markup' => '<div>&nbsp;</div>');
 
-  $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-
   $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'));
 
   $form['submit'] = array(
@@ -983,7 +1031,7 @@ function lingotek_setup_node_updates_form($form, $form_state) {
  */
 function lingotek_setup_link($path = 'admin/config/lingotek/language-settings', $text = 'Previous Step') {
   return array(
-    '#markup' => l($text, $path, array('#attributes' => 'margin-left: 20px;'))
+    '#markup' => '<span style="margin-right: 15px;">'. l($text, $path) . '</span>'
   );
 }
 
@@ -1010,14 +1058,14 @@ function lingotek_setup_node_updates_form_submit($form, $form_state) {
  * Get the Lingotek user's current Communities.  Use the V3 API.
  */
 
-function lingotek_get_communities_v4($login, $passwd, $url) {
+function lingotek_list_community_integrations($login, $passwd) {
 
   // API V4 Connection
   $client = new LingotekSession();
 
   $client->login_id = $login;
   $client->password = $passwd;
-  $client->url = $url;
+  $client->url = LINGOTEK_API_SERVER . '/lingopoint/api/4';
 
   $options = array();
 
@@ -1025,41 +1073,39 @@ function lingotek_get_communities_v4($login, $passwd, $url) {
     return array(FALSE, t('Failed to connect to the Lingotek service: @error', array('@error' => $client->getLastLoginMsg())));
   }
 
-  $list_communities = $client->request("listCommunities", array());
-  if ($list_communities->results == "success") {
-    foreach ($list_communities->communities as $community) {
-      $options[$community->id] = $community->name;
+  $list_community_integrations = $client->request("listCommunityIntegrations", array());
+  if ($list_community_integrations->results == "success") {
+    foreach ($list_community_integrations->communities as $community) {
+      foreach($community->integration_methods as $integration_method){
+        if(!empty($integration_method->key) && !empty($integration_method->secret) /*&& $integration_method->type == 'InboundOauth'*/){ // select first InboundOAuth Integration keys
+          $integration_method->community_name = $community->name;
+          $integration_method->community_id = isset($community->id) ? $community->id : $community->name;
+          $options[$integration_method->community_id] = $integration_method;
+          break;
+        }
+      }
     }
   }
-
   return array(TRUE, $options);
 }
 
 /*
- * Get the Lingotek user's current Projects.  Uses the V4 API with Basic Auth.
+ * Get the Lingotek user's current Projects.
  */
+function lingotek_get_community_settings($community_identity, $return_complete = FALSE) {
 
-function lingotek_get_community_settings_v4($login, $passwd, $community_identity, $url) {
-
-  // API V4 Connection
-  $client = new LingotekSession();
-
-  $client->login_id = $login;
-  $client->password = $passwd;
-  $client->url = $url;
-  $client->community = $community_identity;
-
-  if (!$client->canLogIn()) {
-    return FALSE;
-  }
+  $api = LingotekApi::instance();
 
   $options = array();
-
+  $complete = array();
+  
   // get projects
   $options['project'] = array();
-  $list_projects = $client->request("listProjects", array('community' => $community_identity));
+  $complete['project'] = array();
+  $list_projects = $api->request("listProjects", array('community' => $community_identity));
   if ($list_projects->results == "success") {
     foreach ($list_projects->projects as $project) {
+      $complete['project'][$project->id] = $project;
       if ($project->state == 'Active') {
         //if (!empty($project->workflowId)) { // Send back the ProjectID AND WorkflowID.  Joined by |||
         //  $options['project'][$project->id . '|||' . $project->workflowId] = $project->name;
@@ -1073,10 +1119,13 @@ function lingotek_get_community_settings_v4($login, $passwd, $community_identity
 
   // get workflows
   $options['workflow'] = array();
-  $list_workflows = $client->request("listWorkflows", array('community' => $community_identity));
+  $complete['workflow'] = array();
+  $list_workflows = $api->request("listWorkflows", array('community' => $community_identity));
   if ($list_workflows->results == "success") {
+    
     foreach ($list_workflows->workflows as $workflow) {
       $workflow_key = $workflow->id;
+      $complete['workflow'][$workflow_key] = $workflow;
       foreach ($workflow->workflow_steps as $step) {
         if (isset($step->save_to_vault)) {
           $vault = array();
@@ -1084,32 +1133,38 @@ function lingotek_get_community_settings_v4($login, $passwd, $community_identity
           $workflow_key .= '|||' . $vault[1];
         }
       }
-      $options['workflow'][$workflow_key] = $workflow->name;
+      if($workflow->active && !$workflow->is_public){
+        $options['workflow'][$workflow_key] = $workflow->name;
+      }
     }
   }
 
   // get TM vaults
   $options['vault'] = array();
-  $list_vaults = $client->request("listTMVaults", array('community' => $community_identity));
+  $complete['vault'] = array();
+  $list_vaults = $api->request("listTMVaults", array('community' => $community_identity));
   if ($list_vaults->results == "success") {
     if (isset($list_vaults->personalVaults)) {
       foreach ($list_vaults->personalVaults as $personal_vault) {
+        $complete['vault']['PersonalVaults'][$personal_vault->id] = $personal_vault;
         $options['vault']['Personal Vaults'][$personal_vault->id] = $personal_vault->name;
       }
     }
     if (isset($list_vaults->communityVaults)) {
       foreach ($list_vaults->communityVaults as $community_vault) {
+        $complete['vault']['CommunityVaults'][$community_vault->id] = $community_vault;
         $options['vault']['Community Vaults'][$community_vault->id] = $community_vault->name;
       }
     }
     if (isset($list_vaults->publicVaults)) {
       foreach ($list_vaults->publicVaults as $public_vault) {
+        $complete['vault']['PublicVaults'][$public_vault->id] = $public_vault;
         $options['vault']['Public Vaults'][$public_vault->id] = $public_vault->name;
       }
     }
   }
 
-  return $options;
+  return $return_complete ? array($options, $complete) : $options;
 }
 
 /**

@@ -270,6 +270,8 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
           }
         }
 
+        /* removed conversion of field collection leaves from und to the default language
+         * in favor of using load and presave hooks to sync und and default-language translations
         if ($entity_type == 'field_collection_item') {
           $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
           foreach ($field_names as $table) {
@@ -282,6 +284,8 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
                 ->execute();
           }
         }
+         * 
+         */
       }
 
       cache_clear_all('field:' . $entity_type . ':' . $node->nid, 'cache_field');

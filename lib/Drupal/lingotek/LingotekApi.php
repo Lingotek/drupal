@@ -741,7 +741,8 @@ class LingotekApi {
         'externalId' => $externalId
       );
 
-      if ($output = $this->request('getWorkbenchLink', $params)) {
+      $output = $this->request('getWorkbenchLink', $params);
+      if ($output && isset($output->url)) {
         $links[$static_id] = $url = $output->url;
       }
       else {
@@ -1068,6 +1069,7 @@ class LingotekApi {
   public function createCommunity($parameters = array(), $callback_url = NULL) {
     $credentials = array('consumer_key' => LINGOTEK_AP_OAUTH_KEY, 'consumer_secret' => LINGOTEK_AP_OAUTH_SECRET);
     if (isset($callback_url)) {
+      $parameters['projectName'] = lingotek_get_site_name(); 
       $parameters['callbackUrl'] = $callback_url;
     }
     $response = $this->request('autoProvisionCommunity', $parameters, 'POST', $credentials);

@@ -1138,11 +1138,18 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#description' => t('The user must have the "Translation" or "Manage Projects" permission'),
   );
 
+  $form[$fkey]['lingotek_show_language_label'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show language label on node pages'),
+    '#default_value' => variable_get('lingotek_show_language_label'),
+    '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
+  );
+
   $form[$fkey]['lingotek_account_plan_type'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Enterprise Features'),
     '#default_value' => (variable_get('lingotek_account_plan_type') == 'enterprise' ? 1 : 0),
-    '#description' => t('Some features may not be available without an ') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">enterprise license</a>&nbsp;' . t(' of the Lingotek TMS. Call 801.331.7777 for details.'),
+    '#description' => t('Some features may not be available without an') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">Enterprise license</a>&nbsp;' . t('for the Lingotek TMS. Call 801.331.7777 for details.'),
   );
 
   return $form;
@@ -1247,7 +1254,7 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
       '#markup' => theme('table', array('header' => array(), 'rows' => array(
           array('TMS:', LINGOTEK_API_SERVER),
           array('GMC:', LINGOTEK_GMC_SERVER),
-          array('Billing:', LINGOTEK_BILLING_SERVER),
+        //array('Billing:', LINGOTEK_BILLING_SERVER),
         //array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
         //array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
     )))
