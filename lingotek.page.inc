@@ -17,12 +17,13 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
   $document_progress = $document->getProgress();
 
+  $sum_progress = 0;
   if ($document_progress->results == 'success') {
 
     $rows = array();
-
     foreach ($document_progress->translationTargets as $target) {
       $current_phase = $document->currentPhase($target->id);
+      $marked_complete = FALSE;
 
       $phase_complete_percent = is_object($current_phase) ? $current_phase->percentComplete : 0;
       if (empty($phase_complete_percent)) {
@@ -48,8 +49,18 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
           '#attributes' => array('class' => array('no-checkbox-row')),
         );
         $rows[$target->language . '_' . $phase->name] = $row;
+        $marked_complete = $phase->isMarkedComplete;
       }
+
+      // update progress
+      $lingotek_locale = $target->language;
+      $sum_progress += $target->percentComplete;
+      $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
+      lingotek_lingonode($node->nid, 'target_sync_progress_' . $lingotek_locale, $target->percentComplete);
+      lingotek_lingonode($node->nid, 'target_sync_status_'.$lingotek_locale, $target_status);
+      lingotek_lingonode($node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
     }
+    lingotek_lingonode($node->nid, 'translation_progress', $sum_progress/count($document_progress->translationTargets));// unused
 
     $form['fieldset'] = array(
       '#type' => 'fieldset',
