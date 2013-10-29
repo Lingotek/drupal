@@ -1138,6 +1138,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#description' => t('The user must have the "Translation" or "Manage Projects" permission'),
   );
 
+  $form[$fkey]['lingotek_show_language_label'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show language label on node pages'),
+    '#default_value' => variable_get('lingotek_show_language_label'),
+    '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
+  );
+
   $form[$fkey]['lingotek_account_plan_type'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Enterprise Features'),

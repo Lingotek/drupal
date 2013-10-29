@@ -2007,3 +2007,14 @@ function lingotek_l10n_update_projects_alter(&$projects) {
     $projects = array();
   }
 }
+
+/*
+ * Implements hook_node_view_alter
+ */
+function lingotek_node_view_alter(&$info) {
+  if (!variable_get('lingotek_show_language_label', 0)) {
+    if (isset($info['language'])) {
+      unset($info['language']);
+    }
+  }
+}
