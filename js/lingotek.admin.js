@@ -38,6 +38,8 @@ Drupal.behaviors.lingotekAdminForm = {
         })
         if(count == 0) {
           row.find('td:first-child .form-checkbox').attr('checked',false);
+          row.find('.form-select').val('DISABLED');
+          row.find('.form-select').trigger('change');
         }
       }
     });
