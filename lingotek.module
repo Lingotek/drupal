@@ -582,25 +582,13 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   }
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
 
-  //$translation_edit_link = l(lingotek_language_field_lookup('native', $lingotek_locale), '', array('attributes' => array('onclick' => 'window.open(\'' . lingotek_get_workbench_url($node, $lingotek_locale) . '\'); return false;')));
-
-
-  $node = lingotek_empty_node();
-  $document_id = FALSE;
   if (isset($form['nid']['#value'])) {
     $nid = $form['nid']['#value'];
     $node = lingotek_node_load_default($nid);
-    $document_id = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : '';
   }
   else {
     $node = $form['#node'];
-    $profile_default = lingotek_load_profile_defaults('node');
-    $node->lingotek = lingotek_get_global_profile();
-    if(isset($profile_default[$node->type])) {
-      $node->lingotek = array_merge($node->lingotek, $profile_default[$node->type]);
-    } else {
-      $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
-    }
+    lingotek_node_load(array($node), array());
   }
     
   global $language;
@@ -625,7 +613,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       
   if ($is_enterprise) {
     // Only show these options if the Lingotek document hasn't yet been created.
-    if (!$document_id && class_exists('LingotekApi')) {
+    if (!$node->lingotek['document_id'] && class_exists('LingotekApi')) {
 
       $api = LingotekApi::instance();
 
@@ -681,7 +669,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#type' => 'textfield',
     '#title' => t('Document Id'),
     '#description' => t("Read/Overwrite the document ID associated with the document.  This can break the translation process but can also be used to help figure out if something is wrong."),
-    '#default_value' => ($document_id === False) ? '' : $document_id,
+    '#default_value' => $node->lingotek['document_id'],
   );
   $form['lingotek']['advanced']['current_lingonode'] = array(
     '#type' => 'textarea',
@@ -1173,11 +1161,11 @@ function lingotek_node_load($nodes, $types) {
       $node->lingotek = array_merge($node->lingotek, $node_profile_defaults[$node->type]);
     }
     // Step 3: add node-specific profile
-    if (isset($node_lingovalues[$node->nid]['profile']) && is_numeric($node_lingovalues[$node->nid]['profile'])) {
+    if (isset($node->nid) && isset($node_lingovalues[$node->nid]['profile']) && is_numeric($node_lingovalues[$node->nid]['profile'])) {
       $node->lingotek = array_merge($node->lingotek, $profiles_list[$node_lingovalues[$node->nid]['profile']]);
     }
     // Step 4: add node-specific overrides
-    if (isset($node_lingovalues[$node->nid])) {
+    if (isset($node->nid) && isset($node_lingovalues[$node->nid])) {
       $node->lingotek = array_merge($node->lingotek, $node_lingovalues[$node->nid]);
     }
     // Step 5: if no profile, then disabled.
