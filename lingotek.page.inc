@@ -55,9 +55,12 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       // update progress
       $lingotek_locale = $target->language;
       $sum_progress += $target->percentComplete;
-      $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
+      $target_status_local = lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale);
+      if ($target_status_local === LingotekSync::STATUS_PENDING) {
+        $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
+        lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
+      }
       lingotek_lingonode($node->nid, 'target_sync_progress_' . $lingotek_locale, $target->percentComplete);
-      lingotek_lingonode($node->nid, 'target_sync_status_'.$lingotek_locale, $target_status);
       lingotek_lingonode($node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
     }
     lingotek_lingonode($node->nid, 'translation_progress', $sum_progress/count($document_progress->translationTargets));// unused
