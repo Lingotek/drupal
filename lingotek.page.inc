@@ -335,25 +335,10 @@ function lingotek_publish_form($form, $form_state, $node) {
 function lingotek_publish_form_submit($form, $form_state) {
   if (module_exists('entity_translation')) {
     $node = lingotek_node_load_default($form_state['values']['node_id']);
-
     $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0;
-    $handler = entity_translation_get_handler('node', $node);
-
     $language_codes = $form_state['values']['languages'];
-    $languages_updated = array();
-    $updates = 0;
-    foreach ($language_codes as $langcode) {
-      if ($langcode !== 0) {
-        // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
-        $handler->setTranslation(array(
-          'language' => $langcode,
-          'status' => $status_request
-        ));
-        $languages_updated[$langcode] = lingotek_language_name($langcode);
-        $updates++;
-      }
-    }
-    $handler->saveTranslations();
+
+    list($languages_updated, $updates) = lingotek_entity_translation_save_status($node, $language_codes, $status_request);
 
     $publish_status_text = $status_request ? 'published' : 'unpublished';
     $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";

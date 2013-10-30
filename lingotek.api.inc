@@ -127,6 +127,12 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   LingotekSync::setTargetStatus($source_node->nid, $lingotek_locale, $sync_success_status); //slightly pre-emptive, but certainly more cohesive
   $node->lingotek_upload_override = 0; // ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
+
+  //Add entries for entity translation, if applicable
+  if (module_exists('entity_translation') && lingotek_managed_by_entity_translation($node->type)) {
+    lingotek_entity_translation_save_status($node, array($drupal_language_code));
+  }
+
   //Fix for workbench_moderation changing node state after translation download
   if (module_exists('workbench_moderation')) {
     if (isset($node->workbench_moderation)) {

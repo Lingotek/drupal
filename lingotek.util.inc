@@ -1298,6 +1298,42 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   return $or;
 }
 
+function lingotek_entity_translation_save_status($node, $language_codes, $status_request = NULL) {
+  $handler = entity_translation_get_handler('node', $node);
+  $languages_updated = array();
+  $updates = 0;
+
+  foreach ($language_codes as $langcode) {
+    if ($langcode !== 0) {
+      // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
+      $et_params = array(
+        'language' => $langcode,
+        );
+      if ($langcode != $node->language) {
+        $et_params['source'] = $node->language;
+      }
+      if ($status_request !== NULL) {
+        $et_params['status'] = $status_request;
+      }
+      else {
+        // check for the current status, if any, and set to published as a default
+        if (isset($node->translations->data[$node->language])
+            && !isset($node->translations->data[$langcode])) {
+          $et_params['status'] = $node->translations->data[$node->language]['status'];
+        }
+        else {
+          $et_params['status'] = 1; // published
+        }
+      }
+      $handler->setTranslation($et_params);
+      $languages_updated[$langcode] = lingotek_language_name($langcode);
+      $updates++;
+    }
+  }
+  $handler->saveTranslations();
+  return array($languages_updated, $updates);
+}
+
 function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip = 'Edit this translation') {
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/workbench-link.css', array('group' => CSS_DEFAULT));
   
