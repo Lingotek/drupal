@@ -785,7 +785,10 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
         ))
         ->condition('language', $drupal_language_code)
         ->execute();
-    LingotekLog::info("Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    drupal_static_reset('language_list');
+    LingotekLog::info("Target language added: @drupal_language_code (@lingotek_locale)", array(
+      '@drupal_language_code' => $drupal_language_code,
+      '@lingotek_locale' => $lingotek_locale));
 
     if ($lingotek_enable && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
       $api = LingotekApi::instance();
