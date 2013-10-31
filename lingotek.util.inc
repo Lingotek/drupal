@@ -1376,6 +1376,20 @@ function lingotek_list_entities_with_language($entity_type, $bundle, $language) 
   return $ids;
 }
 
+function lingotek_list_nodes_translated_in_language($bundle, $language) {
+
+  $query = db_select('node')
+      ->fields('node', array('tnid'))
+      ->condition('node.type', $bundle)
+      ->condition('node.tnid', 0, '<>')
+      ->condition('language', $language)
+      ->execute();
+
+  $nodes = $query->fetchCol();
+
+  return $nodes;
+}
+
 function lingotek_list_entities_with_field_in_language($entity_type, $bundle, $field, $language) {
   $query = new EntityFieldQuery;
 
@@ -1383,7 +1397,7 @@ function lingotek_list_entities_with_field_in_language($entity_type, $bundle, $f
       ->entityCondition('entity_type', $entity_type)
       ->entityCondition('bundle', $bundle)
       ->entityCondition('deleted', 0)
-      ->fieldLanguageCondition('body', $language)
+      ->fieldLanguageCondition($field, $language)
       ->execute();
 
   return isset($entities['node']) ? array_keys($entities['node']) : array();

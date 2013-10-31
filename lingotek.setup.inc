@@ -891,6 +891,7 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     $ops = array();
     
     foreach($nodes as $row) {
+      $ops[] = array('lingotek_lingonode', array($row->nid, 'profile', LingotekSync::PROFILE_DISABLED));
       if($row->nid == $row->tnid) {
         $ops[] = array('LingotekSync::setNodeEnabled', array($row->nid, FALSE));
       } else {

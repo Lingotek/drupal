@@ -110,9 +110,13 @@ class LingotekSync {
     $subquery = db_select('node', 'n')->fields('n', array('nid'));
     $subquery->condition('language', $drupal_language_code);
 
+    $subquery2 = db_select('lingotek', 'l2')->fields('l2', array('nid'));
+    $subquery2->condition('lingokey', 'target_sync_status_' . $lingotek_locale); //already has status
+
     $query = db_select('lingotek', 'l')->fields('l');
     $query->condition('lingokey', 'node_sync_status');
     $query->condition('nid', $subquery, 'NOT IN'); // exclude adding to nodes where this locale is the source
+    $query->condition('nid', $subquery2, 'NOT IN'); // exclude nodes that already have this language as a target
     $result = $query->execute();
 
     while ($record = $result->fetchAssoc()) {
