@@ -581,3 +581,29 @@ function lingotek_update_7406(&$sandbox) {
   variable_set('lingotek_enabled_fields', $enabled_fields);
   variable_del('lingotek_translate_fields');
 }
+
+/**
+ * Creates an upgrade path for existing translated content to be inserted into entity_translation module table if necessary
+ */
+function lingotek_update_7408(&$sandbox) {
+  if (module_exists('entity_translation')) {
+    $nid_list = array();
+    $results = db_select('lingotek', 'l')
+      ->fields('l', array('nid', 'lingokey'))
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE')
+      ->condition('lingovalue', LingotekSync::STATUS_CURRENT)
+      ->execute();
+    foreach ($results as $r) {
+      $nid_list[$r->nid] = str_replace('target_sync_status_', '', $r->lingokey);
+    }
+    
+    foreach ($nid_list as $nid => $locale) {
+      $node = lingotek_node_load_default($nid, NULL, TRUE);
+      if ($node) {
+        if (lingotek_managed_by_entity_translation($node->type)) {
+          lingotek_entity_translation_save_status($node, array(Lingotek::convertLingotek2Drupal($locale)));
+        }
+      }
+    }
+  }
+}
