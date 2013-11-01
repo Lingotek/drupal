@@ -343,18 +343,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
         );
       }
     }
-    if (module_exists('entity_translation')) {
-      $form['upload']['upload_nids_et_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_et']));
-      if ($report['upload_nids_et_count'] > 0) {
-        $form['upload']['upload_et'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Include nodes managed by Entity Translation (<span id="upload-et-total">@count</span>)', array('@count' => $report['upload_nids_et_count'])),
-          '#default_value' => 0,
-          '#disabled' => $report['upload_nids_et_count'] == 0,
-          '#description' => t('These nodes will now be managed by Lingotek.')
-        );
-      }
-    }
     if (variable_get('lingotek_translate_config')) {
       // pre-build include/exclude messages based on enabled config types
       $config_types = array(
