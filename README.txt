@@ -1,5 +1,6 @@
 
--- SUMMARY --
+SUMMARY
+--------
 
 Translates your nodes, comments, and the rest of your site using the Lingotek
 Translation Management System.
@@ -10,7 +11,8 @@ To submit bug reports and feature suggestions, or to track changes:
   http://drupal.org/project/issues/lingotek
 
 
--- REQUIREMENTS --
+REQUIREMENTS
+-------------
 
 Dependencies:
   Chaos Tools
@@ -27,14 +29,16 @@ Modules that we integrate with (optional):
   Workbench Moderation
 
 
--- INSTALLATION --
+INSTALLATION
+-------------
 
-* Install as usual, see http://drupal.org/node/70151 for further information.
+* Install as usual, see https://drupal.org/documentation/install/modules-themes/modules-7 for further information.
 
 For detailed step by step instructions see
 http://www.drupaltranslation.com/drupal_translation_module_installation.
 
 
--- CONFIGURATION --
+CONFIGURATION
+--------------
 
 There is setup wizard that helps you to get started, go to admin/config/lingotek/setup.
