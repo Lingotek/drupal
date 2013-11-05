@@ -50,9 +50,9 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     foreach ($lingotek_fields['node'][$localized_node->type] as $field_name) {
       $field = $node->$field_name;
       $f = array();
-      if(isset($field[$node->language])) {
+      if (isset($field[$node->language])) {
         foreach ($field[$node->language] as $key => $value) {
-          if(isset($value['format']))
+          if (isset($value['format']))
             $f[$drupal_language_code][$key]['format'] = $value['format'];
         }
       }
@@ -114,7 +114,8 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   if ($node_method == 'node') { //node-based translations
     $node = lingotek_get_translated_node($source_node, $drupal_language_code);
-  } else {
+  }
+  else {
     $node = $source_node;
   }
 
@@ -127,6 +128,12 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   LingotekSync::setTargetStatus($source_node->nid, $lingotek_locale, $sync_success_status); //slightly pre-emptive, but certainly more cohesive
   $node->lingotek_upload_override = 0; // ensure that no upload to lingotek is triggered on node update (in lingotek_node_update)
+
+  //Add entries for entity translation, if applicable
+  if (module_exists('entity_translation') && lingotek_managed_by_entity_translation($node->type)) {
+    lingotek_entity_translation_save_status($node, array($drupal_language_code));
+  }
+
   //Fix for workbench_moderation changing node state after translation download
   if (module_exists('workbench_moderation')) {
     if (isset($node->workbench_moderation)) {

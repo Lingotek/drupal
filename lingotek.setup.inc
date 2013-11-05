@@ -346,8 +346,8 @@ function lingotek_community_select_form() {
     '#markup' => '<p>Your account is associated with multiple Lingotek communities.</p>
     <p>Select the community to associate this site with:</p>');
   $community_options = array();
-  foreach($community_integrations as $ci){
-    $community_options[$ci->community_id] = $ci->community_name.' ('.$ci->community_id.')';
+  foreach ($community_integrations as $ci) {
+    $community_options[$ci->community_id] = $ci->community_name . ' (' . $ci->community_id . ')';
   }
 
   $form['lingotek_site_community'] = array(
@@ -437,7 +437,7 @@ function lingotek_project_vault_select_form() {
         1 => t('New') . (!$project_already_set ? ' <i>(' . t('recommended') . ')</i>' : ''),
         0 => t('Existing') . ($project_already_set ? ' <i>(' . t('recommended') . ')</i>' : '')
       );
-    if($projects_count == 0){
+    if ($projects_count == 0) {
       unset($project_options[0]);
     }
     $form['project_new_or_existing'] = array(
@@ -566,7 +566,7 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
   $params = array();
 
   // Project
-  if($form_state['values']['project_new_or_existing']){ // new
+  if ($form_state['values']['project_new_or_existing']) { // new
     $auto_provision_project = TRUE;
     $project_name = $form_state['values']['project_new'];
     $params['projectName'] = $project_name;
@@ -582,7 +582,7 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
   }
   
   // Vault
-  if($form_state['values']['vault_existing_or_new']){ // new
+  if ($form_state['values']['vault_existing_or_new']) { // new
     $vault_name = $form_state['values']['vault_new'];
     $params['tmVaultName'] = $vault_name;
   }
@@ -592,13 +592,13 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
     $params['tmVaultId'] = $vault_id;
   }
   
-  if($auto_provision_project){
+  if ($auto_provision_project) {
     $notify_url = lingotek_notify_url_generate();
     $params['callbackUrl'] = $notify_url;
     $api = LingotekApi::instance();
     $response = $api->request('autoProvisionProject', $params);
 
-    if($response->results == 'success'){
+    if ($response->results == 'success') {
       $project_id = $response->project_id;
       $workflow_id = $response->workflow_id;
       $vault_id = $response->tm_vault_id;
@@ -881,7 +881,7 @@ function lingotek_content_type_choose_fields_callback($content_type) {
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
   lingotek_admin_node_translation_settings_form_submit($form, $form_state);
   
-  if($form_state['values']['lingotek_nodes_translation_method'] == 'node' && $form_state['values']['lingotek_overwrite']) {
+  if ($form_state['values']['lingotek_nodes_translation_method'] == 'node' && $form_state['values']['lingotek_overwrite']) {
     $nodes = db_select('node', 'n')
       ->fields('n', array('nid', 'tnid'))
       ->condition('n.tnid', 0, '<>')
@@ -890,10 +890,12 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     
     $ops = array();
     
-    foreach($nodes as $row) {
-      if($row->nid == $row->tnid) {
+    foreach ($nodes as $row) {
+      $ops[] = array('lingotek_lingonode', array($row->nid, 'profile', LingotekSync::PROFILE_DISABLED));
+      if ($row->nid == $row->tnid) {
         $ops[] = array('LingotekSync::setNodeEnabled', array($row->nid, FALSE));
-      } else {
+      }
+      else {
         $ops[] = array('lingotek_lingonode', array($row->nid, 'node_sync_status', LingotekSync::STATUS_TARGET));
       }
     }
@@ -905,7 +907,8 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     batch_set($batch);
     batch_process('admin/config/lingotek/comment-translation-settings');
     
-  } else {
+  }
+  else {
     drupal_goto('admin/config/lingotek/comment-translation-settings');
   }
 }
@@ -1031,7 +1034,7 @@ function lingotek_setup_node_updates_form($form, $form_state) {
  */
 function lingotek_setup_link($path = 'admin/config/lingotek/language-settings', $text = 'Previous Step') {
   return array(
-    '#markup' => '<span style="margin-right: 15px;">'. l($text, $path) . '</span>'
+    '#markup' => '<span style="margin-right: 15px;">' . l($text, $path) . '</span>'
   );
 }
 
@@ -1076,8 +1079,8 @@ function lingotek_list_community_integrations($login, $passwd) {
   $list_community_integrations = $client->request("listCommunityIntegrations", array());
   if ($list_community_integrations->results == "success") {
     foreach ($list_community_integrations->communities as $community) {
-      foreach($community->integration_methods as $integration_method){
-        if(!empty($integration_method->key) && !empty($integration_method->secret) /*&& $integration_method->type == 'InboundOauth'*/){ // select first InboundOAuth Integration keys
+      foreach ($community->integration_methods as $integration_method) {
+        if (!empty($integration_method->key) && !empty($integration_method->secret)) { // select first InboundOAuth Integration keys
           $integration_method->community_name = $community->name;
           $integration_method->community_id = isset($community->id) ? $community->id : $community->name;
           $options[$integration_method->community_id] = $integration_method;
@@ -1133,7 +1136,7 @@ function lingotek_get_community_settings($community_identity, $return_complete =
           $workflow_key .= '|||' . $vault[1];
         }
       }
-      if($workflow->active && !$workflow->is_public){
+      if ($workflow->active && !$workflow->is_public) {
         $options['workflow'][$workflow_key] = $workflow->name;
       }
     }

@@ -88,9 +88,9 @@ function lingotek_notifications() {
   $attempts = 0;
   while ($attempts < 3) {
     $nid = LingotekSync::getNodeIdFromDocId($document_id);
-    if(!$nid) { // check for the old style document_id
+    if (!$nid) { // check for the old style document_id
       $nid = LingotekSync::getNodeIdFromDocId($document_idx);
-      if($nid){
+      if ($nid) {
         $document_id = $document_idx;
       }
     }
@@ -343,18 +343,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
         );
       }
     }
-    if (module_exists('entity_translation')) {
-      $form['upload']['upload_nids_et_json'] = array('#type' => 'hidden', '#value' => json_encode($report['upload_nids_et']));
-      if ($report['upload_nids_et_count'] > 0) {
-        $form['upload']['upload_et'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Include nodes managed by Entity Translation (<span id="upload-et-total">@count</span>)', array('@count' => $report['upload_nids_et_count'])),
-          '#default_value' => 0,
-          '#disabled' => $report['upload_nids_et_count'] == 0,
-          '#description' => t('These nodes will now be managed by Lingotek.')
-        );
-      }
-    }
     if (variable_get('lingotek_translate_config')) {
       // pre-build include/exclude messages based on enabled config types
       $config_types = array(
@@ -398,7 +386,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         $additional_desc .= t('(You can also enable translation for')
             . ' ' . $cf_excluded_str . ' '
             . t('within') . ' ' . t('Translation Configuration in') . ' '
-            . l('Lingotek Settings', 'admin/settings/lingotek/settings')
+            . l(t('Lingotek Settings'), 'admin/settings/lingotek/settings')
             . ')<br/>';
       }
       if (variable_get('lingotek_use_translation_from_drupal')) {
@@ -930,7 +918,7 @@ function lingotek_get_and_update_target_progress($document_ids) {
     $error_message = "API Error(s): <ul>";
     if (is_array($progress_report->errors)) {
       foreach ($progress_report->errors as $error) {
-        $error_message .= "<li>".$error."</li>";
+        $error_message .= "<li>" . $error . "</li>";
       }
     }
     $error_message .= "</ul><i>For additional information, check your recent log messages</i>";

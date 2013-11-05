@@ -695,7 +695,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       $node = lingotek_node_load_default(reset($nids));
     }
     else {
-      if(!$second_run) {
+      if (!$second_run) {
         drupal_set_message(t('You will be changing the settings for @number nodes.', array('@number' => count($nids))), 'warning');
       }
       $node = new stdClass();
@@ -771,7 +771,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#default_value' => $node->lingotek['profile'],
   );
   
-  if($node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED) {
+  if ($node->lingotek['node_sync_status'] == LingotekSync::STATUS_DISABLED) {
     $form['lingotek']['profile']['#default_value'] = LingotekSync::PROFILE_DISABLED;
   }
   
@@ -904,9 +904,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  */
 function lingotek_node_save($node) {
 
-  if(!isset($node->lingotek)) {
+  if (!isset($node->lingotek)) {
     // load default lingotek settings when alternate node creation paths are employed (e.g., commons)
-    lingotek_node_load(array($node),array());
+    lingotek_node_load(array($node), array());
   }
   $has_not_been_uploaded = !isset($node->lingotek['document_id']) || empty($node->lingotek['document_id']);
   
@@ -915,7 +915,7 @@ function lingotek_node_save($node) {
   if ($disabled_selected && !$disabled) {
     LingotekSync::setNodeEnabled($node->nid, FALSE);
   }
-  else if (!$disabled_selected && $disabled) {
+  elseif (!$disabled_selected && $disabled) {
     LingotekSync::setNodeEnabled($node->nid, TRUE);
   }
   
@@ -941,9 +941,10 @@ function lingotek_node_save($node) {
   else { // Specific Profile
     $node_defaults = lingotek_load_profile_defaults('node');
     $profile_overridden = (!isset($node_defaults[$node->type]['profile']) || $node_defaults[$node->type]['profile'] != $node->lingotek['profile']);
-    if($profile_overridden) {
+    if ($profile_overridden) {
       lingotek_lingonode($node->nid, 'profile', $node->lingotek['profile']);
-    } else {
+    }
+    else {
       lingotek_lingonode_variable_delete($node->nid, 'profile');
     }
   }
@@ -969,7 +970,7 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
   if (isset($form_state['nids']) && !empty($form_state['nids'])) {
     $nids = $form_state['nids'];
     
-    foreach($nids as $nid) {
+    foreach ($nids as $nid) {
       $node = node_load($nid);
       $node->lingotek = array_replace($node->lingotek, $form_state['values']['lingotek']);
       node_save($node);
@@ -1110,7 +1111,8 @@ function lingotek_node_delete($node) {
 function lingotek_entity_load_single($entity_type, $entity_id) {
   if ($entity_type == 'node') {
     $entity = lingotek_node_load_default($entity_id);
-  } else {
+  }
+  else {
     $entities = entity_load($entity_type, array($entity_id));
     $entity = $entities[$entity_id];
   }
@@ -1206,7 +1208,7 @@ function lingotek_node_update($node) {
     return;
   }
   //check to make sure it is not a target node
-  if(!empty($node->tnid) && ($node->nid != $node->tnid)) {
+  if (!empty($node->tnid) && ($node->nid != $node->tnid)) {
     return;
   }
   
@@ -1215,7 +1217,8 @@ function lingotek_node_update($node) {
   if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
     if (isset($node->is_new) && $node->is_new) {
       lingotek_workbench_moderation_transition($node, $node->workbench_moderation['current']->from_state, $node->workbench_moderation['current']->state);
-    } else {
+    }
+    else {
       return;
     }
   }
@@ -1240,7 +1243,7 @@ function lingotek_upload_document($node) {
     lingotek_lingonode($node->nid, 'hash', $hash);
     $diff = strcmp($hash, $oldhash);
 
-    if($diff == 0 && $node->lingotek['node_sync_status'] == 'CURRENT') {
+    if ($diff == 0 && $node->lingotek['node_sync_status'] == 'CURRENT') {
       return; //node has no changes.
     }
   }
@@ -1621,7 +1624,7 @@ function lingotek_normalize_field_collection_language($entity, $from_language_no
         if ($from_language_none) {
           $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
         }
-        else if (isset($value[$host->language])) {
+        elseif (isset($value[$host->language])) {
           $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
         }
       }

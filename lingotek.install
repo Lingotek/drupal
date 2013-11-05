@@ -514,19 +514,19 @@ function lingotek_update_7401(&$sandbox) {
  */
 function lingotek_update_7403(&$sandbox) {
   $translate_fields = variable_get('lingotek_translate_fields');
-  if(empty($translate_fields)) {
+  if (empty($translate_fields)) {
 
     $types = _node_types_build()->types;
     $translate_fields = array();
 
-    foreach($types as $t) {
+    foreach ($types as $t) {
       $translation_setting = variable_get('language_content_type_' . $t->type);
-      if($translation_setting == 'lingotek') {
+      if ($translation_setting == 'lingotek') {
         variable_set('language_content_type_' . $t->type, "1");
         $fields = field_info_instances("node", $t->type);
-        foreach($fields as $field_name => $instance) {
+        foreach ($fields as $field_name => $instance) {
           $field = field_info_field($field_name);
-          if($field['translatable'] && $field['lingotek_translatable'] == 1) {
+          if ($field['translatable'] && $field['lingotek_translatable'] == 1) {
             $translate_fields[$t->type][] = $field_name;
           }
         }
@@ -557,7 +557,7 @@ function lingotek_update_7404(&$sandbox) {
   }
 
   $entity_profiles = variable_get('lingotek_entity_profiles');
-  if(empty($entity_profiles)) {
+  if (empty($entity_profiles)) {
     $fields = variable_get('lingotek_translate_fields');
 
     $entity_profiles = array();
@@ -580,4 +580,30 @@ function lingotek_update_7406(&$sandbox) {
 
   variable_set('lingotek_enabled_fields', $enabled_fields);
   variable_del('lingotek_translate_fields');
+}
+
+/**
+ * Creates an upgrade path for existing translated content to be inserted into entity_translation module table if necessary
+ */
+function lingotek_update_7408(&$sandbox) {
+  if (module_exists('entity_translation')) {
+    $nid_list = array();
+    $results = db_select('lingotek', 'l')
+      ->fields('l', array('nid', 'lingokey'))
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE')
+      ->condition('lingovalue', LingotekSync::STATUS_CURRENT)
+      ->execute();
+    foreach ($results as $r) {
+      $nid_list[$r->nid] = str_replace('target_sync_status_', '', $r->lingokey);
+    }
+    
+    foreach ($nid_list as $nid => $locale) {
+      $node = lingotek_node_load_default($nid, NULL, TRUE);
+      if ($node) {
+        if (lingotek_managed_by_entity_translation($node->type)) {
+          lingotek_entity_translation_save_status($node, array(Lingotek::convertLingotek2Drupal($locale)));
+        }
+      }
+    }
+  }
 }

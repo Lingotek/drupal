@@ -372,7 +372,7 @@ function lingotek_admin_profile_usage_by_types($id) {
   $profile_usage = array_count_values($profile_mapping_associations);
   $node_info = entity_get_info('node');
   $node_bundles = array_keys($node_info['bundles']);
-  if(!isset($profile_usage['DISABLED'])) {
+  if (!isset($profile_usage['DISABLED'])) {
     $profile_usage['DISABLED'] = 0;
   }
   foreach ($node_bundles as $bundle) {
@@ -601,7 +601,8 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 
   if ($lingotek_use_translation_from_drupal) {
     variable_set('l10n_update_rebuild_projects', 1);
-  } else {
+  }
+  else {
     variable_del('l10n_update_rebuild_projects');
   }
 

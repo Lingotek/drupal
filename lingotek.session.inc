@@ -273,11 +273,11 @@ class LingotekSession {
         $success = TRUE;
         $error = '';
       }
-      else if (isset($response->results) && $response->results == "fail") {
+      elseif (isset($response->results) && $response->results == "fail") {
         $error = $response->error;
       }
     }
-    else if (isset($data->error)) {
+    elseif (isset($data->error)) {
       $error = $data->error;
     }
 

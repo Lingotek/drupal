@@ -258,14 +258,35 @@ function lingotek_batch_identify_content($front = FALSE) {
   $existing_nids = $result->fetchCol();
   $operations = array();
 
+  global $language;
+  $existing_languages = language_list();
+  unset($existing_languages[$language->language]);
+
   foreach (lingotek_get_content_types() as $type) {
 
     $nodes = node_load_multiple(array(), array('type' => $type));
 
+    $nodes_in_language_field = array();
+    $nodes_in_language_node = array();
+
+    foreach ($existing_languages as $lang) {
+      $nodes_in_language_field[$lang->language] = lingotek_list_entities_with_language('node', $type, $lang->language);
+      $nodes_in_language_node[$lang->language] = lingotek_list_nodes_translated_in_language($type, $lang->language);
+    }
+
     foreach ($nodes as $node) {
       if (!in_array($node->nid, $existing_nids)) {
-        // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
-        $operations[] = array('LingotekSync::setNodeStatus', array($node->nid, LingotekSync::STATUS_EDITED));
+        if ($node->tnid == 0 || $node->tnid == $node->nid) { //skip node translation target nodes
+          // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
+          $operations[] = array('LingotekSync::setNodeStatus', array($node->nid, LingotekSync::STATUS_EDITED));
+
+          foreach ($existing_languages as $lang) {
+            if (in_array($node->nid, $nodes_in_language_field[$lang->language]) || in_array($node->nid, $nodes_in_language_node[$lang->language])) {
+              $lingotek_locale = Lingotek::convertDrupal2Lingotek($lang->language);
+              lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
+            }
+          }
+        }
       };
     }
   }

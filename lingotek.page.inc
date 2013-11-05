@@ -45,7 +45,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $row = array(
           'column_1' => $phase->name,
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
-          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-complete-check" title="'.t('Phase complete').'"></i>':'<i class="icon-check-empty ltk-complete-check"></i>',
+          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-complete-check" title="' . t('Phase complete') . '"></i>' : '<i class="icon-check-empty ltk-complete-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
         );
         $rows[$target->language . '_' . $phase->name] = $row;
@@ -55,12 +55,18 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       // update progress
       $lingotek_locale = $target->language;
       $sum_progress += $target->percentComplete;
-      $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
+      $target_status_local = lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale);
+      if ($target_status_local === LingotekSync::STATUS_PENDING) {
+        $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
+        lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
+      }
       lingotek_lingonode($node->nid, 'target_sync_progress_' . $lingotek_locale, $target->percentComplete);
-      lingotek_lingonode($node->nid, 'target_sync_status_'.$lingotek_locale, $target_status);
       lingotek_lingonode($node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
     }
-    lingotek_lingonode($node->nid, 'translation_progress', $sum_progress/count($document_progress->translationTargets));// unused
+    $count = count($document_progress->translationTargets);
+    if ($count) {
+      lingotek_lingonode($node->nid, 'translation_progress', $sum_progress/$count);// unused
+    }
 
     $form['fieldset'] = array(
       '#type' => 'fieldset',
@@ -335,25 +341,10 @@ function lingotek_publish_form($form, $form_state, $node) {
 function lingotek_publish_form_submit($form, $form_state) {
   if (module_exists('entity_translation')) {
     $node = lingotek_node_load_default($form_state['values']['node_id']);
-
     $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0;
-    $handler = entity_translation_get_handler('node', $node);
-
     $language_codes = $form_state['values']['languages'];
-    $languages_updated = array();
-    $updates = 0;
-    foreach ($language_codes as $langcode) {
-      if ($langcode !== 0) {
-        // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
-        $handler->setTranslation(array(
-          'language' => $langcode,
-          'status' => $status_request
-        ));
-        $languages_updated[$langcode] = lingotek_language_name($langcode);
-        $updates++;
-      }
-    }
-    $handler->saveTranslations();
+
+    list($languages_updated, $updates) = lingotek_entity_translation_save_status($node, $language_codes, $status_request);
 
     $publish_status_text = $status_request ? 'published' : 'unpublished';
     $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";
@@ -394,7 +385,7 @@ function lingotek_pm($node) {
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
-      '#markup' => 'This is a translated node. Go to the ' . l('source node', 'node/' . $node->tnid . '/lingotek_pm') . ' to manage the translations.'
+      '#markup' => t('This is a translated node. Go to the @link to manage the translations.', array('@link' => l('source node', 'node/' . $node->tnid . '/lingotek_pm'))),
     );
     return $output;
   }
@@ -735,7 +726,8 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale);
       drupal_goto($translation_edit_link);
     }
-  } else if ($entity_type == 'comment') {
+  }
+  elseif ($entity_type == 'comment') {
     $comment = comment_load($id);
     if ($comment->language == $drupal_language_code) {
       drupal_goto('comment/' . $comment->cid . '/edit');
@@ -744,7 +736,7 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       $lingotek_comment = LingotekComment::load($comment);
       
       $translation_edit_link = lingotek_get_workbench_url($lingotek_comment->lingotekDocumentId(), $lingotek_locale);
-      if(!empty($translation_edit_link)) {
+      if (!empty($translation_edit_link)) {
         drupal_goto($translation_edit_link);
       }
       else {
