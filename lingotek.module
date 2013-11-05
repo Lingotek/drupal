@@ -1060,7 +1060,7 @@ function lingotek_node_view($node, $view_mode) {
     if ($language->language != $node->language) {
       $link = lingotek_get_workbench_url($node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
       if ($link != '') {
-        $message = t('The translation of @title is still being worked on.', array('@title' => '"' . $node->title . '"')) . " ";
+        $message = t('The translation of this page is still being worked on.') . " ";
         $message .= $link . '&nbsp;';
         if (lingotek_access($node, 'manage projects')) {
           $message .= '<span style="font-size: 80%">[' . l(t('progress'), 'node/' . $node->nid . '/lingotek_pm', array('html' => TRUE)) . ']</span>';

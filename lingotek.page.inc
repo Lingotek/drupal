@@ -54,13 +54,14 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
       // update progress
       $lingotek_locale = $target->language;
-      $sum_progress += $target->percentComplete;
+      $progress_percentage = empty($target->percentComplete) ? 0 : $target->percentComplete;
+      $sum_progress += $progress_percentage;
       $target_status_local = lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale);
       if ($target_status_local === LingotekSync::STATUS_PENDING) {
         $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
         lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
       }
-      lingotek_lingonode($node->nid, 'target_sync_progress_' . $lingotek_locale, $target->percentComplete);
+      lingotek_lingonode($node->nid, 'target_sync_progress_' . $lingotek_locale, $progress_percentage);
       lingotek_lingonode($node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
     }
     $count = count($document_progress->translationTargets);
@@ -584,10 +585,7 @@ function lingotek_mark_phases_complete($form, $form_state, $node, $document = NU
         $language = Lingotek::convertLingotek2Drupal($target->language);
         $current_phase = $document->currentPhase($target->id);
 
-        $phase_complete_percent = $current_phase->percentComplete;
-        if (empty($phase_complete_percent)) {
-          $phase_complete_percent = 0;
-        }
+        $phase_complete_percent = empty($current_phase->percentComplete) ? 0 : $current_phase->percentComplete;
 
         if ($current_phase && $current_phase->canBeMarkedComplete()) {
           $phase_link = l($current_phase->name, '', array('attributes' => array(
