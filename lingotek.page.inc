@@ -45,7 +45,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $row = array(
           'column_1' => $phase->name,
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
-          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-complete-check" title="'.t('Phase complete').'"></i>':'<i class="icon-check-empty ltk-complete-check"></i>',
+          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-complete-check" title="' . t('Phase complete') . '"></i>' : '<i class="icon-check-empty ltk-complete-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
         );
         $rows[$target->language . '_' . $phase->name] = $row;
@@ -385,7 +385,7 @@ function lingotek_pm($node) {
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
-      '#markup' => 'This is a translated node. Go to the ' . l('source node', 'node/' . $node->tnid . '/lingotek_pm') . ' to manage the translations.'
+      '#markup' => t('This is a translated node. Go to the @link to manage the translations.', array('@link' => l('source node', 'node/' . $node->tnid . '/lingotek_pm'))),
     );
     return $output;
   }
@@ -726,7 +726,8 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale);
       drupal_goto($translation_edit_link);
     }
-  } else if ($entity_type == 'comment') {
+  }
+  elseif ($entity_type == 'comment') {
     $comment = comment_load($id);
     if ($comment->language == $drupal_language_code) {
       drupal_goto('comment/' . $comment->cid . '/edit');
@@ -735,7 +736,7 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       $lingotek_comment = LingotekComment::load($comment);
       
       $translation_edit_link = lingotek_get_workbench_url($lingotek_comment->lingotekDocumentId(), $lingotek_locale);
-      if(!empty($translation_edit_link)) {
+      if (!empty($translation_edit_link)) {
         drupal_goto($translation_edit_link);
       }
       else {

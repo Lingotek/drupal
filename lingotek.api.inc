@@ -50,9 +50,9 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     foreach ($lingotek_fields['node'][$localized_node->type] as $field_name) {
       $field = $node->$field_name;
       $f = array();
-      if(isset($field[$node->language])) {
+      if (isset($field[$node->language])) {
         foreach ($field[$node->language] as $key => $value) {
-          if(isset($value['format']))
+          if (isset($value['format']))
             $f[$drupal_language_code][$key]['format'] = $value['format'];
         }
       }
@@ -114,7 +114,8 @@ function lingotek_download_document(&$source_node, $lingotek_locale, $sync_succe
 
   if ($node_method == 'node') { //node-based translations
     $node = lingotek_get_translated_node($source_node, $drupal_language_code);
-  } else {
+  }
+  else {
     $node = $source_node;
   }
 

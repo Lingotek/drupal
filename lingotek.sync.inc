@@ -88,9 +88,9 @@ function lingotek_notifications() {
   $attempts = 0;
   while ($attempts < 3) {
     $nid = LingotekSync::getNodeIdFromDocId($document_id);
-    if(!$nid) { // check for the old style document_id
+    if (!$nid) { // check for the old style document_id
       $nid = LingotekSync::getNodeIdFromDocId($document_idx);
-      if($nid){
+      if ($nid) {
         $document_id = $document_idx;
       }
     }
@@ -386,7 +386,7 @@ function lingotek_form_bulk_sync($form, $form_state) {
         $additional_desc .= t('(You can also enable translation for')
             . ' ' . $cf_excluded_str . ' '
             . t('within') . ' ' . t('Translation Configuration in') . ' '
-            . l('Lingotek Settings', 'admin/settings/lingotek/settings')
+            . l(t('Lingotek Settings'), 'admin/settings/lingotek/settings')
             . ')<br/>';
       }
       if (variable_get('lingotek_use_translation_from_drupal')) {
@@ -918,7 +918,7 @@ function lingotek_get_and_update_target_progress($document_ids) {
     $error_message = "API Error(s): <ul>";
     if (is_array($progress_report->errors)) {
       foreach ($progress_report->errors as $error) {
-        $error_message .= "<li>".$error."</li>";
+        $error_message .= "<li>" . $error . "</li>";
       }
     }
     $error_message .= "</ul><i>For additional information, check your recent log messages</i>";

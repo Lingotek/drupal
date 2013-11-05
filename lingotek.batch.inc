@@ -283,7 +283,7 @@ function lingotek_batch_identify_content($front = FALSE) {
           foreach ($existing_languages as $lang) {
             if (in_array($node->nid, $nodes_in_language_field[$lang->language]) || in_array($node->nid, $nodes_in_language_node[$lang->language])) {
               $lingotek_locale = Lingotek::convertDrupal2Lingotek($lang->language);
-              lingotek_lingonode($node->nid, 'target_sync_status_'.$lingotek_locale, LingotekSync::STATUS_CURRENT);
+              lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
             }
           }
         }

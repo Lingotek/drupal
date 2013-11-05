@@ -1283,13 +1283,13 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   
   $fields = variable_get('lingotek_enabled_fields');
   $types = array();
-  foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
-    if($profile['profile'] == (string)$profile_id && isset($fields['node'][$content_type])) {
+  foreach (lingotek_load_profile_defaults('node') as $content_type => $profile) {
+    if ($profile['profile'] == (string)$profile_id && isset($fields['node'][$content_type])) {
       $types[] = $content_type;
     }
   }
   
-  if(!empty($types)) {
+  if (!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
     $an->condition($table_auto_upload . '.lingovalue', NULL);
@@ -1343,30 +1343,6 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
   $text = '<img src="' . base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_chevs_dd.png" >';
   $url = $entity_type . '/' . $id . '/lingotekworkbench/' . $lingotek_locale;
   return l($text, $url, array('attributes' => array('class' => array('translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
-}
-
-function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
-  $aReturn = array();
-
-  foreach ($aArray1 as $mKey => $mValue) {
-    if ( (!is_array($mValue) && substr($mKey, 0, 4) == 'safe') || $mValue == NULL) {
-      continue;
-    }
-      
-    if (array_key_exists($mKey, $aArray2)) {
-      if (is_array($mValue)) {
-        $aRecursiveDiff = lingotekArrayRecursiveDiff($mValue, $aArray2[$mKey]);
-        if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
-      } else {
-        if ($mValue != $aArray2[$mKey]) {
-          $aReturn[$mKey] = $mValue;
-        }
-      }
-    } else {
-      $aReturn[$mKey] = $mValue;
-    }
-  }
-  return $aReturn;
 }
 
 function lingotek_list_entities_with_language($entity_type, $bundle, $language) {
