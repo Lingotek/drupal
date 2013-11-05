@@ -906,13 +906,19 @@ class LingotekSync {
     return $found;
   }
 
-  public static function getDocIdsFromNodeIds($drupal_node_ids) {
-
+  public static function getDocIdsFromNodeIds($drupal_node_ids, $associate = FALSE) {
     $query = db_select('lingotek', 'l')
-        ->fields('l', array('lingovalue'))
         ->condition('nid', $drupal_node_ids, 'IN')
         ->condition('lingokey', 'document_id');
-    $result = $query->execute()->fetchCol();
+    $query->addField('l', 'lingovalue', 'doc_id');
+
+    if ($associate) {
+      $query->addField('l', 'nid');
+      $result = $query->execute()->fetchAllAssoc('nid');
+    }
+    else {
+      $result = $query->execute()->fetchCol();
+    }
 
     return $result;
   }

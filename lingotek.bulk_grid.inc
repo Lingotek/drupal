@@ -466,16 +466,16 @@ function lingotek_grid_action_submit($form, $form_state) {
       elseif (substr($action, 0, 8) == 'download') { // If downloading all targets
         $lang = substr($action, 9, 10);
         $target_locales = ($lang == 'all') ? lingotek_get_target_locales() : array($lang);
-        $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+        $document_ids_map = LingotekSync::getDocIdsFromNodeIds($nids, $associate = TRUE);
         $complete_targets = array();
         $incomplete_targets = array();
         
         // We need to check all pending nodes to see if they are READY so that in the end the status is correct.
         $pending_document_ids = array();
-        foreach ($document_ids as $doc_id) {
-          $status = lingotek_lingonode($doc_id, 'node_sync_status');
+        foreach ($document_ids_map as $nid => $nid_obj) {
+          $status = lingotek_lingonode($nid, 'node_sync_status');
           if ($status != LingotekSync::STATUS_CURRENT && $status != LingotekSync::STATUS_READY) {
-            $pending_document_ids[] = $doc_id;
+            $pending_document_ids[] = $nid_obj->doc_id;
           }
         }
         lingotek_get_and_update_target_progress($pending_document_ids);
@@ -487,7 +487,8 @@ function lingotek_grid_action_submit($form, $form_state) {
           if (!empty($complete_nids)) {
             $complete_doc_ids = LingotekSync::getDocIdsFromNodeIds($complete_nids);
           }
-          foreach ($document_ids as $doc_id) {
+          foreach ($document_ids_map as $nid_obj) {
+            $doc_id = $nid_obj->doc_id;
             if (in_array($doc_id, $complete_doc_ids)) { // If workflow completed, create target json
               $complete_targets[] = (object) array('document_id' => $doc_id, 'locale' => $language);
             }
