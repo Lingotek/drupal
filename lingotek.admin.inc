@@ -1132,13 +1132,6 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#default_value' => variable_get('lingotek_hide_tlmi', 0),
   );
 
-  $form[$fkey]['lingotek_views_edit_links'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Show links to edit translations in views'),
-    '#default_value' => variable_get('lingotek_views_edit_links'),
-    '#description' => t('The user must have the "Translation" or "Manage Projects" permission'),
-  );
-
   $form[$fkey]['lingotek_show_language_label'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show language label on node pages'),
