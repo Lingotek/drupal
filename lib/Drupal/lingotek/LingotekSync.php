@@ -15,7 +15,7 @@ class LingotekSync {
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
   const STATUS_DISABLED = 'DISABLED';    // A disabled node should neither be uploaded nor downloaded by Lingotek
-  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek
+  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek (used for node storage)
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';

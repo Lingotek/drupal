@@ -1300,41 +1300,23 @@ function lingotek_grid_get_rows($form, &$form_state) {
       $dots_length = strlen($dots);
       $row->title = substr($row->title, 0, $title_truncate_length - $dots_length) . $dots;
     }
-    $translation_progress = NULL;
     $icon = '';
     if ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
       $row->upload_status = LingotekSync::STATUS_DISABLED;
     }
-    if (!is_null($row->upload_status)) {
-      if (isset($row->upload_status)) {
-        $translation_status = $row->upload_status;
-        if ($row->upload_status == LingotekSync::STATUS_EDITED) {
-          $icon = '<i class="fa fa-square-o" title="Needs to be uploaded"></i>';
-        }
-        elseif ($row->upload_status == LingotekSync::STATUS_CURRENT) {
-          $icon = '<i class="fa fa-check-square" title="Uploaded to Lingotek"></i>';
-        }
-        else { //if ($row->upload_status == LingotekSync::STATUS_DISABLED) {
-          $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Lingotek is disabled"></i>';
-        }
-      }
-//        if ($translation_status == LingotekSync::STATUS_EDITED) {
-//            $translation_progress = l('Source Needs Upload', 'node/' . $row->nid . '/lingotek_pm', array('attributes' => array('target' => '_blank')));
-//        }
-//        elseif (!is_null($row->translation_status)) {
-//          if ($row->translation_status == LingotekSync::STATUS_PENDING) {
-//            $translation_progress = l('In Progress', 'node/' . $row->nid . '/lingotek_pm', array('attributes' => array('target' => '_blank')));
-//          }
-//          elseif ($row->translation_status == LingotekSync::STATUS_READY) {
-//            $translation_progress = l('Ready for Download', 'node/' . $row->nid . '/lingotek_pm', array('attributes' => array('target' => '_blank')));
-//          }
-//          elseif ($row->translation_status == LingotekSync::STATUS_CURRENT) {
-//            $translation_progress = t('Complete');
-//          }
-//          elseif ($row->translation_status == LingotekSync::STATUS_DISABLED) {
-//            $translation_progress = t('Disabled');
-//          }
-//        }
+    switch ($row->upload_status) {
+      case LingotekSync::STATUS_EDITED:
+        $icon = '<i class="fa fa-square-o" title="Needs to be uploaded"></i>';
+        break;
+      case LingotekSync::STATUS_CURRENT:
+        $icon = '<i class="fa fa-check-square" title="Uploaded to Lingotek"></i>';
+        break;
+      case LingotekSync::STATUS_DISABLED:
+        $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Lingotek is disabled"></i>';
+        break;
+      default:
+        $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Unknown upload status"></i>';
+        break;
     }
 
     $list_statuses = array('pending', 'ready', 'current', 'edited');
