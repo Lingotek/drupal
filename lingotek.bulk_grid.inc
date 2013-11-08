@@ -1372,7 +1372,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
     $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ' . ($row->language == 'und' ? t('None') : $languages[$row->language]->name) . '</span>';
 
     if (empty($row->upload_status) || $row->upload_status == LingotekSync::STATUS_EDITED) {
-      $source = '<span title="Upload Now" class="upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $row->nid . ',\'upload\')">' . $source . '</span>';
+      $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $row->nid . ',\'upload\')">' . $source . '</span>';
     }
 
     $pm_icon = ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled . '"></i>';
@@ -1380,8 +1380,8 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
     $actions = '';
     $actions .= l('<i title="' . t('Edit Node') . '" class="fa fa-edit"></i>', 'node/' . $row->nid . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
-    $actions .= empty($disabled) ? $pm_link : $pm_icon;
     $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $row->nid . ',"edit"); return false;')));
+    $actions .= empty($disabled) ? $pm_link : $pm_icon;
 
     $no_localized_title = (language_default()->language != $language->language) && $row->localized_title == '';
 

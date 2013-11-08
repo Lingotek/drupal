@@ -200,13 +200,13 @@ a.ltk-action:hover {
   color: #AAA;
 }
 
-.upload-button {
-  color: #338;
+.ltk-upload-button {
+  color: #0074BD;
   cursor: pointer;
 }
 
-.upload-button:hover {
-  color: #99B;
+.ltk-upload-button:hover {
+  color: #00348D;
 }
 
 .node-configuration {
