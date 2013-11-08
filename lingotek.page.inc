@@ -35,7 +35,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       $row = array(
         'column_1' => array('data' => $language_link, 'width' => '40%'),
         'column_2' => array('data' => lingotek_grid_create_progress_bar($target->percentComplete), 'width' => '40%'),
-        'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="icon-check-sign ltk-complete-check" title="'.t('Workflow complete').'"></i>' : '<i class="icon-check-empty ltk-complete-check"></i>', 'width' => '20%'
+        'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="fa fa-check-sign ltk-complete-check" title="'.t('Workflow complete').'"></i>' : '<i class="fa fa-check-empty ltk-complete-check"></i>', 'width' => '20%'
         '#attributes' => array('class' => array('bold-row')),
       );
 
@@ -45,7 +45,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $row = array(
           'column_1' => $phase->name,
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
-          'column_3' => $phase->isMarkedComplete ? '<i class="icon-check-sign ltk-complete-check" title="' . t('Phase complete') . '"></i>' : '<i class="icon-check-empty ltk-complete-check"></i>',
+          'column_3' => $phase->isMarkedComplete ? '<i class="fa fa-check-sign ltk-complete-check" title="' . t('Phase complete') . '"></i>' : '<i class="fa fa-check-empty ltk-complete-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
         );
         $rows[$target->language . '_' . $phase->name] = $row;
@@ -439,7 +439,7 @@ function lingotek_pm($node) {
         // Import Status (check and report on import status)
         $status = $document->getImportStatus();
 
-        $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="icon-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
+        $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="fa fa-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
         drupal_set_message(t('Content Import Status:') . $message, 'status');
 
         $output['import_status'] = array(

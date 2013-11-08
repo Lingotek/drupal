@@ -69,18 +69,18 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $page = pager_find_page(); // Get current page from url
   
   $form['customize'] = array(
-    '#markup' => l('<i class="icon-list-alt icon-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
+    '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
   );
   /*$form['filter_popup'] = array(
-    '#markup' => l('<i class="icon-search icon-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
+    '#markup' => l('<i class="fa-search fa-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
   );*/
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
   $message = t('Check in-progress translation statuses (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
   $form['refresh'] = array(
-    '#markup' => l('<i class="icon-refresh icon-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
+    '#markup' => l('<i class="fa fa-refresh fa-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
   );
   $form['lingotek_update'] = array(
-    '#markup' => l('<i class="icon-cloud-download icon-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action')))),
+    '#markup' => l('<i class="fa fa-cloud-download fa-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action')))),
   );
   
   $form['edit_settings'] = array(
@@ -94,7 +94,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
-    '#title' => l('<i class="icon-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action')))) . ' ' . t('Search') . ': ',
+    '#title' => l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action')))) . ' ' . t('Search') . ': ',
     '#size' => 30,
   );
 
@@ -141,7 +141,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   if ($filter_set) {
     $form['filter_message'] = array(
-      '#markup' => ' ' . l('<i class="icon-remove"></i> ' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear', array('html' => TRUE)) . '',
+      '#markup' => ' ' . l('<i class="fa fa-remove"></i> ' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear', array('html' => TRUE)) . '',
     );
   }
   
@@ -149,7 +149,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['actions_select'] = array(
     '#type' => 'select',
     '#options' => $action_options,
-    '#title' => '<i class="icon-asterisk ltk-muted"></i>' . ' ' . t('Actions') . ': ',
+    '#title' => '<i class="fa fa-asterisk ltk-muted"></i>' . ' ' . t('Actions') . ': ',
   );
 
   // Actions submit button
@@ -165,7 +165,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#type' => 'container',
     '#attached' => array(
       'css' => array(
-        '//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css' => array(
+        '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' => array(
           'type' => 'external',
         ),
       ),
@@ -1309,16 +1309,13 @@ function lingotek_grid_get_rows($form, &$form_state) {
       if (isset($row->upload_status)) {
         $translation_status = $row->upload_status;
         if ($row->upload_status == LingotekSync::STATUS_EDITED) {
-          $icon = '<i class="icon-check-empty" title="Needs to be uploaded"></i>';
+          $icon = '<i class="fa fa-square-o" title="Needs to be uploaded"></i>';
         }
         elseif ($row->upload_status == LingotekSync::STATUS_CURRENT) {
-          $icon = '<i class="icon-check" title="Uploaded to Lingotek"></i>';
+          $icon = '<i class="fa fa-check-square" title="Uploaded to Lingotek"></i>';
         }
-        elseif ($row->upload_status == LingotekSync::STATUS_DISABLED) {
-          $icon = '<i class="icon-lock" title="Document is locked"></i>';
-        }
-        else {
-          
+        else { //if ($row->upload_status == LingotekSync::STATUS_DISABLED) {
+          $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Lingotek is disabled"></i>';
         }
       }
 //        if ($translation_status == LingotekSync::STATUS_EDITED) {
@@ -1364,13 +1361,13 @@ function lingotek_grid_get_rows($form, &$form_state) {
     $disabled = $row->upload_status == LingotekSync::STATUS_DISABLED ? ' lingotek-disabled' : '';
 
     if ($row->lingotek['create_lingotek_document']) {
-      $configuration .= '<i class="icon-arrow-up' . $disabled . '" title="Automatic Upload"></i> ';
+      $configuration .= '<i class="fa fa-arrow-up' . $disabled . '" title="Automatic Upload"></i> ';
     }
     if ($row->lingotek['sync_method']) {
-      $configuration .= '<i class="icon-arrow-down' . $disabled . '" title="Automatic Download"></i> ';
+      $configuration .= '<i class="fa fa-arrow-down' . $disabled . '" title="Automatic Download"></i> ';
     }
     if ($row->lingotek['allow_community_translation']) {
-      $configuration .= '<i class="icon-globe' . $disabled . '" title="Crowdsourcing Enabled"></i> ';
+      $configuration .= '<i class="fa fa-globe' . $disabled . '" title="Crowdsourcing Enabled"></i> ';
     }
 
     if ($row->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
@@ -1390,19 +1387,19 @@ function lingotek_grid_get_rows($form, &$form_state) {
     }
 
 
-    $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ' . ($row->language == 'und' ? 'Language Undefined' : $languages[$row->language]->name) . '</span>';
+    $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ' . ($row->language == 'und' ? t('None') : $languages[$row->language]->name) . '</span>';
 
     if (empty($row->upload_status) || $row->upload_status == LingotekSync::STATUS_EDITED) {
       $source = '<span title="Upload Now" class="upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $row->nid . ',\'upload\')">' . $source . '</span>';
     }
 
-    $pm_icon = ' <i title="' . t('View Translations') . '" class="icon-tasks' . $disabled . '"></i>';
+    $pm_icon = ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled . '"></i>';
     $pm_link = ' ' . l($pm_icon, 'node/' . $row->nid . '/lingotek_pm', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
 
     $actions = '';
-    $actions .= l('<i title="' . t('Edit Node') . '" class="icon-edit"></i>', 'node/' . $row->nid . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
+    $actions .= l('<i title="' . t('Edit Node') . '" class="fa fa-edit"></i>', 'node/' . $row->nid . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
     $actions .= empty($disabled) ? $pm_link : $pm_icon;
-    $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="icon-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $row->nid . ',"edit"); return false;')));
+    $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $row->nid . ',"edit"); return false;')));
 
     $no_localized_title = (language_default()->language != $language->language) && $row->localized_title == '';
 
