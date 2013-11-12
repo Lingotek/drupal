@@ -204,7 +204,8 @@ class LingotekTestCase extends TranslationTestCase {
     
     $option = $element[0]->option[1];
     if(!empty($option)) {
-      $str = (string) $option->attributes()['value'];
+      $attributes = $option->attributes();
+      $str = (string) $attributes['value'];
     }
     
     return $str;
