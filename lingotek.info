@@ -41,7 +41,6 @@ files[] = lib/Drupal/lingotek/LingotekTranslatableEntity.php
 
 files[] = tests/lingotek.base.test
 files[] = tests/lingotek.access.test
-files[] = tests/lingotek.advanced_parsing.test
 files[] = tests/lingotek.setup.test
 
 files[] = lingotek_views_handler_workbench_link.inc
