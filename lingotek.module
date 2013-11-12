@@ -2140,6 +2140,7 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
         'method' => 'replace',
         'effect' => 'fade',
         ),
+      '#prefix' => '<div id="prefill-phases-div">',
     );
     if (isset($node)) {
      $form['lingotek']['workflow_id']['#default_value'] = $node->lingotek['workflow_id'];
@@ -2159,7 +2160,6 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       '#states' => array(
           'invisible' => array(':input[id="edit-lingotek-prefill-phases-checkbox"]' => array('checked' => FALSE)),
         ),
-      '#prefix' => '<div id="prefill-phases-div">',
       '#suffix' => '</div>',
     );
     if (isset($form_state['values']['lingotek']['workflow_id']) && $form_state['values']['lingotek']['workflow_id'] != NULL) {
@@ -2186,8 +2186,9 @@ function lingotek_get_change_workflow_form_callback($form, $form_state) {
   if (isset($form_state['values']['lingotek']['prefill_phases_checkbox']) 
       && $form_state['values']['lingotek']['prefill_phases_checkbox']) {
     return array(
-      $form['lingotek']['prefill_phase_select'], $form['lingotek']['prefill_phases_checkbox'],
-      $form['lingotek']['workflow_id']
+      $form['lingotek']['prefill_phase_select'], 
+      $form['lingotek']['prefill_phases_checkbox'],
+      $form['lingotek']['workflow_id'],
     );
   }
   return;
