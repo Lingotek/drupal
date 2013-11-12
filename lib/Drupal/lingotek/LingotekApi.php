@@ -851,6 +851,32 @@ class LingotekApi {
   }
 
   /**
+   * Updates one or more nids to belong to a given workflow
+   * 
+   * @param array $document_ids
+   *   An array of document IDs
+   * @param string $workflow_id
+   *   A string containing the desired workflow_id
+   * @param string $prefillPhase
+   *   An optional parameter specifying the prefill phase
+   * 
+   * @return bool
+   *   TRUE on success, FALSE on failure.
+   */
+  public function changeWorkflow($document_ids, $workflow_id, $prefillPhase=NULL) {
+    $parameters = array(
+      'documentId' => $document_ids,
+      'workflowId' => $workflow_id,
+      'preserveTargets' => 'true',
+    );
+    if ($prefillPhase) {
+      $parameters['prefillPhase'] = $prefillPhase;
+    }
+
+    return ($this->request('resetDocument', $parameters) ? TRUE : FALSE);
+  }
+
+  /**
    * Marks a phase as complete.
    *
    * @param int $phase_id

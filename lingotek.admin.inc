@@ -366,6 +366,19 @@ function lingotek_admin_profile_usage($id) {
   return $query->countQuery()->execute()->fetchField();
 }
 
+function lingotek_admin_get_nids_by_profile($id) {
+  $query = db_select('node', 'n');
+  $query->fields('n', array('nid'));
+  $query->leftJoin('lingotek', 'l_profile', 'n.nid = l_profile.nid  and l_profile.lingokey = \'profile\'');
+  $query->leftJoin('lingotek', 'l_auto_upload', 'n.nid = l_auto_upload.nid  and l_auto_upload.lingokey = \'create_lingotek_document\'');
+  $query->leftJoin('lingotek', 'l_status', 'n.nid = l_status.nid  and l_status.lingokey = \'node_sync_status\'');
+  $query->condition('l_status.lingovalue', 'TARGET', '<>');
+  $or = lingotek_profile_condition('n', 'l_auto_upload', 'l_profile' , $id);
+  $query->condition($or);
+
+  return $query->execute()->fetchCol();
+}
+
 function lingotek_admin_profile_usage_by_types($id) {
   $profile_mapping = variable_get('lingotek_entity_profiles');
   $profile_mapping_associations = isset($profile_mapping['node']) ? $profile_mapping['node'] : array();
@@ -1393,23 +1406,10 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#default_value' => $form_state['values']['name'],
   );
 
-  $form['defaults']['lingotek_nodes_translation_method'] = array(
-    '#type' => 'radios',
-    '#title' => t('Translation Storage'),
-    '#options' => array(
-      'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
-      'node' => '<strong>Node Translation</strong>  - create a new node per language ',
-    ),
-    'field' => array(
-      '#description' => 'A newer and recommended method. Newer versions of Drupal are expected to use this method.',
-    ),
-    'node' => array(
-      '#description' => 'The classical method. Use for backwards compatibility.',
-    ),
-
-    '#default_value' => isset($form_state['values']['lingotek_nodes_translation_method']) ? $form_state['values']['lingotek_nodes_translation_method'] : 'field',
+  $form['defaults']['current_future_note'] = array(
+    '#type' => 'markup',
+    '#markup' => '<h3>' . t('Profile settings impacting all translations (new and previously uploaded)') . '</h3><hr />',
   );
-
   // Upload
   $form['defaults']['create_lingotek_document'] = array(
     '#type' => 'checkbox',
@@ -1526,7 +1526,78 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#options' => lingotek_get_url_alias_translations(),
       '#default_value' => $form_state['values']['url_alias_translation'],
     );
+  }
+  
+  
+  // Workflows
+  $workflows = $api->listWorkflows();
+  if ($workflows && count($workflows) > 1) {
+    $profiles = variable_get('lingotek_profiles');
+    $profile_id = (isset($form['defaults']['profile_id']['#value']) ? $form['defaults']['profile_id']['#value'] : -1);
+    $curr_workflow_id = (isset($profiles[$profile_id]['workflow_id']) ? $profiles[$profile_id]['workflow_id'] : '');
 
+    $form['defaults']['workflow_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Default Workflow'),
+      '#description' => t('The default Workflow to use when translating content.'),
+      '#default_value' => $curr_workflow_id,
+      '#options' => $workflows,
+      '#ajax' => array(
+        'callback' => 'lingotek_profile_default_workflow_form_callback',
+        'wrapper' => 'prefill-phases-div',
+        'method' => 'replace',
+        'effect' => 'fade',
+      ),
+      '#prefix' => '<div id="prefill-phases-div">',
+    );
+    $form['defaults']['prefill_phases_checkbox'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Change all current content in this profile (@total documents) to use the new workflow', array('@total' => lingotek_admin_profile_usage($id))),
+      '#default_value' => FALSE,
+      '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
+      '#states' => array(
+        'invisible' => array(':input[name="workflow_id"]' => array('value' => $curr_workflow_id)),
+      )
+    );
+
+    $form['defaults']['prefill_phase_select'] = array(
+      '#title' => t("Desired Prefill Phase"),
+      '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
+      '#type' => 'select',
+      '#states' => array(
+          'visible' => array(':input[name="workflow_id"]' => array('!value' => $curr_workflow_id),
+                             ':input[name="prefill_phases_checkbox"]' => array('checked' => true)
+                        ),
+        ),
+      '#suffix' => '</div>',
+    );
+    $form['defaults']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['workflow_id']);
+  }
+
+  // FUTURE-ONLY STUFF
+  $form['defaults']['future_only_note'] = array(
+    '#type' => 'markup',
+    '#markup' => '<h3>' . t('Profile settings impacting only new translations') . '</h3><hr />',
+  );
+  
+  $form['defaults']['lingotek_nodes_translation_method'] = array(
+    '#type' => 'radios',
+    '#title' => t('Translation Storage'),
+    '#options' => array(
+      'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
+      'node' => '<strong>Node Translation</strong>  - create a new node per language ',
+    ),
+    'field' => array(
+      '#description' => 'A newer and recommended method. Newer versions of Drupal are expected to use this method.',
+    ),
+    'node' => array(
+      '#description' => 'The classical method. Use for backwards compatibility.',
+    ),
+
+    '#default_value' => isset($form_state['values']['lingotek_nodes_translation_method']) ? $form_state['values']['lingotek_nodes_translation_method'] : 'field',
+  );
+
+  if ($is_enterprise) {
 
     // Projects
     $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
@@ -1551,19 +1622,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#description' => t('The default Lingotek Project with which translations will be associated.'),
       '#default_value' => isset($form_state['values']['project_id']) ? $form_state['values']['project_id'] : $id,
     );
-
-
-    // Workflows
-    if ($workflows = $api->listWorkflows()) {
-      $form['defaults']['workflow_id'] = array(
-        '#type' => 'select',
-        '#title' => t('Default Workflow'),
-        '#description' => t('The default Workflow to use when translating content.'),
-        '#default_value' => isset($form_state['values']['workflow_id']) ? $form_state['values']['workflow_id'] : '',
-        '#options' => $workflows,
-      );
-    }
-
 
     $vaults = $api->listVaults();
     $current_vault_id = variable_get('lingotek_vault', '');
@@ -1616,6 +1674,15 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   return $form;
 }
 
+function lingotek_profile_default_workflow_form_callback($form, $form_state) {
+  return array(
+    $form['defaults']['workflow_id'],
+    $form['defaults']['prefill_phases_checkbox'],
+    $form['defaults']['prefill_phase_select'],
+
+  );
+}
+
 function lingotek_admin_profile_form_submit($form, &$form_state) {
   if ($form_state['values']['op'] == 'Save') {
     $profiles = variable_get('lingotek_profiles');
@@ -1639,6 +1706,31 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
           }
         }
       }
+    }
+    
+    // If the workflow has changed and if current translations should be changed,
+    // then pull all nodes associated with this profile and update the workflow
+    // on TMS, including the correct phase.
+    if (isset($form_state['values']['profile_id'])
+        && isset($form_state['values']['prefill_phases_checkbox']) 
+        && $form_state['values']['prefill_phases_checkbox']) {
+      $profile_id = $form_state['values']['profile_id'];
+      $workflow_id = $form_state['values']['workflow_id'];
+      $prefill_phase = $form_state['values']['prefill_phase_select'];
+
+      $nids = lingotek_admin_get_nids_by_profile($profile_id);
+      $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+      if (!$document_ids) {
+        return;
+      }
+      $api = LingotekApi::instance();
+      $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+
+      // CREATE/UPDATE WORKFLOW ENTRIES IN THE LINGOTEK METADATA TABLE
+      foreach ($nids as $nid) {
+        lingotek_lingonode($nid, 'workflow_id', $workflow_id);
+      }
+
     }
 
     $profiles[$form_state['values']['profile_id']] = $profile;

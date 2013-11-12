@@ -49,6 +49,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     'reset' => t('Disassociate Translations'),
 //    'delete' => t('Delete Nodes'),
     'edit' => t('Edit Translation Settings'),
+    'workflow' => t('Change Workflow'),
     'Download' => array('download_all' => t('Download All Translations')),
   );
 
@@ -90,6 +91,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['disassociate_translations'] = array(
     '#markup' => l(t('Disassociate Translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset', array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
   );
+  if (LingotekAccount::instance()->isEnterprise()) {
+    $form['change_workflow'] = array(
+      '#markup' => l('Change Workflow', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow', array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+    );
+  }
   
   $form['search'] = array(
     '#type' => 'textfield',
@@ -522,6 +528,10 @@ function lingotek_grid_action_submit($form, $form_state) {
       elseif ($action == 'edit') { // If editing node settings
         $_SESSION['lingotek_edit_nodes'] = $nids;
         drupal_goto('admin/settings/lingotek/manage/edit/'); // Redirect to the edit Lingotek node settings form - for multiple nodes, form defaults are global defaults
+      }
+      elseif ($action == 'workflow') { // If changing the workflow
+        $_SESSION['lingotek_change_workflow'] = $nids;
+        drupal_goto('admin/settings/lingotek/manage/change-workflow/'); // Redirect to the change-workflow settings form - for multiple nodes, form defaults are global defaults
       }
       elseif ($action == 'sync') { // If syncing the progress
         $_SESSION['lingotek_sync_nodes'] = count($nids);
@@ -1516,6 +1526,38 @@ function lingotek_edit_nodes($nids) {
     'nids' => $nids,
   );
   $output = ctools_modal_form_wrapper('lingotek_get_node_settings_form', $form_state);
+  
+  if (!empty($form_state['executed'])) {
+    // Create ajax command array, dismiss the modal window.
+    $commands = array();
+    $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_reload();
+    print ajax_render($commands);
+    drupal_exit();
+  }
+    
+  print ajax_render($output);
+}
+
+/**
+ * Callback function to change workflow for multiple nodes at a time
+ *
+ * Node IDs are passed through the $_SESSION variable at $_SESSION['lingotek_change_workflow']
+ *
+ * Returns a fully rendered html form
+ */
+function lingotek_change_workflow($nids) {
+  $nids = explode(',', $nids);
+
+  ctools_include('node.pages', 'node', '');
+  ctools_include('modal');
+  ctools_include('ajax');
+    
+  $form_state = array(
+    'ajax' => TRUE,
+    'nids' => $nids,
+  );
+  $output = ctools_modal_form_wrapper('lingotek_get_change_workflow_form', $form_state);
   
   if (!empty($form_state['executed'])) {
     // Create ajax command array, dismiss the modal window.
