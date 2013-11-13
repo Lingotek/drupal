@@ -85,15 +85,16 @@ function lingotek_bulk_grid_form($form, $form_state) {
   );
   
   $form['edit_settings'] = array(
-    '#markup' => l('Edit Settings', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit', array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+    '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit', array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
 
   );
   $form['disassociate_translations'] = array(
     '#markup' => l(t('Disassociate Translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset', array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
   );
+
   if (LingotekAccount::instance()->isEnterprise()) {
     $form['change_workflow'] = array(
-      '#markup' => l('Change Workflow', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow', array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+      '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow', array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
     );
   }
   
