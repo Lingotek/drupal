@@ -240,7 +240,7 @@ function lingotek_process_entity_xml($xml, $node, $entity_type, $drupal_language
             }
             $array_key = $target_key[$index];
             $db_field_name = $field['field_name'] . '_' . $array_key;
-            $insert_array[$db_field_name] = decode_entities($text);
+            $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
             //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
             if (isset($node->language) && array_key_exists($node->language, $node_field)) {
               if (array_key_exists('format', $node_field[$node->language][0])) {
