@@ -540,10 +540,9 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   /**
    * Set the chunk's target status(es) in the config metadata table
    */
-  public function setChunkTargetsStatus($status, $target_language = 'all') {
-    if ($target_language != 'all') {
-      $lingotek_language = Lingotek::convertDrupal2Lingotek($target_language);
-      $this->setMetadataValue('target_sync_status_' . $lingotek_language, $status);
+  public function setChunkTargetsStatus($status, $lingotek_locale = 'all') {
+    if ($lingotek_locale != 'all') {
+      $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
     }
     else { // set status for all available targets
       foreach ($this->language_targets as $lt) {
@@ -703,7 +702,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
 
     // set chunk status to current
     $this->setChunkStatus(LingotekSync::STATUS_CURRENT);
-    $this->setChunkTargetsStatus(LingotekSync::STATUS_CURRENT, $target_language);
+    $this->setChunkTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
 
     return TRUE;
   }

@@ -362,19 +362,19 @@ class Lingotek {
    * @return array
    *   An array of Lingotek language codes.
    */
-  public static function availableLanguageTargets($pluck_field = NULL, $include_all = FALSE, $lingotek_locale_to_exclude = NULL) {
-    //lingotek_add_missing_locales();
+  public static function availableLanguageTargets($pluck_field = NULL, $include_disabled = FALSE, $lingotek_locale_to_exclude = NULL) {
+    lingotek_add_missing_locales();
     $languages = array();
-    
+
     foreach (language_list() as $target_language) {
       if ($target_language->lingotek_locale == $lingotek_locale_to_exclude)
         continue;
       $language = (is_string($pluck_field) && isset($target_language->$pluck_field)) ? $target_language->$pluck_field : $target_language;
-      if ($include_all && $target_language->enabled) { // include all languages enabled (not necessarily lingotek_enabled)
-        $languages[] = $language;
+      if ($target_language->lingotek_enabled) { // include all languages enabled
+        $languages[$target_language->lingotek_locale] = $language;
       }
-      else if ($target_language->lingotek_enabled) { // include default language for free
-        $languages[] = $language;
+      else if ($include_disabled) { // include all languages, including disabled (lingotek_enabled is 0)
+        $languages[$target_language->lingotek_locale] = $language;
       }
     }
     return $languages;
@@ -385,7 +385,7 @@ class Lingotek {
   }
 
   public static function availableLanguageTargetsWithoutSourceAsJSON($source_lingotek_locale) {
-    return drupal_json_encode(self::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale));
+    return drupal_json_encode(array_values(self::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale)));
   }
 
 }

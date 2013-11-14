@@ -280,6 +280,17 @@ function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
   return $desired_fields;
 }
 
+function lingotek_get_enabled_fields($entity_type, $bundle) {
+  $translate = variable_get('lingotek_enabled_fields', array());
+  $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
+  if (empty($fields_desired)) {
+    //this won't work for anything more than nodes yet
+    $fields_desired = lingotek_get_translatable_fields_by_content_type($bundle);
+  }
+
+  return $fields_desired;
+}
+
 /**
  * Return the xml representation of the source content for a node.
  *
@@ -373,12 +384,13 @@ function lingotek_xml_fields($entity_type, $node, $translatable, $language) {
           $element_name = $field;
           if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
             $current_field = '<' . $element_name . '>';
-            $entity = entity_load_single('field_collection_item', $delta['value']);
+            $enabled_fields = variable_get('lingotek_enabled_fields');
+            $entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
             $sub_fields = field_info_instances('field_collection_item', $field);
             $translatable_field_types = lingotek_get_translatable_field_types();
             $translatable_sub_fields = array();
             foreach ($sub_fields as $sub_field => $f) {
-              if (in_array($f['widget']['type'], $translatable_field_types)) {
+              if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field])) {
                 $translatable_sub_fields[] = $sub_field;
               }
             }
@@ -391,14 +403,6 @@ function lingotek_xml_fields($entity_type, $node, $translatable, $language) {
             $element_name .= '__' . $element_suffix;
           }
           $current_field = '<' . $element_name . '>';
-          /* if (!array_key_exists('value', $value)) {
-            //TODO add TAGs to be translatable
-            $terms = $node->$field;
-            foreach ($terms[$language] as $term) {
-            // Do something.
-            }
-            continue;
-            } */
           if (is_array($element_suffix)) {
             foreach ($element_suffix as $t_key => $t_val) {
               $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
@@ -603,6 +607,22 @@ function lingotek_get_source_language() {
 
 // END:  lingotek_get_source_language()
 
+
+function lingotek_managed_entity_types() {
+  $types = entity_get_info();
+//  $exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
+//  $exclude = array_flip($exclude);
+//  return array_diff_key($types, $exclude);
+  $enabled = array('comment', 'node', 'field_collection_item', 'message_type');
+  $enabled = array_flip($enabled);
+
+  if (module_exists('field_collection') && $types['field_collection_item']) {
+    $types['field_collection_item']['label'] = 'Field Collection';
+  }
+
+  return array_intersect_key($types, $enabled);
+}
+
 /**
  * Content node types linked to 'translatable' fields.
  */
@@ -784,12 +804,12 @@ function lingotek_delete_target_language($lingotek_locale) {
  * Sets the extended target language locale in the languages table and whether or not it is enabled
  * 
  * @param $drupal_language_code
- * @param $lingotek_enabled whether or not to enable the language as being lingotek_enabled (default: 1)
+ * @param $lingotek_enable whether or not to enable the language on TMS (default: 1)
  * @param $lingotek_locale the lingotek locale that the drupal code should be associated with (it will try to pick the right one when not passed in)
  * @param $api_add boolean whether or not to add the language to all documents in the project (default: TRUE)
  * 
  */
-function lingotek_set_target_language($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL, $api_add = TRUE) {
+function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 1, $lingotek_locale = NULL, $api_add = TRUE) {
   $result = FALSE;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
@@ -797,14 +817,17 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enabled =
     db_update('languages')
         ->fields(array(
           'enabled' => 1,
-          'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
+          'lingotek_enabled' => $lingotek_enable ? 1 : 0,
           'lingotek_locale' => $lingotek_locale
         ))
         ->condition('language', $drupal_language_code)
         ->execute();
-    LingotekLog::info("Target language added: @drupal_language_code", array('@drupal_language_code' => $drupal_language_code));
+    drupal_static_reset('language_list');
+    LingotekLog::info("Target language added: @drupal_language_code (@lingotek_locale)", array(
+      '@drupal_language_code' => $drupal_language_code,
+      '@lingotek_locale' => $lingotek_locale));
 
-    if ($lingotek_enabled && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
+    if ($lingotek_enable && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
       $api = LingotekApi::instance();
       $projects = LingotekSync::getSyncProjects();
       foreach ($projects as $project_id) {
@@ -889,9 +912,8 @@ function lingotek_add_missing_locales() {
   foreach ($languages as $target) {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
       $drupal_language_code = $target->language;
-      $lingotek_enabled = $target->lingotek_enabled ? $target->lingotek_enabled : (($target->language == $default_language->language) ? 0 : 1); // enable default source language by default
       $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE);
-      lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled, $lingotek_locale);
+      lingotek_enable_language_by_code($drupal_language_code, $lingotek_locale);
       $update_static_language_list = TRUE;
     }
   }
@@ -903,10 +925,10 @@ function lingotek_add_missing_locales() {
 /**
  * Add lingotek_locale and lingotek_enable to the language table for the passed in drupal_language_code 
  */
-function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabled = 1, $lingotek_locale = NULL) {
+function lingotek_enable_language_by_code($drupal_language_code, $lingotek_locale = NULL) {
   $field_data = array(
     'enabled' => 1,
-    'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
+    //'lingotek_enabled' => $lingotek_enabled ? 1 : 0,
   );
   if (!is_null($lingotek_locale)) {
     $field_data['lingotek_locale'] = $lingotek_locale;
@@ -919,10 +941,10 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_enabl
 }
 
 /**
- * Get only the languages that are lingotek_enabled
+ * Get only the languages that are enabled
  */
 function lingotek_get_target_locales($codes_only = TRUE) {
-  $target_languages = db_query("SELECT * FROM {languages} WHERE lingotek_enabled = :lingotek_enabled", array(':lingotek_enabled' => 1))->fetchAll();
+  $target_languages = db_query("SELECT * FROM {languages} WHERE enabled = :enabled", array(':enabled' => 1))->fetchAll();
   $target_codes = array();
   foreach ($target_languages as $target_language) {
     $target_codes[] = $target_language->lingotek_locale;
@@ -931,10 +953,10 @@ function lingotek_get_target_locales($codes_only = TRUE) {
 }
 
 /**
- * Get only the languages that are lingotek_enabled
+ * Get only the languages that are enabled
  */
 function lingotek_get_target_languages($codes_only = TRUE) {
-  $target_languages = db_query("SELECT * FROM {languages} WHERE lingotek_enabled = :lingotek_enabled", array(':lingotek_enabled' => 1))->fetchAll();
+  $target_languages = db_query("SELECT * FROM {languages} WHERE enabled = :enabled", array(':enabled' => 1))->fetchAll();
   $target_codes = array();
   foreach ($target_languages as $target_language) {
     $target_codes[] = $target_language->language;
@@ -952,7 +974,8 @@ function lingotek_get_target_languages($codes_only = TRUE) {
  */
 
 function lingotek_get_content_types() {
-  return array_keys(variable_get('lingotek_enabled_fields'));
+  $fields = variable_get('lingotek_enabled_fields');
+  return array_keys($fields['node']);
 }
 
 /*
@@ -1030,7 +1053,11 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   lingotek_migration_2();
   lingotek_migration_3();
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
-
+  if (module_exists('field_collection')) {
+    lingotek_add_default_lang_to_field_collections(); // a temp solution, setting 'und' values for field collections
+    lingotek_add_neutral_lang_to_field_collections();
+  }
+  
   $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
   if ($show_messages) {
     drupal_set_message(t('The field data cleanup utility completed.'));
@@ -1044,6 +1071,105 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   if ($cleanup_batch && is_array($cleanup_batch)) {
     return $cleanup_batch;
   }
+}
+
+function lingotek_add_default_lang_to_field_collections() {
+  lingotek_fix_field_collection_languages($to_lang_neutral=FALSE);
+}
+
+function lingotek_add_neutral_lang_to_field_collections() {
+  lingotek_fix_field_collection_languages($to_lang_neutral=TRUE);
+}
+
+function lingotek_fix_field_collection_languages($to_lang_neutral=TRUE) {
+
+  $language = language_default();
+  $langcode = $language->language;
+
+  if ($to_lang_neutral == TRUE) {
+    $from_lang = $langcode;
+    $to_lang = LANGUAGE_NONE;
+  }
+  else {
+    $from_lang = LANGUAGE_NONE;
+    $to_lang = $langcode;
+  }
+  
+  $fc_str = 'field_collection_item';
+ 
+  $bundles = field_info_bundles($fc_str);
+  foreach ($bundles as $bundle_key => $bundle_val) {
+   
+    $instances = field_info_instances($fc_str, $bundle_key);
+   
+    foreach ($instances as $instance_key => $instance_val) {
+     
+      $query = new EntityFieldQuery;
+     
+      $fc_full_entities = $query
+        ->entityCondition('entity_type', $fc_str)
+        ->entityCondition('bundle', $bundle_key)
+        ->entityCondition('deleted', 0)
+        ->fieldLanguageCondition($instance_key, $from_lang)
+        ->execute();
+     
+      if (empty($fc_full_entities)) {
+        continue;
+      }
+      
+      $fc_und_entities = $query
+        ->entityCondition('entity_type', $fc_str)
+        ->entityCondition('bundle', $bundle_key)
+        ->entityCondition('deleted', 0)
+        ->fieldLanguageCondition($instance_key, $to_lang)
+        ->execute();
+     
+      foreach ($fc_full_entities[$fc_str] as $fc_key => $fc_obj) {
+       
+        // if the entity isn't in the list of entities that have 'und', then add it!
+        if (empty($fc_und_entities) || !array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
+          // add an entry with the new langcode to the database
+          $entity = entity_load($fc_str, array($fc_obj->item_id));          
+          foreach ($entity[$fc_obj->item_id]->{$instance_key}[$from_lang] as $delta => $delta_content) {
+            try {
+              $submission = array(
+                    'entity_type' => $fc_str,
+                    'bundle' => $bundle_key,
+                    'entity_id' => $fc_obj->item_id,
+                    'revision_id' => $fc_obj->revision_id,
+                    'language' => $to_lang,
+                    'delta' => $delta,
+                    );
+              foreach ($delta_content as $dc_key => $dc_val) {
+                if ($dc_key == 'safe_value') { // this is just a sanitized version of value, which we don't need
+                  continue;
+                }
+                if (is_array($dc_val)) {
+                  $submission[$instance_key . '_' . $dc_key] = serialize($dc_val);
+                }
+                else {
+                  $submission[$instance_key . '_' . $dc_key] = $dc_val;
+                }
+              }
+              db_insert('field_data_' . $instance_key)
+                  ->fields($submission)
+                  ->execute();
+            }
+            catch (Exception $e) {
+              // pass, as one or more deltas probably already have the undefined language set
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  
+  // find the difference between all entities and the und ones
+  // for each table:
+    // find all entries containing the default language but no 'und' language
+    // for each entry:
+      // insert a corresponding 'und' line
 }
 
 /**
@@ -1125,7 +1251,7 @@ function lingotek_migration_1() {
   // store lingotek enabled fields in languages table rather than variable table
   $target_languages = array_filter(explode('|', variable_get('lingotek_target_languages', '')));
   foreach ($target_languages as $drupal_language_code) {
-    lingotek_enable_language_by_code($drupal_language_code, 1);
+    lingotek_enable_language_by_code($drupal_language_code);
   }
   variable_del('lingotek_target_languages');
   drupal_static_reset('language_list');
@@ -1190,23 +1316,60 @@ function lingotek_migration_3() {
 function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
   $or = db_or();
   
-  $fields = variable_get('lingotek_enabled_fields');  
+  $fields = variable_get('lingotek_enabled_fields');
   $types = array();
-  foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
-    if($profile['profile'] == $profile_id && isset($fields[$content_type])) {
+  foreach (lingotek_load_profile_defaults('node') as $content_type => $profile) {
+    if ($profile['profile'] == (string)$profile_id && isset($fields['node'][$content_type])) {
       $types[] = $content_type;
     }
-  }  
-
-  if(!empty($types)) {
+  }
+  
+  if (!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
-    $an->condition($table_profile . '.value', NULL);
+    $an->condition($table_auto_upload . '.lingovalue', NULL);
+    $an->condition($table_profile . '.lingovalue', NULL);
     $or->condition($an);
   }
-  $or->condition($table_profile . '.value', $profile_id);
+  $or->condition($table_profile . '.lingovalue', $profile_id);
   
   return $or;
+}
+
+function lingotek_entity_translation_save_status($node, $language_codes, $status_request = NULL) {
+  $handler = entity_translation_get_handler('node', $node);
+  $languages_updated = array();
+  $updates = 0;
+
+  foreach ($language_codes as $langcode) {
+    if ($langcode !== 0) {
+      // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
+      $et_params = array(
+        'language' => $langcode,
+        );
+      if ($langcode != $node->language) {
+        $et_params['source'] = $node->language;
+      }
+      if ($status_request !== NULL) {
+        $et_params['status'] = $status_request;
+      }
+      else {
+        // check for the current status, if any, and set to published as a default
+        if (isset($node->translations->data[$node->language])
+            && !isset($node->translations->data[$langcode])) {
+          $et_params['status'] = $node->translations->data[$node->language]['status'];
+        }
+        else {
+          $et_params['status'] = 1; // published
+        }
+      }
+      $handler->setTranslation($et_params);
+      $languages_updated[$langcode] = lingotek_language_name($langcode);
+      $updates++;
+    }
+  }
+  $handler->saveTranslations();
+  return array($languages_updated, $updates);
 }
 
 function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip = 'Edit this translation') {
@@ -1214,76 +1377,44 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
   
   $text = '<img src="' . base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_chevs_dd.png" >';
   $url = $entity_type . '/' . $id . '/lingotekworkbench/' . $lingotek_locale;
-  return l($text, $url, array('attributes' => array('class' => array('translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
+  return l($text, $url, array('attributes' => array('class' => array('lingotek-translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
 }
 
-function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
-  $aReturn = array();
-
-  foreach ($aArray1 as $mKey => $mValue) {
-    if ( (!is_array($mValue) && substr($mKey, 0, 4) == 'safe') || $mValue == NULL) {
-      continue;
-    }
-      
-    if (array_key_exists($mKey, $aArray2)) {
-      if (is_array($mValue)) {
-        $aRecursiveDiff = lingotekArrayRecursiveDiff($mValue, $aArray2[$mKey]);
-        if (count($aRecursiveDiff)) { $aReturn[$mKey] = $aRecursiveDiff; }
-      } else {
-        if ($mValue != $aArray2[$mKey]) {
-          $aReturn[$mKey] = $mValue;
-        }
-      }
-    } else {
-      $aReturn[$mKey] = $mValue;
-    }
+function lingotek_list_entities_with_language($entity_type, $bundle, $language) {
+  $ids = array();
+  $fields = field_info_instances($entity_type, $bundle);
+  foreach ($fields as $name => $field_info) {
+    $ids = $ids + lingotek_list_entities_with_field_in_language($entity_type, $bundle, $name, $language);
   }
-  return $aReturn;
-} 
 
-function lingotek_entity_compare($entity1, $entity2, $entity_type, $bundle) {
-  $fields = variable_get('lingotek_enabled_fields');
-  $fields = $fields[$bundle];
-  
-  foreach ($fields as $field) {
-    $diff1 = lingotekArrayRecursiveDiff($entity1->{$field}, $entity2->{$field});
-    $diff2 = lingotekArrayRecursiveDiff($entity2->{$field}, $entity1->{$field});
-    if(!empty($diff1))
-      return $diff1;
-    if(!empty($diff2))
-      return $diff2;
-  }
-  
-  return array();
+  return $ids;
 }
 
-function lingotek_managed_entity_types() {
-  $types = entity_get_info();
-  //$exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
-  //$exclude = array_flip($exclude);
-  //return array_diff_key($types, $exclude);
-  
-  $include = array('node', 'comment', 'field_collection_item', 'message', 'taxonomy_term', 'message_type');
-  $include = array_flip($include);
-  return array_intersect_key($types, $include);
+function lingotek_list_nodes_translated_in_language($bundle, $language) {
+
+  $query = db_select('node')
+      ->fields('node', array('tnid'))
+      ->condition('node.type', $bundle)
+      ->condition('node.tnid', 0, '<>')
+      ->condition('language', $language)
+      ->execute();
+
+  $nodes = $query->fetchCol();
+
+  return $nodes;
 }
 
-/**
- * Update Lingotek table settings for a node.
- * 
- * @param array $settings
- *    Associative array of lingokey => lingovalue
- *
- * @param array $node
- *    Array of node objects like what is returned by node_load_multiple()
- *
- */
-function lingotek_update_node_settings($settings, $nids) {
-  foreach ($nids as $nid) {
-    foreach ($settings as $setting => $value) {
-      lingotek_lingonode($nid, $setting, $value);
-    }
-  }
+function lingotek_list_entities_with_field_in_language($entity_type, $bundle, $field, $language) {
+  $query = new EntityFieldQuery;
+
+  $entities = $query
+      ->entityCondition('entity_type', $entity_type)
+      ->entityCondition('bundle', $bundle)
+      ->entityCondition('deleted', 0)
+      ->fieldLanguageCondition($field, $language)
+      ->execute();
+
+  return isset($entities['node']) ? array_keys($entities['node']) : array();
 }
 
 /**
@@ -1306,46 +1437,46 @@ function lingotek_translatable_node_fields() {
   return $translatable_fields;
 }
 
-  /**
-   * Wrap placeholder tags in specific tags that will be ignored by Lingotek
-   *
-   * @param $segment_text
-   *   a string containing the segment to be translated
-   *
-   * @return string
-   *   the original input plus any additional reference tags to be ignored.
-   */
-  function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
-    // NOTE: This regex is only a generalization of the variable names possible using
-    // the t-function's variable interpolation.  This finds all sets of word
-    // characters (A-Z, a-z, - or _) that begin with either !, @, or %, that do not
-    // fall between angle brackets (which would indicate being on the inside
-    // of an HTML tag).  It also protects everything inside square brackets
-    // that do not fall inside angle brackets.
-    $patterns = array(
-      '/(\[[!@%\w:=\/\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
-    );
-    if ($protect_vars) {
-      $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
-    }
-    $replacement = '<drupalvar>${1}</drupalvar>';
-    foreach ($patterns as $p) {
-      $segment_text = preg_replace($p, $replacement, $segment_text);
-    }
-    return $segment_text;
+/**
+ * Wrap placeholder tags in specific tags that will be ignored by Lingotek
+ *
+ * @param $segment_text
+ *   a string containing the segment to be translated
+ *
+ * @return string
+ *   the original input plus any additional reference tags to be ignored.
+ */
+function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
+  // NOTE: This regex is only a generalization of the variable names possible using
+  // the t-function's variable interpolation.  This finds all sets of word
+  // characters (A-Z, a-z, - or _) that begin with either !, @, or %, that do not
+  // fall between angle brackets (which would indicate being on the inside
+  // of an HTML tag).  It also protects everything inside square brackets
+  // that do not fall inside angle brackets.
+  $patterns = array(
+    '/(\[[!@%\w:=\/\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
+  );
+  if ($protect_vars) {
+    $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
   }
+  $replacement = '<drupalvar>${1}</drupalvar>';
+  foreach ($patterns as $p) {
+    $segment_text = preg_replace($p, $replacement, $segment_text);
+  }
+  return $segment_text;
+}
 
-  /**
-   * Unwrap placeholder tags in specific tags that will be ignored by Lingotek
-   *
-   * @param $segment_text
-   *   a string containing the segment that potentially contains drupal variables
-   *
-   * @return string
-   *   the original input less any additional reference tags added prior to upload
-   */
-  function lingotek_unfilter_placeholders($segment_text) {
-    $pattern = '/<\/?drupalvar>/';
-    $replacement = '';
-    return preg_replace($pattern, $replacement, $segment_text);
-  }
+/**
+ * Unwrap placeholder tags in specific tags that will be ignored by Lingotek
+ *
+ * @param $segment_text
+ *   a string containing the segment that potentially contains drupal variables
+ *
+ * @return string
+ *   the original input less any additional reference tags added prior to upload
+ */
+function lingotek_unfilter_placeholders($segment_text) {
+  $pattern = '/<\/?drupalvar>/';
+  $replacement = '';
+  return preg_replace($pattern, $replacement, $segment_text);
+}

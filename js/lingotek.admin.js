@@ -38,6 +38,8 @@ Drupal.behaviors.lingotekAdminForm = {
         })
         if(count == 0) {
           row.find('td:first-child .form-checkbox').attr('checked',false);
+          row.find('.form-select').val('DISABLED');
+          row.find('.form-select').trigger('change');
         }
       }
     });
@@ -67,6 +69,28 @@ Drupal.behaviors.lingotekAdminForm = {
           return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
         }
       });
+
+      if ($('fieldset.lingotek-translate-field-collections').length) {
+        $('fieldset.lingotek-translate-field-collections', context).drupalSetSummary(function (context) {
+          $list = [];
+          total = 0;
+          $('fieldset.lingotek-translate-field-collections select').each(function( index ) {
+            var name = $(this).attr('name');
+            if(name && name.substring(0, 7) == 'profile') {
+
+              if($(this).val() != 'DISABLED') {
+                $list.push($(this).val());
+              }
+              total++;
+            }
+          });
+          if($list.length == 0) {
+            return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+          } else {
+            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
+          }
+        });
+      }
 
       $('fieldset.lingotek-translate-comments', context).drupalSetSummary(function (context) {
         $list = [];

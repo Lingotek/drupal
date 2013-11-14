@@ -37,17 +37,17 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
     
     $entity_type = $this->view->base_table;
     
-    if($entity_type == 'node') {
+    if ($entity_type == 'node') {
       $entity = node_load($values->nid);
     } elseif($entity_type == 'comment') {
       $entity = comment_load($values->cid);
     }
     
-    if(!user_access('manage projects') && !user_access('translation')) {
+    if (!user_access('manage projects') && !user_access('translation')) {
       return; //do not show if the user does not have correct permissions
     }
         
-    if($language->language == $entity->language) {
+    if ($language->language == $entity->language) {
       return;
     }
     
@@ -56,7 +56,7 @@ class lingotek_views_handler_workbench_link extends views_handler_field {
     $text = '<img src="' . base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_chevs_dd.png" >'; 
     $url = 'node/' . $values->nid . '/lingotekworkbench/' . Lingotek::convertDrupal2Lingotek($language->language);
     
-    return l($text, $url, array('attributes' => array('target' => '_blank', 'title' => 'Edit this translation'), 'html' => TRUE));
+    return l($text, $url, array('attributes' => array('target' => '_blank', 'title' => 'Edit this translation', 'class' => 'lingotek-translation-link'), 'html' => TRUE));
   }
 
   function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {

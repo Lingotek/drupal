@@ -14,7 +14,7 @@ class LingotekSync {
   const STATUS_EDITED = 'EDITED';    // The node has been edited, but has not been uploaded to Lingotek
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
-  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek
+  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek (used for node storage)
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
@@ -105,10 +105,14 @@ class LingotekSync {
     $subquery = db_select('node', 'n')->fields('n', array('nid'));
     $subquery->condition('language', $drupal_language_code);
 
+    $subquery2 = db_select('lingotek', 'l2')->fields('l2', array('nid'));
+    $subquery2->condition('lingokey', 'target_sync_status_' . $lingotek_locale); //already has status
+
     $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
     $query->condition('entity_type', 'node');
     $query->condition('entity_key', 'node_sync_status');
     $query->condition('entity_id', $subquery, 'NOT IN'); // exclude adding to nodes where this locale is the source
+    $query->condition('entity_id', $subquery2, 'NOT IN'); // exclude nodes that already have this language as a target
     $result = $query->execute();
 
     while ($record = $result->fetchAssoc()) {
@@ -183,11 +187,10 @@ class LingotekSync {
         ->fields('meta', array('id'))
         ->groupBy('id');
     $ids = $query->execute()->fetchCol();
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
 
     foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
-      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $drupal_language_code);
+      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
   }
 
@@ -198,8 +201,13 @@ class LingotekSync {
 
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes
   public static function deleteTargetEntriesForAllNodes($lingotek_locale) {
-    $key = 'target_sync_status_' . $lingotek_locale;
-    db_delete('lingotek_entity_metadata')->condition('entity_type', 'node')->condition('entity_key', $key)->execute();
+    $keys = array(
+      'target_sync_status_' . $lingotek_locale,
+      'target_sync_last_progress_updated_' . $lingotek_locale,
+      'target_sync_progress_' . $lingotek_locale,
+      'target_last_downloaded_' . $lingotek_locale,
+    );
+    db_delete('lingotek')->condition('lingokey', $keys, 'IN')->execute();
   }
 
   public static function deleteTargetEntriesForAllChunks($lingotek_locale) {
@@ -274,8 +282,8 @@ class LingotekSync {
         continue;
       }
       foreach ($locales as $locale) {
-        $target_status = self::getTargetStatus($document_id, $locale);
         if (isset($response->byDocumentIdAndTargetLocale->$document_id->$locale)) {
+          $target_status = self::getTargetStatus($document_id, $locale);
           $doc_target = array(
             'document_id' => $document_id,
             'locale' => $locale,
@@ -813,7 +821,8 @@ class LingotekSync {
   public static function getDocIdFromEntityId($entity_type, $entity_id) {
     $found = FALSE;
 
-    $query = db_select('lingotek_entity', $entity_type);
+    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
+    $query->condition('entity_type', $entity_type);
     $query->condition('entity_id', $entity_id);
     $query->condition('entity_key', 'document_id');
     $result = $query->execute();
@@ -825,14 +834,21 @@ class LingotekSync {
     return $found;
   }
 
-  public static function getDocIdsFromEntityIds($entity_type, $drupal_node_ids) {
+  public static function getDocIdsFromEntityIds($entity_type, $drupal_node_ids, $associate = FALSE) {
 
     $query = db_select('lingotek_entity_metadata', 'l');
     $query->addField('l', 'value');
     $query->condition('entity_type', $entity_type);
     $query->condition('entity_id', $drupal_node_ids, 'IN');
     $query->condition('entity_key', 'document_id');
-    $result = $query->execute()->fetchCol();
+
+    if ($associate) {
+      $query->addField('l', 'nid');
+      $result = $query->execute()->fetchAllAssoc('nid');
+    }
+    else {
+      $result = $query->execute()->fetchCol();
+    }
 
     return $result;
   }

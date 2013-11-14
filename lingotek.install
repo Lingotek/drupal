@@ -288,23 +288,6 @@ function lingotek_update_7201(&$sandbox) {
 }
 
 /**
- * Ensure the Administrator role is granted newly-introduced permissions.
- */
-function lingotek_update_7202(&$sandbox) {
-  if ($rid = variable_get('user_admin_role', 0)) {
-    $new_permisions = array(
-      'access lingotek utilities',
-      'access per-item lingotek project selection',
-      'access per-item lingotek vault selection'
-    );
-
-    user_role_grant_permissions($rid, $new_permisions);
-
-    return t('Granted new Lingotek permissions to the administrative security role.');
-  }
-}
-
-/**
  * Install default FPRM configuration data to support advanced content parsing.
  */
 function lingotek_update_7203(&$sandbox) {
@@ -436,11 +419,8 @@ function lingotek_update_7213(&$sandbox) {
     $permissions = array(
       'administer lingotek',
       'manage projects',
-      'adjust auto-download node setting',
-      'translate url aliases',
-      'access lingotek utilities',
-      'access per-item lingotek project selection',
-      'access per-item lingotek vault selection'
+      'translation',
+      'use lingotek developer tools'
     );
 
     user_role_grant_permissions($rid, $permissions);
@@ -502,27 +482,27 @@ function lingotek_update_7401(&$sandbox) {
  * Removes the deprecated "Lingotek Translatable" option from each field
  */
 function lingotek_update_7403(&$sandbox) {
-  $translate_fields = variable_get('lingotek_enabled_fields');
-  if(empty($translate_fields)) {
+  $translate_fields = variable_get('lingotek_translate_fields');
+  if (empty($translate_fields)) {
 
     $types = _node_types_build()->types;
     $translate_fields = array();
 
-    foreach($types as $t) {
+    foreach ($types as $t) {
       $translation_setting = variable_get('language_content_type_' . $t->type);
-      if($translation_setting == 'lingotek') {
+      if ($translation_setting == 'lingotek') {
         variable_set('language_content_type_' . $t->type, "1");
         $fields = field_info_instances("node", $t->type);
-        foreach($fields as $field_name => $instance) {
+        foreach ($fields as $field_name => $instance) {
           $field = field_info_field($field_name);
-          if($field['translatable'] && $field['lingotek_translatable'] == 1) {
+          if ($field['translatable'] && $field['lingotek_translatable'] == 1) {
             $translate_fields[$t->type][] = $field_name;
           }
         }
       }
     }
 
-    variable_set('lingotek_enabled_fields', $translate_fields);
+    variable_set('lingotek_translate_fields', $translate_fields);
   }
 }
 
@@ -546,8 +526,8 @@ function lingotek_update_7404(&$sandbox) {
   }
 
   $entity_profiles = variable_get('lingotek_entity_profiles');
-  if(empty($entity_profiles)) {
-    $fields = variable_get('lingotek_enabled_fields');
+  if (empty($entity_profiles)) {
+    $fields = variable_get('lingotek_translate_fields');
 
     $entity_profiles = array();
 
@@ -562,7 +542,45 @@ function lingotek_update_7404(&$sandbox) {
 /**
  * Makes lingotek handle entities better.
  */
-function lingotek_update_7405(&$sandbox) {
+function lingotek_update_7406(&$sandbox) {
+  $translate_fields = variable_get('lingotek_translate_fields');
+
+  $enabled_fields = array('node' => $translate_fields);
+
+  variable_set('lingotek_enabled_fields', $enabled_fields);
+  variable_del('lingotek_translate_fields');
+}
+
+/**
+ * Creates an upgrade path for existing translated content to be inserted into entity_translation module table if necessary
+ */
+function lingotek_update_7408(&$sandbox) {
+  if (module_exists('entity_translation')) {
+    $nid_list = array();
+    $results = db_select('lingotek', 'l')
+      ->fields('l', array('nid', 'lingokey'))
+      ->condition('lingokey', 'target_sync_status_%', 'LIKE')
+      ->condition('lingovalue', LingotekSync::STATUS_CURRENT)
+      ->execute();
+    foreach ($results as $r) {
+      $nid_list[$r->nid] = str_replace('target_sync_status_', '', $r->lingokey);
+    }
+    
+    foreach ($nid_list as $nid => $locale) {
+      $node = lingotek_node_load_default($nid, NULL, TRUE);
+      if ($node) {
+        if (lingotek_managed_by_entity_translation($node->type)) {
+          lingotek_entity_translation_save_status($node, array(Lingotek::convertLingotek2Drupal($locale)));
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Makes lingotek handle entities better.
+ */
+function lingotek_update_7500(&$sandbox) {
   db_query("INSERT INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
 FROM lingotek");

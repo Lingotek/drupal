@@ -99,7 +99,7 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   if (count($operations) > 0) {
 
     $batch = array(
-      'title' => t('Syncing Content Translations with Lingotek'),
+      'title' => t('Syncing Content and Translations'),
       'operations' => $operations,
       'file' => 'lingotek.batch.inc',
       'finished' => 'lingotek_sync_batch_finished'
@@ -242,14 +242,35 @@ function lingotek_batch_identify_content($front = FALSE) {
   $existing_nids = $result->fetchCol();
   $operations = array();
 
+  global $language;
+  $existing_languages = language_list();
+  unset($existing_languages[$language->language]);
+
   foreach (lingotek_get_content_types() as $type) {
 
     $nodes = node_load_multiple(array(), array('type' => $type));
 
+    $nodes_in_language_field = array();
+    $nodes_in_language_node = array();
+
+    foreach ($existing_languages as $lang) {
+      $nodes_in_language_field[$lang->language] = lingotek_list_entities_with_language('node', $type, $lang->language);
+      $nodes_in_language_node[$lang->language] = lingotek_list_nodes_translated_in_language($type, $lang->language);
+    }
+
     foreach ($nodes as $node) {
       if (!in_array($node->nid, $existing_nids)) {
-        // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
-        $operations[] = array('LingotekSync::setNodeStatus', array($node->nid, LingotekSync::STATUS_EDITED));
+        if ($node->tnid == 0 || $node->tnid == $node->nid) { //skip node translation target nodes
+          // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
+          $operations[] = array('LingotekSync::setNodeStatus', array($node->nid, LingotekSync::STATUS_EDITED));
+
+          foreach ($existing_languages as $lang) {
+            if (in_array($node->nid, $nodes_in_language_field[$lang->language]) || in_array($node->nid, $nodes_in_language_node[$lang->language])) {
+              $lingotek_locale = Lingotek::convertDrupal2Lingotek($lang->language);
+              lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
+            }
+          }
+        }
       };
     }
   }
@@ -290,7 +311,7 @@ function lingotek_batch_disassociate_content() {
   $operations[] = array('LingotekSync::disassociateAllChunks', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 
-  $operations[] = array('lingotek_cleanup_utility', array(FALSE)); // identify translatable content
+  $operations[] = array('lingotek_cleanup_utility', array(FALSE, FALSE)); // identify translatable content
   drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
 
   $batch = array(
@@ -299,6 +320,7 @@ function lingotek_batch_disassociate_content() {
   );
 
   batch_set($batch);
+  batch_process('admin/settings/lingotek/settings');
 }
 
 function lingotek_batch_disassociate_content_worker($api, $doc_id) {
