@@ -861,12 +861,6 @@ function lingotek_get_and_update_target_progress($document_ids) {
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
           $values[] = array($nid, 'target_sync_status_' . $language, $to_status);
-          if ($trans_obj) {
-            $trans_obj->deleteMetadataValue('target_sync_status_' . $language);
-          }
-          else {
-            lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
-          }
         }
       }
       // for now just report on node translation progress...
@@ -891,14 +885,18 @@ function lingotek_get_and_update_target_progress($document_ids) {
         $trans_obj->deleteMetadataValue('translation_progress');
       }
     }
-    
-    // insert status info for nodes
-    $query = db_insert('lingotek')
-      ->fields(array('nid', 'lingokey', 'lingovalue'));
+
+    // merge status info for nodes
     foreach ($node_values as $record) {
-      $query->values($record);
+      $query = db_merge('lingotek')
+        ->key(array('nid' => $record[0], 'lingokey' => $record[1]))
+        ->fields(array(
+            'nid' => $record[0],
+            'lingokey' => $record[1],
+            'lingovalue' => $record[2]
+          ))
+        ->execute();
     }
-    $query->execute();
     
     // insert status info for config
     foreach ($cfg_values as $record) {
