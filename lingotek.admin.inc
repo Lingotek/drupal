@@ -106,7 +106,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   $bundles = $entity_type_info['bundles'];
 
   $types = array();
-  $translate = variable_get('lingotek_translate_fields', array());
+  $translate = variable_get('lingotek_enabled_fields', array());
   $translate = isset($translate[$entity_type]) ? $translate[$entity_type] : array();
   $profiles = lingotek_get_profiles();
 
@@ -254,7 +254,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     variable_set('lingotek_nodes_translation_method', $form_state['values']['lingotek_nodes_translation_method']);
   }
 
-  $translate = variable_get('lingotek_translate_fields', array());
+  $translate = variable_get('lingotek_enabled_fields', array());
   unset($translate[$entity_type]);
   $operations = array();
 
@@ -315,7 +315,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
     }
   }
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
-  variable_set('lingotek_translate_fields', $translate);
+  variable_set('lingotek_enabled_fields', $translate);
   variable_set('lingotek_entity_profiles', $entity_profiles);
   drupal_set_message(t('Your content types have been updated.'));
 

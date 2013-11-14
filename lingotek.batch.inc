@@ -213,7 +213,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       if ($id != NULL) {
         $lingotek_locale = $download_target->locale;
         $doc_ids[] = $download_target->document_id;
-        $operations[] = array('lingotek_sync_download_entity_target', array($id, $entity_type, $lingotek_locale, $sync_success_target, FALSE));
+        $operations[] = array('lingotek_entity_download', array($id, $entity_type, $lingotek_locale));
       }
       else { // since no node was found associated with the document ID, check config chunks
         $cid = LingotekConfigChunk::getIdByDocId($download_target->document_id);
@@ -601,13 +601,13 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
     if (!empty($segment)) {
-      $operations[] = array('lingotek_get_and_update_target_progress', $entity_type, array($segment));
+      $operations[] = array('lingotek_get_and_update_target_progress', array($entity_type, $segment));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);
 
   $batch['operations'] = $operations;
-  $redirect = 'admin/settings/lingotek/manage/list';
+  $redirect = 'admin/settings/lingotek/manage/' . $entity_type;
 
   batch_set($batch);
   batch_process($redirect);

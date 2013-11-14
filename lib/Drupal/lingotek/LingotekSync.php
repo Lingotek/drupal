@@ -220,11 +220,11 @@ class LingotekSync {
    * 
    * @return an array of associate arrays.  Each associate array will have a 'nid' (e.g., 5), 'locale' (e.g., 'de_DE'), and optionally 'doc_id' (e.g., 46677222-b5ec-47d5-880e-24632feffaf5)
    */
-  public static function getTargetsByStatus($status, $include_doc_ids = FALSE) {
+  public static function getTargetsByStatus($entity_type, $status, $include_doc_ids = FALSE) {
     $target_language_search = '%';
     $query = db_select('lingotek_entity_metadata', 'l');
     $query->fields('l', array('entity_id', 'entity_key', 'value'));
-    $query->condition('entity_type', 'node');
+    $query->condition('entity_type', $entity_type);
     $query->condition('entity_key', 'target_sync_status_' . $target_language_search, 'LIKE');
     $query->condition('value', $status);
     $result = $query->execute();
@@ -235,7 +235,7 @@ class LingotekSync {
       $nid_doc_map = array();
       foreach ($records as $record) {
         if (!key_exists($record->entity_id, $nid_doc_map)) {
-          $doc_id = self::getDocIdFromNodeId($record->entity_id);
+          $doc_id = self::getDocIdFrom($record->entity_id);
           $nid_doc_map[$record->entity_id] = $doc_id;
         }
       }
@@ -266,7 +266,7 @@ class LingotekSync {
     );
     if (empty($document_ids))
       return $report; // if no documents are PENDING, then no need to make the API call.
-    $response = lingotek_get_and_update_target_progress($document_ids);
+    $response = lingotek_get_and_update_target_progress('node', $document_ids);
 
     $locales = lingotek_get_target_locales();
     foreach ($document_ids as $document_id) {
@@ -340,7 +340,7 @@ class LingotekSync {
     $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
     $query->condition('entity_type', 'node');
     $query->condition('entity_key', 'node_sync_status');
-    $query->condition('entity_value', $status);
+    $query->condition('value', $status);
     $result = $query->countQuery()->execute()->fetchField();
     return $result;
   }
@@ -470,7 +470,7 @@ class LingotekSync {
     $query->condition('l.entity_id', $subquery, 'IN');
     $query->addExpression('COUNT(l.entity_key)', 'targets');
 
-    $query->groupBy('l.nid');
+    $query->groupBy('l.entity_id');
     $result = $query->execute()->fetchAllAssoc('nid');
     return $result;
   }
@@ -807,11 +807,14 @@ class LingotekSync {
   }
 
   public static function getDocIdFromNodeId($drupal_node_id) {
+    return getDocIdFromEntityId('node', $drupal_node_id);
+  }
+  
+  public static function getDocIdFromEntityId($entity_type, $entity_id) {
     $found = FALSE;
 
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
-    $query->condition('entity_type', 'node');
-    $query->condition('entity_id', $drupal_node_id);
+    $query = db_select('lingotek_entity', $entity_type);
+    $query->condition('entity_id', $entity_id);
     $query->condition('entity_key', 'document_id');
     $result = $query->execute();
 
@@ -824,7 +827,8 @@ class LingotekSync {
 
   public static function getDocIdsFromEntityIds($entity_type, $drupal_node_ids) {
 
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
+    $query = db_select('lingotek_entity_metadata', 'l');
+    $query->addField('l', 'value');
     $query->condition('entity_type', $entity_type);
     $query->condition('entity_id', $drupal_node_ids, 'IN');
     $query->condition('entity_key', 'document_id');

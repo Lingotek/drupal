@@ -242,35 +242,35 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_grid_update',
-    'page arguments' => array(),
+    'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_grid_download_ready',
-    'page arguments' => array(),
+    'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/%'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/%/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_edit_nodes',
-    'page arguments' => array(5),
+    'page arguments' => array(5, 6),
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/%'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/%/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.page.inc',
     'page callback' => 'lingotek_disassociate_nodes',
-    'page arguments' => array(5),
+    'page arguments' => array(5, 6),
     'type' => MENU_CALLBACK,
   );
 
@@ -676,13 +676,15 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   $bulk_grid = FALSE;
   $multiple = FALSE;
   //$new_node = isset($node->nid) ? 0 : 1;
+  
+  $entity_type = isset($form_state['entity_type']) ? $form_state['entity_type'] : 'node';
 
   if (isset($form_state['nids'])) {
     $nids = $form_state['nids'];
     $bulk_grid = TRUE;
     $multiple = count($nids) > 1;
     if (!$multiple) {
-      $node = lingotek_node_load_default(reset($nids));
+      $node = lingotek_entity_load_single($entity_type, $nids[0]);
     }
     else {
       if (!$second_run) {
@@ -693,7 +695,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       $node->lingotek['profile'] = LingotekSync::PROFILE_DISABLED; // Note: Consider making this default 'Automatic' (after it is a fixed profile; can't be deleted)
     }
   }
-
+  
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $is_enterprise = LingotekAccount::instance()->isEnterprise();
@@ -893,7 +895,7 @@ function lingotek_entity_save($entity, $entity_type) {
   if (isset($entity->lingotek_upload_override)) {
     return $entity;
   }
-
+  
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   if (!lingotek_enabled_bundle($entity_type, $bundle) && $entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
@@ -954,10 +956,12 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
   if (isset($form_state['nids']) && !empty($form_state['nids'])) {
     $nids = $form_state['nids'];
 
+    $entity_type = $form_state['entity_type'];
+    
     foreach ($nids as $nid) {
-      $node = node_load($nid);
+      $node = lingotek_entity_load_single($entity_type, $nid);
       $node->lingotek = array_replace($node->lingotek, $form_state['values']['lingotek']);
-      node_save($node);
+      lingotek_entity_save($node, $entity_type);
     }
 
 //    $operations = array();
@@ -1124,9 +1128,23 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
  * Implements hook_entity_load().
  */
 function lingotek_entity_load($entities, $entity_type) {
+  
   if (empty($entities)) {
     return;
   }
+  
+  if ($entity_type == 'field_collection_item') {
+    foreach ($entities as $e) {
+      lingotek_normalize_field_collection_language($e);
+    }
+  }
+  if ($entity_type == 'message_type') {
+    foreach ($entities as $e) {
+      lingotek_normalize_language($e);
+    }
+    dpm($e);
+  }
+  dpm($entity_type);
 
   $global_profile = lingotek_get_global_profile();
   $node_profile_defaults = lingotek_load_profile_defaults($entity_type); // return assoc array by node type
@@ -1189,7 +1207,7 @@ function lingotek_entity_insert($entity, $type) {
 /**
  * Implements hook_entity_update().
  */
-function lingotek_entity_update($entity, $type) {
+function lingotek_entity_update($entity, $type) {  
   if ($type == 'node' && !empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
     return;
   }
@@ -1219,7 +1237,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $message = TRUE
 
   if (isset($entity->lingotek_upload_override)) {
     if ($entity->lingotek_upload_override) {
-      lingotek_upload_document($entity, $entity_type);
+      lingotek_entity_upload($entity, $entity_type);
     }
     return;
   }
@@ -1285,6 +1303,18 @@ function lingotek_entity_upload($entity, $entity_type, $message = TRUE) {
     $ln = LingotekEntity::load($entity, $entity_type);
     LingotekApi::instance()->updateContentDocument($ln);
   }
+  
+  lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+  lingotek_keystore($entity_type, $id, 'last_uploaded', time());
+  
+  $languages = Lingotek::availableLanguageTargets('lingotek_locale', FALSE);
+  foreach ($languages as $lingotek_locale) {
+    lingotek_keystore($entity_type, $id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
+  }
+  
+  if (module_exists('entitycache')) {
+    cache_clear_all($id, 'cache_entity_node');
+  }
 }
 
 /*
@@ -1298,11 +1328,11 @@ function lingotek_entity_upload($entity, $entity_type, $message = TRUE) {
  *  Target language to be updated/synchronized
  */
 
-function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, &$context = FALSE) {
+function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$context = FALSE) {
   global $_lingotek_client;
 
   if (is_numeric($entity)) {
-    $entity = lingotek_entity_load_single($entity_type, $id);
+    $entity = lingotek_entity_load_single($entity_type, $entity);
   }
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
@@ -1313,12 +1343,13 @@ function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, &$co
     return FALSE;
   }
 
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  
   if ($context) {
     $context['message'] = t('Downloading "@locale" translation for entity @type @id', array('@locale' => $lingotek_locale, '@type' => $entity_type, '@id' => $id));
   }
-
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-
+  
+  dpm($entity);
   $document_id = $entity->lingotek['document_id'];
   LingotekLog::trace('lingotek_download_document @doc_id (@target)', array('@doc_id' => $document_id, '@target' => $lingotek_locale));
 
@@ -1338,6 +1369,14 @@ function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, &$co
     $xml = new SimpleXMLElement($text);
   } catch (Exception $e) {
     LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
+    
+    if ($context) {
+      $context['results']['download_fails'] = isset($context['results']['download_fails']) && is_numeric($context['results']['download_fails']) ? $context['results']['download_fails'] + 1 : 1;
+      if (!isset($context['results']['download_fail_node_targets']) || !is_array($context['results']['download_fail_node_targets'])) {
+        $context['results']['download_fail_node_targets'] = array();
+      }
+      $context['results']['download_fail_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
+    }
     return FALSE;
   }
 
@@ -1353,8 +1392,6 @@ function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, &$co
 
   lingotek_process_entity_xml($xml, $storage_entity, $entity_type, $drupal_language_code, $url_alias_translation);
 
-  LingotekSync::setTargetStatus($entity->nid, $lingotek_locale, $sync_success_status); //slightly pre-emptive, but certainly more cohesive
-
   if ($entity_type == 'node') {
     //Fix for pathauto expecting the form:
     $storage_entity->path = path_load(array('source' => 'node/' . $storage_entity->nid, 'language' => $storage_entity->language));
@@ -1368,38 +1405,31 @@ function lingotek_entity_download(&$entity, $entity_type, $lingotek_locale, &$co
       }
     }
 
-    lingotek_keystore_variable_delete($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale);
+    lingotek_keystore_delete($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale);
     lingotek_keystore($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale, time());
   }
 
   cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
 
-  $status = lingotek_keystore($entity_type, $id , $lingotek_locale);
+  $status = lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale);
 
   if ($status == LingotekSync::STATUS_READY) {
-    lingotek_keystore($entity_type, $id , $lingotek_locale, LingotekSync::STATUS_CURRENT);
-  }
-
-  if ($sync_success_status == LingotekSync::STATUS_CURRENT) {
+    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
     lingotek_keystore($entity_type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
-    lingotek_keystore($entity_type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
   }
-
+  else if (empty($status)) {
+    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
+  }
+  
+  //Update the timestamp showing that we have downloaded the target
+  lingotek_keystore($entity_type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+  
   if ($context) {
-    if ($result) {
-      $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
-      if (!isset($context['results']['downloaded_node_targets']) || !is_array($context['results']['downloaded_node_targets'])) {
-        $context['results']['downloaded_node_targets'] = array();
-      }
-      $context['results']['downloaded_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
+    $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
+    if (!isset($context['results']['downloaded_node_targets']) || !is_array($context['results']['downloaded_node_targets'])) {
+      $context['results']['downloaded_node_targets'] = array();
     }
-    else {
-      $context['results']['download_fails'] = isset($context['results']['download_fails']) && is_numeric($context['results']['download_fails']) ? $context['results']['download_fails'] + 1 : 1;
-      if (!isset($context['results']['download_fail_node_targets']) || !is_array($context['results']['download_fail_node_targets'])) {
-        $context['results']['download_fail_node_targets'] = array();
-      }
-      $context['results']['download_fail_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
-    }
+    $context['results']['downloaded_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
   }
 
   return TRUE;
@@ -1505,7 +1535,7 @@ function lingotek_is_config_missing() {
     'lingotek_project',
     'lingotek_workflow',
     'lingotek_vault',
-    'lingotek_translate_fields',
+    'lingotek_enabled_fields',
     'lingotek_translate_comments_node_types',
     'lingotek_oauth_consumer_id',
     'lingotek_oauth_consumer_secret',
@@ -1522,7 +1552,7 @@ function lingotek_is_config_missing() {
       elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
         return 'admin/config/lingotek/community-settings-select';
       }
-      elseif ($required_variable == 'lingotek_translate_fields') {
+      elseif ($required_variable == 'lingotek_enabled_fields') {
         return 'admin/config/lingotek/node-translation-settings';
       }
       elseif ($required_variable == 'lingotek_translate_comments_node_types') {
@@ -1570,21 +1600,59 @@ function lingotek_entity_info_alter(&$entity_info) {
   if (isset($entity_info['field_collection_item'])) {
     $entity_info['field_collection_item']['translation']['lingotek'] = TRUE;
   }
+  if (isset($entity_info['message_type'])) {
+    $entity_info['message_type']['translation']['lingotek'] = TRUE;
+  }
+}
+
+function lingotek_normalize_language($entity, $from_language_none = TRUE) {
+  $language = language_default();
+  $site_lang = $language->language;
+  
+  foreach ($entity as $key => $value) {
+    if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
+      if ($from_language_none) {
+        $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
+      }
+      elseif (isset($value[$site_lang])) {
+        $entity->{$key}[LANGUAGE_NONE] = $value[$site_lang];
+      }
+    }
+  }
+}
+
+function lingotek_normalize_field_collection_language($entity, $from_language_none = TRUE) {
+    $host = $entity->hostEntity();
+    $max_field_collection_depth = 10;
+    // bubble up to the true parent to get its language,
+    // which adds support for deeply nested entity collections
+    for ($i = 0; $i < $max_field_collection_depth; $i++) {
+      if ($host instanceof FieldCollectionItemEntity) {
+        $host = $host->hostEntity();
+      }
+    }
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
+        if ($from_language_none) {
+          $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
+        }
+        elseif (isset($value[$host->language])) {
+          $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
+        }
+      }
+    }
 }
 
 /**
  * Implements hook_entity_presave().
- */
+  */
 function lingotek_entity_presave($entity, $type) {
-  /* global $language;
-    if ($type == 'field_collection_item') {
-    foreach ($entity as $key => $value) {
-    if (is_array($value) && array_key_exists('und', $value)) {
-    $entity->{$key}[$language->language] = $value['und'];
-    unset($entity->{$key}['und']);
-    }
-    }
-    } */
+  if ($type == 'field_collection_item') {
+    lingotek_normalize_field_collection_language($entity, FALSE);
+  }
+  if ($type == 'message_type') {
+    lingotek_normalize_language($entity, FALSE);
+  }
 }
 
 /**
@@ -1706,7 +1774,7 @@ function lingotek_workbench_moderation_transition($node, $old_state, $new_state)
       $node->lingotek_upload_override = FALSE;
     }
   }
-  lingotek_upload_document($node);
+  lingotek_entity_upload($node, 'node');
 }
 
 /*
@@ -1835,7 +1903,7 @@ function lingotek_form_alter(&$form, &$form_state, $form_id) {
 
     if (isset($form['#entity']->tnid) && $form['#entity']->tnid != 0 && $form['#entity']->nid != $form['#entity']->tnid) {
       $content_type = $form['type']['#value'];
-      $lingotek_fields = variable_get('lingotek_translate_fields');
+      $lingotek_fields = variable_get('lingotek_enabled_fields');
       foreach ($lingotek_fields[$content_type] as $field) {
         $form[$field]['#disabled'] = TRUE;
       }

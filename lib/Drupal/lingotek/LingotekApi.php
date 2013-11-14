@@ -71,7 +71,7 @@ class LingotekApi {
     $project_id = $translatable_object->getProjectId();
 
     $source_lingotek_locale = $translatable_object->getSourceLocale();
-    $source_language = isset($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
+    $source_language = isset($source_lingotek_locale) && !empty($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
 
     if ($project_id) {
       $parameters = array(
@@ -116,7 +116,7 @@ class LingotekApi {
           // node assumed (based on two functions below...
           $entity_type = $translatable_object->getEntityType();
           lingotek_keystore($entity_type, $translatable_object->getId(), 'document_id', $result->id);
-          LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
+//          LingotekSync::setNodeAndTargetsStatus($translatable_object->getEntity(), LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
           lingotek_keystore($entity_type, $translatable_object->getId(), 'last_uploaded', time());
         }
           
@@ -158,10 +158,6 @@ class LingotekApi {
         // they are set to current at this point.  This same race condition exists
         // for nodes as well; however, the odds may be lower due to number of entries.
         LingotekConfigChunk::setSegmentStatusToCurrentById($translatable_object->getId());
-      }
-      else {
-        LingotekSync::setNodeAndTargetsStatus($translatable_object, LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
-        lingotek_lingonode($translatable_object->nid, 'last_uploaded', time());
       }
     }
 

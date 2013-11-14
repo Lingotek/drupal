@@ -752,7 +752,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
     $document_ids = array($document_ids);
   }
   $project_id = variable_get('lingotek_project', NULL);
-
+  
   $progress_report = $api->getProgressReport($project_id, $document_ids);
 
   $targets_count = LingotekSync::getTargetCountByDocumentIds($document_ids);
@@ -778,7 +778,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
       }
       else {
         $delete_nids_maybe[] = $nid;
-        $target_number = $targets_count[$nid]->targets;
+        $target_number = isset($targets_count[$nid]->targets) ? $targets_count[$nid]->targets : 0;
       }      
       $total_percentage = 0;
       foreach ($completion as $language => $percent) {
@@ -788,8 +788,8 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
         else {
           $values = &$node_values;
         }
-        $values[] = array($nid, 'target_sync_progress_' . $language, $percent);
-        $values[] = array($nid, 'target_sync_last_progress_updated_' . $language, time());
+        $values[] = array($entity_type, $nid, 'target_sync_progress_' . $language, $percent);
+        $values[] = array($entity_type, $nid, 'target_sync_last_progress_updated_' . $language, time());
         $total_percentage += $percent;
 
         $status = LingotekSync::getTargetStatus($doc_id, $language);
@@ -805,18 +805,19 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
           else { // If the workflow is not complete
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
-          $values[] = array($nid, 'target_sync_status_' . $language, $to_status);
+          $values[] = array($entity_type, $nid, 'target_sync_status_' . $language, $to_status);
           if ($trans_obj) {
             $trans_obj->deleteMetadataValue('target_sync_status_' . $language);
           }
           else {
-            lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
+            lingotek_keystore_delete($entity_type, $nid, 'target_sync_status_' . $language);
           }
         }
       }
       // for now just report on node translation progress...
-      if (!$trans_obj) {
+      if (!$trans_obj && $target_number != 0) {
         $node_values[] = array(
+          'entity_type' => $entity_type,
           'entity_id' => $nid,
           'entity_key' => 'translation_progress',
           'value' => $total_percentage / $target_number,
@@ -825,9 +826,9 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
     }
 
     if ($delete_nids_maybe) {
-      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
-      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
-      lingotek_lingonode_variable_delete_multiple($delete_nids_maybe, 'translation_progress');
+      lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
+      lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
+      lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'translation_progress');
     }
     if ($delete_cids_maybe) {
       foreach ($delete_cids_maybe as $cid) {
@@ -839,7 +840,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
     
     // insert status info for nodes
     $query = db_insert('lingotek_entity_metadata')
-      ->fields(array('entity_id', 'entity_key', 'value'));
+      ->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
     foreach ($node_values as $record) {
       $query->values($record);
     }

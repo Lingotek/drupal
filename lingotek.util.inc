@@ -292,7 +292,7 @@ function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
 function lingotek_xml_node_body($entity_type, $entity) {
   $translatable = array();
 
-  $translate = variable_get('lingotek_translate_fields', array());
+  $translate = variable_get('lingotek_enabled_fields', array());
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
   $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
   if (empty($fields_desired) && lingotek_oneoff_translate($entity)) {
@@ -306,8 +306,8 @@ function lingotek_xml_node_body($entity_type, $entity) {
     }
   }
 
-  $content = lingotek_xml_fields($entity, $translatable, $entity->language);
-
+  $content = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
+  
   /* deprecated with config translation
     //Menus related to the page:
     // Do we still want this? Config translation translates these items
@@ -334,7 +334,7 @@ function lingotek_xml_node_body($entity_type, $entity) {
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 }
 
-function lingotek_xml_fields($node, $translatable, $language) {
+function lingotek_xml_fields($entity_type, $node, $translatable, $language) {
   $content = '';
   
   foreach ($translatable as $field) {
@@ -382,7 +382,7 @@ function lingotek_xml_fields($node, $translatable, $language) {
                 $translatable_sub_fields[] = $sub_field;
               }
             }
-            $current_field .= lingotek_xml_fields($entity, $translatable_sub_fields, $field_language);
+            $current_field .= lingotek_xml_fields($entity_type, $entity, $translatable_sub_fields, $field_language);
             $current_field .= '</' . $element_name . '>';
             $content .= $current_field;
             continue;
@@ -401,10 +401,12 @@ function lingotek_xml_fields($node, $translatable, $language) {
             } */
           if (is_array($element_suffix)) {
             foreach ($element_suffix as $t_key => $t_val) {
+              $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
               $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
             }
           }
           else {
+            $delta[$target_key] = lingotek_filter_placeholders($delta[$target_key]);
             $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
           }
           $current_field .= '</' . $element_name . '>';
@@ -950,7 +952,7 @@ function lingotek_get_target_languages($codes_only = TRUE) {
  */
 
 function lingotek_get_content_types() {
-  return array_keys(variable_get('lingotek_translate_fields'));
+  return array_keys(variable_get('lingotek_enabled_fields'));
 }
 
 /*
@@ -1188,7 +1190,7 @@ function lingotek_migration_3() {
 function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
   $or = db_or();
   
-  $fields = variable_get('lingotek_translate_fields');  
+  $fields = variable_get('lingotek_enabled_fields');  
   $types = array();
   foreach(lingotek_load_profile_defaults('node') as $content_type => $profile) {
     if($profile['profile'] == $profile_id && isset($fields[$content_type])) {
@@ -1240,7 +1242,7 @@ function lingotekArrayRecursiveDiff($aArray1, $aArray2) {
 } 
 
 function lingotek_entity_compare($entity1, $entity2, $entity_type, $bundle) {
-  $fields = variable_get('lingotek_translate_fields');
+  $fields = variable_get('lingotek_enabled_fields');
   $fields = $fields[$bundle];
   
   foreach ($fields as $field) {
@@ -1257,9 +1259,13 @@ function lingotek_entity_compare($entity1, $entity2, $entity_type, $bundle) {
 
 function lingotek_managed_entity_types() {
   $types = entity_get_info();
-  $exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
-  $exclude = array_flip($exclude);
-  return array_diff_key($types, $exclude);
+  //$exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
+  //$exclude = array_flip($exclude);
+  //return array_diff_key($types, $exclude);
+  
+  $include = array('node', 'comment', 'field_collection_item', 'message', 'taxonomy_term', 'message_type');
+  $include = array_flip($include);
+  return array_intersect_key($types, $include);
 }
 
 /**
@@ -1299,3 +1305,47 @@ function lingotek_translatable_node_fields() {
 
   return $translatable_fields;
 }
+
+  /**
+   * Wrap placeholder tags in specific tags that will be ignored by Lingotek
+   *
+   * @param $segment_text
+   *   a string containing the segment to be translated
+   *
+   * @return string
+   *   the original input plus any additional reference tags to be ignored.
+   */
+  function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
+    // NOTE: This regex is only a generalization of the variable names possible using
+    // the t-function's variable interpolation.  This finds all sets of word
+    // characters (A-Z, a-z, - or _) that begin with either !, @, or %, that do not
+    // fall between angle brackets (which would indicate being on the inside
+    // of an HTML tag).  It also protects everything inside square brackets
+    // that do not fall inside angle brackets.
+    $patterns = array(
+      '/(\[[!@%\w:=\/\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
+    );
+    if ($protect_vars) {
+      $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
+    }
+    $replacement = '<drupalvar>${1}</drupalvar>';
+    foreach ($patterns as $p) {
+      $segment_text = preg_replace($p, $replacement, $segment_text);
+    }
+    return $segment_text;
+  }
+
+  /**
+   * Unwrap placeholder tags in specific tags that will be ignored by Lingotek
+   *
+   * @param $segment_text
+   *   a string containing the segment that potentially contains drupal variables
+   *
+   * @return string
+   *   the original input less any additional reference tags added prior to upload
+   */
+  function lingotek_unfilter_placeholders($segment_text) {
+    $pattern = '/<\/?drupalvar>/';
+    $replacement = '';
+    return preg_replace($pattern, $replacement, $segment_text);
+  }

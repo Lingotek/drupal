@@ -46,7 +46,7 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     $localized_node->status = $node->status;
     $localized_node->create_lingotek_document = FALSE;
     
-    $lingotek_fields = variable_get('lingotek_translate_fields');
+    $lingotek_fields = variable_get('lingotek_enabled_fields');
     foreach ($lingotek_fields[$localized_node->type] as $field_name) {
       $field = $node->$field_name;
       $f = array();
@@ -165,7 +165,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
             }
             $array_key = $target_key[$index];
             $db_field_name = $field['field_name'] . '_' . $array_key;
-            $insert_array[$db_field_name] = decode_entities($text);
+            $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
             //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
             if (array_key_exists($entity->language, $node_field)) {
               if (array_key_exists('format', $node_field[$entity->language][0])) {

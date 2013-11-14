@@ -211,24 +211,32 @@ function lingotek_node_disassociate_form($form, $form_state, $nids = array(), $c
  * Submit handler for the lingotek_node_disassociate form.
  */
 function lingotek_node_disassociate_form_submit($form, $form_state) {
-  $drupal_node_ids_json = json_decode($form_state['values']['node_id']);
+  if (isset($form_state['values']['node_id'])) {
+    $drupal_node_ids_json = json_decode($form_state['values']['node_id']);
+  }
+  elseif (isset($form_state['nids'])) {
+    $drupal_node_ids_json = json_decode($form_state['nids']);
+  }
+  $entity_type = isset($form_state['entity_type']) ? $form_state['entity_type'] : 'node';
   $drupal_node_ids = array();
   foreach ($drupal_node_ids_json as $nid) {
     $drupal_node_ids[] = $nid;
   }
-  $doc_ids = LingotekSync::getDocIdsFromEntityIds('node', $drupal_node_ids);
+  $doc_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $drupal_node_ids);
 
   $api = LingotekApi::instance();
   $api->removeDocument($doc_ids);
-  lingotek_keystore_delete_all_multiple('node', $drupal_node_ids);
+  lingotek_keystore_delete_all_multiple($entity_type, $drupal_node_ids);
 
-  if (count($drupal_node_ids) <= 1) {
+  if ($entity_type != 'node') {
+    drupal_set_message(t('Translations disassociated for @number entities.', array('@number' => count($drupal_node_ids))));
+  }
+  elseif (count($drupal_node_ids) <= 1) {
     $node = lingotek_node_load_default($drupal_node_ids[0]);
     drupal_set_message(t('Translations disassociated for "@node_title".', array('@node_title' => $node->title)));
   }
   else {
     drupal_set_message(t('Translations disassociated for @number nodes.', array('@number' => count($drupal_node_ids))));
-//    drupal_goto('admin/settings/lingotek/grid');
   }
 }
 
@@ -718,9 +726,9 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       drupal_goto('comment/' . $comment->cid . '/edit');
     }
     else {  
-      $lingotek_comment = LingotekComment::load($comment);
+      $lingotek_trans = LingotekEntity::load($comment);
       
-      $translation_edit_link = lingotek_get_workbench_url($lingotek_comment->lingotekDocumentId(), $lingotek_locale);
+      $translation_edit_link = lingotek_get_workbench_url($lingotek_trans->lingotekDocumentId(), $lingotek_locale);
       if(!empty($translation_edit_link)) {
         drupal_goto($translation_edit_link);
       }
