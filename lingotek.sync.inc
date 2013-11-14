@@ -891,9 +891,9 @@ function lingotek_get_and_update_target_progress($document_ids) {
       $query = db_merge('lingotek')
         ->key(array('nid' => $record[0], 'lingokey' => $record[1]))
         ->fields(array(
-            'nid' => $record[0],
-            'lingokey' => $record[1],
-            'lingovalue' => $record[2]
+            'nid' => $record['nid'],
+            'lingokey' => $record['lingokey'],
+            'lingovalue' => $record['lingovalue']
           ))
         ->execute();
     }
