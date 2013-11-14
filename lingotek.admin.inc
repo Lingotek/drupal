@@ -1552,7 +1552,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     );
     $form['defaults']['prefill_phases_checkbox'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Change all current content in this profile (@total documents) to use the new workflow', array('@total' => lingotek_admin_profile_usage($id))),
+      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => lingotek_admin_profile_usage($profile_id))),
       '#default_value' => FALSE,
       '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
       '#states' => array(
