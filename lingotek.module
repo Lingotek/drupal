@@ -1002,7 +1002,8 @@ function lingotek_node_save($node) {
       if (!isset($node->original->lingotek['workflow_id']) ||
           $node->original->lingotek['workflow_id'] != $curr_workflow) {
         $api = LingotekApi::instance();
-        $prefill_phase = ($node->lingotek['prefill_phases_checkbox'] ? $node->lingotek['prefill_phase_select'] : NULL);
+        $prefill_checked = (isset($node->lingotek['prefill_phases_checkbox']) ? $node->lingotek['prefill_phases_checkbox'] : NULL);
+        $prefill_phase = ($prefill_checked ? $node->lingotek['prefill_phase_select'] : NULL);
         $result = $api->changeWorkflow(array($document_id), $curr_workflow, $prefill_phase);
         LingotekSync::setAllTargetStatus($node->nid, LingotekSync::STATUS_PENDING);
         }
