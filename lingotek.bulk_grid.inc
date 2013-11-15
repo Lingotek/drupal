@@ -148,7 +148,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   if ($filter_set) {
     $form['filter_message'] = array(
-      '#markup' => ' ' . l('<i class="fa fa-remove"></i> ' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear', array('html' => TRUE)) . '',
+      '#markup' => ' ' . l('<i class="fa fa-times" style="margin-right: 5px;"></i>' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear', array('html' => TRUE)) . '',
     );
   }
   
@@ -1187,7 +1187,6 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
   if (isset($filters['profile']) && $filters['profile'] != 'all') {
     $or = lingotek_profile_condition('n', 'lingo_auto_upload', 'lingo_profile', $filters['profile']);
-
     $query->condition($or);
   }
 
@@ -1314,7 +1313,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
   foreach ($table_data_raw as $row) {
     // RENAMING
-    $title_truncate_length = 70;
+    $title_truncate_length = 55;
     if (strlen($row->title) > $title_truncate_length) { // very long title names make The Grid look messy, so we truncate them.
       $dots = '...';
       $dots_length = strlen($dots);

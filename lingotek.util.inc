@@ -1294,12 +1294,12 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   if (!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
-    $an->condition($table_auto_upload . '.lingovalue', NULL);
+    //$an->condition($table_auto_upload . '.lingovalue', NULL);
     $an->condition($table_profile . '.lingovalue', NULL);
     $or->condition($an);
   }
   $or->condition($table_profile . '.lingovalue', $profile_id);
-  
+
   return $or;
 }
 
