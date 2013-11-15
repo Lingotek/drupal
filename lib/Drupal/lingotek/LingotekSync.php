@@ -676,6 +676,28 @@ class LingotekSync {
     return $nids;
   }
 
+  public static function getEntityIdsToUpload($entity_type) {
+//    $query = db_select('lingotek_entity_metadata', 'l')
+//      ->distinct()
+//      ->condition('entity_type', $entity_type)
+//      ->condition('entity_key', 'node_sync_status')
+//      ->condition('value', LingotekSync::STATUS_EDITED);
+//    $query->addField('l', 'entity_id');
+    $info = entity_get_info($entity_type);
+    $id_key = $info['entity keys']['id'];
+    $query = db_select($info['base table'], 'base');
+    $query->addField('base', $id_key);
+    $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.nid and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
+
+    $or = db_or();
+    $or->condition('upload.value', NULL);
+    $or->isNull('upload.value');
+    $query->condition($or);
+   
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+  
   public static function getEntityIdsByStatusAndTarget($entity_type, $status, $target_language = '%') {
     $query = db_select('lingotek_entity_metadata', 'l')
       ->distinct()
@@ -837,13 +859,13 @@ class LingotekSync {
   public static function getDocIdsFromEntityIds($entity_type, $drupal_node_ids, $associate = FALSE) {
 
     $query = db_select('lingotek_entity_metadata', 'l');
-    $query->addField('l', 'value');
+    $query->addField('l', 'value', 'doc_id');
     $query->condition('entity_type', $entity_type);
     $query->condition('entity_id', $drupal_node_ids, 'IN');
     $query->condition('entity_key', 'document_id');
 
     if ($associate) {
-      $query->addField('l', 'nid');
+      $query->addField('l', 'entity_id', 'nid');
       $result = $query->execute()->fetchAllAssoc('nid');
     }
     else {

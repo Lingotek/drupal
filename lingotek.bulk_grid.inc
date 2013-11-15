@@ -88,18 +88,23 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
   $message = t('Check in-progress translation statuses (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
   $form['refresh'] = array(
-    '#markup' => l('<i class="fa fa-refresh fa-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update', array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
+    '#markup' => l('<i class="fa fa-refresh fa-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update/' . $entity_type, array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
   );
+  
   $form['lingotek_update'] = array(
-    '#markup' => l('<i class="fa fa-cloud-download fa-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready', array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action')))),
+    '#markup' => l('<i class="fa fa-cloud-download fa-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action')))),
+  );
+  
+  $form['lingotek_upload'] = array(
+    '#markup' => l('<i class="fa fa-cloud-upload fa-2x ltk-upload"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/upload-edited/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Upload pending'), 'class' => array('lingotek-action')))),
   );
   
   $form['edit_settings'] = array(
-    '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit', array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+    '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/' . $entity_type, array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
 
   );
   $form['disassociate_translations'] = array(
-    '#markup' => l(t('Disassociate Translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset', array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+    '#markup' => l(t('Disassociate Translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/' . $entity_type, array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
   );
 
   if (LingotekAccount::instance()->isEnterprise()) {
@@ -454,20 +459,20 @@ function lingotek_grid_filter_submit($form, $form_state) {
  * Often redirects to batch operations or to other pages entirely
  */
 function lingotek_grid_action_submit($form, $form_state) {
-  $nids = array();
+  $entity_ids = array();
   
   $entity_type = $form_state['values']['entity_type'];
   
   if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'actions_submit') { // If submitting an action
     foreach ($form_state['values']['the_grid'] as $value) {
       if ($value != 0) {
-        $nids[] = $value;
+        $entity_ids[] = $value;
       }
     }
     
     if (isset($form_state['values']['actions_select'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
       $action = $form_state['values']['actions_select']; // Get the action
-      if (count($nids) <= 0) { // Select a node
+      if (count($entity_ids) <= 0) { // Select a node
         drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
       elseif ($action == 'upload') { // If uploading
@@ -475,7 +480,7 @@ function lingotek_grid_action_submit($form, $form_state) {
           'title' => t('Uploading Nodes To Lingotek'),
           'finished' => 'lingotek_sync_upload_node_finished'
         );
-        $operations = lingotek_get_sync_upload_batch_elements($entity_type, $nids);
+        $operations = lingotek_get_sync_upload_batch_elements($entity_type, $entity_ids);
         $batch['operations'] = $operations;
         $redirect = current_path();
 
@@ -485,75 +490,28 @@ function lingotek_grid_action_submit($form, $form_state) {
       elseif (substr($action, 0, 8) == 'download') { // If downloading all targets
         $lang = substr($action, 9, 10);
         $target_locales = ($lang == 'all') ? lingotek_get_target_locales() : array($lang);
-        $document_ids_map = LingotekSync::getDocIdsFromEntityIds($entity_type, $nids, TRUE);
-        $complete_targets = array();
-        $incomplete_targets = array();
         
-        // We need to check all pending nodes to see if they are READY so that in the end the status is correct.
-        $pending_document_ids = array();
-        foreach ($document_ids_map as $nid => $nid_obj) {
-          $status = lingotek_lingonode($nid, 'node_sync_status');
-          if ($status != LingotekSync::STATUS_CURRENT && $status != LingotekSync::STATUS_READY) {
-            $pending_document_ids[] = $nid_obj->doc_id;
+        foreach ($entity_ids as $entity_id) {
+          $entity = lingotek_entity_load_single($entity_type, $entity_id);
+          foreach ($target_locales as $lingotek_locale) {
+            lingotek_entity_download($entity, $entity_type, $lingotek_locale);
           }
-        }
-        lingotek_get_and_update_target_progress($entity_type, $pending_document_ids);
-        
-
-        foreach ($target_locales as $language) { // Separate the nodes by target_sync_progress_[lang code] percentage
-          $complete_nids = LingotekSync::getEntityIdSubsetByTargetStatusReady($entity_type, $nids, $language);
-          $complete_doc_ids = array();
-          if (!empty($complete_nids)) {
-            $complete_doc_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $complete_nids);
-          }
-          foreach ($document_ids_map as $nid_obj) {
-            $doc_id = $nid_obj->doc_id;
-            if (in_array($doc_id, $complete_doc_ids)) { // If workflow completed, create target json
-              $complete_targets[] = (object) array('document_id' => $doc_id, 'locale' => $language);
-            }
-            else {
-              $incomplete_targets[] = (object) array('document_id' => $doc_id, 'locale' => $language);
-            }
-          }
-        }
-        if (!empty($complete_targets)) {
-          $batch = array(
-            'title' => t('Downloading Translations from Lingotek'),
-            'operations' => array(),
-            'finished' => 'lingotek_sync_download_target_finished'
-          );
-          $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($complete_targets, LingotekSync::STATUS_CURRENT)); // If target progress is at 100, download and set to current
-          $batch['operations'] = array_merge($batch['operations'], lingotek_get_sync_download_batch_elements($incomplete_targets, LingotekSync::STATUS_PENDING)); // Otherwise, download and set to pending
-          $redirect = current_path();
-
-          batch_set($batch);
-          batch_process($redirect); // Run the batch operations
         }
       }
       elseif ($action == 'delete') { // If resetting translations
-        $_SESSION['lingotek_disassociate_nodes'] = $nids;
-        $_SESSION['lingotek_entity_type'] = $entity_type;
         drupal_goto('admin/settings/lingotek/manage/delete/'); // Redirect to the disassociate translations form to do so
       }
       elseif ($action == 'reset') { // If resetting translations
-        $_SESSION['lingotek_disassociate_nodes'] = $nids;
-        $_SESSION['lingotek_entity_type'] = $entity_type;
         drupal_goto('admin/settings/lingotek/manage/reset/'); // Redirect to the disassociate translations form to do so
       }
       elseif ($action == 'edit') { // If editing node settings
-        $_SESSION['lingotek_edit_nodes'] = $nids;
-        $_SESSION['lingotek_entity_type'] = $entity_type;
         drupal_goto('admin/settings/lingotek/manage/edit/'); // Redirect to the edit Lingotek node settings form - for multiple nodes, form defaults are global defaults
       }
       elseif ($action == 'workflow') { // If changing the workflow
-        $_SESSION['lingotek_change_workflow'] = $nids;
-        $_SESSION['lingotek_entity_type'] = $entity_type;
         drupal_goto('admin/settings/lingotek/manage/change-workflow/'); // Redirect to the change-workflow settings form - for multiple nodes, form defaults are global defaults
       }
       elseif ($action == 'sync') { // If syncing the progress
-        $_SESSION['lingotek_sync_nodes'] = count($nids);
-        $_SESSION['lingotek_entity_type'] = $entity_type;
-        lingotek_update_target_progress_batch_create($entity_type, $nids); // Run batch operations to get the progress report from Lingotek
+        lingotek_update_target_progress_batch_create($entity_type, $entity_ids); // Run batch operations to get the progress report from Lingotek
       }
     }
   }
@@ -650,7 +608,6 @@ function lingotek_grid_build_column_checkboxes($form_state) {
 }
 
 function lingotek_grid_update($entity_type) {
-  dpm($entity_type);
   $nids = LingotekSync::getEntityIdsByStatusAndTarget($entity_type, LingotekSync::STATUS_PENDING);
   variable_set('lingotek_pending_last_updated', time());
   if (count($nids) > 0) {
@@ -665,7 +622,7 @@ function lingotek_grid_update($entity_type) {
 
 function lingotek_grid_download_ready($entity_type) {
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
-
+  
   if (!empty($targets)) {
 
     $nids = array();
@@ -687,7 +644,30 @@ function lingotek_grid_download_ready($entity_type) {
     );
     $batch['operations'] = $operations;
     batch_set($batch);
-    batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
+    batch_process($redirect);
+  }
+  else {
+    drupal_set_message(t('There are no translations ready for download.'));
+    drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
+  }
+}
+
+function lingotek_grid_upload_edited($entity_type) {
+  $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
+
+  if (!empty($entity_ids)) {    
+    $operations = array();
+    foreach ($entity_ids as $id) {
+      $operations[] = array('lingotek_entity_upload', array($id, $entity_type));
+    }
+    $redirect = 'admin/settings/lingotek/manage/' . $entity_type;
+    $batch = array(
+      'title' => t('Uploading documents'),
+      'finished' => 'lingotek_sync_upload_node_finished',
+      'operations' => $operations,
+    );
+    batch_set($batch);
+    batch_process($redirect);
   }
   else {
     drupal_set_message(t('There are no translations ready for download.'));
@@ -1380,7 +1360,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
     }
     $icon = '';
     if ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
-      $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Unknown upload status"></i>';      
+      $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Lingotek is disabled"></i>';      
     }
     elseif (!is_null($row->upload_status)) {
       switch ($row->upload_status) {
@@ -1390,15 +1370,12 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
 	    case LingotekSync::STATUS_CURRENT:
           $icon = '<i class="fa fa-check-square" title="Uploaded to Lingotek"></i>';
           break;
-        case LingotekSync::STATUS_DISABLED:
-          $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Lingotek is disabled"></i>';
-          break;
         default:
           $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Unknown upload status"></i>';
           break;
       }
     } else {
-      $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Unknown upload status"></i>';
+      $icon = '<i class="fa fa-square-o" title="Needs to be uploaded"></i>';
     }
 
     $list_statuses = array('pending', 'ready', 'current', 'edited');
@@ -1441,7 +1418,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
       $configuration = t('Disabled');
     }
     else {
-      $profile_key = $row->lingotek['profile']; //dpm($profile_key); dpm($profiles);
+      $profile_key = $row->lingotek['profile'];
       if (array_key_exists($profile_key, $profiles)) {
         $configuration = $profiles[$profile_key]['name'];
       }

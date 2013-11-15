@@ -1292,7 +1292,6 @@ function lingotek_migration_3() {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($code, FALSE); //will return FALSE when lingotek_locales are passed in (so, they'll be skipped)
     if ($lingotek_locale) {
       $new_key = $field_name_prefix . $lingotek_locale;
-      //dpm($old_key . " => " . $new_key);
       $query = db_update('lingotek', $ret)
           ->fields(array('lingokey' => $new_key))
           ->condition('lingokey', $old_key, '=');
@@ -1305,7 +1304,7 @@ function lingotek_migration_3() {
       $total_affected_rows += $affected_rows;
     }
     else {
-      //dpm("skip: ".$old_key);
+      //"skip: ".$old_key);
     }
   }
   $ret['total_affected_rows'] = $total_affected_rows;
@@ -1327,11 +1326,11 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   if (!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
-    $an->condition($table_auto_upload . '.lingovalue', NULL);
-    $an->condition($table_profile . '.lingovalue', NULL);
+    $an->condition($table_auto_upload . '.value', NULL);
+    $an->condition($table_profile . '.value', NULL);
     $or->condition($an);
   }
-  $or->condition($table_profile . '.lingovalue', $profile_id);
+  $or->condition($table_profile . '.value', $profile_id);
   
   return $or;
 }

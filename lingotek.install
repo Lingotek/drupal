@@ -540,7 +540,7 @@ function lingotek_update_7404(&$sandbox) {
 }
 
 /**
- * Makes lingotek handle entities better.
+ * Cleans up lingotek variables
  */
 function lingotek_update_7406(&$sandbox) {
   $translate_fields = variable_get('lingotek_translate_fields');
@@ -578,7 +578,7 @@ function lingotek_update_7408(&$sandbox) {
 }
 
 /**
- * Makes lingotek handle entities better.
+ * Adds support for translating additional entity types
  */
 function lingotek_update_7500(&$sandbox) {
   db_query("INSERT INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)

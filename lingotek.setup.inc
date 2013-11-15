@@ -1022,11 +1022,11 @@ function lingotek_setup_node_updates_form_submit($form, $form_state) {
   $update_node_language = $form_state['values']['update_node_language'];
 
   if ($transition_node_titles == 1) {
-    //dpm( 'Do the Node Titles' );
+    // Do the Node Titles
   }
 
   if ($update_node_language == 1) {
-    //dpm( 'Update The Node Languages' );
+    // Update The Node Languages
   }
 
   //drupal_goto( 'admin/config/lingotek/setup-complete' );

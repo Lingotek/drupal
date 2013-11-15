@@ -160,6 +160,13 @@ input.lingotek-content-settings-table.form-checkbox {
     font-size: 150%;
 }
 
+.ltk-upload {
+    color: #AAA;
+}
+.ltk-upload:hover {
+    color: #999;
+}
+
 .ltk-download {
     color: #59ad1a;
 }

@@ -257,6 +257,14 @@ function lingotek_menu() {
     'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
+  
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/upload-edited/%'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_grid_upload_edited',
+    'page arguments' => array(5),
+    'type' => MENU_CALLBACK,
+  );
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/%/%'] = array(
     'access arguments' => array('administer lingotek'),
@@ -604,7 +612,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   }
   else {
     $node = $form['#node'];
-    lingotek_entity_load(array($node), array());
+    lingotek_entity_load(array($node), 'node');
   }
 
   global $language;
@@ -722,7 +730,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     '#type' => 'textfield',
     '#title' => t('Document Id'),
     '#description' => t("Read/Overwrite the document ID associated with the document.  This can break the translation process but can also be used to help figure out if something is wrong."),
-    '#default_value' => ($document_id === False) ? '' : $document_id,
+    '#default_value' => $node->lingotek['document_id'],
   );
   $form['lingotek']['advanced']['current_lingonode'] = array(
     '#type' => 'textarea',
@@ -955,9 +963,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  */
 function lingotek_entity_save($entity, $entity_type) {
 
-  if (!isset($node->lingotek)) {
+  if (!isset($entity->lingotek)) {
     // load default lingotek settings when alternate node creation paths are employed (e.g., commons)
-    lingotek_entity_load(array($entity), array($entity_type));
+    lingotek_entity_load(array($entity), $entity_type);
   }
 
   if (isset($entity->lingotek_upload_override)) {
@@ -1272,9 +1280,6 @@ function lingotek_entity_update($entity, $type) {
   }
 
   list($id, $vid, $bundle) = entity_extract_ids($type, $entity);
-  if (!isset($entity->lingotek)) {
-    lingotek_entity_prepare($entity, $type, $bundle);
-  }
 
   $entity = lingotek_entity_save($entity, $type);
 
@@ -1291,7 +1296,7 @@ function lingotek_entity_update($entity, $type) {
   }
 }
 
-function lingotek_entity_upload_triggered($entity, $entity_type, $message = TRUE) {
+function lingotek_entity_upload_triggered($entity, $entity_type, &$context = array()) {
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
   if (isset($entity->lingotek_upload_override)) {
@@ -1326,14 +1331,28 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $message = TRUE
   }
 
   lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_EDITED);
-
+  
   if ($entity->lingotek['create_lingotek_document']) {
-    lingotek_entity_upload($entity, $entity_type, $message);
+    lingotek_entity_upload($entity, $entity_type, $context);
   }
 }
 
-function lingotek_entity_upload($entity, $entity_type, $message = TRUE) {
+function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
+  if (is_numeric($entity)) {
+    $entity = lingotek_entity_load_single($entity_type, $entity);
+  }
+  
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  
+  LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
+  
+  if ($context) {
+    $context['message'] = t('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
+  }
+  
+  if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+    return;
+  }
 
   LingotekSync::resetTargetProgress($entity_type, $id);
 
@@ -1353,12 +1372,27 @@ function lingotek_entity_upload($entity, $entity_type, $message = TRUE) {
     $ln = LingotekEntity::load($entity, $entity_type);
     $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
 
-    if ($message) {
+    if (empty($context)) {
       if ($success) {
         drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
       }
       else {
         drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $ln->getTitle())), 'error');
+      }
+    } else {
+      if ($success) {
+        $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
+        if (!isset($context['results']['uploaded_nids']) || !is_array($context['results']['uploaded_nids'])) {
+          $context['results']['uploaded_nids'] = array();
+        }
+        $context['results']['uploaded_nids'][] = $id;
+      }
+      else {
+        $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
+        if (!isset($context['results']['upload_fail_nids']) || !is_array($context['results']['upload_fail_nids'])) {
+          $context['results']['upload_fail_nids'] = array();
+        }
+        $context['results']['upload_fail_nids'][] = $id;
       }
     }
   }
@@ -1411,8 +1445,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   if ($context) {
     $context['message'] = t('Downloading "@locale" translation for entity @type @id', array('@locale' => $lingotek_locale, '@type' => $entity_type, '@id' => $id));
   }
-  
-  dpm($entity);
+
   $document_id = $entity->lingotek['document_id'];
   LingotekLog::trace('lingotek_download_document @doc_id (@target)', array('@doc_id' => $document_id, '@target' => $lingotek_locale));
 
@@ -1684,25 +1717,28 @@ function lingotek_normalize_language($entity, $from_language_none = TRUE) {
 }
 
 function lingotek_normalize_field_collection_language($entity, $from_language_none = TRUE) {
-    $host = $entity->hostEntity();
-    $max_field_collection_depth = 10;
-    // bubble up to the true parent to get its language,
-    // which adds support for deeply nested entity collections
-    for ($i = 0; $i < $max_field_collection_depth; $i++) {
-      if ($host instanceof FieldCollectionItemEntity) {
-        $host = $host->hostEntity();
+  if (!($entity instanceof FieldCollectionItemEntity)) {
+    return;
+  }
+  $host = $entity->hostEntity();
+  $max_field_collection_depth = 10;
+  // bubble up to the true parent to get its language,
+  // which adds support for deeply nested entity collections
+  for ($i = 0; $i < $max_field_collection_depth; $i++) {
+    if ($host instanceof FieldCollectionItemEntity) {
+      $host = $host->hostEntity();
+    }
+  }
+  foreach ($entity as $key => $value) {
+    if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
+      if ($from_language_none) {
+        $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
+      }
+      elseif (isset($value[$host->language])) {
+        $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
       }
     }
-    foreach ($entity as $key => $value) {
-      if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
-        if ($from_language_none) {
-          $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
-        }
-        elseif (isset($value[$host->language])) {
-          $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
-        }
-      }
-    }
+  }
 }
 
 /**

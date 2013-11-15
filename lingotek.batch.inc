@@ -327,57 +327,11 @@ function lingotek_batch_disassociate_content_worker($api, $doc_id) {
   return $api->removeDocument($doc_id);
 }
 
-/**
- * Lingotek Translation Sync Process.
- */
-
-/**
- * Upload Batch Worker Function: Upload Node for Translation
- */
-function lingotek_sync_upload_node($entity_type, $entity_id, &$context) {
-
-  LingotekLog::trace('upload node: @node_id', array('@node_id' => $entity_id));
-
-  if ($context) {
-    $context['message'] = t('Uploading node @nid for translation', array('@nid' => $entity_id));
-  }
-  
-  $api = LingotekApi::instance();
-  $entity = lingotek_entity_load_single($entity_type, $entity_id);
-
-  if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
-    return;
-  }
-
-  // clear any node caching by entitycache module
-  if (module_exists('entitycache')) {
-    cache_clear_all($entity_id, 'cache_entity_node');
-  }
-  
-  $result = lingotek_entity_upload($entity, $entity_type);
-
-  if ($result) {
-    $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
-    if (!isset($context['results']['uploaded_nids']) || !is_array($context['results']['uploaded_nids'])) {
-      $context['results']['uploaded_nids'] = array();
-    }
-    $context['results']['uploaded_nids'][] = $entity_id;
-  }
-  else {
-    $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
-    if (!isset($context['results']['upload_fail_nids']) || !is_array($context['results']['upload_fail_nids'])) {
-      $context['results']['upload_fail_nids'] = array();
-    }
-    $context['results']['upload_fail_nids'][] = $entity_id;
-  }
-  //$context['results'][] = t('Uploaded: Node #@nid', array('@nid' => $nid));
-}
-
 function lingotek_sync_upload_node_finished($success, $results, $operations) {
   if ($success) {
     $count = isset($results['uploads']) ? $results['uploads'] : 0;
-    $message = format_plural($count, 'One node uploaded to Lingotek.', '@count nodes uploaded to Lingotek.');
-    $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'node id', 'node ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
+    $message = format_plural($count, 'One entity uploaded to Lingotek.', '@count entities uploaded to Lingotek.');
+    $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'entity id', 'entity ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
   }
   else {
     $message = t('Finished with an error.');
