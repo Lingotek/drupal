@@ -591,6 +591,11 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Translation Progress'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'translation_progress' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'translation_progress' . $suffix] : in_array('translation_progress', $columns['defaults']),
     ),
+    'workflow' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Workflow'),
+      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'workflow' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'workflow' . $suffix] : in_array('workflow', $columns['defaults']),
+    ),
     'changed' => array(
       '#type' => 'checkbox',
       '#title' => t('Last Modified'),
@@ -737,6 +742,7 @@ function lingotek_grid_define_columns() {
       'translations',
       'configuration',
       'document_id',
+      'workflow',
       'changed',
       'last_uploaded',
       'translation_progress_percent',
@@ -1002,11 +1008,12 @@ function lingotek_grid_get_rows($form, &$form_state) {
 
   $header = array(// Define the tentative source header
     'nid' => array('data' => t('Node ID'), 'field' => 'n.nid'),
-    'content_type' => array('data' => t('Content Type'), 'field' => 'n.type'),
     'title' => array('data' => t('Title'), 'field' => 'n.title'),
+    'content_type' => array('data' => t('Content Type'), 'field' => 'n.type'),
     'language' => array('data' => t('Source Uploaded'), 'field' => 'upload_status'),
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
     'configuration' => array('data' => t('Profile')),
+    'workflow' => array('data' => t('Workflow'), 'field' => 'workflow'),
     'document_id' => array('data' => t('Doc ID'), 'field' => 'document_id'),
     'changed' => array('data' => t('Last Modified'), 'field' => 'changed', 'sort' => 'desc'),
     'last_uploaded' => array('data' => t('Last Uploaded'), 'field' => 'last_uploaded'),
@@ -1014,7 +1021,6 @@ function lingotek_grid_get_rows($form, &$form_state) {
     'actions' => array('data' => t('Actions')),
     'translation_status' => array('data' => t('Translation Status')),
     'translation_progress' => array('data' => t('Translation Progress')),
-    //    'workflow' => array('data' => 'Workflow', 'field' => 'workflow'),
     'locale_progress_percent' => array('data' => t('Target Progress'), 'field' => 'locale_progress_percent'),
     'progress_updated' => array('data' => t('Progress Updated'), 'field' => 'progress_updated'),
     'last_downloaded' => array('data' => t('Last Downloaded'), 'field' => 'last_downloaded'),
@@ -1300,6 +1306,9 @@ function lingotek_grid_get_rows($form, &$form_state) {
   $languages = language_list();
   $profiles = lingotek_get_profiles();
   
+  $api = LingotekApi::instance();
+  $workflows = $api->listWorkflows();
+  
   $types = _node_types_build()->types;
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
@@ -1412,6 +1421,7 @@ function lingotek_grid_get_rows($form, &$form_state) {
 //        'locale_progress_percent' => $row->locale_progress_percent ? lingotek_grid_create_progress_bar($row->locale_progress_percent) : lingotek_grid_create_progress_bar(0),
 //        'progress_updated' => $row->progress_updated ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->progress_updated))) : t('Never'),
 //        'last_downloaded' => $row->last_downloaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_downloaded))) : t('Never'),
+      'workflow' => ($row->workflow ? check_plain($workflows[$row->workflow]) : ''),
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
     );
 
