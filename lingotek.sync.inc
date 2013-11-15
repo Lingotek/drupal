@@ -888,12 +888,15 @@ function lingotek_get_and_update_target_progress($document_ids) {
 
     // merge status info for nodes
     foreach ($node_values as $record) {
+      $nid = (isset($record['nid']) ? $record['nid'] : $record[0]);
+      $lingokey = (isset($record['lingokey']) ? $record['lingokey'] : $record[1]);
+      $lingovalue = (isset($record['lingovalue']) ? $record['lingovalue'] : $record[2]);
       $query = db_merge('lingotek')
-        ->key(array('nid' => $record[0], 'lingokey' => $record[1]))
+        ->key(array('nid' => $nid, 'lingokey' => $lingokey))
         ->fields(array(
-            'nid' => (isset($record['nid']) ? $record['nid'] : $record[0]),
-            'lingokey' => (isset($record['lingotek']) ? $record['lingotek'] : $record[0]),
-            'lingovalue' => (isset($record['lingovalue']) ? $record['lingovalue'] : $record[0]),
+            'nid' => $nid,
+            'lingokey' => $lingokey,
+            'lingovalue' => $lingovalue,
           ))
         ->execute();
     }
