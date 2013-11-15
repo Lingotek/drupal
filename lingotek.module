@@ -621,7 +621,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
  
   $api = LingotekApi::instance();
 
-  // show workflow-change option only if there are more than one workflow
+  // show workflow-change option only if there are more than one workflow and if it's an existing node
   $workflows = $api->listWorkflows();
   if ($workflows && count($workflows) > 1) {
     $form['lingotek']['workflow_id'] = array(
@@ -639,33 +639,37 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
         'effect' => 'fade',
         ),
     );
-    
-    $form['lingotek']['prefill_phases_checkbox'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Restore to a phase in the new workflow'),
-      '#default_value' => TRUE,
-      '#description' => t('Prefill the new workflow with translations from the previous workflow'),
-      '#states' => array(
-        'invisible' => array(':input[name="lingotek[workflow_id]"]' => array('value' => $node->lingotek['workflow_id'])),
-      )
-    );
-    
-    $form['lingotek']['prefill_phase_select'] = array(
-      '#title' => t("Desired Prefill Phase"),
-      '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
-      '#type' => 'select',
-      '#states' => array(
-          'visible' => array(':input[name="lingotek[workflow_id]"]' => array('!value' => $node->lingotek['workflow_id']),
-                         array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => true))),
-        ),
-      '#suffix' => '</div>',
-    );
-    if (isset($form_state['values']['lingotek']['workflow_id']) && $form_state['values']['lingotek']['workflow_id'] != NULL) {
-      $form['lingotek']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['lingotek']['workflow_id']);
+    if (!$nid) { // don't show prefill stuff on new nodes 
+      $form['lingotek']['workflow_id']['#suffix'] = '</div>';
     }
     else {
-      $form['lingotek']['prefill_phase_select']['#options'] = array('-1' => '(first choose a workflow)');
-      $form['lingotek']['prefill_phase_select']['#disabled'] = TRUE;
+      $form['lingotek']['prefill_phases_checkbox'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Restore to a phase in the new workflow'),
+        '#default_value' => TRUE,
+        '#description' => t('Prefill the new workflow with translations from the previous workflow'),
+        '#states' => array(
+          'invisible' => array(':input[name="lingotek[workflow_id]"]' => array('value' => $node->lingotek['workflow_id'])),
+        )
+      );
+
+      $form['lingotek']['prefill_phase_select'] = array(
+        '#title' => t("Desired Prefill Phase"),
+        '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
+        '#type' => 'select',
+        '#states' => array(
+            'visible' => array(':input[name="lingotek[workflow_id]"]' => array('!value' => $node->lingotek['workflow_id']),
+                           array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => true))),
+          ),
+        '#suffix' => '</div>',
+      );
+      if (isset($form_state['values']['lingotek']['workflow_id']) && $form_state['values']['lingotek']['workflow_id'] != NULL) {
+        $form['lingotek']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['lingotek']['workflow_id']);
+      }
+      else {
+        $form['lingotek']['prefill_phase_select']['#options'] = array('-1' => '(first choose a workflow)');
+        $form['lingotek']['prefill_phase_select']['#disabled'] = TRUE;
+      }
     }
   }    
   
@@ -2158,7 +2162,7 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
       '#type' => 'select',
       '#states' => array(
-          'invisible' => array(':input[id="edit-lingotek-prefill-phases-checkbox"]' => array('checked' => FALSE)),
+          'invisible' => array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => FALSE)),
         ),
       '#suffix' => '</div>',
     );
@@ -2191,7 +2195,7 @@ function lingotek_get_change_workflow_form_callback($form, $form_state) {
       $form['lingotek']['workflow_id'],
     );
   }
-  return;
+  return $form['lingotek']['workflow_id'];
 }
 
 function lingotek_get_phases_by_workflow_id($workflow_id) {
