@@ -632,17 +632,18 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#default_value' => $node->lingotek['workflow_id'],
       '#options' => $workflows,
       '#empty_option' => '(select one)',
-      '#ajax' => array(
-        'callback' => 'lingotek_get_change_workflow_form_callback',
-        'wrapper' => 'prefill-phases-div',
-        'method' => 'replace',
-        'effect' => 'fade',
-        ),
     );
     if (!$nid) { // don't show prefill stuff on new nodes 
       $form['lingotek']['workflow_id']['#suffix'] = '</div>';
     }
     else {
+      // add the callback and checkbox and phase-select
+      $form['lingotek']['workflow_id']['#ajax'] = array(
+        'callback' => 'lingotek_get_change_workflow_form_callback',
+        'wrapper' => 'prefill-phases-div',
+        'method' => 'replace',
+        'effect' => 'fade',
+      );
       $form['lingotek']['prefill_phases_checkbox'] = array(
         '#type' => 'checkbox',
         '#title' => t('Restore to a phase in the new workflow'),
