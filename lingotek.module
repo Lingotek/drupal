@@ -2198,9 +2198,12 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
   $api = LingotekApi::instance();
   $response = $api->request('getWorkflow', array('id' => $workflow_id));
   $phases = array();
+  $excluded_phases = array('Project Setup', 'Workflow Completion');
   if (isset($response->workflow->steps)) {
     foreach ($response->workflow->steps as $id => $phase_obj) {
-      $phases[$id] = $phase_obj->name;
+      if (!in_array($phase_obj->name, $excluded_phases)) {
+        $phases[$id] = $phase_obj->name;
+      }
     }
   }
   return $phases;
