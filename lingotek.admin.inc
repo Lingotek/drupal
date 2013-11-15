@@ -1408,7 +1408,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['defaults']['current_future_note'] = array(
     '#type' => 'markup',
-    '#markup' => '<h3>' . t('Profile settings impacting all translations (new and previously uploaded)') . '</h3><hr />',
+    '#markup' => '<h3>' . t('Profile settings impacting all nodes (new and existing)') . '</h3><hr />',
   );
   // Upload
   $form['defaults']['create_lingotek_document'] = array(
@@ -1577,7 +1577,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   // FUTURE-ONLY STUFF
   $form['defaults']['future_only_note'] = array(
     '#type' => 'markup',
-    '#markup' => '<h3>' . t('Profile settings impacting only new translations') . '</h3><hr />',
+    '#markup' => '<h3>' . t('Profile settings impacting only new nodes') . '</h3><hr />',
   );
   
   $form['defaults']['lingotek_nodes_translation_method'] = array(
