@@ -165,7 +165,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
       if (array_search($field_type, $translatable_field_types)) {
         $fr[$field_machine_name] = array(
           '#type' => 'checkbox',
-          '#title' => $field_label,
+          '#title' => check_plain($field_label),
           '#attributes' => array(
             'id' => array('edit-form-item-' . $bundle_name . '-seperator-' . $field_machine_name),
             'name' => $bundle_name . '_SEPERATOR_' . $field_machine_name,

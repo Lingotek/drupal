@@ -660,7 +660,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
         '#type' => 'select',
         '#states' => array(
             'visible' => array(':input[name="lingotek[workflow_id]"]' => array('!value' => $node->lingotek['workflow_id']),
-                           array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => true))),
+                           array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => TRUE))),
           ),
         '#suffix' => '</div>',
       );

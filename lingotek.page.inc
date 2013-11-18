@@ -155,7 +155,7 @@ function lingotek_push_form($form, $form_state, $node) {
   $form['content_push'] = array(
     '#type' => 'fieldset',
     '#title' => t('Upload'),
-    '#description' => t("Upload this node's content to Lingotek for translation.") . $last_uploaded_message,
+    '#description' => t("Upload this node's content to Lingotek for translation. @last_uploaded_message", array('@last_uploaded_message' => $last_uploaded_message)),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );

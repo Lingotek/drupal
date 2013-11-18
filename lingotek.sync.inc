@@ -918,14 +918,14 @@ function lingotek_get_and_update_target_progress($document_ids) {
     return $progress_report;
   }
   else {
-    $error_message = "API Error(s): <ul>";
+    $error_message = t("API Error(s):") . " <ul>";
     if (is_array($progress_report->errors)) {
       foreach ($progress_report->errors as $error) {
         $error_message .= "<li>" . $error . "</li>";
       }
     }
     $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
-    drupal_set_message($error_message, 'error');
+    drupal_set_message(t('@error_message', array('@error_message' => $error_message)), 'error');
   }
 
 }
