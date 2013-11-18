@@ -880,9 +880,11 @@ function lingotek_get_and_update_target_progress($document_ids) {
     }
     if ($delete_cids_maybe) {
       foreach ($delete_cids_maybe as $cid) {
-        $trans_obj->deleteMetadataValue('target_sync_progress_%');
-        $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
-        $trans_obj->deleteMetadataValue('translation_progress');
+        if ($trans_obj = LingotekConfigChunk::loadById($cid)) {
+          $trans_obj->deleteMetadataValue('target_sync_progress_%');
+          $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
+          $trans_obj->deleteMetadataValue('translation_progress');
+        }
       }
     }
 
