@@ -48,6 +48,8 @@ function lingotek_perform_action(nid, action) {
           lingotekTriggerModal('#reset-translations-link');
         } else if(val == 'edit') {
           lingotekTriggerModal('#edit-settings-link');
+        } else if(val == 'workflow') {
+          lingotekTriggerModal('#change-workflow-link');
         } else  {
           $('input#edit-actions-submit.form-submit').trigger('click');
         }

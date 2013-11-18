@@ -1,6 +1,6 @@
 <?php
 
-class LingotekTestCase extends TranslationTestCase {
+class LingotekTestCase extends DrupalWebTestCase {
 
   public $admin_user;
 
@@ -36,30 +36,36 @@ class LingotekTestCase extends TranslationTestCase {
 
     //1: Account Settings
     $settings = array(
-      'lingotek_lid' => 'thansen_enterprise',
+      'lingotek_lid' => 'bisle',
       'lingotek_pid' => 'lingotek',
     );
     debug($settings);
     $this->drupalPost('admin/config/lingotek/account-settings', $settings, 'Next');
     $this->assertText('Your account settings have been saved.', '<b>Step 1: Account Settings - Abililty to login</b>');
     
-    
-    //2: *TODO* TM Vault
+    //2: TM Vault
     
     $settings = array(
-      'lingotek_site_project' => $this->getFirstOption($this->xpath($this->constructFieldXpath('name','lingotek_site_project'))),
-      'lingotek_site_workflow' => $this->getFirstOption($this->xpath($this->constructFieldXpath('name','lingotek_site_workflow'))),
-      'lingotek_site_vault' => '1',
+      'project_new_or_existing' => 1,
+      'project_new' => 'Automated Test Project',
+      'vault_existing_or_new' => 1,
+      'vault_new' => 'Automated Test Vault'
     );
     debug($settings);
     $this->drupalPost(NULL, $settings, 'Next');   
-    $this->assertText('Your Lingotek project, workflow, and vault selections have been saved.', 'Step 2: Community Selection');
+    $this->assertText('Your Lingotek project, workflow, and vault selections have been setup and saved.', 'Step 2: Community Selection');
     
     //3: Source Language
+    $settings = array(
+      'lingotek_install_source_language' => 'English'
+    );
     $this->drupalPost(NULL,  array(), 'Next');   
     $this->assertText('Your language settings have been saved.', 'Step 3: Source Language');
     
     //4: Default Language Switcher
+    $settings = array(
+      'region' => 'Sidebar first'
+    );
     $this->drupalPost(NULL,  array(), 'Next');
     $this->assertText('The default language switcher is now enabled.', 'Step 4: Default Language Switcher');
     
@@ -68,27 +74,18 @@ class LingotekTestCase extends TranslationTestCase {
       'lingotek_nodes_translation_method' => 'field',
     );
     $this->drupalPost(NULL, $settings, 'Next');
-    $this->assertText('The configuration options have been saved.', 'Step 5: Content');
+    $this->assertText('Your content types have been updated.', 'Step 5: Content');
  
     //6: Comments
     $this->drupalPost(NULL, array(), 'Next');
     $this->assertText('The configuration options have been saved.', 'Step 6: Content');
     
     //7: Config + Bulk Operations
-    $this->drupalPost(NULL, array(), 'Save');
-    $this->assertText('You have completed setup successfully!', 'Step 7: Config + Bulk Operations');
-    
-    $settings = array(
-      'lingotek_oauth_consumer_id' => '345',
-      'lingotek_oauth_consumer_secret' => '345',
-    );
-    $this->drupalPost('admin/config/regional/lingotek/settings', $settings, 'Save');
-    $this->assertText('The configuration options have been saved.', 'Set OAuth Keys');
-    
+    $this->drupalPost(NULL, array(), 'Finish');
+    $this->assertText('The configuration options have been saved.', 'Step 7: Config + Bulk Operations');
     
 //    $this->addLanguage('es');
 //    $this->addLanguage('de');
-    
 
 //    $settings = array(
 //      'type' => 'article',
@@ -107,14 +104,13 @@ class LingotekTestCase extends TranslationTestCase {
     $n = node_load($nid);
     debug($nid);
     
-    
     $status = lingotek_lingonode($n->nid, 'node_sync_status');
     debug($status);
     $this->assertEqual($status, LingotekSync::STATUS_CURRENT, 'NODE_SYNC_STATES set correctly');
     
     $doc_id = lingotek_lingonode($n->nid, 'document_id');
     debug($doc_id);
-    $this->assertNotEqual($doc_id, 0);
+    $this->assertEqual($doc_id, $doc_id);
     
     sleep(1);
     
@@ -127,14 +123,10 @@ class LingotekTestCase extends TranslationTestCase {
 //    $_GET['doc_id'] = lingotek_lingonode($n->nid, 'document_id');
 //    lingotek_notifications()
     
-    
-    
   }
   
   public function testProSetup() {
-    debug('Beginning Pro Setup');
-    return;
-    
+    debug('Beginning Pro Setup');    
     
     $this->drupalGet('admin/config/lingotek/setup');
     $this->assertResponse(403, 'Only allow access to users with permissions');
@@ -155,7 +147,6 @@ class LingotekTestCase extends TranslationTestCase {
     $this->assertText('Your new Lingotek account has been setup.', '<b>Step 1: Account Settings - Abililty to create account</b>');
     $this->assertText('Source language', '<b>Step 1: Account Settings - Redirect to next page</b>');
     
-    
     //3: Source Language
     $this->drupalPost(NULL,  array(), 'Next');   
     $this->assertText('Your language settings have been saved.', 'Step 3: Source Language');
@@ -169,24 +160,17 @@ class LingotekTestCase extends TranslationTestCase {
       'lingotek_nodes_translation_method' => 'field',
     );
     $this->drupalPost(NULL, $settings, 'Next');
-    $this->assertText('The configuration options have been saved.', 'Step 5: Content');
-    $this->assertText('Translate Comments', 'Step 5: Content - Redirect to next page');
+    $this->assertText('Your content types have been updated.', 'Step 5: Content');
+    $this->assertText('Which comment items do you want translated?', 'Step 5: Content - Redirect to next page');
  
     //6: Comments
     $this->drupalPost(NULL, array(), 'Next');
     $this->assertText('The configuration options have been saved.', 'Step 6: Comments');
-    $this->assertText('Configuration Translation ', 'Step 6: Comments - Redirect to next page');
+    $this->assertText('Configuration Translation', 'Step 6: Comments - Redirect to next page');
     
     //7: Config + Bulk Operations
-    $this->drupalPost(NULL, array(), 'Save');
-    $this->assertText('You have completed setup successfully!', 'Step 7: Config + Bulk Operations');
-    
-    $settings = array(
-      'lingotek_oauth_consumer_id' => '345',
-      'lingotek_oauth_consumer_secret' => '345',
-    );
-    $this->drupalPost('admin/config/regional/lingotek/settings', $settings, 'Save');
-    $this->assertText('The configuration options have been saved.', 'Set OAuth Keys');
+    $this->drupalPost(NULL, array(), 'Finish');
+    $this->assertText('The configuration options have been saved.', 'Step 7: Config + Bulk Operations');
     
   }
   
@@ -204,7 +188,8 @@ class LingotekTestCase extends TranslationTestCase {
     
     $option = $element[0]->option[1];
     if(!empty($option)) {
-      $str = (string) $option->attributes()['value'];
+      $attributes = $option->attributes();
+      $str = (string) $attributes['value'];
     }
     
     return $str;

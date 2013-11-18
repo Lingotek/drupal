@@ -861,12 +861,6 @@ function lingotek_get_and_update_target_progress($document_ids) {
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
           $values[] = array($nid, 'target_sync_status_' . $language, $to_status);
-          if ($trans_obj) {
-            $trans_obj->deleteMetadataValue('target_sync_status_' . $language);
-          }
-          else {
-            lingotek_lingonode_variable_delete($nid, 'target_sync_status_' . $language);
-          }
         }
       }
       // for now just report on node translation progress...
@@ -886,19 +880,28 @@ function lingotek_get_and_update_target_progress($document_ids) {
     }
     if ($delete_cids_maybe) {
       foreach ($delete_cids_maybe as $cid) {
-        $trans_obj->deleteMetadataValue('target_sync_progress_%');
-        $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
-        $trans_obj->deleteMetadataValue('translation_progress');
+        if ($trans_obj = LingotekConfigChunk::loadById($cid)) {
+          $trans_obj->deleteMetadataValue('target_sync_progress_%');
+          $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
+          $trans_obj->deleteMetadataValue('translation_progress');
+        }
       }
     }
-    
-    // insert status info for nodes
-    $query = db_insert('lingotek')
-      ->fields(array('nid', 'lingokey', 'lingovalue'));
+
+    // merge status info for nodes
     foreach ($node_values as $record) {
-      $query->values($record);
+      $nid = (isset($record['nid']) ? $record['nid'] : $record[0]);
+      $lingokey = (isset($record['lingokey']) ? $record['lingokey'] : $record[1]);
+      $lingovalue = (isset($record['lingovalue']) ? $record['lingovalue'] : $record[2]);
+      $query = db_merge('lingotek')
+        ->key(array('nid' => $nid, 'lingokey' => $lingokey))
+        ->fields(array(
+            'nid' => $nid,
+            'lingokey' => $lingokey,
+            'lingovalue' => $lingovalue,
+          ))
+        ->execute();
     }
-    $query->execute();
     
     // insert status info for config
     foreach ($cfg_values as $record) {
@@ -915,14 +918,14 @@ function lingotek_get_and_update_target_progress($document_ids) {
     return $progress_report;
   }
   else {
-    $error_message = "API Error(s): <ul>";
+    $error_message = t("API Error(s):") . " <ul>";
     if (is_array($progress_report->errors)) {
       foreach ($progress_report->errors as $error) {
         $error_message .= "<li>" . $error . "</li>";
       }
     }
     $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
-    drupal_set_message($error_message, 'error');
+    drupal_set_message(t('@error_message', array('@error_message' => $error_message)), 'error');
   }
 
 }

@@ -553,48 +553,6 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
 
   /**
-   * Wrap placeholder tags in specific tags that will be ignored by Lingotek
-   *
-   * @param $segment_text
-   *   a string containing the segment to be translated
-   *
-   * @return string
-   *   the original input plus any additional reference tags to be ignored.
-   */
-  public static function filterPlaceholders($segment_text) {
-    // NOTE: This regex is only a generalization of the variable names possible using
-    // the t-function's variable interpolation.  This finds all sets of word
-    // characters (A-Z, a-z, - or _) that begin with either !, @, or %, that do not
-    // fall between angle brackets (which would indicate being on the inside
-    // of an HTML tag).  It also protects everything inside square brackets
-    // that do not fall inside angle brackets.
-    $patterns = array(
-      '/(\[[!@%\w\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
-      '/([!@%][\w_-]+\s*)(?![^<]*\>)/', // wrap everything beginning with !,@,%
-    );
-    $replacement = '<drupalvar>${1}</drupalvar>';
-    foreach ($patterns as $p) {
-      $segment_text = preg_replace($p, $replacement, $segment_text);
-    }
-    return $segment_text;
-  }
-
-  /**
-   * Unwrap placeholder tags in specific tags that will be ignored by Lingotek
-   *
-   * @param $segment_text
-   *   a string containing the segment that potentially contains drupal variables
-   *
-   * @return string
-   *   the original input less any additional reference tags added prior to upload
-   */
-  public static function unfilterPlaceholders($segment_text) {
-    $pattern = '/<\/?drupalvar>/';
-    $replacement = '';
-    return preg_replace($pattern, $replacement, $segment_text);
-  }
-
-  /**
    * Gets the contents of this item formatted as XML to be sent to Lingotek.
    *
    * @return string
@@ -610,7 +568,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
 
     $content = '';
     foreach ($translatable as $field) {
-      $text = self::filterPlaceholders($this->source_data[$field]);
+      $text = lingotek_filter_placeholders($this->source_data[$field], TRUE);
 
       if ($text) {
         $current_field = '<' . self::TAG_PREFIX . $field . '>';
@@ -852,7 +810,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
       $lid = self::getLidFromTag($drupal_field_name);
       if (!in_array($lid, $non_lingotek_locales_targets)) {
         $content = (string) $xml_obj->element;
-        $content = self::unfilterPlaceholders(decode_entities($content));
+        $content = lingotek_unfilter_placeholders(decode_entities($content));
         $plural_lid = array_key_exists($lid, $plural_mapping);
         $rows += array(
           ":l_$icount" => $lid,

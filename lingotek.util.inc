@@ -373,10 +373,12 @@ function lingotek_xml_fields($node, $translatable, $language) {
             } */
           if (is_array($element_suffix)) {
             foreach ($element_suffix as $t_key => $t_val) {
+              $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
               $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
             }
           }
           else {
+            $delta[$target_key] = lingotek_filter_placeholders($delta[$target_key]);
             $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
           }
           $current_field .= '</' . $element_name . '>';
@@ -1292,12 +1294,12 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   if (!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
-    $an->condition($table_auto_upload . '.lingovalue', NULL);
+    //$an->condition($table_auto_upload . '.lingovalue', NULL);
     $an->condition($table_profile . '.lingovalue', NULL);
     $or->condition($an);
   }
   $or->condition($table_profile . '.lingovalue', $profile_id);
-  
+
   return $or;
 }
 
@@ -1342,7 +1344,7 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
   
   $text = '<img src="' . base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_chevs_dd.png" >';
   $url = $entity_type . '/' . $id . '/lingotekworkbench/' . $lingotek_locale;
-  return l($text, $url, array('attributes' => array('class' => array('translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
+  return l($text, $url, array('attributes' => array('class' => array('lingotek-translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
 }
 
 function lingotek_list_entities_with_language($entity_type, $bundle, $language) {
@@ -1380,4 +1382,48 @@ function lingotek_list_entities_with_field_in_language($entity_type, $bundle, $f
       ->execute();
 
   return isset($entities['node']) ? array_keys($entities['node']) : array();
+}
+
+/**
+ * Wrap placeholder tags in specific tags that will be ignored by Lingotek
+ *
+ * @param $segment_text
+ *   a string containing the segment to be translated
+ *
+ * @return string
+ *   the original input plus any additional reference tags to be ignored.
+ */
+function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
+  // NOTE: This regex is only a generalization of the variable names possible using
+  // the t-function's variable interpolation.  This finds all sets of word
+  // characters (A-Z, a-z, - or _) that begin with either !, @, or %, that do not
+  // fall between angle brackets (which would indicate being on the inside
+  // of an HTML tag).  It also protects everything inside square brackets
+  // that do not fall inside angle brackets.
+  $patterns = array(
+    '/(\[[!@%\w:=\/\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
+  );
+  if ($protect_vars) {
+    $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
+  }
+  $replacement = '<drupalvar>${1}</drupalvar>';
+  foreach ($patterns as $p) {
+    $segment_text = preg_replace($p, $replacement, $segment_text);
+  }
+  return $segment_text;
+}
+
+/**
+ * Unwrap placeholder tags in specific tags that will be ignored by Lingotek
+ *
+ * @param $segment_text
+ *   a string containing the segment that potentially contains drupal variables
+ *
+ * @return string
+ *   the original input less any additional reference tags added prior to upload
+ */
+function lingotek_unfilter_placeholders($segment_text) {
+  $pattern = '/<\/?drupalvar>/';
+  $replacement = '';
+  return preg_replace($pattern, $replacement, $segment_text);
 }

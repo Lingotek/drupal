@@ -136,6 +136,7 @@ input.lingotek-content-settings-table.form-checkbox {
   padding-left: 5px;
   padding-right: 5px;
   color: #fff !important;
+  white-space: nowrap;
 }
 
 .language-icon.target-pending {
@@ -184,6 +185,7 @@ input.lingotek-content-settings-table.form-checkbox {
 
 .lingotek-node-actions, .lingotek-language-source i {
   font-size: 150%;
+  white-space: nowrap;
 }
 .lingotek-node-actions a:hover {
     text-decoration: none;
@@ -199,20 +201,20 @@ a.ltk-action:hover {
   color: #AAA;
 }
 
-.upload-button {
-  color: #338;
+.ltk-upload-button {
+  color: #0074BD;
   cursor: pointer;
 }
 
-.upload-button:hover {
-  color: #99B;
+.ltk-upload-button:hover {
+  color: #00348D;
 }
 
 .node-configuration {
   color: #48C;
 }
 
-#edit-settings-link, #reset-translations-link {
+#edit-settings-link, #reset-translations-link, #change-workflow-link {
   display: none;
 }
 
