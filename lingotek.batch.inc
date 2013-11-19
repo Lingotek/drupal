@@ -132,7 +132,7 @@ function lingotek_get_sync_upload_batch_elements($entity_type, $upload_nids = ar
 
   if (is_array($upload_nids)) {
     foreach ($upload_nids as $nid) {
-      $operations[] = array('lingotek_sync_upload_node', array($entity_type, $nid));
+      $operations[] = array('lingotek_entity_upload', array($nid, $entity_type));
     }
   }
 

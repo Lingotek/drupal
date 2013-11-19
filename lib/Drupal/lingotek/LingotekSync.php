@@ -687,7 +687,7 @@ class LingotekSync {
     $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.nid and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
 
     $or = db_or();
-    $or->condition('upload.value', NULL);
+    $or->condition('upload.value', LingotekSync::STATUS_EDITED);
     $or->isNull('upload.value');
     $query->condition($or);
    

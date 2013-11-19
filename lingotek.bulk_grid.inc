@@ -671,7 +671,7 @@ function lingotek_grid_upload_edited($entity_type) {
     batch_process($redirect);
   }
   else {
-    drupal_set_message(t('There are no translations ready for download.'));
+    drupal_set_message(t('There are no translations ready for upload.'));
     drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
   }
 }
