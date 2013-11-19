@@ -11,6 +11,7 @@ function lingotek_manage_callback() {
 
 function lingotek_bulk_grid_form($form, $form_state) {
   $entity_type = arg(4);
+  $entity_type = empty($entity_type)? 'node': $entity_type;
 
   global $language;
   
@@ -20,7 +21,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
    */
   if (count($_GET) == 1 && isset($_SESSION['grid_custom_parameters']) && !empty($_SESSION['grid_custom_parameters'])) {
     $_SESSION['grid_custom_parameters']['preventloop'] = TRUE;
-    drupal_goto('admin/settings/lingotek/manage/' . ( empty(arg(4)) ? 'node' : arg(4) ), array('query' => $_SESSION['grid_custom_parameters']));
+    drupal_goto('admin/settings/lingotek/manage/' . $entity_type, array('query' => $_SESSION['grid_custom_parameters']));
   }
   else {
     $_SESSION['grid_custom_parameters'] = $_GET;
