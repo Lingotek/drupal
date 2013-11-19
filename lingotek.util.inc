@@ -1282,7 +1282,7 @@ function lingotek_migration_2() {
 function lingotek_migration_3() {
   $ret = array();
   $field_name_prefix = 'target_sync_status_';
-  $result = db_query("SELECT lingokey, COUNT(*) as num FROM {lingotek} WHERE lingokey LIKE :pattern GROUP BY lingokey"
+  $result = db_query("SELECT lingokey, COUNT(*) as num FROM {lingotek_entity_metadata} WHERE lingokey LIKE :pattern GROUP BY lingokey"
       , array(':pattern' => db_like($field_name_prefix) . '%'));
 
   $total_affected_rows = 0;
