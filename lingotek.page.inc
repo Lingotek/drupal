@@ -236,26 +236,18 @@ function lingotek_node_disassociate_form_submit($form, $form_state) {
     $drupal_node_ids_json = json_decode($form_state['nids']);
   }
   $entity_type = isset($form_state['entity_type']) ? $form_state['entity_type'] : 'node';
-  $drupal_node_ids = array();
-  foreach ($drupal_node_ids_json as $nid) {
-    $drupal_node_ids[] = $nid;
+  $entity_ids = array();
+  foreach ($drupal_node_ids_json as $id) {
+    $entity_ids[] = $id;
   }
-  $doc_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $drupal_node_ids);
+  $doc_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $entity_ids);
 
   $api = LingotekApi::instance();
   $api->removeDocument($doc_ids);
-  lingotek_keystore_delete_all_multiple($entity_type, $drupal_node_ids);
+  lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'document_id');
+  lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'node_sync_status');
 
-  if ($entity_type != 'node') {
-    drupal_set_message(t('Translations disassociated for @number entities.', array('@number' => count($drupal_node_ids))));
-  }
-  elseif (count($drupal_node_ids) <= 1) {
-    $node = lingotek_node_load_default($drupal_node_ids[0]);
-    drupal_set_message(t('Translations disassociated for "@node_title".', array('@node_title' => $node->title)));
-  }
-  else {
-    drupal_set_message(t('Translations disassociated for @number nodes.', array('@number' => count($drupal_node_ids))));
-  }
+  drupal_set_message(t('Translations disassociated for @number entities.', array('@number' => count($entity_ids))));
 }
 
 /**

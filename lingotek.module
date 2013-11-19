@@ -819,18 +819,10 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#description' => t("The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
   );
 
-  $profiles = lingotek_get_profiles();
-
-  $profile_options = array();
-  foreach ($profiles as $key => $profile) {
-    $profile_options[$key] = $profile['name'];
-  }
-  $profile_options[LingotekSync::PROFILE_CUSTOM] = 'Custom';
-  $profile_options[LingotekSync::PROFILE_DISABLED] = 'Disabled';
   $form['lingotek']['profile'] = array(
     '#type' => 'select',
     '#title' => 'Translation Profile',
-    '#options' => $profile_options,
+    '#options' => lingotek_get_profile_options(),
     '#default_value' => $node->lingotek['profile'],
   );
 
@@ -1117,6 +1109,19 @@ function lingotek_get_profiles() {
   return $profiles;
 }
 
+function lingotek_get_profile_options() {
+  $profiles = lingotek_get_profiles();
+
+  $profile_options = array();
+  foreach ($profiles as $key => $profile) {
+    $profile_options[$key] = $profile['name'];
+  }
+  $profile_options[LingotekSync::PROFILE_CUSTOM] = 'Custom';
+  $profile_options[LingotekSync::PROFILE_DISABLED] = 'Disabled';
+
+  return $profile_options;
+}
+
 /**
  * Implements hook_node_view().
  */
@@ -1346,7 +1351,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   
   LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
   
-  if ($context) {
+  if (empty($context)) {
     $context['message'] = t('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
   }
   
@@ -1408,7 +1413,9 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
   lingotek_keystore($entity_type, $id, 'last_uploaded', time());
   
-  $languages = Lingotek::availableLanguageTargets('lingotek_locale', FALSE);
+  $source = isset($entity->language) ? $entity->language : language_default()->language;
+  $source = Lingotek::convertDrupal2Lingotek($source);
+  $languages = Lingotek::availableLanguageTargetsWithoutSource($source);
   foreach ($languages as $lingotek_locale) {
     lingotek_keystore($entity_type, $id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
   }
@@ -2281,6 +2288,84 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
     }
   }
   return $phases;
+}
+
+/**
+ * Implements hook_rules_action_info().
+ */
+function lingotek_rules_action_info() {
+  $actions['lingotek_entity_upload'] = array(
+    'group' => t('Lingotek'),
+    'label' => t('Upload an entity'),
+    'base' => 'lingotek_rules_entity_upload',
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+      ),
+    ),
+  );
+  $actions['lingotek_entity_download'] = array(
+    'group' => t('Lingotek'),
+    'label' => t('Download Translations'),
+    'base' => 'lingotek_rules_entity_download',
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+      ),
+      'language' => array(
+        'type' => 'list<text>',
+        'label' => t('Language'),
+        'options list' => 'lingotek_rules_languages',
+      ),
+    ),
+  );
+  $actions['lingotek_entity_change_profile'] = array(
+    'group' => t('Lingotek'),
+    'label' => t('Change Profile'),
+    'base' => 'lingotek_rules_entity_change_profile',
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+      ),
+      'language' => array(
+        'type' => 'text',
+        'label' => t('Profile'),
+        'options list' => 'lingotek_get_profile_options',
+      ),
+    ),
+  );
+  return $actions;
+}
+
+function lingotek_rules_languages() {
+  return Lingotek::availableLanguageTargets('language');
+}
+
+function lingotek_rules_entity_upload($wrapper, $settings, $state) {
+  $entity_type = $wrapper->type();
+  $id = $wrapper->getIdentifier();
+  $entity = lingotek_entity_load_single($entity_type, $id);
+  lingotek_entity_upload($entity, $entity_type);
+}
+
+function lingotek_rules_entity_download($wrapper, $languages, $settings, $state) {
+  dpm(get_defined_vars());
+  $entity_type = $wrapper->type();
+  $id = $wrapper->getIdentifier();
+  $entity = lingotek_entity_load_single($entity_type, $id);
+  lingotek_entity_upload($entity, $entity_type);
+}
+
+function lingotek_rules_entity_change_profile($wrapper, $profile, $settings, $state) {
+  dpm(get_defined_vars());
+  $entity_type = $wrapper->type();
+  $id = $wrapper->getIdentifier();
+  $entity = lingotek_entity_load_single($entity_type, $id);
+  $entity->lingotek['profile'] = $profile;
+  lingotek_entity_save($entity, $entity_type);
 }
 
  /**
