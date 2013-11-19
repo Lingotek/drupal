@@ -69,9 +69,9 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
     
     if ($id) {
       $entity = lingotek_entity_load_single($type, $id);
-      $trans_obj = new LingotekEntity($entity, $type);
+      $trans_obj = LingotekEntity::load($entity, $type);
       $source_language = $entity->language;
-      continue;
+      break;
     }
 
     if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
@@ -83,7 +83,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
         '@language_code' => $lingotek_locale,
         '@project_id' => $project_id,
       );
-      continue;
+      break;
     }
 
     LingotekLog::info('Did not find doc ID @doc_id yet on attempt #@attempt, retrying...', 
@@ -99,6 +99,8 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
  * Registers the site translation notfication callback.
  */
 function lingotek_notifications() {
+
+  LingotekLog::info('Callback received @data', array('@data' => var_export($_GET)), 'callback');
 
   $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;// uuid
   $document_idx = ( isset($_GET['doc_idx']) ) ? $_GET['doc_idx'] : NULL;// this is the deprecated document number
@@ -125,8 +127,10 @@ function lingotek_notifications() {
   
   $trans_obj = lingotek_get_trans_obj($document_id, $document_idx);
 
+  $downloaded = FALSE;
+
   if ($trans_obj) {
-    $trans_obj->preDownload();
+    $trans_obj->preDownload($lingotek_locale, $completed);
     
     $replacements = array(
       '@trans_type' => get_class($trans_obj),
@@ -136,7 +140,7 @@ function lingotek_notifications() {
       '@id' => $trans_obj->getId(),
     );
     
-    if ($trans_obj->download($lingotek_locale)) {
+    if ($downloaded = $trans_obj->download($lingotek_locale)) {
       LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
     }
@@ -145,7 +149,7 @@ function lingotek_notifications() {
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
     }
     
-    $trans_obj->postDownload();
+    $trans_obj->postDownload($lingotek_locale, $completed);
     
   } else {
     LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
@@ -156,24 +160,19 @@ function lingotek_notifications() {
       '@document_id' => $document_id,
       '@lingotek_locale' => $lingotek_locale,
       '@project_id' => $project_id,
-      '@entity_id' => $id ? $id : "NA",
-      '@entity_type' => $type ? $type : "NA",
       '@target_drupal_language_code' => $target_drupal_language_code,
       '@completed' => $completed
         ), 'callback');
 
-  $found = $id || (isset($trans_obj) && $trans_obj) ? TRUE : FALSE;
+  $found = (isset($trans_obj) && $trans_obj);
 
-  $response = $found ? array_merge($_GET, array(
+  $response = array_merge($_GET, array(
         'target_drupal_language_code' => $target_drupal_language_code,
-        'source_language' => $source_language,
-        'type' => isset($trans_obj) ? $trans_obj->getEntityType() : 'node',
-        'id' => isset($trans_obj) ? $trans_obj->getId() : $id,
+        'type' => isset($trans_obj) ? $trans_obj->getEntityType() : '',
+        'id' => isset($trans_obj) ? $trans_obj->getId() : '',
         'found' => $found,
-        'download' => $found && isset($trans_obj) && $trans_obj->getEntityType() == 'comment' ? TRUE : (isset($auto_download) && $auto_download == TRUE)
-      )) : array_merge($_GET, array(
-        'found' => $found
-  ));
+        'download' => $downloaded,
+      ));
 
   drupal_json_output($response);
 }

@@ -267,7 +267,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function download($lingotek_locale) {
     // Necessary to fully implement the interface, but we don't do anything
     // on LingotekNode objects, explicitly.
-    lingotek_entity_download($this->entity, $this->entity_type, $lingotek_locale);
+    return lingotek_entity_download_triggered($this->entity, $this->entity_type, $lingotek_locale);
   }
   
   public function getWorkflowId() {
@@ -348,6 +348,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function postDownload($lingotek_locale, $completed) {
     $type = $this->getEntityType();
     $entity = $this->getEntity();
+    $id = $this->getId();
     
     if ($type == 'node') {
       if (module_exists('workbench_moderation')) {
@@ -373,7 +374,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
       }
 
       if (!$completed) {
-        lingotek_get_and_update_target_progress($document_id);
+        //do nothing
       }
       else {
         lingotek_keystore($type, $id, 'target_sync_progress_' . $lingotek_locale, 100);

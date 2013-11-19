@@ -1354,6 +1354,10 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     return;
   }
 
+  if (module_exists('rules')) {
+    rules_invoke_event('lingotek_pre_upload', new EntityDrupalWrapper($entity_type, $entity));
+  }
+
   LingotekSync::resetTargetProgress($entity_type, $id);
 
   // if workbench moderation is enabled for this node and it is being sent, set flag to be moderated
@@ -1412,6 +1416,22 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if (module_exists('entitycache')) {
     cache_clear_all($id, 'cache_entity_node');
   }
+
+  if (module_exists('rules')) {
+    rules_invoke_event('lingotek_post_upload', new EntityDrupalWrapper($entity_type, $entity));
+  }
+}
+
+function lingotek_entity_download_triggered($entity, $entity_type, $lingotek_locale, &$context = FALSE) {
+  if (is_numeric($entity)) {
+    $entity = lingotek_entity_load_single($entity_type, $entity);
+  }
+
+  if (!$entity->lingotek['create_lingotek_document']) {
+    return FALSE;
+  }
+
+  return lingotek_entity_download($entity, $entity_type, $lingotek_locale, $context);
 }
 
 /*
@@ -1441,7 +1461,11 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   }
 
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-  
+
+  if (module_exists('rules')) {
+    rules_invoke_event('lingotek_pre_download', new EntityDrupalWrapper($entity_type, $entity));
+  }
+
   if ($context) {
     $context['message'] = t('Downloading "@locale" translation for entity @type @id', array('@locale' => $lingotek_locale, '@type' => $entity_type, '@id' => $id));
   }
@@ -1526,6 +1550,10 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
       $context['results']['downloaded_node_targets'] = array();
     }
     $context['results']['downloaded_node_targets'][] = array("nid" => $id, "locale" => $lingotek_locale);
+  }
+
+  if (module_exists('rules')) {
+    rules_invoke_event('lingotek_post_download', new EntityDrupalWrapper($entity_type, $entity));
   }
 
   return TRUE;
@@ -1837,6 +1865,7 @@ function lingotek_field_language_alter(&$display_language, $context) {
  * Otherwise override upload
  */
 function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
+  return;
   //Do not run unless this node has been properly loaded.
   if (!isset($node->lingotek) || !array_key_exists('document_id', $node->lingotek)) {
     return;
@@ -2252,4 +2281,41 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
     }
   }
   return $phases;
+}
+
+ /**
+  * Implements hook_rules_event_info().
+  */
+function lingotek_rules_event_info() {
+
+  $defaults = array(
+    'group' => 'lingotek',
+    'module' => 'lingotek',
+  );
+  return array(
+    'lingotek_pre_upload' => $defaults + array(
+      'label' => t('Before an entity is uploaded'),
+      'variables' => array(
+        'entity' => array('type' => 'entity', 'label' => t('entity uploaded')),
+      ),
+    ),
+    'lingotek_post_upload' => $defaults + array(
+      'label' => t('After an entity was uploaded'),
+      'variables' => array(
+        'entity' => array('type' => 'entity', 'label' => t('entity uploaded')),
+      ),
+    ),
+    'lingotek_pre_download' => $defaults + array(
+      'label' => t('Before an entity is downloaded'),
+      'variables' => array(
+        'entity' => array('type' => 'entity', 'label' => t('entity downloaded')),
+      ),
+    ),
+    'lingotek_post_download' => $defaults + array(
+      'label' => t('After an entity was downloaded'),
+      'variables' => array(
+        'entity' => array('type' => 'entity', 'label' => t('entity downloaded')),
+      ),
+    ),
+  );
 }
