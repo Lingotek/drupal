@@ -405,17 +405,13 @@ class LingotekSync {
 
     // count nodes having this language as the source as current
     if ($status == LingotekSync::STATUS_CURRENT) {
-      $nids = LingotekSync::getAllNodeIds();
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
       $query = db_select('node', 'n');
-      $query->join('lingotek_entity_metadata', 'l', 'l.entity_id = n.nid
+      $query->leftJoin('lingotek_entity_metadata', 'l', 'l.entity_id = n.nid
         AND l.entity_type = \'node\'
-        AND l.entity_key = \'node_profile\'
+        AND l.entity_key = \'profile\'
            AND l.value != \'DISABLED\'');
       $query->condition('n.language', $drupal_language_code);
-      if (count($nids)) {
-        $query->condition('n.nid', $nids, 'IN'); // nodes sent to lingotek
-      }
       $query->addExpression('COUNT(*)', 'cnt');
       $result = $query->execute()->fetchField();
       $count += $result;

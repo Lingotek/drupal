@@ -239,23 +239,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
         ->execute();
     }
   }
-  
-  /**
-   * Updates the local content with data from a Lingotek Document.
-   *
-   * @return bool
-   *   TRUE if the content updates succeeded, FALSE otherwise.
-   */
-  public function updateLocalContent() {
-    if ($this->entity->lingotek['sync_method']) {
-      $document = $api->getDocument($document_id);
 
-      foreach ($document->translationTargets as $target) {
-        lingotek_entity_download($this->entity, $this->entity_type, $lingotek_locale);
-      }
-    }
-  }
-  
   /**
    * Updates the local content of $target_code with data from a Lingotek Document
    *
@@ -264,9 +248,12 @@ class LingotekEntity implements LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function download($lingotek_locale) {
+  public function downloadTriggered($lingotek_locale) {
     // Necessary to fully implement the interface, but we don't do anything
     // on LingotekNode objects, explicitly.
+    if (module_exists('rules')) {
+      rules_invoke_event('lingotek_entity_ready', new EntityDrupalWrapper($this->entity_type, $this->entity));
+    }
     return lingotek_entity_download_triggered($this->entity, $this->entity_type, $lingotek_locale);
   }
   

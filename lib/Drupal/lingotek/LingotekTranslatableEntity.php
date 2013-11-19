@@ -71,7 +71,7 @@ interface LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function download($lingotek_locale);
+  public function downloadTriggered($lingotek_locale);
 
   /**
    * Gets the Lingotek document ID for this entity.

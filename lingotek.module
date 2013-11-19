@@ -1490,7 +1490,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   $use_source = isset($entity->lingotek['use_source']) ? $entity->lingotek['use_source'] : variable_get('lingotek_use_source', FALSE);
   $params['useSource'] = ($use_source) ? 'TRUE' : 'FALSE'; // API expects a string, not boolean
   //Get the finished document
-  $text = $_lingotek_client->download("downloadDocument", $params);
+  $text = $_lingotek_client->downloadTriggered("downloadDocument", $params);
 
   try {
     $xml = new SimpleXMLElement($text);
@@ -2352,18 +2352,18 @@ function lingotek_rules_entity_upload($wrapper, $settings, $state) {
 }
 
 function lingotek_rules_entity_download($wrapper, $languages, $settings, $state) {
-  dpm(get_defined_vars());
   $entity_type = $wrapper->type();
   $id = $wrapper->getIdentifier();
-  $entity = lingotek_entity_load_single($entity_type, $id);
-  lingotek_entity_upload($entity, $entity_type);
+  $entity = $wrapper->value();
+  foreach ($languages as $lingotek_locale) {
+    lingotek_entity_download($entity, $entity_type, $lingotek_locale);
+  }
 }
 
 function lingotek_rules_entity_change_profile($wrapper, $profile, $settings, $state) {
-  dpm(get_defined_vars());
   $entity_type = $wrapper->type();
   $id = $wrapper->getIdentifier();
-  $entity = lingotek_entity_load_single($entity_type, $id);
+  $entity = $wrapper->value();
   $entity->lingotek['profile'] = $profile;
   lingotek_entity_save($entity, $entity_type);
 }
@@ -2400,6 +2400,18 @@ function lingotek_rules_event_info() {
       'label' => t('After an entity was downloaded'),
       'variables' => array(
         'entity' => array('type' => 'entity', 'label' => t('entity downloaded')),
+      ),
+    ),
+    'lingotek_entity_ready' => $defaults + array(
+      'label' => t('A translation is ready for download'),
+      'variables' => array(
+        'entity' => array('type' => 'entity', 'label' => t('entity ready for download')),
+      ),
+    ),
+    'lingotek_entity_all_ready' => $defaults + array(
+      'label' => t('All translations are ready for download'),
+      'variables' => array(
+        'entity' => array('type' => 'entity', 'label' => t('entity ready for download')),
       ),
     ),
   );

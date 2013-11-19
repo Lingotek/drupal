@@ -674,5 +674,5 @@ function lingotek_get_xliff($doc_id) {
 
   $xliff_text = "";
   $params = array('documentId' => $doc_id);
-  return $_lingotek_client->download("downloadDocumentAsXliff", $params);
+  return $_lingotek_client->downloadTriggered("downloadDocumentAsXliff", $params);
 }

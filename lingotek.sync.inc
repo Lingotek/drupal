@@ -140,7 +140,7 @@ function lingotek_notifications() {
       '@id' => $trans_obj->getId(),
     );
     
-    if ($downloaded = $trans_obj->download($lingotek_locale)) {
+    if ($downloaded = $trans_obj->downloadTriggered($lingotek_locale)) {
       LingotekLog::trace('Updated local content for <strong>@trans_type</strong> @id based on hit
             from external API for document: @document, language code @language_code, project ID: @project_id', $replacements, 'api');
     }
