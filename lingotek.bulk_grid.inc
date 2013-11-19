@@ -823,7 +823,6 @@ function lingotek_grid_build_filters($form_state) {
         'all' => t('All'),
         LingotekSync::STATUS_EDITED => t('Out of Sync'),
         LingotekSync::STATUS_CURRENT => t('In Sync'),
-        LingotekSync::STATUS_DISABLED => t('Disabled'),
       ),
       '#multiple' => FALSE,
     ),

@@ -124,9 +124,6 @@ class LingotekSync {
       else if ($record['value'] == self::STATUS_TARGET) { 
         
       }
-      else if ($record['value'] == self::STATUS_DISABLED) { 
-        self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_DISABLED);
-      }
       else { // Otherwise, set it to EDITED
         self::setNodeStatus($node_id, self::STATUS_EDITED);
         self::setTargetStatus($node_id, $lingotek_locale, self::STATUS_EDITED);
