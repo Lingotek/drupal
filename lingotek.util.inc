@@ -1051,7 +1051,6 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   lingotek_set_defaults();
   lingotek_migration_1();
   lingotek_migration_2();
-  lingotek_migration_3();
   lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
   if (module_exists('field_collection')) {
     lingotek_add_default_lang_to_field_collections(); // a temp solution, setting 'und' values for field collections
@@ -1282,7 +1281,7 @@ function lingotek_migration_2() {
 function lingotek_migration_3() {
   $ret = array();
   $field_name_prefix = 'target_sync_status_';
-  $result = db_query("SELECT lingokey, COUNT(*) as num FROM {lingotek_entity_metadata} WHERE lingokey LIKE :pattern GROUP BY lingokey"
+  $result = db_query("SELECT lingokey, COUNT(*) as num FROM {lingotek} WHERE lingokey LIKE :pattern GROUP BY lingokey"
       , array(':pattern' => db_like($field_name_prefix) . '%'));
 
   $total_affected_rows = 0;
