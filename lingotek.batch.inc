@@ -238,7 +238,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
  */
 function lingotek_batch_identify_content($front = FALSE) {
   LingotekLog::trace(__METHOD__);
-  $result = db_query('SELECT DISTINCT nid FROM {lingotek}');
+  $result = db_query("SELECT DISTINCT entity_id FROM {lingotek_entity_metadata} WHERE entity_type='node'");
   $existing_nids = $result->fetchCol();
   $operations = array();
 
