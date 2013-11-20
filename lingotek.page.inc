@@ -719,7 +719,7 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       drupal_goto('comment/' . $comment->cid . '/edit');
     }
     else {  
-      $lingotek_trans = LingotekEntity::load($comment);
+      $lingotek_trans = LingotekEntity::load($comment, $entity_type);
       
       $translation_edit_link = lingotek_get_workbench_url($lingotek_trans->lingotekDocumentId(), $lingotek_locale);
       if(!empty($translation_edit_link)) {

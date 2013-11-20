@@ -1010,10 +1010,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
   $source = isset($form_state['values']['source']) ? $form_state['values']['source'] : TRUE;
 
   $header = array(// Define the tentative source header
-    'nid' => array('data' => t('Node ID'), 'field' => 'n.' . $entity_id_key),
+    'nid' => array('data' => t('ID'), 'field' => 'n.' . $entity_id_key),
     'content_type' => array('data' => t('Content Type'), 'field' => 'type'),
     'title' => array('data' => t('Title'), 'field' => 'n.' . $label_col),
-    'language' => array('data' => t('Source Uploaded'), 'field' => 'upload_status'),
+    'language' => array('data' => t('Source Uploaded')),//, 'field' => 'upload_status'),
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
     'configuration' => array('data' => t('Profile')),
     'document_id' => array('data' => t('Doc ID'), 'field' => 'document_id'),
@@ -1395,7 +1395,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
 
     array_multisort($locales, SORT_ASC, $statuses);
 
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, TRUE);
+    $translations = ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) ? '' // hide translation statuses when profile is disabled
+                  : lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, TRUE); // show translation statuses
 
     $configuration = '';
 
@@ -1427,14 +1428,16 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
       }
     }
 
-
+    // Source 
+    
     $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
     if ($language_col) {
       $source .= ($row->language == 'und' ? 'Language Undefined' : $languages[$row->language]->name);
     }
     $source .= '</span>';
 
-    if (empty($row->upload_status) || $row->upload_status == LingotekSync::STATUS_EDITED) {
+    $needs_upload = $row->upload_status == LingotekSync::STATUS_EDITED || (empty($row->upload_status) && $row->lingotek['profile'] != LingotekSync::PROFILE_DISABLED);
+    if ($needs_upload) { // add link for upload
       $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
     }
 
@@ -1491,7 +1494,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
   return $table_data;
 }
 
-function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $nid = NULL, $convert = FALSE) {
+function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $convert = FALSE) {
   $html = "";
 
   $legend = array(
@@ -1500,8 +1503,8 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $nid
     LingotekSync::STATUS_CURRENT => 'Current',
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
   );
-  $default_link = $entity_type . '/' . $nid . '/lingotekworkbench/';
-  $manual_link = $entity_type .  '/' . $nid . '/lingotek_pm/';
+  $default_link = $entity_type . '/' . $entity_id . '/lingotekworkbench/';
+  $manual_link = $entity_type .  '/' . $entity_id . '/lingotek_pm/';
   $link_map = array(
     LingotekSync::STATUS_PENDING => $default_link,
     LingotekSync::STATUS_READY => $default_link,
