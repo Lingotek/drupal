@@ -56,14 +56,6 @@ interface LingotekTranslatableEntity {
   public function setMetadataValue($key, $value);
 
   /**
-   * Updates the local content with data from a Lingotek Document.
-   *
-   * @return bool
-   *   TRUE if the content updates succeeded, FALSE otherwise.
-   */
-  public function updateLocalContent();
-
-  /**
    * Updates the local content of $target_code with data from a Lingotek Document
    *
    * @param string $lingotek_locale
