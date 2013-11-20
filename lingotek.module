@@ -1324,14 +1324,13 @@ function lingotek_entity_upload_triggered($entity, $entity_type, &$context = arr
   }
 
   if (isset($entity->lingotek['document_id'])) {
-    $xml = lingotek_xml_node_body($entity);
+    $xml = lingotek_entity_xml_body($entity_type, $entity);
     $hash = md5($xml);
     $oldhash = lingotek_keystore($entity_type, $id, 'hash');
-    lingotek_lingonode($node->nid, 'hash', $hash);
+    lingotek_keystore($entity_type, $id, 'hash', $hash);
     $diff = strcmp($hash, $oldhash);
-
-    if ($diff == 0 && $node->lingotek['node_sync_status'] == 'CURRENT') {
-      return; //node has no changes.
+    if ($diff == 0 && $entity->lingotek['node_sync_status'] == 'CURRENT') {
+      return; //entity has no changes.
     }
   }
 

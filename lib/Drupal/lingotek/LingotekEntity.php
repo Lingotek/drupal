@@ -125,7 +125,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   The XML document representing the entity's translatable content.
    */
   public function documentLingotekXML() {
-    $xml = lingotek_xml_node_body($this->entity_type, $this->entity);
+    $xml = lingotek_entity_xml_body($this->entity_type, $this->entity);
     return $xml;
   }  
   

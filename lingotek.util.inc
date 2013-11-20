@@ -300,7 +300,7 @@ function lingotek_get_enabled_fields($entity_type, $bundle) {
  * @return string
  *   The XML representation of the node in Lingotek format.
  */
-function lingotek_xml_node_body($entity_type, $entity) {
+function lingotek_entity_xml_body($entity_type, $entity) {
   $translatable = array();
 
   $translate = variable_get('lingotek_enabled_fields', array());
