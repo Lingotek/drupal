@@ -1379,34 +1379,34 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
 //    lingotek_node_save_readonly($entity);
     $ln = LingotekEntity::load($entity, $entity_type);
     $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
-
-    if (empty($context)) {
-      if ($success) {
-        drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
-      }
-      else {
-        drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $ln->getTitle())), 'error');
-      }
-    } else {
-      if ($success) {
-        $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
-        if (!isset($context['results']['uploaded_nids']) || !is_array($context['results']['uploaded_nids'])) {
-          $context['results']['uploaded_nids'] = array();
-        }
-        $context['results']['uploaded_nids'][] = $id;
-      }
-      else {
-        $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
-        if (!isset($context['results']['upload_fail_nids']) || !is_array($context['results']['upload_fail_nids'])) {
-          $context['results']['upload_fail_nids'] = array();
-        }
-        $context['results']['upload_fail_nids'][] = $id;
-      }
-    }
   }
   else {
     $ln = LingotekEntity::load($entity, $entity_type);
-    LingotekApi::instance()->updateContentDocument($ln);
+    $success = LingotekApi::instance()->updateContentDocument($ln);
+  }
+
+  if (empty($context)) {
+    if ($success) {
+      drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
+    }
+    else {
+      drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $ln->getTitle())), 'error');
+    }
+  } else {
+    if ($success) {
+      $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
+      if (!isset($context['results']['uploaded_nids']) || !is_array($context['results']['uploaded_nids'])) {
+        $context['results']['uploaded_nids'] = array();
+      }
+      $context['results']['uploaded_nids'][] = $id;
+    }
+    else {
+      $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
+      if (!isset($context['results']['upload_fail_nids']) || !is_array($context['results']['upload_fail_nids'])) {
+        $context['results']['upload_fail_nids'] = array();
+      }
+      $context['results']['upload_fail_nids'][] = $id;
+    }
   }
   
   lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
