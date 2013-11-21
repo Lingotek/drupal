@@ -826,6 +826,11 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#default_value' => $node->lingotek['profile'],
   );
 
+  $form['lingotek']['document_id'] = array(
+    '#type' => 'value',
+    '#value' => $node->lingotek['document_id'],
+  );
+
   $form['lingotek']['node_sync_status'] = array(
     '#type' => 'value',
     '#value' => $node->lingotek['node_sync_status'],
@@ -982,20 +987,19 @@ function lingotek_entity_save($entity, $entity_type) {
       ->execute();
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
-    $ignore = array('et_content', 'lingotek_push_once', 'lingotek_disabled', 'advanced', 'node_sync_status', 'document_id');
     $query = db_insert('lingotek_entity_metadata')->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
 
-    foreach ($entity->lingotek as $key => $value) {
-      if (array_search($key, $ignore) === FALSE) {
-        $query->values(array($entity_type, $id, $key, $value));
+    foreach ($remove as $key) {
+      if (isset($entity->lingotek[$key])) {
+        $query->values(array($entity_type, $id, $key, $entity->lingotek[$key]));
       }
     }
     $query->execute();
     
     // check for a workflow change
-    if (isset($entity->lingotek['workflow_id']) && isset($entity->lingotek['advanced']['document_id'])) {
+    if (isset($entity->lingotek['workflow_id']) && isset($entity->lingotek['document_id'])) {
       $curr_workflow = $entity->lingotek['workflow_id'];
-      $document_id = $entity->lingotek['advanced']['document_id'];
+      $document_id = $entity->lingotek['document_id'];
       if (!isset($entity->original->lingotek['workflow_id']) ||
           $entity->original->lingotek['workflow_id'] != $curr_workflow) {
         $api = LingotekApi::instance();
@@ -2072,7 +2076,6 @@ function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeab
     $profile_fields = array_merge($profile_fields, array(
       'lingotek_nodes_translation_method',
       'project_id',
-      'workflow_id',
       'vault_id',
     ));
   }
@@ -2085,6 +2088,7 @@ function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeab
       'sync_method',
       'allow_community_translation',
       'url_alias_translation',
+      'workflow_id',
       'sync_method_workbench_moderation',
       'create_lingotek_document_workbench_moderation',
     ));
