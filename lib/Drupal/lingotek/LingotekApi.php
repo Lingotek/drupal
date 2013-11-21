@@ -685,14 +685,15 @@ class LingotekApi {
    * Gets available Lingotek Workflows.
    * 
    * @param $reset
-   *   A boolean value to determin whether we need to query the API
+   *   A boolean value to determine whether we need to query the API
+   * @param $include_public
+   *   A boolean value to determine whether to show public workflows
    * 
    * @return array
    *   An array of available Workflows with workflow IDs as keys, workflow labels as values.
    */
-  public function listWorkflows($reset = FALSE) {
+  public function listWorkflows($reset = FALSE, $include_public = FALSE) {
     $workflows = variable_get('lingotek_workflow_defaults', array());
-
     if (!empty($workflows) && $reset == FALSE) {
       return $workflows;
     }
@@ -700,6 +701,8 @@ class LingotekApi {
     if ($workflows_raw = $this->request('listWorkflows')) {
       $workflows = array();
       foreach ($workflows_raw->workflows as $workflow) {
+        if ($include_public || (!$workflow->is_public 
+            && $workflow->owner != LINGOTEK_DEFAULT_WORKFLOW_TEMPLATE))
         $workflows[$workflow->id] = $workflow->name;
       }
       variable_set('lingotek_workflow_defaults', $workflows);

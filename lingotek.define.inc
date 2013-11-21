@@ -76,3 +76,4 @@ lingotek_define('STDERR', fopen('php://stderr', 'w'));
  * Define file-processing timeout
  */
 lingotek_define('LINGOTEK_FILE_PROCESS_TIMEOUT', 120);
+lingotek_define('LINGOTEK_DEFAULT_WORKFLOW_TEMPLATE', 2);

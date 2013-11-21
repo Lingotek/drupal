@@ -192,6 +192,7 @@ input.lingotek-content-settings-table.form-checkbox {
 
 .lingotek-node-actions, .lingotek-language-source i {
   font-size: 150%;
+  white-space: nowrap;
 }
 .lingotek-node-actions a:hover {
     text-decoration: none;

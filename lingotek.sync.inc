@@ -793,12 +793,6 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
           $values[] = array($entity_type, $nid, 'target_sync_status_' . $language, $to_status);
-          if ($trans_obj) {
-            $trans_obj->deleteMetadataValue('target_sync_status_' . $language);
-          }
-          else {
-            lingotek_keystore_delete($entity_type, $nid, 'target_sync_status_' . $language);
-          }
         }
       }
       // for now just report on node translation progress...
@@ -819,19 +813,29 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
     }
     if ($delete_cids_maybe) {
       foreach ($delete_cids_maybe as $cid) {
-        $trans_obj->deleteMetadataValue('target_sync_progress_%');
-        $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
-        $trans_obj->deleteMetadataValue('translation_progress');
+        if ($trans_obj = LingotekConfigChunk::loadById($cid)) {
+          $trans_obj->deleteMetadataValue('target_sync_progress_%');
+          $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
+          $trans_obj->deleteMetadataValue('translation_progress');
+        }
       }
     }
-    
-    // insert status info for nodes
-    $query = db_insert('lingotek_entity_metadata')
-      ->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
+
+    // merge status info for nodes
     foreach ($node_values as $record) {
-      $query->values($record);
+      $entity_id = (isset($record['entity_id']) ? $record['entity_id'] : $record[1]);
+      $entity_key = (isset($record['entity_key']) ? $record['entity_key'] : $record[2]);
+      $value = (isset($record['value']) ? $record['value'] : $record[3]);
+      $query = db_merge('lingotek_entity_metadata')
+        ->key(array('entity_id' => $entity_id, 'entity_key' => $entity_key))
+        ->fields(array(
+            'entity_type' => $entity_type,
+            'entity_id' => $entity_id,
+            'entity_key' => $entity_key,
+            'value' => $value,
+          ))
+        ->execute();
     }
-    $query->execute();
     
     // insert status info for config
     foreach ($cfg_values as $record) {
@@ -848,14 +852,14 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
     return $progress_report;
   }
   else {
-    $error_message = "API Error(s): <ul>";
+    $error_message = t("API Error(s):") . " <ul>";
     if (is_array($progress_report->errors)) {
       foreach ($progress_report->errors as $error) {
         $error_message .= "<li>" . $error . "</li>";
       }
     }
     $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
-    drupal_set_message($error_message, 'error');
+    drupal_set_message(t('@error_message', array('@error_message' => $error_message)), 'error');
   }
 
 }

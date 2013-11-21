@@ -155,7 +155,7 @@ function lingotek_push_form($form, $form_state, $node) {
   $form['content_push'] = array(
     '#type' => 'fieldset',
     '#title' => t('Upload'),
-    '#description' => t("Upload this node's content to Lingotek for translation.") . $last_uploaded_message,
+    '#description' => t("Upload this node's content to Lingotek for translation. @last_uploaded_message", array('@last_uploaded_message' => $last_uploaded_message)),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
   );
@@ -207,7 +207,7 @@ function lingotek_node_disassociate_form($form, $form_state, $nids = array(), $c
   $form['disassociate_translations'] = array(
     '#type' => 'fieldset',
     '#title' => t('Disassociate Translations'),
-    '#description' => t("Disassociates the node's locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the node's translation management settings to their defaults."),
+    '#description' => t("Should only be used to change the Lingotek project or TM vault associated with the node’s translation. Disassociates node translations on Lingotek’s servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the node’s content to restart the translation process."),
     '#collapsible' => $collapse_fieldset,
     '#collapsed' => $collapse_fieldset,
   );
@@ -440,10 +440,12 @@ function lingotek_pm($node) {
       
       }
       
+      /* REMOVE DISASSOCIATE_TRANSLTIONS FORM FROM THE TRANSLATE PAGE, FOR NOW
       $disassociate_translations_form = drupal_get_form('lingotek_node_disassociate_form', $node->nid);
       $output['disassociate_translations'] = array(
         '#markup' => drupal_render($disassociate_translations_form),
       );
+      */
     }
   }
   else {

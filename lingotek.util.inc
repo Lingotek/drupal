@@ -1302,9 +1302,6 @@ function lingotek_migration_3() {
       }
       $total_affected_rows += $affected_rows;
     }
-    else {
-      //"skip: ".$old_key);
-    }
   }
   $ret['total_affected_rows'] = $total_affected_rows;
   //drupal_set_message("fields updated");
@@ -1325,7 +1322,7 @@ function lingotek_profile_condition($node_table, $table_auto_upload, $table_prof
   if (!empty($types)) {
     $an = db_and();
     $an->condition($node_table . '.type', $types, 'IN');
-    $an->condition($table_auto_upload . '.value', NULL);
+    //$an->condition($table_auto_upload . '.value', NULL);
     $an->condition($table_profile . '.value', NULL);
     $or->condition($an);
   }

@@ -651,7 +651,7 @@ function lingotek_setup_language_settings_form() {
     '#type' => 'select',
     '#options' => $languages,
     '#default_value' => $source_language,
-    '#description' => t('<br/>In most cases, your source language should be the default language. (The current site default language is: <b>' . $default_language->name . '</b>)'),
+    '#description' => t('<br/>In most cases, your source language should be the default language. (The current site default language is: <b>@default_language</b>', array('@default_language' => $default_language->name)),
     //t('The current language your site is written in.'),
     '#required' => TRUE,
   );

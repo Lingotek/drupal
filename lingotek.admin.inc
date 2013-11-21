@@ -170,7 +170,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
       if (array_search($field_type, $translatable_field_types)) {
         $fr[$field_machine_name] = array(
           '#type' => 'checkbox',
-          '#title' => $field_label,
+          '#title' => check_plain($field_label),
           '#attributes' => array(
             'id' => array('edit-form-item-' . $bundle_name . '-seperator-' . $field_machine_name),
             'name' => $bundle_name . '_SEPERATOR_' . $field_machine_name,
@@ -1414,7 +1414,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['defaults']['current_future_note'] = array(
     '#type' => 'markup',
-    '#markup' => '<h3>' . t('Profile settings impacting all translations (new and previously uploaded)') . '</h3><hr />',
+    '#markup' => '<h3>' . t('Profile settings impacting all nodes (new and existing)') . '</h3><hr />',
   );
   // Upload
   $form['defaults']['create_lingotek_document'] = array(
@@ -1558,7 +1558,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     );
     $form['defaults']['prefill_phases_checkbox'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Change all current content in this profile (@total documents) to use the new workflow', array('@total' => lingotek_admin_profile_usage($profile_id))),
+      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => lingotek_admin_profile_usage($profile_id))),
       '#default_value' => FALSE,
       '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
       '#states' => array(
@@ -1583,7 +1583,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   // FUTURE-ONLY STUFF
   $form['defaults']['future_only_note'] = array(
     '#type' => 'markup',
-    '#markup' => '<h3>' . t('Profile settings impacting only new translations') . '</h3><hr />',
+    '#markup' => '<h3>' . t('Profile settings impacting only new nodes') . '</h3><hr />',
   );
   
   $form['defaults']['lingotek_nodes_translation_method'] = array(
@@ -1835,7 +1835,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       array('data' => array(
           '#type' => 'markup',
           '#prefix' => t('Disassociate All Translations') . ' <i>' . t('(use with caution)') . '</i>' . '<div class="description">',
-          '#markup' => t("Disassociates all locally-published translations from their counterparts on Lingotek's servers. This allows for your Drupal content to be re-uploaded to Lingotek, so that it can be retranslated entirely using the currently-defined workflow. Also resets the translation management settings for all nodes to those defined in the Content Defaults Settings."),
+          '#markup' => t("Should only be used to change the Lingotek project or TM vault associated with the node’s translation. Disassociates node translations on Lingotek’s servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the node’s content to restart the translation process."),
           '#suffix' => '</div>'
         )),
       array('data' => $btn_disassociate_translations)
