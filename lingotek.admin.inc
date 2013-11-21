@@ -135,7 +135,7 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     '#value' => $entity_type,
   );
 
-  $form['node_translation'] = array(
+  $form['translation_' . $entity_type] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?')),
     '#collapsible' => TRUE,
@@ -147,10 +147,15 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     '#submit' => array('lingotek_admin_node_translation_settings_form_submit'),
   );
 
+  $selector = '.lingotek-content-settings-table.' . $entity_type;
+  $enable_all =  l(t('(set all to automatic)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '0'); return false;")));
+  $enable_all_manual =  l(t('(set all to manual)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '1'); return false;")));  
+  $disable_all =  l(t('(disable all)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', 'DISABLED'); return false;")));
+
   if ($setup_complete) {
-    $form['node_translation'][] = array(
+    $form['translation_' . $entity_type][] = array(
       '#type' => 'item',
-      '#description' => t('Choose what you want translated:'),
+      '#description' => t('Choose what you want translated:') . ' ' . $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all,
     );
   }
 
@@ -238,20 +243,20 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   $variables = array(
     'header' => $header,
     'rows' => $rows,
-    'attributes' => array('class' => array('lingotek-content-settings-table')),
+    'attributes' => array('class' => array('lingotek-content-settings-table', $entity_type)),
   );
 
-  $form['node_translation']['types'] = array(
+  $form['translation_' . $entity_type]['types'] = array(
     '#type' => 'markup',
     '#markup' => theme('table', $variables),
     '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
   );
 
   if ($entity_type == 'field_collection_item') {
-    $form['node_translation']['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
+    $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
   }
 
-  $form['node_translation']['actions']['submit'] = array(
+  $form['translation_' . $entity_type]['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );

@@ -836,11 +836,11 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['node_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['translation_node']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
 
-  unset($form['node_translation']['actions']['submit']);
-  $form['node_translation']['actions']['submit'] = array(
+  unset($form['translation_node']['actions']['submit']);
+  $form['translation_node']['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next')
   );
@@ -889,18 +889,20 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
 }
 
 function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
-  $form = lingotek_admin_comment_translation_settings_form($form, $form_state);
+  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'comment', false);
+
+  drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
 
   if (is_array($_SESSION['lingotek_setup_path'])) {
     if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/comment-translation-settings') {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
-    $form['comment_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
+    $form['translation_comment']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
-  $form['comment_translation']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
+  $form['translation_comment']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
 
-  unset($form['comment_translation']['actions']['submit']);
-  $form['comment_translation']['actions']['submit'] = array(
+  unset($form['translation_comment']['actions']['submit']);
+  $form['translation_comment']['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Next'),
   );
@@ -911,7 +913,7 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
 }
 
 function lingotek_setup_comment_translation_settings_form_submit($form, &$form_state) {
-  lingotek_admin_comment_translation_settings_form_submit($form, $form_state);
+  lingotek_admin_node_translation_settings_form_submit($form, $form_state);
   drupal_goto('admin/config/lingotek/additional-translation-settings');
 }
 
