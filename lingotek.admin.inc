@@ -135,6 +135,13 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     '#value' => $entity_type,
   );
 
+  $selector = '.lingotek-content-settings-table.' . $entity_type;
+  $enable_all =  l(t('(set all to automatic)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '0'); return false;")));
+  $enable_all_manual =  l(t('(set all to manual)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '1'); return false;")));  
+  $disable_all =  l(t('(disable all)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', 'DISABLED'); return false;")));
+
+  $links = $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all;
+
   $form['translation_' . $entity_type] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?')),
@@ -147,17 +154,10 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     '#submit' => array('lingotek_admin_node_translation_settings_form_submit'),
   );
 
-  $selector = '.lingotek-content-settings-table.' . $entity_type;
-  $enable_all =  l(t('(set all to automatic)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '0'); return false;")));
-  $enable_all_manual =  l(t('(set all to manual)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '1'); return false;")));  
-  $disable_all =  l(t('(disable all)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', 'DISABLED'); return false;")));
-
-  if ($setup_complete) {
-    $form['translation_' . $entity_type][] = array(
-      '#type' => 'item',
-      '#description' => t('Choose what you want translated:') . ' ' . $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all,
-    );
-  }
+  $form['translation_' . $entity_type][] = array(
+    '#type' => 'item',
+    '#description' => t('Choose what you want translated:') . ' ' . $links,
+  );
 
   $rows = array();
 
@@ -246,11 +246,13 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     'attributes' => array('class' => array('lingotek-content-settings-table', $entity_type)),
   );
 
-  $form['translation_' . $entity_type]['types'] = array(
-    '#type' => 'markup',
-    '#markup' => theme('table', $variables),
-    '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
-  );
+  if ($setup_complete) {
+    $form['translation_' . $entity_type]['types'] = array(
+      '#type' => 'markup',
+      '#markup' => theme('table', $variables),
+      '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
+    );
+  }
 
   if ($entity_type == 'field_collection_item') {
     $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
@@ -340,6 +342,9 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
   variable_set('lingotek_entity_profiles', $entity_profiles);
   drupal_set_message(t('Your content types have been updated.'));
 
+  // This is needed for versions of Drupal core 7.10 and lower. See http://drupal.org/node/1380660 for details.
+  drupal_static_reset('field_available_languages');
+
   if (count($operations)) {
     $batch = array(
       'title' => t('Preparing content for translation'),
@@ -400,105 +405,6 @@ function lingotek_admin_profile_usage_by_types($id) {
   }
 
   return isset($profile_usage[$id]) ? $profile_usage[$id] : 0;
-}
-
-/**
- * Additional translation form
- */
-function lingotek_admin_comment_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
-  global $base_url;
-  $api = LingotekApi::instance();
-  //$setup_complete = variable_get('lingotek_setup_complete', 0);
-  $setup_complete = (!lingotek_is_config_missing());
-  $account = LingotekAccount::instance();
-  $is_enterprise = $account->isEnterprise();
-  /*
-   * Comment translation
-   */
-  $form['comment_translation'] = array(
-    '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Translate Comments') : t('Which comment items do you want translated?')),
-    //'#description' => t('Enable/disable and set defaults for comment translation.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'administrative_settings',
-    'actions' => array(
-      '#type' => 'actions',
-      'submit' => array(
-        '#type' => 'submit',
-        '#value' => t('Save'),
-      )
-    ),
-    '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
-  );
-
-  $form['comment_translation'][] = array(
-    '#type' => 'item',
-    '#description' => t('Automatically translate comments on the selected content types.'),
-  );
-
-  $type_options = array();
-  $type_defaults = array();
-  foreach (node_type_get_types() as $type => $type_data) {
-    $type_options[$type] = $type_data->name;
-    $type_defaults[$type] = $type;
-  }
-  $form['comment_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_node_types'] = array(
-    '#type' => 'checkboxes',
-    '#options' => $type_options,
-    '#multiple' => TRUE,
-    '#default_value' => variable_get('lingotek_translate_comments_node_types', $setup_complete ? array() : $type_defaults),
-  );
-
-  if ($is_enterprise) {
-    $form['comment_translation']['lingotek_translate_comments_options']['lingotek_translate_comments_workflow_id'] = array(
-      '#type' => 'select',
-      '#title' => t('Workflow'),
-      '#description' => t('This workflow will be used to translate comments.
-        Since there is no Drupal UI for managing workflow phases for comments, it is
-        recommended that you choose a Workflow that only consists of a single machine translation Phase.'),
-      '#options' => $api->listWorkflows(),
-      '#default_value' => variable_get('lingotek_translate_comments_workflow_id', ''),
-    );
-  }
-
-  return $form;
-}
-
-function lingotek_admin_comment_translation_settings_form_submit($form, &$form_state) {
-  $form_state['values']['lingotek_translate_comments'] = FALSE;
-
-  foreach ($form_state['values']['lingotek_translate_comments_node_types'] as $val) {
-    if (!empty($val))
-      $form_state['values']['lingotek_translate_comments'] = TRUE;
-  }
-
-  system_settings_form_submit($form, $form_state);
-
-  //This code configures the content entity and it's fields so that they can be translated.
-  if ($form_state['values']['lingotek_translate_comments']) {
-    foreach ($form_state['values']['lingotek_translate_comments_node_types'] as $content_type => $value) {
-      if (!title_field_replacement_enabled('comment', 'comment_node_' . $content_type, 'subject')) {
-        title_field_replacement_toggle('comment', 'comment_node_' . $content_type, 'subject');
-        title_field_replacement_batch_set('comment', 'comment_node_' . $content_type, 'subject');
-      }
-    }
-
-    $field = field_info_field('subject_field');
-    $field['translatable'] = TRUE;
-    field_update_field($field);
-
-    $field = field_info_field('comment_body');
-    $field['translatable'] = TRUE;
-    field_update_field($field);
-
-    // This is needed for versions of Drupal core 7.10 and lower. See http://drupal.org/node/1380660 for details.
-    drupal_static_reset('field_available_languages');
-  }
-
-  // Enabling/disabling Lingotek comment translation will have an effect on the comment entity.
-  entity_info_cache_clear();
-  entity_get_info('comment');
 }
 
 /**

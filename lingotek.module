@@ -1677,7 +1677,6 @@ function lingotek_is_config_missing() {
     'lingotek_workflow',
     'lingotek_vault',
     'lingotek_enabled_fields',
-    'lingotek_translate_comments_node_types',
     'lingotek_oauth_consumer_id',
     'lingotek_oauth_consumer_secret',
   );
@@ -1695,9 +1694,6 @@ function lingotek_is_config_missing() {
       }
       elseif ($required_variable == 'lingotek_enabled_fields') {
         return 'admin/config/lingotek/node-translation-settings';
-      }
-      elseif ($required_variable == 'lingotek_translate_comments_node_types') {
-        return 'admin/config/lingotek/comment-translation-settings';
       }
       elseif ($required_variable == 'lingotek_oauth_consumer_id' || $required_variable == 'lingotek_oauth_consumer_secret') {
         return TRUE;
