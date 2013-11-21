@@ -141,7 +141,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
           $field_collection_id = isset($node_field['und'][$delta]['value']) ? $node_field['und'][$delta]['value'] : $node_field[$default_language][$delta]['value'];
           $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
           $field_collection_item->type = $field['field_name'];
-          $field_collection_item->language = $node->language;
+          $field_collection_item->language = $entity->language;
           $field_collection_item->nid = $field_collection_item->item_id;
           $field_collection_item->vid = $field_collection_item->revision_id;
 
@@ -149,7 +149,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
           $db_field_name = $field['field_name'] . '_value';
           $db_revision_field_name = $field['field_name'] . '_revision_id';
           $insert_array['language'] = $drupal_language_code;
-          $lang = isset($node_field[$node->language][$delta]['value']) ? $node->language : 'und';
+          $lang = isset($node_field[$entity->language][$delta]['value']) ? $entity->language : 'und';
           $insert_array[$db_field_name] = $node_field[$lang][$delta]['value'];
           $insert_array[$db_revision_field_name] = $node_field[$lang][$delta]['revision_id'];
         }
@@ -175,7 +175,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
           
           // put fields into both field_data_ and field_revision_ tables
           // if published version (in node table) is as current as most current revision (in node_revision table)
-          if (isset($node->workbench_moderation) && isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid != $node->workbench_moderation['current']->vid) {
+          if ($entity_type == 'node' && isset($entity->workbench_moderation) && isset($entity->workbench_moderation['published']) && $entity->workbench_moderation['published']->vid != $entity->workbench_moderation['current']->vid) {
             $only_write_revisions = 1;
             unset($field_names[$only_write_revisions]);
           }
