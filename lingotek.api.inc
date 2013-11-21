@@ -69,6 +69,11 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
 
 function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  //This is necessary to allow comment translations to be update. I am not sure why.
+  if ($entity_type == 'comment') {
+    $vid = $id;
+  }
   
   $delta = 0;
   $last_tag = NULL;
