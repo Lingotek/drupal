@@ -246,12 +246,13 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
     'attributes' => array('class' => array('lingotek-content-settings-table', $entity_type)),
   );
 
+  $form['translation_' . $entity_type]['types'] = array(
+    '#type' => 'markup',
+    '#markup' => theme('table', $variables),
+  );
+
   if ($setup_complete) {
-    $form['translation_' . $entity_type]['types'] = array(
-      '#type' => 'markup',
-      '#markup' => theme('table', $variables),
-      '#suffix' => '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)',
-    );
+    $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)';
   }
 
   if ($entity_type == 'field_collection_item') {
