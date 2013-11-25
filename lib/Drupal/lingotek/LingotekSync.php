@@ -767,7 +767,7 @@ class LingotekSync {
     $query->condition('entity_key', 'document_id');
     $query->distinct();
     $result = $query->execute();
-    $doc_ids = array_merge($doc_ids, $result->fetchCol());
+    $doc_ids = $result->fetchCol();
 
     // config-related doc IDs
     $query = db_select('lingotek_config_metadata', 'l')
