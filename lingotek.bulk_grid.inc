@@ -1492,7 +1492,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
 //        'locale_progress_percent' => $row->locale_progress_percent ? lingotek_grid_create_progress_bar($row->locale_progress_percent) : lingotek_grid_create_progress_bar(0),
 //        'progress_updated' => $row->progress_updated ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->progress_updated))) : t('Never'),
 //        'last_downloaded' => $row->last_downloaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_downloaded))) : t('Never'),
-      'workflow' => ($row->workflow ? check_plain($workflows[$row->workflow]) : ''),
+      'workflow' => ($row->workflow ? (isset($workflows[$row->workflow]) ? check_plain($workflows[$row->workflow]) : $row->workflow) : ''),
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
     );
       
@@ -1513,6 +1513,7 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     LingotekSync::STATUS_READY => 'Ready to Download',
     LingotekSync::STATUS_CURRENT => 'Current',
     LingotekSync::STATUS_EDITED => 'Source needs to be uploaded',
+    ''
   );
   $default_link = $entity_type . '/' . $entity_id . '/lingotekworkbench/';
   $manual_link = $entity_type .  '/' . $entity_id . '/lingotek_pm/';
@@ -1523,14 +1524,19 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     LingotekSync::STATUS_EDITED => $manual_link,
   );
 
-  foreach ($locales as $key => $original_locale) {
-    $locale = $convert ? Lingotek::convertLingotek2Drupal($original_locale) : $original_locale;
-    if ($locale) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
-      $status = $statuses[$key];
-      $css_class = 'target-' . $status;
-      $tip = $languages[$locale]->name . ' - ' . $legend[strtoupper($status)];
+  $lingotek_languages = Lingotek::getLanguages();
 
-      $html .= l($locale, $link_map[strtoupper($status)] . $original_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
+  foreach ($locales as $key => $original_locale) {
+    if(key_exists($original_locale, $lingotek_languages)){
+      $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled;//array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
+      $lang_code = $lingotek_languages[$original_locale]->language;
+      if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
+        $status = $statuses[$key];
+        $css_class = 'target-' . $status;
+        $tip = $languages[$lang_code]->name . ' - ' . $legend[strtoupper($status)];
+
+        $html .= l($lang_code, $link_map[strtoupper($status)] . $lang_code, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
+      }
     }
   }
   

@@ -92,9 +92,7 @@ function lingotek_get_dashboard_code() {
           "endpoint_url": "%s",
           "sync_url": "%s",
           // data
-          "locales": %s,
-          "source_statuses":%s ,
-          "target_statuses": %s
+          "locales": %s
         };
          lingotek.dashboard(containerId,config); 
         });
@@ -127,9 +125,7 @@ function lingotek_get_dashboard_code() {
       $endpoint, // endpoint url
       $sync_url,
       // data
-      json_encode(lingotek_get_locale_details()), // The languages "localized" on Drupal
-      json_encode(lingotek_get_source_statuses()), // source_statuses
-      json_encode(lingotek_get_target_statuses()) // target_statuses
+      json_encode(lingotek_get_locale_details()) // The languages "localized" on Drupal
   );
   return $output;
 }
