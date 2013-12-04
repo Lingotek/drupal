@@ -63,7 +63,6 @@ function lingotek_get_dashboard_code() {
 
   $output = '';
   $guid = lingotek_get_guid(); // 16 char string
-  $totals = lingotek_get_target_status();
 
   $script = '
       <script src="' . LINGOTEK_GMC_SERVER . '/js/lingotek.min.js"></script>
@@ -93,16 +92,16 @@ function lingotek_get_dashboard_code() {
           "endpoint_url": "%s",
           "sync_url": "%s",
           // data
-          "source_language":%s ,
-          "localization_languages": %s,
-          "target_languages": %s
+          "locales": %s,
+          "source_statuses":%s ,
+          "target_statuses": %s
         };
          lingotek.dashboard(containerId,config); 
         });
       </script>
     ';
 
-  $endpoint = $base_url . '/lingotek/target'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
+  $endpoint = $base_url . '/lingotek/locale'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
   $sync_url = $base_url . '/' . LINGOTEK_MENU_MAIN_BASE_URL . '/manage/node'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
 
   $output .= sprintf($script,
@@ -128,9 +127,9 @@ function lingotek_get_dashboard_code() {
       $endpoint, // endpoint url
       $sync_url,
       // data
-      lingotek_get_source_language_json(), // source_language
-      json_encode(Lingotek::availableLanguageTargets('lingotek_locale', TRUE)), // localization_languages - The languages "localized" on Drupal
-      json_encode($totals) // The target languages they are using on Lingotek
+      json_encode(lingotek_get_locale_details()), // The languages "localized" on Drupal
+      json_encode(lingotek_get_source_statuses()), // source_statuses
+      json_encode(lingotek_get_target_statuses()) // target_statuses
   );
   return $output;
 }
@@ -148,93 +147,60 @@ function lingotek_dashboard_command_ajax() {
 
   $response = array();
 
-  // 1. Update a Target Language (Initiate a Machine Translation Batch)
-  if ($method == 'PUT') {
+  switch ($method) {
+    case 'POST': // Add/Insert Target Language
+      $message = 'POST: Insert a new Target Language';
+      $lingotek_locale = $_POST['code'];
+      $parameters = $_POST;
+      if (strlen($lingotek_locale) > 1) {
+        // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
+        $add = lingotek_add_target_language($lingotek_locale);
+        $response = lingotek_get_locale_details($lingotek_locale);
+        $response['tms_added'] = $add;
+      }
+      else {
+        $response['error'] = "locale code required";
+      }
+      break;
+    case 'DELETE': // Remove/Delete Target Language
+      // Initiate Language Delete
+      parse_str(file_get_contents("php://input"), $parameters);
+      $lingotek_locale = $parameters['code'];
+      $message = t('DELETE: remove language (@code)', array('@code' => $lingotek_locale));
 
-    // Initiate Machine Translation
-    $message = 'PUT: Initiate Machine Translation';
-    parse_str(file_get_contents("php://input"), $parameters);
-
-    $type = $parameters['type'];
-    $lingotek_locale = $parameters['code'];
-
-    $response = array(
-      'code' => $lingotek_locale,
-      'active' => TRUE,
-      'docs' => '0',
-      'pending' => '0',
-      'current' => '0'
-    );
-
-    // Launch the machine translation process!
-  } // END:  PUT
-  // 2. Add/Insert Target Language
-  if ($_POST) {
-
-    $message = 'POST: Insert a new Target Language';
-    $lingotek_locale = $_POST['code'];
-    $parameters = $_POST;
-
-    if (strlen($lingotek_locale) > 1) {
-
-      // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
-      $add = lingotek_add_target_language($lingotek_locale);
-
-      $response = lingotek_get_target_status($lingotek_locale);
-      $response['success'] = $add;
-    }
-  } // END:  POST
-  // 3. Remove/Delete Target Language
-  if ($method == 'DELETE') {
-
-    // Initiate Language Delete
-    parse_str(file_get_contents("php://input"), $parameters);
-
-    $lingotek_locale = $parameters['code'];
-
-    $message = t('DELETE: Remove language (@code)', array('@code' => $lingotek_locale));
-
-    // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
-    $delete = lingotek_delete_target_language($lingotek_locale); // Mark this language as Active => False
-
-    $response = array(
-      'code' => $lingotek_locale,
-      'active' => FALSE,
-      'success' => $delete
-    ); // Format:  {'code':'es','active':'FALSE','success':TRUE}
-  } // END:  DELETE
-  // 4. Retrieve the Target Languages and Status
-  if ($method == 'GET') {
-
-    // Retrieve the Target Languages and Status
-    $message = 'GET: Retrieve the Target Language(s) and Status';
-    $parameters = $_GET;
-
-    $response = isset($_GET['code']) ? lingotek_get_target_status($_GET['code']) : lingotek_get_target_status();
-  } // END:  GET
-
-  if ($method == 'PUT') {
-    $commands = array();
-    ajax_deliver(array('#type' => 'ajax', '#commands' => $commands));
+      // Removes the language to the local list of languages we do translation for, and also removes the target language from the Lingotek project.
+      $delete = lingotek_delete_target_language($lingotek_locale); // Mark this language as Active => False
+      $response = array(
+        'code' => $lingotek_locale,
+        'active' => FALSE,
+        'success' => $delete
+      ); // Format:  {'code':'es','active':'FALSE','success':TRUE}
+      break;
+    case 'GET': // 4. Retrieve the Target Languages and Status
+    default:
+      // Retrieve the Target Languages and Status
+      $message = 'GET: retrieve the details of the locale(s)';
+      $parameters = $_GET;
+      $response = isset($_GET['code']) ? lingotek_get_locale_details($_GET['code']) : lingotek_get_locale_details();
+      break;
   }
-  else {
-    //lingotek_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
-    $general = array('message' => $message);
-    $full_response = array_merge($general, $response);
-    if ($method !== 'GET') { //skip logging GETS (since they occur lots)
-      LingotekLog::info('<h2>Target - @method</h21>
+  //lingotek_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
+  $general = array('request' => $message);
+  $full_response = array_merge($general, $response);
+  if ($method !== 'GET') { //skip logging GETS (since they occur frequently)
+    LingotekLog::info('<h2>Target - @method</h21>
       <h3>Parameters:</h3>
       <div>!parameters</div>
       <h3>Response:</h3>
       <div>!response</div>
       ', array(
-        '@method' => $method,
-        '!parameters' => ($parameters),
-        '!response' => ($response)
-          ), 'endpoint');
-    }
-    return lingotek_json_output_cors($full_response);
+      '@method' => $method,
+      '!parameters' => ($parameters),
+      '!response' => ($response)
+        ), 'endpoint');
   }
+
+  return lingotek_json_output_cors($full_response);
 }
 
 /**
@@ -266,26 +232,99 @@ function lingotek_get_type_field_mapping($node_type = NULL) {
   return $type_field_mapping;
 }
 
-// END:  lingotek_get_type_field_mapping()
+/**
+ * Get the details of each language
+ */
+function lingotek_get_locale_details($lingotek_locale_requested = NULL) {
+
+  $response = array();
+  $available_languages = Lingotek::getLanguages(NULL, FALSE);// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
+  $source_total = 0;
+  $target_total = 0;
+  // If we get a parameter, only return that language. Otherwise return all languages.
+  foreach ($available_languages as $l) {
+    if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $l->lingotek_locale)
+      continue;
+    $drupal_language_code = $l->language;
+    $lingotek_locale = $l->lingotek_locale;
+    $source_count = LingotekSync::getSourceCount($lingotek_locale);
+    $target_count = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+
+    $target_status = array(
+      'locale' => $lingotek_locale, // Return this language code as the Lingotek language code.
+      'dcode' => $drupal_language_code,
+      'active' => intval($l->lingotek_enabled), //lingotek_enabled,
+      'enabled' => intval($l->enabled), // drupal enabled
+      'source_docs' => $source_count,
+      'target_docs' => $target_count
+    );
+    if ($lingotek_locale_requested == $l->lingotek_locale) {
+      $response = $target_status;
+    }
+    else {
+      $response[$lingotek_locale] = $target_status;
+    }
+    $source_total += $source_count;
+    $target_total += $target_count;
+  }
+  if (is_null($lingotek_locale_requested)) {
+    $response['source_total'] = $source_total;
+    $response['target_total'] = $target_total;
+    $response['count'] = count($available_languages);
+  }
+  return $response;
+}
 
 /**
- * Outputs the language code with page count in json format.  Supplied to the dashboard.
- * Output Format (example): {'code':'en_US','docs':'500'}
+ * Returns the language code with number of source documents written in the passed in locale (or all sources, when omitted)
  */
-function lingotek_get_source_language_json() {
-
+function lingotek_get_source_statuses($lingotek_locale_requested = NULL) {
   $data = array();
-  $source_language = lingotek_get_source_language();
-  $data['code'] = Lingotek::convertDrupal2Lingotek($source_language);
+  $response = array();
+  $available_languages = Lingotek::getLanguages();// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
 
-  $data['edited'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_EDITED);
-  $data['pending'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_PENDING);
-  $data['ready'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_READY);
-  $data['current'] = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT);
+  // If we get a parameter, only return that language. Otherwise return all languages.
+  foreach ($available_languages as $source) {
+    if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $source->lingotek_locale)
+      continue;
+    $drupal_language_code = $source->language;
+    $lingotek_locale = $source->lingotek_locale;
+    $total = LingotekSync::getSourceCount($lingotek_locale);
+    if ($lingotek_locale_requested == $source->lingotek_locale) {
+      $response = $total;
+    }
+    else {
+      $response[$lingotek_locale] = $total;
+    }
+  }
+  return $response;
+}
 
-  $data['docs'] = $data['edited'] + $data['pending'] + $data['ready'] + $data['current'];
+/**
+ * Returns the number of target translations for the passed in locale (or all locales, when omitted)
+ */
+function lingotek_get_target_statuses($lingotek_locale_requested = NULL) {
 
-  return json_encode($data);
+  $response = array();
+  $available_languages = Lingotek::getLanguages(NULL, FALSE);// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
+
+  // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
+  // Otherwise Return a List of all the Active Languages
+  foreach ($available_languages as $target) {
+    if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $target->lingotek_locale)
+      continue;
+    $drupal_language_code = $target->language;
+    $lingotek_locale = $target->lingotek_locale;
+    $total = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+
+    if ($lingotek_locale_requested == $target->lingotek_locale) {
+      $response = $target_status;
+    }
+    else {
+      $response[$lingotek_locale] = $total;
+    }
+  }
+  return $response;
 }
 
 /**
@@ -298,46 +337,4 @@ function lingotek_get_guid() {
     variable_set('lingotek_guid', $guid);
   }
   return $guid;
-}
-
-/**
- * Get the status of the target given by locale
- */
-function lingotek_get_target_status($lingotek_locale_requested = NULL) {
-
-  $response = array();
-  $target_languages = Lingotek::availableLanguageTargets(NULL, FALSE);// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
-
-  // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
-  // Otherwise Return a List of all the Active Languages
-  foreach ($target_languages as $target) {
-    if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $target->lingotek_locale)
-      continue;
-    $drupal_language_code = $target->language;
-    $lingotek_locale = $target->lingotek_locale;
-    $edited = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_EDITED, $lingotek_locale);
-    $pending = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_PENDING, $lingotek_locale);
-    $ready = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_READY, $lingotek_locale);
-    $current = LingotekSync::getTargetCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
-    $total = $edited + $pending + $ready + $current;
-
-    $target_status = array(
-      'code' => $lingotek_locale, // Return this language code as the Lingotek language code.
-      'dcode' => $drupal_language_code,
-      'active' => intval($target->lingotek_enabled), //lingotek_enabled,
-      'enabled' => intval($target->enabled), // drupal enabled
-      'docs' => $total,
-      'pending' => $pending,
-      'ready' => $ready,
-      'edited' => $edited,
-      'current' => $current
-    );
-    if ($lingotek_locale_requested == $target->lingotek_locale) {
-      $response = $target_status;
-    }
-    else {
-      $response[] = $target_status;
-    }
-  }
-  return $response;
 }

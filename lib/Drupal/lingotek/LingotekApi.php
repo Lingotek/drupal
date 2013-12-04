@@ -89,7 +89,7 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $translatable_object);
 
       if ($with_targets) {
-        $parameters['targetAsJSON'] = Lingotek::availableLanguageTargetsWithoutSourceAsJSON($source_language);
+        $parameters['targetAsJSON'] = Lingotek::getLanguagesWithoutSourceAsJSON($source_language);
 
         $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
         $result = $this->request('addContentDocumentWithTargetsAsync', $parameters);
