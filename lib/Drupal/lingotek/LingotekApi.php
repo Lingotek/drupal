@@ -115,7 +115,6 @@ class LingotekApi {
           // node assumed (based on two functions below...
           $entity_type = $translatable_object->getEntityType();
           lingotek_keystore($entity_type, $translatable_object->getId(), 'document_id', $result->id);
-//          LingotekSync::setNodeAndTargetsStatus($translatable_object->getEntity(), LingotekSync::STATUS_CURRENT, LingotekSync::STATUS_PENDING);
           lingotek_keystore($entity_type, $translatable_object->getId(), 'last_uploaded', time());
         }
           
@@ -942,14 +941,14 @@ class LingotekApi {
    *
    * @param array $parameters
    *   An array of API request parameters.
-   * @param object $node
-   *   A Drupal node object.
+   * @param object $entity
+   *   A Drupal entity object.
    */
-  private function addAdvancedParameters(&$parameters, $node) {
+  private function addAdvancedParameters(&$parameters, LingotekTranslatableEntity $entity) {
     // Extra parameters when using advanced XML configuration.
     $advanced_parsing_enabled = variable_get('lingotek_advanced_parsing', FALSE);
     $use_advanced_parsing = ($advanced_parsing_enabled ||
-        (!$advanced_parsing_enabled && lingotek_lingonode($node->nid, 'use_advanced_parsing')));
+        (!$advanced_parsing_enabled && lingotek_keystore($entity->getEntityType(), $entity->getId(), 'use_advanced_parsing')));
 
     if ($use_advanced_parsing) {
 

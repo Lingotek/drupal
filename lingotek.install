@@ -278,8 +278,8 @@ function lingotek_update_7201(&$sandbox) {
     }
 
     $process_node = lingotek_node_load_default(array_shift($sandbox['nodes']));
-    if ($process_node->nid && !lingotek_lingonode($process_node->nid, 'project_id')) {
-      lingotek_lingonode($process_node->nid, 'project_id', $default_lingotek_project);
+    if ($process_node->nid && !lingotek_keystore('node', $process_node->nid, 'project_id')) {
+      lingotek_keystore('node', $process_node->nid, 'project_id', $default_lingotek_project);
     }
     $sandbox['progress'] = (int) (count($sandbox['nodes']) / $sandbox['max']);
   }
@@ -519,9 +519,9 @@ function lingotek_update_7404(&$sandbox) {
   $nids = $result->fetchCol();
 
   foreach ($nids as $nid) {
-    $profile = lingotek_lingonode($nid, 'profile');
+    $profile = lingotek_keystore('node', $nid, 'profile');
     if (empty($profile)) {
-      lingotek_lingonode($nid, 'profile', LingotekSync::PROFILE_CUSTOM);
+      lingotek_keystore('node', $nid, 'profile', LingotekSync::PROFILE_CUSTOM);
     }
   }
 

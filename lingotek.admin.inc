@@ -286,6 +286,9 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 
   foreach ($form_state['input'] as $key => $value) {
 
+    if ($key == 'article_SEPERATOR_field_fc_test') {
+      $asdf = '';
+    }
     // Look for Selected Content Types and Fields.
     if (FALSE !== strpos($key, '_SEPERATOR_')) {
       // And only if set to translate
@@ -1644,7 +1647,8 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
       $prefill_phase = $form_state['values']['prefill_phase_select'];
 
       $nids = lingotek_admin_get_nids_by_profile($profile_id);
-      $document_ids = LingotekSync::getDocIdsFromNodeIds($nids);
+      $entity_type = arg(4); // divine the content type from the route
+      $document_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $nids);
       if (!$document_ids) {
         return;
       }
@@ -1653,7 +1657,7 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
 
       // CREATE/UPDATE WORKFLOW ENTRIES IN THE LINGOTEK METADATA TABLE
       foreach ($nids as $nid) {
-        lingotek_lingonode($nid, 'workflow_id', $workflow_id);
+        lingotek_keystore($entity_type, $nid, 'workflow_id', $workflow_id);
       }
 
     }
@@ -1881,7 +1885,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
       $arr[] = drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE);
     }*/
 
-    foreach (lingotek_managed_entity_types() as $machine_name => $entity_type) {
+    foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
       $entity_settings = drupal_get_form('lingotek_admin_node_translation_settings_form', $machine_name, $show_fieldset);
       $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @types', array('@type' => $entity_type['label'])));
     }

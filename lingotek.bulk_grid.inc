@@ -110,7 +110,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   if (LingotekAccount::instance()->isEnterprise()) {
     $form['change_workflow'] = array(
-      '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow', array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+      '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow/' . $entity_type, array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
     );
   }
   
@@ -1631,7 +1631,7 @@ function lingotek_edit_nodes($entity_type, $nids) {
  *
  * Returns a fully rendered html form
  */
-function lingotek_change_workflow($nids) {
+function lingotek_change_workflow($entity_type, $nids) {
   $nids = explode(',', $nids);
 
   ctools_include('node.pages', 'node', '');
@@ -1640,6 +1640,7 @@ function lingotek_change_workflow($nids) {
     
   $form_state = array(
     'ajax' => TRUE,
+    'entity_type' => $entity_type,
     'nids' => $nids,
   );
   $output = ctools_modal_form_wrapper('lingotek_get_change_workflow_form', $form_state);

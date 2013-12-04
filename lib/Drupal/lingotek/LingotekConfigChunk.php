@@ -664,7 +664,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $document = $api->getDocument($document_id);
 
     foreach ($document->translationTargets as $target) {
-      $this->updateLocalContentByTarget($target->lingotek_locale);
+      $this->downloadTriggered($target->lingotek_locale);
     }
   }
 

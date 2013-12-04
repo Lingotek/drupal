@@ -74,9 +74,8 @@ function lingotek_field_language_data_cleanup_batch_create($autoset_batch = FALS
  *
  * Creates the batch operations array.  Downloads first, then uploads.
  */
-function lingotek_sync_batch_create($upload_nids = array(), $upload_config = array(), $download_targets = array(), $download_targets_incomplete = array(), $redirect = '', $extra_operations = array()) {
+function lingotek_sync_batch_create($upload_config = array(), $download_targets = array(), $download_targets_incomplete = array(), $redirect = '', $extra_operations = array()) {
 
-  $has_upload = !empty($upload_nids);
   $has_upload_config = !empty($upload_config);
   $has_download = !empty($download_targets);
   $has_download_incomplete = !empty($download_targets_incomplete);
@@ -84,11 +83,10 @@ function lingotek_sync_batch_create($upload_nids = array(), $upload_config = arr
   // Grab the Nodes that need to be Downloaded & Uploaded.  These are batch operation arrays.
   $download_commands = $has_download ? lingotek_get_sync_download_batch_elements($download_targets, LingotekSync::STATUS_CURRENT) : array();
   $download_commands_inc = $has_download_incomplete ? lingotek_get_sync_download_batch_elements($download_targets_incomplete, LingotekSync::STATUS_PENDING) : array();
-  $upload_commands = $has_upload ? lingotek_get_sync_upload_batch_elements('node', $upload_nids) : array();
-  $upload_config_commands = $has_upload_config ? lingotek_get_sync_upload_config_batch_elements('node', $upload_config) : array();
+  $upload_config_commands = $has_upload_config ? lingotek_get_sync_upload_config_batch_elements($upload_config) : array();
 
   $operations = array();
-  $operations = array_merge($operations, $download_commands, $download_commands_inc, $upload_commands, $upload_config_commands);
+  $operations = array_merge($operations, $download_commands, $download_commands_inc, $upload_config_commands);
   $operations = array_merge($operations, $extra_operations);
 
   // Where to send the user after the batch has processed. If redirect_url GET param exists, then use it
@@ -224,67 +222,10 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       }
     }
     $doc_ids = array_unique($doc_ids);
-    foreach ($doc_ids as $doc_id) {
-      //$updates[] = array('lingotek_get_and_update_target_progress', array($doc_ids));
-    }
     $operations = array_merge($updates, $operations);
   }
 
   return $operations;
-}
-
-/**
- * Batch Create: Lingotek Identify Content - create informative lingonode data (in lingotek table) for pre-existing content 
- */
-function lingotek_batch_identify_content($front = FALSE) {
-  LingotekLog::trace(__METHOD__);
-  $result = db_query("SELECT DISTINCT entity_id FROM {lingotek_entity_metadata} WHERE entity_type='node'");
-  $existing_nids = $result->fetchCol();
-  $operations = array();
-
-  global $language;
-  $existing_languages = language_list();
-  unset($existing_languages[$language->language]);
-
-  foreach (lingotek_get_content_types() as $type) {
-
-    $nodes = node_load_multiple(array(), array('type' => $type));
-
-    $nodes_in_language_field = array();
-    $nodes_in_language_node = array();
-
-    foreach ($existing_languages as $lang) {
-      $nodes_in_language_field[$lang->language] = lingotek_list_entities_with_language('node', $type, $lang->language);
-      $nodes_in_language_node[$lang->language] = lingotek_list_nodes_translated_in_language($type, $lang->language);
-    }
-
-    foreach ($nodes as $node) {
-      if (!in_array($node->nid, $existing_nids)) {
-        if ($node->tnid == 0 || $node->tnid == $node->nid) { //skip node translation target nodes
-          // Add content nodes to lingotek table, to indicate that they are machine translatable nodes
-          $operations[] = array('LingotekSync::setNodeStatus', array($node->nid, LingotekSync::STATUS_EDITED));
-
-          foreach ($existing_languages as $lang) {
-            if (in_array($node->nid, $nodes_in_language_field[$lang->language]) || in_array($node->nid, $nodes_in_language_node[$lang->language])) {
-              $lingotek_locale = Lingotek::convertDrupal2Lingotek($lang->language);
-              lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
-            }
-          }
-        }
-      };
-    }
-  }
-
-  $batch = array(
-    'title' => t('Identifying Translatable Content'),
-    'operations' => $operations,
-      //'finished' => 'lingotek_batch_identify_content_finished'
-  );
-
-  batch_set($batch);
-  if ($front) {
-    batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-  }
 }
 
 /**
@@ -391,7 +332,7 @@ function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_succe
   LingotekLog::trace('download chunk: @chunk_id (@language)', array('@chunk_id' => $cid, '@language' => $lingotek_locale));
   $trans_obj = LingotekConfigChunk::loadById($cid);
   if ($trans_obj) {
-    $result = $trans_obj->updateLocalContentByTarget($lingotek_locale);
+    $result = $trans_obj->downloadTriggered($lingotek_locale);
   }
   if ($result) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;

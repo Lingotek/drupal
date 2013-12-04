@@ -56,17 +56,17 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       $lingotek_locale = $target->language;
       $progress_percentage = empty($target->percentComplete) ? 0 : $target->percentComplete;
       $sum_progress += $progress_percentage;
-      $target_status_local = lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale);
+      $target_status_local = lingotek_keystore('node', $node->nid, 'target_sync_status_' . $lingotek_locale);
       if ($target_status_local === LingotekSync::STATUS_PENDING) {
         $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
-        lingotek_lingonode($node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
+        lingotek_keystore('node', $node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
       }
-      lingotek_lingonode($node->nid, 'target_sync_progress_' . $lingotek_locale, $progress_percentage);
-      lingotek_lingonode($node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
+      lingotek_keystore('node', $node->nid, 'target_sync_progress_' . $lingotek_locale, $progress_percentage);
+      lingotek_keystore('node', $node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
     }
     $count = count($document_progress->translationTargets);
     if ($count) {
-      lingotek_lingonode($node->nid, 'translation_progress', $sum_progress/$count);// unused
+      lingotek_keystore('node', $node->nid, 'translation_progress', $sum_progress/$count);// unused
     }
 
     $form['fieldset'] = array(
@@ -116,7 +116,7 @@ function lingotek_download_translations_form_submit($form, $form_state) {
     cache_clear_all($nid, 'cache_entity_node');
   }
 
-  $document_id = lingotek_lingonode($nid, 'document_id');
+  $document_id = lingotek_keystore('node', $nid, 'document_id');
 
   $locales = array();
   $download_targets = array();
@@ -130,7 +130,7 @@ function lingotek_download_translations_form_submit($form, $form_state) {
 
   $extra_operations = array();
 
-  lingotek_sync_batch_create(array(), array(), $download_targets, array(), 'node/' . $form_state['values']['nid'] . '/lingotek_pm', $extra_operations);
+  lingotek_sync_batch_create(array(), $download_targets, array(), 'node/' . $form_state['values']['nid'] . '/lingotek_pm', $extra_operations);
 
   drupal_set_message(t('Updated local translations for the selected languages: @selected_locales', array('@selected_locales' => implode(", ", $locales))));
   cache_clear_all('field:node:' . $form_state['values']['nid'], 'cache_field');
@@ -487,7 +487,7 @@ function lingotek_advanced_parsing_upgrade_form($form_state) {
         '#collapsed' => TRUE,
       );
 
-      $advanced_parsing = lingotek_lingonode($node_id, 'use_advanced_parsing');
+      $advanced_parsing = lingotek_keystore('node', $node_id, 'use_advanced_parsing');
       if (empty($advanced_parsing)) {
         $form['advanced_parsing_upgrade']['submit'] = array(
           '#type' => 'submit',
@@ -520,7 +520,7 @@ function lingotek_advanced_parsing_upgrade_form_submit($form, $form_state) {
   $error = FALSE;
 
   if (!empty($form_state['values']['node_id'])) {
-    lingotek_lingonode($form_state['values']['node_id'], 'use_advanced_parsing', 1);
+    lingotek_keystore('node', $form_state['values']['node_id'], 'use_advanced_parsing', 1);
     $target_node = lingotek_node_load_default($form_state['values']['node_id']);
     if ($target_node->nid) {
       if (LingotekApi::instance()->updateContentDocument(LingotekEntity::load($target_node))) {

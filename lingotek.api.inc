@@ -61,7 +61,7 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     }
         
     node_save($localized_node);
-    lingotek_lingonode($localized_node->nid, 'node_sync_status', 'TARGET');
+    lingotek_keystore('node', $localized_node->nid, 'node_sync_status', 'TARGET');
   }
 
   return $localized_node;
@@ -650,7 +650,7 @@ function lingotek_get_workbench_url_by_phases($document_id, $phases, $label = FA
         if ($label === TRUE) {
           $label = lingotek_get_phase_name($phase_id);
         }
-        $nid = LingotekSync::getNodeIdFromDocId($document_id);
+        list($nid, $entity_type) = LingotekSync::getEntityIdFromDocId($document_id);
         $l = l($label, '', array('attributes' => array(
             'onclick' => 'window.open(\'' . $path . '\'); return false;',
             'onmouseover' => 'jQuery("#node-' . $nid . '").addClass("lingotek-highlight");',

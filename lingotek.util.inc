@@ -24,32 +24,28 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
   }
 }
 
-function lingotek_lingonode($nid, $key = "", $value = "") {
-  return lingotek_keystore('node', $nid, $key, $value);
-}
-
 /*
  * Helper function, for storing additional information with a Node.
  * Example usage (GET):
- *    lingotek_lingonode('all') - returns all nodes and properties
- *    lingotek_lingonode(5) - returns all properties for the specified NodeId (i.e., 5)
- *    lingotek_lingonode(5,'node_sync_status') - returns the value for the specified property (i.e., node_sync_status) for the specified NodeId (i.e., 5)
+ *    lingotek_keystore($entity_type, 'all') - returns all entities and properties
+ *    lingotek_keystore($entity_type, 5) - returns all properties for the specified Entity ID (i.e., 5)
+ *    lingotek_keystore($entity_type, 5,'node_sync_status') - returns the value for the specified property (i.e., node_sync_status) for the specified Entity ID (i.e., 5)
  * Example usage (SET):
- *     lingotek_lingonode(5,'node_sync_status','CURRENT') - sets the value to 'CURRENT' for the property 'node_sync_status' of NodeId 5
+ *     lingotek_keystore($entity_type, 5,'node_sync_status','CURRENT') - sets the value to 'CURRENT' for the property 'node_sync_status' of Entity 5 of type $entity_type
  *
  * @param $nid
- *  NodeId.
+ *  Entity ID.
  * @param $key
  *  (optional) "" Key to look up in the database.  If no key is specified, then
- *  every key for the Node is returned with it's value.
+ *  every key for the Entity is returned with it's value.
  * @param $value
  *  (optional) "" Value to save.  If "" or no value is given for $value, then
  *  it will return the $value of the first found instance of the specified $key
  *  in the database.  Returns FALSE if no value is found.
  */
 
-function lingotek_keystore($entity_type, $nid, $key = "", $value = "") {
-  if ($nid == 'all') {
+function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "") {
+  if ($entity_id == 'all') {
     $lingo_node = array();
     $result = db_select('lingotek_entity_metadata', 'n')
       ->condition('entity_type', $entity_type)
@@ -60,11 +56,11 @@ function lingotek_keystore($entity_type, $nid, $key = "", $value = "") {
     }
     return $lingo_node;
   }
-  if ($nid == -1) {
-    LingotekLog::error("Invalid -1 nid passed to lingotek_lingonode().", array('@nid' => $nid, '@key' => $key, '@value' => $value));
+  if ($entity_id == -1) {
+    LingotekLog::error("Invalid -1 entity ID passed to lingotek_keystore().", array('@nid' => $entity_id, '@key' => $key, '@value' => $value));
     return FALSE;
   }
-  if (is_numeric($nid) && $nid) {
+  if (is_numeric($entity_id) && $entity_id) {
     //Return an array with all of the keys and values.
     if ($key === "") {
       $lingo_node = array();
@@ -72,7 +68,7 @@ function lingotek_keystore($entity_type, $nid, $key = "", $value = "") {
       $result = db_select('lingotek_entity_metadata', 'n')
         ->fields('n', array(db_escape_field('entity_key'), db_escape_field('value')))
         ->condition('entity_type', $entity_type)
-        ->condition(db_escape_field('entity_id'), $nid)
+        ->condition(db_escape_field('entity_id'), $entity_id)
         ->execute();
       foreach ($result as $row) {
         $lingo_node[$row->entity_key] = check_plain($row->value);
@@ -85,7 +81,7 @@ function lingotek_keystore($entity_type, $nid, $key = "", $value = "") {
       $result = db_select('lingotek_entity_metadata', 'n')
         ->fields('n', array(db_escape_field('value')))
         ->condition('entity_type', $entity_type)
-        ->condition(db_escape_field('entity_id'), $nid)
+        ->condition(db_escape_field('entity_id'), $entity_id)
         ->condition(db_escape_field('entity_key'), $key)
         ->execute();
       $row = $result->fetchObject();
@@ -101,29 +97,25 @@ function lingotek_keystore($entity_type, $nid, $key = "", $value = "") {
     else {
       $row = array(
         db_escape_field('entity_type') => $entity_type,        
-        db_escape_field('entity_id') => $nid,
+        db_escape_field('entity_id') => $entity_id,
         db_escape_field('entity_key') => $key,
         db_escape_field('value') => $value,
       );
 
-      if (lingotek_keystore($entity_type, $nid, $key) === FALSE) { //Insert
+      if (lingotek_keystore($entity_type, $entity_id, $key) === FALSE) { //Insert
         drupal_write_record('lingotek_entity_metadata', $row);
-        return "$nid : $key => $value INSERTED";
+        return "$entity_id : $key => $value INSERTED";
       }
       else { //Update
         drupal_write_record('lingotek_entity_metadata', $row, array(db_escape_field('entity_type'), db_escape_field('entity_id'), db_escape_field('entity_key')));
-        return "$nid : $key => $value UPDATED";
+        return "$entity_id : $key => $value UPDATED";
       }
     }
   }
   else {
-    LingotekLog::error("Invalid nid (@nid) passed to lingotek_lingonode().", array('@nid' => $nid, '@key' => $key, '@value' => $value));
+    LingotekLog::error("Invalid entity ID (@entity_id) passed to lingotek_keystore().", array('@entity_id' => $entity_id, '@key' => $key, '@value' => $value));
     return FALSE;
   }
-}
-
-function lingotek_lingonode_variable_delete($nid, $lingokey) {
-  lingotek_keystore_delete('node', $nid, $lingokey);
 }
 
 /*
@@ -143,10 +135,6 @@ function lingotek_keystore_delete($entity_type, $id, $key) {
   $query->condition('entity_id', $id);
   $query->condition('entity_key', $key);
   $query->execute();
-}
-
-function lingotek_lingonode_variable_delete_multiple( $nids = array(), $lingokey, $condition = '=') {
-  lingotek_keystore_delete_multiple('node', $nids, $lingokey, $condition);
 }
 
 /**
@@ -182,16 +170,6 @@ function lingotek_keystore_delete_multiple($entity_type, $nids = array(), $lingo
         ->condition('entity_key', $lingokey, $condition)
         ->execute();
   }
-}
-
-/*
- * When a node is deleted, this is called to clean out the extra data from that node in the Lingotek table.
- *
- * @param $nid
- *  NodeId.
- */
-function lingotek_lingonode_delete($nid) {
-  lingotek_lingonode_delete('node', $nid);
 }
 
 function lingotek_keystore_delete_all($entity_type, $id) {
@@ -608,19 +586,33 @@ function lingotek_get_source_language() {
 // END:  lingotek_get_source_language()
 
 
-function lingotek_managed_entity_types() {
+/**
+ * Return a whitelist of entity types supported for translation by the Lingotek module
+ */
+function lingotek_managed_entity_types($include_all = FALSE) {
   $types = entity_get_info();
-//  $exclude = array('i18n_translation', 'file', 'user', 'taxonomy_vocabulary', 'taxonomy_term');
-//  $exclude = array_flip($exclude);
-//  return array_diff_key($types, $exclude);
-  $enabled = array('comment', 'node', 'field_collection_item', 'message_type');
+  $enabled = array('node', 'comment', 'message_type');
+  if ($include_all) {
+    // include the entities that should not normally be managed separately
+    if (module_exists('field_collection')) {
+      $enabled[] = 'field_collection_item';
+    }
+  }
   $enabled = array_flip($enabled);
 
-  if (module_exists('field_collection') && $types['field_collection_item']) {
-    $types['field_collection_item']['label'] = 'Field Collection';
+  $types['comment']['label'] = 'Comments';
+  $types['node']['label'] = 'Nodes';
+  
+  if (isset($types['message_type'])) {
+    $types['message_type']['label'] = 'Message Types';
+  }
+  
+  if (isset($types['field_collection_item'])) {
+    $types['field_collection_item']['label'] = 'Field Collections';
   }
 
-  return array_intersect_key($types, $enabled);
+  $enabled_types = array_intersect_key($types, $enabled);
+  return $enabled_types;
 }
 
 /**
@@ -1062,11 +1054,6 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
     drupal_set_message(t('The field data cleanup utility completed.'));
   }
 
-  lingotek_batch_identify_content(); // Identify pre-existing content (based on these new content-type settings)
-  if ($show_messages) {
-    drupal_set_message(t('Translatable content has been identified.'));
-  }
-  
   if ($cleanup_batch && is_array($cleanup_batch)) {
     return $cleanup_batch;
   }
