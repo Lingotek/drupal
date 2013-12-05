@@ -60,7 +60,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     if (!isset($this->language->lingotek_locale)) { // if Drupal variable 'language_default' does not exist
       $this->language->lingotek_locale = Lingotek::convertDrupal2Lingotek($this->language->language);
     }
-    $this->language_targets = Lingotek::availableLanguageTargetsWithoutSource($this->language->lingotek_locale);
+    $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language->lingotek_locale);
     $this->min_lid = $this->getMinLid();
     $this->max_lid = $this->getMaxLid();
   }
