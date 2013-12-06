@@ -941,6 +941,7 @@ function lingotek_setup_additional_translation_settings_form($form, &$form_state
 function lingotek_setup_additional_translation_settings_form_submit($form, &$form_state) {
   // WTD: process the submitted options
   
+  lingotek_setup_allowed_translation_formats();
   $operations = array();
   $cleanup_batch = lingotek_cleanup_utility(FALSE, FALSE); // return the batch, rather than autoset to execute
   if ($cleanup_batch && isset($cleanup_batch['operations'])) {
@@ -949,6 +950,20 @@ function lingotek_setup_additional_translation_settings_form_submit($form, &$for
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
   
   lingotek_admin_additional_translation_settings_form_submit($form, $form_state, $additional_operations=$operations);
+}
+
+/**
+ * Update the formats allowed to be used for saving blocks and strings, etc. to include HTML
+ * 
+ * Currently, Lingotek will attempt to translate all filter formats
+ */
+function lingotek_setup_allowed_translation_formats() {
+  $filter_formats = filter_formats();
+  $lingotek_supported_formats = array();
+  foreach ($filter_formats as $key => $format) {
+    $lingotek_supported_formats[$key] = $format->format;
+  }
+  variable_set('i18n_string_allowed_formats', $lingotek_supported_formats);
 }
 
 /**
