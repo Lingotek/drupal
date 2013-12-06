@@ -967,10 +967,6 @@ function lingotek_entity_save($entity, $entity_type) {
   
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  if (!lingotek_enabled_bundle($entity_type, $bundle) && $entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
-    return $entity;
-  }
-
   $has_not_been_uploaded = !isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id']);
 
   $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
@@ -1002,8 +998,14 @@ function lingotek_entity_save($entity, $entity_type) {
         $prefill_checked = (isset($entity->lingotek['prefill_phases_checkbox']) ? $entity->lingotek['prefill_phases_checkbox'] : NULL);
         $prefill_phase = ($prefill_checked ? $entity->lingotek['prefill_phase_select'] : NULL);
         $result = $api->changeWorkflow(array($document_id), $curr_workflow, $prefill_phase);
-        LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_PENDING);
+        if ($result === TRUE) {
+          LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_PENDING);
+          lingotek_keystore($entity_type, $id, 'workflow_id', $curr_workflow);
         }
+        else {
+          LingotekLog::error('Failed to change workflow for @et #@id: @error', array('@et' => $entity_type, '@id' => $id, '@error' => $result));
+        }
+      }
     }
   }
   else { // Specific Profile
@@ -1063,7 +1065,7 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
 
     // CREATE/UPDATE WORKFLOW ENTRIES IN THE LINGOTEK METADATA TABLE
     foreach ($nids as $nid) {
-      lingotek_keystore('entity_type', $nid, 'workflow_id', $workflow_id);
+      lingotek_keystore($entity_type, $nid, 'workflow_id', $workflow_id);
       LingotekSync::setAllTargetStatus($entity_type, $nid, LingotekSync::STATUS_PENDING);
     }
   }
