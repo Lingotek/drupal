@@ -595,7 +595,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   if (!user_access('manage projects')) {
     return;
   }
-  $is_enterprise = LingotekAccount::instance()->isEnterprise();
+  $show_advanced = LingotekAccount::instance()->showAdvanced();
 
   if (isset($form['nid']['#value'])) {
     $nid = $form['nid']['#value'];
@@ -681,7 +681,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     }
   }    
   
-  if ($is_enterprise) {
+  if ($show_advanced) {
     // Only show these options if the Lingotek document hasn't yet been created.
     if (!$node->lingotek['document_id'] && class_exists('LingotekApi')) {
 
@@ -765,7 +765,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
-  $is_enterprise = LingotekAccount::instance()->isEnterprise();
+  $show_advanced = LingotekAccount::instance()->showAdvanced();
   $workbench_moderation_enabled = module_exists('workbench_moderation');
 
   $title = t('Translation Management');
@@ -921,7 +921,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     }
   }
 
-  if ($is_enterprise) {
+  if ($show_advanced) {
     // Community Translation
     $form['lingotek']['allow_community_translation'] = array(
       '#type' => 'checkbox',
@@ -1106,6 +1106,23 @@ function lingotek_get_profiles() {
     variable_set('lingotek_profiles', $profiles);
   }
   return $profiles;
+}
+
+  function lingotek_get_profile_settings($profile_id) {
+  // merge of global profile settings and profile-specific settings
+  $profiles = lingotek_get_profiles();
+  $global_profile = lingotek_get_global_profile();
+  $profile = isset($profiles[$profile_id]) ? $profiles[$profile_id] : array();
+  return array_merge($global_profile, $profile);
+}
+
+function lingotek_set_profile_settings($profile_id, $settings) {
+  // reverse merge, saving the differences and stomping the rest
+  $global_profile = lingotek_get_global_profile();
+  $profiles = lingotek_get_profiles();
+  $differences = array_diff($settings, $global_profile);
+  $profiles[$profile_id] = $differences;
+  variable_set('lingotek_profiles', $profiles);
 }
 
 function lingotek_get_profile_options() {

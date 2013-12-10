@@ -108,7 +108,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l(t('Disassociate Translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/' . $entity_type, array('attributes' => array('id' => 'reset-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
   );
 
-  if (LingotekAccount::instance()->isEnterprise()) {
+  $api = LingotekApi::instance();
+  $workflows = $api->listWorkflows();
+  if (is_array($workflows) && count($workflows) > 1) {
     $form['change_workflow'] = array(
       '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow/' . $entity_type, array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
     );
@@ -478,7 +480,7 @@ function lingotek_grid_action_submit($form, $form_state) {
       }
       elseif ($action == 'upload') { // If uploading
         $batch = array(
-          'title' => t('Uploading Nodes To Lingotek'),
+          'title' => t('Uploading Content To Lingotek'),
           'finished' => 'lingotek_sync_upload_node_finished'
         );
         $operations = lingotek_get_sync_upload_batch_elements($entity_type, $entity_ids);

@@ -16,7 +16,7 @@ class LingotekAccount {
   const ACTIVE = 'active';
   const UNKNOWN = 'unknown';
   const NONE = 'none';
-  const ENTERPRISE = 'enterprise';
+  const ADVANCED = 'advanced';
 
   /**
    * Holds the static instance of the singleton object.
@@ -114,12 +114,12 @@ class LingotekAccount {
     return $details;
   }
 
-  public function isEnterprise() {
-    return $this->isPlanType(self::ENTERPRISE);
+  public function showAdvanced() {
+    return $this->isPlanType(self::ADVANCED);
   }
 
-  public function getEnterpriseStatusText() {
-    return ( $this->isPlanType(self::ENTERPRISE) ) ? '<span style="color: green;">Yes</span>' : '<span>No</span>';
+  public function getAdvancedStatusText() {
+    return ( $this->isPlanType(self::ADVANCED) ) ? '<span style="color: green;">Yes</span>' : '<span>No</span>';
   }
 
   /**

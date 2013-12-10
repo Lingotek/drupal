@@ -465,10 +465,10 @@ function lingotek_access_by_plan_type($types, $permission = NULL) {
 
 function lingotek_access_dev_tools($node, $permission) {
   // Special case:  hide the Lingotek Developer Tools when the node is managed by entity translation and has not been pushed to Lingotek
-  // OR when not Enterprise
+  // OR when not showing advanced features
 
   $user_access = user_access($permission);
-  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->isEnterprise()) {
+  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->showAdvanced()) {
     return FALSE;
   }
   // Default: Standard user access
