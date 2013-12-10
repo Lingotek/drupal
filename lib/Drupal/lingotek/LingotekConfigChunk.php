@@ -377,36 +377,21 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return mixed
    *   A LingotekConfigChunk object on success, FALSE on failure.
    */
-  public static function loadByLingotekDocumentId($lingotek_document_id, $source_language_code, $lingotek_project_id) {
+  public static function loadByLingotekDocumentId($lingotek_document_id) {
     $chunk = FALSE;
 
     // Get the Chunk entries in the system associated with the document ID.
     $query = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('id'))
         ->condition('config_key', 'document_id')
-        ->condition('value', $lingotek_document_id);
-    $results = $query->execute();
+        ->condition('value', $lingotek_document_id)
+        ->execute();
+    $id = $query->fetchField();
 
-    $target_ids = array();
-    foreach ($results as $result) {
-      $target_ids[] = $result->id;
+    if ($id) {
+      $chunk = self::loadById($id);
     }
-
-    // Get the results that are associated with the passed Lingotek project ID.
-    // Lingotek Document IDs are not unique across projects.
-    if (!empty($target_ids)) {
-      $in_project_results = db_select('lingotek_config_metadata', 'meta')
-          ->fields('meta', array('id'))
-          ->condition('id', $target_ids, 'IN')
-          ->condition('config_key', 'project_id')
-          ->condition('value', $lingotek_project_id)
-          ->execute()
-          ->fetchAll();
-
-      if (count($in_project_results)) {
-        $chunk = self::loadById($in_project_results[0]->id);
-      }
-    }
+    
     return $chunk;
   }
 

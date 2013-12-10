@@ -118,10 +118,6 @@ class LingotekAccount {
     return $this->isPlanType(self::ADVANCED);
   }
 
-  public function getAdvancedStatusText() {
-    return ( $this->isPlanType(self::ADVANCED) ) ? '<span style="color: green;">Yes</span>' : '<span>No</span>';
-  }
-
   /**
    * Get Account Status
    * NOTE:  You shouldnt need to call this directly.  Its called in the constructor.

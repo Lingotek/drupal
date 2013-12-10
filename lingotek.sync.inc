@@ -55,6 +55,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
   $max = 3;
   $sleep = rand($min, $max);
   sleep($sleep);
+  $trans_obj = NULL;
 
   // try 3 times if by chance we don't find the document in the database yet..
   $attempts = 0;
@@ -70,19 +71,10 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
     if ($id) {
       $entity = lingotek_entity_load_single($type, $id);
       $trans_obj = LingotekEntity::load($entity, $type);
-      $source_language = $entity->language;
       break;
     }
 
-    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id, $source_language, $project_id)) {
-      $source_language = lingotek_get_source_language(); //TO-DO: use the source_language of the object?
-      $replacements['@id'] = $trans_obj->cid;
-      $replacements['@trans_type'] = "ConfigChunk";
-      $replacements = array(
-        '@document' => $document_id,
-        '@language_code' => $lingotek_locale,
-        '@project_id' => $project_id,
-      );
+    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id)) {
       break;
     }
 
@@ -91,7 +83,9 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
     sleep(2);
     $attempts++;
   }
-  
+  if (!$trans_obj) {
+    LingotekLog::error('Did not find doc ID @doc_id after all attempts.  Giving up.' , array('@doc_id' => $document_id));
+  }
   return $trans_obj;
 }
 
@@ -661,7 +655,7 @@ function lingotek_update_config_progress($document_ids) {
     $cfg_values = array();
     $trans_obj = NULL;
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-      $trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($doc_id, NULL, $project_id);
+      $trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
       if (!$trans_obj) {
         LingotekLog::error("Lingotek doc ID '@doc_id' not found", array('@doc_id' => $doc_id));
         continue;
