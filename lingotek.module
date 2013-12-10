@@ -1444,7 +1444,7 @@ function lingotek_entity_download_triggered($entity, $entity_type, $lingotek_loc
     $entity = lingotek_entity_load_single($entity_type, $entity);
   }
 
-  if (!$entity->lingotek['create_lingotek_document']) {
+  if (!$entity->lingotek['sync_method']) {
     return FALSE;
   }
 
