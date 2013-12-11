@@ -1159,7 +1159,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
   $form[$fkey]['lingotek_account_plan_type'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Advanced Features'),
-    '#default_value' => (variable_get('lingotek_account_plan_type') == 'enterprise' ? 1 : 0),
+    '#default_value' => (variable_get('lingotek_account_plan_type') == 'advanced' ? 1 : 0),
     '#description' => t('Some features may not be available without an') . '&nbsp;<a href="http://www.lingotek.com/drupal_pricing" target="_blank">Enterprise license</a>&nbsp;' . t('for the Lingotek TMS. Call 801.331.7777 for details.'),
   );
 
@@ -1168,7 +1168,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
 function lingotek_admin_prefs_form_submit($form, &$form_state) {
   lingotek_admin_language_switcher_form_submit($form, $form_state);
-  $form_state['values']['lingotek_account_plan_type'] = ($form['prefs']['lingotek_account_plan_type']['#checked'] ? 'enterprise' : 'standard');
+  $form_state['values']['lingotek_account_plan_type'] = ($form['prefs']['lingotek_account_plan_type']['#checked'] ? 'advanced' : 'standard');
   system_settings_form_submit($form, $form_state);
   menu_rebuild();
 }

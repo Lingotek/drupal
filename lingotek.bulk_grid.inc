@@ -531,7 +531,7 @@ function lingotek_grid_build_column_checkboxes($form_state) {
   $column_elements = array(
     'nid' => array(
       '#type' => 'checkbox',
-      '#title' => t('Node ID'),
+      '#title' => t('ID'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'nid' . $suffix] : in_array('nid', $columns['defaults']),
     ),
     'content_type' => array(
@@ -541,12 +541,12 @@ function lingotek_grid_build_column_checkboxes($form_state) {
     ),
     'title' => array(
       '#type' => 'checkbox',
-      '#title' => t('Node Title'),
+      '#title' => t('Title'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'title' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'title' . $suffix] : in_array('title', $columns['defaults']),
     ),
     'language' => array(
       '#type' => 'checkbox',
-      '#title' => t('Source Language'),
+      '#title' => t('Source Uploaded'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'language' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'language' . $suffix] : in_array('language', $columns['defaults']),
     ),
     'translations' => array(
@@ -556,7 +556,7 @@ function lingotek_grid_build_column_checkboxes($form_state) {
     ),
     'configuration' => array(
       '#type' => 'checkbox',
-      '#title' => t('Configuration'),
+      '#title' => t('Profile'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'configuration' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'configuration' . $suffix] : in_array('configuration', $columns['defaults']),
     ),
     'document_id' => array(
@@ -581,7 +581,7 @@ function lingotek_grid_build_column_checkboxes($form_state) {
     ),
     'last_uploaded' => array(
       '#type' => 'checkbox',
-      '#title' => t('Time Last Uploaded'),
+      '#title' => t('Last Uploaded'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'last_uploaded' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'last_uploaded' . $suffix] : in_array('last_uploaded', $columns['defaults']),
     ),
     'locale_progress_percent' => array(

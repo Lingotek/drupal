@@ -579,10 +579,18 @@ function lingotek_update_7408(&$sandbox) {
 
 /**
  * Adds support for translating additional entity types
+ * Updates 'lingotek_account_plan_type' to be 'advanced' if currently 'enterprise'
  */
 function lingotek_update_7500(&$sandbox) {
+  // support for additional entity types
   db_query("INSERT INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
 FROM lingotek");
   //db_query("DROP TABLE lingotek");
+  
+  // update 'enterprise' to be 'advanced'
+  $current_plan_type = variable_get('lingotek_account_plan_type');
+  if ($current_plan_type == 'enterprise') {
+    variable_set('lingotek_account_plan_type', 'advanced');
+  }
 }
