@@ -362,7 +362,7 @@ class Lingotek {
    * @return array
    *   An array of Lingotek language codes.
    */
-  public static function availableLanguageTargets($pluck_field = NULL, $include_disabled = FALSE, $lingotek_locale_to_exclude = NULL) {
+  public static function getLanguages($pluck_field = NULL, $include_disabled = FALSE, $lingotek_locale_to_exclude = NULL) {
     lingotek_add_missing_locales();
     $languages = array();
 
@@ -380,12 +380,12 @@ class Lingotek {
     return $languages;
   }
 
-  public static function availableLanguageTargetsWithoutSource($source_lingotek_locale) {
-    return self::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale);
+  public static function getLanguagesWithoutSource($source_lingotek_locale) {
+    return self::getLanguages('lingotek_locale', FALSE, $source_lingotek_locale);
   }
 
-  public static function availableLanguageTargetsWithoutSourceAsJSON($source_lingotek_locale) {
-    return drupal_json_encode(array_values(self::availableLanguageTargets('lingotek_locale', FALSE, $source_lingotek_locale)));
+  public static function getLanguagesWithoutSourceAsJSON($source_lingotek_locale) {
+    return drupal_json_encode(array_values(self::getLanguages('lingotek_locale', FALSE, $source_lingotek_locale)));
   }
 
 }

@@ -165,7 +165,8 @@ class LingotekSync {
 
     foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
-      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
+      if(is_object($chunk))
+        $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
   }
 
@@ -278,14 +279,68 @@ class LingotekSync {
     return $report;
   }
 
-  //lingotek_count_nodes
-  public static function getNodeCountByStatus($status) {
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
-    $query->condition('entity_type', 'node');
-    $query->condition('entity_key', 'node_sync_status');
-    $query->condition('value', $status);
-    $result = $query->countQuery()->execute()->fetchField();
-    return $result;
+  public static function getSourceCount($lingotek_locale) {
+    $count = 0;
+    //$count += self::getEntitySourceCount($lingotek_locale, NULL);// ALL
+    $count += self::getEntitySourceCount($lingotek_locale, 'node');
+    // config
+    return $count;
+  }
+
+  public static function getEntitySourceCount($lingotek_locale, $entity_type = NULL){
+    $managed_entities = lingotek_managed_entity_types();
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+    $target_key = 'node_sync_status';
+    $q = array();
+    $total_count = 0;
+    foreach($managed_entities as $m_entity_type => $properties){
+      if(!is_null($entity_type) && $entity_type != $m_entity_type){
+        continue;
+      }
+      $entity_base_table = $properties['base table'];
+      $query = db_select($entity_base_table, 't')->condition('t.language', $drupal_language_code);
+      $count = $query->countQuery()->execute()->fetchField();
+      $total_count += $count;
+    }
+    return $total_count;
+  }
+  
+  public static function getCountByStatus($status, $lingotek_locale) {
+    $count = 0;
+    //$count += self::getEntityCountByStatus($status, $lingotek_locale, NULL);// ALL
+    $count += self::getEntityTargetCountByStatus($status, $lingotek_locale, 'node');
+    // (turned off reporting of config chunks, for now)
+    /*
+    if (variable_get('lingotek_translate_config', 0)) {
+      $count += self::getChunkCountByStatus($status);
+    }
+     */
+    return $count;
+  }
+
+  public static function getEntityTargetCountByStatus($status, $lingotek_locale, $entity_type = NULL) {
+    $managed_entities = lingotek_managed_entity_types(); //dvz($managed_entities,TRUE);
+    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+    $target_prefix = 'target_sync_status_';
+    $target_key = $target_prefix . $lingotek_locale;
+    $q = array();
+    $total_count = 0;
+    foreach($managed_entities as $m_entity_type => $properties){
+      if(!is_null($entity_type) && $entity_type != $m_entity_type){
+        continue;
+      }
+      $entity_base_table = $properties['base table'];
+      $query = db_select($entity_base_table, 't');
+      $query->leftJoin('lingotek_entity_metadata', 'l',
+       'l.entity_id = '.$properties['entity keys']['id'].
+       ' AND l.entity_type = \''.$entity_base_table.'\''.
+       ' AND l.entity_key = \''.$target_key.'\' '
+      );
+      $query->condition('l.value', $status);
+      $count = $query->countQuery()->execute()->fetchField();
+      $total_count += $count;
+    }
+    return $total_count;
   }
 
   //lingotek_count_chunks
@@ -311,19 +366,6 @@ class LingotekSync {
     }
     LingotekLog::error('Unknown config-chunk status: @status', array('@status' => $status));
     return 0;
-  }
-
-  //lingotek_count_total_source
-  public static function getCountByStatus($status) {
-    $count = 0;
-    $count += self::getNodeCountByStatus($status);
-    // (turned off reporting of config chunks, for now)
-    /*
-    if (variable_get('lingotek_translate_config', 0)) {
-      $count += self::getChunkCountByStatus($status);
-    }
-     */
-    return $count;
   }
 
   public static function getTargetNodeCountByStatus($status, $lingotek_locale) {
@@ -492,7 +534,7 @@ class LingotekSync {
     if (!isset($source_language->lingotek_locale)) {
       $source_language->lingotek_locale = Lingotek::convertDrupal2Lingotek($source_language->language);
     }
-    $lingotek_codes = Lingotek::availableLanguageTargetsWithoutSource($source_language->lingotek_locale);
+    $lingotek_codes = Lingotek::getLanguagesWithoutSource($source_language->lingotek_locale);
     if (!count($lingotek_codes)) {
       LingotekLog::error('No languages configured for this Lingotek account.', array());
       return array();

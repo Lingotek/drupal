@@ -155,7 +155,7 @@ function lingotek_menu() {
   );
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/notifications'] = $items[LINGOTEK_NOTIFY_URL]; // allow early auto-provision community callback urls to wor
   // Dashboard:  Ajax Command Processor
-  $items['lingotek/target'] = array(
+  $items['lingotek/locale'] = array(
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek'),
     'description' => 'Lingotek Command Router',
@@ -1437,7 +1437,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   
   $source = isset($entity->language) ? $entity->language : language_default()->language;
   $source = Lingotek::convertDrupal2Lingotek($source);
-  $languages = Lingotek::availableLanguageTargetsWithoutSource($source);
+  $languages = Lingotek::getLanguagesWithoutSource($source);
   foreach ($languages as $lingotek_locale) {
     lingotek_keystore($entity_type, $id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
   }
@@ -2352,7 +2352,7 @@ function lingotek_rules_action_info() {
 }
 
 function lingotek_rules_languages() {
-  return Lingotek::availableLanguageTargets('language');
+  return Lingotek::getLanguages('language');
 }
 
 function lingotek_rules_entity_upload($wrapper, $settings, $state) {
