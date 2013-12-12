@@ -187,7 +187,8 @@ class LingotekSync {
 
     foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
-      $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
+      if(is_object($chunk))
+        $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
   }
 

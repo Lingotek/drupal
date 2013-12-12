@@ -42,14 +42,16 @@ function lingotek_dashboard() {
   }
 
   return array(
-    'dashboard' => array(
-      '#type' => 'markup',
-      '#markup' => '<div id="dashboard"></div>'
-    ),
     'script' => array(
       '#type' => 'markup',
       '#markup' => lingotek_get_dashboard_code() // Generates the dashboard javascript.
     )
+  );
+  return array(
+    'script' => array(
+      '#type' => 'markup',
+      '#markup' => lingotek_get_dashboard_code() // Generates the dashboard javascript.
+    ),
   );
 }
 
@@ -65,15 +67,10 @@ function lingotek_get_dashboard_code() {
   $guid = lingotek_get_guid(); // 16 char string
 
   $script = '
-      <script src="' . LINGOTEK_GMC_SERVER . '/js/lingotek.min.js"></script>
       <script> 
-        require(["lingotek"],function(lingotek){ 
-        var containerId = "dashboard"; 
-        var config = { 
+        var cms_data = { 
           // lingotek
           "community": "%s",
-          "oauth_key": "%s",
-          "oauth_secret": "%s",
           "external_id": "%s",
           "tm_vault_id": "%s",
           "workflow_id": "%s",
@@ -89,14 +86,12 @@ function lingotek_get_dashboard_code() {
           "cms_version": "%s",
           "cms_tag": "%s",
           "module_version": %s,
-          "endpoint_url": "%s",
-          "sync_url": "%s",
-          // data
-          "locales": %s
+          "endpoint_url": "%s"
         };
-         lingotek.dashboard(containerId,config); 
-        });
       </script>
+      <link rel="stylesheet" href="' . LINGOTEK_GMC_SERVER . '/v2/styles/ltk.css"> 
+      <script src="' . LINGOTEK_GMC_SERVER . '/v2/ltk.min.js"></script>  
+      <div ltk-dashboard ng-app="LingotekApp"></div>
     ';
 
   $endpoint = $base_url . '/lingotek/locale'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
@@ -105,8 +100,6 @@ function lingotek_get_dashboard_code() {
   $output .= sprintf($script,
       // lingotek 
       variable_get('lingotek_community_identifier', ''), //community
-      variable_get('lingotek_oauth_consumer_id', ''), //oauth_key
-      variable_get('lingotek_oauth_consumer_secret', ''), //oauth_secret
       variable_get('lingotek_login_id', ''), //external_id
       variable_get('lingotek_vault', ''), //tm_vault_id
       variable_get('lingotek_workflow', ''), //workflow_id
@@ -122,10 +115,7 @@ function lingotek_get_dashboard_code() {
       VERSION, // drupal version
       variable_get('install_profile', ''), // CMS tag variable_get('lingotek_cms_tag','')
       json_encode(lingotek_get_module_info('version')), // module version --- get all module info:  lingotek_get_module_info()
-      $endpoint, // endpoint url
-      $sync_url,
-      // data
-      json_encode(lingotek_get_locale_details()) // The languages "localized" on Drupal
+      $endpoint
   );
   return $output;
 }
