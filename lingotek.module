@@ -508,20 +508,32 @@ function lingotek_entity_translation_node_tab_access() {
   $args = func_get_args();
   $node = array_shift($args);
   if ($node->language !== LANGUAGE_NONE) {
-    if (lingotek_supported_type($node->type) || lingotek_managed_by_entity_translation($node->type)) {
-      // If the node has been pushed then return FALSE (don't show the "Translate" tab)
-      // Otherwise, return TRUE (show the "Translate" tab)
-      $user_access = (drupal_multilingual() && (user_access('translate any entity') || user_access("translate node entities")));
-      $translate_tab_access = $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED && $user_access;
-      return $translate_tab_access;
+    
+    // if the user doesn't have rights, don't show it
+    $user_access = (drupal_multilingual() && (user_access('translate any entity') || user_access("translate node entities")));
+    $node_disabled = isset($node->lingotek['profile']) && $node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
+    if (!$user_access) {
+      return FALSE;
     }
-    elseif (entity_translation_node_supported_type($node->type)) {
+    
+    // if it's a Lingotek-supported type and the node itself is not specifically
+    // disabled then don't show it
+    if (lingotek_supported_type($node->type) && !$node_disabled) {
+      return FALSE;
+    }
+
+    if (entity_translation_node_supported_type($node->type)) {
       // This is not a Lingotek-supported type, but is a type
       // that is set up for Entity Translation.
       // Fall back to the Entity Translation module's access callback.
+      if (entity_translation_node('node', $node)) {
+        $function = array_shift($args);
+        return call_user_func_array($function, $args);
+      }
       return entity_translation_tab_access('node', $node);
     }
-    elseif (entity_translation_node('node', $node) && module_exists('translation')) {
+
+    if (entity_translation_node('node', $node) && module_exists('translation')) {
       // This node is set up to use the Translation module's
       // node translation (as opposed to Entity Translation).
       return _translation_tab_access($node);
