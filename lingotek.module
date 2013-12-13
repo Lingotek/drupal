@@ -518,7 +518,7 @@ function lingotek_entity_translation_node_tab_access() {
     
     // if it's a Lingotek-supported type and the node itself is not specifically
     // disabled then don't show it
-    if (lingotek_supported_type($node->type) && !$node_disabled) {
+    if (lingotek_access($node, 'manage projects')) {
       return FALSE;
     }
 
@@ -1052,6 +1052,8 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
       $node->lingotek = array_replace($node->lingotek, $form_state['values']['lingotek']);
       lingotek_entity_save($node, $entity_type);
     }
+    node_types_rebuild();
+    menu_rebuild();
   }
 }
 
@@ -1308,7 +1310,7 @@ function lingotek_entity_insert($entity, $type) {
  * Implements hook_entity_update().
  */
 function lingotek_entity_update($entity, $type) {  
-  if ($type == 'node' && !empty($node->tnid) && ($node->nid != $node->tnid)) {//check to make sure it is not a target node
+  if ($type == 'node' && !empty($entity->tnid) && ($entity->nid != $entity->tnid)) {//check to make sure it is not a target node
     return;
   }
 
