@@ -350,8 +350,11 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
 
     batch_set($batch);
 
-    if (current_path() == 'admin/settings/lingotek/settings') {
-      $redirect = LINGOTEK_MENU_LANG_BASE_URL . '/settings';
+    // if coming from the settings page, stay there; otherwise, continue with setup pages
+    $cur_path = current_path();
+    if ($cur_path == 'admin/settings/lingotek/settings' ||
+        $cur_path == LINGOTEK_MENU_LANG_BASE_URL . '/settings') {
+      $redirect = $cur_path;
     }
     else {
       $redirect = 'admin/config/lingotek/comment-translation-settings';
