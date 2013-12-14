@@ -1103,6 +1103,23 @@ function lingotek_get_global_profile() {
   );
 }
 
+/*
+ * Return all profiles in an associative array, by name
+ */
+function lingotek_get_profiles_by_name($include_custom = FALSE) {
+  $profile_options = array();
+  $profiles = lingotek_get_profiles();
+  foreach ($profiles as $key => $profile) {
+    $profile_options[$key] = $profile['name'];
+  }
+  if ($include_custom) {
+    $profile_options[LingotekSync::PROFILE_CUSTOM] = 'Custom';
+  }
+  $profile_options[LingotekSync::PROFILE_DISABLED] = 'Disabled';
+
+  return $profile_options;
+}
+
 function lingotek_get_profiles() {
   $profiles = variable_get('lingotek_profiles', array());
 

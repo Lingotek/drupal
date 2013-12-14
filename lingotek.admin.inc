@@ -98,17 +98,8 @@ function lingotek_admin_node_translation_settings_form($form, &$form_state, $ent
   $types = array();
   $translate = variable_get('lingotek_enabled_fields', array());
   $translate = isset($translate[$entity_type]) ? $translate[$entity_type] : array();
-  $profiles = lingotek_get_profiles();
 
-  $profile_options = array();
-  foreach ($profiles as $key => $profile) {
-    $profile_options[$key] = $profile['name'];
-  }
-  /* Entity types should not have a "custom" option.  This
-     should just be for individual entities */
-  //$profile_options[LingotekSync::PROFILE_CUSTOM] = 'Custom';
-
-  $profile_options[LingotekSync::PROFILE_DISABLED] = 'Disabled';
+  $profile_options = lingotek_get_profiles_by_name();
 
   if ($entity_type == 'field_collection_item') {
     $profile_options = array(
@@ -363,23 +354,30 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
   }
 }
 
-function lingotek_admin_profile_usage($id) {
-  $query = db_select('node', 'n');
-  $query->fields('n', array('nid'));
-  $query->leftJoin('lingotek_entity_metadata', 'l_profile', 'n.nid = l_profile.entity_id  and l_profile.entity_key = \'profile\'');
-  $query->leftJoin('lingotek_entity_metadata', 'l_auto_upload', 'n.nid = l_auto_upload.entity_id  and l_auto_upload.entity_key = \'create_lingotek_document\'');
-  $query->leftJoin('lingotek_entity_metadata', 'l_status', 'n.nid = l_status.entity_id  and l_status.entity_key = \'node_sync_status\'');
-  $query->condition('l_status.value', 'TARGET', '<>');
-  $or = lingotek_profile_condition('n', 'l_auto_upload', 'l_profile' , $id);
-  $query->condition($or);
-  return $query->countQuery()->execute()->fetchField();
+/*
+ * Return an array of entity types with the number of each using the given profile
+ */
+function lingotek_admin_profile_usage($profile_id) {
+  $profiles = lingotek_get_profiles_by_name(TRUE);
+  $entity_counts = array();
+  $entities = lingotek_admin_get_entities_by_profile_id($profile_id);
+  // count up the entities by type
+  foreach ($entities as $e) {
+    if (isset($entity_counts[$e['type']])) {
+      $entity_counts[$e['type']]++;
+    }
+    else {
+      $entity_counts[$e['type']] = 1;
+    }
+  }
+  return $entity_counts;
 }
 
 /*
  * Return an associative array of entity types, with an array of bundles
  * enabled for the given profile.
  */
-function lingotek_admin_get_bundles_by_profile($profile_id) {
+function lingotek_admin_get_bundles_by_profile_id($profile_id) {
   $entities = entity_get_info();
   $lentities = variable_get('lingotek_entity_profiles');
   $bundles = array();
@@ -388,7 +386,7 @@ function lingotek_admin_get_bundles_by_profile($profile_id) {
       unset($entities[$entity_name]);
     }
     foreach ($entity['bundles'] as $bundle_name => $bundle) {
-      if (isset($lentities[$entity_name][$bundle_name]) && $lentities[$entity_name][$bundle_name] === $profile_id) {
+      if (isset($lentities[$entity_name][$bundle_name]) && $lentities[$entity_name][$bundle_name] === (string)$profile_id) {
         if (!isset($bundles[$entity_name])) {
           $bundles[$entity_name] = array();
         }
@@ -442,9 +440,9 @@ function lingotek_admin_get_document_id_tree() {
  * 
  * Return an array of entity-specific arrays containing document_id, type, and id
  */
-function lingotek_admin_get_entities_by_profile($profile_id, $uploaded_only = FALSE) {
+function lingotek_admin_get_entities_by_profile_id($profile_id, $uploaded_only = FALSE) {
   // get all bundles that belong to the given profile
-  $bundles = lingotek_admin_get_bundles_by_profile($profile_id);
+  $bundles = lingotek_admin_get_bundles_by_profile_id($profile_id);
   $entities = array();
   
   // get all entities that belond to those bundles
@@ -506,22 +504,13 @@ function lingotek_admin_get_entities_by_profile($profile_id, $uploaded_only = FA
   return $filtered_entities;
 }
 
-function lingotek_admin_profile_usage_by_types($id) {
-  $profile_mapping = variable_get('lingotek_entity_profiles');
-  $profile_mapping_associations = isset($profile_mapping['node']) ? $profile_mapping['node'] : array();
-  $profile_usage = array_count_values($profile_mapping_associations);
-  $node_info = entity_get_info('node');
-  $node_bundles = array_keys($node_info['bundles']);
-  if (!isset($profile_usage['DISABLED'])) {
-    $profile_usage['DISABLED'] = 0;
+function lingotek_admin_profile_usage_by_types($profile_id) {
+  $bundles_using_profile = lingotek_admin_get_bundles_by_profile_id($profile_id);
+  $count_types = 0;
+  foreach ($bundles_using_profile as $bup) {
+    $count_types += count($bup); 
   }
-  foreach ($node_bundles as $bundle) {
-    if (isset($profile_mapping['node']) && !array_key_exists($bundle, $profile_mapping['node'])) {
-      $profile_usage['DISABLED']++;
-    }
-  }
-
-  return isset($profile_usage[$id]) ? $profile_usage[$id] : 0;
+  return $count_types;
 }
 
 /**
@@ -1281,7 +1270,7 @@ function lingotek_admin_connection_form_submit($form, &$form_state) {
 }
 
 function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALSE) {
-  $profiles = lingotek_get_profiles();
+  $profiles = lingotek_get_profiles_by_name(TRUE);
 
   $form['header'] = array(
     '#type' => 'item',
@@ -1298,24 +1287,21 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $total_count_with_profiles = 0;
   $rows = array();
 
-  foreach ($profiles as $key => $profile) {
+  foreach ($profiles as $key => $profile_name) {
     $edit_link =  l(t('Edit'), LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key, array('attributes' => array('class' => array('ctools-use-modal'))));
 
-    $count = lingotek_admin_profile_usage($key);
+    $count_by_entity_type = lingotek_admin_profile_usage($key);
     $count_types = lingotek_admin_profile_usage_by_types($key);
-    $total_count_with_profiles += $count;
-
-    $rows[] = array($profile['name'], $count . ' ' . format_plural($count, 'node', 'nodes') . ' &sdot;  ' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . '', $edit_link);
+    $total_count_with_profiles += array_sum($count_by_entity_type);
+    $entities_str = '';
+    foreach ($count_by_entity_type as $entity_type => $count) {
+      if (!empty($entities_str)) {
+        $entities_str .= ', ';
+      }
+      $entities_str .= $count . ' ' . format_plural($count, $entity_type, $entity_type . 's');
+    }
+    $rows[] = array($profile_name, $entities_str  . ' (' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . ')', $edit_link);
   }
-
-  $custom_count = lingotek_admin_profile_usage(LingotekSync::PROFILE_CUSTOM);
-  $custom_count_types = lingotek_admin_profile_usage_by_types(LingotekSync::PROFILE_CUSTOM);
-  $rows[] = array(t('Custom'), $custom_count . ' ' . format_plural($custom_count, 'node', 'nodes') . ' &sdot; ' . $custom_count_types . ' ' . format_plural($count_types, 'content type', 'content types'), '');
-
-  $total_node_count = current(db_query("SELECT COUNT(DISTINCT(n.nid)) FROM {node} n WHERE n.status=1")->fetchCol());
-  $disabled_count = ($total_node_count - ($total_count_with_profiles + $custom_count)); // lingotek_admin_profile_usage(LingotekSync::PROFILE_DISABLED);
-  $disabled_count_types = lingotek_admin_profile_usage_by_types(LingotekSync::PROFILE_DISABLED);
-  $rows[] = array(t('Disabled'), $disabled_count . ' ' . format_plural($disabled_count, 'node', 'nodes') . ' &sdot; ' . $disabled_count_types . ' ' . format_plural($disabled_count_types, 'content type', 'content types'), '');
 
   $variables = array(
     'header' => $headers,
@@ -1555,7 +1541,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     );
     $form['defaults']['prefill_phases_checkbox'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => lingotek_admin_profile_usage($profile_id))),
+      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage($profile_id)))),
       '#default_value' => FALSE,
       '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
       '#states' => array(
@@ -1657,7 +1643,9 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   );
   $first_custom_id = 2;
   $is_custom_profile_id = $profile_id >= $first_custom_id;
-  if (lingotek_admin_profile_usage($profile_id) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0 && $is_custom_profile_id) {
+  // if no entities or bundles are assigned to the profile, and if it was created
+  // by the site admin, then allow deletion.
+  if (array_sum(lingotek_admin_profile_usage($profile_id)) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0 && $is_custom_profile_id) {
     $form['defaults']['delete'] = array(
       '#type' => 'submit',
       '#value' => 'Delete',
@@ -1723,7 +1711,7 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
         $workflow_id = $form_state['values']['workflow_id'];
         $prefill_phase = $form_state['values']['prefill_phase_select'];
   
-        $entities = lingotek_admin_get_entities_by_profile($profile_id);
+        $entities = lingotek_admin_get_entities_by_profile_id($profile_id);
         
         $api = LingotekApi::instance();
         $document_ids = array();
