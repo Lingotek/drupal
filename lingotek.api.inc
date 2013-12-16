@@ -150,6 +150,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
           $field_collection_item->nid = $field_collection_item->item_id;
           $field_collection_item->vid = $field_collection_item->revision_id;
 
+          // RECURSION FOR FIELD COLLECTIONS
           lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $drupal_language_code);
           $db_field_name = $field['field_name'] . '_value';
           $db_revision_field_name = $field['field_name'] . '_revision_id';
@@ -177,17 +178,11 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
             }
             $index++;
           }
-          
-          // put fields into both field_data_ and field_revision_ tables
-          // if published version (in node table) is as current as most current revision (in node_revision table)
-          if ($entity_type == 'node' && isset($entity->workbench_moderation) && isset($entity->workbench_moderation['published']) && $entity->workbench_moderation['published']->vid != $entity->workbench_moderation['current']->vid) {
-            $only_write_revisions = 1;
-            unset($field_names[$only_write_revisions]);
-          }
         }
 
         foreach ($field_names as $field_name) {
           // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
+          // UPDATE: This could perhaps be rewritten now that workbench_moderation is supported through the rules module
           try {
             drupal_write_record($field_name, $insert_array);
           } catch (PDOException $e) {
@@ -345,66 +340,6 @@ function lingotek_get_url_alias_translations() {
   $methods[1] = t("Translate the URL alias");
   $methods[2] = t("Use the translated page title");
   return $methods;
-}
-
-/*
- * Get all workbench moderation states
- */
-
-function lingotek_get_workbench_moderation_states() {
-  $methods = array();
-  $states = workbench_moderation_states();
-  foreach ($states as $array) {
-    $methods[$array->name] = $array->name;
-  }
-  return $methods;
-}
-
-/*
- * Get post-download workbench moderation options
- */
-
-function lingotek_get_workbench_moderation_options() {
-  $options = array();
-  $options['no_moderation'] = 'Leave at the current state';
-  $options['increment'] = 'Increment to the next state';
-  $states = workbench_moderation_states();
-  foreach ($states as $array) {
-    $options[] = 'Change to ' . $array->name;
-  }
-  return $options;
-}
-
-/*
- * Get lingotek default workbench moderation transitions
- * If global variables are not set, it picks the first transition for a state
- * If no transitions exist for a state, it picks a transition to the same state
- *
- * @return array $lingotek_transitions
- *    associative array of transitions_from => transitions_to sets
- */
-
-function lingotek_get_workbench_moderation_transitions() {
-  $lingotek_transitions = array();
-  $states = lingotek_get_workbench_moderation_states();
-  $transitions = workbench_moderation_transitions();
-  foreach ($transitions as $transition) {
-    $trans = variable_get('lingotek_sync_wb_select_' . $transition->from_name, NULL);
-    if ($trans) {
-      $lingotek_transitions[$transition->from_name] = $trans;
-      unset($states[$transition->from_name]);
-    }
-    else {
-      if (isset($states[$transition->from_name])) {
-        $lingotek_transitions[$transition->from_name] = $transition->to_name;
-        unset($states[$transition->from_name]);
-      }
-    }
-  }
-  foreach ($states as $state) {
-    $lingotek_transitions[$state] = $state;
-  }
-  return $lingotek_transitions;
 }
 
 /*

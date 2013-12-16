@@ -412,52 +412,6 @@ function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
   $context['finished'] = 1;
 }
 
-/*
- * Batch worker for workbench moderation moderating post-download
- *
- * @param int $nid
- *    Node ID of node to be moderated
- *
- * @param int $options_index
- *    Index for array returned by lingotek_get_workbench_moderation_options()
- *    Specifies the state to which we should moderate
- *
- * @param array $trans_options
- *    Associative array where $key => $value is $transitions_from => $transitions_to
- *    All transitions using lingotek defaults
- */
-function lingotek_workbench_moderation_moderate($nid, $options_index, $trans_options = array()) {
-  $options = lingotek_get_workbench_moderation_options();
-  $option = $options[$options_index];
-  $node = lingotek_node_load_default($nid);
-  $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($nid);
-  if (empty($target_statuses)) { // if not all of the targets have been translated and downloaded
-    // if workbench_moderation is not enabled for this node
-    if (module_exists('workbench_moderation') && isset($node->workbench_moderation)) {
-      if ($options_index == 'no_moderation') {
-        return;
-      }
-      elseif ($options_index == 'increment') {
-        $transitions_from = $node->workbench_moderation['current']->state;
-        $transitions_to = $trans_options[$transitions_from];
-        workbench_moderation_moderate($node, $transitions_to);
-      }
-      else {
-        $states = lingotek_get_workbench_moderation_states();
-        $index = 0;
-        foreach ($states as $state) {
-          if ($index == $options_index) {
-            workbench_moderation_moderate($node, $state);
-            return;
-          }
-          $index++;
-        }
-      }
-    }
-  }
-  return;
-}
-
 /**
  * Ensures correct language-specific field data for the specified item.
  * 

@@ -778,7 +778,6 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $show_advanced = LingotekAccount::instance()->showAdvanced();
-  $workbench_moderation_enabled = module_exists('workbench_moderation');
 
   $title = t('Translation Management');
 
@@ -874,64 +873,12 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
   );
 
-  $show_moderation = FALSE;
-  if ($workbench_moderation_enabled) {
-    /* foreach ($nodes as $node) {
-      $show_moderation = workbench_moderation_node_type_moderated($node->type);
-      if ($show_moderation) {
-      break;
-      }
-      } */
-    $show_moderation = $bulk_grid || workbench_moderation_node_type_moderated($node->type);
-
-    if ($show_moderation) {
-      $form['lingotek']['create_lingotek_document_workbench_moderation'] = array(
-        '#type' => 'select',
-        '#title' => t('Workbench Moderation Upload'),
-        '#field_prefix' => t('Upload to Lingotek when node reaches'),
-        '#field_suffix' => t('state.'),
-        '#options' => lingotek_get_workbench_moderation_states(),
-        '#default_value' => $multiple ? workbench_moderation_state_published() : $node->lingotek['create_lingotek_document_workbench_moderation'],
-        '#description' => 'The most recent revision will be automatically uploaded when changed to this state.',
-        '#states' => array(
-          'invisible' => array(
-            ':input[id="edit-lingotek-create-lingotek-document"]' => array('checked' => FALSE),
-          ),
-        ),
-      );
-    }
-  }
-
   $form['lingotek']['sync_method'] = array(
     '#type' => 'checkbox',
     '#title' => t('Download Translations Automatically'),
     '#default_value' => $node->lingotek['sync_method'],
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
-
-
-  if ($workbench_moderation_enabled) {
-    $default_download_state = 'no_moderation';
-    if (!$multiple && isset($node->nid)) {
-      $default_download_state = $node->lingotek['sync_method_workbench_moderation'];
-    }
-    if ($show_moderation) {
-      $transition_select = lingotek_workbench_moderation_get_mult_transitions();
-      $form['lingotek']['sync_method_workbench_moderation'] = array(
-        '#type' => 'select',
-        '#title' => t('Workbench Moderation Download'),
-        '#field_suffix' => t('after translations have downloaded from Lingotek.'),
-        '#options' => lingotek_get_workbench_moderation_options(),
-        '#default_value' => $default_download_state,
-        '#description' => t("Transition will not occur until <i>all</i> of the node's translations have downloaded."),
-        '#states' => array(
-          'invisible' => array(
-            ':input[id="edit-lingotek-syncmethod"]' => array('checked' => FALSE),
-          ),
-        ),
-      );
-    }
-  }
 
   if ($show_advanced) {
     // Community Translation
@@ -1095,8 +1042,6 @@ function lingotek_get_global_profile() {
     'allow_community_translation' => 0,
     'url_alias_translation' => 0,
     'node_sync_status' => LingotekSync::STATUS_EDITED,
-    'sync_method_workbench_moderation' => 'no_moderation',
-    'create_lingotek_document_workbench_moderation' => 'published',
     'project_id' => variable_get('lingotek_project'),
     'workflow_id' => variable_get('lingotek_workflow'),
     'vault_id' => variable_get('lingotek_vault'),
@@ -1287,13 +1232,6 @@ function lingotek_entity_load($entities, $entity_type) {
 //    }
     list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-    // translate node titles for workbench moderation 'View draft' node tab
-    if ($entity_type == 'node' && module_exists('workbench_moderation') && isset($entity->workbench_moderation['published']) && $entity->workbench_moderation['published']->vid != $vid) {
-      // Workbench Moderation calls two node saves if viewing a draft, so we have to
-      // clear this cache in order for the translated title fields to be loaded
-      drupal_static_reset('title_entity_sync');
-      title_entity_sync('node', $node);
-    }
     // Node profile inheritance heirarchy
     // Step 1: get global profile
     $entity->lingotek = $global_profile;
@@ -1334,18 +1272,7 @@ function lingotek_entity_update($entity, $type) {
   list($id, $vid, $bundle) = entity_extract_ids($type, $entity);
 
   $entity = lingotek_entity_save($entity, $type);
-
-  if ($type == 'node' && module_exists('workbench_moderation') && isset($entity->workbench_moderation)) {
-    if ($entity->is_new) {
-      lingotek_workbench_moderation_transition($entity, $entity->workbench_moderation['current']->from_state, $entity->workbench_moderation['current']->state);
-    }
-    else {
-      return;
-    }
-  }
-  else {
-    lingotek_entity_upload_triggered($entity, $type);
-  }
+  lingotek_entity_upload_triggered($entity, $type);
 }
 
 function lingotek_entity_upload_triggered($entity, $entity_type, &$context = array()) {
@@ -1411,12 +1338,6 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   }
 
   LingotekSync::resetTargetProgress($entity_type, $id);
-
-  // if workbench moderation is enabled for this node and it is being sent, set flag to be moderated
-  // prevents moderation from happening for every downloaded language
-  if ($entity_type == 'node' && $entity->lingotek['sync_method'] == 1 && module_exists('workbench_moderation') && isset($entity->workbench_moderation)) {
-    lingotek_keystore('node', $id, 'workbench_moderate', 0);
-  }
 
   // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
   if (!isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id'])) {
@@ -1566,13 +1487,6 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     $storage_entity->path = path_load(array('source' => 'node/' . $storage_entity->nid, 'language' => $storage_entity->language));
     $storage_entity->path['alias'] = isset($storage_entity->path['alias']) ? $storage_entity->path['alias'] : '';
     $storage_entity->path['pathauto'] = 0;
-
-    //Fix for workbench_moderation changing node state after translation download
-    if (module_exists('workbench_moderation')) {
-      if (isset($storage_entity->workbench_moderation)) {
-        $storage_entity->workbench_moderation['updating_live_revision'] = 1; // ensure that workflow state does not get updated
-      }
-    }
 
     lingotek_keystore_delete($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale);
     lingotek_keystore($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale, time());
@@ -1903,50 +1817,6 @@ function lingotek_field_language_alter(&$display_language, $context) {
   }
 }
 
-/**
- * Implements hook_workbench_moderation_transition()
- *
- * Upload content automatically only if new state corresponds auto-upload workbench_moderation variables
- * Otherwise override upload
- */
-function lingotek_workbench_moderation_transition($node, $old_state, $new_state) {
-  return;
-  //Do not run unless this node has been properly loaded.
-  if (!isset($node->lingotek) || !array_key_exists('document_id', $node->lingotek)) {
-    return;
-  }
-
-  // Check global and node-specific settings
-  // if this node is managed by lingotek, add lingotek wb variables
-  if ((isset($node->lingotek_push_once) && $node->lingotek_push_once) || lingotek_node_pushed($node) || isset($node->is_new) || !lingotek_managed_by_entity_translation($node->type)) {
-    $def_state = $node->lingotek['create_lingotek_document_workbench_moderation'];
-    $states = lingotek_get_workbench_moderation_states();
-
-    // do not change status updates if only moderated (no node_save called)
-    if (!isset($node->workbench_moderation_state_new)) {
-      $node->skip_status_updates = TRUE;
-    }
-    if ($old_state == workbench_moderation_state_published() && $new_state != workbench_moderation_state_published()) { // if changing from published
-      $node->status = 0; // unpublish
-      node_save($node);
-    }
-
-    // Check new state against settings
-    if ($new_state != $states[$def_state]) {// && !isset($node->is_new)) {
-      $node->lingotek_upload_override = FALSE;
-    }
-  }
-  lingotek_entity_upload($node, 'node');
-}
-
-/*
- * AJAX callback to update transition options
- */
-
-function lingotek_workbench_moderation_node_callback($form, &$form_state) {
-  return $form['lingotek']['content']['syncMethod_wb_message'];
-}
-
 /*
  * Implements hook_entity_delete()
  *
@@ -2114,8 +1984,6 @@ function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeab
       'allow_community_translation',
       'url_alias_translation',
       'workflow_id',
-      'sync_method_workbench_moderation',
-      'create_lingotek_document_workbench_moderation',
     ));
   }
 

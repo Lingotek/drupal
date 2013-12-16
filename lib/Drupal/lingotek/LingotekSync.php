@@ -477,18 +477,6 @@ class LingotekSync {
     return $et_node_ids;
   }
 
-  public static function getNonWorkbenchModerationNodeIds($edited_nodes) {
-    $sub_query = db_select('workbench_moderation_node_history', 'wb') // get nids for unmoderated nodes
-        ->fields('wb', array('nid'));
-    $query = db_select('node_revision', 'nr')
-        ->distinct(TRUE)
-        ->fields('nr', array('nid'))
-        ->condition('nid', $sub_query, 'NOT IN')
-        ->condition('nid', $edited_nodes, 'IN');
-    $no_wb_mod = $query->execute()->fetchCol(0);
-    return $no_wb_mod;
-  }
-
   protected static function getQueryCompletedConfigTranslations($drupal_codes) {
     // return a query object that contains all fully-translated/current strings
     // or ones that were not translated by Lingotek.

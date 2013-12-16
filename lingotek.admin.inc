@@ -1384,10 +1384,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   $stored_profile = lingotek_get_profile_settings($profile_id);
   
   $show_advanced = $account->showAdvanced();
-  $workbench_moderation_enabled = FALSE;
-  if (module_exists('workbench_moderation')) {
-    $workbench_moderation_enabled = TRUE;
-  }
 
   $form['defaults']['profile_id'] = array(
     '#type' => 'value',
@@ -1412,21 +1408,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
   );
 
-  if ($workbench_moderation_enabled) {
-    $form['defaults']['create_lingotek_document_workbench_moderation'] = array(
-      '#type' => 'select',
-      '#title' => 'Workbench Moderation Uploads',
-      '#options' => lingotek_get_workbench_moderation_states(),
-      '#default_value' => isset($form_state['values']['create_lingotek_document_workbench_moderation']) ? $form_state['values']['create_lingotek_document_workbench_moderation'] : workbench_moderation_state_published(),
-      '#states' => array(
-        'invisible' => array(
-          ':input[name="create_lingotek_document"]' => array('checked' => FALSE),
-        ),
-      ),
-      '#description' => 'The most recent revision will be automatically uploaded when changed to this state.',
-    );
-  }
-
   // Download
   $form['defaults']['sync_method'] = array(
     '#type' => 'checkbox',
@@ -1434,68 +1415,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#default_value' => $form_state['values']['sync_method'],
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
-
-  if ($workbench_moderation_enabled) {
-    $transition_select = lingotek_workbench_moderation_get_mult_transitions();
-
-    $form['defaults']['lingotek_sync_wb']['sync_method_workbench_moderation'] = array(
-      '#type' => 'select',
-      '#title' => t('Workbench Moderation Downloads'),
-//      '#field_prefix' => t('After translations have downloaded'),
-      '#field_suffix' => t('after translations have downloaded.'),
-      '#options' => lingotek_get_workbench_moderation_options(),
-      '#default_value' => isset($form_state['values']['sync_method_workbench_moderation']) ? $form_state['values']['sync_method_workbench_moderation'] : 'no_moderation',
-      '#description' => t("Transitions will not occur until <i>all</i> of a node's translations have downloaded."),
-      '#states' => array(
-        'invisible' => array(
-          ':input[name="sync_method"]' => array('checked' => FALSE),
-        ),
-      ),
-    );
-
-    if (!empty($transition_select)) {
-      $form['defaults']['lingotek_sync_wb']['wb_select'] = array(
-        '#type' => 'item',
-        '#states' => array(
-          'visible' => array(
-            'select[name="sync_method_workbench_moderation"]' => array('value' => 'increment'),
-            ':input[name="sync_method"]' => array('checked' => TRUE),
-          ),
-        ),
-      );
-      $form['defaults']['lingotek_sync_wb']['wb_select']['helper'] = array(
-        '#type' => 'item',
-        '#description' => t('Your configuration of the Workbench Moderation module has multiple transition paths.<br>Choose the state that you would like the translations to transition to below.'),
-      );
-      $header = array('Current State', 'Transitions to');
-      $form['defaults']['lingotek_sync_wb']['wb_select']['wb_table'] = array(
-        '#type' => 'container',
-        '#theme' => 'table',
-        '#header' => $header,
-        '#rows' => array(),
-      );
-      foreach ($transition_select as $from_state => $to_states) {
-        $selected = isset($form_state['values']['lingotek_sync_wb_select_' . $from_state]) ? $form_state['values']['lingotek_sync_wb_select_' . $from_state] : ''; // get default
-        $select_str = '<div class="form-item form-type-select form-item-lingotek-sync-wb-select-' . $from_state . '">'; // HTML for a Drupal form select element
-        $select_str .= '<select id="lingotek_sync_wb_select_' . $from_state . '" name="lingotek_sync_wb_select_' . $from_state . '"';
-        $select_str .= ' class="form-select">';
-        foreach ($to_states as $state) {
-          $select_str .= '<option ';
-          $select_str .= 'value="' . $state . '"';
-          if ($selected && $selected == $state) { // select default
-            $select_str .= ' selected="selected"';
-          }
-          $select_str .= '>' . $state . '</option>';
-        }
-        // foreach option add to string
-        $select_str .= '</select></div>';
-        $form['defaults']['lingotek_sync_wb']['wb_select']['wb_table']['#rows'][] = array(
-          array('data' => $from_state, 'width' => '20%'),
-          array('data' => $select_str, 'width' => '80%'),
-        ); // Get out of _POST
-      }
-    }
-  }
 
   if ($show_advanced) {
 
@@ -1689,19 +1608,6 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
       }
     }
 
-    if (module_exists('workbench_moderation')) { // set or unset multiple transition globals based on form selection
-      $states = lingotek_get_workbench_moderation_states();
-      if ($form_state['values']['sync_method'] == 1) {
-        if ($form_state['values']['sync_method_workbench_moderation'] == 'increment') {
-          foreach ($states as $state) {
-            if (isset($form_state['input']['lingotek_sync_wb_select_' . $state])) {
-              $profile['lingotek_sync_wb_select_' . $state] = $form_state['input']['lingotek_sync_wb_select_' . $state];
-            }
-          }
-        }
-      }
-    }
-    
     // If the workflow has changed and if current translations should be changed,
     // then pull all nodes associated with this profile and update the workflow
     // on TMS, including the correct phase.
@@ -2057,12 +1963,4 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
 
     batch_set($batch);
   }
-}
-
-/*
- * AJAX callback to update transition options
- */
-
-function lingotek_workbench_moderation_callback_transitions_default($form, &$form_state) {
-  return $form['defaults']['lingotek_sync_wb_select'];
 }

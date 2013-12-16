@@ -330,28 +330,6 @@ class LingotekEntity implements LingotekTranslatableEntity {
     $id = $this->getId();
     
     if ($type == 'node') {
-      if (module_exists('workbench_moderation')) {
-        // if workbench moderation is enabled for this node, and node should be moderated, moderate it based on the options
-        $target_statuses = LingotekSync::getAllTargetStatusNotCurrent($id);
-        if (empty($target_statuses)) {
-          lingotek_keystore($type, $id, 'workbench_moderate', 1);
-        }
-
-        if (isset($entity->workbench_moderation) && lingotek_keystore('node', $id, 'workbench_moderate') == 1) {
-          $options_index = $entity->lingotek['sync_method_workbench_moderation'];
-          $trans_options = lingotek_get_workbench_moderation_transitions();
-          if ($options_index == 1) {
-            $from_state = $entity->workbench_moderation['current']->state;
-            $mult_trans = variable_get('lingotek_sync_wb_select_' . $from_state, NULL);
-            if ($mult_trans) {
-              $trans_options[$from_state] = $mult_trans;
-            }
-          }
-          lingotek_workbench_moderation_moderate($id, $options_index, $trans_options); // moderate if all languages have been downloaded
-          lingotek_keystore_delete('node', $id, 'workbench_moderate');
-        }
-      }
-
       if (!$completed) {
         //do nothing
       }
