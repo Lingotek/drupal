@@ -285,8 +285,11 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
           $translate[$entity_type][$content_type][] = $content_field;
 
-          // Set this content type to be Lingotek translated.
-          variable_set('language_content_type_' . $content_type, '1');
+          // Set this content type to be translation-enabled only if currently disabled.
+          $currently_enabled_content_type = variable_get('language_content_type_' . $content_type, '0');
+          if ($currently_enabled_content_type == '0') {
+            variable_set('language_content_type_' . $content_type, '1');
+          }
           // Set this field to 'translatable'.
           // Update the field via the Field API (Instead of the direct db_update)
           $field = field_info_field($content_field);
