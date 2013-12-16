@@ -1462,3 +1462,32 @@ function lingotek_unfilter_placeholders($segment_text) {
   $replacement = '';
   return preg_replace($pattern, $replacement, $segment_text);
 }
+
+/**
+ * Return redirect-path information by entity type for Lingotek-supported entities
+ *
+ * @param $entity_type
+ *   a string containing the name of the given entity type
+ *
+ * @param $next
+ *   whether to redirect to the next setup destination or just return the current one
+ */
+function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
+  $entities = array(
+      'node' => array('current' => 'admin/config/lingotek/node-translation-settings',
+                      'next' => 'admin/config/lingotek/comment-translation-settings',),
+      'comment' => array('current' => 'admin/config/lingotek/comment-translation-settings',
+                      'next' => 'admin/config/lingotek/additional-translation-settings',),
+      'config' => array('current' => 'admin/config/lingotek/additional-translation-settings',
+                      'next' => 'admin/settings/lingotek',),
+      );
+  if (isset($entities[$entity_type])) {
+    if ($next) {
+      return $entities[$entity_type]['next'];
+    }
+    else {
+      return $entities[$entity_type]['current'];
+    }
+  }
+  return NULL;
+}

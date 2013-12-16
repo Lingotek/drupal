@@ -325,7 +325,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
       $entity_profiles[$entity_type][$content_type] = $value;
     }
   }
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/node-translation-settings';
+  $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path($entity_type);
   variable_set('lingotek_enabled_fields', $translate);
   variable_set('lingotek_entity_profiles', $entity_profiles);
   drupal_set_message(t('Your content types have been updated.'));
@@ -348,7 +348,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
       $redirect = $cur_path;
     }
     else {
-      $redirect = 'admin/config/lingotek/comment-translation-settings';
+      $redirect = lingotek_get_entity_setup_path($entity_type, TRUE);
     }
     batch_process($redirect);
   }

@@ -832,8 +832,8 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
     );
   }
   
-  if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/node-translation-settings') {
+  if (isset($_SESSION['lingotek_setup_path']) && is_array($_SESSION['lingotek_setup_path'])) {
+    if (end($_SESSION['lingotek_setup_path']) == lingotek_get_entity_setup_path('node')) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['translation_node']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
@@ -880,11 +880,11 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     );
     
     batch_set($batch);
-    batch_process('admin/config/lingotek/comment-translation-settings');
+    batch_process(lingotek_get_entity_setup_path('node', TRUE));
     
   }
   else {
-    drupal_goto('admin/config/lingotek/comment-translation-settings');
+    drupal_goto(lingotek_get_entity_setup_path('node', TRUE));
   }
 }
 
@@ -894,7 +894,7 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
 
   if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/comment-translation-settings') {
+    if (end($_SESSION['lingotek_setup_path']) == lingotek_get_entity_setup_path('comment')) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['translation_comment']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
@@ -914,14 +914,14 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
 
 function lingotek_setup_comment_translation_settings_form_submit($form, &$form_state) {
   lingotek_admin_node_translation_settings_form_submit($form, $form_state);
-  drupal_goto('admin/config/lingotek/additional-translation-settings');
+  drupal_goto(lingotek_get_entity_setup_path('comment', TRUE));
 }
 
 function lingotek_setup_additional_translation_settings_form($form, &$form_state) {
   $form = lingotek_admin_additional_translation_settings_form($form, $form_state);
 
   if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
+    if (end($_SESSION['lingotek_setup_path']) == lingotek_get_entity_setup_path('additional')) {
       $null = array_pop($_SESSION['lingotek_setup_path']);
     } // if the user went back, remove the last element, which is this page.
     $form['additional_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
@@ -947,7 +947,7 @@ function lingotek_setup_additional_translation_settings_form_submit($form, &$for
   if ($cleanup_batch && isset($cleanup_batch['operations'])) {
     $operations = array_merge($operations, $cleanup_batch['operations']);
   }
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/additional-translation-settings';
+  $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path('additional');
   
   lingotek_admin_additional_translation_settings_form_submit($form, $form_state, $additional_operations=$operations);
 }
