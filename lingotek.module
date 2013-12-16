@@ -1398,6 +1398,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
   
   if (empty($context)) {
+    $empty_context = TRUE; // preserve the fact that $context *was* empty when passed
     $context['message'] = t('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
   }
   
@@ -1427,7 +1428,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     $success = LingotekApi::instance()->updateContentDocument($ln);
   }
 
-  if (empty($context)) {
+  if ($empty_context) {
     if ($success) {
       drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
     }
