@@ -155,7 +155,7 @@ function lingotek_menu() {
   );
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/notifications'] = $items[LINGOTEK_NOTIFY_URL]; // allow early auto-provision community callback urls to wor
   // Dashboard:  Ajax Command Processor
-  $items['lingotek/locale'] = array(
+  $items['lingotek/language'] = array(
     'type' => MENU_CALLBACK,
     'access arguments' => array('administer lingotek'),
     'description' => 'Lingotek Command Router',

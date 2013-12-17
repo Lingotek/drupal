@@ -94,7 +94,7 @@ function lingotek_get_dashboard_code() {
       <div ltk-dashboard ng-app="LingotekApp"></div>
     ';
 
-  $endpoint = $base_url . '/lingotek/locale'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
+  $endpoint = $base_url . '/lingotek/language'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/lingotek/target';
   $sync_url = $base_url . '/' . LINGOTEK_MENU_MAIN_BASE_URL . '/manage/node'; //(variable_get('clean_url', 0) ? '' : '?q=') . '/' . LINGOTEK_MENU_LANG_BASE_URL . '/sync';
 
   $output .= sprintf($script,
@@ -141,7 +141,7 @@ function lingotek_dashboard_command_ajax() {
       if (strlen($lingotek_locale) > 1) {
         // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
         $add = lingotek_add_target_language($lingotek_locale);
-        $response = lingotek_get_locale_details($lingotek_locale);
+        $response = lingotek_get_language_details($lingotek_locale);
         $response['tms_added'] = $add;
       }
       else {
@@ -167,7 +167,7 @@ function lingotek_dashboard_command_ajax() {
       // Retrieve the Target Languages and Status
       $message = 'GET: retrieve the details of the locale(s)';
       $parameters = $_GET;
-      $response = isset($_GET['code']) ? lingotek_get_locale_details($_GET['code']) : lingotek_get_locale_details();
+      $response = isset($_GET['code']) ? lingotek_get_language_details($_GET['code']) : lingotek_get_language_details();
       break;
   }
   //lingotek_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));
@@ -221,28 +221,32 @@ function lingotek_get_type_field_mapping($node_type = NULL) {
 /**
  * Get the details of each language
  */
-function lingotek_get_locale_details($lingotek_locale_requested = NULL) {
+function lingotek_get_language_details($lingotek_locale_requested = NULL) {
 
   $response = array();
-  $available_languages = Lingotek::getLanguages(NULL, FALSE);// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
+  $available_languages = Lingotek::getLanguages(NULL, FALSE);
   $source_total = 0;
   $target_total = 0;
+  $source_totals = array();
+  $target_totals = array();
   // If we get a parameter, only return that language. Otherwise return all languages.
   foreach ($available_languages as $l) {
     if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $l->lingotek_locale)
       continue;
     $drupal_language_code = $l->language;
     $lingotek_locale = $l->lingotek_locale;
-    $source_count = LingotekSync::getSourceCount($lingotek_locale);
-    $target_count = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+    $source_counts = LingotekSync::getSourceCounts($lingotek_locale);
+    $source_count = $source_counts['total']; //unset($source_counts['total']);
+    $target_counts = LingotekSync::getCountsByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+    $target_count = $target_counts['total'];
 
     $target_status = array(
       'locale' => $lingotek_locale, // Return this language code as the Lingotek language code.
       'dcode' => $drupal_language_code,
       'active' => intval($l->lingotek_enabled), //lingotek_enabled,
       'enabled' => intval($l->enabled), // drupal enabled
-      'source_docs' => $source_count,
-      'target_docs' => $target_count
+      'source' => $source_counts,
+      'target' => $target_counts
     );
     if ($lingotek_locale_requested == $l->lingotek_locale) {
       $response = $target_status;
@@ -252,11 +256,16 @@ function lingotek_get_locale_details($lingotek_locale_requested = NULL) {
     }
     $source_total += $source_count;
     $target_total += $target_count;
+    $source_totals = LingotekSync::arraySumValues($source_totals, $source_counts['types']);
+    $target_totals = LingotekSync::arraySumValues($target_totals, $target_counts['types']);
   }
   if (is_null($lingotek_locale_requested)) {
-    $response['source_total'] = $source_total;
-    $response['target_total'] = $target_total;
-    $response['count'] = count($available_languages);
+    $response = array(
+      'languages' => $response,
+      'source' => array('types'=>$source_totals,'total'=>$source_total),
+      'target' => array('types'=>$target_totals,'total'=>$target_total),
+      'count' => count($available_languages),
+      );
   }
   return $response;
 }

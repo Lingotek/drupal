@@ -279,12 +279,52 @@ class LingotekSync {
     return $report;
   }
 
-  public static function getSourceCount($lingotek_locale) {
-    $count = 0;
-    //$count += self::getEntitySourceCount($lingotek_locale, NULL);// ALL
-    $count += self::getEntitySourceCount($lingotek_locale, 'node');
-    // config
-    return $count;
+   /**
+   * Sums the values of the arrays be there keys (PHP 4, PHP 5)
+   * array array_sum_values ( array array1 [, array array2 [, array ...]] )
+   */
+  public static function arraySumValues() {
+    $return = array();
+    $intArgs = func_num_args();
+    $arrArgs = func_get_args();
+    if ($intArgs < 1) {
+      trigger_error('Warning: Wrong parameter count for arraySumValues()', E_USER_WARNING);
+    }
+
+    foreach ($arrArgs as $arrItem) {
+      if (!is_array($arrItem)) {
+        trigger_error('Warning: Wrong parameter values for arraySumValues()', E_USER_WARNING);
+      }
+      foreach ($arrItem as $k => $v) {
+        if (!key_exists($k, $return)) {
+          $return[$k] = 0;
+        }
+        $return[$k] += $v;
+      }
+    }
+    return $return;
+
+    $sumArray = array();
+    foreach ($myArray as $k => $subArray) {
+      foreach ($subArray as $id => $value) {
+        $sumArray[$id]+=$value;
+      }
+    }
+    return $sumArray;
+  }
+
+  public static function getSourceCounts($lingotek_locale) {
+    $total = 0;
+    $managed_entities = lingotek_managed_entity_types();
+    $response = array();
+    $response['types'] = array();
+    foreach(array_keys($managed_entities) as $entity_type){
+      $entity_type_count = self::getEntitySourceCount($lingotek_locale, $entity_type);
+      $response['types'][$entity_type] = $entity_type_count;
+      $total += $entity_type_count;
+    }
+    $response['total'] = $total;
+    return $response;
   }
 
   public static function getEntitySourceCount($lingotek_locale, $entity_type = NULL){
@@ -305,17 +345,18 @@ class LingotekSync {
     return $total_count;
   }
   
-  public static function getCountByStatus($status, $lingotek_locale) {
-    $count = 0;
-    //$count += self::getEntityCountByStatus($status, $lingotek_locale, NULL);// ALL
-    $count += self::getEntityTargetCountByStatus($status, $lingotek_locale, 'node');
-    // (turned off reporting of config chunks, for now)
-    /*
-    if (variable_get('lingotek_translate_config', 0)) {
-      $count += self::getChunkCountByStatus($status);
+  public static function getCountsByStatus($status, $lingotek_locale) {
+    $total = 0;
+    $managed_entities = lingotek_managed_entity_types();
+    $response = array();
+    $response['types'] = array();
+    foreach(array_keys($managed_entities) as $entity_type){
+      $entity_type_count = self::getEntityTargetCountByStatus($status, $lingotek_locale, $entity_type);
+      $response['types'][$entity_type] = $entity_type_count;
+      $total += $entity_type_count;
     }
-     */
-    return $count;
+    $response['total'] = $total;
+    return $response;
   }
 
   public static function getEntityTargetCountByStatus($status, $lingotek_locale, $entity_type = NULL) {
