@@ -1289,9 +1289,15 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
 
   $total_count_with_profiles = 0;
   $rows = array();
+  $profiles_excluded_from_editing = array('CUSTOM', 'DISABLED');
 
   foreach ($profiles as $key => $profile_name) {
-    $edit_link =  l(t('Edit'), LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key, array('attributes' => array('class' => array('ctools-use-modal'))));
+    if (in_array((string)$key, $profiles_excluded_from_editing)) {
+      $edit_link = '';
+    }
+    else {
+      $edit_link =  l(t('Edit'), LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key, array('attributes' => array('class' => array('ctools-use-modal'))));
+    }
 
     $count_by_entity_type = lingotek_admin_profile_usage($key);
     $count_types = lingotek_admin_profile_usage_by_types($key);
