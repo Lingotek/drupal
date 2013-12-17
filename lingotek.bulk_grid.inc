@@ -74,11 +74,18 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#value' => $entity_type,
   );
   
+  $total_entity_rows = lingotek_get_entity_count($entity_type);
+  $page = pager_find_page() + 1; // Get current page from url
+  $limit_select = (isset($_SESSION['limit_select']) ? (int)$_SESSION['limit_select'] : 0);
+  
+  if ((int)($page - 1) * $limit_select > $total_entity_rows) {
+    // reset the page to be the last set of results
+    $_SESSION['grid_custom_parameters']['page'] = (int)($total_entity_rows / $limit_select);
+    $page = (int)$_SESSION['grid_custom_parameters']['page'] + 1;
+  }
+  
   // Run query to get table rows
   $table_data = lingotek_grid_get_rows($entity_type, $form, $form_state);
-  
-  // Count of returned results
-  $page = pager_find_page(); // Get current page from url
   
   $form['customize'] = array(
     '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
@@ -246,7 +253,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
   $form_state['values']['limit_select'] = $limit;
   
-  $results_first = ($page * $form_state['values']['limit_select']) + 1;
+  $results_first = (($page - 1) * $limit_select) + 1;
+
   $results_last = $results_first + count($table_data) - 1;
   if ($results_last > 0) {
     $form['count'] = array(
@@ -256,7 +264,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     );
   }
 
-  if (count($table_data) >= 10) {
+  if (count($table_data) >= 10 || $page > 1) {
     $form['limit_select'] = array(
       '#type' => 'select',
       '#prefix' => '<div id="page-limit">',

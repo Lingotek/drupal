@@ -1491,3 +1491,17 @@ function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
   }
   return NULL;
 }
+
+/**
+ * Return the number of entities
+ *
+ * @param $entity_type
+ *   a string containing the name of the given entity type
+ */
+function lingotek_get_entity_count($entity_type) {
+  $query = db_select($entity_type, 'n')
+    ->fields('n')
+    ->execute();
+  $num_results = $query->rowCount();
+  return $num_results;
+}
