@@ -311,10 +311,14 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getNote() {
+    return $this->getTitle();
+  }
+  
+  public function getUrl() {
     if ($this->entity_type == 'node' || $this->entity_type == 'comment') {
-      url($this->getEntityType() . '/' . $this->getId(), array('absolute' => TRUE, 'alias' => TRUE));
+      $hack = (object) array('language' => ''); // this causes the url function to not prefix the url with the current language the user is viewing the site in
+      return url($this->getEntityType() . '/' . $this->getId(), array('absolute' => TRUE, 'alias' => TRUE, 'language' => $hack));
     }
-    
     return '';
   }
   

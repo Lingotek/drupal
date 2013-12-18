@@ -86,6 +86,8 @@ interface LingotekTranslatableEntity {
   
   public function getDocumentName();
   
+  public function getUrl();
+  
   public function getNote();
   
   public function preDownload($lingotek_locale, $completed);
