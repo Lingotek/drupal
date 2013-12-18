@@ -1540,12 +1540,13 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     if(key_exists($original_locale, $lingotek_languages)){
       $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled;//array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
       $lang_code = $lingotek_languages[$original_locale]->language;
+      $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
         $status = $statuses[$key];
         $css_class = 'target-' . $status;
         $tip = $languages[$lang_code]->name . ' - ' . $legend[strtoupper($status)];
 
-        $html .= l($lang_code, $link_map[strtoupper($status)] . $lang_code, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
+        $html .= l($lang_code, $link_map[strtoupper($status)] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
       }
     }
   }
