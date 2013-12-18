@@ -74,14 +74,18 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#value' => $entity_type,
   );
   
-  $total_entity_rows = lingotek_get_entity_count($entity_type);
   $page = pager_find_page() + 1; // Get current page from url
   $limit_select = (isset($_SESSION['limit_select']) ? (int)$_SESSION['limit_select'] : 0);
   
+  $total_entity_rows = lingotek_grid_get_rows($entity_type, $form, $form_state, TRUE);
+  
   if ((int)($page - 1) * $limit_select > $total_entity_rows) {
     // reset the page to be the last set of results
-    $_SESSION['grid_custom_parameters']['page'] = (int)($total_entity_rows / $limit_select);
-    $page = (int)$_SESSION['grid_custom_parameters']['page'] + 1;
+    $page = 1;
+    $_SESSION['grid_custom_parameters']['page'] = 0;
+    if (isset($_GET['page'])) {
+      $_GET['page'] = 0; // used by PagerDefault class to get page number
+    }
   }
   
   // Run query to get table rows
@@ -1006,7 +1010,7 @@ function lingotek_grid_process_elements($elements, $prefix, $suffix) {
  *    Returns array of rows
  *    Populates The Grid
  */
-function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
+function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=FALSE) {
 
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
@@ -1063,17 +1067,20 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
     }
   }
 
-  // Initialize Query and extend paginator and tablesort
-  $query = db_select($base_table, 'n')
-      ->extend('PagerDefault')
-      ->extend('TableSort');
-
+  // Initialize Query and extend paginator and tablesort if necessary
+  if ($count_only) {
+    $query = db_select($base_table, 'n');
+  }
+  else {
+    $query = db_select($base_table, 'n')
+        ->extend('PagerDefault')
+        ->extend('TableSort');
+    $query->limit($limit)
+        ->orderByHeader($form_state['values']['grid_header']);
+  }
   if ($base_table == 'node') {
     $query->innerJoin('node', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
   }
-
-  $query->limit($limit);
-  $query->orderByHeader($form_state['values']['grid_header']);
 
   // Node Title and Name of Content Type (type)
   $query->fields('n', array($entity_id_key));
@@ -1355,6 +1362,13 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state) {
     }
   }
   // END FILTERS
+
+  // If count only, return the count
+  if ($count_only) {
+    $result = $query->execute();
+    return $result->rowCount();
+  }
+
   // Execute the query
   $table_data_raw = $query->execute()->fetchAllAssoc($entity_id_key);
   lingotek_entity_load($table_data_raw, $entity_type);
