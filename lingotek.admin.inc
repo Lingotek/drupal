@@ -460,7 +460,6 @@ function lingotek_admin_get_entities_by_profile_id($profile_id, $uploaded_only =
   }
   
   // subtract all entities specifically *not* set to the given profile
-  // and add in the document IDs
   $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
@@ -493,7 +492,7 @@ function lingotek_admin_get_entities_by_profile_id($profile_id, $uploaded_only =
   $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
-      ->condition('lem.value', (int)$profile_id)
+      ->condition('lem.value', $profile_id)
       ->execute();
   $add_entity_ids = $query->fetchAll();
   foreach ($add_entity_ids as $aei) {

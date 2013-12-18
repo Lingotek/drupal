@@ -915,6 +915,12 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  */
 function lingotek_entity_save($entity, $entity_type) {
 
+  $managed_entity_types = array_keys(lingotek_managed_entity_types());
+  if (!in_array($entity_type, $managed_entity_types)) {
+    // nothing to do here
+    return $entity;
+  }
+
   if (!isset($entity->lingotek)) {
     // load default lingotek settings when alternate node creation paths are employed (e.g., commons)
     lingotek_entity_load(array($entity), $entity_type);
