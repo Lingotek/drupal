@@ -12,10 +12,10 @@ class LingotekSync {
 
   const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
   const STATUS_EDITED = 'EDITED';    // The node has been edited, but has not been uploaded to Lingotek
+  const STATUS_FAILED = 'FAILED';    // The node or target translation has failed during processing
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek (used for node storage)
-
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
   
@@ -166,7 +166,7 @@ class LingotekSync {
     foreach ($ids as $i) {
       $chunk = LingotekConfigChunk::loadById($i);
       if(is_object($chunk))
-        $chunk->setChunkTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
+        $chunk->setTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
   }
 

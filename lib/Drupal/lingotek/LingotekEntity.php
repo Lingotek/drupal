@@ -41,6 +41,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   private function __construct($entity, $entity_type) {
     $this->entity = $entity;
     $this->language = $entity->language;
+    $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language);
     $this->entity_type = $entity_type;
   }
   
@@ -142,17 +143,17 @@ class LingotekEntity implements LingotekTranslatableEntity {
   
 
   /**
-   * Gets the local Lingotek metadata for this comment.
+   * Gets the local Lingotek metadata for this entity.
    *
    * @return array
-   *   An array of key/value data for the current comment.
+   *   An array of key/value data for the current entity.
    */
   protected function metadata() {
     $metadata = array();
 
     $results = db_select('lingotek_entity_metadata', 'meta')
       ->fields('meta')
-      ->condition('entity_id', $this->comment->cid)
+      ->condition('entity_id', $this->getId())
       ->condition('entity_type', $this->entity_type)
       ->execute();
 
@@ -356,5 +357,21 @@ class LingotekEntity implements LingotekTranslatableEntity {
         cache_clear_all($id, 'cache_entity_node');
       }
     }
+  }
+
+  public function setStatus($status) {
+    $this->setMetadataValue('node_sync_status', $status);
+  }
+
+  public function setTargetsStatus($status, $lingotek_locale = 'all') {
+    if ($lingotek_locale != 'all') {
+      $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
+    }
+    else { // set status for all available targets
+      foreach ($this->language_targets as $lt) {
+        $this->setMetadataValue('target_sync_status_' . $lt, $status);
+      }
+    }
+    return $this;
   }
 }

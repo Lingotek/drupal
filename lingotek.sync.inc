@@ -473,11 +473,26 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
   $progress_report = $api->getProgressReport($project_id, $document_ids);
 
   $targets_count = LingotekSync::getTargetCountByDocumentIds($document_ids);
-
+  
   if (isset($progress_report) && $progress_report->results == 'success') {
     $delete_nids_maybe = array();
     $node_values = array();
     $trans_obj = NULL;
+
+    if (isset($progress_report->errors)) {
+      foreach (get_object_vars($progress_report->errors) as $doc_id => $error) {
+        list($entity_id, $entity_type) = LingotekSync::getEntityIdFromDocId($doc_id, $entity_type);
+        switch ($error->status) {
+          case 'NOT_FOUND':
+            // update the status for the entity type and doc_id to be pending
+            lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_PENDING);
+            break;
+          default:
+            lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_FAILED);
+            LingotekLog::error('Received unrecognized error status from Lingotek for @entity_type #@id: @error', array('@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
+        }
+      }
+    }
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
       list($nid, $entity_type_from_table) = LingotekSync::getEntityIdFromDocId($doc_id);
       if (!$nid) {
@@ -580,6 +595,22 @@ function lingotek_update_config_progress($document_ids) {
     $cids = array();
     $cfg_values = array();
     $trans_obj = NULL;
+    
+    if (isset($progress_report->errors)) {
+      foreach (get_object_vars($progress_report->errors) as $doc_id => $error) {
+        $chunk = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
+        switch ($error->status) {
+          case 'NOT_FOUND':
+            // update the status for the entity type and doc_id to be pending
+            $chunk->setMetadataValue('chunk_sync_status', LingotekSync::STATUS_PENDING);
+            break;
+          default:
+            $chunk->setMetadataValue('chunk_sync_status', LingotekSync::STATUS_FAILED);
+            LingotekLog::error('Received unrecognized error status from Lingotek for config chunk @id: @error', array('@id' => $chunk->getId(), '@error' => $error));
+        }
+      }
+    }
+    
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
       $trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
       if (!$trans_obj) {

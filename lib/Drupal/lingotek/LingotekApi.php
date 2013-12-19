@@ -99,11 +99,16 @@ class LingotekApi {
       }
 
       if ($result) {
+        if (isset($result->errors) && $result->errors) {
+          LingotekLog::error(t('Request to send document to Lingotek failed: ') . print_r($result->errors, TRUE), array());
+          $translatable_object->setStatus(LingotekSync::STATUS_FAILED);
+          return FALSE;
+        }
         if (get_class($translatable_object) == 'LingotekConfigChunk') {
           $translatable_object->setDocumentId($result->id);
           $translatable_object->setProjectId($project_id);
-          $translatable_object->setChunkStatus(LingotekSync::STATUS_CURRENT);
-          $translatable_object->setChunkTargetsStatus(LingotekSync::STATUS_PENDING);
+          $translatable_object->setStatus(LingotekSync::STATUS_CURRENT);
+          $translatable_object->setTargetsStatus(LingotekSync::STATUS_PENDING);
 
           // WTD: there is a race condition here where a user could modify a locales-
           // source entry between the time the dirty segments are pulled and the time
@@ -148,8 +153,8 @@ class LingotekApi {
 
     if ($result) {
       if (get_class($translatable_object) == 'LingotekConfigChunk') {
-        $translatable_object->setChunkStatus(LingotekSync::STATUS_CURRENT);
-        $translatable_object->setChunkTargetsStatus(LingotekSync::STATUS_PENDING);
+        $translatable_object->setStatus(LingotekSync::STATUS_CURRENT);
+        $translatable_object->setTargetsStatus(LingotekSync::STATUS_PENDING);
 
         // WTD: there is a race condition here where a user could modify a locales-
         // source entry between the time the dirty segments are pulled and the time

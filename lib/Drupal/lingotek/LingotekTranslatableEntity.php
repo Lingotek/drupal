@@ -94,6 +94,9 @@ interface LingotekTranslatableEntity {
   
   public function postDownload($lingotek_locale, $completed);
   
+  public function setStatus($status);
+
+  public function setTargetsStatus($status);
   /*
    * Returns the source locale for the translatable entity
    */

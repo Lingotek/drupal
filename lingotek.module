@@ -1291,7 +1291,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, &$context = arr
     return;
   }
 
-  if ((!lingotek_enabled_bundle($entity_type, $bundle) && $entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) || !Lingotek::isSupportedLanguage($entity->language)) {
+  if ((!lingotek_enabled_bundle($entity_type, $bundle) && $entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) || !isset($entity->language) || !Lingotek::isSupportedLanguage($entity->language)) {
     return;
   }
 
@@ -1330,6 +1330,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   
   LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
   
+  $empty_context = FALSE;
   if (empty($context)) {
     $empty_context = TRUE; // preserve the fact that $context *was* empty when passed
     $context['message'] = t('Uploading @type @id for translation', array('@type' => $entity_type,'@id' => $id));
@@ -1358,6 +1359,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if ($empty_context) {
     if ($success) {
       drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
+      lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
     }
     else {
       drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $ln->getTitle())), 'error');
@@ -1369,6 +1371,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
         $context['results']['uploaded_nids'] = array();
       }
       $context['results']['uploaded_nids'][] = $id;
+      lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
     }
     else {
       $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
@@ -1379,7 +1382,6 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     }
   }
   
-  lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
   lingotek_keystore($entity_type, $id, 'last_uploaded', time());
   
   $source = isset($entity->language) ? $entity->language : language_default()->language;
