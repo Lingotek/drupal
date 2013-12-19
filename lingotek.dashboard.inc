@@ -224,7 +224,7 @@ function lingotek_get_type_field_mapping($node_type = NULL) {
 function lingotek_get_language_details($lingotek_locale_requested = NULL) {
 
   $response = array();
-  $available_languages = Lingotek::getLanguages(NULL, FALSE);
+  $available_languages = Lingotek::getLanguages(NULL, TRUE);
   $source_total = 0;
   $target_total = 0;
   $source_totals = array();
@@ -266,58 +266,6 @@ function lingotek_get_language_details($lingotek_locale_requested = NULL) {
       'target' => array('types'=>$target_totals,'total'=>$target_total),
       'count' => count($available_languages),
       );
-  }
-  return $response;
-}
-
-/**
- * Returns the language code with number of source documents written in the passed in locale (or all sources, when omitted)
- */
-function lingotek_get_source_statuses($lingotek_locale_requested = NULL) {
-  $data = array();
-  $response = array();
-  $available_languages = Lingotek::getLanguages();// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
-
-  // If we get a parameter, only return that language. Otherwise return all languages.
-  foreach ($available_languages as $source) {
-    if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $source->lingotek_locale)
-      continue;
-    $drupal_language_code = $source->language;
-    $lingotek_locale = $source->lingotek_locale;
-    $total = LingotekSync::getSourceCount($lingotek_locale);
-    if ($lingotek_locale_requested == $source->lingotek_locale) {
-      $response = $total;
-    }
-    else {
-      $response[$lingotek_locale] = $total;
-    }
-  }
-  return $response;
-}
-
-/**
- * Returns the number of target translations for the passed in locale (or all locales, when omitted)
- */
-function lingotek_get_target_statuses($lingotek_locale_requested = NULL) {
-
-  $response = array();
-  $available_languages = Lingotek::getLanguages(NULL, FALSE);// print("locale: ".$lingotek_locale."\n"); print("count: ".  implode(', ',array_keys($target_languages)).' ['.count($target_languages)."]\n");
-
-  // If we get a parameter, only return that language.  Otherwise return all the codes (dont return the source language).
-  // Otherwise Return a List of all the Active Languages
-  foreach ($available_languages as $target) {
-    if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $target->lingotek_locale)
-      continue;
-    $drupal_language_code = $target->language;
-    $lingotek_locale = $target->lingotek_locale;
-    $total = LingotekSync::getCountByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
-
-    if ($lingotek_locale_requested == $target->lingotek_locale) {
-      $response = $target_status;
-    }
-    else {
-      $response[$lingotek_locale] = $total;
-    }
   }
   return $response;
 }
