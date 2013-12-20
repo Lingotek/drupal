@@ -327,24 +327,36 @@ class LingotekSync {
     return $response;
   }
 
-  public static function getEntitySourceCount($lingotek_locale, $entity_type = NULL){
+  public static function getEntitySourceCount($lingotek_locale, $entity_type = NULL) {
     $managed_entities = lingotek_managed_entity_types();
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-    $target_key = 'node_sync_status';
     $q = array();
     $total_count = 0;
-    foreach($managed_entities as $m_entity_type => $properties){
-      if(!is_null($entity_type) && $entity_type != $m_entity_type){
+    foreach ($managed_entities as $m_entity_type => $properties) {
+      if (!is_null($entity_type) && $entity_type != $m_entity_type) {
         continue;
       }
       $entity_base_table = $properties['base table'];
       $query = db_select($entity_base_table, 't')->condition('t.language', $drupal_language_code);
+
+      // exclude disabled bundles
+      $disabled_entity_ids = self::getEntityIdsByProfileStatus($entity_base_table, LingotekSync::PROFILE_DISABLED);
+      if (!empty($disabled_entity_ids)) {
+        $query->condition($properties['entity keys']['id'], $disabled_entity_ids, "NOT IN"); //exclude disabled nodes
+      }
+
+      // exclude disabled entities
+      $disabled_bundles = lingotek_get_disabled_bundles($entity_base_table);
+      if (!empty($disabled_bundles)) {
+        $query->condition("t.".$properties['bundle keys']['bundle'], $disabled_bundles, "NOT IN"); //exclude disabled bundles
+      }
+
       $count = $query->countQuery()->execute()->fetchField();
       $total_count += $count;
     }
     return $total_count;
   }
-  
+
   public static function getCountsByStatus($status, $lingotek_locale) {
     $total = 0;
     $managed_entities = lingotek_managed_entity_types();
@@ -360,7 +372,7 @@ class LingotekSync {
   }
 
   public static function getEntityTargetCountByStatus($status, $lingotek_locale, $entity_type = NULL) {
-    $managed_entities = lingotek_managed_entity_types(); //dvz($managed_entities,TRUE);
+    $managed_entities = lingotek_managed_entity_types();
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
     $target_prefix = 'target_sync_status_';
     $target_key = $target_prefix . $lingotek_locale;
@@ -377,6 +389,19 @@ class LingotekSync {
        ' AND l.entity_type = \''.$entity_base_table.'\''.
        ' AND l.entity_key = \''.$target_key.'\' '
       );
+
+      // exclude disabled bundles
+      $disabled_bundles = lingotek_get_disabled_bundles($entity_base_table);
+      if (!empty($disabled_bundles)) {
+        $query->condition("t.".$properties['bundle keys']['bundle'], $disabled_bundles, "NOT IN");
+      }
+
+      // exclude disabled entities
+      $disabled_entity_ids = self::getEntityIdsByProfileStatus($entity_base_table, LingotekSync::PROFILE_DISABLED);
+      if (!empty($disabled_entity_ids)) {
+        $query->condition("t.".$properties['entity keys']['id'], $disabled_entity_ids, "NOT IN");
+      }
+
       $query->condition('l.value', $status);
       $count = $query->countQuery()->execute()->fetchField();
       $total_count += $count;
@@ -686,6 +711,17 @@ class LingotekSync {
       ->distinct()
       ->condition('entity_type', $entity_type)
       ->condition('entity_key', 'target_sync_status_' . $target_language, 'LIKE')
+      ->condition('value', $status);
+    $query->addField('l', 'entity_id', 'nid');
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
+  public static function getEntityIdsByProfileStatus($entity_type, $status) {
+    $query = db_select('lingotek_entity_metadata', 'l')
+      ->distinct()
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_key', 'profile')
       ->condition('value', $status);
     $query->addField('l', 'entity_id', 'nid');
     $result = $query->execute()->fetchCol();

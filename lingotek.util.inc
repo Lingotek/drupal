@@ -481,6 +481,23 @@ function lingotek_enabled_bundle($entity_type, $bundle) {
 }
 
 /**
+ * Returns an array of disabled bundles for a given entity_type
+ *
+ * @return
+ *   Array of bundle key values (e.g., 'article', 'page').
+ */
+function lingotek_get_disabled_bundles($entity_type) {
+  $bundles = array_keys(field_info_bundles($entity_type));
+  $disabled_bundles = array();
+  foreach($bundles as $bundle){
+    if(!lingotek_enabled_bundle($entity_type, $bundle)){
+      $disabled_bundles[] = $bundle;
+    }
+  }
+  return $disabled_bundles;
+}
+
+/**
  * Returns whether the given node type has support for translations.
  *
  * @return
@@ -768,7 +785,7 @@ function lingotek_delete_target_language($lingotek_locale) {
     if (Lingotek::convertDrupal2Lingotek(language_default()->language, FALSE) <> $lingotek_locale) {
       db_update('languages')
           ->fields(array(
-            'enabled' => 0,
+            //'enabled' => 0,
             'lingotek_enabled' => 0,
           ))
           ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
