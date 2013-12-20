@@ -60,6 +60,7 @@ function lingotek_uninstall() {
   db_drop_field('languages', 'lingotek_enabled');
   db_drop_field('languages', 'lingotek_locale');
   db_drop_field('locales_target', 'translation_agent_id');
+  db_drop_table('lingotek');// leave this here until we move it to an update function
   db_drop_table('lingotek_config_metadata');
   db_drop_table('lingotek_translation_agent');
 }
@@ -584,7 +585,7 @@ function lingotek_update_7500(&$sandbox) {
   db_query("INSERT IGNORE INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
 FROM lingotek");
-  //db_query("DROP TABLE lingotek");
+  //db_drop_table('lingotek');// as soon as this is running in an update function remove it from the uninstall function above
 }
 
 /**
