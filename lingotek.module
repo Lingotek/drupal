@@ -1271,6 +1271,11 @@ function lingotek_entity_insert($entity, $type) {
  * Implements hook_entity_update().
  */
 function lingotek_entity_update($entity, $type) {  
+  $entity_types = lingotek_managed_entity_types();
+  if (!in_array($type, $entity_types)) {
+    // Not an entity type we work with
+    return;
+  }
   if ($type == 'node' && !empty($entity->tnid) && ($entity->nid != $entity->tnid)) {//check to make sure it is not a target node
     return;
   }
