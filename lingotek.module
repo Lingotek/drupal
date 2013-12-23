@@ -935,7 +935,6 @@ function lingotek_entity_save($entity, $entity_type) {
   $has_not_been_uploaded = !isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id']);
 
   $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
-  $remove[] = 'profile';
 
   db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $entity_type)
@@ -1271,9 +1270,9 @@ function lingotek_entity_insert($entity, $type) {
  * Implements hook_entity_update().
  */
 function lingotek_entity_update($entity, $type) {  
-  $entity_types = lingotek_managed_entity_types();
-  if (!in_array($type, $entity_types)) {
-    // Not an entity type we work with
+  $managed_entity_types = array_keys(lingotek_managed_entity_types());
+  if (!in_array($type, $managed_entity_types)) {
+    // nothing to do here
     return;
   }
   if ($type == 'node' && !empty($entity->tnid) && ($entity->nid != $entity->tnid)) {//check to make sure it is not a target node
@@ -1282,7 +1281,7 @@ function lingotek_entity_update($entity, $type) {
 
   list($id, $vid, $bundle) = entity_extract_ids($type, $entity);
 
-  $entity = lingotek_entity_save($entity, $type);
+  lingotek_entity_save($entity, $type);
   lingotek_entity_upload_triggered($entity, $type);
 }
 
@@ -1990,7 +1989,7 @@ function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeab
 
   if ($include_changeable) {
     $profile_fields = array_merge($profile_fields, array(
-      'profile_id',
+      'profile',
       'name',
       'create_lingotek_document',
       'sync_method',
