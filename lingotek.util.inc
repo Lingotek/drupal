@@ -487,14 +487,20 @@ function lingotek_enabled_bundle($entity_type, $bundle) {
  *   Array of bundle key values (e.g., 'article', 'page').
  */
 function lingotek_get_disabled_bundles($entity_type) {
-  $bundles = array_keys(field_info_bundles($entity_type));
-  $disabled_bundles = array();
-  foreach($bundles as $bundle){
-    if(!lingotek_enabled_bundle($entity_type, $bundle)){
-      $disabled_bundles[] = $bundle;
+  return lingotek_get_bundles_by_profile($entity_type, LingotekSync::PROFILE_DISABLED);
+}
+
+function lingotek_get_bundles_by_profile($entity_type, $profile) {
+  $entities = variable_get('lingotek_entity_profiles');
+  $profiled_bundles = array();
+  if (isset($entities[$entity_type])) {
+    foreach ($entities[$entity_type] as $bundle_name => $cur_profile) {
+      if ((string)$profile === $cur_profile) {
+        $profiled_bundles[] = $bundle_name;
+      }
     }
   }
-  return $disabled_bundles;
+  return $profiled_bundles;
 }
 
 /**
@@ -1312,21 +1318,20 @@ function lingotek_migration_3() {
   return $ret;
 }
 
-function lingotek_profile_condition($node_table, $table_auto_upload, $table_profile, $profile_id) {
+function lingotek_profile_condition($entity_type, $table_alias, $table_profile, $profile_id) {
   $or = db_or();
   
   $fields = variable_get('lingotek_enabled_fields');
   $types = array();
-  foreach (lingotek_load_profile_defaults('node') as $content_type => $profile) {
-    if ($profile['profile'] == (string)$profile_id && isset($fields['node'][$content_type])) {
+  foreach (lingotek_load_profile_defaults($entity_type) as $content_type => $profile) {
+    if ($profile['profile'] == (string)$profile_id && isset($fields[$entity_type][$content_type])) {
       $types[] = $content_type;
     }
   }
   
   if (!empty($types)) {
     $an = db_and();
-    $an->condition($node_table . '.type', $types, 'IN');
-    //$an->condition($table_auto_upload . '.value', NULL);
+    $an->condition($table_alias . '.type', $types, 'IN');
     $an->condition($table_profile . '.value', NULL);
     $or->condition($an);
   }
@@ -1521,4 +1526,131 @@ function lingotek_get_entity_count($entity_type) {
     ->execute();
   $num_results = $query->rowCount();
   return $num_results;
+}
+
+/*
+ * Return an associative array of entity types, with an array of bundles
+ * enabled for the given profile.
+ */
+function lingotek_get_bundles_by_profile_id($profile_id) {
+  $entities = entity_get_info();
+  $lentities = variable_get('lingotek_entity_profiles');
+  $bundles = array();
+  foreach ($entities as $entity_name => $entity) {
+    if (!isset($lentities[$entity_name])) {
+      unset($entities[$entity_name]);
+    }
+    foreach ($entity['bundles'] as $bundle_name => $bundle) {
+      if (isset($lentities[$entity_name][$bundle_name]) && $lentities[$entity_name][$bundle_name] === (string)$profile_id) {
+        if (!isset($bundles[$entity_name])) {
+          $bundles[$entity_name] = array();
+        }
+        $bundles[$entity_name][$bundle_name] = TRUE;
+      }
+    }
+  }
+  return $bundles;
+}
+
+/*
+ * Return an array tree of entity_types -> entity_ids -> document_ids
+ */
+function lingotek_get_document_id_tree() {
+  $query = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('entity_id', 'entity_type', 'value'))
+      ->condition('lem.entity_key', 'document_id')
+      ->execute();
+  $results = $query->fetchAll();
+  $doc_id_tree = array();
+  foreach ($results as $r) {
+    if (!isset($doc_id_tree[$r->entity_type])) {
+      $doc_id_tree[$r->entity_type] = array();
+    }
+    $doc_id_tree[$r->entity_type][$r->entity_id] = $r->value;    
+  }
+  return $doc_id_tree;
+}
+
+/*
+ * Get all entities that are enabled for lingotek translation, by profile
+ * 
+ * Return an array of entity-specific arrays containing document_id, type, and id
+ */
+function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', $uploaded_only = FALSE) {
+  // get all bundles that belong to the given profile
+  $bundles = lingotek_get_bundles_by_profile_id($profile_id);
+  $entities = array();
+  
+  if ($entity_type != 'all') {
+    if (isset($bundles[$entity_type])) {
+      $bundles = array($entity_type => $bundles[$entity_type]);
+    }
+    else {
+      // entity type doesn't exist, return nothing
+      return array();
+    }
+  }
+  
+  // get all entities that belond to those bundles
+  foreach ($bundles as $et => $entity_bundles) {
+    $tmp_entities = entity_load($et);
+    foreach ($tmp_entities as $tid => $tinfo) {
+      list($entity_id, $vid, $bundle_name) = entity_extract_ids($et, $tinfo);
+      if (isset($bundles[$et][$bundle_name])) {
+        $entities[] = array('id' => $tid, 'type' => $et);
+      }
+    }
+  }
+  
+  // subtract all entities specifically *not* set to the given profile
+  $query = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('entity_id', 'entity_type'))
+      ->condition('lem.entity_key', 'profile')
+      ->condition('lem.value', (int)$profile_id, '!=');
+  if ($entity_type != 'all') {
+    $query->condition('lem.entity_type', $entity_type);
+  }
+  $result = $query->execute();
+  $subtract_entity_ids = $result->fetchAll();
+  
+  $doc_ids = lingotek_get_document_id_tree();
+  $subtractions = array();
+  foreach ($subtract_entity_ids as $sei) {
+    if (!isset($subtractions[$sei->entity_type])) {
+      $subtractions[$sei->entity_type] = array();
+    }
+    $subtractions[$sei->entity_type][$sei->entity_id] = TRUE;
+  }
+  $filtered_entities = array();
+  foreach ($entities as $e) {
+    if (!isset($subtractions[$e['type']][$e['id']])) {
+      if (isset($doc_ids[$e['type']][$e['id']])) {
+        $e['document_id'] = $doc_ids[$e['type']][$e['id']];
+        $filtered_entities[] = $e;
+      }
+      else if (!$uploaded_only) {
+        $filtered_entities[] = $e;
+      }
+    }
+  }
+  
+  // add all entities specifically set to the given profile
+  $query = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('entity_id', 'entity_type'))
+      ->condition('lem.entity_key', 'profile')
+      ->condition('lem.value', $profile_id);
+  if ($entity_type != 'all') {
+    $query->condition('lem.entity_type', $entity_type);
+  }
+  $result = $query->execute();
+  $add_entity_ids = $result->fetchAll();
+  foreach ($add_entity_ids as $aei) {
+    $addition = array('id' => $aei->entity_id, 'type' => $aei->entity_type);
+    if (isset($doc_ids[$aei->entity_type][$aei->entity_id])) {
+      $addition['document_id'] = $doc_ids[$aei->entity_type][$aei->entity_id];
+    }
+    $filtered_entities[] = $addition;
+  }
+  
+  return $filtered_entities;
 }

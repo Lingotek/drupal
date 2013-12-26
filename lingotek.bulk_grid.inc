@@ -168,7 +168,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
         }
       }
       else {
-        if (!empty($value) && $value != 'all') {
+        // $value === '0' accounts for the case of the automatic profile
+        if ((!empty($value) && $value != 'all') || $value === '0') {
           $filter_set = TRUE;
         }
       }
@@ -1236,7 +1237,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
   // Source Language
   if (isset($filters['source_language']) && $filters['source_language'] != 'all') {
-    $query->condition('n.language', $filters['source_language']);
+    $query->condition('n.' . $info['entity keys']['language'], $filters['source_language']);
   }
 
   // Upload Status
@@ -1246,12 +1247,18 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
   //  Content Type
   if (isset($filters['content_type']) && !in_array('all', $filters['content_type'])) {
-    $query->condition('n.type', $filters['content_type'], 'IN');
+    $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
   }
 
   if (isset($filters['profile']) && $filters['profile'] != 'all') {
-    $or = lingotek_profile_condition('n', 'lingo_auto_upload', 'lingo_profile', $filters['profile']);
-    $query->condition($or);
+    $profiled_entities = lingotek_get_entities_by_profile_id($filters['profile'], $entity_type);
+    $profiled_entity_ids = array(-1);
+    foreach ($profiled_entities as $p) {
+      $profiled_entity_ids[] = $p['id'];
+    }
+    $query->condition('n.' . $info['entity keys']['id'], $profiled_entity_ids, 'IN');
+    //$or = lingotek_profile_condition($base_table, 'n', 'lingo_profile', $filters['profile']);
+    //$query->condition($or);
   }
 
   // Last Uploaded
