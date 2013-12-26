@@ -1586,8 +1586,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
       $bundles = array($entity_type => $bundles[$entity_type]);
     }
     else {
-      // entity type doesn't exist, return nothing
-      return array();
+      $bundles = array();
     }
   }
   
