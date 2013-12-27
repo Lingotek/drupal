@@ -1483,7 +1483,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     }
     $source .= '</span>';
 
-    $needs_upload = $row->upload_status == LingotekSync::STATUS_EDITED || (empty($row->upload_status) && $row->lingotek['profile'] != LingotekSync::PROFILE_DISABLED);
+    $needs_upload = ($row->upload_status == LingotekSync::STATUS_EDITED || empty($row->upload_status)) && $row->lingotek['profile'] != LingotekSync::PROFILE_DISABLED;
     if ($needs_upload) { // add link for upload
       $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
     }
