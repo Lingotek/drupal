@@ -183,7 +183,7 @@ class LingotekSync {
       'target_sync_progress_' . $lingotek_locale,
       'target_last_downloaded_' . $lingotek_locale,
     );
-    db_delete('lingotek')->condition('lingokey', $keys, 'IN')->execute();
+    db_delete('lingotek_entity_metadata')->condition('lingokey', $keys, 'IN')->execute();
   }
 
   public static function deleteTargetEntriesForAllChunks($lingotek_locale) {

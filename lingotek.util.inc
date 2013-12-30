@@ -804,7 +804,7 @@ function lingotek_delete_target_language($lingotek_locale) {
 
     // Removes the node sync target language entries from the lingotek table
     // and removes config chunk target language entries from lingotek_config_metadata.
-    LingotekSync::deleteTargetEntriesForAllDocs($lingotek_locale);
+    // LingotekSync::deleteTargetEntriesForAllDocs($lingotek_locale); // We leave the last updated statuses for reporting
 
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
