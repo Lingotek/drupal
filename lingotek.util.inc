@@ -1605,7 +1605,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
-      ->condition('lem.value', (int)$profile_id, '!=');
+      ->condition('lem.value', $profile_id, '!=');
   if ($entity_type != 'all') {
     $query->condition('lem.entity_type', $entity_type);
   }
