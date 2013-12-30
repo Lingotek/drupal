@@ -803,7 +803,7 @@ function lingotek_grid_build_filters($form_state) {
     'nid' => array(
       '#type' => 'textfield',
       '#default_value' => isset($_SESSION['grid_filters']['nid']) ? $_SESSION['grid_filters']['nid'] : '',
-      '#title' => t('Node ID is'),
+      '#title' => t('Entity ID is'),
       '#size' => 8,
     ),
     'document_id' => array(
@@ -1083,7 +1083,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     $query->innerJoin('node', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
   }
 
-  // Node Title and Name of Content Type (type)
+  // Entity Title and Name of Content Type (type)
   $query->fields('n', array($entity_id_key));
   
   if ($label_col) {
@@ -1130,7 +1130,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   $query->leftJoin('lingotek_entity_metadata', 'lingo_document_id', 'lingo_document_id.entity_type =\'' . $entity_type . '\' AND lingo_document_id.entity_id = ' . $eid . ' and lingo_document_id.entity_key = \'document_id\'');
   $query->addField('lingo_document_id', 'value', 'document_id');
 
-  // Node Upload Status
+  // Entity Upload Status
   $query->leftJoin('lingotek_entity_metadata', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\' and lingo_upload_status.value <> \''. LingotekSync::STATUS_TARGET . '\'');
   //$query->leftJoin('lingotek_entity_metadata', 'lingo_upload_status', 'lingo_upload_status.nid = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\'');
   //$query->condition('lingo_upload_status.value', LingotekSync::STATUS_TARGET, '<>');
@@ -1209,12 +1209,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     }
   }
 
-  //  Node ID
+  //  Entity ID
   if (isset($filters['nid']) && $filters['nid'] != '') {
     $query->condition('' . $eid . '', $filters['nid']);
   }
-
-
 
   // Lingotek Document ID
   if (isset($filters['document_id']) && $filters['document_id'] != '') {
@@ -1488,11 +1486,12 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
       $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
     }
 
-    $pm_icon = ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled . '"></i>';
+    $pm_icon = ($entity_type == 'node') ? ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled . '"></i>' : '';
     $pm_link = ' ' . l($pm_icon, 'node/' . $entity_id . '/lingotek_pm', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
-
+    
+    
     $actions = '';
-    $actions .= l('<i title="' . t('Edit Node') . '" class="fa fa-edit"></i>', $entity_type . '/' . $entity_id . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
+    $actions .= l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $entity_type . '/' . $entity_id . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
     $actions .= empty($disabled) ? $pm_link : $pm_icon;
     $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $entity_id . ',"edit"); return false;')));
 
@@ -1603,13 +1602,13 @@ function lingotek_grid_create_progress_bar($progress) {
  *
  * Returns a fully rendered html form
  */
-function lingotek_disassociate_nodes($entity_type, $nids) {
+function lingotek_disassociate_nodes($entity_type, $entity_ids) {
   $second_run = !empty($form_state['executed']);
   
-  $nids = explode(',', $nids);
+  $entity_ids = explode(',', $entity_ids);
   
-  if (count($nids) > 1 && !$second_run) {
-    drupal_set_message(t('You will be disassociating translations for @number nodes.', array('@number' => count($nids))), 'warning');
+  if (count($entity_ids) > 1 && !$second_run) {
+    drupal_set_message(format_plural(count($entity_ids),'You will be disassociating translations for one entity.', 'You will be disassociating translations for @count entities'), 'warning');
   }
   
   ctools_include('node.pages', 'node', '');
@@ -1618,7 +1617,7 @@ function lingotek_disassociate_nodes($entity_type, $nids) {
   
   $form_state = array(
     'ajax' => TRUE,
-    'nids' => $nids,
+    'nids' => $entity_ids,
     'entity_type' => $entity_type,
   );
   $output = ctools_modal_form_wrapper('lingotek_node_disassociate_form', $form_state);

@@ -25,7 +25,7 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
 }
 
 /*
- * Helper function, for storing additional information with a Node.
+ * Helper function, for storing additional information with an Entity.
  * Example usage (GET):
  *    lingotek_keystore($entity_type, 'all') - returns all entities and properties
  *    lingotek_keystore($entity_type, 5) - returns all properties for the specified Entity ID (i.e., 5)
