@@ -348,7 +348,7 @@ class LingotekSync {
       // exclude disabled entities
       $disabled_bundles = lingotek_get_disabled_bundles($entity_base_table);
       if (!empty($disabled_bundles)) {
-        $query->condition("t.".$properties['bundle keys']['bundle'], $disabled_bundles, "NOT IN"); //exclude disabled bundles
+        $query->condition("t.".$properties['entity keys']['bundle'], $disabled_bundles, "NOT IN"); //exclude disabled bundles
       }
 
       $count = $query->countQuery()->execute()->fetchField();
@@ -393,7 +393,7 @@ class LingotekSync {
       // exclude disabled bundles
       $disabled_bundles = lingotek_get_disabled_bundles($entity_base_table);
       if (!empty($disabled_bundles)) {
-        $query->condition("t.".$properties['bundle keys']['bundle'], $disabled_bundles, "NOT IN");
+        $query->condition("t.".$properties['entity keys']['bundle'], $disabled_bundles, "NOT IN");
       }
 
       // exclude disabled entities
