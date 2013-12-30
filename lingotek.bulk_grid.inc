@@ -15,6 +15,12 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   global $language;
   
+  if (isset($_SESSION['grid_entity_type']) && $_SESSION['grid_entity_type'] != $entity_type) {
+     $_SESSION['grid_entity_type'] = $entity_type;
+     lingotek_grid_clear_filters();
+  }
+  
+  
   /*
    * Here we store or retrieve the GET parameters so that the state of the table is maintained when leaving and coming back
    * Also makes it so the state is not lost when performing bulk actions
@@ -178,7 +184,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   if ($filter_set) {
     $form['filter_message'] = array(
-      '#markup' => ' ' . l('<i class="fa fa-times" style="margin-right: 5px;"></i>' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear', array('html' => TRUE)) . '',
+      '#markup' => ' ' . l('<i class="fa fa-times" style="margin-right: 5px;"></i>' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear/' . $entity_type, array('html' => TRUE)) . '',
     );
   }
   
@@ -986,9 +992,9 @@ function lingotek_grid_clear_filters() {
   }
 }
 
-function lingotek_grid_clear_filters_page() {
+function lingotek_grid_clear_filters_page($entity_type) {
   lingotek_grid_clear_filters();
-  drupal_goto('admin/settings/lingotek/manage/list');
+  drupal_goto('admin/settings/lingotek/manage/'.$entity_type);
 }
 
 /**
