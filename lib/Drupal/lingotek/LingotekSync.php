@@ -339,16 +339,10 @@ class LingotekSync {
       $entity_base_table = $properties['base table'];
       $query = db_select($entity_base_table, 't')->condition('t.language', $drupal_language_code);
 
-      // exclude disabled bundles
-      $disabled_entity_ids = self::getEntityIdsByProfileStatus($entity_base_table, LingotekSync::PROFILE_DISABLED);
-      if (!empty($disabled_entity_ids)) {
-        $query->condition($properties['entity keys']['id'], $disabled_entity_ids, "NOT IN"); //exclude disabled nodes
-      }
-
-      // exclude disabled entities
-      $disabled_bundles = lingotek_get_disabled_bundles($entity_base_table);
-      if (!empty($disabled_bundles)) {
-        $query->condition("t.".$properties['entity keys']['bundle'], $disabled_bundles, "NOT IN"); //exclude disabled bundles
+      // exclude disabled nodes (including those that have disabled bundles)
+      $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
+      if(!empty($disabled_entity_ids)){
+        $query->condition($properties['entity keys']['id'], $disabled_entity_ids, "NOT IN"); //exclude disabled entities
       }
 
       $count = $query->countQuery()->execute()->fetchField();
@@ -390,16 +384,10 @@ class LingotekSync {
        ' AND l.entity_key = \''.$target_key.'\' '
       );
 
-      // exclude disabled bundles
-      $disabled_bundles = lingotek_get_disabled_bundles($entity_base_table);
-      if (!empty($disabled_bundles)) {
-        $query->condition("t.".$properties['entity keys']['bundle'], $disabled_bundles, "NOT IN");
-      }
-
-      // exclude disabled entities
-      $disabled_entity_ids = self::getEntityIdsByProfileStatus($entity_base_table, LingotekSync::PROFILE_DISABLED);
-      if (!empty($disabled_entity_ids)) {
-        $query->condition("t.".$properties['entity keys']['id'], $disabled_entity_ids, "NOT IN");
+      // exclude disabled nodes (including those that have disabled bundles)
+      $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
+      if(!empty($disabled_entity_ids)){
+        $query->condition("t.".$properties['entity keys']['id'], $disabled_entity_ids, "NOT IN"); //exclude disabled entities
       }
 
       $query->condition('l.value', $status);
