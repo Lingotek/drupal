@@ -829,6 +829,7 @@ function lingotek_grid_build_filters($form_state) {
       '#default_value' => isset($_SESSION['grid_filters']['profile']) ? $_SESSION['grid_filters']['profile'] : 'all',
       '#title' => t('Translation Profile'),
       '#options' => $profiles,
+      '#multiple' => TRUE
     ),
     /*'title' => array(
       '#type' => 'textfield',
@@ -1254,7 +1255,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
   }
 
-  if (isset($filters['profile']) && $filters['profile'] != 'all') {
+  if (isset($filters['profile']) && !in_array('all',$filters['profile'])) {
     $profiled_entities = lingotek_get_entities_by_profile_id($filters['profile'], $entity_type);
     $profiled_entity_ids = array(-1);
     foreach ($profiled_entities as $p) {

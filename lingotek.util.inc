@@ -1533,9 +1533,16 @@ function lingotek_get_entity_count($entity_type) {
  * enabled for the given profile.
  */
 function lingotek_get_bundles_by_profile_id($profile_id) {
+  $bundles = array();
+  if(is_array($profile_id)) { // allow profile_ids to be an array of profiles to find bundles for
+    $mapped_results = array_map('lingotek_get_bundles_by_profile_id',$profile_id);
+    foreach($mapped_results as $result){
+      $bundles = array_merge_recursive($result, $bundles);
+    }
+    return $bundles;
+  }
   $entities = entity_get_info();
   $lentities = variable_get('lingotek_entity_profiles');
-  $bundles = array();
   foreach ($entities as $entity_name => $entity) {
     if (!isset($lentities[$entity_name])) {
       unset($entities[$entity_name]);
@@ -1578,7 +1585,8 @@ function lingotek_get_document_id_tree() {
  */
 function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', $uploaded_only = FALSE) {
   // get all bundles that belong to the given profile
-  $bundles = lingotek_get_bundles_by_profile_id($profile_id);
+  $bundles = lingotek_get_bundles_by_profile_id($profile_id); // this function accepts an id or an array of ids
+
   $entities = array();
   
   if ($entity_type != 'all') {
@@ -1605,7 +1613,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
-      ->condition('lem.value', $profile_id, '!=');
+      ->condition('lem.value', $profile_id, is_array($profile_id) ? 'NOT IN' : '!=');
   if ($entity_type != 'all') {
     $query->condition('lem.entity_type', $entity_type);
   }
@@ -1632,12 +1640,12 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
       }
     }
   }
-  
+
   // add all entities specifically set to the given profile
   $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
-      ->condition('lem.value', $profile_id);
+      ->condition('lem.value', $profile_id,  is_array($profile_id) ? 'IN' : '=');
   if ($entity_type != 'all') {
     $query->condition('lem.entity_type', $entity_type);
   }

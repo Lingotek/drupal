@@ -94,7 +94,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
  */
 function lingotek_notifications() {
 
-  LingotekLog::info('Callback received @data', array('@data' => var_export($_GET)), 'callback');
+  LingotekLog::trace('Received <pre>@data</pre>', array('@data' => var_export($_GET, TRUE)), 'callback');
 
   $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;// uuid
   $document_idx = ( isset($_GET['doc_idx']) ) ? $_GET['doc_idx'] : NULL;// this is the deprecated document number
@@ -114,7 +114,7 @@ function lingotek_notifications() {
   if ((!isset($document_id) && !isset($document_idx)) || !isset($lingotek_locale)) {
     return drupal_json_output(array("message" => "Missing Required Parameter(s).  Required: doc_id, target_code"));
   }
-  
+
   include_once('lingotek.batch.inc');
 
   $target_drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
@@ -150,11 +150,13 @@ function lingotek_notifications() {
     return drupal_json_output(array("message" => "The doc_id was not found on the site."));
   }
   
-  LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>entity:</b> @entity_type @entity_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
+  LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>entity:</b> @entity_type #@entity_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
       '@document_id' => $document_id,
       '@lingotek_locale' => $lingotek_locale,
       '@project_id' => $project_id,
       '@target_drupal_language_code' => $target_drupal_language_code,
+      '@entity_type' => isset($trans_obj) ? $trans_obj->getEntityType() : '',
+      '@entity_id' => isset($trans_obj) ? $trans_obj->getId() : '',
       '@completed' => $completed
         ), 'callback');
 
@@ -168,7 +170,7 @@ function lingotek_notifications() {
         'download' => $downloaded,
       ));
 
-  drupal_json_output($response);
+  return drupal_json_output($response);
 }
 
 /**
