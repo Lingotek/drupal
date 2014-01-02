@@ -16,11 +16,13 @@ function lingotek_bulk_grid_form($form, $form_state) {
   global $language;
   
   if (isset($_SESSION['grid_entity_type']) && $_SESSION['grid_entity_type'] != $entity_type) {
-     $_SESSION['grid_entity_type'] = $entity_type;
-     lingotek_grid_clear_filters();
+    $_SESSION['grid_entity_type'] = $entity_type;
+    lingotek_grid_clear_filters();
   }
-  
-  
+  else if (!isset($_SESSION['grid_entity_type'])) {
+    $_SESSION['grid_entity_type'] = $entity_type;
+  }
+
   /*
    * Here we store or retrieve the GET parameters so that the state of the table is maintained when leaving and coming back
    * Also makes it so the state is not lost when performing bulk actions
