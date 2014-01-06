@@ -343,7 +343,7 @@ class LingotekSync {
       if ($entity_base_table == 'node') {
         $tnid_query = db_or();
         $tnid_query->condition('t.tnid', 0);
-        $tnid_query->condition('t.tnid', 't.nid');
+        $tnid_query->where('t.tnid = t.nid');
         $query->condition($tnid_query);
       }
 
@@ -396,7 +396,7 @@ class LingotekSync {
       if ($entity_base_table == 'node') {
         $tnid_query = db_or();
         $tnid_query->condition('t.tnid', 0);
-        $tnid_query->condition('t.tnid', 't.nid');
+        $tnid_query->where('t.tnid = t.nid');
         $query->condition($tnid_query);
       }
 
@@ -407,6 +407,7 @@ class LingotekSync {
       }
 
       $query->condition('l.value', $status);
+
       $count = $query->countQuery()->execute()->fetchField();
       $total_count += $count;
     }
