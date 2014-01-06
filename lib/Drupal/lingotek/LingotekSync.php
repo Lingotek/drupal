@@ -339,6 +339,14 @@ class LingotekSync {
       $entity_base_table = $properties['base table'];
       $query = db_select($entity_base_table, 't')->condition('t.language', $drupal_language_code);
 
+      // exclude translation sets (only for nodes)
+      if ($entity_base_table == 'node') {
+        $tnid_query = db_or();
+        $tnid_query->condition('t.tnid', 0);
+        $tnid_query->condition('t.tnid', 't.nid');
+        $query->condition($tnid_query);
+      }
+
       // exclude disabled nodes (including those that have disabled bundles)
       $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
       if(!empty($disabled_entity_ids)){
@@ -383,6 +391,14 @@ class LingotekSync {
        ' AND l.entity_type = \''.$entity_base_table.'\''.
        ' AND l.entity_key = \''.$target_key.'\' '
       );
+
+      // exclude translation sets (only for nodes)
+      if ($entity_base_table == 'node') {
+        $tnid_query = db_or();
+        $tnid_query->condition('t.tnid', 0);
+        $tnid_query->condition('t.tnid', 't.nid');
+        $query->condition($tnid_query);
+      }
 
       // exclude disabled nodes (including those that have disabled bundles)
       $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
@@ -683,13 +699,13 @@ class LingotekSync {
     $id_key = $info['entity keys']['id'];
     $query = db_select($info['base table'], 'base');
     $query->addField('base', $id_key);
-    $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.nid and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
+    $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.'.$id_key.' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
 
     $or = db_or();
     $or->condition('upload.value', LingotekSync::STATUS_EDITED);
     $or->isNull('upload.value');
     $query->condition($or);
-   
+
     $result = $query->execute()->fetchCol();
     return $result;
   }
@@ -754,11 +770,11 @@ class LingotekSync {
     db_truncate('lingotek_config_metadata')->execute();
   }
 
-  public static function disassociateNodes($document_ids = array()) {
-    $nids = self::getNodeIdsFromDocIds($document_ids);
+  public static function disassociateEntities($document_ids = array()) {
+    $eids = self::getNodeIdsFromDocIds($document_ids);
     db_delete('lingotek_entity_metadata')
       ->condition('entity_type', 'node')
-      ->condition('entity_id', $nids, 'IN')
+      ->condition('entity_id', $eids, 'IN')
       ->execute();
   }
 
