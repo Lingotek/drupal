@@ -478,17 +478,18 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
   
   if (isset($progress_report) && $progress_report->results == 'success') {
     $delete_nids_maybe = array();
-    $node_values = array();
+    $entity_values = array();
     $trans_obj = NULL;
 
-    if (isset($progress_report->errors)) {
+    if (!empty($progress_report->errors)) {
       foreach (get_object_vars($progress_report->errors) as $doc_id => $error) {
         list($entity_id, $entity_type) = LingotekSync::getEntityIdFromDocId($doc_id, $entity_type);
         switch ($error->status) {
-          case 'NOT_FOUND':
+          case 'IN_QUEUE':
             // update the status for the entity type and doc_id to be pending
             lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_PENDING);
             break;
+          case 'NOT_FOUND':
           default:
             lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_FAILED);
             LingotekLog::error('Received unrecognized error status from Lingotek for @entity_type #@id: @error', array('@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
@@ -496,19 +497,19 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
       }
     }
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-      list($nid, $entity_type_from_table) = LingotekSync::getEntityIdFromDocId($doc_id);
-      if (!$nid) {
+      list($entity_id, $entity_type_from_table) = LingotekSync::getEntityIdFromDocId($doc_id);
+      if (!$entity_id) {
         LingotekLog::error("Lingotek doc ID '@doc_id' not found", array('@doc_id' => $doc_id));
         continue;
       }
       else {
-        $delete_nids_maybe[] = $nid;
-        $target_number = isset($targets_count[$nid]->targets) ? $targets_count[$nid]->targets : 0;
-      }      
+        $delete_nids_maybe[] = $entity_id;
+        $target_number = isset($targets_count[$entity_id]->targets) ? $targets_count[$entity_id]->targets : 0;
+      }
       $total_percentage = 0;
       foreach ($completion as $language => $percent) {
-        $node_values[] = array($entity_type, $nid, 'target_sync_progress_' . $language, $percent);
-        $node_values[] = array($entity_type, $nid, 'target_sync_last_progress_updated_' . $language, time());
+        $entity_values[] = array($entity_type, $entity_id, 'target_sync_progress_' . $language, $percent);
+        $entity_values[] = array($entity_type, $entity_id, 'target_sync_last_progress_updated_' . $language, time());
         $total_percentage += $percent;
 
         $status = LingotekSync::getTargetStatus($doc_id, $language);
@@ -524,16 +525,21 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
           else { // If the workflow is not complete
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
-          $node_values[] = array($entity_type, $nid, 'target_sync_status_' . $language, $to_status);
+          $entity_values[] = array($entity_type, $entity_id, 'target_sync_status_' . $language, $to_status);
         }
       }
       if ($target_number != 0) {
-        $node_values[] = array(
+        $entity_values[] = array(
           'entity_type' => $entity_type,
-          'entity_id' => $nid,
+          'entity_id' => $entity_id,
           'entity_key' => 'translation_progress',
           'value' => $total_percentage / $target_number,
         );
+      }
+      // update source status when necessary
+      $entity_source_status = lingotek_keystore($entity_type, $entity_id, 'node_sync_status');
+      if ($entity_source_status == LingotekSync::STATUS_FAILED || $entity_source_status == LingotekSync::STATUS_PENDING) {
+        lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
       }
     }
 
@@ -543,8 +549,8 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
       lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'translation_progress');
     }
 
-    // merge status info for nodes
-    foreach ($node_values as $record) {
+    // merge status info for entities
+    foreach ($entity_values as $record) {
       $entity_id = (isset($record['entity_id']) ? $record['entity_id'] : $record[1]);
       $entity_key = (isset($record['entity_key']) ? $record['entity_key'] : $record[2]);
       $value = (isset($record['value']) ? $record['value'] : $record[3]);

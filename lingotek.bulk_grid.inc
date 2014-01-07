@@ -1415,13 +1415,13 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
         case LingotekSync::STATUS_EDITED:
           $icon = '<i class="fa fa-square-o" title="Needs to be uploaded"></i>';
           break;
-	case LingotekSync::STATUS_CURRENT:
+        case LingotekSync::STATUS_CURRENT:
           $icon = '<i class="fa fa-check-square" title="Uploaded to Lingotek"></i>';
           break;
-	case LingotekSync::STATUS_PENDING:
+        case LingotekSync::STATUS_PENDING:
           $icon = '<i class="fa fa-square" title="Upload to Lingotek in progress"></i>';
           break;
-	case LingotekSync::STATUS_FAILED:
+        case LingotekSync::STATUS_FAILED:
           $icon = '<i class="fa fa-warning" style="color: darkorange;" title="Lingotek processing failed"></i>';
           break;
         default:
