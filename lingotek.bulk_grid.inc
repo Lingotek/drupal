@@ -1425,7 +1425,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
           $icon = '<i class="fa fa-warning" style="color: darkorange;" title="Lingotek processing failed"></i>';
           break;
         default:
-          $icon = '<i class="fa fa-minus-square" style="color: #999;" title="Unknown upload status"></i>';
+          $icon = '<i class="fa fa-question-circle" style="color: darkorange;" title="Unknown upload status: ' . check_plain($row->upload_status) . '"></i>';
           break;
       }
     } else {

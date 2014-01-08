@@ -76,6 +76,16 @@ function lingotek_menu() {
     'weight' => 1,
     'type' => MENU_CALLBACK
   );
+  
+  $items['lingotek/view/%/%/%'] = array(
+    'title' => '',
+    'file' => 'lingotek.page.inc',
+    'access arguments' => array('access content'),
+    'page arguments' => array(2, 3, 4),
+    'page callback' => 'lingotek_entity_view_redirect',
+    'weight' => 1,
+    'type' => MENU_CALLBACK
+  );
 
   $items['node/%node/lingotek_dev'] = array(
     'title' => 'Lingotek Developer Tools',

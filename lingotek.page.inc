@@ -733,3 +733,33 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
     }
   }
 }
+
+/**
+ * This is a function that redirects to the entity specified for a particular lingotek locale (e.g., en_US, de_DE, fr_FR)
+ */
+function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_locale) {
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
+  $url = drupal_get_normal_path($entity_type . '/' . $entity_id); //assumes url detection
+  $url_language_detection_enabled = TRUE; //TO-DO: detect when it is not enabled, currently it is assumed
+
+  if ($drupal_language_code) {
+    $url = $drupal_language_code . "/" . $url;
+  }
+  else {
+    drupal_set_message(t('The language requested is not available. The default language will be shown instead.'), 'warning');
+  }
+  if (!$url_language_detection_enabled) { //TO-DO: consider extending this functionality to use additional language detection methods
+    $output = array();
+    $message = t("The URL detection method is required for viewing content in a specified language. In order to use this feature an administrator will need to enable the URL detection method in the") . ' ' . l('Language detection and selection settings', 'admin/config/regional/language/configure') . '.';
+    $output['message'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('This feature requires URL language detection to be enabled'),
+      '#description' => $message,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    drupal_set_message($message, 'warning');
+    return $output;
+  }
+  drupal_goto($url);
+}
