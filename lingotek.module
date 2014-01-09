@@ -1725,28 +1725,68 @@ function lingotek_normalize_language($entity, $from_language_none = TRUE) {
   }
 }
 
-function lingotek_normalize_field_collection_language($entity, $from_language_none = TRUE) {
+function lingotek_get_fc_parent($entity) {
+  $query = new EntityFieldQuery();
+  $query->fieldCondition($entity->fieldInfo(), 'revision_id', $entity->revision_id);
+  if (!$entity->isInUse()) {
+    $query->age(FIELD_LOAD_REVISION);
+  }
+  $result = $query->execute();
+  $num_results = isset($result) ? sizeof($result) : 0;
+  if (!isset($result) || $num_results != 1) {
+    // found more or less than we bargained for.  Abort.
+    LingotekLog::error('Found @parents parents when querying for field-collection parent: @entity',
+        array('@parents' => $num_results, '@entity' => print_r($entity, TRUE)));
+    return NULL;
+  }
+  foreach ($result as $parent_type => $parents) {
+    if (!isset($result) || sizeof($result) != 1) {
+      LingotekLog::error('Found @parents parents when querying for field-collection parent: @entity',
+          array('@parents' => $num_results, '@entity' => print_r($entity, TRUE)));
+      return NULL;
+    }
+    foreach (array_keys($parents) as $parent_id) {
+      return entity_load_single($parent_type, $parent_id);
+    }
+  }
+}
+
+function lingotek_normalize_field_collection_language($entity) {
   if (!($entity instanceof FieldCollectionItemEntity)) {
     return;
   }
-  $host = $entity->hostEntity();
+  $host = lingotek_get_fc_parent($entity);
+  if (!$host) {
+    // unable to locate parent.  Abort.
+    return;
+  }
   $max_field_collection_depth = 10;
   // bubble up to the true parent to get its language,
   // which adds support for deeply nested entity collections
   for ($i = 0; $i < $max_field_collection_depth; $i++) {
     if ($host instanceof FieldCollectionItemEntity) {
-      $host = $host->hostEntity();
+      $host = lingotek_get_fc_parent($host);
+      continue;
     }
+    break;
+  }
+  if (!$host) {
+    return;
+  }
+  if ($host instanceof FieldCollectionItemEntity) {
+    LingotekLog::error('Field collections nested too deeply, possibly a loop?: @entity',
+        array('@entity' => print_r($entity, TRUE)));
   }
   foreach ($entity as $key => $value) {
-    if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
-      if ($from_language_none) {
+    if (is_array($value)) {
+      if (array_key_exists(LANGUAGE_NONE, $value)) {
         $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
       }
-      elseif (isset($value[$host->language])) {
+      else if (array_key_exists($host->language, $value)) {
         $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
       }
     }
+    
   }
 }
 
