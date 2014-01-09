@@ -18,7 +18,9 @@ class LingotekSync {
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek (used for node storage)
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
-  
+  const PROFILE_AUTOMATIC = 0;
+  const PROFILE_MANUAL = 1;
+
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     if ($chunk_id = LingotekConfigChunk::getIdByDocId($doc_id)) {

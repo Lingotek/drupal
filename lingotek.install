@@ -597,3 +597,22 @@ function lingotek_update_7501(&$sandbox) {
     variable_set('lingotek_account_plan_type', 'advanced');
   }
 }
+
+/**
+ * Migrates comment profile settings
+ */
+function lingotek_update_7502(&$sandbox) {
+  // migrate the old variable to the new
+  $comment_settings = variable_get('lingotek_translate_comments_node_types'); // old variable
+  $comment_settings_disabled_value = 0;
+  if (!is_null($comment_settings)) {
+    $profiles = variable_get('lingotek_entity_profiles'); // new variable where profiles will be stored
+    $profiles['comment'] = (isset($profiles['comment']) && is_array($profiles['comment'])) ? $profiles['comment'] : array();
+    foreach ($comment_settings as $setting) {
+      $profiles['comment']['comment_node_' . $setting] = ($setting == $comment_settings_disabled_value) ? LingotekSync::PROFILE_DISABLED : LingotekSync::PROFILE_AUTOMATIC;
+    }
+    variable_set('lingotek_entity_profiles', $profiles);
+  }
+  // deletes the old variable now migrated variable
+  variable_del('lingotek_translate_comments_node_types');
+}
