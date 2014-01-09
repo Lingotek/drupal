@@ -318,7 +318,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function getUrl() {
     if ($this->entity_type == 'node' || $this->entity_type == 'comment') {
       $hack = (object) array('language' => ''); // this causes the url function to not prefix the url with the current language the user is viewing the site in
-      return url("lingotek/view/" . $this->getEntityType() . '/' . $this->getId(), array('absolute' => TRUE, 'alias' => TRUE, 'language' => $hack));
+      return url("lingotek/view/" . $this->getEntityType() . '/' . $this->getId() . '/{locale}', array('absolute' => TRUE, 'alias' => TRUE, 'language' => $hack));
     }
     return '';
   }
