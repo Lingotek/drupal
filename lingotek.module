@@ -1678,14 +1678,33 @@ function lingotek_entity_info_alter(&$entity_info) {
   }
 }
 
+function lingotek_get_fc_parent($entity) {
+  $query = new EntityFieldQuery();
+  $query->fieldCondition($entity->fieldInfo(), 'revision_id', $entity->revision_id);
+  if (!$entity->isInUse()) {
+    $query->age(FIELD_LOAD_REVISION);
+  }
+  $result = $query->execute();
+  if (!isset($result) || sizeof($result) != 1) {
+    // found more or less than we bargained for.  Abort.
+    return NULL;
+  }
+  $parent_array = array_values($result);
+  return $parent_array[0];
+}
+
 function lingotek_normalize_field_collection_language($entity, $from_language_none = TRUE) {
-    $host = $entity->hostEntity();
+    $host = lingotek_get_fc_parent($entity);
+    if (!$host) {
+      // unable to locate parent.  Abort.
+      return;
+    }
     $max_field_collection_depth = 10;
     // bubble up to the true parent to get its language,
     // which adds support for deeply nested entity collections
     for ($i = 0; $i < $max_field_collection_depth; $i++) {
       if ($host instanceof FieldCollectionItemEntity) {
-        $host = $host->hostEntity();
+        $host = lingotek_get_fc_parent($entity);
       }
     }
     foreach ($entity as $key => $value) {
