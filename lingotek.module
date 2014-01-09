@@ -1795,7 +1795,7 @@ function lingotek_normalize_field_collection_language($entity) {
   */
 function lingotek_entity_presave($entity, $type) {
   if ($type == 'field_collection_item') {
-    lingotek_normalize_field_collection_language($entity, FALSE);
+    lingotek_normalize_field_collection_language($entity);
   }
   if ($type == 'message_type') {
     lingotek_normalize_language($entity, FALSE);
