@@ -1685,12 +1685,23 @@ function lingotek_get_fc_parent($entity) {
     $query->age(FIELD_LOAD_REVISION);
   }
   $result = $query->execute();
-  if (!isset($result) || sizeof($result) != 1) {
+  $num_results = isset($result) ? sizeof($result) : 0;
+  if (!isset($result) || $num_results != 1) {
     // found more or less than we bargained for.  Abort.
+    LingotekLog::error('Found @parents parents when querying for field-collection parent: @entity',
+        array('@parents' => $num_results, '@entity' => print_r($entity, TRUE)));
     return NULL;
   }
-  $parent_array = array_values($result);
-  return $parent_array[0];
+  foreach ($result as $parent_type => $parents) {
+    if (!isset($result) || sizeof($result) != 1) {
+      LingotekLog::error('Found @parents parents when querying for field-collection parent: @entity',
+          array('@parents' => $num_results, '@entity' => print_r($entity, TRUE)));
+      return NULL;
+    }
+    foreach (array_keys($parents) as $parent_id) {
+      return entity_load_single($parent_type, $parent_id);
+    }
+  }
 }
 
 function lingotek_normalize_field_collection_language($entity, $from_language_none = TRUE) {
