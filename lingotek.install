@@ -608,8 +608,8 @@ function lingotek_update_7502(&$sandbox) {
   if (!is_null($comment_settings)) {
     $profiles = variable_get('lingotek_entity_profiles'); // new variable where profiles will be stored
     $profiles['comment'] = (isset($profiles['comment']) && is_array($profiles['comment'])) ? $profiles['comment'] : array();
-    foreach ($comment_settings as $setting) {
-      $profiles['comment']['comment_node_' . $setting] = ($setting == $comment_settings_disabled_value) ? LingotekSync::PROFILE_DISABLED : LingotekSync::PROFILE_AUTOMATIC;
+    foreach ($comment_settings as $setting_key => $setting_val) {
+      $profiles['comment']['comment_node_' . $setting_key] = ($setting_val == $comment_settings_disabled_value) ? LingotekSync::PROFILE_DISABLED : LingotekSync::PROFILE_AUTOMATIC;
     }
     variable_set('lingotek_entity_profiles', $profiles);
   }
