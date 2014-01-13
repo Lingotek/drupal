@@ -1178,7 +1178,14 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
       }
       $entities_str .= $count . ' ' . format_plural($count, $entity_type, $entity_type . 's');
     }
-    $rows[] = array($profile_name, $entities_str  . ' (' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . ')', $edit_link);
+
+    // The custom profile line should not be shown unless there are entities assigned as 'custom'
+    if ($key != 'CUSTOM') {
+      $rows[] = array($profile_name, $entities_str  . ' (' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . ')', $edit_link);
+    }
+    else if ($count_by_entity_type) {
+      $rows[] = array($profile_name, $entities_str, $edit_link);
+    }
   }
 
   $variables = array(
