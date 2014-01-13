@@ -20,13 +20,24 @@ Drupal.behaviors.lingotekAdminForm = {
       })
     });
     
+    // default all fields to be checked when profile is not disabled (and no fields are currently checked)
+    $('.lingotek-content-settings-table').find('tr').each(function() {
+      var val = $(this).find('.form-select').val();
+      var count = 0;
+      if (val != 'DISABLED') {
+        count = $(this).find('.form-checkbox:checked').size();
+        if (count == 0) {
+          $(this).find('.form-checkbox').attr('checked', true);
+        }
+      }
+    });
     //when a field checkbox is clicked
     $('.field.form-checkbox', context).click( function() {
       if($(this).attr("name") == "lingotek_use_translation_from_drupal") {
         return;
       }
       
-      row = $(this).parents('tr')
+      row = $(this).parents('tr');
       if($(this).attr('checked')) {
         row.find('td:first-child .form-checkbox').each( function() {
           $(this).attr('checked', true);
