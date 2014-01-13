@@ -614,5 +614,28 @@ function lingotek_update_7502(&$sandbox) {
   }
   // deletes the old, now migrated, variables
   variable_del('lingotek_translate_comments_node_types');
-  //variable_del('lingotek_translate_comments');
+  variable_del('lingotek_translate_comments');
+
+  // set assumed status of CURRENT for all comment translations
+  // select all comment entity ids in the lingotek_entity_metadata table
+  $entity_type = 'comment';
+  $query = db_select('lingotek_entity_metadata', 'l');
+  $query->fields('l', array('entity_id'))->condition('entity_type', $entity_type);
+  $query->distinct('entity_id');
+  $result = $query->execute();
+  $entity_ids = $result->fetchCol();
+
+  // foreach entity, set the target statuses
+  $entities = entity_load('comment', $entity_ids);
+  foreach ($entities as $entity) {
+    $entity_id = $entity->cid;
+    foreach (array_keys(Lingotek::getLanguages()) as $lingotek_locale) {
+      if (Lingotek::convertDrupal2Lingotek($entity->language) != $lingotek_locale) { // only add status when not the source language
+        LingotekSync::setTargetStatus($entity_type, $entity_id, $lingotek_locale, LingotekSync::STATUS_CURRENT);
+      }
+      else { // remove status when source language equal to target language
+        lingotek_keystore_delete($entity_type, $entity_id, "target_sync_status_$lingotek_locale");
+      }
+    }
+  }
 }
