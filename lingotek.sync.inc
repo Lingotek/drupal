@@ -486,13 +486,12 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
         list($entity_id, $entity_type) = LingotekSync::getEntityIdFromDocId($doc_id, $entity_type);
         switch ($error->status) {
           case 'IN_QUEUE':
-            // update the status for the entity type and doc_id to be pending
             lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_PENDING);
             break;
           case 'NOT_FOUND':
           default:
             lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_FAILED);
-            LingotekLog::error('Received unrecognized error status from Lingotek for @entity_type #@id: @error', array('@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
+            LingotekLog::error('Received unexpected error status (@status) from Lingotek for @entity_type #@id: <pre>@error</pre>', array('@status' => $error->status, '@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
         }
       }
     }
@@ -608,13 +607,13 @@ function lingotek_update_config_progress($document_ids) {
       foreach (get_object_vars($progress_report->errors) as $doc_id => $error) {
         $chunk = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
         switch ($error->status) {
-          case 'NOT_FOUND':
-            // update the status for the entity type and doc_id to be pending
+          case 'IN_QUEUE':
             $chunk->setMetadataValue('chunk_sync_status', LingotekSync::STATUS_PENDING);
             break;
+          case 'NOT_FOUND':
           default:
             $chunk->setMetadataValue('chunk_sync_status', LingotekSync::STATUS_FAILED);
-            LingotekLog::error('Received unrecognized error status from Lingotek for config chunk @id: @error', array('@id' => $chunk->getId(), '@error' => $error));
+            LingotekLog::error('Received unexpected error status (@status) from Lingotek for config chunk #@id: <pre>@error</pre>', array('@status' => $error->status, '@id' => $chunk, '@error' => $error));
         }
       }
     }
