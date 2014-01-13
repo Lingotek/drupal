@@ -635,6 +635,7 @@ function lingotek_update_7502(&$sandbox) {
       }
       else { // remove status when source language equal to target language
         lingotek_keystore_delete($entity_type, $entity_id, "target_sync_status_$lingotek_locale");
+        lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
       }
     }
   }
