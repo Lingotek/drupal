@@ -62,6 +62,7 @@ function lingotek_uninstall() {
   db_drop_field('locales_target', 'translation_agent_id');
   db_drop_table('lingotek');// leave this here until we move it to an update function
   db_drop_table('lingotek_config_metadata');
+  db_drop_table('lingotek_entity_metadata');
   db_drop_table('lingotek_translation_agent');
 }
 
