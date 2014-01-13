@@ -1180,7 +1180,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     }
 
     // The custom profile line should not be shown unless there are entities assigned as 'custom'
-    if ($key != 'CUSTOM') {
+    if ($key !== 'CUSTOM') {
       $rows[] = array($profile_name, $entities_str  . ' (' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . ')', $edit_link);
     }
     else if ($count_by_entity_type) {
