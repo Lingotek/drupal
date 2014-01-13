@@ -835,6 +835,16 @@ function lingotek_admin_prepare_menus() {
   db_update('menu_custom')
       ->fields(array('i18n_mode' => LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE))
       ->execute();
+
+  // find all menu links that are not language-neutral and not part of a
+  // translation set and update them to be language-neutral (so they will
+  // be added to the locales_source table as a string to be translated)
+  db_update('menu_links')
+      ->fields(array('language' => LANGUAGE_NONE))
+      ->condition('language', LANGUAGE_NONE, '!=')
+      ->condition('i18n_tsid', 0)
+      ->execute();
+
   return TRUE;
 }
 
