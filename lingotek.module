@@ -1696,9 +1696,7 @@ function lingotek_comment_view($comment, $view_mode, $langcode) {
  * Implements hook_entity_info_alter().
  */
 function lingotek_entity_info_alter(&$entity_info) {
-  // Only alter the entity handling of comment fields
-  // if Lingotek translation is enabled.
-  if (variable_get('lingotek_translate_comments', FALSE)) {
+  if (isset($entity_info['comment'])) {
     $entity_info['comment']['translation']['lingotek'] = TRUE;
   }
   if (isset($entity_info['field_collection_item'])) {
@@ -1806,8 +1804,6 @@ function lingotek_entity_presave($entity, $type) {
  * Implements hook_form_FORMID_alter().
  */
 function lingotek_form_comment_form_alter(&$form, $form_state) {
-  if (variable_get('lingotek_translate_comments', FALSE)) {
-
     // Caution.  There be some wackey voodoo in here.
     // The locale module is going to set the comment's language to the user's browsing language
     // but the form_attach_fields call in comment_form() will have already run
@@ -1857,7 +1853,6 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
         }
       } // END:  foreach $comment_fields
     } // END:  if $comment_language != $default_language
-  }
 }
 
 /**

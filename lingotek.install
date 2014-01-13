@@ -604,15 +604,15 @@ function lingotek_update_7501(&$sandbox) {
 function lingotek_update_7502(&$sandbox) {
   // migrate the old variable to the new
   $comment_settings = variable_get('lingotek_translate_comments_node_types'); // old variable
-  $comment_settings_disabled_value = 0;
   if (!is_null($comment_settings)) {
     $profiles = variable_get('lingotek_entity_profiles'); // new variable where profiles will be stored
     $profiles['comment'] = (isset($profiles['comment']) && is_array($profiles['comment'])) ? $profiles['comment'] : array();
     foreach ($comment_settings as $setting_key => $setting_val) {
-      $profiles['comment']['comment_node_' . $setting_key] = ($setting_val == $comment_settings_disabled_value) ? LingotekSync::PROFILE_DISABLED : LingotekSync::PROFILE_AUTOMATIC;
+      $profiles['comment']['comment_node_' . $setting_key] = ($setting_val === $setting_key) ? LingotekSync::PROFILE_AUTOMATIC : LingotekSync::PROFILE_DISABLED;
     }
     variable_set('lingotek_entity_profiles', $profiles);
   }
-  // deletes the old variable now migrated variable
+  // deletes the old, now migrated, variables
   variable_del('lingotek_translate_comments_node_types');
+  //variable_del('lingotek_translate_comments');
 }
