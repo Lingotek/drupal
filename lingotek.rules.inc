@@ -109,13 +109,13 @@ function lingotek_rules_condition_info() {
 }
 
 function lingotek_entity_all_downloaded($entity, $entity_type) {
-  $result = db_select('lingotek_entity_metadata', 'lem')
+  $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id'))
       ->condition('lem.entity_id', $entity->getIdentifier())
       ->condition('lem.entity_type', $entity_type)
       ->condition('lem.entity_key', 'target_sync_status_%', 'LIKE')
-      ->condition('lem.value', LingotekSync::STATUS_CURRENT, '!=')
-      ->execute();
+      ->condition('lem.value', LingotekSync::STATUS_CURRENT, '!=');
+  $result = $query->execute();
   if ($result->rowCount()) {
     return FALSE;
   }
