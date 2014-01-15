@@ -174,7 +174,7 @@ class LingotekSession {
    * @return
    *  Location of the file, or FALSE on error.
    */
-  public function download($api, $params) {
+  public function downloadTriggered($api, $params) {
     $result = LingotekApi::instance()->request($api, $params);
     $result_decoded = json_decode($result);// non-zipped will be decoded
 

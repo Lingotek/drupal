@@ -7,7 +7,7 @@
 
 Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
-
+ 
     //when a content type checkbox is clicked
     $('.form-select', context).change( function() {
       isEnabled = $(this).val() != 'DISABLED';
@@ -20,13 +20,24 @@ Drupal.behaviors.lingotekAdminForm = {
       })
     });
     
+    // default all fields to be checked when profile is not disabled (and no fields are currently checked)
+    $('.lingotek-content-settings-table').find('tr').each(function() {
+      var val = $(this).find('.form-select').val();
+      var count = 0;
+      if (val != 'DISABLED') {
+        count = $(this).find('.form-checkbox:checked').size();
+        if (count == 0) {
+          $(this).find('.form-checkbox').attr('checked', true);
+        }
+      }
+    });
     //when a field checkbox is clicked
     $('.field.form-checkbox', context).click( function() {
       if($(this).attr("name") == "lingotek_use_translation_from_drupal") {
         return;
       }
       
-      row = $(this).parents('tr')
+      row = $(this).parents('tr');
       if($(this).attr('checked')) {
         row.find('td:first-child .form-checkbox').each( function() {
           $(this).attr('checked', true);
@@ -95,11 +106,14 @@ Drupal.behaviors.lingotekAdminForm = {
       $('fieldset.lingotek-translate-comments', context).drupalSetSummary(function (context) {
         $list = [];
         total = 0;
-        $('#edit-lingotek-translate-comments-node-types input').each(function( index ) {
-          if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
+        $('fieldset.lingotek-translate-comments select').each(function( index ) {
+          var name = $(this).attr('name');
+          if(name && name.substring(0, 7) == 'profile') {
+            if($(this).val() != 'DISABLED') {
               $list.push($(this).val());
             }
             total++;
+          }
         });
         if($list.length == 0) {
           return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
@@ -158,3 +172,12 @@ Drupal.behaviors.lingotekAdminForm = {
 };
 
 })(jQuery);
+
+function lingotekSetAll(sel, val) {
+  fieldset = jQuery(sel);
+  console.log(jQuery(sel));
+  jQuery(sel).find('.form-select').each( function() {
+    jQuery(this).val(val);
+    jQuery(this).trigger('change');
+  });
+}

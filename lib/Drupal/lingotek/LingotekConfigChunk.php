@@ -60,7 +60,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     if (!isset($this->language->lingotek_locale)) { // if Drupal variable 'language_default' does not exist
       $this->language->lingotek_locale = Lingotek::convertDrupal2Lingotek($this->language->language);
     }
-    $this->language_targets = Lingotek::availableLanguageTargetsWithoutSource($this->language->lingotek_locale);
+    $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language->lingotek_locale);
     $this->min_lid = $this->getMinLid();
     $this->max_lid = $this->getMaxLid();
   }
@@ -377,36 +377,21 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return mixed
    *   A LingotekConfigChunk object on success, FALSE on failure.
    */
-  public static function loadByLingotekDocumentId($lingotek_document_id, $source_language_code, $lingotek_project_id) {
+  public static function loadByLingotekDocumentId($lingotek_document_id) {
     $chunk = FALSE;
 
     // Get the Chunk entries in the system associated with the document ID.
     $query = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('id'))
         ->condition('config_key', 'document_id')
-        ->condition('value', $lingotek_document_id);
-    $results = $query->execute();
+        ->condition('value', $lingotek_document_id)
+        ->execute();
+    $id = $query->fetchField();
 
-    $target_ids = array();
-    foreach ($results as $result) {
-      $target_ids[] = $result->id;
+    if ($id) {
+      $chunk = self::loadById($id);
     }
-
-    // Get the results that are associated with the passed Lingotek project ID.
-    // Lingotek Document IDs are not unique across projects.
-    if (!empty($target_ids)) {
-      $in_project_results = db_select('lingotek_config_metadata', 'meta')
-          ->fields('meta', array('id'))
-          ->condition('id', $target_ids, 'IN')
-          ->condition('config_key', 'project_id')
-          ->condition('value', $lingotek_project_id)
-          ->execute()
-          ->fetchAll();
-
-      if (count($in_project_results)) {
-        $chunk = self::loadById($in_project_results[0]->id);
-      }
-    }
+    
     return $chunk;
   }
 
@@ -532,7 +517,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   /**
    * Set the chunk's status in the config metadata table
    */
-  public function setChunkStatus($status) {
+  public function setStatus($status) {
     $this->setMetadataValue('chunk_sync_status', $status);
     return $this;
   }
@@ -540,7 +525,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   /**
    * Set the chunk's target status(es) in the config metadata table
    */
-  public function setChunkTargetsStatus($status, $lingotek_locale = 'all') {
+  public function setTargetsStatus($status, $lingotek_locale = 'all') {
     if ($lingotek_locale != 'all') {
       $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
     }
@@ -664,7 +649,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $document = $api->getDocument($document_id);
 
     foreach ($document->translationTargets as $target) {
-      $this->updateLocalContentByTarget($target->lingotek_locale);
+      $this->downloadTriggered($target->lingotek_locale);
     }
   }
 
@@ -676,7 +661,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function updateLocalContentByTarget($lingotek_locale) {
+  public function downloadTriggered($lingotek_locale) {
     $metadata = $this->metadata();
     $document_id = $metadata['document_id'];
 
@@ -701,8 +686,8 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     /* END FAST */
 
     // set chunk status to current
-    $this->setChunkStatus(LingotekSync::STATUS_CURRENT);
-    $this->setChunkTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+    $this->setStatus(LingotekSync::STATUS_CURRENT);
+    $this->setTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
 
     return TRUE;
   }
@@ -918,4 +903,21 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         ->fetchField();
   }
 
+  public function getDocumentName() {
+    return 'config - ' . $this->cid;
+  }
+  
+  public function getUrl() {
+    return '';
+  }
+  
+  public function getNote() {
+    return '';
+  }
+
+  public function preDownload($lingotek_locale, $completed) {
+  }
+
+  public function postDownload($lingotek_locale, $completed) {
+  }
 }

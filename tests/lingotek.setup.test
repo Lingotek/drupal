@@ -104,11 +104,11 @@ class LingotekTestCase extends DrupalWebTestCase {
     $n = node_load($nid);
     debug($nid);
     
-    $status = lingotek_lingonode($n->nid, 'node_sync_status');
+    $status = lingotek_keystore('node', $n->nid, 'node_sync_status');
     debug($status);
     $this->assertEqual($status, LingotekSync::STATUS_CURRENT, 'NODE_SYNC_STATES set correctly');
     
-    $doc_id = lingotek_lingonode($n->nid, 'document_id');
+    $doc_id = lingotek_keystore('node', $n->nid, 'document_id');
     debug($doc_id);
     $this->assertEqual($doc_id, $doc_id);
     
@@ -117,11 +117,6 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->drupalGet('node/' . $n->nid . '/lingotek_pm');
     $this->assertNoText('Upload');
     $this->assertText('Download Translations');
-    
-//    lingotek_download_document($n, $lingotek_locale);
-    
-//    $_GET['doc_id'] = lingotek_lingonode($n->nid, 'document_id');
-//    lingotek_notifications()
     
   }
   
@@ -173,14 +168,6 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->assertText('The configuration options have been saved.', 'Step 7: Config + Bulk Operations');
     
   }
-  
-//  public testNodes() {
-//    $n = $this->drupalCreateNode();
-//    
-//    sleep(2);
-//    $_GET['doc_id'] = lingotek_lingonode($n->nid, 'document_id');
-//    lingotek_notifications()
-//  }
   
   function getFirstOption($element) {
 //    debug((string)$element[0]->option[1]);
