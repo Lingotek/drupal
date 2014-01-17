@@ -649,7 +649,7 @@ function lingotek_update_7503(&$sandbox) {
   $profiles = variable_get('lingotek_entity_profiles');
   foreach ($profiles as $profile_key => $profile) {
     foreach ($profile as $bundle => $profile_id) {
-      if ($profile_id == LingotekSync::PROFILE_CUSTOM) {
+      if ($profile_id === LingotekSync::PROFILE_CUSTOM) {
         $profiles[$profile_key][$bundle] = LingotekSync::PROFILE_AUTOMATIC;
       }
     }

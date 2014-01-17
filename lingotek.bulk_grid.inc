@@ -106,19 +106,22 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l('<i class="fa-search fa-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
   );*/
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
-  $message = t('Check in-progress translation statuses (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
-  $form['refresh'] = array(
-    '#markup' => l('<i class="fa fa-refresh fa-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update/' . $entity_type, array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
-  );
+  $message = t('Check status of in-progress translations (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ago' : 'Never'));
   
   $form['lingotek_update'] = array(
     '#markup' => l('<i class="fa fa-cloud-download fa-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action')))),
   );
-  
-  $form['lingotek_upload'] = array(
-    '#markup' => l('<i class="fa fa-cloud-upload fa-2x ltk-upload"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/upload-edited/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Upload pending'), 'class' => array('lingotek-action')))),
+
+  $form['refresh'] = array(
+    '#markup' => l('<i class="fa fa-refresh fa-2x ltk-refresh"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/update/' . $entity_type, array('html' => TRUE, 'attributes' => array('class' => 'lingotek-action', 'title' => $message))),
   );
+
+  $form['lingotek_upload'] = array(
+    '#markup' => l('<i class="fa fa-cloud-upload fa-2x ltk-upload"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/upload-edited/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Upload all pending source content'), 'class' => array('lingotek-action')))),
+  );
+
   
+
   $form['edit_settings'] = array(
     '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/' . $entity_type, array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
 
@@ -159,7 +162,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#value' => 'Go',
     '#submit' => array('lingotek_grid_filter_inline_submit'),
   );
-    
+
+  $form['advanced_link'] = array(
+    '#markup' => l(t('Advanced') . '<span style="margin: 0 5px;"></span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action'))))
+  );
+
   $filter_set = FALSE;
   
   if (isset($_SESSION['grid_filters'])) {  
@@ -186,7 +193,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   if ($filter_set) {
     $form['filter_message'] = array(
-      '#markup' => ' ' . l('<i class="fa fa-times" style="margin-right: 5px;"></i>' . t('Clear Filters'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear/' . $entity_type, array('html' => TRUE)) . '',
+      '#markup' => '<span style="white-space:nowrap;">' . l('<i class="fa fa-times" style="margin: 0 5px;"></i>' . t('Clear Filters') . '</span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear/' . $entity_type, array('html' => TRUE)) . '</span>',
     );
   }
   
