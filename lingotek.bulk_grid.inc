@@ -1493,7 +1493,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     
     $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
     if ($language_col) {
-      $source .= ($row->language == 'und' ? 'Language Undefined' : $languages[$row->language]->name);
+      $source .= ($row->language == 'und' ? t('Language Neutral') : $languages[$row->language]->name);
     }
     $source .= '</span>';
 

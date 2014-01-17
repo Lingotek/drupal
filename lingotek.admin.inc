@@ -974,7 +974,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
   $ls_select_region = array(
     '#type' => 'select',
     //'#title' => t('The region where the switcher will be displayed.'),
-    '#description' => 'The region where the switcher will be displayed.',
+    '#description' => t('The region where the switcher will be displayed.'),
     '#options' => $block_regions,
     '#default_value' => $default_region_value,
     '#states' => array(
@@ -999,8 +999,8 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
   $form[$fkey][] = array(
     '#type' => 'item',
-    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.'
-        . '<br>Go to ' . l(t('Language detection and selection'), $general_detection_config_url) . ' to change this.'),
+    '#description' => t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>.')
+    . '<br>' . t('Go to') . ' ' . l(t('Language detection and selection'), $general_detection_config_url) . ' ' . t('to change this.'),
     '#states' => array(
       'invisible' => array(
         ':input[name="enabled"]' => array('checked' => FALSE),
@@ -1156,8 +1156,8 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
 
   $form['header'] = array(
     '#type' => 'item',
-    '#title' => 'Translation Profiles',
-    '#description' => 'Translation management defaults used when creating new entities. At the entity level, these settings can be adjusted.'
+    '#title' => t('Translation Profiles'),
+    '#description' => t('Translation management defaults used when creating new entities. At the entity level, these settings can be adjusted.')
   );
 
   $headers = array(
