@@ -159,7 +159,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   
   $form['search_submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Go',
+    '#value' => t('Go'),
     '#submit' => array('lingotek_grid_filter_inline_submit'),
   );
 

@@ -1161,9 +1161,9 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   );
 
   $headers = array(
-    'Profile Name',
-    'Usage',
-    'Actions',
+    t('Profile Name'),
+    t('Usage'),
+    t('Actions'),
   );
 
   $total_count_with_profiles = 0;
@@ -1274,7 +1274,10 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   
   $profile_id = (isset($form_state['values']['profile_id']) ? $form_state['values']['profile_id']: -1);
   $stored_profile = lingotek_get_profile_settings($profile_id);
-  
+
+  $first_custom_id = 2;
+  $is_custom_profile_id = $profile_id >= $first_custom_id;
+
   $show_advanced = $account->showAdvanced();
 
   $form['defaults']['profile_id'] = array(
@@ -1284,8 +1287,9 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['defaults']['name'] = array(
     '#type' => 'textfield',
-    '#title' => 'Profile Name',
+    '#title' => t('Profile Name'),
     '#default_value' => $form_state['values']['name'],
+    '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
   $form['defaults']['current_future_note'] = array(
@@ -1298,6 +1302,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#title' => t('Upload Content Automatically'),
     '#default_value' => $form_state['values']['create_lingotek_document'],
     '#description' => t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation.<br/>When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
+    '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
   // Download
@@ -1306,6 +1311,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#title' => t('Download Translations Automatically'),
     '#default_value' => $form_state['values']['sync_method'],
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
+    '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
   if ($show_advanced) {
@@ -1387,14 +1393,14 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#type' => 'radios',
     '#title' => t('Translation Storage'),
     '#options' => array(
-      'field' => '<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node',
-      'node' => '<strong>Node Translation</strong>  - create a new node per language ',
+      'field' => t('<strong>Field Translation</strong> (Recommended) - all translations are stored in a single node'),
+      'node' => t('<strong>Node Translation</strong>  - create a new node per language '),
     ),
     'field' => array(
-      '#description' => 'A newer and recommended method. Newer versions of Drupal are expected to use this method.',
+      '#description' => t('A newer and recommended method. Newer versions of Drupal are expected to use this method.'),
     ),
     'node' => array(
-      '#description' => 'The classical method. Use for backwards compatibility.',
+      '#description' => t('The classical method. Use for backwards compatibility.'),
     ),
 
     '#default_value' => isset($form_state['values']['lingotek_nodes_translation_method']) ? $form_state['values']['lingotek_nodes_translation_method'] : 'field',
@@ -1453,16 +1459,15 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['defaults']['save'] = array(
     '#type' => 'submit',
-    '#value' => 'Save',
+    '#value' => t('Save'),
   );
-  $first_custom_id = 2;
-  $is_custom_profile_id = $profile_id >= $first_custom_id;
+
   // if no entities or bundles are assigned to the profile, and if it was created
   // by the site admin, then allow deletion.
   if (array_sum(lingotek_admin_profile_usage($profile_id)) == 0 && lingotek_admin_profile_usage_by_types($profile_id) == 0 && $is_custom_profile_id) {
     $form['defaults']['delete'] = array(
       '#type' => 'submit',
-      '#value' => 'Delete',
+      '#value' => t('Delete'),
     );
   }
   else {
@@ -1473,7 +1478,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   }
   $form['defaults']['cancel'] = array(
     '#type' => 'submit',
-    '#value' => 'Cancel',
+    '#value' => t('Cancel'),
   );
 
   return $form;

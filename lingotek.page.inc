@@ -93,7 +93,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
     $form['fieldset']['submit'] = array(
       '#type' => 'submit',
-      '#value' => 'Download',
+      '#value' => t('Download'),
     );
 
     $form['fieldset']['nid'] = array(

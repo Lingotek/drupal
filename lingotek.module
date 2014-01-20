@@ -859,7 +859,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
 
   $form['lingotek']['profile'] = array(
     '#type' => 'select',
-    '#title' => 'Translation Profile',
+    '#title' => t('Translation Profile'),
     '#options' => lingotek_get_profile_options(),
     '#default_value' => $node->lingotek['profile'],
   );
@@ -883,14 +883,14 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#type' => 'radios',
       '#title' => t('Method for storing translations'),
       '#options' => array(
-        'field' => '<strong>Fields</strong> (Recommended) - all translations are stored in a single node',
-        'node' => '<strong>Nodes</strong>  - create a new node per language ',
+        'field' => t('<strong>Fields</strong> (Recommended) - all translations are stored in a single node'),
+        'node' => t('<strong>Nodes</strong>  - create a new node per language '),
       ),
       'field' => array(
-        '#description' => 'A newer and recommended method. It appears newer versions of Drupal will use this method.',
+        '#description' => t('A newer and recommended method. It appears newer versions of Drupal will use this method.'),
       ),
       'node' => array(
-        '#description' => 'The classical method. Use for backwards compatibility.',
+        '#description' => t('The classical method. Use for backwards compatibility.'),
       ),
       '#disabled' => isset($node->nid),
       '#default_value' => $node->lingotek['lingotek_nodes_translation_method'],
