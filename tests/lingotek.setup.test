@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ * Lingotek Setup Test Case
+ */
 class LingotekTestCase extends DrupalWebTestCase {
 
   public $admin_user;
@@ -174,11 +178,11 @@ class LingotekTestCase extends DrupalWebTestCase {
     $str = '';
     
     $option = $element[0]->option[1];
-    if(!empty($option)) {
+    if (!empty($option)) {
       $attributes = $option->attributes();
       $str = (string) $attributes['value'];
     }
-    
+
     return $str;
   }
 

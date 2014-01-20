@@ -291,7 +291,7 @@ function lingotek_setup_account_settings_form_submit($form, $form_state) {
   // Validate the Account
   list($success, $msg) = lingotek_list_community_integrations($login_id, $password);
   if ($success == FALSE) {
-    drupal_set_message($msg, 'error');
+    drupal_set_message(check_plain($msg), 'error');
   }
   else {
     // Login Successful:  Valid Account
@@ -318,7 +318,7 @@ function lingotek_community_select_form() {
 
   if ($success == FALSE) {
 
-    drupal_set_message($msg, 'error');
+    drupal_set_message(check_plain($msg), 'error');
     drupal_goto('admin/config/lingotek/account-settings'); // Shouldnt be here.  So something messed up.  Go back.
   }
   else {
@@ -889,7 +889,7 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
 }
 
 function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
-  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'comment', false);
+  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'comment', FALSE);
 
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
 

@@ -382,7 +382,7 @@ function lingotek_pm($node) {
   // node disabled support
   if ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
     $output[] = array(
-      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").'
+      '#markup' => t('Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").')
     );
     return $output;
   }
@@ -428,7 +428,7 @@ function lingotek_pm($node) {
         $status = $document->getImportStatus();
 
         $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="fa fa-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
-        drupal_set_message(t('Content Import Status:') . $message, 'status');
+        drupal_set_message(t('Content Import Status: @message', array('@message' => check_plain($message))), 'status');
 
         $output['import_status'] = array(
           '#type' => 'fieldset',
@@ -724,7 +724,7 @@ function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
       $lingotek_trans = LingotekEntity::load($comment, $entity_type);
       
       $translation_edit_link = lingotek_get_workbench_url($lingotek_trans->lingotekDocumentId(), $lingotek_locale);
-      if(!empty($translation_edit_link)) {
+      if (!empty($translation_edit_link)) {
         drupal_goto($translation_edit_link);
       }
       else {
@@ -750,7 +750,7 @@ function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_local
   }
   if (!$url_language_detection_enabled) { //TO-DO: consider extending this functionality to use additional language detection methods
     $output = array();
-    $message = t("The URL detection method is required for viewing content in a specified language. In order to use this feature an administrator will need to enable the URL detection method in the") . ' ' . l('Language detection and selection settings', 'admin/config/regional/language/configure') . '.';
+    $message = t('The URL detection method is required for viewing content in a specified language. In order to use this feature an administrator will need to enable the URL detection method in the <a href="@link">Language detection and selection settings</a>', array('@link' => url('admin/config/regional/language/configure')));
     $output['message'] = array(
       '#type' => 'fieldset',
       '#title' => t('This feature requires URL language detection to be enabled'),

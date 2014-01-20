@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Lingotek Module + Rules Module Integration
+ */
+
+/**
  * Implements hook_rules_action_info().
  */
 function lingotek_rules_action_info() {

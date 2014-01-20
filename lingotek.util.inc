@@ -1008,13 +1008,13 @@ function lingotek_human_readable_timestamp($unix_timestamp, $as_array = FALSE) {
   $time = time() - $unix_timestamp;
 
   $intervals = array(
-    31536000 => 'year',
-    2592000 => 'month',
-    604800 => 'week',
-    86400 => 'day',
-    3600 => 'hour',
-    60 => 'minute',
-    1 => 'second'
+    31536000 => t('year'),
+    2592000 => t('month'),
+    604800 => t('week'),
+    86400 => t('day'),
+    3600 => t('hour'),
+    60 => t('minute'),
+    1 => t('second')
   );
 
   foreach ($intervals as $unit => $text) {
@@ -1030,10 +1030,10 @@ function lingotek_human_readable_timestamp($unix_timestamp, $as_array = FALSE) {
     }
   }
   if ($as_array) {
-    return array('number' => 0, 'interval' => 'seconds');
+    return array('number' => 0, 'interval' => t('seconds'));
   }
   else {
-    return '0 seconds';
+    return '0 ' . t('seconds');
   }
 }
 
@@ -1496,13 +1496,13 @@ function lingotek_unfilter_placeholders($segment_text) {
  */
 function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
   $entities = array(
-      'node' => array('current' => 'admin/config/lingotek/node-translation-settings',
-                      'next' => 'admin/config/lingotek/comment-translation-settings',),
-      'comment' => array('current' => 'admin/config/lingotek/comment-translation-settings',
-                      'next' => 'admin/config/lingotek/additional-translation-settings',),
-      'config' => array('current' => 'admin/config/lingotek/additional-translation-settings',
-                      'next' => 'admin/settings/lingotek',),
-      );
+    'node' => array('current' => 'admin/config/lingotek/node-translation-settings',
+      'next' => 'admin/config/lingotek/comment-translation-settings'),
+    'comment' => array('current' => 'admin/config/lingotek/comment-translation-settings',
+      'next' => 'admin/config/lingotek/additional-translation-settings'),
+    'config' => array('current' => 'admin/config/lingotek/additional-translation-settings',
+      'next' => 'admin/settings/lingotek'),
+  );
   if (isset($entities[$entity_type])) {
     if ($next) {
       return $entities[$entity_type]['next'];
@@ -1534,9 +1534,9 @@ function lingotek_get_entity_count($entity_type) {
  */
 function lingotek_get_bundles_by_profile_id($profile_id) {
   $bundles = array();
-  if(is_array($profile_id)) { // allow profile_ids to be an array of profiles to find bundles for
-    $mapped_results = array_map('lingotek_get_bundles_by_profile_id',$profile_id);
-    foreach($mapped_results as $result){
+  if (is_array($profile_id)) { // allow profile_ids to be an array of profiles to find bundles for
+    $mapped_results = array_map('lingotek_get_bundles_by_profile_id', $profile_id);
+    foreach ($mapped_results as $result) {
       $bundles = array_merge_recursive($result, $bundles);
     }
     return $bundles;
@@ -1635,7 +1635,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
         $e['document_id'] = $doc_ids[$e['type']][$e['id']];
         $filtered_entities[] = $e;
       }
-      else if (!$uploaded_only) {
+      elseif (!$uploaded_only) {
         $filtered_entities[] = $e;
       }
     }

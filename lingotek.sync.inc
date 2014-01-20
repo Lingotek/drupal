@@ -63,7 +63,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
     list($id, $type) = LingotekSync::getEntityIdFromDocId($document_id);
     if (!$id) { // check for the old style document_id
       list($id, $type) = LingotekSync::getEntityIdFromDocId($document_idx);
-      if ($id){
+      if ($id) {
         $document_id = $document_idx;
       }
     }
@@ -145,13 +145,14 @@ function lingotek_notifications() {
     
     $trans_obj->postDownload($lingotek_locale, $completed);
     
-  } else {
+  }
+  else {
     LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
     return drupal_json_output(array("message" => "The doc_id was not found on the site."));
   }
-  
+
   LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>entity:</b> @entity_type #@entity_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
-      '@document_id' => $document_id,
+    '@document_id' => $document_id,
       '@lingotek_locale' => $lingotek_locale,
       '@project_id' => $project_id,
       '@target_drupal_language_code' => $target_drupal_language_code,
