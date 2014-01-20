@@ -374,7 +374,7 @@ function lingotek_pm($node) {
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
-      '#markup' => t('This is a translated node. Go to the @link to manage the translations.', array('@link' => l('source node', 'node/' . $node->tnid . '/lingotek_pm'))),
+      '#markup' => t('This is a translated node. Go to the <a href="@link">source node</a> to manage the translations.', array('@link' => url('node/' . $node->tnid . '/lingotek_pm'))),
     );
     return $output;
   }
