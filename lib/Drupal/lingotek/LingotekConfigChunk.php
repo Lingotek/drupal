@@ -904,9 +904,9 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
 
   public function getDocumentName() {
-    return 'config - ' . $this->cid;
+    return $this->getTitle();
   }
-  
+
   public function getUrl() {
     return '';
   }
