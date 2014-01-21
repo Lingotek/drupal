@@ -1216,12 +1216,15 @@ function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
  * which we currently do not have as a dependency.
  */
 function lingotek_entity_load_single($entity_type, $entity_id) {
+  $entity = NULL;
   if ($entity_type == 'node') {
     $entity = lingotek_node_load_default($entity_id);
   }
   else {
     $entities = entity_load($entity_type, array($entity_id));
-    $entity = $entities[$entity_id];
+    if ($entities && isset($entities[$entity_id])) {
+      $entity = $entities[$entity_id];
+    }
   }
 
   return $entity;

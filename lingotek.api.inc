@@ -145,6 +145,10 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
           $default_language = $default->language;
           $field_collection_id = isset($node_field['und'][$delta]['value']) ? $node_field['und'][$delta]['value'] : $node_field[$default_language][$delta]['value'];
           $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
+          if (!$field_collection_item) {
+            // The field collection was removed, so disregard any info on it
+            continue;
+          }
           $field_collection_item->type = $field['field_name'];
           $field_collection_item->language = $entity->language;
           $field_collection_item->nid = $field_collection_item->item_id;
