@@ -88,32 +88,44 @@ function lingotek_rules_entity_change_profile($wrapper, $profile, $settings, $st
  * Implements hook_rules_condition_info().
  */
 function lingotek_rules_condition_info() {
-  $defaults = array(
-    'group' => 'lingotek',
+  $items = array();
+  $items['lingotek_entity_all_downloaded'] = array(
+    'group' => t('Lingotek'),
     'module' => 'lingotek',
-  );
-  return array(
-    'lingotek_entity_all_downloaded' => $defaults + array(
-      'label' => t('All translations for the entity have been downloaded'),
-      'parameter' => array(
-        'entity' => array(
-          'type' => 'entity', 
-          'label' => t('Entity'),
-          'desciption' => t('Specifies the entity for which the translation was downloaded.'),
-        ),
-        'entity_type' => array(
-          'type' => 'token',
-          'label' => t('Entity type'),
-          'description' => t('The entity type to check for.'),
-          'options list' => 'rules_entity_action_type_options',
-          'restriction' => 'input',
-        ),
+    'label' => t('Entity has all translations downloaded'),
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+        'desciption' => t('Specifies the entity for which the translation was downloaded.'),
       ),
     ),
   );
+  $items['lingotek_entity_has_profile'] = array(
+    'group' => t('Lingotek'),
+    'module' => 'lingotek',
+    'label' => t('Entity has profile'),
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+        'desciption' => t('Specifies the entity for which the translation was downloaded.'),
+      ),
+      'profile' => array(
+        'type' => 'token',
+        'label' => t('Profile'),
+        'description' => t('The Lingotek profile assigned to this entity'),
+        'options list' => 'lingotek_get_profiles_by_name',
+        'restriction' => 'input',
+      ),
+    ),
+  );
+  return $items;
 }
 
-function lingotek_entity_all_downloaded($entity, $entity_type) {
+function lingotek_entity_all_downloaded($entity) {
+  $info = $entity->info(); // this $entity comes in as a DrupalEntityWrapper object
+  $entity_type = $info['type'];
   $query = db_select('lingotek_entity_metadata', 'lem')
       ->fields('lem', array('entity_id'))
       ->condition('lem.entity_id', $entity->getIdentifier())
@@ -127,13 +139,19 @@ function lingotek_entity_all_downloaded($entity, $entity_type) {
   return TRUE;
 }
 
- /**
-  * Implements hook_rules_event_info().
-  */
+function lingotek_entity_has_profile($entity, $profile) {
+  $raw = $entity->raw(); // this $entity comes in as a DrupalEntityWrapper object
+  $entity_profile_id = isset($raw->lingotek['profile']) ? $raw->lingotek['profile'] : "NONE";
+  return $entity_profile_id === $profile;
+}
+
+/**
+ * Implements hook_rules_event_info().
+ */
 function lingotek_rules_event_info() {
 
   $defaults = array(
-    'group' => 'lingotek',
+    'group' => t('Lingotek'),
     'module' => 'lingotek',
   );
   return array(

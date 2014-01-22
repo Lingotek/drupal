@@ -304,13 +304,10 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getDocumentName() {
-    if ($this->entity_type == 'node') {
-      return $this->getTitle();
-    } else {
-      return $this->getEntityType() . ' - ' . $this->getId();
-    }
+    return $this->getTitle();
+    //return $this->getEntityType() . ' - ' . $this->getId();
   }
-  
+
   public function getNote() {
     return $this->getTitle();
   }

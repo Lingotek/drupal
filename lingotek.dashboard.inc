@@ -115,7 +115,7 @@ function lingotek_get_dashboard_code() {
       'Drupal', // cms type
       VERSION, // drupal version
       variable_get('install_profile', ''), // CMS tag variable_get('lingotek_cms_tag','')
-      $language->lingotek_locale, // locale requested,
+      isset($language->lingotek_locale) ? $language->lingotek_locale : Lingotek::convertDrupal2Lingotek($language->language, FALSE), // locale requested,
       json_encode(lingotek_get_module_info('version')), // module version --- get all module info:  lingotek_get_module_info()
       $endpoint
   );
