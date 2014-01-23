@@ -15,7 +15,7 @@ lingotek.forms = lingotek.forms || {};
         $('#edit-lingotek-create-lingotek-document').change(updateVerticalTabSummary);
         $('#edit-lingotek-sync-method').change(updateVerticalTabSummary);
         $('#edit-lingotek-profile').change(updateVerticalTabSummary);
-        $('#edit-language').change();
+        updateVerticalTabSummary();
     };
     
     lingotek.forms.enableLtkFromET = false;

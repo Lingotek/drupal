@@ -1097,16 +1097,16 @@ function lingotek_get_global_profile() {
 /*
  * Return all profiles in an associative array, by name
  */
-function lingotek_get_profiles_by_name($include_custom = FALSE, $usetfunc = TRUE) {
+function lingotek_get_profiles_by_name($include_custom = FALSE, $use_tfunction = TRUE) {
   $profile_options = array();
   $profiles = lingotek_get_profiles();
   foreach ($profiles as $key => $profile) {
-    $profile_options[$key] = $usetfunc ? t($profile['name']) : $profile['name'];
+    $profile_options[$key] = $use_tfunction ? t($profile['name']) : $profile['name'];
   }
   if ($include_custom) {
-    $profile_options[LingotekSync::PROFILE_CUSTOM] = $usetfunc ? t('Custom') : 'Custom';
+    $profile_options[LingotekSync::PROFILE_CUSTOM] = $use_tfunction ? t('Custom') : 'Custom';
   }
-  $profile_options[LingotekSync::PROFILE_DISABLED] = $usetfunc ? t('Disabled') : 'Disabled';
+  $profile_options[LingotekSync::PROFILE_DISABLED] = $use_tfunction ? t('Disabled') : 'Disabled';
 
   return $profile_options;
 }
