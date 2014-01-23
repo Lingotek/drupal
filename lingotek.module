@@ -76,8 +76,18 @@ function lingotek_menu() {
     'weight' => 1,
     'type' => MENU_CALLBACK
   );
-  
-  $items['lingotek/view/%/%/%'] = array(
+
+  $items['lingotek/workbench/%/%/%'] = array(// lingotek/workbench/entity_type/entity_id/lingotek_locale
+    'title' => 'Workbench',
+    'access arguments' => array('translation'),
+    'file' => 'lingotek.page.inc',
+    'page arguments' => array(2, 3, 4), // entity_type, entity_id, lingotek_locale
+    'page callback' => 'lingotek_workbench_redirect',
+    'weight' => 1,
+    'type' => MENU_CALLBACK
+  );
+
+  $items['lingotek/view/%/%/%'] = array(// lingotek/view/entity_type/entity_id/lingotek_locale
     'title' => '',
     'file' => 'lingotek.page.inc',
     'access arguments' => array('access content'),

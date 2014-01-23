@@ -1570,7 +1570,7 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     LingotekSync::STATUS_EDITED => t('Source needs to be uploaded'),
     ''
   );
-  $default_link = $entity_type . '/' . $entity_id . '/lingotekworkbench/';
+  $default_link = 'lingotek/workbench/' . $entity_type . '/' . $entity_id . '/';
   $manual_link = $entity_type . '/' . $entity_id . '/lingotek_pm/';
   $link_map = array(
     LingotekSync::STATUS_PENDING => $default_link,

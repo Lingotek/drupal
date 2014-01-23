@@ -29,7 +29,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
-      $language_link = l(lingotek_language_field_lookup('native', $target->language), 'node/' . $node->nid . '/lingotekworkbench/' . $target->language, array('attributes' => array('target' => '_blank')));
+      $language_link = l(lingotek_language_field_lookup('native', $target->language), 'lingotek/workbench/node/' . $node->nid . '/' . $target->language, array('attributes' => array('target' => '_blank')));
       $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
 
       $row = array(
@@ -697,40 +697,20 @@ function page_sync_comment_translations($comment_id) {
 /*
  * 
  */
-function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
+function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-  
-  if ($entity_type == 'node') {
-    // clear any residual nodes built out before the lingotek document_id was stored
-    if (module_exists('entitycache')) {
-      cache_clear_all($id, 'cache_entity_node');
-    }
-    $node = node_load($id);
-    
-    if ($node->language == $drupal_language_code) {
-      drupal_goto('node/' . $node->nid . '/edit');
-    }
-    else {
-      $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale);
-      drupal_goto($translation_edit_link);
-    }
+
+  if (module_exists('entitycache')) {
+    cache_clear_all($entity_id, "cache_entity_$entity_type");
   }
-  elseif ($entity_type == 'comment') {
-    $comment = comment_load($id);
-    if ($comment->language == $drupal_language_code) {
-      drupal_goto('comment/' . $comment->cid . '/edit');
-    }
-    else {  
-      $lingotek_trans = LingotekEntity::load($comment, $entity_type);
-      
-      $translation_edit_link = lingotek_get_workbench_url($lingotek_trans->lingotekDocumentId(), $lingotek_locale);
-      if (!empty($translation_edit_link)) {
-        drupal_goto($translation_edit_link);
-      }
-      else {
-        drupal_goto('comment/' . $comment->cid . '/edit');
-      }
-    }
+  $entity = entity_load_single($entity_type, $entity_id);
+
+  if ($entity->language == $drupal_language_code) {
+    drupal_goto($entity_type . '/' . $entity->id . '/edit');
+  }
+  else {
+    $translation_edit_link = lingotek_get_workbench_url($entity->lingotek['document_id'], $lingotek_locale);
+    drupal_goto($translation_edit_link);
   }
 }
 

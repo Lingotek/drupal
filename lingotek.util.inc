@@ -1380,7 +1380,7 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/workbench-link.css', array('group' => CSS_DEFAULT));
   
   $text = '<img src="' . base_path() . drupal_get_path('module', 'lingotek') . '/images/ico_chevs_dd.png" >';
-  $url = $entity_type . '/' . $id . '/lingotekworkbench/' . $lingotek_locale;
+  $url = 'lingotek/workbench/' . $entity_type . '/' . $id . '/' . $lingotek_locale;
   return l($text, $url, array('attributes' => array('class' => array('lingotek-translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
 }
 

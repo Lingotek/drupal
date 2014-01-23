@@ -75,7 +75,7 @@ Drupal.behaviors.lingotekAdminForm = {
           }
         });
         if($list.length == 0) {
-          return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+          return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
         } else {
           return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
         }
@@ -96,7 +96,7 @@ Drupal.behaviors.lingotekAdminForm = {
             }
           });
           if($list.length == 0) {
-            return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+            return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
           } else {
             return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
           }
@@ -116,7 +116,7 @@ Drupal.behaviors.lingotekAdminForm = {
           }
         });
         if($list.length == 0) {
-          return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+          return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
         } else {
           return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
         }
@@ -150,7 +150,7 @@ Drupal.behaviors.lingotekAdminForm = {
           }
         });
         if ($list.length === 0 && extra_text.length === 0) {
-            return '<span style="color:red;">' + Drupal.t('Disabled') + '</span>';
+            return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
         } else if ($list.length === max) {
             return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: all' + extra_text;
         } else {
