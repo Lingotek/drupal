@@ -1091,6 +1091,11 @@ function lingotek_add_neutral_lang_to_field_collections() {
 }
 
 function lingotek_fix_field_collection_languages($to_lang_neutral=TRUE) {
+  // find the difference between all entities and the und ones
+  // for each table:
+  //   find all entries containing the default language but no 'und' language
+  //   for each entry:
+  //     insert a corresponding 'und' line
 
   $language = language_default();
   $langcode = $language->language;
@@ -1172,13 +1177,6 @@ function lingotek_fix_field_collection_languages($to_lang_neutral=TRUE) {
       }
     }
   }
-  
-  
-  // find the difference between all entities and the und ones
-  // for each table:
-    // find all entries containing the default language but no 'und' language
-    // for each entry:
-      // insert a corresponding 'und' line
 }
 
 /**
