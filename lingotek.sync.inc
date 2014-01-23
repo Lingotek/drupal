@@ -385,6 +385,13 @@ function lingotek_form_bulk_sync($form, $form_state) {
     '#disabled' => ($upload_count_total == 0 && $download_count_total == 0),
     '#submit' => $submit_functions,
   );
+
+  $form['force_download'] = array(
+    '#type' => 'submit',
+    '#value' => t('Force Download All'),
+    '#submit' => $submit_functions,
+  );
+
   return $form;
 }
 
@@ -398,8 +405,28 @@ function lingotek_form_bulk_sync($form, $form_state) {
  *   The FAPI form state array.
  */
 function lingotek_form_bulk_sync_submit($form, $form_state) {
-  //dpm($form); //dpm($form_state);
+
+  $extra_operations = array();
+  $upload_config = array();
+  $download_targets_incomplete = array();
   $vals = $form_state['values'];
+
+  if ($vals['op'] == 'Force Download All') {
+    $document_ids = LingotekConfigChunk::getAllDocumentIds();
+    $available_targets = Lingotek::getLanguages();
+    unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
+    $download_targets = array();
+    foreach ($document_ids as $doc_id) {
+      foreach (array_keys($available_targets) as $lang) {
+        $target = new stdClass();
+        $target->document_id = $doc_id;
+        $target->locale = $lang;
+        $download_targets[] = $target;
+      }
+    }
+    lingotek_sync_batch_create($upload_config, $download_targets, $download_targets_incomplete, NULL, $extra_operations);
+    return;
+  }
 
   // upload config
   $upload_config = array();
@@ -448,7 +475,6 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     }
   }
 
-  $extra_operations = array();
   $document_ids = array_unique($document_ids);
 
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
