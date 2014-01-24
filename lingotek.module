@@ -1766,9 +1766,6 @@ function lingotek_get_fc_parent($entity) {
   $result = $query->execute();
   $num_results = isset($result) ? count($result) : 0;
   if (!isset($result) || $num_results != 1) {
-    // found more or less than we bargained for.  Abort.
-    LingotekLog::error('Found @parents parents when querying for field-collection parent: @entity',
-        array('@parents' => $num_results, '@entity' => print_r($entity, TRUE)));
     return NULL;
   }
   foreach ($result as $parent_type => $parents) {
@@ -1778,14 +1775,21 @@ function lingotek_get_fc_parent($entity) {
   }
 }
 
-function lingotek_normalize_field_collection_language($entity, $read_only = TRUE) {
-  if (!($entity instanceof FieldCollectionItemEntity)) {
-    return;
+function lingotek_get_host_language($entity, $read_only = TRUE) {
+  if (isset($entity->language)) {
+    return $entity->language;
+  }
+
+  $site_default_lang = language_default();
+  $site_default_langcode = $site_default_lang->language;
+
+  if (!$read_only && isset($_POST['language'])) {
+    return $_POST['language'];
   }
   $host = lingotek_get_fc_parent($entity);
   if (!$host) {
     // unable to locate parent.  Abort.
-    return;
+    return $site_default_langcode;
   }
   $max_field_collection_depth = 10;
   // bubble up to the true parent to get its language,
@@ -1798,19 +1802,34 @@ function lingotek_normalize_field_collection_language($entity, $read_only = TRUE
     break;
   }
   if (!$host) {
-    return;
+    return $site_default_langcode;
   }
   if ($host instanceof FieldCollectionItemEntity) {
-    LingotekLog::error('Field collections nested too deeply, possibly a loop?: @entity',
-        array('@entity' => print_r($entity, TRUE)));
+    LingotekLog::error('Field collections nested too deeply, possibly a loop?: @entity', array('@entity' => print_r($entity, TRUE)));
   }
-  foreach ($entity as $key => $value) {
-    if (is_array($value)) {
+  if (isset($host->language)) {
+    return $host->language;
+  }
+  return $site_default_langcode;
+}
+
+function lingotek_normalize_field_collection_language($entity, $read_only = TRUE) {
+
+  $host_language = lingotek_get_host_language($entity, $read_only);
+  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
+  if (!$field_collection_field_types) {
+    // if there are no field collections existing, nothing to do
+    return;
+  }
+  foreach ($entity as $key => $value) { // for each field in the entity
+    // if the given field either belongs to a field collection or is a
+    // field collection itself, then normalize the languages
+    if (is_array($value) && ($entity instanceof FieldCollectionItemEntity || isset($field_collection_field_types[$key]))) {
       // On entity load, LANGUAGE_NONE should be the authority,
       // meaning the most current changes should be stored there.
       if ($read_only) {
         if (array_key_exists(LANGUAGE_NONE, $value)) {
-          $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
+          $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
         }
       }
       // On entity save, LANGUAGE_NONE and host language must
@@ -1818,21 +1837,36 @@ function lingotek_normalize_field_collection_language($entity, $read_only = TRUE
       else {
         // initial creation, so only one language exists
         if (count($value) == 1) {
-          if (array_key_exists($host->language, $value)) {
-            $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
+          if (array_key_exists($host_language, $value)) {
+            $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
           }
           elseif (array_key_exists(LANGUAGE_NONE, $value)) {
-            $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
+            $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
           }
         }
         else {
-          // step 1: find the changes in host->language or LANGUAGE_NONE
-          // step 2: propagate the change to the other one
-          if (array_key_exists($host->language, $value) && !isset($value[$host->language][0]['safe_value'])) {
-            $entity->{$key}[LANGUAGE_NONE] = $value[$host->language];
+          if (!isset($field_collection_field_types[$key])) {
+            // Non-field-collection handling
+            // step 1: find the changes in host->language or LANGUAGE_NONE
+            // step 2: propagate the change to the other one
+            if (array_key_exists($host_language, $value) && !isset($value[$host_language][0]['safe_value'])) {
+              $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
+            }
+            elseif (array_key_exists(LANGUAGE_NONE, $value) && !isset($value[LANGUAGE_NONE][0]['safe_value'])) {
+              $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
+            }
           }
-          elseif (array_key_exists(LANGUAGE_NONE, $value) && !isset($value[LANGUAGE_NONE][0]['safe_value'])) {
-            $entity->{$key}[$host->language] = $value[LANGUAGE_NONE];
+          else {
+            // handle field collections separately by reconciling differences in
+            // deltas between languages
+            if (isset($value[LANGUAGE_NONE]) && isset($value[$host_language])) {
+              if (count($value[LANGUAGE_NONE]) > count($value[$host_language])) {
+                $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
+              }
+              else if (count($value[$host_language]) > count($value[LANGUAGE_NONE])) {
+                $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
+              }
+            }
           }
         }
       }
@@ -1845,7 +1879,7 @@ function lingotek_normalize_field_collection_language($entity, $read_only = TRUE
  * Implements hook_entity_presave().
   */
 function lingotek_entity_presave($entity, $type) {
-  if ($type == 'field_collection_item') {
+  if (module_exists('field_collection')) {
     lingotek_normalize_field_collection_language($entity, FALSE);
   }
   if ($type == 'message_type') {
