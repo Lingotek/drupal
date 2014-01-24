@@ -34,6 +34,17 @@ class LingotekSync {
     return FALSE;
   }
 
+  public static function getTargetStatusOptions() {
+    return array(
+      'STATUS_CURRENT' => self::STATUS_CURRENT,
+      'STATUS_EDITED' => self::STATUS_EDITED,
+      'STATUS_FAILED' => self::STATUS_FAILED,
+      'STATUS_PENDING' => self::STATUS_PENDING,
+      'STATUS_READY' => self::STATUS_READY,
+      'STATUS_TARGET' => self::STATUS_TARGET,
+    );
+  }
+
   public static function getAllTargetStatusNotCurrent($nid) {
     $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_key', 'value'))

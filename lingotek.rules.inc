@@ -22,7 +22,7 @@ function lingotek_rules_action_info() {
   );
   $actions['lingotek_entity_download'] = array(
     'group' => t('Lingotek'),
-    'label' => t('Download Translations'),
+    'label' => t('Download specified translations'),
     'base' => 'lingotek_rules_entity_download',
     'parameter' => array(
       'entity' => array(
@@ -33,6 +33,17 @@ function lingotek_rules_action_info() {
         'type' => 'list<text>',
         'label' => t('Language'),
         'options list' => 'lingotek_rules_languages',
+      ),
+    ),
+  );
+  $actions['lingotek_entity_download_all_translations'] = array(
+    'group' => t('Lingotek'),
+    'label' => t('Download all translations'),
+    'base' => 'lingotek_rules_entity_download_all',
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
       ),
     ),
   );
@@ -75,6 +86,17 @@ function lingotek_rules_entity_download($wrapper, $languages, $settings, $state)
   }
 }
 
+function lingotek_rules_entity_download_all($wrapper, $settings, $state) {
+  $entity_type = $wrapper->type();
+  $id = $wrapper->getIdentifier();
+  $entity = $wrapper->value();
+  $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($entity->language);
+  $target_languages = Lingotek::getLanguagesWithoutSource($source_lingotek_locale);
+  foreach ($target_languages as $lingotek_locale) {
+    lingotek_entity_download($entity, $entity_type, $lingotek_locale);
+  }
+}
+
 function lingotek_rules_entity_change_profile($wrapper, $profile, $settings, $state) {
   $entity_type = $wrapper->type();
   $id = $wrapper->getIdentifier();
@@ -89,7 +111,7 @@ function lingotek_rules_entity_change_profile($wrapper, $profile, $settings, $st
  */
 function lingotek_rules_condition_info() {
   $items = array();
-  $items['lingotek_entity_all_downloaded'] = array(
+  $items['lingotek_rules_entity_all_downloaded'] = array(
     'group' => t('Lingotek'),
     'module' => 'lingotek',
     'label' => t('Entity has all translations downloaded'),
@@ -101,7 +123,38 @@ function lingotek_rules_condition_info() {
       ),
     ),
   );
-  $items['lingotek_entity_has_profile'] = array(
+  $items['lingotek_rules_entity_all_ready_for_download'] = array(
+    'group' => t('Lingotek'),
+    'module' => 'lingotek',
+    'label' => t('Entity has all translations ready for download'),
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+        'desciption' => t('Specifies the entity for which the translation is ready for download.'),
+      ),
+    ),
+  );
+  $items['lingotek_rules_entity_all_translations_of_status'] = array(
+    'group' => t('Lingotek'),
+    'module' => 'lingotek',
+    'label' => t('Entity has all translations of status'),
+    'parameter' => array(
+      'entity' => array(
+        'type' => 'entity',
+        'label' => t('Entity'),
+        'desciption' => t('Specifies the entity for which the translation is ready for download.'),
+      ),
+      'status' => array(
+        'type' => 'token',
+        'label' => t('Status'),
+        'description' => t('The Lingotek translation status'),
+        'options list' => 'LingotekSync::getTargetStatusOptions',
+        'restriction' => 'input',
+      ),
+    ),
+  );
+  $items['lingotek_rules_entity_has_profile'] = array(
     'group' => t('Lingotek'),
     'module' => 'lingotek',
     'label' => t('Entity has profile'),
@@ -123,25 +176,40 @@ function lingotek_rules_condition_info() {
   return $items;
 }
 
-function lingotek_entity_all_downloaded($entity) {
-  $info = $entity->info(); // this $entity comes in as a DrupalEntityWrapper object
-  $entity_type = $info['type'];
-  $query = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem', array('entity_id'))
-      ->condition('lem.entity_id', $entity->getIdentifier())
-      ->condition('lem.entity_type', $entity_type)
-      ->condition('lem.entity_key', 'target_sync_status_%', 'LIKE')
-      ->condition('lem.value', LingotekSync::STATUS_CURRENT, '!=');
-  $result = $query->execute();
-  if ($result->rowCount()) {
-    return FALSE;
-  }
-  return TRUE;
+function lingotek_rules_entity_all_downloaded($wrapper) {
+  return lingotek_rules_entity_all_translations_of_status($wrapper, LingotekSync::STATUS_CURRENT);
 }
 
-function lingotek_entity_has_profile($entity, $profile) {
-  $raw = $entity->raw(); // this $entity comes in as a DrupalEntityWrapper object
-  $entity_profile_id = isset($raw->lingotek['profile']) ? $raw->lingotek['profile'] : "NONE";
+function lingotek_rules_entity_all_ready_for_download($wrapper) {
+  return lingotek_rules_entity_all_translations_of_status($wrapper, LingotekSync::STATUS_READY);
+}
+
+function lingotek_rules_entity_all_translations_of_status($wrapper, $status) {
+  $entity = $wrapper->value();
+  $entity_id = $wrapper->getIdentifier();
+  $entity_type = $wrapper->type();
+  $source_lingotek_locale = Lingotek::convertDrupal2Lingotek($entity->language);
+  $target_languages = Lingotek::getLanguagesWithoutSource($source_lingotek_locale);
+  $target_status_keys = array();
+  foreach ($target_languages as $target_lingotek_locale) {
+    $target_status_keys[] = 'target_sync_status_' . $target_lingotek_locale;
+  }
+  if (empty($target_status_keys)) {
+    return FALSE;
+  }
+  $query = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('entity_id'))
+      ->condition('lem.entity_id', $entity_id)
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_key', $target_status_keys, 'IN')
+      ->condition('lem.value', $status);
+  $result = $query->execute();
+  return ($result->rowCount() === count($target_languages));
+}
+
+function lingotek_rules_entity_has_profile($wrapper, $profile) {
+  $entity = $wrapper->value(); // $wrapper is a DrupalEntityWrapper object
+  $entity_profile_id = isset($entity->lingotek['profile']) ? $entity->lingotek['profile'] : "NONE";
   return $entity_profile_id === $profile;
 }
 
@@ -149,48 +217,40 @@ function lingotek_entity_has_profile($entity, $profile) {
  * Implements hook_rules_event_info().
  */
 function lingotek_rules_event_info() {
-
   $defaults = array(
     'group' => t('Lingotek'),
     'module' => 'lingotek',
   );
   return array(
-    'lingotek_pre_upload' => $defaults + array(
-      'label' => t('Before an entity is uploaded'),
-      'variables' => array(
-        'entity' => array('type' => 'entity', 'label' => t('entity uploaded')),
-      ),
+    'lingotek_entity_pre_upload' => $defaults + array(
+  'label' => t('Before an entity is uploaded'),
+  'variables' => array(
+    'entity' => array('type' => 'entity', 'label' => t('entity uploaded')),
+  ),
     ),
-    'lingotek_post_upload' => $defaults + array(
-      'label' => t('After an entity was uploaded'),
-      'variables' => array(
-        'entity' => array('type' => 'entity', 'label' => t('entity uploaded')),
-      ),
+    'lingotek_entity_post_upload' => $defaults + array(
+  'label' => t('After an entity was uploaded'),
+  'variables' => array(
+    'entity' => array('type' => 'entity', 'label' => t('entity uploaded')),
+  ),
     ),
-    'lingotek_pre_download' => $defaults + array(
-      'label' => t('Before an entity is downloaded'),
-      'variables' => array(
-        'entity' => array('type' => 'entity', 'label' => t('entity downloaded')),
-      ),
+    'lingotek_entity_translation_pre_download' => $defaults + array(
+  'label' => t('Before a translation is downloaded'),
+  'variables' => array(
+    'entity' => array('type' => 'entity', 'label' => t('entity translation downloaded')),
+  ),
     ),
-    'lingotek_post_download' => $defaults + array(
-      'label' => t('After an entity was downloaded'),
-      'variables' => array(
-        'entity' => array('type' => 'entity', 'label' => t('entity downloaded')),
-      ),
+    'lingotek_entity_translation_post_download' => $defaults + array(
+  'label' => t('After a translation was downloaded'),
+  'variables' => array(
+    'entity' => array('type' => 'entity', 'label' => t('entity translation downloaded')),
+  ),
     ),
-    'lingotek_entity_ready' => $defaults + array(
-      'label' => t('A translation is ready for download'),
-      'variables' => array(
-        'entity' => array('type' => 'entity', 'label' => t('entity ready for download')),
-      ),
-    ),
-    'lingotek_entity_all_ready' => $defaults + array(
-      'label' => t('All translations are ready for download'),
-      'variables' => array(
-        'entity' => array('type' => 'entity', 'label' => t('entity ready for download')),
-      ),
+    'lingotek_entity_translation_ready' => $defaults + array(
+  'label' => t('A translation is ready for download'),
+  'variables' => array(
+    'entity' => array('type' => 'entity', 'label' => t('entity translation ready for download'))
+  ),
     ),
   );
 }
-

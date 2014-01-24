@@ -242,10 +242,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function downloadTriggered($lingotek_locale) {
-    // Necessary to fully implement the interface, but we don't do anything
-    // on LingotekNode objects, explicitly.
     if (module_exists('rules')) {
-      rules_invoke_event('lingotek_entity_ready', new EntityDrupalWrapper($this->entity_type, $this->entity));
+      rules_invoke_event('lingotek_entity_translation_ready', new EntityDrupalWrapper($this->entity_type, $this->entity));
     }
     return lingotek_entity_download_triggered($this->entity, $this->entity_type, $lingotek_locale);
   }

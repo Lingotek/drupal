@@ -185,8 +185,6 @@ function lingotek_push_form_submit($form, $form_state) {
   }
 
   lingotek_entity_upload($node, 'node');
-
-  drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));
 }
 
 /**
@@ -428,7 +426,7 @@ function lingotek_pm($node) {
         $status = $document->getImportStatus();
 
         $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="fa fa-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
-        drupal_set_message(t('Content Import Status: @message', array('@message' => check_plain($message))), 'status');
+        drupal_set_message(t('Content Import Status:').' '.$message, 'status');
 
         $output['import_status'] = array(
           '#type' => 'fieldset',
