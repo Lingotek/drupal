@@ -1251,7 +1251,7 @@ function lingotek_entity_load($entities, $entity_type) {
   
   if ($entity_type == 'field_collection_item') {
     foreach ($entities as $e) {
-      lingotek_normalize_field_collection_language($e);
+      lingotek_normalize_field_collection_language($entity_type, $e);
     }
   }
   if ($entity_type == 'message_type') {
@@ -1813,27 +1813,27 @@ function lingotek_get_host_language($entity, $read_only = TRUE) {
   return $site_default_langcode;
 }
 
-function lingotek_is_valid_field_collection_entity($entity) {
-  $field_collection_types = array('node', 'FieldCollectionItemEntity');
-  foreach ($field_collection_types as $fct) {
-    if ($entity instanceof $fct) {
-      return TRUE;
-    }
-    return FALSE;
+function lingotek_is_valid_field_collection_entity($entity_type) {
+  $field_collection_types = array('node', 'field_collection_item');
+  if (in_array($entity_type, $field_collection_types)) {
+    return TRUE;
   }
+  return FALSE;
 }
 
-function lingotek_normalize_field_collection_language($entity, $read_only = TRUE) {
+function lingotek_normalize_field_collection_language($entity_type, $entity, $read_only = TRUE) {
 
-  if (!lingotek_is_valid_field_collection_entity($entity)) {
+  if (!lingotek_is_valid_field_collection_entity($entity_type)) {
     return;
   }
+
   $host_language = lingotek_get_host_language($entity, $read_only);
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
   if (!$field_collection_field_types) {
     // if there are no field collections existing, nothing to do
     return;
   }
+
   foreach ($entity as $key => $value) { // for each field in the entity
     // if the given field either belongs to a field collection or is a
     // field collection itself, then normalize the languages
@@ -1893,7 +1893,7 @@ function lingotek_normalize_field_collection_language($entity, $read_only = TRUE
   */
 function lingotek_entity_presave($entity, $type) {
   if (module_exists('field_collection')) {
-    lingotek_normalize_field_collection_language($entity, FALSE);
+    lingotek_normalize_field_collection_language($type, $entity, FALSE);
   }
   if ($type == 'message_type') {
     lingotek_normalize_language($entity, FALSE);
