@@ -721,7 +721,10 @@ function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_local
   $url_language_detection_enabled = TRUE; //TO-DO: detect when it is not enabled, currently it is assumed
 
   if ($drupal_language_code) {
-    $url = $drupal_language_code . "/" . $url;
+    $default_language = language_default();
+    if ($drupal_language_code !== $default_language->language) {
+      $url = $drupal_language_code . "/" . $url;
+    }
   }
   else {
     drupal_set_message(t('The language requested is not available. The default language will be shown instead.'), 'warning');
