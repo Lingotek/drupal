@@ -1813,8 +1813,21 @@ function lingotek_get_host_language($entity, $read_only = TRUE) {
   return $site_default_langcode;
 }
 
+function lingotek_is_valid_field_collection_entity($entity) {
+  $field_collection_types = array('node', 'FieldCollectionItemEntity');
+  foreach ($field_collection_types as $fct) {
+    if ($entity instanceof $fct) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+}
+
 function lingotek_normalize_field_collection_language($entity, $read_only = TRUE) {
 
+  if (!lingotek_is_valid_field_collection_entity($entity)) {
+    return;
+  }
   $host_language = lingotek_get_host_language($entity, $read_only);
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
   if (!$field_collection_field_types) {
