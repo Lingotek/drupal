@@ -85,7 +85,9 @@ class LingotekApi {
       $parameters['content'] = $translatable_object->documentLingotekXML();
       $parameters['url'] = $translatable_object->getUrl();
       $parameters['workflowId'] = $translatable_object->getWorkflowId();
-
+      if (!strlen($parameters['url'])) {
+        unset($parameters['url']);
+      }
       $this->addAdvancedParameters($parameters, $translatable_object);
 
       if ($with_targets) {
@@ -146,6 +148,9 @@ class LingotekApi {
     $parameters['content'] = $translatable_object->documentLingotekXML();
     $parameters['url'] = $translatable_object->getUrl();
     $parameters['format'] = $this->xmlFormat();
+    if (!strlen($parameters['url'])) {
+      unset($parameters['url']);
+    }
 
     $this->addAdvancedParameters($parameters, $translatable_object);
 
