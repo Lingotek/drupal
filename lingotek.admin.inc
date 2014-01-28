@@ -1581,6 +1581,12 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#submit' => array('lingotek_notify_url_update')
   );
 
+  $btn_field_collection_update = array(
+    '#type' => 'submit',
+    '#value' => t('Update'),
+    '#submit' => array('lingotek_cleanup_field_collection_fields')
+  );
+
   $btn_callback_refresh_api_cache = array(
     '#type' => 'submit',
     '#value' => t('Refresh'),
@@ -1591,6 +1597,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_field_collection_update, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
 
@@ -1614,7 +1621,21 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
         )),
       array('data' => $btn_callback_url_update),
     ),
-    array(
+  );
+
+  if (module_exists('field_collection')) {
+    $rows[] = array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => t('Update Field-Collection Fields') . '<div class="description">',
+          '#markup' => t("This utility sets all field-collections to be <i>language neutral</i>, allowing the underlying fields to be enabled for multilingual use."),
+          '#suffix' => '</div>'
+        )),
+      array('data' => $btn_field_collection_update)
+    );
+  }
+
+  $rows[] = array(
       array('data' => array(
           '#type' => 'markup',
           '#prefix' => t('Cleanup and Identify Translatable Content') . '<div class="description">',
@@ -1622,8 +1643,8 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
           '#suffix' => '</div>'
         )),
       array('data' => $btn_cleanup),
-    ),
-    array(
+  );
+  $rows[] = array(
       array('data' => array(
           '#type' => 'markup',
           '#prefix' => t('Disassociate All Translations') . ' <i>' . t('(use with caution)') . '</i>' . '<div class="description">',
@@ -1631,8 +1652,8 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
           '#suffix' => '</div>'
         )),
       array('data' => $btn_disassociate_translations)
-    ),
   );
+
   $header = array();
   $form['utilities']['utility_table'] = array(
     '#markup' => theme('table', array('header' => $header, 'rows' => $rows))

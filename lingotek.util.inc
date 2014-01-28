@@ -1659,3 +1659,21 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   
   return $filtered_entities;
 }
+
+/*
+ * Clean up field-collection fields
+ */
+
+function lingotek_cleanup_field_collection_fields() {
+  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
+
+  // update all lines in field-collection field tables to be undefined,
+  // ignoring duplicates, then delete all lines in field-collection
+  // field tables that aren't undefined.
+  foreach (array_keys($field_collection_field_types) as $fc_field_name) {
+    db_query("UPDATE IGNORE {field_data_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
+    db_query("DELETE FROM {field_data_" . $fc_field_name . "} WHERE language != '" . LANGUAGE_NONE . "'");
+    db_query("UPDATE IGNORE {field_revision_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
+    db_query("DELETE FROM {field_revision_" . $fc_field_name . "} WHERE language != '" . LANGUAGE_NONE . "'");
+  }
+}
