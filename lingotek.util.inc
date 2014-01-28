@@ -1676,4 +1676,5 @@ function lingotek_cleanup_field_collection_fields() {
     db_query("UPDATE IGNORE {field_revision_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
     db_query("DELETE FROM {field_revision_" . $fc_field_name . "} WHERE language != '" . LANGUAGE_NONE . "'");
   }
+  drupal_set_message(t('Updated Field-Collection fields.'));
 }
