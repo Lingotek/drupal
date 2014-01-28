@@ -156,12 +156,8 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
 
           // RECURSION FOR FIELD COLLECTIONS
           lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $drupal_language_code);
-          $db_field_name = $field['field_name'] . '_value';
-          $db_revision_field_name = $field['field_name'] . '_revision_id';
-          $insert_array['language'] = $drupal_language_code;
-          $lang = isset($node_field[$entity->language][$delta]['value']) ? $entity->language : 'und';
-          $insert_array[$db_field_name] = $node_field[$lang][$delta]['value'];
-          $insert_array[$db_revision_field_name] = $node_field[$lang][$delta]['revision_id'];
+          $last_tag = $tag;
+          continue;
         }
         else {
           foreach ($content as $text) {
@@ -201,23 +197,6 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
             drupal_write_record($field_name, $insert_array, $primary_keys);
           }
         }
-
-        /* removed conversion of field collection leaves from und to the default language
-         * in favor of using load and presave hooks to sync und and default-language translations
-        if ($entity_type == 'field_collection_item') {
-          $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
-          foreach ($field_names as $table) {
-            db_update($table)
-                ->fields(array(
-                  'language' => $node->language,
-                ))
-                ->condition('entity_id', $node->nid)
-                ->condition('language', 'und')
-                ->execute();
-          }
-        }
-         * 
-         */
       }
 
       cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');

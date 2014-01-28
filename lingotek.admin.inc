@@ -267,6 +267,7 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
   $operations = array();
 
   $entity_profiles = variable_get('lingotek_entity_profiles', array());
+  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
 
   foreach ($form_state['input'] as $key => $value) {
 
@@ -293,7 +294,8 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
           // Set this field to 'translatable'.
           // Update the field via the Field API (Instead of the direct db_update)
           $field = field_info_field($content_field);
-          $field['translatable'] = 1;
+          $is_field_collection = key_exists($content_field, $field_collection_field_types);
+          $field['translatable'] = $is_field_collection ? 0 : 1;
           field_update_field($field);
         }
       }
@@ -314,9 +316,11 @@ function lingotek_admin_node_translation_settings_form_submit($form, &$form_stat
           if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
             //title_field_replacement_batch_set($title_entity, $title_bundle, $title_field);
             $operations[] = array('title_field_replacement_batch', array($entity_type, $bundle, $legacy_field));
-            $translate[$entity_type][$content_type][] = $legacy_field . '_field';
-            $field = field_info_field($legacy_field . '_field');
-            $field['translatable'] = 1;
+            $field_name = $legacy_field . '_field';
+            $translate[$entity_type][$content_type][] = $field_name;
+            $field = field_info_field($field_name);
+            $is_field_collection = key_exists($field_name, $field_collection_field_types);
+            $field['translatable'] = $is_field_collection ? 0 : 1;
             $operations[] = array('field_update_field', array($field)); //field_update_field($field);
           }
         }

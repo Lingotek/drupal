@@ -1829,15 +1829,17 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
 
   $host_language = lingotek_get_host_language($entity, $read_only);
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
-  if (!$field_collection_field_types) {
-    // if there are no field collections existing, nothing to do
+  if (!$field_collection_field_types) { // if there are no field collections existing, nothing to do
     return;
   }
 
   foreach ($entity as $key => $value) { // for each field in the entity
-    // if the given field either belongs to a field collection or is a
-    // field collection itself, then normalize the languages
-    if (is_array($value) && ($entity instanceof FieldCollectionItemEntity || isset($field_collection_field_types[$key]))) {
+    // if the given field either belongs to a field collection then normalize the languages
+    if (isset($field_collection_field_types[$key])) {
+      continue;
+    }
+
+    if (is_array($value) && ($entity instanceof FieldCollectionItemEntity)) {
       // On entity load, LANGUAGE_NONE should be the authority,
       // meaning the most current changes should be stored there.
       if ($read_only) {
@@ -1846,10 +1848,10 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
         }
       }
       // On entity save, LANGUAGE_NONE and host language must
-      // both be destinations for changes
+      // both be destinations for changes so that field collection content
+      // will continue to be visible if the Lingotek module is disabled
       else {
-        // initial creation, so only one language exists
-        if (count($value) == 1) {
+        if (count($value) == 1) { // initial creation, so only one language exists
           if (array_key_exists($host_language, $value)) {
             $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
           }
@@ -1857,29 +1859,12 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
             $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
           }
         }
-        else {
-          if (!isset($field_collection_field_types[$key])) {
-            // Non-field-collection handling
-            // step 1: find the changes in host->language or LANGUAGE_NONE
-            // step 2: propagate the change to the other one
-            if (array_key_exists($host_language, $value) && !isset($value[$host_language][0]['safe_value'])) {
-              $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
-            }
-            elseif (array_key_exists(LANGUAGE_NONE, $value) && !isset($value[LANGUAGE_NONE][0]['safe_value'])) {
-              $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
-            }
+        else { // update
+          if (array_key_exists($host_language, $value) && !isset($value[$host_language][0]['safe_value'])) {
+            $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
           }
-          else {
-            // handle field collections separately by reconciling differences in
-            // deltas between languages
-            if (isset($value[LANGUAGE_NONE]) && isset($value[$host_language])) {
-              if (count($value[LANGUAGE_NONE]) > count($value[$host_language])) {
-                $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
-              }
-              else if (count($value[$host_language]) > count($value[LANGUAGE_NONE])) {
-                $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
-              }
-            }
+          elseif (array_key_exists(LANGUAGE_NONE, $value) && !isset($value[LANGUAGE_NONE][0]['safe_value'])) {
+            $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
           }
         }
       }
@@ -1967,7 +1952,13 @@ function lingotek_field_language_alter(&$display_language, $context) {
   // because Lingotek translation hasn't finished yet, or synchonization with
   // Lingotek hasn't yet occurred. In this case, fall back to displaying
   // the default language for each field.
+  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
+
   foreach ($display_language as $field => $display_language_code) {
+    $is_field_collection = isset($field_collection_field_types[$field]);
+    if ($is_field_collection) {
+      continue;
+    }
     if (!isset($context['entity']->{$field}[$display_language_code])) {
       $display_language[$field] = $context['entity']->language;
     }
