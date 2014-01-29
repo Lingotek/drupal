@@ -1624,11 +1624,15 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   );
 
   if (module_exists('field_collection')) {
+    $extra_note = '';
+    if (lingotek_has_unconventional_fc_translations()) {
+      $extra_note = '<div style="color:red;">' . t('Note: It appears you have existing field collection translations that may not conform with Lingotek\'s method of translating field collections.  Using this utility will delete those translations.') . '</div>';
+    }
     $rows[] = array(
       array('data' => array(
           '#type' => 'markup',
           '#prefix' => t('Update Field-Collection Fields') . '<div class="description">',
-          '#markup' => t("This utility sets all field-collections to be <i>language neutral</i>, allowing the underlying fields to be enabled for multilingual use."),
+          '#markup' => t("This utility sets all field-collections to be <i>language neutral</i>, allowing the underlying fields to be enabled for multilingual use.  !note", array('!note' => $extra_note)),
           '#suffix' => '</div>'
         )),
       array('data' => $btn_field_collection_update)

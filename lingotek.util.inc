@@ -1678,3 +1678,27 @@ function lingotek_cleanup_field_collection_fields() {
   }
   drupal_set_message(t('Updated Field-Collection fields.'));
 }
+
+function lingotek_has_unconventional_fc_translations() {
+  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
+  $query_join_items = array(
+    'fca.entity_type = fcb.entity_type',
+    'fca.bundle = fcb.bundle',
+    'fca.deleted = fcb.deleted',
+    'fca.entity_id = fcb.entity_id',
+    'fca.revision_id = fcb.revision_id',
+    'fca.delta = fcb.delta',
+    'fca.language != fcb.language',
+  );
+  foreach (array_keys($field_collection_field_types) as $fc_field_name) {
+    $query = db_select('field_data_' . $fc_field_name, 'fca');
+    $query->join('field_data_' . $fc_field_name, 'fcb', implode(' AND ', $query_join_items) . ' AND fca.' . $fc_field_name . '_value != fcb.' . $fc_field_name . '_value');
+    $query->groupBy('fca.entity_id');
+    $query->fields('fca', array('entity_id'));
+    $result = $query->execute();
+    if ($result && $unconventional_fc = $result->fetchAll()) {
+      return $unconventional_fc;
+    }
+    return FALSE;
+  }
+}
