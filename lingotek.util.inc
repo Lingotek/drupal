@@ -323,16 +323,16 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 }
 
-function lingotek_xml_fields($entity_type, $node, $translatable, $language) {
+function lingotek_xml_fields($entity_type, $entity, $translatable, $language) {
   $content = '';
   
   foreach ($translatable as $field) {
-    $text = & $node->$field;
+    $content_container = & $entity->$field;
 
-    $field_language = array_key_exists($language, $node->$field) ? $language : LANGUAGE_NONE;
+    $field_language = is_array($content_container) && array_key_exists($language, $content_container) ? $language : LANGUAGE_NONE;
 
     // Deal with not being initialized right, such as pre-existing titles.
-    if (!array_key_exists($field_language, $node->$field) || !array_key_exists(0, $text[$field_language])) {
+    if (!isset($content_container[$field_language])) {
       continue;
     }
 
@@ -357,7 +357,7 @@ function lingotek_xml_fields($entity_type, $node, $translatable, $language) {
           continue;
         }
       }
-      foreach ($text[$field_language] as $delta) {
+      foreach ($content_container[$field_language] as $delta) {
         if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
           $element_name = $field;
           if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
