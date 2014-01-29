@@ -701,10 +701,11 @@ function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale)
   if (module_exists('entitycache')) {
     cache_clear_all($entity_id, "cache_entity_$entity_type");
   }
+
   $entity = entity_load_single($entity_type, $entity_id);
 
   if ($entity->language == $drupal_language_code) {
-    drupal_goto($entity_type . '/' . $entity->id . '/edit');
+    drupal_goto($entity_type . '/' . $entity_id . '/edit');
   }
   else {
     $translation_edit_link = lingotek_get_workbench_url($entity->lingotek['document_id'], $lingotek_locale);
