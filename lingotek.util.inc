@@ -1672,9 +1672,9 @@ function lingotek_cleanup_field_collection_fields() {
   // field tables that aren't undefined.
   foreach (array_keys($field_collection_field_types) as $fc_field_name) {
     db_query("UPDATE IGNORE {field_data_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
-    db_query("DELETE FROM {field_data_" . $fc_field_name . "} WHERE language != '" . LANGUAGE_NONE . "'");
+    db_query("DELETE FROM {field_data_" . $fc_field_name . "} WHERE language <> '" . LANGUAGE_NONE . "'");
     db_query("UPDATE IGNORE {field_revision_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
-    db_query("DELETE FROM {field_revision_" . $fc_field_name . "} WHERE language != '" . LANGUAGE_NONE . "'");
+    db_query("DELETE FROM {field_revision_" . $fc_field_name . "} WHERE language <> '" . LANGUAGE_NONE . "'");
   }
   drupal_set_message(t('Updated Field-Collection fields.'));
 }
