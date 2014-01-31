@@ -123,6 +123,12 @@ function lingotek_schema() {
       'entity_type',
       'entity_key',
     ),
+    'indexes' => array(
+      'idx_entity_id' => array('entity_id'),
+      'idx_entity_key' => array('entity_key'),
+      'idx_entity_type_and_key' => array('entity_type', 'entity_key'),
+      'idx_entity_key_and_value' => array('entity_key', 'value'),
+    ),
   );
 
   $schema['lingotek_config_metadata'] = array(
@@ -657,4 +663,23 @@ function lingotek_update_7503(&$sandbox) {
     }
   }
   variable_set('lingotek_entity_profiles', $profiles);
+}
+
+/**
+ * Add indexes to the lingotek_entity_metadata table
+ */
+function lingotek_update_7504(&$sandbox) {
+  $table = 'lingotek_entity_metadata';
+  $indexes = array(
+    'idx_entity_id' => array('entity_id'),
+    'idx_entity_key' => array('entity_key'),
+    'idx_entity_type_and_key' => array('entity_type', 'entity_key'),
+    'idx_entity_key_and_value' => array('entity_key', 'value'),
+  );
+  foreach ($indexes as $index_name => $fields) {
+    if (!db_index_exists($table, $index_name)) {
+      db_add_index($table, $index_name, $fields);
+    }
+  }
+  return t('Added indexes to the lingotek entity metadata table.');
 }
