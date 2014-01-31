@@ -1598,6 +1598,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   
   // get all entities that belond to those bundles
   foreach ($bundles as $et => $entity_bundles) {
+    /*  THE SLOW BUT CORRECT WAY TO EXTRACT INFO
     $tmp_entities = entity_load($et);
     foreach ($tmp_entities as $tid => $tinfo) {
       list($entity_id, $vid, $bundle_name) = entity_extract_ids($et, $tinfo);
@@ -1605,6 +1606,32 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
         $entities[] = array('id' => $tid, 'type' => $et);
       }
     }
+    */
+    // THE OPTIMIZED WAY
+    if ($et == 'comment') {
+      $ref_tables = array();
+      foreach (array_keys($entity_bundles) as $key) {
+        $tmp_array = explode('_', $key);
+        $key = implode('_', array_slice($tmp_array, 2));
+        $ref_tables[] = $key;
+      }
+      $query = db_select($et, 'e')
+          ->fields('e', array('cid'));
+      $query->join('node', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
+    }
+    else {
+      $entity_info = entity_get_info($et);
+      $bundle_field_name = $entity_info['entity keys']['bundle'];
+      $id_field_name = $entity_info['entity keys']['id'];
+      $query = db_select($et, 'e')
+          ->fields('e', array($id_field_name))
+          ->condition('e.' . $bundle_field_name, array_keys($entity_bundles), 'IN');
+    }
+    $results = $query->execute()->fetchCol();
+    foreach ($results as $id) {
+      $entities[] = array('id' => $id, 'type' => $et);
+    }
+    // END OPTIMIZED WAY
   }
   
   // subtract all entities specifically *not* set to the given profile
