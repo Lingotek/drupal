@@ -295,7 +295,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     }
   }
 
-  $content = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
+  $content = lingotek_xml_fields($entity, $translatable, $entity->language);
   
   /* deprecated with config translation
     //Menus related to the page:
@@ -323,7 +323,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 }
 
-function lingotek_xml_fields($entity_type, $entity, $translatable, $language) {
+function lingotek_xml_fields($entity, $translatable, $language) {
   $content = '';
   
   foreach ($translatable as $field) {
@@ -363,7 +363,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable, $language) {
           if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
             $current_field = '<' . $element_name . '>';
             $enabled_fields = variable_get('lingotek_enabled_fields');
-            $entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
+            $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
             $sub_fields = field_info_instances('field_collection_item', $field);
             $translatable_field_types = lingotek_get_translatable_field_types();
             $translatable_sub_fields = array();
@@ -372,7 +372,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable, $language) {
                 $translatable_sub_fields[] = $sub_field;
               }
             }
-            $current_field .= lingotek_xml_fields($entity_type, $entity, $translatable_sub_fields, $field_language);
+            $current_field .= lingotek_xml_fields($sub_entity, $translatable_sub_fields, $field_language);
             $current_field .= '</' . $element_name . '>';
             $content .= $current_field;
             continue;
