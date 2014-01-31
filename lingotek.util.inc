@@ -613,28 +613,33 @@ function lingotek_get_source_language() {
  * Return a whitelist of entity types supported for translation by the Lingotek module
  */
 function lingotek_managed_entity_types($include_all = FALSE) {
-  $types = entity_get_info();
-  $enabled = array('node', 'comment', 'message_type');
+  $type_info = entity_get_info();
+  //$types = array_keys($type_info);
+
+  $whitelist = array('node', 'comment', 'message_type'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
-      $enabled[] = 'field_collection_item';
+      $whitelist[] = 'field_collection_item';
     }
   }
-  $enabled = array_flip($enabled);
+  $whitelist = array_flip($whitelist);
+  $enabled_types = array_intersect_key($type_info, $whitelist);
 
-  $types['comment']['label'] = 'Comments';
-  $types['node']['label'] = 'Nodes';
-  
-  if (isset($types['message_type'])) {
-    $types['message_type']['label'] = 'Message Types';
+  // labels
+  if (isset($enabled_types['comment'])) {
+    $enabled_types['comment']['label'] = 'Comments';
   }
-  
-  if (isset($types['field_collection_item'])) {
-    $types['field_collection_item']['label'] = 'Field Collections';
+  if (isset($enabled_types['node'])) {
+    $enabled_types['node']['label'] = 'Nodes';
+  }
+  if (isset($enabled_types['message_type'])) {
+    $enabled_types['message_type']['label'] = 'Message Types';
+  }
+  if (isset($enabled_types['field_collection_item'])) {
+    $enabled_types['field_collection_item']['label'] = 'Field Collections';
   }
 
-  $enabled_types = array_intersect_key($types, $enabled);
   return $enabled_types;
 }
 
