@@ -1009,14 +1009,6 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     ),
   );
 
-  if (module_exists('navbar')) {
-    $form[$fkey]['lingotek_navbar_switcher'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable the language switcher in the navbar'),
-      '#default_value' => variable_get('lingotek_navbar_switcher'),
-    );
-  }
-
   $form['prefs']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
@@ -1845,10 +1837,6 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
       LOCALE_LANGUAGE_NEGOTIATION_BROWSER => 4,
     );
     language_negotiation_set(LANGUAGE_TYPE_INTERFACE, $types);
-  }
-
-  if (isset($form_state['values']['lingotek_navbar_switcher'])) {
-    variable_set('lingotek_navbar_switcher', $form_state['values']['lingotek_navbar_switcher']);
   }
 
   // Flush cache
