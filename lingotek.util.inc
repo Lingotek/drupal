@@ -916,7 +916,6 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
     locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
   }
 
-  LingotekSync::insertTargetEntriesForAllDocs($lingotek_locale); // Add the node sync target language entries to the lingotek table.
   return lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale, $call_api);
 }
 
