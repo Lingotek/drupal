@@ -63,7 +63,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
     list($id, $type) = LingotekSync::getEntityIdFromDocId($document_id);
     if (!$id) { // check for the old style document_id
       list($id, $type) = LingotekSync::getEntityIdFromDocId($document_idx);
-      if ($id){
+      if ($id) {
         $document_id = $document_idx;
       }
     }
@@ -145,13 +145,14 @@ function lingotek_notifications() {
     
     $trans_obj->postDownload($lingotek_locale, $completed);
     
-  } else {
+  }
+  else {
     LingotekLog::error('Lingotek document ID (@doc_id) not found.', array('@doc_id' => $document_id));
     return drupal_json_output(array("message" => "The doc_id was not found on the site."));
   }
-  
+
   LingotekLog::info('[notify] <br/><b>code:</b> @lingotek_locale <br/><b>doc_id:</b> @document_id<br/><b>project:</b> @project_id <br/><b>entity:</b> @entity_type #@entity_id (@target_drupal_language_code) <br/><b>completed</b>: @completed', array(
-      '@document_id' => $document_id,
+    '@document_id' => $document_id,
       '@lingotek_locale' => $lingotek_locale,
       '@project_id' => $project_id,
       '@target_drupal_language_code' => $target_drupal_language_code,
@@ -384,6 +385,13 @@ function lingotek_form_bulk_sync($form, $form_state) {
     '#disabled' => ($upload_count_total == 0 && $download_count_total == 0),
     '#submit' => $submit_functions,
   );
+
+  $form['force_download'] = array(
+    '#type' => 'submit',
+    '#value' => t('Force Download All'),
+    '#submit' => $submit_functions,
+  );
+
   return $form;
 }
 
@@ -397,8 +405,28 @@ function lingotek_form_bulk_sync($form, $form_state) {
  *   The FAPI form state array.
  */
 function lingotek_form_bulk_sync_submit($form, $form_state) {
-  //dpm($form); //dpm($form_state);
+
+  $extra_operations = array();
+  $upload_config = array();
+  $download_targets_incomplete = array();
   $vals = $form_state['values'];
+
+  if ($vals['op'] == 'Force Download All') {
+    $document_ids = LingotekConfigChunk::getAllDocumentIds();
+    $available_targets = Lingotek::getLanguages();
+    unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
+    $download_targets = array();
+    foreach ($document_ids as $doc_id) {
+      foreach (array_keys($available_targets) as $lang) {
+        $target = new stdClass();
+        $target->document_id = $doc_id;
+        $target->locale = $lang;
+        $download_targets[] = $target;
+      }
+    }
+    lingotek_sync_batch_create($upload_config, $download_targets, $download_targets_incomplete, NULL, $extra_operations);
+    return;
+  }
 
   // upload config
   $upload_config = array();
@@ -447,7 +475,6 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
     }
   }
 
-  $extra_operations = array();
   $document_ids = array_unique($document_ids);
 
   //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);

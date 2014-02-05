@@ -29,7 +29,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       if (empty($phase_complete_percent)) {
         $phase_complete_percent = 0;
       }
-      $language_link = l(lingotek_language_field_lookup('native', $target->language), 'node/' . $node->nid . '/lingotekworkbench/' . $target->language, array('attributes' => array('target' => '_blank')));
+      $language_link = l(lingotek_language_field_lookup('native', $target->language), 'lingotek/workbench/node/' . $node->nid . '/' . $target->language, array('attributes' => array('target' => '_blank')));
       $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
 
       $row = array(
@@ -93,7 +93,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
 
     $form['fieldset']['submit'] = array(
       '#type' => 'submit',
-      '#value' => 'Download',
+      '#value' => t('Download'),
     );
 
     $form['fieldset']['nid'] = array(
@@ -185,8 +185,6 @@ function lingotek_push_form_submit($form, $form_state) {
   }
 
   lingotek_entity_upload($node, 'node');
-
-  drupal_set_message(t('Uploaded content for "@node_title" to Lingotek for translation.', array('@node_title' => $node->title)));
 }
 
 /**
@@ -374,7 +372,7 @@ function lingotek_pm($node) {
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
-      '#markup' => t('This is a translated node. Go to the @link to manage the translations.', array('@link' => l('source node', 'node/' . $node->tnid . '/lingotek_pm'))),
+      '#markup' => t('This is a translated node. Go to the <a href="@link">source node</a> to manage the translations.', array('@link' => url('node/' . $node->tnid . '/lingotek_pm'))),
     );
     return $output;
   }
@@ -382,7 +380,7 @@ function lingotek_pm($node) {
   // node disabled support
   if ($node->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
     $output[] = array(
-      '#markup' => 'Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").'
+      '#markup' => t('Lingotek Translation is currently disabled for this node. You can enable translation by editing this node and selecting a Translation Profile (e.g. "Automatic").')
     );
     return $output;
   }
@@ -428,7 +426,7 @@ function lingotek_pm($node) {
         $status = $document->getImportStatus();
 
         $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="fa fa-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
-        drupal_set_message(t('Content Import Status:') . $message, 'status');
+        drupal_set_message(t('Content Import Status:') . ' ' . $message, 'status');
 
         $output['import_status'] = array(
           '#type' => 'fieldset',
@@ -697,40 +695,21 @@ function page_sync_comment_translations($comment_id) {
 /*
  * 
  */
-function lingotek_workbench_redirect($entity_type, $id, $lingotek_locale) {
+function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-  
-  if ($entity_type == 'node') {
-    // clear any residual nodes built out before the lingotek document_id was stored
-    if (module_exists('entitycache')) {
-      cache_clear_all($id, 'cache_entity_node');
-    }
-    $node = node_load($id);
-    
-    if ($node->language == $drupal_language_code) {
-      drupal_goto('node/' . $node->nid . '/edit');
-    }
-    else {
-      $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale);
-      drupal_goto($translation_edit_link);
-    }
+
+  if (module_exists('entitycache')) {
+    cache_clear_all($entity_id, "cache_entity_$entity_type");
   }
-  elseif ($entity_type == 'comment') {
-    $comment = comment_load($id);
-    if ($comment->language == $drupal_language_code) {
-      drupal_goto('comment/' . $comment->cid . '/edit');
-    }
-    else {  
-      $lingotek_trans = LingotekEntity::load($comment, $entity_type);
-      
-      $translation_edit_link = lingotek_get_workbench_url($lingotek_trans->lingotekDocumentId(), $lingotek_locale);
-      if(!empty($translation_edit_link)) {
-        drupal_goto($translation_edit_link);
-      }
-      else {
-        drupal_goto('comment/' . $comment->cid . '/edit');
-      }
-    }
+
+  $entity = entity_load_single($entity_type, $entity_id);
+
+  if ($entity->language == $drupal_language_code) {
+    drupal_goto($entity_type . '/' . $entity_id . '/edit');
+  }
+  else {
+    $translation_edit_link = lingotek_get_workbench_url($entity->lingotek['document_id'], $lingotek_locale);
+    drupal_goto($translation_edit_link);
   }
 }
 
@@ -743,14 +722,17 @@ function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_local
   $url_language_detection_enabled = TRUE; //TO-DO: detect when it is not enabled, currently it is assumed
 
   if ($drupal_language_code) {
-    $url = $drupal_language_code . "/" . $url;
+    $default_language = language_default();
+    if ($drupal_language_code !== $default_language->language) {
+      $url = $drupal_language_code . "/" . $url;
+    }
   }
   else {
     drupal_set_message(t('The language requested is not available. The default language will be shown instead.'), 'warning');
   }
   if (!$url_language_detection_enabled) { //TO-DO: consider extending this functionality to use additional language detection methods
     $output = array();
-    $message = t("The URL detection method is required for viewing content in a specified language. In order to use this feature an administrator will need to enable the URL detection method in the") . ' ' . l('Language detection and selection settings', 'admin/config/regional/language/configure') . '.';
+    $message = t('The URL detection method is required for viewing content in a specified language. In order to use this feature an administrator will need to enable the URL detection method in the <a href="@link">Language detection and selection settings</a>', array('@link' => url('admin/config/regional/language/configure')));
     $output['message'] = array(
       '#type' => 'fieldset',
       '#title' => t('This feature requires URL language detection to be enabled'),

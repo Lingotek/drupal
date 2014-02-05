@@ -19,16 +19,6 @@
     color: #00348D;
 }
 
-/*#lingotek-navbar-tab {
-  margin-top: 8px;
-  color: black;
-  float: right;
-}
-
-#lingotek-navbar-tab .ddTitle {
-  height: 23px;
-}*/
-
 div.form-item-create-lingotek-document-workbench-moderation, div.form-item-sync-method-workbench-moderation {
   margin-left: 50px;
 }
@@ -161,10 +151,10 @@ input.lingotek-content-settings-table.form-checkbox {
 }
 
 .ltk-upload {
-    color: #AAA;
+    color: #444;
 }
 .ltk-upload:hover {
-    color: #999;
+    color: #000;
 }
 
 .ltk-download {
@@ -209,12 +199,12 @@ a.ltk-action:hover {
 }
 
 .ltk-upload-button {
-  color: #0074BD;
+  color: #333;
   cursor: pointer;
 }
 
 .ltk-upload-button:hover {
-  color: #00348D;
+  color: #000;
 }
 
 .node-configuration {

@@ -242,10 +242,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
   public function downloadTriggered($lingotek_locale) {
-    // Necessary to fully implement the interface, but we don't do anything
-    // on LingotekNode objects, explicitly.
     if (module_exists('rules')) {
-      rules_invoke_event('lingotek_entity_ready', new EntityDrupalWrapper($this->entity_type, $this->entity));
+      rules_invoke_event('lingotek_entity_translation_ready', new EntityDrupalWrapper($this->entity_type, $this->entity));
     }
     return lingotek_entity_download_triggered($this->entity, $this->entity_type, $lingotek_locale);
   }
@@ -304,21 +302,19 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getDocumentName() {
-    if ($this->entity_type == 'node') {
-      return $this->getTitle();
-    } else {
-      return $this->getEntityType() . ' - ' . $this->getId();
-    }
+    return $this->getTitle();
+    //return $this->getEntityType() . ' - ' . $this->getId();
   }
-  
+
   public function getNote() {
     return $this->getTitle();
   }
   
   public function getUrl() {
+    global $base_url;
     if ($this->entity_type == 'node' || $this->entity_type == 'comment') {
       $hack = (object) array('language' => ''); // this causes the url function to not prefix the url with the current language the user is viewing the site in
-      return url("lingotek/view/" . $this->getEntityType() . '/' . $this->getId() . '/{locale}', array('absolute' => TRUE, 'alias' => TRUE, 'language' => $hack));
+      return $base_url . "/lingotek/view/" . $this->getEntityType() . '/' . $this->getId() . '/{locale}';
     }
     return '';
   }

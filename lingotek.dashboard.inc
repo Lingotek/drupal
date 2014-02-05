@@ -61,7 +61,7 @@ function lingotek_dashboard() {
  * Generates the code for the embedded Javascript dashboard.
  */
 function lingotek_get_dashboard_code() {
-  global $base_url;
+  global $base_url, $language;
 
   $output = '';
   $guid = lingotek_get_guid(); // 16 char string
@@ -85,6 +85,7 @@ function lingotek_get_dashboard_code() {
           "cms_type": "%s",
           "cms_version": "%s",
           "cms_tag": "%s",
+          "locale": "%s",
           "module_version": %s,
           "endpoint_url": "%s"
         };
@@ -114,6 +115,7 @@ function lingotek_get_dashboard_code() {
       'Drupal', // cms type
       VERSION, // drupal version
       variable_get('install_profile', ''), // CMS tag variable_get('lingotek_cms_tag','')
+      isset($language->lingotek_locale) ? $language->lingotek_locale : Lingotek::convertDrupal2Lingotek($language->language, FALSE), // locale requested,
       json_encode(lingotek_get_module_info('version')), // module version --- get all module info:  lingotek_get_module_info()
       $endpoint
   );
@@ -262,10 +264,10 @@ function lingotek_get_language_details($lingotek_locale_requested = NULL) {
   if (is_null($lingotek_locale_requested)) {
     $response = array(
       'languages' => $response,
-      'source' => array('types'=>$source_totals,'total'=>$source_total),
-      'target' => array('types'=>$target_totals,'total'=>$target_total),
+      'source' => array('types' => $source_totals, 'total' => $source_total),
+      'target' => array('types' => $target_totals, 'total' => $target_total),
       'count' => count($available_languages),
-      );
+    );
   }
   return $response;
 }

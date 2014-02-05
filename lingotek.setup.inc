@@ -291,7 +291,7 @@ function lingotek_setup_account_settings_form_submit($form, $form_state) {
   // Validate the Account
   list($success, $msg) = lingotek_list_community_integrations($login_id, $password);
   if ($success == FALSE) {
-    drupal_set_message($msg, 'error');
+    drupal_set_message(check_plain($msg), 'error');
   }
   else {
     // Login Successful:  Valid Account
@@ -318,7 +318,7 @@ function lingotek_community_select_form() {
 
   if ($success == FALSE) {
 
-    drupal_set_message($msg, 'error');
+    drupal_set_message(check_plain($msg), 'error');
     drupal_goto('admin/config/lingotek/account-settings'); // Shouldnt be here.  So something messed up.  Go back.
   }
   else {
@@ -794,7 +794,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
 
   $fs['values'] = lingotek_get_global_profile();
   $fs['values']['profile_id'] = LingotekSync::PROFILE_CUSTOM;
-  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'node');
+  $form = lingotek_admin_entity_bundle_profiles_form($form, $form_state, 'node');
   $content_defaults = lingotek_admin_profile_form($form, $fs);
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
   $form['lingotek_nodes_translation_method']['#weight'] = -3;
@@ -854,7 +854,7 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
  * Node Translation Settings - Form Submit
  */
 function lingotek_setup_node_translation_settings_form_submit($form, &$form_state) {
-  lingotek_admin_node_translation_settings_form_submit($form, $form_state);
+  lingotek_admin_entity_bundle_profiles_form_submit($form, $form_state);
   
   if ($form_state['values']['lingotek_nodes_translation_method'] == 'node' && $form_state['values']['lingotek_overwrite']) {
     $nodes = db_select('node', 'n')
@@ -889,7 +889,7 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
 }
 
 function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
-  $form = lingotek_admin_node_translation_settings_form($form, $form_state, 'comment', false);
+  $form = lingotek_admin_entity_bundle_profiles_form($form, $form_state, 'comment', FALSE);
 
   drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
 
@@ -913,7 +913,7 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
 }
 
 function lingotek_setup_comment_translation_settings_form_submit($form, &$form_state) {
-  lingotek_admin_node_translation_settings_form_submit($form, $form_state);
+  lingotek_admin_entity_bundle_profiles_form_submit($form, $form_state);
   drupal_goto(lingotek_get_entity_setup_path('comment', TRUE));
 }
 

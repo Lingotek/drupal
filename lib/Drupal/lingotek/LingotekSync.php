@@ -34,6 +34,17 @@ class LingotekSync {
     return FALSE;
   }
 
+  public static function getTargetStatusOptions() {
+    return array(
+      'STATUS_CURRENT' => self::STATUS_CURRENT,
+      'STATUS_EDITED' => self::STATUS_EDITED,
+      'STATUS_FAILED' => self::STATUS_FAILED,
+      'STATUS_PENDING' => self::STATUS_PENDING,
+      'STATUS_READY' => self::STATUS_READY,
+      'STATUS_TARGET' => self::STATUS_TARGET,
+    );
+  }
+
   public static function getAllTargetStatusNotCurrent($nid) {
     $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_key', 'value'))
@@ -76,39 +87,6 @@ class LingotekSync {
       $projects[] = $default_project_id;
     }
     return $projects;
-  }
-
-  // Add the node sync target language entries to the lingotek table.
-  public static function insertTargetEntriesForAllNodes($lingotek_locale) {
-    // select all nids where the node's source is the locale provided
-    $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-    $subquery = db_select('node', 'n')->fields('n', array('nid'));
-    $subquery->condition('language', $drupal_language_code);
-
-    $subquery2 = db_select('lingotek_entity_metadata', 'l2')->fields('l2', array('entity_id'));
-    $subquery2->condition('entity_key', 'target_sync_status_' . $lingotek_locale); //already has status
-
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
-    $query->condition('entity_type', 'node');
-    $query->condition('entity_key', 'node_sync_status');
-    $query->condition('entity_id', $subquery, 'NOT IN'); // exclude adding to nodes where this locale is the source
-    $query->condition('entity_id', $subquery2, 'NOT IN'); // exclude nodes that already have this language as a target
-    $result = $query->execute();
-
-    while ($record = $result->fetchAssoc()) {
-      $node_id = $record['entity_id'];
-      // If the Node is CURRENT or PENDING, then we just need to pull down the new translation (because the source will have been uploaded), so set the Node and Target to PENDING.
-      if ($record['value'] == self::STATUS_CURRENT) {
-        self::setTargetStatus('node', $node_id, $lingotek_locale, self::STATUS_PENDING);
-      }
-      else if ($record['value'] == self::STATUS_TARGET) { 
-        
-      }
-      else { // Otherwise, set it to EDITED
-        self::setNodeStatus($node_id, self::STATUS_EDITED);
-        self::setTargetStatus('node', $node_id, $lingotek_locale, self::STATUS_EDITED);
-      }
-    }
   }
 
   public static function resetTargetProgress($entity_type, $id) {
@@ -170,11 +148,6 @@ class LingotekSync {
       if(is_object($chunk))
         $chunk->setTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
     }
-  }
-
-  public static function insertTargetEntriesForAllDocs($lingotek_locale) {
-    self::insertTargetEntriesForAllNodes($lingotek_locale);
-    self::insertTargetEntriesForAllChunks($lingotek_locale);
   }
 
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes

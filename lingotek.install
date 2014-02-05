@@ -123,6 +123,12 @@ function lingotek_schema() {
       'entity_type',
       'entity_key',
     ),
+    'indexes' => array(
+      'idx_entity_id' => array('entity_id'),
+      'idx_entity_key' => array('entity_key'),
+      'idx_entity_type_and_key' => array('entity_type', 'entity_key'),
+      'idx_entity_key_and_value' => array('entity_key', 'value'),
+    ),
   );
 
   $schema['lingotek_config_metadata'] = array(
@@ -627,16 +633,18 @@ function lingotek_update_7502(&$sandbox) {
   $entity_ids = $result->fetchCol();
 
   // foreach entity, set the target statuses
-  $entities = entity_load('comment', $entity_ids);
-  foreach ($entities as $entity) {
-    $entity_id = $entity->cid;
-    foreach (array_keys(Lingotek::getLanguages()) as $lingotek_locale) {
-      if (Lingotek::convertDrupal2Lingotek($entity->language) != $lingotek_locale) { // only add status when not the source language
-        LingotekSync::setTargetStatus($entity_type, $entity_id, $lingotek_locale, LingotekSync::STATUS_CURRENT);
-      }
-      else { // remove status when source language equal to target language
-        lingotek_keystore_delete($entity_type, $entity_id, "target_sync_status_$lingotek_locale");
-        lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+  if (!empty($entity_ids)) {
+    $entities = entity_load('comment', $entity_ids);
+    foreach ($entities as $entity) {
+      $entity_id = $entity->cid;
+      foreach (array_keys(Lingotek::getLanguages()) as $lingotek_locale) {
+        if (Lingotek::convertDrupal2Lingotek($entity->language) != $lingotek_locale) { // only add status when not the source language
+          LingotekSync::setTargetStatus($entity_type, $entity_id, $lingotek_locale, LingotekSync::STATUS_CURRENT);
+        }
+        else { // remove status when source language equal to target language
+          lingotek_keystore_delete($entity_type, $entity_id, "target_sync_status_$lingotek_locale");
+          lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+        }
       }
     }
   }
@@ -649,10 +657,29 @@ function lingotek_update_7503(&$sandbox) {
   $profiles = variable_get('lingotek_entity_profiles');
   foreach ($profiles as $profile_key => $profile) {
     foreach ($profile as $bundle => $profile_id) {
-      if ($profile_id == LingotekSync::PROFILE_CUSTOM) {
+      if ($profile_id === LingotekSync::PROFILE_CUSTOM) {
         $profiles[$profile_key][$bundle] = LingotekSync::PROFILE_AUTOMATIC;
       }
     }
   }
   variable_set('lingotek_entity_profiles', $profiles);
+}
+
+/**
+ * Add indexes to the lingotek_entity_metadata table
+ */
+function lingotek_update_7504(&$sandbox) {
+  $table = 'lingotek_entity_metadata';
+  $indexes = array(
+    'idx_entity_id' => array('entity_id'),
+    'idx_entity_key' => array('entity_key'),
+    'idx_entity_type_and_key' => array('entity_type', 'entity_key'),
+    'idx_entity_key_and_value' => array('entity_key', 'value'),
+  );
+  foreach ($indexes as $index_name => $fields) {
+    if (!db_index_exists($table, $index_name)) {
+      db_add_index($table, $index_name, $fields);
+    }
+  }
+  return t('Added indexes to the lingotek entity metadata table.');
 }

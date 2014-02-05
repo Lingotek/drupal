@@ -903,10 +903,24 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
         ->fetchField();
   }
 
+
+/*
+ * Return all document IDs related to config translation
+ */
+
+  public static function getAllDocumentIds() {
+  $result = db_select('lingotek_config_metadata', 'c')
+      ->fields('c', array('value'))
+      ->condition('c.config_key', 'document_id')
+      ->execute();
+  return $result->fetchCol();
+}
+
+
   public function getDocumentName() {
-    return 'config - ' . $this->cid;
+    return $this->getTitle();
   }
-  
+
   public function getUrl() {
     return '';
   }
