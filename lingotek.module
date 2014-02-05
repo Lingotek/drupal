@@ -1468,7 +1468,7 @@ function lingotek_entity_download_triggered($entity, $entity_type, $lingotek_loc
 }
 
 /*
- * Download the translations from the Lingotek platform
+ * Download the translations from the Lingotek platform.
  *
  * This updates a node's content with translations for target languages
  *
@@ -1586,7 +1586,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
 }
 
 /*
- * Implements hook_help
+ * Implements hook_help().
  */
 
 function lingotek_help($path, $arg) {
@@ -1841,7 +1841,7 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
   }
 
   foreach ($entity as $key => $value) { // for each field in the entity
-    // if the given field either belongs to a field collection then normalize the languages
+    // if the given field belongs to a field collection then normalize the languages
     if (isset($field_collection_field_types[$key])) {
       continue;
     }
@@ -1973,7 +1973,7 @@ function lingotek_field_language_alter(&$display_language, $context) {
 }
 
 /*
- * Implements hook_entity_delete()
+ * Implements hook_entity_delete().
  *
  * This removes the lingotek data of an entity.
  */
@@ -1990,7 +1990,7 @@ function lingotek_entity_delete($entity, $type) {
 }
 
 /**
- * Implements hook_form_alter
+ * Implements hook_form_alter().
  */
 function lingotek_form_alter(&$form, &$form_state, $form_id) {
   if (substr($form_id, -9) == 'node_form') {
@@ -2054,7 +2054,7 @@ function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeab
 }
 
 /**
- * Implementation of hook_views_api
+ * Implements hook_views_api().
  */
 function lingotek_views_api() {
   return array(
@@ -2065,7 +2065,7 @@ function lingotek_views_api() {
 /**
  * Implements hook_cron().
  *
- * Updates the local cache of commonly used values.
+ * Update the local cache of commonly used values.
  */
 function lingotek_cron() {
 
@@ -2078,7 +2078,9 @@ function lingotek_cron() {
 }
 
 /*
- * Implements hook_l10n_update
+ * Implements hook_l10n_update().
+ *
+ * Reset the projects array in the l10n_update module.
  */
 function lingotek_l10n_update_projects_alter(&$projects) {
   if (variable_get('lingotek_use_translation_from_drupal', 0) != 1) {
@@ -2087,7 +2089,10 @@ function lingotek_l10n_update_projects_alter(&$projects) {
 }
 
 /*
- * Implements hook_node_view_alter
+ * Implements hook_node_view_alter().
+ *
+ * Remove the language label from the node view if the show-language variable
+ * is not set.
  */
 function lingotek_node_view_alter(&$info) {
   if (!variable_get('lingotek_show_language_label', 0)) {
@@ -2145,8 +2150,8 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       '#markup' => t('This is a target node for the language code: @lang. To change
         the Lingotek settings please edit the source node.', array('@lang' => $node->language)),
     );
-    
-    return $form; //this is a target node and thus should not have lingotek settings
+    // This is a target node and thus should not have lingotek settings.
+    return $form; 
   }
 
   if (isset($nids)) {
@@ -2155,22 +2160,21 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       '#default_value' => json_encode($nids),
     );
   }
-  
+
   $form['lingotek']['lingotek_note'] = array(
     '#type' => 'item',
     '#title' => $title,
     '#description' => t("This option allows you to replace the current workflow with a new workflow. This will result in the removal of any existing translations. You can optionally restore those translations to a phase in the new workflow."),
   );
-  
-  $api = LingotekApi::instance();
 
+  $api = LingotekApi::instance();
 
   if ($workflows = $api->listWorkflows()) {
     if (!isset($form_state['values']['workflow_id'])) {
       $keys = array_keys($workflows);
       $form_state['values']['workflow_id'] = $keys[0];
     }
-    
+
     $form['lingotek']['workflow_id'] = array(
       '#type' => 'select',
       '#title' => t('Workflow'),
@@ -2182,27 +2186,27 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
         'wrapper' => 'prefill-phases-div',
         'method' => 'replace',
         'effect' => 'fade',
-        ),
+      ),
       '#prefix' => '<div id="prefill-phases-div">',
     );
     if (isset($node)) {
-     $form['lingotek']['workflow_id']['#default_value'] = $node->lingotek['workflow_id'];
+      $form['lingotek']['workflow_id']['#default_value'] = $node->lingotek['workflow_id'];
     }
-    
+
     $form['lingotek']['prefill_phases_checkbox'] = array(
       '#type' => 'checkbox',
       '#title' => t('Restore to a phase in the new workflow'),
       '#default_value' => TRUE,
       '#description' => t('Prefill the new workflow with translations from the previous workflow'),
     );
-    
+
     $form['lingotek']['prefill_phase_select'] = array(
       '#title' => t("Desired Prefill Phase"),
       '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
       '#type' => 'select',
       '#states' => array(
-          'invisible' => array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => FALSE)),
-        ),
+        'invisible' => array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => FALSE)),
+      ),
       '#suffix' => '</div>',
     );
     if (isset($form_state['values']['lingotek']['workflow_id']) && $form_state['values']['lingotek']['workflow_id'] != NULL) {
@@ -2225,11 +2229,22 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
   return $form;
 }
 
+/**
+ * Workflow form callback.
+ *
+ * @param array $form
+ *   the form loaded
+ * @param array $form_state
+ *   the form state (content)
+ *
+ * @return string
+ *   a workflow UUID
+ */
 function lingotek_get_change_workflow_form_callback($form, $form_state) {
-  if (isset($form_state['values']['lingotek']['prefill_phases_checkbox']) 
+  if (isset($form_state['values']['lingotek']['prefill_phases_checkbox'])
       && $form_state['values']['lingotek']['prefill_phases_checkbox']) {
     return array(
-      $form['lingotek']['prefill_phase_select'], 
+      $form['lingotek']['prefill_phase_select'],
       $form['lingotek']['prefill_phases_checkbox'],
       $form['lingotek']['workflow_id'],
     );
@@ -2237,6 +2252,15 @@ function lingotek_get_change_workflow_form_callback($form, $form_state) {
   return $form['lingotek']['workflow_id'];
 }
 
+/**
+ * Get project phases by workflow ID.
+ *
+ * @param string $workflow_id
+ *   the workflow UUID
+ *
+ * @return array
+ *   an associative array of phases for the given workflow
+ */
 function lingotek_get_phases_by_workflow_id($workflow_id) {
   $api = LingotekApi::instance();
   $response = $api->request('getWorkflow', array('id' => $workflow_id));
@@ -2252,15 +2276,20 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
   return $phases;
 }
 
-/*
- * Implements hook_menu_link_insert
+/**
+ * Implements hook_menu_link_insert().
+ *
+ * @see lingotek_menu_link_update()
  */
 function lingotek_menu_link_insert($link) {
   lingotek_menu_link_update($link);
 }
 
-/*
- * Implements hook_menu_link_update
+/**
+ * Implements hook_menu_link_update().
+ *
+ * Update the menu link's language to be language neutral, if desired,
+ * otherwise set it to be the same as it's node.
  */
 function lingotek_menu_link_update($link) {
   if (lingotek_translate_menu_link($link)) {
@@ -2268,17 +2297,27 @@ function lingotek_menu_link_update($link) {
   }
   else {
     if (!strstr($link['link_path'], '/')) {
-      return; // no link language to set!
+      // No link language to set!
+      return;
     }
     list($path, $node_id) = explode('/', $link['link_path']);
-    if ($node_id && (int)$node_id) {
-      // get the node's language
+    if ($node_id && (int) $node_id) {
+      // Get the node's language.
       $node = node_load($node_id);
       lingotek_set_menu_link_language($link['mlid'], $node->language);
     }
   }
 }
 
+/**
+ * Determine whether the menu link should be translated.
+ *
+ * @param object $link
+ *   the link object to be checked
+ *
+ * @return bool
+ *   TRUE or FALSE
+ */
 function lingotek_translate_menu_link($link) {
   if (isset($link['lingotek_translate']) && $link['lingotek_translate'] == LANGUAGE_NONE) {
     return TRUE;
@@ -2286,6 +2325,14 @@ function lingotek_translate_menu_link($link) {
   return FALSE;
 }
 
+/**
+ * Set a menu link's language.
+ *
+ * @param int $link_id
+ *   the id of the menu link to be updated
+ * @param string $langcode
+ *   the two-digit language code to be set for the menu link
+ */
 function lingotek_set_menu_link_language($link_id, $langcode) {
   $updated = db_update('menu_links')
       ->fields(array('language' => $langcode))
