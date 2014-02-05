@@ -2,7 +2,7 @@ name = "Lingotek Translation"
 description = "Extends Drupal's multilingual features by integrating with the Lingotek Translation Management System."
 package = Multilingual
 core = "7.x"
-php = "5.2"
+php = "5.3"
 configure = admin/config/lingotek/setup
 
 dependencies[] = locale
