@@ -1876,12 +1876,26 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
             $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
           }
         }
-        else { // update
-          if (array_key_exists($host_language, $value) && !isset($value[$host_language][0]['safe_value'])) {
-            $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
+        else {
+          // Update by comparing changes with the original entity for the host
+          // language and language neutral.  Save the one that changed.
+          if (isset($entity->original) && isset($entity->original->{$key})) {
+            $original_value = $entity->original->{$key};
+            if (array_key_exists($host_language, $value) && (!array_key_exists($host_language, $original_value) || $value[$host_language] != $original_value[$host_language])) {
+              $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
+            }
+            elseif (array_key_exists(LANGUAGE_NONE, $value) && (!array_key_exists(LANGUAGE_NONE, $original_value) || $value[LANGUAGE_NONE] != $original_value[LANGUAGE_NONE])) {
+              $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
+            }
           }
-          elseif (array_key_exists(LANGUAGE_NONE, $value) && !isset($value[LANGUAGE_NONE][0]['safe_value'])) {
-            $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
+          else {
+            // Use the most common way if no original entity exists.
+            if (array_key_exists($host_language, $value) && !isset($value[$host_language][0]['safe_value'])) {
+              $entity->{$key}[LANGUAGE_NONE] = $value[$host_language];
+            }
+            elseif (array_key_exists(LANGUAGE_NONE, $value) && !isset($value[LANGUAGE_NONE][0]['safe_value'])) {
+              $entity->{$key}[$host_language] = $value[LANGUAGE_NONE];
+            }
           }
         }
       }
