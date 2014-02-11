@@ -1566,15 +1566,21 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#submit' => array('lingotek_cleanup_utility')
   );
 
+  $btn_identify_translations = array(
+    '#type' => 'submit',
+    '#value' => t('Update Statuses'),
+    '#submit' => array('lingotek_batch_identify_translations')
+  );
+
   $btn_callback_url_update = array(
     '#type' => 'submit',
-    '#value' => t('Update'),
+    '#value' => t('Update URL'),
     '#submit' => array('lingotek_notify_url_update')
   );
 
   $btn_field_collection_update = array(
     '#type' => 'submit',
-    '#value' => t('Update'),
+    '#value' => t('Update Fields'),
     '#submit' => array('lingotek_cleanup_field_collection_fields')
   );
 
@@ -1584,12 +1590,13 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#submit' => array('lingotek_refresh_api_cache')
   );
 
-  // Start: Not sure why, but without these below, the table button do not work properly
-  $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
+  // Start: Not sure why, but without these below, the table buttons do not work properly
+  $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_field_collection_update, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_identify_translations, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
 
   $rows = array(
@@ -1631,13 +1638,26 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   }
 
   $rows[] = array(
-      array('data' => array(
-          '#type' => 'markup',
-          '#prefix' => t('Cleanup and Identify Translatable Content') . '<div class="description">',
-          '#markup' => t("The cleanup utility identifies translatable content and processes all existing data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
-          '#suffix' => '</div>'
-        )),
-      array('data' => $btn_cleanup),
+    array('data' => array(
+        '#type' => 'markup',
+        '#prefix' => t('Cleanup Utility') . '<div class="description">',
+        '#markup' => t("The cleanup utility identifies translatable content and processes all existing data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
+        '#suffix' => '</div>'
+      )),
+    array('data' => $btn_cleanup),
+  );
+  $rows[] = array(
+    array('data' => array(
+        '#type' => 'markup',
+        '#prefix' => t('Identify  and Update Statuses for Existing Translations') . '<div class="description">',
+        '#markup' => t("This utility identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>."),
+        '#suffix' => '</div>'
+      )),
+    array('data' => $btn_identify_translations),
+      /* array('data' => array(
+        '#type' => 'markup',
+        '#markup' => l(t('Update'), 'lingotek/utility/batch_identify_translations', array('attributes' => array('class' => 'button')))
+        )), */
   );
   $rows[] = array(
       array('data' => array(

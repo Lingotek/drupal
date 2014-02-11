@@ -943,9 +943,13 @@ function lingotek_setup_additional_translation_settings_form_submit($form, &$for
   
   lingotek_setup_allowed_translation_formats();
   $operations = array();
-  $cleanup_batch = lingotek_cleanup_utility(FALSE, FALSE); // return the batch, rather than autoset to execute
-  if ($cleanup_batch && isset($cleanup_batch['operations'])) {
-    $operations = array_merge($operations, $cleanup_batch['operations']);
+  $batch = lingotek_cleanup_utility(FALSE, FALSE); // return the batch, rather than autoset to execute
+  if ($batch && isset($batch['operations'])) {
+    $operations = array_merge($operations, $batch['operations']);
+  }
+  $batch = lingotek_batch_identify_translations(FALSE);
+  if ($batch && isset($batch['operations'])) {
+    $operations = array_merge($operations, $batch['operations']);
   }
   $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path('additional');
   

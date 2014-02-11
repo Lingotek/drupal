@@ -97,6 +97,16 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK
   );
 
+  $items['lingotek/utility/%'] = array(
+    'title' => '',
+    'file' => 'lingotek.util.inc',
+    'access arguments' => array('administer lingotek'),
+    'page arguments' => array(2),
+    'page callback' => 'lingotek_utility_router',
+    'weight' => 1,
+    'type' => MENU_CALLBACK
+  );
+
   $items['node/%node/lingotek_dev'] = array(
     'title' => 'Lingotek Developer Tools',
     'access callback' => 'lingotek_access_dev_tools', // Enterprise Only Function

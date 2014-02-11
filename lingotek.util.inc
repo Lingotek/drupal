@@ -44,7 +44,7 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
  *  in the database.  Returns FALSE if no value is found.
  */
 
-function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "") {
+function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $update_on_dup = TRUE) {
   if ($entity_id == 'all') {
     $lingo_node = array();
     $result = db_select('lingotek_entity_metadata', 'n')
@@ -102,13 +102,17 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "") {
         db_escape_field('value') => $value,
       );
 
-      if (lingotek_keystore($entity_type, $entity_id, $key) === FALSE) { //Insert
+      $existing_value = lingotek_keystore($entity_type, $entity_id, $key);
+      if ($existing_value === FALSE) { //Insert
         drupal_write_record('lingotek_entity_metadata', $row);
-        return "$entity_id : $key => $value INSERTED";
+        return "$entity_id : $key => $value (INSERTED)";
       }
-      else { //Update
+      elseif ($update_on_dup) { // key exists -> update
         drupal_write_record('lingotek_entity_metadata', $row, array(db_escape_field('entity_type'), db_escape_field('entity_id'), db_escape_field('entity_key')));
-        return "$entity_id : $key => $value UPDATED";
+        return "$entity_id : $key => $value (UPDATED)";
+      }
+      else { // key exists -> ignore (ignore on duplicate key)
+        return "$entity_id : $key => $existing_value (IGNORED)";
       }
     }
   }
@@ -140,7 +144,7 @@ function lingotek_keystore_delete($entity_type, $id, $key) {
 /**
  * Helper function to delete a specified variable from multiple nodes in the Lingotek table
  *
- * @param int array $nids
+ * @param int array $entity_ids
  *    array of node ids for the variable that needs to be deleted
  *    if a single nid is passed in, it will be converted to an array before processing
  *
@@ -151,15 +155,15 @@ function lingotek_keystore_delete($entity_type, $id, $key) {
  *    additional condition checking (i.e. 'LIKE', '<' '=' '>', etc...)
  *    defaults to '='
  */
-function lingotek_keystore_delete_multiple($entity_type, $nids = array(), $lingokey, $condition = '=') {
-  if (!is_array($nids)) {
-    $nids = array($nids);
+function lingotek_keystore_delete_multiple($entity_type, $entity_ids, $lingokey, $condition = '=') {
+  if (!is_array($entity_ids)) {
+    $entity_ids = array($entity_ids);
   }
 
   $query = db_select('lingotek_entity_metadata', 'l') // Make sure that the variable exists in the table for every input nid
       ->fields('l', array('entity_id'))
       ->condition('entity_type', $entity_type)
-      ->condition('entity_id', $nids, 'IN')
+      ->condition('entity_id', $entity_ids, 'IN')
       ->condition('entity_key', $lingokey, $condition);
   $delete_nids = $query->execute()->fetchCol();
 
@@ -1390,37 +1394,44 @@ function lingotek_list_entities_with_language($entity_type, $bundle, $language) 
   $ids = array();
   $fields = field_info_instances($entity_type, $bundle);
   foreach ($fields as $name => $field_info) {
-    $ids = $ids + lingotek_list_entities_with_field_in_language($entity_type, $bundle, $name, $language);
+    $ids = $ids + lingotek_list_entities_with_field_in_language_by_bundle($entity_type, $bundle, $name, $language);
   }
 
   return $ids;
 }
 
-function lingotek_list_nodes_translated_in_language($bundle, $language) {
-
+function lingotek_list_nodes_translated_in_language($language, $bundle = NULL) {
   $query = db_select('node')
-      ->fields('node', array('tnid'))
-      ->condition('node.type', $bundle)
-      ->condition('node.tnid', 0, '<>')
+      ->fields('node', array('tnid'));
+  if (!is_null($bundle)) {
+    $query->condition('node.type', $bundle);
+  }
+  $query->condition('node.tnid', 0, '<>')
       ->condition('language', $language)
-      ->execute();
-
-  $nodes = $query->fetchCol();
+      ->where('node.nid != node.tnid');
+  $nodes = $query->execute()->fetchCol();
 
   return $nodes;
 }
 
-function lingotek_list_entities_with_field_in_language($entity_type, $bundle, $field, $language) {
+function lingotek_list_entities_with_field_in_language_by_bundle($entity_type, $bundle, $field, $language, $exclude_source = TRUE) {
   $query = new EntityFieldQuery;
-
-  $entities = $query
-      ->entityCondition('entity_type', $entity_type)
-      ->entityCondition('bundle', $bundle)
-      ->entityCondition('deleted', 0)
-      ->fieldLanguageCondition($field, $language)
-      ->execute();
+  $query->entityCondition('entity_type', $entity_type);
+  if (!is_null($bundle)) {
+    $query->entityCondition('bundle', $bundle);
+  }
+  if ($exclude_source) {
+    $query->propertyCondition('language', $language, "!=");
+  }
+  $query->entityCondition('deleted', 0)
+      ->fieldLanguageCondition($field, $language);
+  $entities = $query->execute();
 
   return isset($entities['node']) ? array_keys($entities['node']) : array();
+}
+
+function lingotek_list_entities_with_field_in_language($entity_type, $field, $language, $exclude_source = TRUE) {
+  return lingotek_list_entities_with_field_in_language_by_bundle($entity_type, NULL, $field, $language, $exclude_source);
 }
 
 /**
@@ -1731,5 +1742,79 @@ function lingotek_has_unconventional_fc_translations() {
       return $unconventional_fc;
     }
     return FALSE;
+  }
+}
+
+/**
+ * Batch Create: Lingotek Identify Content - create informative lingotek_entity_ data (in lingotek table) for pre-existing content
+ */
+function lingotek_batch_identify_translations($autoset_batch = TRUE) {
+  LingotekLog::trace(__METHOD__);
+
+  $operations = array();
+  $existing_languages = language_list();
+  $entity_types = lingotek_managed_entity_types();
+
+  // I. Identify field-based translations and set statuses
+  $fields_to_test_for_translations = array('body', 'comment_body'); // tables to test for pre-existing translations
+  // if a translation for a specific language exists in this table then add a translation status in the lingotek table
+  foreach ($entity_types as $entity_type => $entity_type_details) {
+    foreach ($existing_languages as $langcode => $language_details) {
+      $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
+      foreach ($fields_to_test_for_translations as $field) {
+        // exclude when language is the source of the node
+        $entity_ids = lingotek_list_entities_with_field_in_language($entity_type, $field, $langcode, TRUE);
+        foreach ($entity_ids as $entity_id) {
+          $operations[] = array('lingotek_batch_keystore_worker', array($entity_type, $entity_id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT, FALSE));
+        }
+      }
+    }
+  }
+
+  // II. Identify node-based translations and set statuses
+  $entity_type = 'node';
+  foreach ($existing_languages as $langcode => $language_details) {
+    $entity_ids = lingotek_list_nodes_translated_in_language($langcode);
+    $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
+    foreach ($entity_ids as $entity_id) {
+      $operations[] = array('lingotek_batch_keystore_worker', array($entity_type, $entity_id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT, FALSE));
+    }
+  }
+
+  $batch = array(
+    'title' => t('Identifying Existing Translations'),
+    'operations' => $operations,
+    'finished' => 'lingotek_batch_identify_translations_finished'
+  );
+
+  if ($autoset_batch) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+    batch_set($batch); //batch_process('<front>');
+    batch_process('admin/settings/lingotek/settings');
+    //batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+  }
+  else {
+    return $batch;
+  }
+}
+
+function lingotek_batch_identify_translations_finished($success, $results, $operations) {
+  $status_added = 0;
+  foreach ($results as $result) {
+    if (strpos($result, 'INSERT') !== FALSE) {
+      $status_added++;
+    }
+  }
+  $message = format_plural(count($results), t('Identified just one existing translation.'), t('Identified @count existing translations.')) . ' ';
+  $message .= $status_added > 0 ? format_plural($status_added, t('One translation status was added.'), t('@count translation statuses were added.')) : t('Translation statuses were already present.');
+  drupal_set_message($message);
+}
+
+function lingotek_utility_router($method, $params = array()) {
+  $callback = "lingotek_" . $method;
+  if (is_callable($callback)) {
+    call_user_func($callback);
+  }
+  else {
+    return drupal_set_message("Utility not callable: " . $callback, 'error');
   }
 }

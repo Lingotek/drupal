@@ -484,5 +484,12 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
   $redirect = 'admin/settings/lingotek/manage/' . $entity_type;
 
   batch_set($batch);
-  batch_process($redirect);
+}
+
+/**
+ * Batch worker function for lingotek_keystore operations
+ */
+function lingotek_batch_keystore_worker($entity_type, $entity_id, $key, $value, $update_on_dup, &$context) {
+  $result = lingotek_keystore($entity_type, $entity_id, $key, $value, $update_on_dup);
+  $context['results'][] = $result;
 }
