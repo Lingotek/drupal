@@ -6,7 +6,6 @@ php = "5.3"
 configure = admin/config/lingotek/setup
 
 dependencies[] = locale
-dependencies[] = translation
 dependencies[] = field_ui
 dependencies[] = title
 dependencies[] = block
@@ -23,7 +22,6 @@ dependencies[] = i18n_translation
 dependencies[] = i18n_variable
 dependencies[] = views
 dependencies[] = i18nviews
-dependencies[] = i18n_node
 dependencies[] = l10n_update
 dependencies[] = ctools
 dependencies[] = potx

@@ -1818,3 +1818,15 @@ function lingotek_utility_router($method, $params = array()) {
     return drupal_set_message("Utility not callable: " . $callback, 'error');
   }
 }
+
+/**
+ * Determine whether site has the required dependencies for node-based translation
+ * 
+ * @return boolean
+ */
+function lingotek_node_based_trans_ready() {
+  if (module_exists('translation') && module_exists('i18n_node')) {
+    return TRUE;
+  }
+  return FALSE;
+}

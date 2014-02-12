@@ -563,7 +563,7 @@ function lingotek_entity_translation_node_tab_access() {
       return entity_translation_tab_access('node', $node);
     }
 
-    if (entity_translation_node('node', $node) && module_exists('translation')) {
+    if (entity_translation_node('node', $node) && lingotek_node_based_trans_ready()) {
       // This node is set up to use the Translation module's
       // node translation (as opposed to Entity Translation).
       return _translation_tab_access($node);
@@ -898,6 +898,11 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#markup' => '<div id="edit-lingotek-content" class="form-wrapper">',
   );
 
+  $content_translation_note = '';
+  if (!lingotek_node_based_trans_ready()) {
+    $content_translation_note = t("Note: Requires Content Translation module (translation) and Node Translation module (i18n_node).");
+  }
+  
   if (!$bulk_grid) {
     $form['lingotek']['lingotek_nodes_translation_method'] = array(
       '#type' => 'radios',
@@ -910,9 +915,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
         '#description' => t('A newer and recommended method. It appears newer versions of Drupal will use this method.'),
       ),
       'node' => array(
-        '#description' => t('The classical method. Use for backwards compatibility.'),
+        '#description' => t('The classical method. Use for backwards compatibility. <i>@note</i>', array('@note' => $content_translation_note)),
       ),
-      '#disabled' => isset($node->nid),
+      '#disabled' => isset($node->nid) || !lingotek_node_based_trans_ready(),
       '#default_value' => $node->lingotek['lingotek_nodes_translation_method'],
     );
   }

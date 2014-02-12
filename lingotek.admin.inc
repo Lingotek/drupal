@@ -1381,6 +1381,11 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#type' => 'markup',
     '#markup' => '<h3>' . t('Profile settings impacting only new nodes') . '</h3><hr />',
   );
+
+  $content_translation_note = '';
+  if (!lingotek_node_based_trans_ready()) {
+    $content_translation_note = t("Note: Requires Content Translation module (translation) and Node Translation module (i18n_node).");
+  }
   
   $form['defaults']['lingotek_nodes_translation_method'] = array(
     '#type' => 'radios',
@@ -1393,10 +1398,11 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#description' => t('A newer and recommended method. Newer versions of Drupal are expected to use this method.'),
     ),
     'node' => array(
-      '#description' => t('The classical method. Use for backwards compatibility.'),
+      '#description' => t('The classical method. Use for backwards compatibility. <i>@note</i>', array('@note' => $content_translation_note)),
     ),
 
     '#default_value' => isset($form_state['values']['lingotek_nodes_translation_method']) ? $form_state['values']['lingotek_nodes_translation_method'] : 'field',
+    '#disabled' => lingotek_node_based_trans_ready() ? FALSE : TRUE,
   );
 
   // Projects
