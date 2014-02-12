@@ -484,6 +484,7 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
   $redirect = 'admin/settings/lingotek/manage/' . $entity_type;
 
   batch_set($batch);
+  batch_process($redirect);
 }
 
 /**
