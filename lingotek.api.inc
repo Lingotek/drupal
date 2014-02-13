@@ -206,7 +206,8 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
       if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
         module_load_include('inc', 'pathauto');
         $uri = entity_uri('node', $entity);
-        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $entity), $entity->type, $drupal_language_code);
+        $entity_unchanged = entity_load_unchanged('node', $id);
+        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $entity_unchanged), $entity->type, $drupal_language_code);
       }
     }
     $last_tag = $tag;

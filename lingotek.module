@@ -946,7 +946,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#title' => t('URL Alias Translation'),
       '#default_value' => $node->lingotek['url_alias_translation'],
       '#options' => lingotek_get_url_alias_translations(),
-      '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, define a path pattern, and check "Enable Lingotek Translation" for the Title field.'),
+      '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern.'),
     );
   }
 
