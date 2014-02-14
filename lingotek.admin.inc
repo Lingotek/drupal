@@ -1590,6 +1590,12 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#submit' => array('lingotek_cleanup_field_collection_fields')
   );
 
+  $btn_message_types_update = array(
+    '#type' => 'submit',
+    '#value' => t('Update Message Types'),
+    '#submit' => array('lingotek_cleanup_message_types')
+  );
+
   $btn_callback_refresh_api_cache = array(
     '#type' => 'submit',
     '#value' => t('Refresh'),
@@ -1600,6 +1606,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_field_collection_update, array('#attributes' => array('style' => 'display: none;')));
+  $form['utilities'][] = array_merge($btn_message_types_update, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_identify_translations, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
@@ -1640,6 +1647,18 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
           '#suffix' => '</div>'
         )),
       array('data' => $btn_field_collection_update)
+    );
+  }
+
+  if (module_exists('message')) {
+    $rows[] = array(
+      array('data' => array(
+          '#type' => 'markup',
+          '#prefix' => t('Set Languages for Message Types') . '<div class="description">',
+          '#markup' => t("This utility sets all empty and undefined languages associated with the Message API module to be the site-default language."),
+          '#suffix' => '</div>'
+        )),
+      array('data' => $btn_message_types_update)
     );
   }
 

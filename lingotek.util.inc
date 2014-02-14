@@ -1702,10 +1702,9 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   return $filtered_entities;
 }
 
-/*
+/**
  * Clean up field-collection fields
  */
-
 function lingotek_cleanup_field_collection_fields() {
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
 
@@ -1719,6 +1718,22 @@ function lingotek_cleanup_field_collection_fields() {
     db_query("DELETE FROM {field_revision_" . $fc_field_name . "} WHERE language <> '" . LANGUAGE_NONE . "'");
   }
   drupal_set_message(t('Updated Field-Collection fields.'));
+}
+
+/**
+ * Set all message types with empty or undefined languages to be the site's default language
+ */
+function lingotek_cleanup_message_types() {
+  $default_lang = lingotek_get_source_language();
+  $message_types = message_type_load();
+  foreach ($message_types as $mt) {
+    if (!($mt->language) || $mt->language == LANGUAGE_NONE) {
+      $mte = entity_load_single('message_type', $mt->id);
+      $mte->language = $default_lang;
+      message_type_save($mte);
+    }
+  }
+  drupal_set_message(t('Updated missing and undefined languages for Message Types.'));
 }
 
 function lingotek_has_unconventional_fc_translations() {
