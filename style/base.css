@@ -145,6 +145,14 @@ input.lingotek-content-settings-table.form-checkbox {
   background-color:#999;
 }
 
+.language-icon.target-untracked {
+  color:#aaa !important;
+  background-color:inherit;
+  border-width: 1px;
+  border-color: #ccc !important;
+  border-style: solid;
+}
+
 .ltk-complete-check {
     color: green;
     font-size: 150%;

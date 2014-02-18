@@ -239,7 +239,8 @@ function lingotek_get_language_details($lingotek_locale_requested = NULL) {
     $lingotek_locale = $l->lingotek_locale;
     $source_counts = LingotekSync::getSourceCounts($lingotek_locale);
     $source_count = $source_counts['total']; //unset($source_counts['total']);
-    $target_counts = LingotekSync::getCountsByStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+    $target_statuses_to_include = array(LingotekSync::STATUS_CURRENT);
+    $target_counts = LingotekSync::getCountsByStatus($target_statuses_to_include, $lingotek_locale);
     $target_count = $target_counts['total'];
 
     $target_status = array(

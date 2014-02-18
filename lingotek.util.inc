@@ -311,7 +311,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     } */
 
   //URL Alias related to the page:
-  $url_alias_translation = $entity->lingotek['url_alias_translation'];
+  $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
   if ($url_alias_translation == 1) {
     $conditions = array('source' => 'node/' . $entity->nid);
     if ($entity->language != LANGUAGE_NONE) {
@@ -1780,7 +1780,7 @@ function lingotek_batch_identify_translations($autoset_batch = TRUE) {
         // exclude when language is the source of the node
         $entity_ids = lingotek_list_entities_with_field_in_language($entity_type, $field, $langcode, TRUE);
         foreach ($entity_ids as $entity_id) {
-          $operations[] = array('lingotek_batch_keystore_worker', array($entity_type, $entity_id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT, FALSE));
+          $operations[] = array('lingotek_batch_keystore_worker', array($entity_type, $entity_id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_UNTRACKED, FALSE));
         }
       }
     }
@@ -1841,6 +1841,18 @@ function lingotek_utility_router($method, $params = array()) {
  */
 function lingotek_node_based_trans_ready() {
   if (module_exists('translation') && module_exists('i18n_node')) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+function lingotek_entity_changed($entity_type, $entity, $entity_id) {
+  $xml = lingotek_entity_xml_body($entity_type, $entity);
+  $hash = md5($xml);
+  $oldhash = lingotek_keystore($entity_type, $entity_id, 'hash');
+
+  if (!$oldhash || strcmp($hash, $oldhash)) {
+    lingotek_keystore($entity_type, $entity_id, 'hash', $hash);
     return TRUE;
   }
   return FALSE;

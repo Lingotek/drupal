@@ -1131,6 +1131,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='READY')", 't_ready');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='EDITED')", 't_edited');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 't_untracked');
 
   $filters = isset($_SESSION['grid_filters']) ? $_SESSION['grid_filters'] : array();
 
@@ -1159,6 +1160,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   // Last Uploaded Timestamp
   $query->leftJoin('lingotek_entity_metadata', 'lingo_last_uploaded', 'lingo_last_uploaded.entity_type =\'' . $entity_type . '\' AND lingo_last_uploaded.entity_id = ' . $eid . ' and lingo_last_uploaded.entity_key = \'last_uploaded\'');
   $query->addField('lingo_last_uploaded', 'value', 'last_uploaded');
+
+  // Any Upload Errors
+  $query->leftJoin('lingotek_entity_metadata', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
+  $query->addField('lingo_last_sync_error', 'value', 'last_sync_error');
 
   // Translation Progress Percent (Average of all target workflow progresses)
 //    $query->leftJoin('lingotek_entity_metadata', 'lingo_translation_progress_percent', 'lingo_translation_progress_percent.nid = ' . $eid . ' and lingo_translation_progress_percent.entity_key = \'translation_progress\'');
@@ -1429,7 +1434,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
           $icon = '<i class="fa fa-square" title="' . t('Upload to Lingotek in progress') . '"></i>';
           break;
         case LingotekSync::STATUS_FAILED:
-          $icon = '<i class="fa fa-warning" style="color: darkorange;" title="' . t('Lingotek processing failed') . '"></i>';
+          $error = $row->last_sync_error ? $row->last_sync_error : '';
+          $icon = '<i class="fa fa-warning" style="color: darkorange;" title="' . t('Lingotek processing failed @error', array('@error' => ': ' . $error)) . '"></i>';
           break;
         default:
           $icon = '<i class="fa fa-question-circle" style="color: darkorange;" title="' . t('Unknown upload status') . ': ' . check_plain($row->upload_status) . '"></i>';
@@ -1440,7 +1446,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
       $icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
     }
 
-    $list_statuses = array('pending', 'ready', 'current', 'edited');
+    $list_statuses = array('pending', 'ready', 'current', 'edited', 'untracked');
 
     $locales = array();
     $statuses = array();
@@ -1457,8 +1463,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
     array_multisort($locales, SORT_ASC, $statuses);
 
-    $translations = ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) ? '' // hide translation statuses when profile is disabled
-                  : lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, TRUE); // show translation statuses
+    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, TRUE); // show translation statuses
 
     $configuration = '';
 
@@ -1497,8 +1502,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
       $source .= ($row->language == 'und' ? t('Language Neutral') : t($languages[$row->language]->name));
     }
     $source .= '</span>';
-
-    $needs_upload = ($row->upload_status == LingotekSync::STATUS_EDITED || empty($row->upload_status)) && $row->lingotek['profile'] != LingotekSync::PROFILE_DISABLED;
+    $linked_statuses = array(LingotekSync::STATUS_EDITED, LingotekSync::STATUS_FAILED);
+    $needs_upload = (in_array($row->upload_status, $linked_statuses) || empty($row->upload_status)) && $row->lingotek['profile'] != LingotekSync::PROFILE_DISABLED;
     if ($needs_upload) { // add link for upload
       $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
     }
@@ -1567,16 +1572,20 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     LingotekSync::STATUS_PENDING => t('In Progress'),
     LingotekSync::STATUS_READY => t('Ready to Download'),
     LingotekSync::STATUS_CURRENT => t('Current'),
-    LingotekSync::STATUS_EDITED => t('Source needs to be uploaded'),
+    LingotekSync::STATUS_EDITED => t('Not Current'),
+    LingotekSync::STATUS_UNTRACKED => t('Untracked'),
     ''
   );
   $default_link = 'lingotek/workbench/' . $entity_type . '/' . $entity_id . '/';
   $manual_link = $entity_type . '/' . $entity_id . '/lingotek_pm/';
+  $untracked_link = 'lingotek/view/' . $entity_type . '/' . $entity_id . '/';
+
   $link_map = array(
     LingotekSync::STATUS_PENDING => $default_link,
     LingotekSync::STATUS_READY => $default_link,
     LingotekSync::STATUS_CURRENT => $default_link,
     LingotekSync::STATUS_EDITED => $manual_link,
+    LingotekSync::STATUS_UNTRACKED => $untracked_link,
   );
 
   $lingotek_languages = Lingotek::getLanguages();

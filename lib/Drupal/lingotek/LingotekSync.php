@@ -16,6 +16,7 @@ class LingotekSync {
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek (used for node storage)
+  const STATUS_UNTRACKED = 'UNTRACKED'; // A translation was discovered that is not currently managed by Lingotek
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
   const PROFILE_AUTOMATIC = 0;
@@ -42,6 +43,7 @@ class LingotekSync {
       'STATUS_PENDING' => self::STATUS_PENDING,
       'STATUS_READY' => self::STATUS_READY,
       'STATUS_TARGET' => self::STATUS_TARGET,
+      'STATUS_UNTRACKED' => self::STATUS_UNTRACKED,
     );
   }
 
@@ -348,7 +350,21 @@ class LingotekSync {
     return $response;
   }
 
+  /**
+   * Get a count of translation targets by entity and status.
+   *
+   * @param mixed $status
+   *   a string or array of strings containing the desired status(es) to count
+   * @param string $lingotek_locale
+   *   the desired locale to count
+   * @param string $entity_type
+   *   the desired entity type to count
+   * @return array
+   */
   public static function getEntityTargetCountByStatus($status, $lingotek_locale, $entity_type = NULL) {
+    if (!is_array($status)) {
+      $status = array(-1, $status);
+    }
     $managed_entities = lingotek_managed_entity_types();
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
     $target_prefix = 'target_sync_status_';
@@ -376,13 +392,16 @@ class LingotekSync {
       }
 
       // exclude disabled nodes (including those that have disabled bundles)
-      $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
-      if(!empty($disabled_entity_ids)){
+      $disabled_entities = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
+      if (!empty($disabled_entities)) {
+        $disabled_entity_ids = array();
+        array_walk($disabled_entities, function($a) use (&$disabled_entity_ids) {
+          $disabled_entity_ids[] = $a['id'];
+        });
         $query->condition("t.".$properties['entity keys']['id'], $disabled_entity_ids, "NOT IN"); //exclude disabled entities
       }
 
-      $query->condition('l.value', $status);
-
+      $query->condition('l.value', $status, 'IN');
       $count = $query->countQuery()->execute()->fetchField();
       $total_count += $count;
     }

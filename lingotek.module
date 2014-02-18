@@ -1044,6 +1044,15 @@ function lingotek_entity_save($entity, $entity_type) {
     else {
       lingotek_keystore_delete($entity_type, $id, 'profile');
     }
+    // If the hash changed, handle target statuses
+    if (lingotek_entity_changed($entity_type, $entity, $id)) {
+      if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+        LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_UNTRACKED);
+      }
+      elseif ($entity->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET) {
+        LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
+      }
+    }
   }
 
   //This reloads the lingotek values to ensure that the proper defaults and hierarchy are used.
@@ -1374,12 +1383,8 @@ function lingotek_entity_upload_triggered($entity, $entity_type, &$context = arr
     return;
   }
 
-  $xml = lingotek_entity_xml_body($entity_type, $entity);
-  $hash = md5($xml);
-  $oldhash = lingotek_keystore($entity_type, $id, 'hash');
-  lingotek_keystore($entity_type, $id, 'hash', $hash);
-  $diff = strcmp($hash, $oldhash);
-  if ($diff == 0 && $entity->lingotek['node_sync_status'] == 'CURRENT') {
+  $entity_changed = lingotek_entity_changed($entity_type, $entity, $id);
+  if (!$entity_changed && $entity->lingotek['node_sync_status'] == 'CURRENT') {
     return; //entity has no changes.
   }
 
@@ -1457,8 +1462,12 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   $source = isset($entity->language) ? $entity->language : language_default()->language;
   $source = Lingotek::convertDrupal2Lingotek($source);
   $languages = Lingotek::getLanguagesWithoutSource($source);
-  foreach ($languages as $lingotek_locale) {
-    lingotek_keystore($entity_type, $id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
+
+  // Add pending statuses for all languages on successful upload only
+  if ($success) {
+    foreach ($languages as $lingotek_locale) {
+      lingotek_keystore($entity_type, $id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
+    }
   }
   
   if (module_exists('entitycache')) {

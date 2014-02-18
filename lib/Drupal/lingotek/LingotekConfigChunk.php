@@ -523,6 +523,14 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
 
   /**
+   * Set the chunk's last error in the config metadata table
+   */
+  public function setLastError($errors) {
+    $this->setMetadataValue('last_sync_error', substr($errors, 0, 255));
+    return $this;
+  }
+
+  /**
    * Set the chunk's target status(es) in the config metadata table
    */
   public function setTargetsStatus($status, $lingotek_locale = 'all') {

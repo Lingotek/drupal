@@ -357,6 +357,15 @@ class LingotekEntity implements LingotekTranslatableEntity {
 
   public function setStatus($status) {
     $this->setMetadataValue('node_sync_status', $status);
+    return $this;
+  }
+
+  /**
+   * Set the entity's last error in the entity metadata table
+   */
+  public function setLastError($errors) {
+    $this->setMetadataValue('last_sync_error', substr($errors, 0, 255));
+    return $this;
   }
 
   public function setTargetsStatus($status, $lingotek_locale = 'all') {

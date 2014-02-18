@@ -1674,7 +1674,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   $rows[] = array(
     array('data' => array(
         '#type' => 'markup',
-        '#prefix' => t('Identify  and Update Statuses for Existing Translations') . '<div class="description">',
+        '#prefix' => t('Identify and Update Statuses for Existing Translations') . '<div class="description">',
         '#markup' => t("This utility identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>."),
         '#suffix' => '</div>'
       )),
