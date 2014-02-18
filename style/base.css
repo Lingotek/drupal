@@ -219,7 +219,7 @@ a.ltk-action:hover {
   color: #48C;
 }
 
-#edit-settings-link, #reset-translations-link, #change-workflow-link {
+.ltk-hidden-modal-trigger, #edit-settings-link, #change-workflow-link {
   display: none;
 }
 

@@ -884,7 +884,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * Return all textgroups from locales_source for which translation is desired
    */
   public static function getTextgroupsForTranslation() {
-    $textgroups = array();
+    $textgroups = array(-1);
     if (variable_get('lingotek_translate_config_builtins', 0)) {
       $textgroups[] = 'default';
     }
