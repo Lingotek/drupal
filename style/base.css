@@ -136,8 +136,8 @@ a.language-icon {
 }
 
 .language-icon.target-current {
-  background-color: #48C;
-  border: 1px solid #48C;
+  background-color: rgba(68,135,204,0.9);
+  border: 1px solid rgba(68,135,204,1);
 }
 
 .language-icon.target-ready {
@@ -154,6 +154,24 @@ a.language-icon {
   color: #aaa !important;
   background-color:inherit;
   border: 1px #ccc solid;
+}
+
+.language-icon.target-pending.target-disabled {
+  background-color: inherit;
+  border: 1px solid rgba(206,32,41,0.5);
+  color: #aaa !important;
+}
+
+.language-icon.target-ready.target-disabled {
+  background-color: inherit;
+  border: 1px solid rgba(89,173,26,0.8);
+  color: #aaa !important;
+}
+
+.language-icon.target-current.target-disabled {
+  background-color: inherit;
+  border: 1px solid rgba(68,135,204,0.8);
+  color: #aaa !important;
 }
 
 .ltk-complete-check {

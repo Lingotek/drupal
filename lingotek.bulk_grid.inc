@@ -1492,20 +1492,22 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
     array_multisort($locales, SORT_ASC, $statuses);
 
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, TRUE); // show translation statuses
+    $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
+
+    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled); // show translation statuses
 
     $configuration = '';
 
-    $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED ? ' lingotek-disabled' : '';
+    $disabled_class = $disabled ? ' lingotek-disabled' : '';
 
     if ($row->lingotek['create_lingotek_document']) {
-      $configuration .= '<i class="fa fa-arrow-up' . $disabled . '" title="' . t('Automatic Upload') . '"></i> ';
+      $configuration .= '<i class="fa fa-arrow-up' . $disabled_class . '" title="' . t('Automatic Upload') . '"></i> ';
     }
     if ($row->lingotek['sync_method']) {
-      $configuration .= '<i class="fa fa-arrow-down' . $disabled . '" title="' . t('Automatic Download') . '"></i> ';
+      $configuration .= '<i class="fa fa-arrow-down' . $disabled_class . '" title="' . t('Automatic Download') . '"></i> ';
     }
     if ($row->lingotek['allow_community_translation']) {
-      $configuration .= '<i class="fa fa-globe' . $disabled . '" title="' . t('Crowdsourcing Enabled') . '"></i> ';
+      $configuration .= '<i class="fa fa-globe' . $disabled_class . '" title="' . t('Crowdsourcing Enabled') . '"></i> ';
     }
 
     if ($row->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
@@ -1537,13 +1539,13 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
       $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
     }
 
-    $pm_icon = ($entity_type == 'node') ? ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled . '"></i>' : '';
+    $pm_icon = ($entity_type == 'node') ? ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled_class . '"></i>' : '';
     $pm_link = ' ' . l($pm_icon, 'node/' . $entity_id . '/lingotek_pm', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
     
     
     $actions = '';
     $actions .= l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $entity_type . '/' . $entity_id . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
-    $actions .= empty($disabled) ? $pm_link : $pm_icon;
+    $actions .= empty($disabled_class) ? $pm_link : $pm_icon;
     $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $entity_id . ',"edit"); return false;')));
 
     $no_localized_title = (language_default()->language != $language->language) && $row->localized_title == '';
@@ -1594,7 +1596,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   return $table_data;
 }
 
-function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $convert = FALSE) {
+function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE) {
   $html = "";
 
   $legend = array(
@@ -1626,10 +1628,11 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
       $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
         $status = $statuses[$key];
-        $css_class = 'target-' . $status;
+        $css_classes = 'target-' . $status;
+        $css_classes .= $disabled ? ' target-disabled' : '';
         $tip = $languages[$lang_code]->name . ' - ' . $legend[strtoupper($status)];
 
-        $html .= l($lang_code, $link_map[strtoupper($status)] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_class))));
+        $html .= l($lang_code, $link_map[strtoupper($status)] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_classes))));
       }
     }
   }
