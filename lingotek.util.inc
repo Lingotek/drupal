@@ -595,19 +595,10 @@ function lingotek_current_phase($phases) {
 }
 
 /**
- * Gets the Lingotek Source Language ( Drupal variable: lingotek_source_language).
- * Returns a language code (ie:  en / es / de)
- * Uses the Drupal default language as a fallback.
+ * Return the Drupal default language (ie:  en / es / de)
  */
 function lingotek_get_source_language() {
-
-  $source_language = variable_get('lingotek_source_language', NULL);
-  if (empty($source_language)) {
-    $drupal_default_language = language_default();
-    $source_language = $drupal_default_language->language;
-  }
-
-  return $source_language;
+  return language_default('language');
 }
 
 // END:  lingotek_get_source_language()
@@ -931,7 +922,6 @@ function lingotek_add_missing_locales() {
   $languages = language_list();
   $default_language = language_default();
   $update_static_language_list = FALSE;
-  //$source_language = variable_get( 'lingotek_source_language', $default_language->language );
   foreach ($languages as $target) {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
       $drupal_language_code = $target->language;

@@ -394,17 +394,6 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
-  // Standard Screens
-  $items['admin/config/lingotek/language-settings'] = array(
-    'title' => 'Choose Your Languages',
-    'description' => 'Manage your Lingotek language settings.',
-    'file' => 'lingotek.setup.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_setup_language_settings_form'),
-    'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
-  );
-
   $items['admin/config/lingotek/node-translation-settings'] = array(
     'title' => 'Enable Content Types',
     'description' => 'Select the nodes and fields you want translated.',

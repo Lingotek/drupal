@@ -216,7 +216,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
 
       $_SESSION['lingotek_setup_path'] = array('admin/config/lingotek/new-account');
       drupal_set_message(t('Your new Lingotek account has been setup.'));
-      drupal_goto('admin/config/lingotek/language-settings');
+      drupal_goto('admin/config/lingotek/setup-language-switcher');
     } // END:  if 200: Success
     else {
 
@@ -227,7 +227,7 @@ function lingotek_setup_new_account_form_submit($form, &$form_state) {
   else { // If the user already has all the required community credentials, just direct them to the next step.
     $_SESSION['lingotek_setup_path'] = array('admin/config/lingotek/new-account');
     drupal_set_message(t('Your Lingotek account settings have been saved.'));
-    drupal_goto('admin/config/lingotek/language-settings');
+    drupal_goto('admin/config/lingotek/setup-language-switcher');
   }
 }
 
@@ -614,98 +614,6 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
   
   $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/project-vault-select';
   drupal_set_message(t('Your Lingotek project, workflow, and vault selections have been setup and saved.'));
-  drupal_goto('admin/config/lingotek/language-settings'); // Move to Source Language Select Step. 
-}
-
-/**
- * Language Selection - Form Layout
- */
-function lingotek_setup_language_settings_form() {
-
-  $languages = array(
-    '0' => t('Select a Language...'),
-    'ar' => t('Arabic'),
-    'zh-hans' => t('Chinese (Simplified)'),
-    'nl' => t('Dutch'),
-    'en' => t('English'),
-    'fr' => t('French'),
-    'de' => t('German'),
-    'it' => t('Italian'),
-    'ja' => t('Japanese'),
-    'ko' => t('Korean'),
-    'pt-br' => t('Portuguese'),
-    'ru' => t('Russian'),
-    'es' => t('Spanish')
-  );
-  $default_language = language_default();
-  $source_language = variable_get('lingotek_source_language', $default_language->language);
-
-  $form['lingotek_current_language'] = array(
-    '#type' => 'item',
-    '#title' => t('Source language'),
-    '#description' => t('To get started, select the source language that the website is written in.')
-  );
-
-  $form['lingotek_install_source_language'] = array(
-    //'#title' => t('Source Language'),
-    '#type' => 'select',
-    '#options' => $languages,
-    '#default_value' => $source_language,
-    '#description' => t('<br/>In most cases, your source language should be the default language. (The current site default language is: <b>@default_language</b>', array('@default_language' => $default_language->name)),
-    //t('The current language your site is written in.'),
-    '#required' => TRUE,
-  );
-
-  if (is_array($_SESSION['lingotek_setup_path'])) {
-    if (end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/language-settings') {
-      $null = array_pop($_SESSION['lingotek_setup_path']);
-    } // if the user went back, remove the last element, which is this page.
-    $form['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
-  }
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Next')
-  );
-
-  $form['lingotek_support_footer'] = lingotek_support_footer();
-
-  return $form;
-}
-
-/**
- * Language Selection - Form Validation
- * Requires a source and target language to be selected.
- */
-function lingotek_setup_language_settings_form_validate($form, &$form_state) {
-
-  if ($form_state['values']['lingotek_install_source_language'] == '0') {
-    form_set_error('', t('You must select a valid source language.'));
-  }
-}
-
-/**
- * Language Selection - Form Submit Processing
- * Save source and target language selections.
- * Activate a source or target language if it isn't currently active.
- */
-function lingotek_setup_language_settings_form_submit($form, $form_state) {
-
-  // These are the languages that are currently active in this Drupal installation.
-  $active_languages = language_list('enabled');
-  $source_language = $form_state['values']['lingotek_install_source_language'];
-
-  // if the Source language is not active, activate it.
-  if (!array_key_exists($source_language, $active_languages[1])) {
-    locale_add_language($source_language);  // Function from the Locale module.
-  }
-
-  variable_set('lingotek_source_language', $form_state['values']['lingotek_install_source_language']);
-
-  $_SESSION['lingotek_setup_path'][] = 'admin/config/lingotek/language-settings';
-  drupal_set_message(t('Your language settings have been saved.'));
-
-
   drupal_goto('admin/config/lingotek/setup-language-switcher');
 }
 
@@ -1015,7 +923,7 @@ function lingotek_setup_node_updates_form($form, $form_state) {
 
   $form['lingotek_middle_spacer'] = array('#markup' => '<div>&nbsp;</div>');
 
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/language-settings', t('Previous Step'));
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/new-account', t('Previous Step'));
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -1028,7 +936,7 @@ function lingotek_setup_node_updates_form($form, $form_state) {
 /**
  * Setup Button
  */
-function lingotek_setup_link($path = 'admin/config/lingotek/language-settings', $text = 'Previous Step') {
+function lingotek_setup_link($path = 'admin/config/lingotek/new-account', $text = 'Previous Step') {
   return array(
     '#markup' => '<span style="margin-right: 15px;">' . l($text, $path) . '</span>'
   );
