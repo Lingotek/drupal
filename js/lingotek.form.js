@@ -16,6 +16,7 @@ lingotek.forms = lingotek.forms || {};
         $('#edit-lingotek-sync-method').change(updateVerticalTabSummary);
         $('#edit-lingotek-profile').change(updateVerticalTabSummary);
         updateVerticalTabSummary();
+        toggleMenuSelector();
     };
     
     lingotek.forms.enableLtkFromET = false;
@@ -31,12 +32,17 @@ lingotek.forms = lingotek.forms || {};
     
     var toggleMenuSelector = function() {
         if ($("#edit-language").val() == 'en') { // locales tables assume English language
-          $('#edit-menu-non-english').hide();
           $('#edit-menu-english').show();
+          $('#edit-menu-non-english').hide();
         }
         else {
-          $('#edit-menu-non-english').show();
           $('#edit-menu-english').hide();           
+          if ($("#edit-language").val() != 'und') { // show the note if neither English or Undefined
+            $('#edit-menu-non-english').show();
+          }
+          else {
+            $('#edit-menu-non-english').hide();
+          }
         }
     }
     

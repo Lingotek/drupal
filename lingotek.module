@@ -785,6 +785,8 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     // and if either 'english' or 'language neutral' is selected for the node
     // being created, then show the option to set the menu item as 'und' for
     // i18n_string translation.
+    $i18n_language = 'en';
+
     $form['menu']['link']['lingotek_translate'] = array(
       '#type' => 'select',
       '#title' => 'Menu translation through Lingotek',
@@ -796,8 +798,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     );
     $form['menu']['link']['nonenglish_info'] = array(
       '#markup' => t('<div id="edit-menu-non-english">Note: This menu item will be visible only in this node\'s currently selected language.  If you want this menu link to be available for all languages, you must add it directly through the Menus administration tool as an English string and then save the menu item as "Language Neutral".</div>'),
+      '#prefix' => '<div id="edit-menu-non-english">',
+      '#suffix' => '</div>',
     );
-    $form['language']['#attributes'] = array('onchange' => '');
   }
 
 }
