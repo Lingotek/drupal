@@ -326,28 +326,11 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function postDownload($lingotek_locale, $completed) {
-    $type = $this->getEntityType();
-    $entity = $this->getEntity();
+    //$type = $this->getEntityType();
+    //$entity = $this->getEntity();
     $id = $this->getId();
     
     if ($type == 'node') {
-      if (!$completed) {
-        //do nothing
-      }
-      else {
-        lingotek_keystore($type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
-
-        $query = db_select('lingotek_entity_metadata');
-        $query->condition('entity_type', 'node');
-        $query->addExpression('AVG(value)');
-
-        $total = $query->condition('entity_key', 'target_sync_progress_%', 'LIKE')
-          ->condition('entity_id', $id)
-          ->execute()->fetchField();
-        lingotek_keystore($type, $id, 'translation_progress', $total);
-
-        lingotek_keystore($type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
-      }
       // clear any caching from entitycache module to allow the new translation to show immediately
       if (module_exists('entitycache')) {
         cache_clear_all($id, 'cache_entity_node');

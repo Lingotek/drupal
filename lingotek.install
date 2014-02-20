@@ -681,5 +681,18 @@ function lingotek_update_7504(&$sandbox) {
       db_add_index($table, $index_name, $fields);
     }
   }
-  return t('Added indexes to the lingotek entity metadata table.');
+  return t('Added indexes to the <i>lingotek_entity_metadata</i> table.');
+}
+
+/**
+ * Remove unused entries from lingotek_entity_metadata table
+ */
+function lingotek_update_7505(&$sandbox) {
+  $delete = db_delete('lingotek_entity_metadata');
+  $or = db_or();
+  $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
+  $or->condition('entity_key', 'target_sync_last_progress_updated_%', 'LIKE');
+  $or->condition('entity_key', 'translation_progress');
+  $count = $delete->condition($or)->execute();
+  return format_plural($count, 'Removed one unused entry from the <i>lingotek_entity_metadata</i> table.', 'Removed @count unused entries from the <i>lingotek_entity_metadata</i> table.');
 }

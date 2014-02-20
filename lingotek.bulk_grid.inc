@@ -615,11 +615,6 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Doc ID'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'document_id' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'document_id' . $suffix] : in_array('document_id', $columns['defaults']),
     ),
-    'translation_progress' => array(
-      '#type' => 'checkbox',
-      '#title' => t('Translation Progress'),
-      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'translation_progress' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'translation_progress' . $suffix] : in_array('translation_progress', $columns['defaults']),
-    ),
     'workflow' => array(
       '#type' => 'checkbox',
       '#title' => t('Workflow'),
@@ -645,11 +640,6 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Progress Last Updated'),
       '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'progress_updated' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'progress_updated' . $suffix] : in_array('progress_updated', $columns['defaults']),
     ),
-//    'translation_progress_percent' => array(
-//      '#type' => 'checkbox',
-//      '#title' => t('Translation Progress Percentage'),
-//      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'translation_progress_percent' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'translation_progress_percent' . $suffix] : in_array('translation_progress_percent', $columns['defaults']),
-//    ),
     'last_downloaded' => array(
       '#type' => 'checkbox',
       '#title' => t('Time Last Downloaded'),
@@ -814,7 +804,6 @@ function lingotek_grid_define_columns() {
       'workflow',
       'changed',
       'last_uploaded',
-      'translation_progress_percent',
       'actions',
     ),
     'defaults' => array(
@@ -911,99 +900,6 @@ function lingotek_grid_build_filters($form_state) {
       '#options' => array('all' => t('All')) + node_type_get_names(),
       '#multiple' => TRUE
     ),
-    /*'translation_status' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['translation_status']) ? $_SESSION['grid_filters']['translation_status'] : 'all',
-      '#title' => t('Translation Status'),
-      '#options' => array(
-        'all' => t('All'),
-        'out_of_sync' => t('Out of Sync'),
-        'in_sync' => t('In Sync'),
-        'disabled' => t('Disabled'),
-      ),
-      '#multiple' => TRUE
-    ),
-    'translation_progress' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['translation_progress']) ? $_SESSION['grid_filters']['translation_progress'] : 'all',
-      '#title' => t('Translation Progress'),
-      '#options' => array(
-        'all' => t('All'),
-        'needs_upload' => t('Source Needs Upload'),
-        'in_progress' => t('In Progress'),
-        'download' => t('Ready for Download'),
-        'complete' => t('Complete'),
-        'disabled' => t('Disabled'),
-      ),
-      '#multiple' => TRUE
-    ),*/
-/*    'last_uploaded' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['last_uploaded']) ? $_SESSION['grid_filters']['last_uploaded'] : 'all',
-      '#title' => t('Last Uploaded'),
-      '#options' => array(
-        'all' => t('All'),
-        '1 day' => t('Less than 1 day ago'),
-        '< 1 week' => t('Less than 1 week ago'),
-        '>= 1 week' => t('1 week or more ago'),
-        'unknown' => t('Unknown'),
-      ),
-      '#multiple' => FALSE
-    ),
-    'locale_progress_percent' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['locale_progress_percent']) ? $_SESSION['grid_filters']['locale_progress_percent'] : 'all',
-      '#title' => t('Target Progress Percentage'),
-      '#options' => array(
-        'all' => t('All'),
-        0 => t('0 Percent'),
-        25 => t('Between 1 and 25 Percent'),
-        50 => t('Between 26 and 50 Percent'),
-        75 => t('Between 51 and 75 Percent'),
-        100 => t('Between 76 and 100 Percent')
-      ),
-      '#multiple' => TRUE
-    ),
-    'progress_updated' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['progress_updated']) ? $_SESSION['grid_filters']['progress_updated'] : 'all',
-      '#title' => t('Progress Updated'),
-      '#options' => array(
-        'all' => t('All'),
-        '1 day' => t('Less than 1 day ago'),
-        '< 1 week' => t('Less than 1 week ago'),
-        '>= 1 week' => t('1 week or more ago'),
-        'unknown' => t('Unknown'),
-      ),
-      '#multiple' => FALSE
-    ),*/
-//    'translation_progress_percent' => array(
-//      '#type' => 'select',
-//      '#default_value' => isset($_SESSION['grid_filters']['translation_progress_percent']) ? $_SESSION['grid_filters']['translation_progress_percent'] : 'all',
-//      '#title' => t('Translation Progress Percentage'),
-//      '#options' => array(
-//        'all' => t('All'),
-//        0 => t('0 Percent'),
-//        25 => t('Between 1 and 25 Percent'),
-//        50 => t('Between 26 and 50 Percent'),
-//        75 => t('Between 51 and 75 Percent'),
-//        100 => t('Between 76 and 100 Percent')
-//      ),
-//      '#multiple' => TRUE
-//    ),
-/*    'last_downloaded' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['last_downloaded']) ? $_SESSION['grid_filters']['last_downloaded'] : 'all',
-      '#title' => t('Last Downloaded'),
-      '#options' => array(
-        'all' => t('All'),
-        '1 day' => t('Less than 1 day ago'),
-        '< 1 week' => t('Less than 1 week ago'),
-        '>= 1 week' => t('1 week or more ago'),
-        'unknown' => t('Unknown'),
-      ),
-      '#multiple' => FALSE
-    ),*/
   );
 
   return lingotek_grid_process_elements($filters, '', '__filter'); // Add prefix and suffix to the name of each filter element
@@ -1098,12 +994,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     'document_id' => array('data' => t('Doc ID'), 'field' => 'document_id'),
     'changed' => array('data' => t('Last Modified'), 'field' => 'changed'),
     'last_uploaded' => array('data' => t('Last Uploaded'), 'field' => 'last_uploaded'),
-//      'translation_progress_percent' => array('data' => t('Workflow Progress'), 'field' => 'translation_progress_percent'),
     'actions' => array('data' => t('Actions')),
     'translation_status' => array('data' => t('Translation Status')),
-    'translation_progress' => array('data' => t('Translation Progress')),
-    'locale_progress_percent' => array('data' => t('Target Progress'), 'field' => 'locale_progress_percent'),
-    'progress_updated' => array('data' => t('Progress Updated'), 'field' => 'progress_updated'),
     'last_downloaded' => array('data' => t('Last Downloaded'), 'field' => 'last_downloaded'),
     'translate_link' => array('data' => t('Translate')),
   );
@@ -1206,27 +1098,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   $query->leftJoin('lingotek_entity_metadata', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
   $query->addField('lingo_last_sync_error', 'value', 'last_sync_error');
 
-  // Translation Progress Percent (Average of all target workflow progresses)
-//    $query->leftJoin('lingotek_entity_metadata', 'lingo_translation_progress_percent', 'lingo_translation_progress_percent.nid = ' . $eid . ' and lingo_translation_progress_percent.entity_key = \'translation_progress\'');
-//      $query->addField('lingo_translation_progress_percent', 'value', 'translation_progress_percent');
-  // Add translation status to the query
-//    $query->leftJoin('lingotek_entity_metadata', 'lingo_translation_status', '' . $eid . ' = lingo_translation_status.nid and lingo_translation_status.entity_key LIKE \'target_sync_status_' . $language_filter . '\'');
-//      $query->addField('lingo_translation_status', 'value', 'translation_status');
-  // Add workflow to the query
   $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
   $query->addField('lingo_workflow', 'value', 'workflow');
-
-//    // Target Workflow Progress
-//    $query->leftJoin('lingotek_entity_metadata', 'lingo_locale_progress_percent', '' . $eid . ' = lingo_locale_progress_percent.nid and lingo_locale_progress_percent.entity_key LIKE \'target_sync_progress_' . $language_filter . '\'');
-//      $query->addField('lingo_locale_progress_percent', 'value', 'locale_progress_percent');
-//
-//    // Target Progress Last Updated Timestamp
-//    $query->leftJoin('lingotek_entity_metadata', 'lingo_progress_updated', '' . $eid . ' = lingo_progress_updated.nid and lingo_progress_updated.entity_key LIKE \'target_sync_last_progress_updated_' . $language_filter . '\'');
-//      $query->addField('lingo_progress_updated', 'value', 'progress_updated');
-//
-//    // Last Downloaded Timestamp
-//    $query->leftJoin('lingotek_entity_metadata', 'lingo_last_downloaded', '' . $eid . ' = lingo_last_downloaded.nid and lingo_last_downloaded.entity_key LIKE \'target_last_downloaded_' . $language_filter . '\'');
-//      $query->addField('lingo_last_downloaded', 'value', 'last_downloaded');
 
   if (isset($filters['search_type']) && $filters['search_type'] == 'all') {
     $filters['title'] = $filters['body'] = $filters['search'];
@@ -1332,86 +1205,6 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     else {
       $params = explode(' ', $filters['last_uploaded'], 2); // string formatted like '< 1 week', so explode with a limit of two gives us array(0 => '<', 1 => '1 week')
       $query->condition('lingo_last_uploaded.value', strToTime($params[1]), $params[0]);
-    }
-  }
-
-  // Translation Progress Percentage
-//      if (isset($columns['translation_progress_percent']) && $columns['translation_progress_percent'] && isset($filters['translation_progress_percent']) && !in_array('all', $filters['translation_progress_percent'])) {
-//        $or = db_or();
-//        foreach ($filters['translation_progress_percent'] as $percent) {
-//          if ($percent == 0) {
-//            $or->condition('lingo_translation_progress_percent.value', $percent);
-//            $or->condition('lingo_translation_progress_percent.value', NULL);
-//          }
-//          else {
-//            $range = array((int)$percent - 24, (int)$percent);
-//            $or->where('CAST(lingo_translation_progress_percent.value as UNSIGNED) BETWEEN ' . $range[0] . '  AND ' . $range[1]);
-//          }
-//        }
-//        $query->condition($or);
-//      }
-  // Translation Status
-//      if (isset($filters['translation_status']) && !empty($filters['translation_status']) && !in_array('all', $filters['translation_status'])) {
-//        $or = db_or();
-//        if (in_array('out_of_sync', $filters['translation_status'])) {
-//          $or->condition('lingo_upload_status.value', LingotekSync::STATUS_EDITED);
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_PENDING);
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_READY);
-//        }
-//        if (in_array('in_sync', $filters['translation_status'])) {
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_CURRENT);
-//        }
-//        if (in_array('disabled', $filters['translation_status'])) {
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_DISABLED);
-//        }
-//        $query->condition($or);
-//      }
-  // Translation Progress
-//      if (isset($filters['translation_progress']) && !empty($filters['translation_progress']) && !in_array('all', $filters['translation_progress'])) {
-//        $or = db_or();
-//        if (in_array('needs_upload', $filters['translation_progress'])) {
-//          $or->condition('lingo_upload_status.value', LingotekSync::STATUS_EDITED);
-//        }
-//        if (in_array('in_progress', $filters['translation_progress'])) {
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_PENDING);
-//        }
-//        if (in_array('download', $filters['translation_progress'])) {
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_READY);
-//        }
-//        if (in_array('complete', $filters['translation_progress'])) {
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_CURRENT);
-//        }
-//        if (in_array('disabled', $filters['translation_progress'])) {
-//          $or->condition('lingo_translation_status.value', LingotekSync::STATUS_DISABLED);
-//        }
-//        $query->condition($or);
-//      }
-  // Target Progress Percentage
-//      if (isset($filters['locale_progress_percent']) && !in_array('all', $filters['locale_progress_percent'])) {
-//        $or = db_or();
-//        foreach ($filters['locale_progress_percent'] as $percent) {
-//          if ($percent == 0) {
-//            $or->condition('lingo_locale_progress_percent.value', $percent);
-//            $or->condition('lingo_locale_progress_percent.value', NULL);
-//          }
-//          else {
-//            $range = array((int)$percent - 24, (int)$percent);
-//            $or->where('CAST(lingo_locale_progress_percent.value as UNSIGNED) BETWEEN ' . $range[0] . '  AND ' . $range[1]);
-//          }
-//        }
-//        $query->condition($or);
-//      }
-  // Progress Last Updated
-  if (isset($filters['progress_updated']) && $filters['progress_updated'] != 'all') {
-    if ($filters['progress_updated'] == '1 day') {
-      $query->condition('lingo_progress_updated.value', strToTime($filters['progress_updated']), '<');
-    }
-    elseif ($filters['progress_updated'] == 'unknown') {
-      $query->condition('lingo_progress_updated.value', NULL);
-    }
-    else {
-      $params = explode(' ', $filters['progress_updated'], 2); // string formatted like '< 1 week', so explode with a limit of two gives us array(0 => '<', 1 => '1 week')
-      $query->condition('lingo_progress_updated.value', strToTime($params[1]), $params[0]);
     }
   }
 
@@ -1588,13 +1381,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
       'configuration' => $configuration,
       'document_id' => $row->document_id ? : t('N/A'),
       'content_type' => isset($info['bundles'][$row->type]['label']) ? $info['bundles'][$row->type]['label'] : $row->type,
-//        'translation_status' => $row->upload_status ?: t('N/A'),
-//        'translation_progress' => $translation_progress ?: t('N/A'),
-      
       'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
-//        'locale_progress_percent' => $row->locale_progress_percent ? lingotek_grid_create_progress_bar($row->locale_progress_percent) : lingotek_grid_create_progress_bar(0),
-//        'progress_updated' => $row->progress_updated ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->progress_updated))) : t('Never'),
-//        'last_downloaded' => $row->last_downloaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_downloaded))) : t('Never'),
       'workflow' => ($row->workflow ? (isset($workflows[$row->workflow]) ? check_plain($workflows[$row->workflow]) : $row->workflow) : ''),
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
     );
@@ -1639,12 +1426,13 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
       $lang_code = $lingotek_languages[$original_locale]->language;
       $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
-        $status = $statuses[$key];
-        $css_classes = 'target-' . $status;
+        $status = strtoupper($statuses[$key]);
+        $status = $disabled && strtoupper($status) != LingotekSync::STATUS_CURRENT ? LingotekSync::STATUS_UNTRACKED : $status;
+        $css_classes = 'target-' . strtolower($status);
         $css_classes .= $disabled ? ' target-disabled' : '';
-        $tip = $languages[$lang_code]->name . ' - ' . $legend[strtoupper($status)];
+        $tip = $languages[$lang_code]->name . ' - ' . $legend[$status];
 
-        $html .= l($lang_code, $link_map[strtoupper($status)] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_classes))));
+        $html .= l($lang_code, $link_map[$status] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_classes))));
       }
     }
   }
@@ -1901,6 +1689,9 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
   $api->removeDocument($doc_ids);
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'document_id');
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'node_sync_status');
+  foreach ($entity_ids as $entity_id) {
+    LingotekSync::setAllTargetStatus($entity_type, $entity_id, LingotekSync::STATUS_UNTRACKED);
+  }
 
-  drupal_set_message(t('Translations disassociated for @number entities.', array('@number' => count($entity_ids))));
+  drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity.', 'Translations disassociated for @count entities.'));
 }

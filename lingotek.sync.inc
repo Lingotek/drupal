@@ -555,25 +555,11 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
           $entity_values[] = array($entity_type, $entity_id, 'target_sync_status_' . $language, $to_status);
         }
       }
-      if ($target_number != 0) {
-        $entity_values[] = array(
-          'entity_type' => $entity_type,
-          'entity_id' => $entity_id,
-          'entity_key' => 'translation_progress',
-          'value' => $total_percentage / $target_number,
-        );
-      }
       // update source status when necessary
       $entity_source_status = lingotek_keystore($entity_type, $entity_id, 'node_sync_status');
       if ($entity_source_status == LingotekSync::STATUS_FAILED || $entity_source_status == LingotekSync::STATUS_PENDING) {
         lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
       }
-    }
-
-    if ($delete_nids_maybe) {
-      lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'target_sync_progress_%', 'LIKE');
-      lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'target_sync_last_progress_updated_%', 'LIKE');
-      lingotek_keystore_delete_multiple($entity_type, $delete_nids_maybe, 'translation_progress');
     }
 
     // merge status info for entities

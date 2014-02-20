@@ -1416,8 +1416,6 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     rules_invoke_event('lingotek_entity_pre_upload', new EntityDrupalWrapper($entity_type, $entity));
   }
 
-  LingotekSync::resetTargetProgress($entity_type, $id);
-
   // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
   if (!isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id'])) {
     $ln = LingotekEntity::load($entity, $entity_type);

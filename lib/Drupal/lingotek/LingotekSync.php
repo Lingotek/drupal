@@ -58,12 +58,12 @@ class LingotekSync {
     return $result;
   }
 
-  public static function setTargetStatus($entity_type, $entity_id, $lingotek_locale, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
+  public static function setTargetStatus($entity_type, $entity_id, $lingotek_locale, $status) {
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_keystore($entity_type, $entity_id, $key, $status);
   }
   
-  public static function setAllTargetStatus($entity_type, $entity_id, $status) {//lingotek_set_target_sync_status($node_id, $lingotek_locale, $node_status)
+  public static function setAllTargetStatus($entity_type, $entity_id, $status) {
     $query = db_update('lingotek_entity_metadata')
       ->condition('entity_type', $entity_type)
       ->condition('entity_id', $entity_id)
@@ -91,53 +91,6 @@ class LingotekSync {
     return $projects;
   }
 
-  public static function resetTargetProgress($entity_type, $id) {
-    $query = db_select('lingotek_entity_metadata', 'l')
-      ->fields('l', array('entity_key'))
-      ->condition('entity_type', $entity_type)
-      ->condition('entity_id', $id)
-      ->condition('entity_key', 'target_sync_status_%', 'LIKE');
-    $targets_raw = $query->execute()->fetchCol();
-    foreach ($targets_raw as $target_raw) {
-      $target = str_replace('target_sync_status_', '', $target_raw);
-      $fields[] = array(
-        'entity_type' => $entity_type,
-        'entity_id' => $id,
-        'entity_key' => 'target_sync_progress_' . $target,
-        'value' => 0,
-      );
-      $fields[] = array(
-        'entity_type' => $entity_type,
-        'entity_id' => $id,
-        'entity_key' => 'target_sync_last_progress_updated_' . $target,
-        'value' => time(),
-      );
-    }
-    $fields[] = array(
-      'entity_type' => $entity_type,
-      'entity_id' => $id,
-      'entity_key' => 'translation_progress',
-      'value' => 0,
-    );
-
-    $delete = db_delete('lingotek_entity_metadata')
-      ->condition('entity_type', $entity_type)
-      ->condition('entity_id', $id);
-    $or = db_or();
-      $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
-      $or->condition('entity_key', 'target_sync_last_progress_updated_%', 'LIKE');
-      $or->condition('entity_key', 'translation_progress');
-    $delete->condition($or)
-      ->execute();
-
-    $insert = db_insert('lingotek_entity_metadata')
-      ->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
-    foreach ($fields as $field) {
-      $insert->values($field);
-    }
-    $insert->execute();
-  }
-  
   public static function insertTargetEntriesForAllChunks($lingotek_locale) {
     // insert/update a target language for all chunks
     $query = db_select('lingotek_config_metadata', 'meta')
