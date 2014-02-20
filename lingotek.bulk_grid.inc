@@ -67,8 +67,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
     t('Download') => array('download_all' => t('Download All Translations')),
   );
 
-  $target_languages_raw = language_list('language');
-    
+  $target_languages_raw = Lingotek::getLanguages();
+
   foreach ($target_languages_raw as $target_raw) {
     $action_options[t('Download')]['download_' . $target_raw->lingotek_locale] = t('Download') . ' ' . t($target_raw->name) . ' (' . $target_raw->lingotek_locale . ') ' . t('Translation');
   }

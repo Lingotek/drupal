@@ -1175,16 +1175,21 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     $count_types = lingotek_admin_profile_usage_by_types($key);
     $total_count_with_profiles += array_sum($count_by_entity_type);
     $entities_str = '';
+    $total_entities = 0;
+
     foreach ($count_by_entity_type as $entity_type => $count) {
       if (!empty($entities_str)) {
         $entities_str .= ', ';
       }
       $entities_str .= $count . ' ' . format_plural($count, $entity_type, $entity_type . 's');
+      $total_entities += $count;
     }
+    $entities_str = strlen(trim($entities_str)) ? " ($entities_str)" : "";
+    $entities_str = $total_entities . ' ' . format_plural($total_entities, "entity", "entities") . $entities_str;
 
     // The custom profile line should not be shown unless there are entities assigned as 'custom'
     if ($key !== 'CUSTOM') {
-      $rows[] = array($profile_name, $entities_str . ' (' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types') . ')', $edit_link);
+      $rows[] = array($profile_name, $entities_str . ', ' . $count_types . ' ' . format_plural($count_types, 'content type', 'content types'), $edit_link);
     }
     elseif ($count_by_entity_type) {
       $rows[] = array($profile_name, $entities_str, $edit_link);
@@ -1202,7 +1207,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   );
 
   $form['add'] = array(
-    '#markup' => '<p>' . l(t('Add new profile'), LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add', array('attributes' => array('class' => 'ctools-use-modal'))) . '</p>',
+    '#markup' => t('<p><a href="@url" class="ctools-use-modal"><i class="fa fa-plus"></i> Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
   );
 
   return $form;
@@ -1794,6 +1799,11 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $output['lingotek'] = array(
     '#type' => 'vertical_tabs',
     '#attached' => array(
+      'css' => array(
+        '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' => array(
+          'type' => 'external',
+        ),
+      ),
       'js' => array(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js'),
     ),
   );
