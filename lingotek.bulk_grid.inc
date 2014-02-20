@@ -551,15 +551,9 @@ function lingotek_grid_action_submit($form, $form_state) {
         batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
       }
       elseif (substr($action, 0, 8) == 'download') { // If downloading all targets
-        $lang = substr($action, 9, 10);
-        $target_locales = ($lang == 'all') ? lingotek_get_target_locales() : array($lang);
-        
-        foreach ($entity_ids as $entity_id) {
-          $entity = lingotek_entity_load_single($entity_type, $entity_id);
-          foreach ($target_locales as $lingotek_locale) {
-            lingotek_entity_download($entity, $entity_type, $lingotek_locale);
-          }
-        }
+        $locale = substr($action, 9, 10);
+        $target_locales = ($locale == 'all') ? lingotek_get_target_locales() : array($locale);
+        lingotek_grid_download_selected($entity_type, $entity_ids, $target_locales);
       }
       elseif ($action == 'delete' || $action == 'reset') {
         // ajax ctools modal employed (see lingotek_bulk_grid_form() and lingotek.bulk_grid.js)
@@ -685,21 +679,39 @@ function lingotek_grid_update($entity_type) {
   }
 }
 
+function lingotek_grid_download_selected($entity_type, $entity_ids, $target_locales) {
+  $operations = array();
+  $entities = entity_load($entity_type, $entity_ids);
+  foreach ($entities as $entity) {
+    foreach ($target_locales as $locale) {
+      $operations[] = array('lingotek_entity_download', array($entity, $entity_type, $locale));
+    }
+  }
+  $redirect = 'admin/settings/lingotek/manage/' . $entity_type;
+  $batch = array(
+    'title' => t('Downloading Translations'),
+    'finished' => 'lingotek_sync_download_target_finished',
+  );
+  $batch['operations'] = $operations;
+  batch_set($batch);
+  batch_process($redirect);
+}
+
 function lingotek_grid_download_ready($entity_type) {
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
   
   if (!empty($targets)) {
 
-    $nids = array();
+    $entity_ids = array();
     foreach ($targets as $target) {
-      $nids[] = $target['nid'];
+      $entity_ids[] = $target['id'];
     }
-    $nodes = entity_load($entity_type, $nids);
-    
+    $entities = entity_load($entity_type, $entity_ids);
+
     $operations = array();
     foreach ($targets as $target) {
-      if ($nodes[$target['nid']]->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) { // exclude nodes with PROFILE_DISABLED
-        $operations[] = array('lingotek_entity_download', array($target['nid'], $entity_type, $target['locale']));
+      if ($entities[$target['id']]->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) { // exclude nodes with PROFILE_DISABLED
+        $operations[] = array('lingotek_entity_download', array($target['id'], $entity_type, $target['locale']));
       }
     }
     $redirect = 'admin/settings/lingotek/manage/' . $entity_type;

@@ -204,7 +204,7 @@ class LingotekSync {
     $targets = array();
     foreach ($records as $record) {
       $doc_target = array(
-        'nid' => $record->entity_id,
+        'id' => $record->entity_id,
         'doc_id' => $include_doc_ids ? $nid_doc_map[$record->entity_id] : NULL,
         'locale' => str_replace('target_sync_status_', '', $record->entity_key)
       );
