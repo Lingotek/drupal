@@ -1165,10 +1165,10 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
 
   foreach ($profiles as $key => $profile_name) {
     if (in_array((string)$key, $profiles_excluded_from_editing)) {
-      $edit_link = '';
+      $edit_link = '<i class="fa fa-gear fa-lg ltk-disabled-icon"></i>';
     }
     else {
-      $edit_link =  l(t('Edit'), LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key, array('attributes' => array('class' => array('ctools-use-modal'))));
+      $edit_link = '<a href="' . url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key) . '" class="ctools-use-modal" title="' . t('Edit') . '"><i class="fa fa-gear fa-lg"></i></a>';
     }
 
     $count_by_entity_type = lingotek_admin_profile_usage($key);
@@ -1813,7 +1813,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
     drupal_get_form('lingotek_admin_connection_form', $show_fieldset),
   );
 
-  $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, 'Account');
+  $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, t('Account'), array('id' => 'ltk-account'));
 
   $connected = $api->testAuthentication();
 
@@ -1821,25 +1821,22 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
 
     foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
       $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
-      $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])));
+      $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('class' => array('ltk-entity')));
     }
 
-    //$output['lingotek'][] = lingotek_wrap_in_fieldset($arr, 'Translate Content');
-    //$output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_comment_translation_settings_form', $show_fieldset), 'Translate Comments');
-
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'));
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), 'Translation Profiles');
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'), array('id' => 'ltk-config'));
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), t('Translation Profiles'), array('id' => 'ltk-profiles'));
     if ($show_advanced) {
-      $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE), 'Advanced Content Parsing');
+      $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE), t('Advanced Content Parsing'), array('id' => 'ltk-advanced-content-parsing'));
     }
 
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), 'Preferences');
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), t('Preferences'), array('id' => 'ltk-prefs'));
 
     $logging_utilities = array(
       drupal_get_form('lingotek_admin_logging_form', $show_fieldset),
       drupal_get_form('lingotek_admin_utilities_form', $show_fieldset),
     );
-    $output['lingotek'][] = lingotek_wrap_in_fieldset($logging_utilities, 'Logging & Utilities');
+    $output['lingotek'][] = lingotek_wrap_in_fieldset($logging_utilities, t('Logging & Utilities'));
   }
 
 
@@ -1847,14 +1844,15 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   return $output;
 }
 
-function lingotek_wrap_in_fieldset($form, $title) {
-  return array(
+function lingotek_wrap_in_fieldset($form, $title, $attributes = array()) {
+  $fieldset = array(
     '#type' => 'fieldset',
     '#group' => 'lingotek',
-    '#title' => $title,
-    '#attributes' => array('class' => array('lingotek-' . strtolower(str_replace(' ', '-', $title)))),
+    '#title' => $title, // comes in translated
+    '#attributes' => $attributes,
     'children' => $form,
   );
+  return $fieldset;
 }
 
 function lingotek_admin_language_switcher_form_submit($form, $form_state) {

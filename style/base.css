@@ -204,6 +204,17 @@ a.language-icon {
     color: #666;
 }
 
+.ltk-disabled-icon {
+  color: #ddd;
+}
+
+.ltk-disabled-text {
+  color: #666;
+}
+.ltk-enabled-text {
+  color: green;
+}
+
 .no-localized-title, .no-localized-title a {
   color: #444;
   /*font-style: italic;*/
@@ -224,7 +235,7 @@ a.ltk-action:hover {
 }
 
 #edit-grid-container i.lingotek-disabled {
-  color: #AAA;
+  color: #ddd;
 }
 
 .ltk-upload-button {

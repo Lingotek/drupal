@@ -57,56 +57,15 @@ Drupal.behaviors.lingotekAdminForm = {
 
     //ensure that there is a vertical tab set
     if($('.vertical-tabs').length != 0) {
-      $('fieldset.lingotek-account', context).drupalSetSummary(function (context) {
+      $('fieldset#ltk-account', context).drupalSetSummary(function (context) {
         return Drupal.t($('#account_summary').val() + ' / ' + $('#connection_summary').val());
       });
 
-      $('fieldset.lingotek-translate-nodes', context).drupalSetSummary(function (context) {
+      // entity summary (used for all entity tabs in on Settings page
+      $('fieldset.ltk-entity', context).drupalSetSummary(function (context) {
         $list = [];
         total = 0;
-        $('fieldset.lingotek-translate-nodes select').each(function( index ) {
-          var name = $(this).attr('name');
-          if(name && name.substring(0, 7) == 'profile') {
-            
-            if($(this).val() != 'DISABLED') {
-              $list.push($(this).val());
-            }
-            total++;
-          }
-        });
-        if($list.length == 0) {
-          return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
-        } else {
-          return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
-        }
-      });
-
-      if ($('fieldset.lingotek-translate-field-collections').length) {
-        $('fieldset.lingotek-translate-field-collections', context).drupalSetSummary(function (context) {
-          $list = [];
-          total = 0;
-          $('fieldset.lingotek-translate-field-collections select').each(function( index ) {
-            var name = $(this).attr('name');
-            if(name && name.substring(0, 7) == 'profile') {
-
-              if($(this).val() != 'DISABLED') {
-                $list.push($(this).val());
-              }
-              total++;
-            }
-          });
-          if($list.length == 0) {
-            return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
-          } else {
-            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
-          }
-        });
-      }
-
-      $('fieldset.lingotek-translate-comments', context).drupalSetSummary(function (context) {
-        $list = [];
-        total = 0;
-        $('fieldset.lingotek-translate-comments select').each(function( index ) {
+        $(context).find('select').each(function( index ) {
           var name = $(this).attr('name');
           if(name && name.substring(0, 7) == 'profile') {
             if($(this).val() != 'DISABLED') {
@@ -116,26 +75,27 @@ Drupal.behaviors.lingotekAdminForm = {
           }
         });
         if($list.length == 0) {
-          return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
+          return '<span class="ltk-disabled-text">' + Drupal.t('Disabled') + '</span>';
         } else {
-          return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
+          return '<span class="ltk-enabled-text">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
         }
       });
 
-      $('fieldset.lingotek-translate-configuration', context).drupalSetSummary(function (context) {
+      // config summary
+      $('fieldset#ltk-config', context).drupalSetSummary(function (context) {
         $list = [];
         max = 5;
         extra_text = "";
         
         //uncheck lingotek_use_translation_from_drupal when builtin is not checked
         $ltk_use_translation = $('#lingotek_use_translation_from_drupal');
-        if ($('#edit-config-lingotek-translate-config-builtins').is(':checked')) {
+        if ($('#edit-config-lingotek-config-builtins').is(':checked')) {
             $ltk_use_translation.removeAttr('disabled');
         } else {
             $ltk_use_translation.removeAttr('checked').attr('disabled',true);
         }
 
-        $('#edit-additional-translation input').each(function( index ) {
+        $(context).find('input').each(function( index ) {
           if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
             name = $(this).attr('name');
             
@@ -150,23 +110,30 @@ Drupal.behaviors.lingotekAdminForm = {
           }
         });
         if ($list.length === 0 && extra_text.length === 0) {
-            return '<span style="color:#666;">' + Drupal.t('Disabled') + '</span>';
+            return '<span class="ltk-disabled-text">' + Drupal.t('Disabled') + '</span>';
         } else if ($list.length === max) {
-            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: all' + extra_text;
+            return '<span class="ltk-enabled-text">' + Drupal.t('Enabled') + '</span>: all' + extra_text;
         } else {
-            return '<span style="color:green;">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ');
+            return '<span class="ltk-enabled-text">' + Drupal.t('Enabled') + '</span>: ' + $list.join(', ');
         }
       });
 
-      $('fieldset.lingotek-preferences', context).drupalSetSummary(function (context) {
-        $list = [];
-        $('#edit-region').each(function( index ) {
-          if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
-            $list.push($(this).val());
-          }
-        });
-        return Drupal.t($list.join(', '));
+      // profiles summary
+      $('fieldset#ltk-profiles', context).drupalSetSummary(function (context){
+        return $(context).find('tbody tr').length + ' ' + Drupal.t('profiles')
       });
+
+      /*
+      // prefs summary
+      $('fieldset#ltk-prefs', context).drupalSetSummary(function (context) {
+        $list = [];
+        return  'Selected: '+ $(context).find('input:checkbox:checked:enabled').length + '/'+ $(context).find('input:checkbox').length;
+        $(context).find('input:checkbox').each(function( index ) {
+          var label = $(this).attr('checked') ? '1' : '0';
+          $list.push(label);
+        });
+        return $list.join('-');
+      });*/
     }
   }
 };
