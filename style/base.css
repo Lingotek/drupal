@@ -234,10 +234,6 @@ a.ltk-action:hover {
     color: #00348D;
 }
 
-#edit-grid-container i.lingotek-disabled {
-  color: #ddd;
-}
-
 .ltk-upload-button {
   color: #333;
   cursor: pointer;

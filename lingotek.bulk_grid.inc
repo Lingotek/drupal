@@ -1303,7 +1303,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
     $configuration = '';
 
-    $disabled_class = $disabled ? ' lingotek-disabled' : '';
+    $disabled_class = $disabled ? ' ltk-disabled-icon' : '';
 
     if ($row->lingotek['create_lingotek_document']) {
       $configuration .= '<i class="fa fa-arrow-up' . $disabled_class . '" title="' . t('Automatic Upload') . '"></i> ';
@@ -1344,10 +1344,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
       $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
     }
 
-    $pm_icon = ($entity_type == 'node') ? ' <i title="' . t('View Translations') . '" class="fa fa-tasks' . $disabled_class . '"></i>' : '';
-    $pm_link = ' ' . l($pm_icon, 'node/' . $entity_id . '/lingotek_pm', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
-    
-    
+    $pm_icon = ($entity_type == 'node') ? ' <i class="fa fa-tasks' . $disabled_class . '"></i>' : '';
+    $pm_link = ' ' . l($pm_icon, 'node/' . $entity_id . '/lingotek_pm', array('html' => TRUE, 'attributes' => array('title' => t('View Translations'), 'target' => '_blank')));
+
+
     $actions = '';
     $actions .= l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $entity_type . '/' . $entity_id . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
     $actions .= empty($disabled_class) ? $pm_link : $pm_icon;
@@ -1431,7 +1431,7 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
         $css_classes = 'target-' . strtolower($status);
         $css_classes .= $disabled ? ' target-disabled' : '';
         $tip = $languages[$lang_code]->name . ' - ' . $legend[$status];
-
+        $status = $disabled ? LingotekSync::STATUS_UNTRACKED : $status; // all disabled entities should link to view page (not workbench)
         $html .= l($lang_code, $link_map[$status] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_classes))));
       }
     }
