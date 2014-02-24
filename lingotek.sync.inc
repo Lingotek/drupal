@@ -586,8 +586,8 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
         $error_message .= "<li>" . $error . "</li>";
       }
     }
-    $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
-    drupal_set_message(t('@error_message', array('@error_message' => $error_message)), 'error');
+    $error_message .= "</ul><i>" . t('For additional information, check your <a href="@link">recent log messages</a>', array('@link' => url('admin/reports/dblog'))) . "</i>";
+    drupal_set_message($error_message, 'error');
   }
 }
 
@@ -684,8 +684,8 @@ function lingotek_update_config_progress($document_ids) {
         $error_message .= "<li>" . $error . "</li>";
       }
     }
-    $error_message .= "</ul><i>For additional information, check your recent log messages</i>";
-    drupal_set_message(t('@error_message', array('@error_message' => $error_message)), 'error');
+    $error_message .= "</ul><i>" . t('For additional information, check your <a href="@link">recent log messages</a>', array('@link' => url('admin/reports/dblog'))) . "</i>";
+    drupal_set_message($error_message, 'error');
   }
 
 }
