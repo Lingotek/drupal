@@ -326,8 +326,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function postDownload($lingotek_locale, $completed) {
-    //$type = $this->getEntityType();
-    //$entity = $this->getEntity();
+    $type = $this->getEntityType();
+    $entity = $this->getEntity();
     $id = $this->getId();
     
     if ($type == 'node') {
