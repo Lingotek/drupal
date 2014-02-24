@@ -787,24 +787,17 @@ function lingotek_delete_target_language($lingotek_locale) {
   $result = FALSE;
 
   if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
-
-    if (Lingotek::convertDrupal2Lingotek(language_default()->language, FALSE) <> $lingotek_locale) {
-      db_update('languages')
-          ->fields(array(
-            //'enabled' => 0,
-            'lingotek_enabled' => 0,
-          ))
-          ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
-          ->execute();
-      LingotekLog::info("Target language removed: @lingotek_locale"
-          , array(
-        '@lingotek_locale' => $lingotek_locale)
-      );
-    }
-
-    // Removes the node sync target language entries from the lingotek table
-    // and removes config chunk target language entries from lingotek_config_metadata.
-    // LingotekSync::deleteTargetEntriesForAllDocs($lingotek_locale); // We leave the last updated statuses for reporting
+    db_update('languages')
+        ->fields(array(
+          //'enabled' => 0,
+          'lingotek_enabled' => 0,
+        ))
+        ->condition('lingotek_locale', $lingotek_locale) //->condition('language',  $drupal_language_code)
+        ->execute();
+    LingotekLog::info("Target language removed: @lingotek_locale"
+        , array(
+      '@lingotek_locale' => $lingotek_locale)
+    );
 
     // Remove the Target Language from the Lingotek Project.
     $project_id = variable_get('lingotek_project', '');
