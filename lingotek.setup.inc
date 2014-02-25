@@ -767,22 +767,17 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
   if ($form_state['values']['lingotek_nodes_translation_method'] == 'node' && $form_state['values']['lingotek_overwrite']) {
     $nodes = db_select('node', 'n')
       ->fields('n', array('nid', 'tnid'))
-      ->condition('n.tnid', 0, '<>')
-      ->execute()
-      ->fetchAll();
+        ->where('n.nid <> n.tnid AND n.tnid <> 0')
+        ->execute()
+        ->fetchAll();
     
     $ops = array();
     
     foreach ($nodes as $row) {
       $ops[] = array('lingotek_keystore', array('node', $row->nid, 'profile', LingotekSync::PROFILE_DISABLED));
-      if ($row->nid == $row->tnid) {
-        $ops[] = array('LingotekSync::setNodeEnabled', array($row->nid, FALSE));
-      }
-      else {
-        $ops[] = array('lingotek_keystore', array('node', $row->nid, 'node_sync_status', LingotekSync::STATUS_TARGET));
-      }
+      $ops[] = array('lingotek_keystore', array('node', $row->nid, 'node_sync_status', LingotekSync::STATUS_TARGET));
     }
-    
+
     $batch = array(
       'operations' => $ops,
     );
@@ -851,8 +846,11 @@ function lingotek_setup_additional_translation_settings_form_submit($form, &$for
   
   lingotek_setup_allowed_translation_formats();
   $operations = array();
-  $batch = lingotek_cleanup_utility(FALSE, FALSE); // return the batch, rather than autoset to execute
-  if ($batch && isset($batch['operations'])) {
+  $batch = array();
+  if (variable_get('lingotek_setup_cleanup_nodes')) {
+    $batch = lingotek_field_language_data_cleanup_batch_create(FALSE); // return the batch, rather than autoset to execute
+  }
+  if (isset($batch['operations'])) {
     $operations = array_merge($operations, $batch['operations']);
   }
   $batch = lingotek_batch_identify_translations(FALSE);

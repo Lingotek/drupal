@@ -239,9 +239,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)';
   }
 
-  if ($entity_type == 'field_collection_item') {
-    $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
-  }
+  lingotek_admin_add_entity_specific_changes($form, $form_state, $entity_type);
 
   $form['translation_' . $entity_type]['actions']['submit'] = array(
     '#type' => 'submit',
@@ -249,6 +247,47 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   return $form;
+}
+
+/**
+ * Modify general entity-translation form to include entity-specific changes.
+ * 
+ * @param array $form
+ *   The form created in function lingotek_admin_entity_bundle_profiles_form
+ * @param array $form_state
+ *   The form state passed to function lingotek_admin_entity_bundle_profiles_form
+ * @param string $entity_type
+ *   The entity type for which to change the form or form state
+ */
+function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entity_type) {
+  $form['translation_' . $entity_type]['spacer'] = array(
+    '#type' => 'markup',
+    '#markup' => '<div class="spacer">&nbsp;</div>',
+  );
+  switch ($entity_type) {
+    case 'node':
+      // Optional clean up node languages.
+      $node_languages = 'lingotek_function_node_languages';
+      $form['translation_' . $entity_type][$node_languages] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Clean up node languages'),
+        '#description' => t('Set all language-neutral nodes (and underlying fields and path aliases) for enabled content types to be @lang.', array('@lang' => language_default('name'))),
+        '#default_value' => variable_get($node_languages, 1),
+      );
+      // Optionally identify existing translations.
+      $identify_translations = 'lingotek_function_identify_translations';
+      $form['translation_' . $entity_type][$identify_translations] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Identify Existing Translations'),
+        '#description' => t('Identify existing node translations currently untracked by the Lingotek Translation module.  The translation status for all newly discovered translations will be set to <i>untracked</i>.'),
+        '#default_value' => variable_get($identify_translations, 1),
+      );
+      break;
+    case 'field_collection_item':
+      // add note about field collections being coupled with their parent entities
+      $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
+      break;
+  }
 }
 
 /**
@@ -270,9 +309,6 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
 
   foreach ($form_state['input'] as $key => $value) {
-    if ($key == 'article_SEPERATOR_field_fc_test') {
-      $asdf = '';
-    }
     // Look for Selected Content Types and Fields.
     if (FALSE !== strpos($key, '_SEPERATOR_')) {
       // And only if set to translate
@@ -329,6 +365,14 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     if (FALSE !== strpos($key, 'profile_')) {
       $content_type = substr($key, strlen('profile_'));
       $entity_profiles[$entity_type][$content_type] = $value;
+    }
+    // Look for any prepare/cleanup functions to record for future running
+    if (FALSE !== strpos($key, 'lingotek_function')) {
+      // Add the preference for future reference in settings.
+      variable_set($key, $value);
+      if ($value) {
+        lingotek_set_batch_function($key);
+      }
     }
   }
   $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path($entity_type);
@@ -1554,7 +1598,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $form['utilities'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Utilities'),
+    '#title' => t('Additional Utilities'),
     '#description' => '',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -1571,34 +1615,10 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     ),
   );
 
-  $btn_cleanup = array(
-    '#type' => 'submit',
-    '#value' => t('Cleanup'),
-    '#submit' => array('lingotek_cleanup_utility')
-  );
-
-  $btn_identify_translations = array(
-    '#type' => 'submit',
-    '#value' => t('Update Statuses'),
-    '#submit' => array('lingotek_batch_identify_translations')
-  );
-
   $btn_callback_url_update = array(
     '#type' => 'submit',
     '#value' => t('Update URL'),
     '#submit' => array('lingotek_notify_url_update')
-  );
-
-  $btn_field_collection_update = array(
-    '#type' => 'submit',
-    '#value' => t('Update Fields'),
-    '#submit' => array('lingotek_cleanup_field_collection_fields')
-  );
-
-  $btn_message_types_update = array(
-    '#type' => 'submit',
-    '#value' => t('Update Message Types'),
-    '#submit' => array('lingotek_cleanup_message_types')
   );
 
   $btn_callback_refresh_api_cache = array(
@@ -1610,10 +1630,6 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   // Start: Not sure why, but without these below, the table buttons do not work properly
   $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_field_collection_update, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_message_types_update, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_cleanup, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_identify_translations, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
 
@@ -1639,56 +1655,6 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     ),
   );
 
-  if (module_exists('field_collection')) {
-    $extra_note = '';
-    if (lingotek_has_unconventional_fc_translations()) {
-      $extra_note = '<div style="color:red;">' . t('Note: It appears you have existing field collection translations that may not conform with Lingotek\'s method of translating field collections.  Using this utility will delete those translations.') . '</div>';
-    }
-    $rows[] = array(
-      array('data' => array(
-          '#type' => 'markup',
-          '#prefix' => t('Update Field-Collection Fields') . '<div class="description">',
-          '#markup' => t("This utility sets all field-collections to be <i>language neutral</i>, allowing the underlying fields to be enabled for multilingual use.  !note", array('!note' => $extra_note)),
-          '#suffix' => '</div>'
-        )),
-      array('data' => $btn_field_collection_update)
-    );
-  }
-
-  if (module_exists('message')) {
-    $rows[] = array(
-      array('data' => array(
-          '#type' => 'markup',
-          '#prefix' => t('Set Languages for Message Types') . '<div class="description">',
-          '#markup' => t("This utility sets all empty and undefined languages associated with the Message API module to be the site-default language."),
-          '#suffix' => '</div>'
-        )),
-      array('data' => $btn_message_types_update)
-    );
-  }
-
-  $rows[] = array(
-    array('data' => array(
-        '#type' => 'markup',
-        '#prefix' => t('Cleanup Utility') . '<div class="description">',
-        '#markup' => t("The cleanup utility identifies translatable content and processes all existing data for translation-enabled fields on nodes, ensuring that if data was entered before enabling field translation on a field that the existing field data is copied over to the parent node's current language."),
-        '#suffix' => '</div>'
-      )),
-    array('data' => $btn_cleanup),
-  );
-  $rows[] = array(
-    array('data' => array(
-        '#type' => 'markup',
-        '#prefix' => t('Identify and Update Statuses for Existing Translations') . '<div class="description">',
-        '#markup' => t("This utility identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>."),
-        '#suffix' => '</div>'
-      )),
-    array('data' => $btn_identify_translations),
-      /* array('data' => array(
-        '#type' => 'markup',
-        '#markup' => l(t('Update'), 'lingotek/utility/batch_identify_translations', array('attributes' => array('class' => 'button')))
-        )), */
-  );
   $rows[] = array(
       array('data' => array(
           '#type' => 'markup',
@@ -1774,6 +1740,120 @@ function lingotek_admin_logging_form_submit($form, &$form_state) {
   system_settings_form_submit($form, $form_state);
 }
 
+/**
+ * Utilities form.
+ */
+function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE) {
+
+  $form['cleanup'] = array(
+    '#type' => $show_fieldset ? 'fieldset' : 'item',
+    '#title' => t('Cleanup Utilities'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'administrative_settings',
+    'actions' => array(
+      '#type' => 'actions',
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => t('Run Selected Utilities')
+      )
+    ),
+    '#submit' => array('lingotek_admin_cleanup_form_submit')
+  );
+
+  $cleanup_function_headers = array(
+    'title' => array('data' => t('All Utilities')),
+    'desc' => array('data' => t('Description')),
+  );
+
+  $cleanup_functions = array();
+
+  /* TEMPLATE
+  $cleanup_functions['lingotek_cleanup_'] = array(
+    'title' => t('title'),
+    'desc' => t('description'),
+  );
+   * END TEMPLATE
+   */
+  $cleanup_functions['lingotek_add_missing_locales'] = array(
+    'title' => t('Add Missing Locales'),
+    'desc' => t('Fills in any missing locale values to the languages table'),
+  );
+
+  $cleanup_functions['lingotek_cleanup_field_languages'] = array(
+    'title' => t('Cleanup Node Languages'),
+    'desc' => t('Sets all language-neutral nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
+  );
+
+  $cleanup_functions['lingotek_batch_identify_translations'] = array(
+    'title' => t('Identify Existing Translations'),
+    'desc' => t('Identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>.'),
+  );
+
+  if (module_exists('field_collection')) {
+    $extra_note = '';
+    if (lingotek_has_unconventional_fc_translations()) {
+      $extra_note = '<div style="color:red;">' . t('Note: It appears you have existing field collection translations that may not conform with Lingotek\'s method of translating field collections.  Using this utility will delete those translations.') . '</div>';
+    }
+    $cleanup_functions['lingotek_cleanup_field_collection_fields'] = array(
+      'title' => t('Prepare Field Collections'),
+      'desc' => t("Sets all field-collections to be <i>language neutral</i>, allowing the underlying fields to be enabled for multilingual use.  !note", array('!note' => $extra_note)),
+    );
+  }
+
+  if (module_exists('message')) {
+    $cleanup_functions['lingotek_cleanup_message_types'] = array(
+      'title' => t('Prepare Message Types'),
+      'desc' => t("Sets all empty and undefined languages associated with the Message API module to be the site-default language."),
+    );
+  }
+
+  $form['cleanup']['grid'] = array(
+    '#type' => 'tableselect',
+    '#header' => $cleanup_function_headers,
+    '#options' => $cleanup_functions,
+  );
+
+  $rows = array();
+
+  return $form;
+}
+
+/**
+ * Attempt to execute each of the cleanup functions selected by the requester.
+ *
+ * @param array $form
+ * @param array $form_state
+ */
+function lingotek_admin_cleanup_form_submit($form, &$form_state) {
+  // All cleanup-related batch functions should exist in lingotek.util.inc
+  // and their return value should be a set batch.
+  $cleanup_batch = array(
+    'title' => t('Lingotek Cleanup Utility Batch'),
+    'operations' => array('lingotek_cleanup_batch_init', array()),
+    'file' => 'lingotek.util.inc',
+  );
+  batch_set($cleanup_batch);
+  foreach ($form_state['values']['grid'] as $cleanup_function) {
+    if (!$cleanup_function) {
+      // Function was not selected to run.
+      continue;
+    }
+    if (!function_exists($cleanup_function)) {
+      LingotekLog::error('Attempted to run non-existent cleanup function: @function', array('@function' => $cleanup_function));
+      continue;
+    }
+    try {
+      $cleanup_function();
+    } catch (Exception $e) {
+      LingotekLog::error('Failed to run cleanup function "@function".  Error was: @error', array('@function' => $cleanup_function, '@error' => $e->getMessage()));
+      continue;
+    }
+  }
+  // Execute all set batches and then return.
+  batch_process('admin/settings/lingotek/settings');
+}
+
 function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset = TRUE) {
 
   lingotek_is_module_setup();
@@ -1831,12 +1911,13 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
     }
 
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), t('Preferences'), array('id' => 'ltk-prefs'));
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), 'Logging');
 
-    $logging_utilities = array(
-      drupal_get_form('lingotek_admin_logging_form', $show_fieldset),
+    $utilities = array(
+      drupal_get_form('lingotek_admin_cleanup_form', $show_fieldset),
       drupal_get_form('lingotek_admin_utilities_form', $show_fieldset),
     );
-    $output['lingotek'][] = lingotek_wrap_in_fieldset($logging_utilities, t('Logging & Utilities'));
+    $output['lingotek'][] = lingotek_wrap_in_fieldset($utilities, t('Utilities'));
   }
 
 

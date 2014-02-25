@@ -915,16 +915,24 @@ function lingotek_add_missing_locales() {
   $languages = language_list();
   $default_language = language_default();
   $update_static_language_list = FALSE;
+  $added_locales = array();
   foreach ($languages as $target) {
     if (isset($target->lingotek_locale) && !strlen($target->lingotek_locale)) {
       $drupal_language_code = $target->language;
       $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE);
       lingotek_enable_language_by_code($drupal_language_code, $lingotek_locale);
       $update_static_language_list = TRUE;
+      $added_locales[] = $lingotek_locale;
     }
   }
   if ($update_static_language_list) {
     drupal_static_reset('language_list');
+  }
+  if (!empty($added_locales)) {
+    drupal_set_message(t('Added the following locales to the languages table: @added.', array('@added' => implode(', ', $added_locales))));
+  }
+  else {
+    drupal_set_message(t('All locales already set in the languages table.'));
   }
 }
 
@@ -1052,16 +1060,6 @@ function lingotek_get_module_info($field = NULL) {
  */
 function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) {
   LingotekLog::trace(__METHOD__);
-
-  lingotek_set_priority();
-  lingotek_set_defaults();
-  lingotek_migration_1();
-  lingotek_migration_2();
-  lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
-  if (module_exists('field_collection')) {
-    lingotek_add_default_lang_to_field_collections(); // a temp solution, setting 'und' values for field collections
-    lingotek_add_neutral_lang_to_field_collections();
-  }
   
   $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
   if ($show_messages) {
@@ -1073,101 +1071,9 @@ function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) 
   }
 }
 
-function lingotek_add_default_lang_to_field_collections() {
-  lingotek_fix_field_collection_languages($to_lang_neutral=FALSE);
-}
-
-function lingotek_add_neutral_lang_to_field_collections() {
-  lingotek_fix_field_collection_languages($to_lang_neutral=TRUE);
-}
-
-function lingotek_fix_field_collection_languages($to_lang_neutral=TRUE) {
-  // find the difference between all entities and the und ones
-  // for each table:
-  //   find all entries containing the default language but no 'und' language
-  //   for each entry:
-  //     insert a corresponding 'und' line
-
-  $language = language_default();
-  $langcode = $language->language;
-
-  if ($to_lang_neutral == TRUE) {
-    $from_lang = $langcode;
-    $to_lang = LANGUAGE_NONE;
-  }
-  else {
-    $from_lang = LANGUAGE_NONE;
-    $to_lang = $langcode;
-  }
-  
-  $fc_str = 'field_collection_item';
- 
-  $bundles = field_info_bundles($fc_str);
-  foreach ($bundles as $bundle_key => $bundle_val) {
-   
-    $instances = field_info_instances($fc_str, $bundle_key);
-   
-    foreach ($instances as $instance_key => $instance_val) {
-     
-      $query = new EntityFieldQuery;
-     
-      $fc_full_entities = $query
-        ->entityCondition('entity_type', $fc_str)
-        ->entityCondition('bundle', $bundle_key)
-        ->entityCondition('deleted', 0)
-        ->fieldLanguageCondition($instance_key, $from_lang)
-        ->execute();
-     
-      if (empty($fc_full_entities)) {
-        continue;
-      }
-      
-      $fc_und_entities = $query
-        ->entityCondition('entity_type', $fc_str)
-        ->entityCondition('bundle', $bundle_key)
-        ->entityCondition('deleted', 0)
-        ->fieldLanguageCondition($instance_key, $to_lang)
-        ->execute();
-     
-      foreach ($fc_full_entities[$fc_str] as $fc_key => $fc_obj) {
-       
-        // if the entity isn't in the list of entities that have 'und', then add it!
-        if (empty($fc_und_entities) || !array_key_exists($fc_key, $fc_und_entities[$fc_str])) {
-          // add an entry with the new langcode to the database
-          $entity = entity_load($fc_str, array($fc_obj->item_id));          
-          foreach ($entity[$fc_obj->item_id]->{$instance_key}[$from_lang] as $delta => $delta_content) {
-            try {
-              $submission = array(
-                    'entity_type' => $fc_str,
-                    'bundle' => $bundle_key,
-                    'entity_id' => $fc_obj->item_id,
-                    'revision_id' => $fc_obj->revision_id,
-                    'language' => $to_lang,
-                    'delta' => $delta,
-                    );
-              foreach ($delta_content as $dc_key => $dc_val) {
-                if ($dc_key == 'safe_value') { // this is just a sanitized version of value, which we don't need
-                  continue;
-                }
-                if (is_array($dc_val)) {
-                  $submission[$instance_key . '_' . $dc_key] = serialize($dc_val);
-                }
-                else {
-                  $submission[$instance_key . '_' . $dc_key] = $dc_val;
-                }
-              }
-              db_insert('field_data_' . $instance_key)
-                  ->fields($submission)
-                  ->execute();
-            }
-            catch (Exception $e) {
-              // pass, as one or more deltas probably already have the undefined language set
-            }
-          }
-        }
-      }
-    }
-  }
+function lingotek_cleanup_field_languages() {
+  $cleanup_batch = lingotek_field_language_data_cleanup_batch_create(FALSE);
+  batch_set($cleanup_batch);
 }
 
 /**
@@ -1689,18 +1595,59 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
  * Clean up field-collection fields
  */
 function lingotek_cleanup_field_collection_fields() {
+  // todo: This function is MySQL-specific.  Needs refactoring to be db-agnostic.
+
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
 
-  // update all lines in field-collection field tables to be undefined,
+  // Update all lines in field-collection field tables to be undefined,
   // ignoring duplicates, then delete all lines in field-collection
   // field tables that aren't undefined.
+
+  $fc_fields_found = 0;
+  $fc_dups_found = 0;
   foreach (array_keys($field_collection_field_types) as $fc_field_name) {
+    $fc_langs = lingotek_cleanup_get_dirty_field_collection_fields("field_data_" . $fc_field_name);
+    if (!$fc_langs) {
+      // No language-specific field-collection fields exist in this table
+      continue;
+    }
+    // Make sure one of each field has an undefined entry.
+    // We do this by first adding the count of affected fields, and then
+    // removing the remaining ones (duplicates) below, to avoid double counting
+    // fields that were actually changed.  (Some would already have language-
+    // neutral and some would not.)
+    foreach ($fc_langs as $fc_lang) {
+      $fc_fields_found += (int) $fc_lang;
+    }
     db_query("UPDATE IGNORE {field_data_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
+
+    // Find all unnecessary fields (language-specific) for removal.
+    $fc_langs = lingotek_cleanup_get_dirty_field_collection_fields("field_data_" . $fc_field_name);
+    // Subtract the ones that were not removed from the update above.
+    foreach ($fc_langs as $dups) {
+      $fc_dups_found += (int) $dups;
+      $fc_fields_found -= (int) $dups;
+    }
     db_query("DELETE FROM {field_data_" . $fc_field_name . "} WHERE language <> '" . LANGUAGE_NONE . "'");
     db_query("UPDATE IGNORE {field_revision_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
     db_query("DELETE FROM {field_revision_" . $fc_field_name . "} WHERE language <> '" . LANGUAGE_NONE . "'");
   }
-  drupal_set_message(t('Updated Field-Collection fields.'));
+  if ($fc_fields_found) {
+    drupal_set_message(format_plural($fc_fields_found, t('Set 1 field-collection entry to be language neutral'), t('Set @ff field-collection entries to be language neutral.', array('@ff' => $fc_fields_found))));
+  }
+  if ($fc_dups_found) {
+    drupal_set_message(format_plural($fc_dups_found, t('Removed 1 unnecessary language-specific field-collection entry'), t('Removed @ff unnecessary language-specific field-collection entries.', array('@ff' => $fc_dups_found))));
+  }
+  if (!$fc_fields_found && !$fc_dups_found) {
+    drupal_set_message(t('All field-collection entries were already correctly set to be language neutral.'));
+  }
+}
+
+function lingotek_cleanup_get_dirty_field_collection_fields($field_collection_table) {
+  $query = "SELECT COUNT(entity_id) FROM {" . $field_collection_table . "} WHERE language != '" . LANGUAGE_NONE . "' GROUP BY entity_type, bundle, entity_id, delta";
+  $result = db_query($query)->fetchCol();
+  $empty_array = array();
+  return ($result && is_array($result) ? $result : $empty_array);
 }
 
 /**
@@ -1708,15 +1655,32 @@ function lingotek_cleanup_field_collection_fields() {
  */
 function lingotek_cleanup_message_types() {
   $default_lang = lingotek_get_source_language();
+  $def_lang_name = language_default('name');
   $message_types = message_type_load();
+  $missing_lang = 0;
+  $und_lang = 0;
   foreach ($message_types as $mt) {
     if (!($mt->language) || $mt->language == LANGUAGE_NONE) {
+      if (!($mt->language)) {
+        $missing_lang++;
+      }
+      elseif ($mt->language == LANGUAGE_NONE) {
+        $und_lang++;
+      }
       $mte = entity_load_single('message_type', $mt->id);
       $mte->language = $default_lang;
       message_type_save($mte);
     }
   }
-  drupal_set_message(t('Updated missing and undefined languages for Message Types.'));
+  if ($missing_lang) {
+    drupal_set_message(format_plural($missing_lang, t('Set 1 message type with missing language to @lang.', array('@lang' => $def_lang_name)), t('Set @count message types with missing languages to @lang.', array('@count' => $missing_lang, '@lang' => $def_lang_name))));
+  }
+  if ($und_lang) {
+    drupal_set_message(format_plural($und_lang, t('Set 1 language-neutral message type to @lang.', array('@lang' => $def_lang_name)), t('Set @count language-neutral message types to @lang.', array('@count' => $und_lang, '@lang' => $def_lang_name))));
+  }
+  if (!$missing_lang && !$und_lang) {
+    drupal_set_message(t('All message types were already correctly set to a specific language.'));
+  }
 }
 
 function lingotek_has_unconventional_fc_translations() {
@@ -1746,7 +1710,7 @@ function lingotek_has_unconventional_fc_translations() {
 /**
  * Batch Create: Lingotek Identify Content - create informative lingotek_entity_ data (in lingotek table) for pre-existing content
  */
-function lingotek_batch_identify_translations($autoset_batch = TRUE) {
+function lingotek_batch_identify_translations($process_batch = FALSE) {
   LingotekLog::trace(__METHOD__);
 
   $operations = array();
@@ -1784,14 +1748,10 @@ function lingotek_batch_identify_translations($autoset_batch = TRUE) {
     'operations' => $operations,
     'finished' => 'lingotek_batch_identify_translations_finished'
   );
-
-  if ($autoset_batch) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
-    batch_set($batch); //batch_process('<front>');
+  batch_set($batch);
+  // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+  if ($process_batch) {
     batch_process('admin/settings/lingotek/settings');
-    //batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-  }
-  else {
-    return $batch;
   }
 }
 
@@ -1839,4 +1799,31 @@ function lingotek_entity_changed($entity_type, $entity, $entity_id) {
     return TRUE;
   }
   return FALSE;
+}
+
+/**
+ * Initialize cleanup batch processing
+ * 
+ * @param array $context
+ * @return boolean
+ */
+function lingotek_cleanup_batch_init(&$context) {
+  // A stub function for now.
+  return TRUE;
+}
+
+/**
+ * Run a function that sets a batch
+ *
+ * These are functions that set a batch to be processed at the next
+ * batch_process() call.
+ */
+function lingotek_set_batch_function($func_name) {
+  $functions = array(
+    'lingotek_function_node_languages' => 'lingotek_cleanup_field_languages',
+    'lingotek_function_identify_translations' => 'lingotek_batch_identify_translations',
+  );
+  if (isset($functions[$func_name])) {
+    $functions[$func_name]();
+  }
 }

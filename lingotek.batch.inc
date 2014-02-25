@@ -252,9 +252,6 @@ function lingotek_batch_disassociate_content() {
   $operations[] = array('LingotekSync::disassociateAllChunks', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 
-  $operations[] = array('lingotek_cleanup_utility', array(FALSE, FALSE)); // identify translatable content
-  drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
-
   $batch = array(
     'title' => t('Disassociating Translations'),
     'operations' => $operations,
@@ -373,29 +370,44 @@ function lingotek_sync_download_target_finished($success, $results, $operations)
 /**
  * Batch API worker for changing the node language setting.
  */
-function lingotek_node_source_language_cleanup_batch_worker($nid, $source_language) {
+function lingotek_node_source_language_cleanup_batch_worker($nid, $source_language, &$context) {
 
+  $context['message'] = t("Setting language for node #@nid to '@sl", array('@nid' => $nid, '@sl' => $source_language));
   $loaded_node = lingotek_node_load_default($nid);
   $loaded_node->language = $source_language;
   $loaded_node->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
   node_save($loaded_node);
+
+  if (!isset($context['results']['node_cleanup'])) {
+    $context['results']['node_cleanup'] = 0;
+  }
+  $context['results']['node_cleanup'] ++;
 }
 
 /**
  * Batch API worker for changing the url alias language setting
  */
-function lingotek_node_url_alias_source_language_cleanup_batch_worker($nid, $source_language) {
+function lingotek_node_url_alias_source_language_cleanup_batch_worker($nid, $source_language, &$context) {
 
   $conditions = array('source' => 'node/' . $nid);
   $conditions['language'] = $source_language;
   $source_alias = path_load($conditions);
+
+  if (!isset($context['results']['url_alias_cleanup'])) {
+    $context['results']['url_alias_cleanup'] = array('searched' => 0, 'added' => 0);
+  }
+  $context['results']['url_alias_cleanup']['searched'] ++;
+
   if ($source_alias === FALSE) { // if no url alias exists for this node in the source language
     $conditions['language'] = LANGUAGE_NONE;
     $und_alias = path_load($conditions);
+
     if ($und_alias !== FALSE) { // if a url alias exists for language none (
+      $context['message'] = t("Saving language-neutral path alias for node #@nid to language '@sl'", array('@nid' => $nid, '@sl' => $source_language));
       $conditions['language'] = $source_language;
       $conditions['alias'] = $und_alias['alias'];
       path_save($conditions);
+      $context['results']['url_alias_cleanup']['added'] ++;
     }
   }
 }
@@ -408,10 +420,12 @@ function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
   $process_node = lingotek_node_load_default($nid);
   if ($process_node->nid) {
     lingotek_field_language_data_cleanup_update_node($process_node->nid);
-    //$context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
     $context['message'] = t('Preparing translatable content: @node_title', array('@node_title' => $process_node->title));
   }
-
+  if (!isset($context['results']['field_cleanup'])) {
+    $context['results']['field_cleanup'] = 0;
+  }
+  $context['results']['field_cleanup'] ++;
   $context['finished'] = 1;
 }
 
@@ -459,7 +473,22 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
  * FINISHED CALLBACK:  lingotek_field_language_data_cleanup_batch_create()
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
-  
+  if ($success) {
+    $def_lang = language_default('name');
+    if (isset($results['node_cleanup'])) {
+      $num_nodes = (int) $results['node_cleanup'];
+      drupal_set_message(t('Converted @num nodes from language neutral to @def_lang', array('@num' => $num_nodes, '@def_lang' => $def_lang)));
+    }
+    if (isset($results['url_alias_cleanup'])) {
+      $searched = (int) $results['url_alias_cleanup']['searched'];
+      $added = (int) $results['url_alias_cleanup']['added'];
+      drupal_set_message(t('Searched @searched nodes for url aliases, added @added @lang aliases.', array('@searched' => $searched, '@added' => $added, '@lang' => $def_lang)));
+    }
+    if (isset($results['field_cleanup'])) {
+      $num_nodes = (int) $results['field_cleanup'];
+      drupal_set_message(t('Checked @num nodes for language-neutral fields.', array('@num' => $num_nodes)));
+    }
+  }
 }
 
 function lingotek_update_target_progress_batch_create($entity_type, $nids) {
@@ -492,5 +521,6 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
  */
 function lingotek_batch_keystore_worker($entity_type, $entity_id, $key, $value, $update_on_dup, &$context) {
   $result = lingotek_keystore($entity_type, $entity_id, $key, $value, $update_on_dup);
+  $context['message'] = t('Updating tracking information for @et #@eid', array('@et' => $entity_type, '@eid' => $entity_id));
   $context['results'][] = $result;
 }
