@@ -1572,9 +1572,6 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     $storage_entity->path = path_load(array('source' => 'node/' . $storage_entity->nid, 'language' => $storage_entity->language));
     $storage_entity->path['alias'] = isset($storage_entity->path['alias']) ? $storage_entity->path['alias'] : '';
     $storage_entity->path['pathauto'] = 0;
-
-    lingotek_keystore_delete($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale);
-    lingotek_keystore($entity_type, $entity->nid, 'target_last_downloaded_' . $lingotek_locale, time());
   }
 
   cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
@@ -1583,14 +1580,10 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
 
   if ($status == LingotekSync::STATUS_READY) {
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
-    lingotek_keystore($entity_type, $id, 'target_sync_progress_' . $lingotek_locale, 100);
   }
   elseif (empty($status)) {
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
   }
-  
-  //Update the timestamp showing that we have downloaded the target
-  lingotek_keystore($entity_type, $id, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
   
   if ($context) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;

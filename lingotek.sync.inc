@@ -482,7 +482,7 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
 }
 
 /**
-* Updates the 'target_sync_progress_[lang-code]' field for every target in the lingotek table
+* Updates the 'target_sync_status_[lang-code]' field for every target in the lingotek table
 * with the overall progress returned by TMS
 *
 * @param int array $document_ids
@@ -533,12 +533,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
         $delete_nids_maybe[] = $entity_id;
         $target_number = isset($targets_count[$entity_id]->targets) ? $targets_count[$entity_id]->targets : 0;
       }
-      $total_percentage = 0;
       foreach ($completion as $language => $percent) {
-        $entity_values[] = array($entity_type, $entity_id, 'target_sync_progress_' . $language, $percent);
-        $entity_values[] = array($entity_type, $entity_id, 'target_sync_last_progress_updated_' . $language, time());
-        $total_percentage += $percent;
-
         $status = LingotekSync::getTargetStatus($doc_id, $language);
         if (isset($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language)) {
           if ($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language) { // If the workflow is complete
@@ -593,7 +588,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
 
 
 /**
-* Updates the 'target_sync_progress_[lang-code]' field for every target in the 
+* Updates the 'target_sync_status_[lang-code]' field for every target in the
 * lingotek_config_metadata table with the overall progress returned by TMS
 *
 * @param int array $document_ids
@@ -638,14 +633,8 @@ function lingotek_update_config_progress($document_ids) {
         LingotekLog::error("Lingotek doc ID '@doc_id' not found", array('@doc_id' => $doc_id));
         continue;
       }
-      $trans_obj->deleteMetadataValue('target_sync_progress_%');
-      $trans_obj->deleteMetadataValue('target_sync_last_progress_updated_%');
-      $trans_obj->deleteMetadataValue('translation_progress');
    
       foreach ($completion as $language => $percent) {
-        $cfg_values[] = array($trans_obj->cid, 'target_sync_progress_' . $language, $percent);
-        $cfg_values[] = array($trans_obj->cid, 'target_sync_last_progress_updated_' . $language, time());
-
         $status = LingotekSync::getTargetStatus($doc_id, $language);
         if (isset($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language)) {
           if ($progress_report->workflowCompletedByDocumentIdAndTargetLocale->$doc_id->$language) { // If the workflow is complete

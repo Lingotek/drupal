@@ -692,6 +692,7 @@ function lingotek_update_7505(&$sandbox) {
   $or = db_or();
   $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
   $or->condition('entity_key', 'target_sync_last_progress_updated_%', 'LIKE');
+  $or->condition('entity_key', 'target_last_downloaded_%', 'LIKE');
   $or->condition('entity_key', 'translation_progress');
   $count = $delete->condition($or)->execute();
   return format_plural($count, 'Removed one unused entry from the <i>lingotek_entity_metadata</i> table.', 'Removed @count unused entries from the <i>lingotek_entity_metadata</i> table.');

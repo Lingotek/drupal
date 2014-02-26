@@ -61,8 +61,6 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
         lingotek_keystore('node', $node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
       }
-      lingotek_keystore('node', $node->nid, 'target_sync_progress_' . $lingotek_locale, $progress_percentage);
-      lingotek_keystore('node', $node->nid, 'target_sync_last_progress_updated_' . $lingotek_locale, time());
     }
 
     $form['fieldset'] = array(

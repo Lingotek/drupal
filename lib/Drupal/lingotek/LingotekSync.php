@@ -106,14 +106,11 @@ class LingotekSync {
   }
 
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes
-  public static function deleteTargetEntriesForAllNodes($lingotek_locale) {
+  public static function deleteTargetEntriesForAllEntities($lingotek_locale) {
     $keys = array(
       'target_sync_status_' . $lingotek_locale,
-      'target_sync_last_progress_updated_' . $lingotek_locale,
-      'target_sync_progress_' . $lingotek_locale,
-      'target_last_downloaded_' . $lingotek_locale,
     );
-    db_delete('lingotek_entity_metadata')->condition('lingokey', $keys, 'IN')->execute();
+    db_delete('lingotek_entity_metadata')->condition('entity_key', $keys, 'IN')->execute();
   }
 
   public static function deleteTargetEntriesForAllChunks($lingotek_locale) {
@@ -122,7 +119,7 @@ class LingotekSync {
   }
 
   public static function deleteTargetEntriesForAllDocs($lingotek_locale) {
-    self::deleteTargetEntriesForAllNodes($lingotek_locale);
+    self::deleteTargetEntriesForAllEntities($lingotek_locale);
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
   }
   
