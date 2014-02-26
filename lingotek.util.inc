@@ -874,7 +874,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
   if (is_null($lingotek_locale)) {
     return FALSE;
   }
-  lingotek_add_missing_locales(); // fills in any missing lingotek_locale values to the languages table
+  lingotek_add_missing_locales(FALSE); // fills in any missing lingotek_locale values to the languages table
   $language = lingotek_lookup_language_by_locale($lingotek_locale);
 
   if ($language) {
@@ -910,7 +910,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
 /**
  * Fills in any missing lingotek_locale values to the languages table
  */
-function lingotek_add_missing_locales() {
+function lingotek_add_missing_locales($show_message = TRUE) {
   LingotekLog::trace(__METHOD__);
   $languages = language_list();
   $default_language = language_default();
@@ -932,7 +932,9 @@ function lingotek_add_missing_locales() {
     drupal_set_message(t('Added the following locales to the languages table: @added.', array('@added' => implode(', ', $added_locales))));
   }
   else {
-    drupal_set_message(t('All locales already set in the languages table.'));
+    if ($show_message) {
+      drupal_set_message(t('All locales already set in the languages table.'));
+    }
   }
 }
 

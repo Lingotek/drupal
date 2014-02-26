@@ -484,6 +484,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       'name' => 'lingotek_prepare_config_blocks',
       'class' => array('field'),
     ),
+    '#default_value' => 1,
   );
   $prep_taxonomy_chbx = array(
     '#id' => 'lingotek_prepare_config_taxonomies',
@@ -494,6 +495,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       'name' => 'lingotek_prepare_config_taxonomies',
       'class' => array('field'),
     ),
+    '#default_value' => 1,
   );
   $prep_menus_chbx = array(
     '#id' => 'lingotek_prepare_config_menus',
@@ -504,6 +506,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       'name' => 'lingotek_prepare_config_menus',
       'class' => array('field'),
     ),
+    '#default_value' => 1,
   );
 
   if (variable_get('lingotek_use_translation_from_drupal', 1)) {
@@ -598,19 +601,19 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 
   // prepare for any configuration translation, if applicable
   $config_groups = array();
-  if (variable_get('lingotek_translate_config_blocks', 0) && $form_state['input']['lingotek_prepare_config_blocks']) {
+  if (variable_get('lingotek_translate_config_blocks', 0) && isset($form_state['input']['lingotek_prepare_config_blocks'])) {
     lingotek_admin_prepare_blocks();
     $config_groups['blocks'] = 'blocks';
   }
-  if (variable_get('lingotek_translate_config_taxonomies', 0)) {
+  if (variable_get('lingotek_translate_config_taxonomies', 0) && isset($form_state['input']['lingotek_prepare_config_taxonomies'])) {
     lingotek_admin_prepare_taxonomies();
     $config_groups['taxonomy'] = 'taxonomy';
   }
-  if (variable_get('lingotek_translate_config_menus', 0)) {
+  if (variable_get('lingotek_translate_config_menus', 0) && isset($form_state['input']['lingotek_prepare_config_menus'])) {
     lingotek_admin_prepare_menus();
     $config_groups['menu'] = 'menu';
   }
-  if (variable_get('lingotek_translate_config_views', 0)) {
+  if (variable_get('lingotek_translate_config_views', 0) && isset($form_state['input']['lingotek_prepare_config_views'])) {
     lingotek_admin_prepare_views();
     $config_groups['views'] = 'views';
   }
@@ -650,13 +653,15 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 function lingotek_admin_setup_nonbuiltins_batch($operations) {
   $batch = array(
     'operations' => $operations,
-    'title' => 'Identifying translatable content',
-    'init_message' => t('Completing setup process'),
+    'title' => 'Site translation preparation',
+    'init_message' => t('Preparing to run batch actions'),
     'progress_message' => t('Processed @current out of @total.'),
     'error_message' => t('An error has occurred during setup.  Please review the log for more information.'),
     'file' => drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc',
   );
-  batch_set($batch);
+  if ($operations && count($operations)) {
+    batch_set($batch);
+  }
 }
 
 function lingotek_admin_load_l10n_update_batch($modules) {
