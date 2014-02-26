@@ -19,11 +19,13 @@ function lingotek_field_language_data_cleanup_batch_create($autoset_batch = FALS
   $entity_type = 'node';
   $source_language = lingotek_get_source_language();
   $translated_types = lingotek_translatable_node_types(); // Get the list of content types that we translate.
+  $disabled_types = lingotek_get_disabled_bundles($entity_type);
+  $enabled_types = array_diff($translated_types, $disabled_types);
   // Fix node level language settings
   // This selects all the nodes that are language undefined and are content types we need to translate.  We need to change these nodes from language undefined to the source language.
   $query1 = new EntityFieldQuery();
   $nodes1 = $query1->entityCondition('entity_type', $entity_type)
-      ->entityCondition('bundle', $translated_types)
+      ->entityCondition('bundle', $enabled_types)
       ->propertyCondition('language', 'und', '=')
       ->execute();
 
@@ -40,6 +42,7 @@ function lingotek_field_language_data_cleanup_batch_create($autoset_batch = FALS
   // This selects all nodes that have a language defined.  It does NOT select the UND language nodes.
   $query2 = new EntityFieldQuery();
   $nodes2 = $query2->entityCondition('entity_type', $entity_type)
+      ->entityCondition('bundle', $enabled_types)
       ->propertyCondition('language', 'und', '<>')
       ->execute();
 

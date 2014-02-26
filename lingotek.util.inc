@@ -1057,22 +1057,6 @@ function lingotek_get_module_info($field = NULL) {
   return is_null($field) ? $info : (isset($info[$field]) ? $info[$field] : NULL);
 }
 
-/**
- * Clean-up utility
- */
-function lingotek_cleanup_utility($show_messages = TRUE, $autoset_batch = TRUE) {
-  LingotekLog::trace(__METHOD__);
-  
-  $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($autoset_batch = $autoset_batch);
-  if ($show_messages) {
-    drupal_set_message(t('The field data cleanup utility completed.'));
-  }
-
-  if ($cleanup_batch && is_array($cleanup_batch)) {
-    return $cleanup_batch;
-  }
-}
-
 function lingotek_cleanup_field_languages() {
   $cleanup_batch = lingotek_field_language_data_cleanup_batch_create(FALSE);
   batch_set($cleanup_batch);
@@ -1310,6 +1294,11 @@ function lingotek_list_entities_with_field_in_language_by_bundle($entity_type, $
   $query->entityCondition('entity_type', $entity_type);
   if (!is_null($bundle)) {
     $query->entityCondition('bundle', $bundle);
+  }
+  else {
+    // Include only the enabled bundle types
+    $disabled_bundles = array_merge(array('-1'), lingotek_get_disabled_bundles($entity_type));
+    $query->entityCondition('bundle', $disabled_bundles, 'NOT IN');
   }
   if ($exclude_source) {
     $query->propertyCondition('language', $language, "!=");

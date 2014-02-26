@@ -846,17 +846,6 @@ function lingotek_setup_additional_translation_settings_form_submit($form, &$for
   
   lingotek_setup_allowed_translation_formats();
   $operations = array();
-  $batch = array();
-  if (variable_get('lingotek_setup_cleanup_nodes')) {
-    $batch = lingotek_field_language_data_cleanup_batch_create(FALSE); // return the batch, rather than autoset to execute
-  }
-  if (isset($batch['operations'])) {
-    $operations = array_merge($operations, $batch['operations']);
-  }
-  $batch = lingotek_batch_identify_translations(FALSE);
-  if ($batch && isset($batch['operations'])) {
-    $operations = array_merge($operations, $batch['operations']);
-  }
   $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path('additional');
   
   lingotek_admin_additional_translation_settings_form_submit($form, $form_state, $additional_operations=$operations);

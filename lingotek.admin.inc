@@ -365,6 +365,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     if (FALSE !== strpos($key, 'profile_')) {
       $content_type = substr($key, strlen('profile_'));
       $entity_profiles[$entity_type][$content_type] = $value;
+      variable_set('lingotek_entity_profiles', $entity_profiles);
     }
     // Look for any prepare/cleanup functions to record for future running
     if (FALSE !== strpos($key, 'lingotek_function')) {
@@ -377,7 +378,6 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
   }
   $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path($entity_type);
   variable_set('lingotek_enabled_fields', $enabled_fields);
-  variable_set('lingotek_entity_profiles', $entity_profiles);
   drupal_set_message(t('Your content types have been updated.'));
 
   // This is needed for versions of Drupal core 7.10 and lower. See http://drupal.org/node/1380660 for details.
