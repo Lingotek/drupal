@@ -68,8 +68,8 @@ class LingotekSync {
       ->condition('entity_type', $entity_type)
       ->condition('entity_id', $entity_id)
       ->condition('entity_key', 'target_sync_status%', 'LIKE')
-      ->fields(array('value' => $status))
-      ->execute();
+      ->fields(array('value' => $status, 'modified' => time()))
+        ->execute();
   }
 
   public static function setNodeStatus($node_id, $status) {

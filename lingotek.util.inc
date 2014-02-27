@@ -67,7 +67,7 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
 
       $result = db_select('lingotek_entity_metadata', 'n')
         ->fields('n', array(db_escape_field('entity_key'), db_escape_field('value')))
-        ->condition('entity_type', $entity_type)
+          ->condition('entity_type', $entity_type)
         ->condition(db_escape_field('entity_id'), $entity_id)
         ->execute();
       foreach ($result as $row) {
@@ -95,19 +95,22 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
     }
     //Insert/Update the specified key and value
     else {
+      $timestamp = time();
       $row = array(
         db_escape_field('entity_type') => $entity_type,        
         db_escape_field('entity_id') => $entity_id,
         db_escape_field('entity_key') => $key,
         db_escape_field('value') => $value,
+        db_escape_field('created') => $timestamp,
+        db_escape_field('modified') => $timestamp
       );
-
       $existing_value = lingotek_keystore($entity_type, $entity_id, $key);
-      if ($existing_value === FALSE) { //Insert
+      if ($existing_value === FALSE) { // insert
         drupal_write_record('lingotek_entity_metadata', $row);
         return "$entity_id : $key => $value (INSERTED)";
       }
       elseif ($update_on_dup) { // key exists -> update
+        unset($row[db_escape_field('created')]); // retain original created timestamp
         drupal_write_record('lingotek_entity_metadata', $row, array(db_escape_field('entity_type'), db_escape_field('entity_id'), db_escape_field('entity_key')));
         return "$entity_id : $key => $value (UPDATED)";
       }

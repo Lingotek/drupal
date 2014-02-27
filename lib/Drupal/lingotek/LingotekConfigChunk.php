@@ -619,19 +619,23 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    */
   public function setMetadataValue($key, $value) {
     $metadata = $this->metadata();
+    $timestamp = time();
     if (!isset($metadata[$key])) {
       db_insert('lingotek_config_metadata')
           ->fields(array(
             'id' => $this->cid,
             'config_key' => $key,
             'value' => $value,
+            'created' => $timestamp,
+            'modified' => $timestamp
           ))
           ->execute();
     }
     else {
       db_update('lingotek_config_metadata')
           ->fields(array(
-            'value' => $value
+            'value' => $value,
+            'modified' => $timestamp
           ))
           ->condition('id', $this->cid)
           ->condition('config_key', $key)

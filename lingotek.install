@@ -117,6 +117,18 @@ function lingotek_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'created' => array(
+        'type' => 'int',
+        'description' => "created timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      ),
+      'modified' => array(
+        'type' => 'int',
+        'description' => "last modified timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      )
     ),
     'primary key' => array(
       'entity_id',
@@ -155,6 +167,18 @@ function lingotek_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'created' => array(
+        'type' => 'int',
+        'description' => "created timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      ),
+      'modified' => array(
+        'type' => 'int',
+        'description' => "last modified timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      )
     ),
     'primary key' => array(
       'id',
@@ -696,4 +720,38 @@ function lingotek_update_7505(&$sandbox) {
   $or->condition('entity_key', 'translation_progress');
   $count = $delete->condition($or)->execute();
   return format_plural($count, 'Removed one unused entry from the <i>lingotek_entity_metadata</i> table.', 'Removed @count unused entries from the <i>lingotek_entity_metadata</i> table.');
+}
+
+/**
+ * Add created and modified timestamps to lingotek schemas.
+ */
+function lingotek_update_7506() {
+  $tables = array('lingotek_entity_metadata', 'lingotek_config_metadata');
+  $fields = array('created', 'modified');
+  $spec = array(
+    'created' => array(
+      'type' => 'int',
+    'description' => "created timestamp",
+    'default' => 0,
+    'not null' => TRUE,
+  ),
+    'modified' => array(
+      'type' => 'int',
+      'description' => "last modified timestamp",
+      'default' => 0,
+      'not null' => TRUE,
+  ));
+  $total = 0;
+  foreach ($tables as $table) {
+    foreach ($fields as $field) {
+      try {
+        db_add_field($table, $field, $spec[$field]);
+      } catch (Exception $ex) {
+        // already exists (no need to do anything)
+      }
+      $total++;
+    }
+  }
+  $message = "The fields have successfully been added ($total/$total).";
+  return $message;
 }
