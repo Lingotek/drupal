@@ -64,6 +64,8 @@ Drupal.behaviors.lingotekAdminForm = {
 
     //ensure that there is a vertical tab set
     if($('.vertical-tabs').length != 0) {
+
+      // account summary
       $('fieldset#ltk-account', context).drupalSetSummary(function (context) {
         return Drupal.t($('#account_summary').val() + ' / ' + $('#connection_summary').val());
       });
@@ -72,11 +74,13 @@ Drupal.behaviors.lingotekAdminForm = {
       $('fieldset.ltk-entity', context).drupalSetSummary(function (context) {
         $list = [];
         total = 0;
+
         $(context).find('select').each(function( index ) {
-          var name = $(this).attr('name');
+          var $this = $(this);
+          var name = $this.attr('name');
           if(name && name.substring(0, 7) == 'profile') {
-            if($(this).val() != 'DISABLED') {
-              $list.push($(this).val());
+            if($this.val() != 'DISABLED') {
+              $list.push($this.val());
             }
             total++;
           }
@@ -86,6 +90,39 @@ Drupal.behaviors.lingotekAdminForm = {
         } else {
           return '<span class="ltk-enabled-text">' + Drupal.t('Enabled') + '</span>: ' + $list.length + '/' + total + ' ' + Drupal.t('content types');
         }
+      });
+
+      // utility enabling/disabling
+      $('.ltk-entity').each(function(index) {
+
+        var $entity_utility_options = $(this).find('.js-utility-options');
+        var $entity_profile_selects = $(this).find('select');
+
+        function turn_on() {
+          $entity_utility_options.find('input[type="checkbox"]').attr('checked', true);
+          $entity_utility_options.show();
+        }
+        function turn_off() {
+          $entity_utility_options.find('input[type="checkbox"]').attr('checked', false);
+          $entity_utility_options.hide();
+        }
+        turn_off();// disable by default
+
+        $entity_profile_selects.each(function() {
+          var $ddl = $(this);
+          $ddl.data('initial', $ddl.val());// store initial value to detect need for utilities
+        });
+        $entity_profile_selects.change(function() {
+          var $ddl = $(this);
+          var initial = $ddl.data('initial');
+          var current = $ddl.val();
+          if (initial == 'DISABLED' && current != 'DISABLED') {
+            turn_on();
+          } else {
+            turn_off();
+          }
+        });
+
       });
 
       // config summary

@@ -236,7 +236,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   if ($setup_complete) {
-    $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: changing the profile will update existing nodes for all settings except the project, workflow, vault, and method (e.g. node/field)';
+    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => $entity_type));
   }
 
   lingotek_admin_add_entity_specific_changes($form, $form_state, $entity_type);
@@ -260,32 +260,33 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
  *   The entity type for which to change the form or form state
  */
 function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entity_type) {
-  $form['translation_' . $entity_type]['spacer'] = array(
-    '#type' => 'markup',
-    '#markup' => '<div class="spacer">&nbsp;</div>',
+  $form['translation_' . $entity_type]['container'] = array(
+    '#type' => 'container',
+    '#prefix' => '<div class="spacer">&nbsp;</div>',
+    '#attributes' => array('class' => array('js-utility-options')),
   );
   switch ($entity_type) {
     case 'node':
       // Optional clean up node languages.
       $node_languages = 'lingotek_function_node_languages';
-      $form['translation_' . $entity_type][$node_languages] = array(
+      $form['translation_' . $entity_type]['container'][$node_languages] = array(
         '#type' => 'checkbox',
-        '#title' => t('Clean up node languages'),
-        '#description' => t('Set all language-neutral nodes (and underlying fields and path aliases) for enabled content types to be @lang.', array('@lang' => language_default('name'))),
-        '#default_value' => variable_get($node_languages, 1),
+        '#title' => t('Prepare node languages'),
+        '#description' => t('Set all <i>language neutral</i> nodes (and underlying fields and path aliases) for enabled content types to be @lang.', array('@lang' => language_default('name'))),
+        '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
       );
       // Optionally identify existing translations.
       $identify_translations = 'lingotek_function_identify_translations';
-      $form['translation_' . $entity_type][$identify_translations] = array(
+      $form['translation_' . $entity_type]['container'][$identify_translations] = array(
         '#type' => 'checkbox',
-        '#title' => t('Identify Existing Translations'),
+        '#title' => t('Identify existing translations'),
         '#description' => t('Identify existing node translations currently untracked by the Lingotek Translation module.  The translation status for all newly discovered translations will be set to <i>untracked</i>.'),
-        '#default_value' => variable_get($identify_translations, 1),
+        '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
       );
       break;
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
-      $form['translation_' . $entity_type]['types']['#suffix'] = '* Note: Field collections will be uploaded and downloaded at the same time as their parent.';
+      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: Field collections will be uploaded and downloaded at the same time as their parent.');
       break;
   }
 }
@@ -1332,7 +1333,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   );
 
   $form['add'] = array(
-    '#markup' => t('<p><a href="@url" class="ctools-use-modal"><i class="fa fa-plus"></i> Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
+    '#markup' => t('<p><a href="@url" class="ctools-use-modal"><i class="fa fa-plus" style="padding-right:3px"></i>Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
   );
 
   return $form;
