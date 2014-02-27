@@ -1862,7 +1862,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     'desc' => t('Identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>.'),
   );
 
-  $cleanup_functions['lingotek_cleanup_field_languages'] = array(
+  $cleanup_functions['lingotek_cleanup_field_languages_for_nodes'] = array(
     'title' => t('Prepare nodes'),
     'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
   );

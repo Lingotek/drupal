@@ -642,88 +642,54 @@ function lingotek_managed_entity_types($include_all = FALSE) {
 }
 
 /**
- * Content node types linked to 'translatable' fields.
+ * Return content types linked to 'translatable' fields for the given entity type.
  */
-function lingotek_translatable_node_types() {
+function lingotek_translatable_types($entity_type) {
 
   $types = array();
 
-  $fields = lingotek_translatable_node_field_details();
-  foreach ($fields as $field) {
+  $entity_types = lingotek_translatable_field_details();
+  if (!isset($entity_types[$entity_type])) {
+    // No fields found for the given entity type.
+    return $types;
+  }
+  foreach ($entity_types[$entity_type] as $field) {
     foreach ($field['bundles'] as $bundle) {
       $types[$bundle] = $bundle;
     }
   }
-
   if (count($types) > 0) {
     $types = array_keys($types);
   }
-
   return $types;
 }
 
 /**
  * Goes though ALL the fields in the system and gets the details about the ones that are marked 'translatable'.
  */
-function lingotek_translatable_node_field_details() {
+function lingotek_translatable_field_details() {
 
   $fields = field_info_fields();
   $translatable_fields = array();
 
   foreach ($fields as $field_id => $field) {
     foreach ($field['bundles'] as $type => $instance) {
-      /*
-        echo '<br>FieldID: ' . $field_id;
-        echo '<br>Field: ' . $field;
-        echo '<br>Type: ' . $type;
-        echo '<br>Instance: ' . $instance;
-       */
-
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
         $field_db_table = array_keys($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
         $field_db_table = array_shift($field_db_table);
-        $translatable_fields[] = array(
+        $translatable_fields[$type][] = array(
           'entity_type' => $type,
           'machine_name' => $field['field_name'],
           'db_table' => $field_db_table,
           'bundles' => $field['bundles'][$type],
         );
       }
-      //echo '<br>';
     }
   }
-
-  /* Return data format
-    array (
-    0 =>
-    array (
-    'entity_type' => 'node',
-    'machine_name' => 'body',
-    'db_table' => 'field_data_body',
-    'bundles' =>
-    array (
-    0 => 'page',
-    1 => 'article',
-    ),
-    ),
-    1 =>
-    array (
-    'entity_type' => 'node',
-    'machine_name' => 'title_field',
-    'db_table' => 'field_data_title_field',
-    'bundles' =>
-    array (
-    0 => 'article',
-    1 => 'page',
-    ),
-    ),
-    )
-   */
   return $translatable_fields;
 }
 
-// END:  lingotek_translatable_node_field_details()
 // --- Active and Target Language management Functions
 
 /**
@@ -1060,9 +1026,17 @@ function lingotek_get_module_info($field = NULL) {
   return is_null($field) ? $info : (isset($info[$field]) ? $info[$field] : NULL);
 }
 
-function lingotek_cleanup_field_languages() {
-  $cleanup_batch = lingotek_field_language_data_cleanup_batch_create(FALSE);
+function lingotek_cleanup_field_languages($entity_type) {
+  $cleanup_batch = lingotek_field_language_data_cleanup_batch_create($entity_type, FALSE);
   batch_set($cleanup_batch);
+}
+
+function lingotek_cleanup_field_languages_for_nodes() {
+  lingotek_cleanup_field_languages('node');
+}
+
+function lingotek_cleanup_field_languages_for_comments() {
+  lingotek_cleanup_field_languages('comment');
 }
 
 /**
@@ -1824,7 +1798,7 @@ function lingotek_cleanup_batch_init(&$context) {
  */
 function lingotek_set_batch_function($func_name) {
   $functions = array(
-    'lingotek_function_node_languages' => 'lingotek_cleanup_field_languages',
+    'lingotek_function_node_languages' => 'lingotek_cleanup_field_languages_for_nodes',
     'lingotek_function_identify_translations' => 'lingotek_batch_identify_translations',
   );
   if (isset($functions[$func_name])) {

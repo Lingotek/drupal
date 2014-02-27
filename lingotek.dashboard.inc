@@ -192,35 +192,6 @@ function lingotek_dashboard_command_ajax() {
 }
 
 /**
- * Returns an array that maps a content_type to one (and just 1) of its translated fields.
- * We can then use that array to track how many nodes have been translated.
- */
-function lingotek_get_type_field_mapping($node_type = NULL) {
-
-  $type_field_mapping = array(); // Keep as an array, cause you have to loop it for each content type time you do a count.
-  $node_types = lingotek_translatable_node_types(); // These are the node types marked for translation.  I need 1 field from each to count off of.
-  $node_fields = lingotek_translatable_node_field_details(); // These are the fields that are translated.
-  //debug( $node_types );
-  //debug( $node_fields );
-  // Match a translated node_type up with a translated node_field, and grab the db_table where its data is stored so we can query off of it.
-  foreach ($node_types as $type) {
-    //debug( $type );
-    // Look for that type in one of the field bundles.
-    foreach ($node_fields as $field) {
-      //debug( $field );
-      // Is this type, listed in the bundles for this field?  ie:  does this type, use this field?
-      if (in_array($type, $field['bundles'])) {
-        //debug( 'The Type: ' . $type . ' Uses the field: ' . $field['machine_name'] );
-        $type_field_mapping[$type] = $field['db_table']; // Get a db table for this field that we can do a language count off of it.
-        break; // Only need one field, bail on this loop.
-      }
-    } // END:  loop fields
-  } // END:  loop types
-
-  return $type_field_mapping;
-}
-
-/**
  * Get the details of each language
  */
 function lingotek_get_language_details($lingotek_locale_requested = NULL) {

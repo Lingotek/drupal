@@ -13,12 +13,11 @@
  * @param bool $autoset_batch
  * If this batch was NOT created from a form_submit() handler, then pass in TRUE
  */
-function lingotek_field_language_data_cleanup_batch_create($autoset_batch = FALSE) {
+function lingotek_field_language_data_cleanup_batch_create($entity_type, $autoset_batch = FALSE) {
   LingotekLog::trace(__METHOD__);
   $operations = array();
-  $entity_type = 'node';
   $source_language = lingotek_get_source_language();
-  $translated_types = lingotek_translatable_node_types(); // Get the list of content types that we translate.
+  $translated_types = lingotek_translatable_types($entity_type); // Get the list of content types that we translate.
   $disabled_types = lingotek_get_disabled_bundles($entity_type);
   $enabled_types = array_diff($translated_types, $disabled_types);
   // Fix node level language settings
