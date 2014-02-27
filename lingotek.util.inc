@@ -1589,6 +1589,7 @@ function lingotek_cleanup_field_collection_fields() {
   // todo: This function is MySQL-specific.  Needs refactoring to be db-agnostic.
 
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
+  $disabled_types = lingotek_get_disabled_bundles('field_collection_item');
 
   // Update all lines in field-collection field tables to be undefined,
   // ignoring duplicates, then delete all lines in field-collection
@@ -1600,6 +1601,10 @@ function lingotek_cleanup_field_collection_fields() {
     $fc_langs = lingotek_cleanup_get_dirty_field_collection_fields("field_data_" . $fc_field_name);
     if (!$fc_langs) {
       // No language-specific field-collection fields exist in this table
+      continue;
+    }
+    if (in_array($fc_field_name, $disabled_types)) {
+      // Lingotek does not manage this field-collection type.  Abort.
       continue;
     }
     // Make sure one of each field has an undefined entry.
@@ -1648,9 +1653,14 @@ function lingotek_cleanup_message_types() {
   $default_lang = lingotek_get_source_language();
   $def_lang_name = language_default('name');
   $message_types = message_type_load();
+  $disabled_types = lingotek_get_disabled_bundles('message_type');
   $missing_lang = 0;
   $und_lang = 0;
   foreach ($message_types as $mt) {
+    if (in_array($mt->category, $disabled_types)) {
+      // Lingotek does not manage this message type category.  Abort.
+      continue;
+    }
     if (!($mt->language) || $mt->language == LANGUAGE_NONE) {
       if (!($mt->language)) {
         $missing_lang++;
