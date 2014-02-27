@@ -91,14 +91,14 @@ Drupal.behaviors.lingotekAdminForm = {
       // config summary
       $('fieldset#ltk-config', context).drupalSetSummary(function (context) {
         $list = [];
-        max = 5;
+        max = 7;
         extra_text = "";
         
         $(context).find('input').each(function( index ) {
           if($(this).attr('checked') ==  'checked' || $(this).attr('checked') == '1') {
             name = $(this).attr('name');
             
-            if(name.indexOf("config") != -1){
+            if(name.indexOf("translate_config") != -1){
                 name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
                 $list.push(name);
             }

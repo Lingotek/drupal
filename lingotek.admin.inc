@@ -489,7 +489,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   $prep_taxonomy_chbx = array(
     '#id' => 'lingotek_prepare_config_taxonomies',
     '#type' => 'checkbox',
-    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options, in preparation for handling string-based translations of taxonomy vocabularies and terms.'),
+    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options.'),
     '#attributes' => array(
       'id' => array('lingotek_prepare_config_taxonomies'),
       'name' => 'lingotek_prepare_config_taxonomies',
