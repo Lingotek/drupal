@@ -391,7 +391,8 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     );
 
     batch_set($batch);
-
+  }
+  if (batch_get()) {
     // if coming from the settings page, stay there; otherwise, continue with setup pages
     $cur_path = current_path();
     if ($cur_path == 'admin/settings/lingotek/settings' ||
