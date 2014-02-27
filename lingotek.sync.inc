@@ -232,6 +232,8 @@ function lingotek_form_bulk_sync($form, $form_state) {
       'lingotek_translate_config_menus' => t('menus'),
       'lingotek_translate_config_views' => t('views'),
       'lingotek_translate_config_taxonomies' => t('taxonomy vocabularies & terms'),
+      'lingotek_translate_config_fields' => t('field labels'),
+      'lingotek_translate_config_misc' => t('other miscellaneous strings'),
     );
     $config_types_included = array();
     $config_types_excluded = array();
