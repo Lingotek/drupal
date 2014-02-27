@@ -955,10 +955,10 @@ function lingotek_admin_prepare_menus() {
       ->condition('i18n_tsid', 0)
       ->execute();
   if ($result) {
-    drupal_set_message(format_plural($result, t('Set 1 menu link to <i>Language neutral</i>.'), t('Set @num menu links to <i>Language neutral</i>.', array('@num' => (int) $result))));
+    drupal_set_message(format_plural($result, t('Set 1 menu link to <i>language neutral</i>.'), t('Set @num menu links to <i>Language neutral</i>.', array('@num' => (int) $result))));
   }
   else {
-    drupal_set_message(t('All menu links already set to <i>Language neutral</i>.'));
+    drupal_set_message(t('All menu links already set to <i>language neutral</i>.'));
   }
 
   return TRUE;
@@ -1679,7 +1679,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $form['utilities'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Additional Utilities'),
+    '#title' => t('Lingotek Utilities'),
     '#description' => '',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -1828,7 +1828,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   $form['cleanup'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => t('Cleanup Utilities'),
+    '#title' => t('Multilingual Preparation Utilities'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -1856,33 +1856,28 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
   );
    * END TEMPLATE
    */
-  $cleanup_functions['lingotek_add_missing_locales'] = array(
-    'title' => t('Add Missing Locales'),
-    'desc' => t('Fills in any missing locale values to the languages table'),
+  $cleanup_functions['lingotek_batch_identify_translations'] = array(
+    'title' => '<span style="white-space: nowrap">' . t('Identify existing translations') . '</span>',
+    'desc' => t('Identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>.'),
   );
 
   $cleanup_functions['lingotek_cleanup_field_languages'] = array(
-    'title' => t('Cleanup Node Languages'),
-    'desc' => t('Sets all language-neutral nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
-  );
-
-  $cleanup_functions['lingotek_batch_identify_translations'] = array(
-    'title' => t('Identify Existing Translations'),
-    'desc' => t('Identifies existing node translations currently untracked by the Lingotek module. The translation status for all newly discovered translations will be set to <i>current</i>.'),
+    'title' => t('Prepare nodes'),
+    'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
   );
 
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
-    'desc' => t('Update all blocks to be translatable in the Languages settings.'),
+    'desc' => t('Update all blocks to be translatable in the <i>Languages</i> settings.'),
   );
 
   $cleanup_functions['lingotek_admin_prepare_taxonomies'] = array(
-    'title' => t('Prepare taxonomy vocabularies'),
+    'title' => t('Prepare taxonomy'),
     'desc' => t('Update all taxonomy vocabularies to use translation mode <i>Localize</i> in the Multilingual Options, in preparation for handling string-based translations of taxonomy vocabularies and terms.'),
   );
 
   $cleanup_functions['lingotek_admin_prepare_menus'] = array(
-    'title' => t('Prepare menus and menu links'),
+    'title' => t('Prepare menus'),
     'desc' => t('Update all menus to use <i>Translate and Localize</i> in the Multilingual Options, and update all menu links to be <i>Language neutral</i>.'),
   );
 
@@ -1892,7 +1887,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
       $extra_note = '<div style="color:red;">' . t('Note: It appears you have existing field collection translations that may not conform with Lingotek\'s method of translating field collections.  Using this utility will delete those translations.') . '</div>';
     }
     $cleanup_functions['lingotek_cleanup_field_collection_fields'] = array(
-      'title' => t('Prepare Field Collections'),
+      'title' => t('Prepare field collections'),
       'desc' => t("Sets all field-collections to be <i>language neutral</i>, allowing the underlying fields to be enabled for multilingual use.  !note", array('!note' => $extra_note)),
     );
   }
@@ -1903,6 +1898,11 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
       'desc' => t("Sets all empty and undefined languages associated with the Message API module to be the site-default language."),
     );
   }
+
+  $cleanup_functions['lingotek_add_missing_locales'] = array(
+    'title' => t('Add missing locales'),
+    'desc' => t('Fills in any missing locale values to the <i>languages</i> table'),
+  );
 
   $form['cleanup']['grid'] = array(
     '#type' => 'tableselect',
