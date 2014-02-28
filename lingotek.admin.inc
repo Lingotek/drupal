@@ -1845,7 +1845,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
   );
 
   $cleanup_function_headers = array(
-    'title' => array('data' => t('All Utilities')),
+    'title' => array('data' => t('Utility')),
     'desc' => array('data' => t('Description')),
   );
 
