@@ -465,7 +465,6 @@ function lingotek_update_7213(&$sandbox) {
  * Adds the lingotek_translation_agent table and links it to the locales_target table
  */
 function lingotek_update_7401(&$sandbox) {
-
   // add the translation_agent table
   $module = 'lingotek';
   $table = 'lingotek_translation_agent';
@@ -483,12 +482,13 @@ function lingotek_update_7401(&$sandbox) {
     array('id' => '1', 'name' => 'unknown'),
     array('id' => '2', 'name' => 'Drupal Translations'),
     array('id' => '3', 'name' => 'Lingotek'),
-    );
+  );
 
   foreach ($agents as $a) {
-    db_insert('lingotek_translation_agent')
-      ->fields(array('id' => $a['id'], 'name' => $a['name']))
-      ->execute();
+    db_merge('lingotek_translation_agent')
+        ->key(array('id' => $a['id']))
+        ->fields(array('id' => $a['id'], 'name' => $a['name']))
+        ->execute();
   }
 
   $spec = array(
