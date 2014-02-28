@@ -95,10 +95,37 @@ function lingotek_bulk_grid_form($form, $form_state) {
       $_GET['page'] = 0; // used by PagerDefault class to get page number
     }
   }
-  
+
+  $filter_set = FALSE;
+
+  if (isset($_SESSION['grid_filters'])) {
+    foreach ($_SESSION['grid_filters'] as $key => $value) {
+      if (is_array($value)) {
+        $keys = array_keys($value);
+        if (count($keys) == 1) {
+          if ($keys[0] != '' && $keys[0] != 'all') {
+            $filter_set = TRUE;
+          }
+        }
+        elseif (count($keys) > 1) {
+          $filter_set = TRUE;
+        }
+      }
+      else {
+        // $value === '0' accounts for the case of the automatic profile
+        if ((!empty($value) && $value != 'all') || $value === '0') {
+          $filter_set = TRUE;
+        }
+      }
+    }
+  }
+
   // Run query to get table rows
   $table_data = lingotek_grid_get_rows($entity_type, $form, $form_state);
-  
+
+  $results_first = (($page - 1) * $limit_select) + 1;
+  $results_last = $results_first + count($table_data) - 1;
+
   $form['customize'] = array(
     '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
   );
@@ -141,7 +168,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow/' . $entity_type, array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
     );
   }
-  
+
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
@@ -171,30 +198,6 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l(t('Advanced') . '<span style="margin: 0 5px;"></span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action'))))
   );
 
-  $filter_set = FALSE;
-  
-  if (isset($_SESSION['grid_filters'])) {  
-    foreach ($_SESSION['grid_filters'] as $key => $value) {
-      if (is_array($value)) {
-        $keys = array_keys($value);
-        if (count($keys) == 1) {
-          if ($keys[0] != ''  && $keys[0]  != 'all') {
-            $filter_set = TRUE;
-          }
-        }
-        elseif (count($keys) > 1) {
-          $filter_set = TRUE;
-        }
-      }
-      else {
-        // $value === '0' accounts for the case of the automatic profile
-        if ((!empty($value) && $value != 'all') || $value === '0') {
-          $filter_set = TRUE;
-        }
-      }
-    }
-  }
-  
   if ($filter_set) {
     $form['filter_message'] = array(
       '#markup' => '<span style="white-space:nowrap;">' . l('<i class="fa fa-times" style="margin: 0 5px;"></i>' . t('Clear Filters') . '</span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear/' . $entity_type, array('html' => TRUE)) . '</span>',
@@ -215,7 +218,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#name' => 'actions_submit',
     '#submit' => array('lingotek_grid_action_submit'),
   );
-  
+
   // div container for the table and pager
   $form['grid_container'] = array(
     '#type' => 'container',
@@ -277,18 +280,15 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
   $form_state['values']['limit_select'] = $limit;
   
-  $results_first = (($page - 1) * $limit_select) + 1;
-
-  $results_last = $results_first + count($table_data) - 1;
   if ($results_last > 0) {
     $form['count'] = array(
-      '#markup' => '<span id="grid-result-summary">'
+      '#markup' => '<span class="grid-result-summary">'
       . t('Displaying @first - @last', array('@first' => $results_first, '@last' => $results_last))
       . ($filter_set ? (' (' . t('filtered results') . ')') : '') . '</span>',
     );
   }
 
-  if (count($table_data) >= 10 || $page > 1) {
+  if (count($table_data) >= $limit || $page > 1) {
     $form['limit_select'] = array(
       '#type' => 'select',
       '#prefix' => '<div id="page-limit">',
@@ -488,11 +488,7 @@ function lingotek_grid_filter_submit($form, $form_state) {
     foreach ($form_state['values'] as $key => $value) {
       $add_key_to_session = FALSE;
       $nest = NULL;
-      if ($key == 'limit_select') {
-        $add_key_to_session = TRUE;
-        $lselected = TRUE;
-      }
-      elseif (strpos($key, '__filter')) {
+      if (strpos($key, '__filter')) {
         $add_key_to_session = TRUE;
         $nest = 'grid_filters'; //stored in $_SESSION['grid_filters'][$key]
       }
@@ -511,9 +507,6 @@ function lingotek_grid_filter_submit($form, $form_state) {
 
       }
     }
-  }
-  if (!$lselected) {
-    $_SESSION['limit_select'] = 10;
   }
 }
 
@@ -965,7 +958,6 @@ function lingotek_grid_process_elements($elements, $prefix, $suffix) {
  *    Populates The Grid
  */
 function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=FALSE) {
-
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;
