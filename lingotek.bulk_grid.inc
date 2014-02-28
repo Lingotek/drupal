@@ -1299,7 +1299,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
     $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
 
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled); // show translation statuses
+    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $row->language); // show translation statuses
 
     $configuration = '';
 
@@ -1335,7 +1335,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     
     $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
     if ($language_col) {
-      $source .= ($row->language == 'und' ? t('Language Neutral') : t($languages[$row->language]->name));
+      $source .= ($row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name));
     }
     $source .= '</span>';
     $linked_statuses = array(LingotekSync::STATUS_EDITED, LingotekSync::STATUS_FAILED);
@@ -1395,7 +1395,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   return $table_data;
 }
 
-function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE) {
+function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL) {
   $html = "";
 
   $legend = array(
@@ -1425,6 +1425,9 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
       $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled; //array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
       $lang_code = $lingotek_languages[$original_locale]->language;
       $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
+      if (!is_null($source_language) && $lang_code === $source_language) {
+        continue; // hide source language targets (shouldn't exist anyways)
+      }
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
         $status = strtoupper($statuses[$key]);
         $status = $disabled && strtoupper($status) != LingotekSync::STATUS_CURRENT ? LingotekSync::STATUS_UNTRACKED : $status;
