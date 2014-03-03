@@ -1297,7 +1297,7 @@ function lingotek_list_entities_with_field_in_language($entity_type, $field, $la
  * @return array
  *   An array of the machine names for translatable fields in the system.
  */
-function lingotek_translatable_node_fields() {
+function lingotek_translatable_fields() {
   $fields = field_info_fields();
   $translatable_fields = array();
   foreach ($fields as $field_id => $field) {
@@ -1530,10 +1530,10 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
     if (!isset($subtractions[$e['type']][$e['id']])) {
       if (isset($doc_ids[$e['type']][$e['id']])) {
         $e['document_id'] = $doc_ids[$e['type']][$e['id']];
-        $filtered_entities[] = $e;
+        $filtered_entities[$e['id']] = $e;
       }
       elseif (!$uploaded_only) {
-        $filtered_entities[] = $e;
+        $filtered_entities[$e['id']] = $e;
       }
     }
   }
@@ -1553,7 +1553,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
     if (isset($doc_ids[$aei->entity_type][$aei->entity_id])) {
       $addition['document_id'] = $doc_ids[$aei->entity_type][$aei->entity_id];
     }
-    $filtered_entities[] = $addition;
+    $filtered_entities[$aei->entity_id] = $addition;
   }
   
   return $filtered_entities;
@@ -1799,9 +1799,24 @@ function lingotek_cleanup_batch_init(&$context) {
 function lingotek_set_batch_function($func_name) {
   $functions = array(
     'lingotek_function_node_languages' => 'lingotek_cleanup_field_languages_for_nodes',
+    'lingotek_function_comment_languages' => 'lingotek_cleanup_field_languages_for_comments',
     'lingotek_function_identify_translations' => 'lingotek_batch_identify_translations',
   );
   if (isset($functions[$func_name])) {
     $functions[$func_name]();
   }
+}
+
+/**
+ * Get all entities enabled for Lingotek, by entity type
+ * 
+ * @param string $entity_type
+ *   The entity type to search for entities
+ * @return array
+ *   an array of arrays containing entity type and entity ID
+ */
+function lingotek_get_enabled_entities_by_type($entity_type) {
+  $profiles = lingotek_get_profiles();
+  $profile_ids = array_keys($profiles);
+  return lingotek_get_entities_by_profile_id($profile_ids, $entity_type);
 }

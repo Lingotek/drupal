@@ -284,6 +284,15 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
         '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
       );
       break;
+    case 'comment':
+      // Optional clean up comment languages.
+      $comment_languages = 'lingotek_function_comment_languages';
+      $form['translation_' . $entity_type]['container'][$comment_languages] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Prepare comment languages'),
+        '#description' => t('Set all <i>language neutral</i> comments (and underlying fields) for enabled comment types to be @language.', array('@language' => language_default('name'))),
+        '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
+      );
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
       $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: Field collections will be uploaded and downloaded at the same time as their parent.');
@@ -1866,6 +1875,11 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
   $cleanup_functions['lingotek_cleanup_field_languages_for_nodes'] = array(
     'title' => t('Prepare nodes'),
     'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
+  );
+
+  $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
+    'title' => t('Prepare comments'),
+    'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
   );
 
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
