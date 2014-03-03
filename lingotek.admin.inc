@@ -1910,7 +1910,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   if (module_exists('message')) {
     $cleanup_functions['lingotek_cleanup_message_types'] = array(
-      'title' => t('Prepare Message Types'),
+      'title' => t('Prepare message types'),
       'desc' => t("Sets all empty and undefined languages associated with the Message API module to be the site-default language."),
     );
   }
