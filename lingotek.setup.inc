@@ -549,7 +549,6 @@ function lingotek_project_vault_select_form() {
     '#type' => 'submit',
     '#value' => t('Next')
   );
-  //$form['#submit'] = 'lingotek_project_vault_select_form_submit';
 
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
@@ -802,7 +801,7 @@ function lingotek_setup_comment_translation_settings_form($form, &$form_state) {
     } // if the user went back, remove the last element, which is this page.
     $form['translation_comment']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
-  $form['translation_comment']['#submit'] = 'lingotek_setup_comment_translation_settings_form_submit';
+  $form['translation_comment']['#submit'] = array('lingotek_setup_comment_translation_settings_form_submit');
 
   unset($form['translation_comment']['actions']['submit']);
   $form['translation_comment']['actions']['submit'] = array(
@@ -829,7 +828,7 @@ function lingotek_setup_additional_translation_settings_form($form, &$form_state
     } // if the user went back, remove the last element, which is this page.
     $form['additional_translation']['actions']['lingotek_back_button'] = lingotek_setup_link(end($_SESSION['lingotek_setup_path']), t('Previous Step'));
   }
-  $form['additional_translation']['#submit'] = 'lingotek_setup_additional_translation_settings_form_submit';
+  $form['additional_translation']['#submit'] = array('lingotek_setup_additional_translation_settings_form_submit');
 
   unset($form['additional_translation']['actions']['submit']);
   $form['additional_translation']['actions']['submit'] = array(
