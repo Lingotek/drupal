@@ -968,7 +968,11 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   
   $label_col  = isset($info['entity keys']['label']) && $info['entity keys']['label'] ? $info['entity keys']['label'] : NULL;
   $bundle_col = isset($info['entity keys']['bundle']) && $info['entity keys']['bundle'] && isset($entity_properties[$info['entity keys']['bundle']]) ? $info['entity keys']['bundle'] : NULL;
-  $language_col = isset($info['entity keys']['language']) && $info['entity keys']['language'] ? $info['entity keys']['language'] : NULL;
+  // All managed entity types should have a language column.
+  // Field collection entities have one, but it is called 'langcode'.
+  // Message type entities have one, and it is called 'language'; but currently it does not appear in their entity keys.
+  // So, the $language_col looks for the correct language field, and then guesses it is 'language' if it doesn't find one.
+  $language_col = isset($info['entity keys']['language']) && $info['entity keys']['language'] ? $info['entity keys']['language'] : 'language';
   
   $table_data = array();
   $limit = isset($_SESSION['limit_select']) ? $_SESSION['limit_select'] : 10;
@@ -1045,8 +1049,9 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
   }
   elseif ($bundle_col) {
-    if ($info['entity keys']['bundle'] != 'type')
+    if ($info['entity keys']['bundle'] != 'type') {
       $query->addField('n', $info['entity keys']['bundle']);
+    }
     $query->addField('n', $info['entity keys']['bundle'], 'type');
   }
 
@@ -1061,9 +1066,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   $filters = isset($_SESSION['grid_filters']) ? $_SESSION['grid_filters'] : array();
 
   global $language;
+  $localized_label_table = 'field_data_' . $label_col . '_field';
 
-  if ($label_col && language_default()->language != $language->language) {
-    $query->leftJoin('field_data_' . $label_col . '_field', 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
+  if ($label_col && language_default()->language != $language->language && db_table_exists($localized_label_table)) {
+    $query->leftJoin($localized_label_table, 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
     $query->addField('t_title', $label_col . '_field_value', 'localized_title');
   }
 
@@ -1345,7 +1351,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     $actions .= empty($disabled_class) ? $pm_link : $pm_icon;
     $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $entity_id . ',"edit"); return false;')));
 
-    $no_localized_title = (language_default()->language != $language->language) && $row->localized_title == '';
+    $no_localized_title = (language_default()->language != $language->language) && (!isset($row->localized_title) or $row->localized_title == '');
 
     if ($label_col) {
       $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';

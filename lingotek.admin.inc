@@ -95,6 +95,14 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   $entity_type_info = entity_get_info($entity_type);
   $bundles = $entity_type_info['bundles'];
 
+  // Add the default bundle related to message types, if applicable.
+  if ($entity_type == 'message_type' && module_exists('message')) {
+    $bundles['message_type'] = array(
+      'label' => 'message_type',
+      'rdf_mapping' => array(),
+    );
+  }
+
   $types = array();
   $translate = variable_get('lingotek_enabled_fields', array());
   $translate = isset($translate[$entity_type]) ? $translate[$entity_type] : array();
