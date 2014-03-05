@@ -273,6 +273,17 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
     '#prefix' => '<div class="spacer">&nbsp;</div>',
     '#attributes' => array('class' => array('js-utility-options')),
   );
+
+  // Warning note when enabling nodes with existing Lingotek translations
+  $entities = entity_load($entity_type);
+  $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';
+  if ($entity_type != 'field_collection_item' && lingotek_previously_managed_translations($entity_type, array_keys($entities))) {
+    $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">Note: If edits have been made to the local copy of translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek.</div>';
+  }
+  $form['translation_' . $entity_type]['container']['overwrite_warning'] = array(
+    '#markup' => $overwrite_markup,
+  );
+
   switch ($entity_type) {
     case 'node':
       // Optional clean up node languages.

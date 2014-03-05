@@ -1820,3 +1820,21 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
   $profile_ids = array_keys($profiles);
   return lingotek_get_entities_by_profile_id($profile_ids, $entity_type);
 }
+
+function lingotek_previously_managed_translations($entity_type, $entity_ids) {
+  $enabled_entities = lingotek_get_enabled_entities_by_type($entity_type);
+  $entity_ids = array_diff($entity_ids, array_keys($enabled_entities));
+  if (empty($entity_ids)) {
+    // No disabled entities found.
+    return FALSE;
+  }
+  $query = db_select('lingotek_entity_metadata', 'lem');
+  $query->fields('lem', array('entity_id'))
+      ->condition('lem.entity_id', $entity_ids, 'IN')
+      ->condition('lem.entity_key', 'document_id');
+  $result = $query->execute();
+  if ($result->rowCount()) {
+    return TRUE;
+  }
+  return FALSE;
+}
