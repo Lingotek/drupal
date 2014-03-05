@@ -276,8 +276,14 @@ class LingotekSync {
 
       // exclude disabled nodes (including those that have disabled bundles)
       $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
-      if(!empty($disabled_entity_ids)){
-        $query->condition($properties['entity keys']['id'], $disabled_entity_ids, "NOT IN"); //exclude disabled entities
+      if (count($disabled_entity_ids)) {
+        $enabled_entity_ids = lingotek_get_enabled_entities_by_type($entity_base_table);
+        if (count($disabled_entity_ids) < count($enabled_entity_ids)) {
+          $query->condition($properties['entity keys']['id'], array_keys($disabled_entity_ids), "NOT IN"); //exclude disabled entities
+        }
+        else {
+          $query->condition($properties['entity keys']['id'], array_keys($enabled_entity_ids), "IN"); //include only eabled entities
+        }
       }
 
       $count = $query->countQuery()->execute()->fetchField();
