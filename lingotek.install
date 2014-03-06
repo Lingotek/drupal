@@ -752,6 +752,27 @@ function lingotek_update_7506() {
       $total++;
     }
   }
-  $message = "The fields have successfully been added ($total/$total).";
+  $message = "Creation and modification timestamps for Lingotek metadata have successfully been added ($total/$total).";
   return $message;
+}
+
+/**
+ * Reset any bundles currently set to legacy profile 'CUSTOM' to be 'MANUAL'.
+ */
+function lingotek_update_7507() {
+  $entity_profiles = variable_get('lingotek_entity_profiles', NULL);
+  $custom_bundles = array();
+  foreach ($entity_profiles as $entity_type => $bundles) {
+    foreach ($bundles as $bundle_name => $profile) {
+      if ($profile == LingotekSync::PROFILE_CUSTOM) {
+        $entity_profiles[$entity_type][$bundle_name] = LingotekSync::PROFILE_MANUAL;
+        $custom_bundles[] = "$bundle_name ($entity_type)";
+      }
+    }
+  }
+  if (!empty($custom_bundles)) {
+    variable_set('lingotek_entity_profiles', $entity_profiles);
+    $message = "The following content types have been reset from profile 'CUSTOM' to profile 'MANUAL': " . implode(', ', $custom_bundles) . "  (The 'CUSTOM' profile is now reserved for individual entities only and is no longer supported at the content-type level.)";
+    return $message;
+  }
 }
