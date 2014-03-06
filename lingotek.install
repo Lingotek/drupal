@@ -4,6 +4,9 @@
  * @file
  * Installation for Lingotek Community Translation Module.
  */
+
+require_once drupal_get_filename('module', 'lingotek');
+
 /*
  * Implements hook_requirements() (see:
  */
