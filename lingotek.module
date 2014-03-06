@@ -882,7 +882,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
 
   // Warning note when enabling nodes with existing Lingotek translations
   $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';
-  if (lingotek_previously_managed_translations($entity_type, $nids)) {
+  if (isset($nids) && lingotek_previously_managed_translations($entity_type, $nids)) {
     $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">Note: One or more of the entities selected have had previous Lingotek translations.  If edits have been made to the local copy of these translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek.</div>';
   }
   $form['lingotek']['overwrite_warning'] = array(
