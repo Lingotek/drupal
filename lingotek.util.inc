@@ -1645,7 +1645,7 @@ function lingotek_cleanup_message_types() {
       elseif ($mt->language == LANGUAGE_NONE) {
         $und_lang++;
       }
-      $mte = entity_load_single('message_type', $mt->id);
+      $mte = lingotek_entity_load_single('message_type', $mt->id);
       $mte->language = $default_lang;
       message_type_save($mte);
     }
@@ -1768,7 +1768,11 @@ function lingotek_node_based_trans_ready() {
 }
 
 function lingotek_entity_changed($entity_type, $entity, $entity_id) {
-  $xml = lingotek_entity_xml_body($entity_type, $entity);
+  $updated_entity = $entity;
+  if ($entity_type == 'node') {
+    $updated_entity = lingotek_node_load_default($entity_id);
+  }
+  $xml = lingotek_entity_xml_body($entity_type, $updated_entity);
   $hash = md5($xml);
   $oldhash = lingotek_keystore($entity_type, $entity_id, 'hash');
 

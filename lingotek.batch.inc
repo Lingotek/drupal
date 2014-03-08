@@ -393,17 +393,11 @@ function lingotek_sync_download_target_finished($success, $results, $operations)
 function lingotek_source_language_cleanup_batch_worker($entity_type, $entity_id, $source_language, &$context) {
 
   $context['message'] = t("Setting language for @entity_type #@id to '@source_language", array('@entity_type' => $entity_type, '@id' => $entity_id, '@source_language' => $source_language));
-  if ($entity_type == 'node') {
-    // For nodes, we must change the info for the most current version.
-    $loaded_entity = lingotek_node_load_default($entity_id);
-    $loaded_entity->language = $source_language;
-  }
-  else {
-    $loaded_entity = entity_load_single($entity_type, $entity_id);
-    $info = entity_get_info($entity_type);
-    if (!empty($info['entity keys']['language']) && isset($loaded_entity->{$info['entity keys']['language']})) {
-      $loaded_entity->{$info['entity keys']['language']} = $source_language;
-    }
+
+  $loaded_entity = lingotek_entity_load_single($entity_type, $entity_id);
+  $info = entity_get_info($entity_type);
+  if (!empty($info['entity keys']['language']) && isset($loaded_entity->{$info['entity keys']['language']})) {
+    $loaded_entity->{$info['entity keys']['language']} = $source_language;
   }
   $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
   entity_save($entity_type, $loaded_entity);
@@ -478,13 +472,8 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
 
   $edited = FALSE;
 
-  if ($entity_type == 'node') {
-    // Ensure we have the most current version of the node.
-    $entity = lingotek_node_load_default($entity_id, NULL, TRUE);
-  }
-  else {
-    $entity = entity_load_single($entity_type, $entity_id);
-  }
+  $entity = lingotek_entity_load_single($entity_type, $entity_id);
+
   if (!$entity) {
     LingotekLog::error('Attempted to update field data for a non-existent @entity_type: @entity_id', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
     return $edited;

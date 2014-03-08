@@ -1803,7 +1803,7 @@ function lingotek_get_fc_parent($entity) {
   }
   foreach ($result as $parent_type => $parents) {
     foreach (array_keys($parents) as $parent_id) {
-      return entity_load_single($parent_type, $parent_id);
+      return lingotek_entity_load_single($parent_type, $parent_id);
     }
   }
 }

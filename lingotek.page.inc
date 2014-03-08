@@ -635,7 +635,7 @@ function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale)
     cache_clear_all($entity_id, "cache_entity_$entity_type");
   }
 
-  $entity = entity_load_single($entity_type, $entity_id);
+  $entity = lingotek_entity_load_single($entity_type, $entity_id);
 
   if ($entity->language == $drupal_language_code) {
     drupal_goto($entity_type . '/' . $entity_id . '/edit');

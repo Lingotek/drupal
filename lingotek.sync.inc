@@ -479,7 +479,6 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
 
   $document_ids = array_unique($document_ids);
 
-  //dpm($download_locales); dpm($download_targets); dpm($upload_nids); dpm($vals);
   lingotek_sync_batch_create($upload_config, $download_targets, $download_targets_incomplete, NULL, $extra_operations);
 }
 
