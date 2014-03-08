@@ -556,10 +556,12 @@ class LingotekSync {
     // get the list of all segments that need updating
     // that belong to the textgroups the user wants translated
     $textgroups = array_merge(array(-1), LingotekConfigChunk::getTextgroupsForTranslation());
+    $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
     $query = db_select('locales_source', 'ls');
     $query->fields('ls', array('lid'))
         ->condition('ls.source', '', '!=')
-        ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN');
+        ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN')
+        ->where('length(ls.source) < ' . (int) $max_length);
     if (in_array('misc', $textgroups)) {
       $or = db_or();
       $or->condition('ls.textgroup', $textgroups, 'IN');
