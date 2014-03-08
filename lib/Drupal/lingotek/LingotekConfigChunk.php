@@ -152,6 +152,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   an array of lids from locales_source
    */
   public static function getSegmentIdsById($chunk_id) {
+    $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
     $include_misc_textgroups = FALSE;
     $textgroups_array = self::getTextgroupsForTranslation();
     if (in_array('misc', $textgroups_array)) {
@@ -167,7 +168,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
                         ".$include_misc?"OR ls.textgroup NOT IN ('default','blocks','taxonomy','menu','views','field'))":")",
       array(':minLid' => self::minLid($chunk_id),
             ':maxLid' => self::maxLid($chunk_id),
-            ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
+            ':maxLen' => $max_length,
         )
     );
     return $result->fetchCol();
@@ -289,6 +290,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $chunk_size = LINGOTEK_CONFIG_CHUNK_SIZE;
     $chunk_min = (intval($chunk_id) - 1) * intval($chunk_size) + 1;
     $chunk_max = (intval($chunk_id) - 1) * intval($chunk_size) + $chunk_size;
+    $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
     $textgroups_array = self::getTextgroupsForTranslation();
     $textgroups = "-1,'" . implode("','", $textgroups_array) . "'";
 
@@ -310,7 +312,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $results = db_query($query, array(
       ':minLid' => $chunk_min,
       ':maxLid' => $chunk_max,
-      ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
+      ':maxLen' => $max_length,
         )
     );
 
