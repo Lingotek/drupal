@@ -70,8 +70,9 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
 function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  //This is necessary to allow comment translations to be update. I am not sure why.
-  if ($entity_type == 'comment') {
+  // Add revision_id to be the same as the entity_id if it was not found or if
+  // it is a comment.
+  if ($vid === NULL || $entity_type == 'comment') {
     $vid = $id;
   }
   
@@ -143,7 +144,16 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
         if (module_exists('field_collection') && $field['type'] == 'field_collection') {
           $default = language_default();
           $default_language = $default->language;
-          $field_collection_id = isset($node_field['und'][$delta]['value']) ? $node_field['und'][$delta]['value'] : $node_field[$default_language][$delta]['value'];
+          if (isset($node_field[LANGUAGE_NONE][$delta]['value'])) {
+            $field_collection_id = $node_field[LANGUAGE_NONE][$delta]['value'];
+          }
+          elseif (isset($node_field[$default_language][$delta]['value'])) {
+            $field_collection_id = $node_field[$language_default][$delta]['value'];
+          }
+          else {
+            // the field-collection field must be empty
+            continue;
+          }
           $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
           if (!$field_collection_item) {
             // The field collection was removed, so disregard any info on it
@@ -205,7 +215,8 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
       if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
         module_load_include('inc', 'pathauto');
         $uri = entity_uri('node', $entity);
-        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $entity), $entity->type, $drupal_language_code);
+        $entity_unchanged = entity_load_unchanged('node', $id);
+        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $entity_unchanged), $entity->type, $drupal_language_code);
       }
     }
     $last_tag = $tag;

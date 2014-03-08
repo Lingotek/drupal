@@ -152,16 +152,23 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   an array of lids from locales_source
    */
   public static function getSegmentIdsById($chunk_id) {
-    $textgroups = "-1,'" . implode("','", self::getTextgroupsForTranslation()) . "'";
+    $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
+    $include_misc_textgroups = FALSE;
+    $textgroups_array = self::getTextgroupsForTranslation();
+    if (in_array('misc', $textgroups_array)) {
+      $include_misc_textgroups = TRUE;
+    }
+    $textgroups = "-1,'" . implode("','", $textgroups_array) . "'";
     $result = db_query(" SELECT ls.lid
                         FROM {locales_source} ls
                         WHERE ls.lid >= :minLid
                         AND ls.lid <= :maxLid
                         AND LENGTH(ls.source) < :maxLen
-                        AND ls.textgroup IN ($textgroups)
-                        ", array(':minLid' => self::minLid($chunk_id),
-      ':maxLid' => self::maxLid($chunk_id),
-      ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
+                        AND (ls.textgroup IN ($textgroups)
+                        ".$include_misc?"OR ls.textgroup NOT IN ('default','blocks','taxonomy','menu','views','field'))":")",
+      array(':minLid' => self::minLid($chunk_id),
+            ':maxLid' => self::maxLid($chunk_id),
+            ':maxLen' => $max_length,
         )
     );
     return $result->fetchCol();
@@ -283,17 +290,29 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $chunk_size = LINGOTEK_CONFIG_CHUNK_SIZE;
     $chunk_min = (intval($chunk_id) - 1) * intval($chunk_size) + 1;
     $chunk_max = (intval($chunk_id) - 1) * intval($chunk_size) + $chunk_size;
-    $textgroups = "-1,'" . implode("','", self::getTextgroupsForTranslation()) . "'";
+    $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
+    $textgroups_array = self::getTextgroupsForTranslation();
+    $textgroups = "-1,'" . implode("','", $textgroups_array) . "'";
 
-    $results = db_query(" SELECT ls.lid, ls.source
-                        FROM {locales_source} ls
-                        WHERE ls.lid >= :minLid
-                        AND ls.lid <= :maxLid
-                        AND LENGTH(ls.source) < :maxLen
-                        AND ls.textgroup IN ($textgroups)
-                        ", array(':minLid' => $chunk_min,
+    $query = "SELECT ls.lid, ls.source
+      FROM {locales_source} ls
+      WHERE ls.lid >= :minLid
+      AND ls.lid <= :maxLid
+      AND LENGTH(ls.source) < :maxLen
+      ";
+    if (in_array('misc', $textgroups_array)) {
+      $query .= "AND (ls.textgroup IN ($textgroups)
+        OR ls.textgroup NOT IN ('default','taxonomy','blocks','menu','views','field'))
+        ";
+    }
+    else {
+      $query .= "AND ls.textgroup IN ($textgroups)";
+    }
+
+    $results = db_query($query, array(
+      ':minLid' => $chunk_min,
       ':maxLid' => $chunk_max,
-      ':maxLen' => LINGOTEK_CONFIG_MAX_SOURCE_LENGTH,
+      ':maxLen' => $max_length,
         )
     );
 
@@ -523,6 +542,14 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
 
   /**
+   * Set the chunk's last error in the config metadata table
+   */
+  public function setLastError($errors) {
+    $this->setMetadataValue('last_sync_error', substr($errors, 0, 255));
+    return $this;
+  }
+
+  /**
    * Set the chunk's target status(es) in the config metadata table
    */
   public function setTargetsStatus($status, $lingotek_locale = 'all') {
@@ -594,19 +621,23 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    */
   public function setMetadataValue($key, $value) {
     $metadata = $this->metadata();
+    $timestamp = time();
     if (!isset($metadata[$key])) {
       db_insert('lingotek_config_metadata')
           ->fields(array(
             'id' => $this->cid,
             'config_key' => $key,
             'value' => $value,
+            'created' => $timestamp,
+            'modified' => $timestamp
           ))
           ->execute();
     }
     else {
       db_update('lingotek_config_metadata')
           ->fields(array(
-            'value' => $value
+            'value' => $value,
+            'modified' => $timestamp
           ))
           ->condition('id', $this->cid)
           ->condition('config_key', $key)
@@ -891,6 +922,12 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     }
     if (variable_get('lingotek_translate_config_views', 0)) {
       $textgroups[] = 'views';
+    }
+    if (variable_get('lingotek_translate_config_fields', 0)) {
+      $textgroups[] = 'field';
+    }
+    if (variable_get('lingotek_translate_config_misc', 0)) {
+      $textgroups[] = 'misc';
     }
     return $textgroups;
   }

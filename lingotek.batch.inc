@@ -13,40 +13,60 @@
  * @param bool $autoset_batch
  * If this batch was NOT created from a form_submit() handler, then pass in TRUE
  */
-function lingotek_field_language_data_cleanup_batch_create($autoset_batch = FALSE) {
+function lingotek_field_language_data_cleanup_batch_create($entity_type, $autoset_batch = FALSE) {
   LingotekLog::trace(__METHOD__);
   $operations = array();
-  $entity_type = 'node';
   $source_language = lingotek_get_source_language();
-  $translated_types = lingotek_translatable_node_types(); // Get the list of content types that we translate.
+  $translated_types = lingotek_translatable_types($entity_type);
+  $disabled_types = lingotek_get_disabled_bundles($entity_type);
+  $managed_entities = lingotek_get_enabled_entities_by_type($entity_type);
+  $enabled_types = array_diff($translated_types, $disabled_types);
+  $info = entity_get_info($entity_type);
+
   // Fix node level language settings
-  // This selects all the nodes that are language undefined and are content types we need to translate.  We need to change these nodes from language undefined to the source language.
+  // This selects all the nodes that are language undefined and are content
+  // types we need to translate.  We need to change these nodes from language
+  // undefined to the source language.
   $query1 = new EntityFieldQuery();
-  $nodes1 = $query1->entityCondition('entity_type', $entity_type)
-      ->entityCondition('bundle', $translated_types)
+  $entities1 = $query1->entityCondition('entity_type', $entity_type)
       ->propertyCondition('language', 'und', '=')
       ->execute();
-
-  if (isset($nodes1[$entity_type])) {
-    foreach ($nodes1[$entity_type] as $node1) {
-      $operations[] = array('lingotek_node_source_language_cleanup_batch_worker', array($node1->nid, $source_language));
-      $operations[] = array('lingotek_node_url_alias_source_language_cleanup_batch_worker', array($node1->nid, $source_language));
-      $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($node1->nid));
+  if (isset($entities1[$entity_type])) {
+    foreach ($entities1[$entity_type] as $entity) {
+      $entity_id = $entity->{$info['entity keys']['id']};
+      if (isset($managed_entities[$entity_id])) {
+        $operations[] = array('lingotek_source_language_cleanup_batch_worker', array($entity_type, $entity_id, $source_language));
+      }
     }
   }
 
-
   // Fix field languages
-  // This selects all nodes that have a language defined.  It does NOT select the UND language nodes.
   $query2 = new EntityFieldQuery();
-  $nodes2 = $query2->entityCondition('entity_type', $entity_type)
-      ->propertyCondition('language', 'und', '<>')
+  $entities2 = $query2->entityCondition('entity_type', $entity_type)
       ->execute();
+  if (isset($entities2[$entity_type])) {
+    foreach ($entities2[$entity_type] as $entity) {
+      $entity_id = $entity->{$info['entity keys']['id']};
+      if (isset($managed_entities[$entity_id])) {
+        $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($entity_type, $entity->{$info['entity keys']['id']}));
+      }
+    }
+  }
 
-  if (isset($nodes2[$entity_type])) {
-    foreach ($nodes2[$entity_type] as $node2) {
-      $operations[] = array('lingotek_node_url_alias_source_language_cleanup_batch_worker', array($node2->nid, $source_language));
-      $operations[] = array('lingotek_field_language_data_cleanup_batch_worker', array($node2->nid));
+  // Add missing URL aliases
+  $query = db_select('url_alias', 'ua')
+      ->fields('ua', array('source'))
+      ->condition('ua.source', "$entity_type/%", 'LIKE')
+      ->condition('ua.language', LANGUAGE_NONE)
+      ->execute();
+  foreach ($query->fetchCol() as $source) {
+    try {
+      list($et, $id) = explode('/', $source);
+      if (isset($managed_entities[$id])) {
+        $operations[] = array('lingotek_url_alias_source_language_cleanup_batch_worker', array($entity_type, $id, $source_language));
+      }
+    } catch (Exception $ex) {
+      LingotekLog::trace('Found url alias that did not fit the normal pattern: @alias.  Ignoring.');
     }
   }
 
@@ -252,9 +272,6 @@ function lingotek_batch_disassociate_content() {
   $operations[] = array('LingotekSync::disassociateAllChunks', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 
-  $operations[] = array('lingotek_cleanup_utility', array(FALSE, FALSE)); // identify translatable content
-  drupal_set_message(t('Translation management settings for all nodes have been set to the defaults.'));
-
   $batch = array(
     'title' => t('Disassociating Translations'),
     'operations' => $operations,
@@ -371,31 +388,50 @@ function lingotek_sync_download_target_finished($success, $results, $operations)
  */
 
 /**
- * Batch API worker for changing the node language setting.
+ * Batch API worker for changing the entity's language setting.
  */
-function lingotek_node_source_language_cleanup_batch_worker($nid, $source_language) {
+function lingotek_source_language_cleanup_batch_worker($entity_type, $entity_id, $source_language, &$context) {
 
-  $loaded_node = lingotek_node_load_default($nid);
-  $loaded_node->language = $source_language;
-  $loaded_node->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
-  node_save($loaded_node);
+  $context['message'] = t("Setting language for @entity_type #@id to '@source_language", array('@entity_type' => $entity_type, '@id' => $entity_id, '@source_language' => $source_language));
+
+  $loaded_entity = lingotek_entity_load_single($entity_type, $entity_id);
+  $info = entity_get_info($entity_type);
+  if (!empty($info['entity keys']['language']) && isset($loaded_entity->{$info['entity keys']['language']})) {
+    $loaded_entity->{$info['entity keys']['language']} = $source_language;
+  }
+  $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
+  entity_save($entity_type, $loaded_entity);
+
+  if (!isset($context['results']['entity_cleanup'])) {
+    $context['results']['entity_cleanup'] = 0;
+  }
+  $context['results']['entity_cleanup'] ++;
 }
 
 /**
  * Batch API worker for changing the url alias language setting
  */
-function lingotek_node_url_alias_source_language_cleanup_batch_worker($nid, $source_language) {
+function lingotek_url_alias_source_language_cleanup_batch_worker($entity_type, $id, $source_language, &$context) {
 
-  $conditions = array('source' => 'node/' . $nid);
+  $conditions = array('source' => $entity_type . '/' . $id);
   $conditions['language'] = $source_language;
   $source_alias = path_load($conditions);
-  if ($source_alias === FALSE) { // if no url alias exists for this node in the source language
+
+  if (!isset($context['results']['url_alias_cleanup'])) {
+    $context['results']['url_alias_cleanup'] = array('searched' => 0, 'added' => 0);
+  }
+  $context['results']['url_alias_cleanup']['searched'] ++;
+
+  if ($source_alias === FALSE) { // if no url alias exists for this entity in the source language
     $conditions['language'] = LANGUAGE_NONE;
     $und_alias = path_load($conditions);
+
     if ($und_alias !== FALSE) { // if a url alias exists for language none (
+      $context['message'] = t("Saving language-neutral path alias for @entity_type #@id to language '@sl'", array('@entity_type' => $entity_type, '@nid' => $id, '@sl' => $source_language));
       $conditions['language'] = $source_language;
       $conditions['alias'] = $und_alias['alias'];
       path_save($conditions);
+      $context['results']['url_alias_cleanup']['added'] ++;
     }
   }
 }
@@ -403,53 +439,62 @@ function lingotek_node_url_alias_source_language_cleanup_batch_worker($nid, $sou
 /**
  * Batch API processor for field data language updates.
  */
-function lingotek_field_language_data_cleanup_batch_worker($nid, &$context) {
+function lingotek_field_language_data_cleanup_batch_worker($entity_type, $entity_id, &$context) {
 
-  $process_node = lingotek_node_load_default($nid);
-  if ($process_node->nid) {
-    lingotek_field_language_data_cleanup_update_node($process_node->nid);
-    //$context['message'] = t('Updating field data for node: @node_title', array('@node_title' => $process_node->title));
-    $context['message'] = t('Preparing translatable content: @node_title', array('@node_title' => $process_node->title));
+  $result = lingotek_field_language_data_cleanup_update_entity($entity_type, $entity_id, $context);
+
+  if (!isset($context['results']['field_cleanup'])) {
+    $context['results']['field_cleanup'] = 0;
   }
-
+  if ($result) {
+    $context['results']['field_cleanup'] ++;
+  }
   $context['finished'] = 1;
 }
 
 /**
  * Ensures correct language-specific field data for the specified item.
  * 
- * Logic: Look at each translatable_node_field (Any field marked for lingotek translation management) for the given node.
- * If the field has data in the language 'und' area, and is empty in the language area that this node is, copy the data over.
- * So if this node is marked as English, but there is no data in the English language spots, but there IS in the 'und' spots, move the data to the English locations.
+ * Logic: Look at each translatable_field (Any field marked for lingotek 
+ * translation management) for the given node.  If the field has data in the
+ * language 'und' area, and is empty in the language area that this node is,
+ * copy the data over.  So if this node is marked as English, but there is no
+ * data in the English language spots, but there IS in the 'und' spots, move
+ * the data to the English locations.
  *
  * @param int $nid
  *   The node ID of the item to be updated.
  *
  * @return bool
- *   TRUE if the specified node's field data was updated. FALSE if no changes were made.
+ *   TRUE if specified node's field data was updated. FALSE if no changes made.
  */
-function lingotek_field_language_data_cleanup_update_node($nid) {
+function lingotek_field_language_data_cleanup_update_entity($entity_type, $entity_id, &$context) {
+
   $edited = FALSE;
 
-  $node = lingotek_node_load_default($nid, NULL, TRUE);
-  if ($node->nid) {
-    if ($node->language != 'und') {
-      $translatable_fields = lingotek_translatable_node_fields();
-      foreach ($translatable_fields as $field_name) {
-        if (!empty($node->{$field_name}['und']) && empty($node->{$field_name}[$node->language])) {
-          $node->{$field_name}[$node->language] = $node->{$field_name}['und'];
-          $edited = TRUE;
-        }
+  $entity = lingotek_entity_load_single($entity_type, $entity_id);
+
+  if (!$entity) {
+    LingotekLog::error('Attempted to update field data for a non-existent @entity_type: @entity_id', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
+    return $edited;
+  }
+  $info = entity_get_info($entity_type);
+  $label_field = $info['entity keys']['label'];
+  $language_field = $info['entity keys']['language'];
+  $context['message'] = t('Preparing translatable content for @entity_type: @entity_title', array('@entity_type' => $entity_type, '@entity_title' => $entity->$label_field));
+  if (entity_language($entity_type, $entity) != 'und') {
+    $translatable_fields = lingotek_translatable_fields();
+    foreach ($translatable_fields as $field_name) {
+      if (!empty($entity->{$field_name}['und']) && empty($entity->{$field_name}[$entity->{$language_field}])) {
+        $entity->{$field_name}[$entity->{$language_field}] = $entity->{$field_name}['und'];
+        $edited = TRUE;
       }
     }
-
-    if ($edited) {
-      $node->lingotek_upload_override = FALSE;
-      node_save($node);
-    }
   }
-  else {
-    LingotekLog::error('Attempted to update field data for a non-existent node: @node_id', array('@node_id' => $node->nid));
+
+  if ($edited) {
+    $entity->lingotek_upload_override = FALSE;
+    entity_save($entity_type, $entity);
   }
 
   return $edited;
@@ -459,7 +504,22 @@ function lingotek_field_language_data_cleanup_update_node($nid) {
  * FINISHED CALLBACK:  lingotek_field_language_data_cleanup_batch_create()
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
-  
+  if ($success) {
+    $def_lang = language_default('name');
+    if (isset($results['entity_cleanup'])) {
+      $num_nodes = (int) $results['entity_cleanup'];
+      drupal_set_message(format_plural($num_nodes, t('Converted @count entities from language neutral to @language', array('@count' => $num_nodes, '@language' => $def_lang)), t('Converted @count entities from language neutral to @language', array('@count' => $num_nodes, '@language' => $def_lang))));
+    }
+    if (isset($results['url_alias_cleanup'])) {
+      $searched = (int) $results['url_alias_cleanup']['searched'];
+      $added = (int) $results['url_alias_cleanup']['added'];
+      drupal_set_message(format_plural($searched, t('Searched @search_count entity for url aliases, added @add_count in @language.', array('@search_count' => $searched, '@add_count' => $added, '@language' => $def_lang)), t('Searched @search_count entities for url aliases, added @add_count in @language.', array('@search_count' => $searched, '@add_count' => $added, '@language' => $def_lang))));
+    }
+    if (isset($results['field_cleanup'])) {
+      $num_nodes = (int) $results['field_cleanup'];
+      drupal_set_message(format_plural($num_nodes, t('Added language-specific fields for @count entity with language-neutral fields.', array('@count' => $num_nodes)), t('Added language-specific fields for @count entities with language-neutral fields.', array('@count' => $num_nodes))));
+    }
+  }
 }
 
 function lingotek_update_target_progress_batch_create($entity_type, $nids) {
@@ -485,4 +545,13 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
 
   batch_set($batch);
   batch_process($redirect);
+}
+
+/**
+ * Batch worker function for lingotek_keystore operations
+ */
+function lingotek_batch_keystore_worker($entity_type, $entity_id, $key, $value, $update_on_dup, &$context) {
+  $result = lingotek_keystore($entity_type, $entity_id, $key, $value, $update_on_dup);
+  $context['message'] = t('Updating tracking information for @et #@eid', array('@et' => $entity_type, '@eid' => $entity_id));
+  $context['results'][] = $result;
 }

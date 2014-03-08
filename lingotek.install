@@ -4,6 +4,9 @@
  * @file
  * Installation for Lingotek Community Translation Module.
  */
+
+require_once drupal_get_filename('module', 'lingotek');
+
 /*
  * Implements hook_requirements() (see:
  */
@@ -117,6 +120,18 @@ function lingotek_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'created' => array(
+        'type' => 'int',
+        'description' => "created timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      ),
+      'modified' => array(
+        'type' => 'int',
+        'description' => "last modified timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      )
     ),
     'primary key' => array(
       'entity_id',
@@ -155,6 +170,18 @@ function lingotek_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'created' => array(
+        'type' => 'int',
+        'description' => "created timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      ),
+      'modified' => array(
+        'type' => 'int',
+        'description' => "last modified timestamp",
+        'default' => 0,
+        'not null' => TRUE,
+      )
     ),
     'primary key' => array(
       'id',
@@ -441,7 +468,6 @@ function lingotek_update_7213(&$sandbox) {
  * Adds the lingotek_translation_agent table and links it to the locales_target table
  */
 function lingotek_update_7401(&$sandbox) {
-
   // add the translation_agent table
   $module = 'lingotek';
   $table = 'lingotek_translation_agent';
@@ -459,12 +485,13 @@ function lingotek_update_7401(&$sandbox) {
     array('id' => '1', 'name' => 'unknown'),
     array('id' => '2', 'name' => 'Drupal Translations'),
     array('id' => '3', 'name' => 'Lingotek'),
-    );
+  );
 
   foreach ($agents as $a) {
-    db_insert('lingotek_translation_agent')
-      ->fields(array('id' => $a['id'], 'name' => $a['name']))
-      ->execute();
+    db_merge('lingotek_translation_agent')
+        ->key(array('id' => $a['id']))
+        ->fields(array('id' => $a['id'], 'name' => $a['name']))
+        ->execute();
   }
 
   $spec = array(
@@ -681,5 +708,74 @@ function lingotek_update_7504(&$sandbox) {
       db_add_index($table, $index_name, $fields);
     }
   }
-  return t('Added indexes to the lingotek entity metadata table.');
+  return t('Added indexes to the <i>lingotek_entity_metadata</i> table.');
+}
+
+/**
+ * Remove unused entries from lingotek_entity_metadata table
+ */
+function lingotek_update_7505(&$sandbox) {
+  $delete = db_delete('lingotek_entity_metadata');
+  $or = db_or();
+  $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
+  $or->condition('entity_key', 'target_sync_last_progress_updated_%', 'LIKE');
+  $or->condition('entity_key', 'target_last_downloaded_%', 'LIKE');
+  $or->condition('entity_key', 'translation_progress');
+  $count = $delete->condition($or)->execute();
+  return format_plural($count, 'Removed one unused entry from the <i>lingotek_entity_metadata</i> table.', 'Removed @count unused entries from the <i>lingotek_entity_metadata</i> table.');
+}
+
+/**
+ * Add created and modified timestamps to lingotek schemas.
+ */
+function lingotek_update_7506() {
+  $tables = array('lingotek_entity_metadata', 'lingotek_config_metadata');
+  $fields = array('created', 'modified');
+  $spec = array(
+    'created' => array(
+      'type' => 'int',
+    'description' => "created timestamp",
+    'default' => 0,
+    'not null' => TRUE,
+  ),
+    'modified' => array(
+      'type' => 'int',
+      'description' => "last modified timestamp",
+      'default' => 0,
+      'not null' => TRUE,
+  ));
+  $total = 0;
+  foreach ($tables as $table) {
+    foreach ($fields as $field) {
+      try {
+        db_add_field($table, $field, $spec[$field]);
+      } catch (Exception $ex) {
+        // already exists (no need to do anything)
+      }
+      $total++;
+    }
+  }
+  $message = "Creation and modification timestamps for Lingotek metadata have successfully been added ($total/$total).";
+  return $message;
+}
+
+/**
+ * Reset any bundles currently set to legacy profile 'CUSTOM' to be 'MANUAL'.
+ */
+function lingotek_update_7507() {
+  $entity_profiles = variable_get('lingotek_entity_profiles', NULL);
+  $custom_bundles = array();
+  foreach ($entity_profiles as $entity_type => $bundles) {
+    foreach ($bundles as $bundle_name => $profile) {
+      if ($profile == LingotekSync::PROFILE_CUSTOM) {
+        $entity_profiles[$entity_type][$bundle_name] = LingotekSync::PROFILE_MANUAL;
+        $custom_bundles[] = "$bundle_name ($entity_type)";
+      }
+    }
+  }
+  if (!empty($custom_bundles)) {
+    variable_set('lingotek_entity_profiles', $entity_profiles);
+    $message = "The following content types have been reset from profile 'CUSTOM' to profile 'MANUAL': " . implode(', ', $custom_bundles) . "  (The 'CUSTOM' profile is now reserved for individual entities only and is no longer supported at the content-type level.)";
+    return $message;
+  }
 }
