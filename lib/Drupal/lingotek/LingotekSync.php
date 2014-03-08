@@ -279,10 +279,10 @@ class LingotekSync {
       if (count($disabled_entity_ids)) {
         $enabled_entity_ids = lingotek_get_enabled_entities_by_type($entity_base_table);
         if (count($disabled_entity_ids) < count($enabled_entity_ids)) {
-          $query->condition($properties['entity keys']['id'], array_keys($disabled_entity_ids), "NOT IN"); //exclude disabled entities
+          $query->condition($properties['entity keys']['id'], array_merge(array(-1), array_keys($disabled_entity_ids)), "NOT IN"); //exclude disabled entities
         }
         else {
-          $query->condition($properties['entity keys']['id'], array_keys($enabled_entity_ids), "IN"); //include only eabled entities
+          $query->condition($properties['entity keys']['id'], array_merge(array(-1), array_keys($enabled_entity_ids)), "IN"); //include only eabled entities
         }
       }
 
