@@ -1696,7 +1696,11 @@ function lingotek_batch_identify_translations($process_batch = FALSE) {
   $entity_types = lingotek_managed_entity_types();
 
   // I. Identify field-based translations and set statuses
-  $fields_to_test_for_translations = array('body', 'comment_body'); // tables to test for pre-existing translations
+
+  $fields_to_test_for_translations = array('body'); // tables to test for pre-existing translations
+  if (module_exists('comment') && db_field_exists('comment_body')) {
+      $fields_to_test_for_translations[] = 'comment_body';
+  }
   // if a translation for a specific language exists in this table then add a translation status in the lingotek table
   foreach ($entity_types as $entity_type => $entity_type_details) {
     foreach ($existing_languages as $langcode => $language_details) {
