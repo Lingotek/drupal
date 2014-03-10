@@ -1365,9 +1365,13 @@ function lingotek_unfilter_placeholders($segment_text) {
  *   whether to redirect to the next setup destination or just return the current one
  */
 function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
+  $node_next = 'admin/config/lingotek/comment-translation-settings';
+  if (!module_exists('comment')) {
+    $node_next = 'admin/config/lingotek/additional-translation-settings';
+  }
   $entities = array(
     'node' => array('current' => 'admin/config/lingotek/node-translation-settings',
-      'next' => 'admin/config/lingotek/comment-translation-settings'),
+      'next' => $node_next),
     'comment' => array('current' => 'admin/config/lingotek/comment-translation-settings',
       'next' => 'admin/config/lingotek/additional-translation-settings'),
     'config' => array('current' => 'admin/config/lingotek/additional-translation-settings',
@@ -1807,9 +1811,11 @@ function lingotek_cleanup_batch_init(&$context) {
 function lingotek_set_batch_function($func_name) {
   $functions = array(
     'lingotek_function_node_languages' => 'lingotek_cleanup_field_languages_for_nodes',
-    'lingotek_function_comment_languages' => 'lingotek_cleanup_field_languages_for_comments',
     'lingotek_function_identify_translations' => 'lingotek_batch_identify_translations',
   );
+  if (module_exists('comment')) {
+    $functions['lingotek_function_comment_languages'] = 'lingotek_cleanup_field_languages_for_comments';
+  }
   if (isset($functions[$func_name])) {
     $functions[$func_name]();
   }

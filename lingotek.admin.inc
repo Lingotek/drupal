@@ -1895,10 +1895,12 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
   );
 
-  $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
-    'title' => t('Prepare comments'),
-    'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
-  );
+  if (module_exists('comment')) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
+      'title' => t('Prepare comments'),
+      'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
+    );
+  }
 
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
