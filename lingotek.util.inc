@@ -1825,7 +1825,14 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
   return lingotek_get_entities_by_profile_id($profile_ids, $entity_type);
 }
 
-function lingotek_previously_managed_translations($entity_type, $entity_ids) {
+function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL ) {
+  if (!$entity_ids || !is_array($entity_ids)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', $entity_type)
+      ->propertyCondition('status', 1);
+    $entities = $query->execute();
+    $entity_ids = array_keys($entities);
+  }
   $enabled_entities = lingotek_get_enabled_entities_by_type($entity_type);
   $entity_ids = array_diff($entity_ids, array_keys($enabled_entities));
   if (empty($entity_ids)) {
