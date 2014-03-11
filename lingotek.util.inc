@@ -1702,7 +1702,7 @@ function lingotek_batch_identify_translations($process_batch = FALSE) {
   // I. Identify field-based translations and set statuses
 
   $fields_to_test_for_translations = array('body'); // tables to test for pre-existing translations
-  if (module_exists('comment') && db_field_exists('comment_body')) {
+  if (module_exists('comment') && db_field_exists('comment', 'comment_body')) {
       $fields_to_test_for_translations[] = 'comment_body';
   }
   // if a translation for a specific language exists in this table then add a translation status in the lingotek table
