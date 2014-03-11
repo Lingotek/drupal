@@ -420,6 +420,10 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     batch_set($batch);
   }
   if (batch_get()) {
+    // Reverse the order of the batches in order to put title manipulations before language prep
+    $final_batch_set =& batch_get();
+    $final_batch_set['sets'] = array_reverse($final_batch_set['sets']);
+
     // if coming from the settings page, stay there; otherwise, continue with setup pages
     $cur_path = current_path();
     if ($cur_path == 'admin/settings/lingotek/settings' ||
