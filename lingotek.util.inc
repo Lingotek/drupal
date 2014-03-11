@@ -1365,9 +1365,13 @@ function lingotek_unfilter_placeholders($segment_text) {
  *   whether to redirect to the next setup destination or just return the current one
  */
 function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
+  $node_next = 'admin/config/lingotek/comment-translation-settings';
+  if (!module_exists('comment')) {
+    $node_next = 'admin/config/lingotek/additional-translation-settings';
+  }
   $entities = array(
     'node' => array('current' => 'admin/config/lingotek/node-translation-settings',
-      'next' => 'admin/config/lingotek/comment-translation-settings'),
+      'next' => $node_next),
     'comment' => array('current' => 'admin/config/lingotek/comment-translation-settings',
       'next' => 'admin/config/lingotek/additional-translation-settings'),
     'config' => array('current' => 'admin/config/lingotek/additional-translation-settings',
@@ -1696,7 +1700,11 @@ function lingotek_batch_identify_translations($process_batch = FALSE) {
   $entity_types = lingotek_managed_entity_types();
 
   // I. Identify field-based translations and set statuses
-  $fields_to_test_for_translations = array('body', 'comment_body'); // tables to test for pre-existing translations
+
+  $fields_to_test_for_translations = array('body'); // tables to test for pre-existing translations
+  if (module_exists('comment') && db_field_exists('comment', 'comment_body')) {
+      $fields_to_test_for_translations[] = 'comment_body';
+  }
   // if a translation for a specific language exists in this table then add a translation status in the lingotek table
   foreach ($entity_types as $entity_type => $entity_type_details) {
     foreach ($existing_languages as $langcode => $language_details) {
@@ -1803,9 +1811,11 @@ function lingotek_cleanup_batch_init(&$context) {
 function lingotek_set_batch_function($func_name) {
   $functions = array(
     'lingotek_function_node_languages' => 'lingotek_cleanup_field_languages_for_nodes',
-    'lingotek_function_comment_languages' => 'lingotek_cleanup_field_languages_for_comments',
     'lingotek_function_identify_translations' => 'lingotek_batch_identify_translations',
   );
+  if (module_exists('comment')) {
+    $functions['lingotek_function_comment_languages'] = 'lingotek_cleanup_field_languages_for_comments';
+  }
   if (isset($functions[$func_name])) {
     $functions[$func_name]();
   }
@@ -1825,7 +1835,14 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
   return lingotek_get_entities_by_profile_id($profile_ids, $entity_type);
 }
 
-function lingotek_previously_managed_translations($entity_type, $entity_ids) {
+function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL ) {
+  if (!$entity_ids || !is_array($entity_ids)) {
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', $entity_type)
+      ->propertyCondition('status', 1);
+    $entities = $query->execute();
+    $entity_ids = array_keys($entities);
+  }
   $enabled_entities = lingotek_get_enabled_entities_by_type($entity_type);
   $entity_ids = array_diff($entity_ids, array_keys($enabled_entities));
   if (empty($entity_ids)) {

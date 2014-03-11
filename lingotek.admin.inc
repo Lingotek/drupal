@@ -275,9 +275,8 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
   );
 
   // Warning note when enabling nodes with existing Lingotek translations
-  $entities = entity_load($entity_type);
   $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';
-  if ($entity_type != 'field_collection_item' && lingotek_previously_managed_translations($entity_type, array_keys($entities))) {
+  if ($entity_type != 'field_collection_item' && lingotek_previously_managed_translations($entity_type)) {
     $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">Note: If edits have been made to the local copy of translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek.</div>';
   }
   $form['translation_' . $entity_type]['container']['overwrite_warning'] = array(
@@ -421,6 +420,10 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     batch_set($batch);
   }
   if (batch_get()) {
+    // Reverse the order of the batches in order to put title manipulations before language prep
+    $final_batch_set =& batch_get();
+    $final_batch_set['sets'] = array_reverse($final_batch_set['sets']);
+
     // if coming from the settings page, stay there; otherwise, continue with setup pages
     $cur_path = current_path();
     if ($cur_path == 'admin/settings/lingotek/settings' ||
@@ -1895,10 +1898,12 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
   );
 
-  $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
-    'title' => t('Prepare comments'),
-    'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
-  );
+  if (module_exists('comment')) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
+      'title' => t('Prepare comments'),
+      'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
+    );
+  }
 
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
