@@ -350,8 +350,8 @@ function lingotek_xml_fields($entity, $translatable, $language) {
     );
     if (module_exists('link')) {
       $target_keys['link'] = array(
-        'url' => '',
         'title' => '',
+        'url' => '',
       );
     }
 
@@ -390,8 +390,10 @@ function lingotek_xml_fields($entity, $translatable, $language) {
           $current_field = '<' . $element_name . '>';
           if (is_array($element_suffix)) {
             foreach ($element_suffix as $t_key => $t_val) {
-              $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
-              $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+              if (isset($delta[$t_key])) {
+                $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
+                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+              }
             }
           }
           else {
