@@ -1861,3 +1861,16 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
   }
   return FALSE;
 }
+
+function lingotek_is_node_translation($node = NULL) {
+  // The case of creating a new node-based translation.
+  if (isset($_GET['translation']) && isset($_GET['target']) && ($source_item = menu_link_load($_GET['translation']))) {
+    return TRUE;
+  }
+  // The case of updating an existing node-based translation.
+  if ($node && isset($node->tnid) && $node->tnid !== 0 && $node->tnid !== $node->nid) {
+    return TRUE;
+  }
+  // Not a node-based translation.
+  return FALSE;
+}

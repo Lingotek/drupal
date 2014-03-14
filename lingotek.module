@@ -620,7 +620,7 @@ function lingotek_permission() {
 function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // On node create, set the language select box to our source language, if this is a node content type that we translate for, if the form is in Add mode.
   if (!isset($form['nid']['#value'])) { // add mode (no node id set)
-    if (lingotek_supported_type($form['type']['#value'])) { // lingotek translated content type
+    if (lingotek_supported_type($form['type']['#value']) && !lingotek_is_node_translation()) { // lingotek translated content type
       $form['language']['#default_value'] = lingotek_get_source_language();
     }
   }
@@ -796,6 +796,25 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
 }
 
+/**
+ * Display the Lingotek node-settings form
+ *
+ * This form is used both in a tab at the bottom of each node's edit form
+ * (Translation management) and in the bulk-action select box on the translation
+ * manage page (Edit Translation Settings).
+ *
+ * @param array $form
+ *   the passed form elements
+ *
+ * @param array $form_state
+ *   the form state, including submitted values if any
+ *
+ * @param object $node
+ *   an optional node on which to act
+ *
+ * @return array
+ *   the modified form
+ */
 function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   $second_run = isset($form_state['input']['op']);
 
@@ -826,9 +845,15 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
 
   $show_advanced = LingotekAccount::instance()->showAdvanced();
 
+  // Vertical Tab.
+  // (When the Lingotek module is enabled, then show the translation tab unless
+  // the node is *not* managed by Lingotek *and* it is a node-based translation
+  // of a different (source) node.
+  if (lingotek_is_node_translation($node) && isset($node->translation_source->lingotek['profile']) && $node->translation_source->lingotek['profile'] === LingotekSync::PROFILE_DISABLED) {
+    return $form;
+  }
   $title = t('Translation Management');
 
-  // Vertical Tab.
   $form['lingotek'] = array(
     '#title' => t('Translation management'),
     '#type' => 'fieldset',
@@ -843,12 +868,14 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#tree' => TRUE,
   );
 
-  if (isset($node->tnid) && $node->tnid != 0 && $node->tnid != $node->nid) {
+  if (lingotek_is_node_translation($node)) {
     $form['lingotek']['note'] = array(
       '#markup' => t('This is a target node for the language code: @lang. To change
         the Lingotek settings please edit the source node.', array('@lang' => $node->language)),
     );
-
+    $form['lingotek']['content_begin'] = array(
+      '#markup' => '<div id="edit-lingotek-content" class="form-wrapper">',
+    );
     return $form; //this is a target node and thus should not have lingotek settings
   }
 
@@ -907,7 +934,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   if (!lingotek_node_based_trans_ready()) {
     $content_translation_note = t("Note: Requires Content Translation module (translation) and Node Translation module (i18n_node).");
   }
-  
+
   if (!$bulk_grid) {
     $form['lingotek']['lingotek_nodes_translation_method'] = array(
       '#type' => 'radios',
