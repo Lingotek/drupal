@@ -616,9 +616,9 @@ function lingotek_update_7408(&$sandbox) {
  * Adds support for translating additional entity types
  */
 function lingotek_update_7500(&$sandbox) {
-  db_query("INSERT IGNORE INTO lingotek_entity_metadata (entity_id, entity_type, entity_key, value)
+  db_query("INSERT IGNORE INTO {lingotek_entity_metadata} (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
-FROM lingotek");
+FROM {lingotek}");
   //db_drop_table('lingotek');// as soon as this is running in an update function remove it from the uninstall function above
 }
 
