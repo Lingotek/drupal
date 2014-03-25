@@ -264,7 +264,7 @@ class LingotekSync {
         continue;
       }
       $entity_base_table = $properties['base table'];
-      $query = db_select($entity_base_table, 't')->condition('t.language', $drupal_language_code);
+      $query = db_select('{' . $entity_base_table . '}', 't')->condition('t.language', $drupal_language_code);
 
       // exclude translation sets (only for nodes)
       if ($entity_base_table == 'node') {
@@ -332,7 +332,7 @@ class LingotekSync {
         continue;
       }
       $entity_base_table = $properties['base table'];
-      $query = db_select($entity_base_table, 't');
+      $query = db_select('{' . $entity_base_table . '}', 't');
       $query->leftJoin('{lingotek_entity_metadata}', 'l', 'l.entity_id = '.$properties['entity keys']['id'].
        ' AND l.entity_type = \''.$entity_base_table.'\''.
        ' AND l.entity_key = \''.$target_key.'\' '
@@ -406,7 +406,7 @@ class LingotekSync {
     // count nodes having this language as the source as current
     if ($status == LingotekSync::STATUS_CURRENT) {
       $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
-      $query = db_select('node', 'n');
+      $query = db_select('{node}', 'n');
       $query->leftJoin('{lingotek_entity_metadata}', 'l', 'l.entity_id = n.nid
         AND l.entity_type = \'node\'
         AND l.entity_key = \'profile\'
@@ -506,7 +506,7 @@ class LingotekSync {
     $primary_or = db_or()
         ->condition('lt0.i18n_status', 0)
         ->condition('lt0.translation_agent_id', $lingotek_id, '!=');
-    $query = db_select('locales_target', "lt0")
+    $query = db_select('{locales_target}', "lt0")
         ->fields('lt0', array('lid'))
         ->condition('lt0.language', $first_lang)
         ->condition($primary_or);
@@ -518,7 +518,7 @@ class LingotekSync {
       $addtl_joins++;
       $ja = "lt$addtl_joins"; // join alias
       $join_str = "$ja.lid = lt0.lid and $ja.language = '$new_join' and ($ja.i18n_status = 0 or $ja.translation_agent_id != $lingotek_id)";
-      $query->join('locales_target', $ja, $join_str);
+      $query->join('{locales_target}', $ja, $join_str);
     }
     return $query;
   }
@@ -531,7 +531,7 @@ class LingotekSync {
 
   public static function getAllChunkLids() {
     // return the list of all lids
-    $query = db_select('locales_source', 'ls')
+    $query = db_select('{locales_source}', 'ls')
         ->fields('ls', array('lid'));
     return $query->execute()->fetchCol();
   }
@@ -556,7 +556,7 @@ class LingotekSync {
     // that belong to the textgroups the user wants translated
     $textgroups = array_merge(array(-1), LingotekConfigChunk::getTextgroupsForTranslation());
     $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
-    $query = db_select('locales_source', 'ls');
+    $query = db_select('{locales_source}', 'ls');
     $query->fields('ls', array('lid'))
         ->condition('ls.source', '', '!=')
         ->condition('ls.lid', self::getQueryCompletedConfigTranslations($drupal_codes), 'NOT IN')
@@ -658,7 +658,7 @@ class LingotekSync {
 //    $query->addField('l', 'entity_id');
     $info = entity_get_info($entity_type);
     $id_key = $info['entity keys']['id'];
-    $query = db_select($info['base table'], 'base');
+    $query = db_select('{' . $info['base table'] . '}', 'base');
     $query->addField('base', $id_key);
     $query->leftJoin('{lingotek_entity_metadata}', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
 

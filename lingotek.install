@@ -257,7 +257,7 @@ function lingotek_update_7200(&$sandbox) {
   drupal_load('module', 'lingotek');
 
   if (!isset($sandbox['progress'])) {
-    $result = db_select('lingotek', 'n')->distinct(TRUE)->fields('n', array(db_escape_field('nid')))->execute();
+    $result = db_select('{lingotek}', 'n')->distinct(TRUE)->fields('n', array(db_escape_field('nid')))->execute();
     $nodes = array();
     foreach ($result as $row) {
       array_push($nodes, $row->nid);
@@ -298,7 +298,7 @@ function lingotek_update_7201(&$sandbox) {
 
   if ($default_lingotek_project) {
     if (!isset($sandbox['progress'])) {
-      $result = db_select('lingotek', 'l')
+      $result = db_select('{lingotek}', 'l')
           ->distinct(TRUE)
           ->fields('l', array('nid'))
           ->execute();
@@ -488,7 +488,7 @@ function lingotek_update_7401(&$sandbox) {
   );
 
   foreach ($agents as $a) {
-    db_merge('lingotek_translation_agent')
+    db_merge('{lingotek_translation_agent}')
         ->key(array('id' => $a['id']))
         ->fields(array('id' => $a['id'], 'name' => $a['name']))
         ->execute();
@@ -547,7 +547,7 @@ function lingotek_update_7403(&$sandbox) {
 function lingotek_update_7404(&$sandbox) {
   LingotekSync::updateNotifyUrl();
 
-  $query = db_select('lingotek', 'l');
+  $query = db_select('{lingotek}', 'l');
   $query->fields('l', array('nid'));
   $query->distinct('nid');
   $result = $query->execute();
@@ -592,8 +592,8 @@ function lingotek_update_7406(&$sandbox) {
 function lingotek_update_7408(&$sandbox) {
   if (module_exists('entity_translation')) {
     $nid_list = array();
-    $results = db_select('lingotek', 'l')
-      ->fields('l', array('nid', 'lingokey'))
+    $results = db_select('{lingotek}', 'l')
+        ->fields('l', array('nid', 'lingokey'))
       ->condition('lingokey', 'target_sync_status_%', 'LIKE')
       ->condition('lingovalue', LingotekSync::STATUS_CURRENT)
       ->execute();

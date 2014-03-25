@@ -54,7 +54,7 @@ function lingotek_field_language_data_cleanup_batch_create($entity_type, $autose
   }
 
   // Add missing URL aliases
-  $query = db_select('url_alias', 'ua')
+  $query = db_select('{url_alias}', 'ua')
       ->fields('ua', array('source'))
       ->condition('ua.source', "$entity_type/%", 'LIKE')
       ->condition('ua.language', LANGUAGE_NONE)

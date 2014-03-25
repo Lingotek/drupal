@@ -1015,17 +1015,17 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
   // Initialize Query and extend paginator and tablesort if necessary
   if ($count_only) {
-    $query = db_select($base_table, 'n');
+    $query = db_select('{' . $base_table . '}', 'n');
   }
   else {
-    $query = db_select($base_table, 'n')
+    $query = db_select('{' . $base_table . '}', 'n')
         ->extend('PagerDefault')
         ->extend('TableSort');
     $query->limit($limit)
         ->orderByHeader($form_state['values']['grid_header']);
   }
   if ($base_table == 'node') {
-    $query->innerJoin('node', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
+    $query->innerJoin('{node}', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
   }
 
   // Entity Title and Name of Content Type (type)
@@ -1104,14 +1104,14 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
 
   if (isset($filters['title'])) {
-    $title_query = db_select('field_data_title_field', 'tf')
+    $title_query = db_select('{field_data_title_field}', 'tf')
         ->distinct()
         ->fields('tf', array('entity_id'))
         ->condition('tf.title_field_value', '%' . $filters['title'] . '%', 'LIKE');
   }
 
   if (isset($filters['body'])) {
-    $body_query = db_select('field_data_body', 'tb')
+    $body_query = db_select('{field_data_body}', 'tb')
         ->distinct()
         ->fields('tb', array('entity_id'))
         ->condition('tb.body_value', '%' . $filters['body'] . '%', 'LIKE');

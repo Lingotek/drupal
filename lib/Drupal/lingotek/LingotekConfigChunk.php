@@ -208,7 +208,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     // except for the i18n_status field, which should preserve its
     // currently-set flags, and the plid and plural fields which just
     // take default values for now.
-    db_merge('locales_target')
+    db_merge('{locales_target}')
         ->key(array('lid' => $lid, 'language' => $target_language,))
         ->fields(array(
           'lid' => $lid,
@@ -735,7 +735,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *    the language code for which to get the segments that need updating
    */
   public static function getDirtyLidsByChunkIdAndLanguage($chunk_id, $language) {
-    $result = db_select('locales_target', 'lt')
+    $result = db_select('{locales_target}', 'lt')
         ->fields('lt', array('lid'))
         ->condition('lid', self::minLid($chunk_id), '>=')
         ->condition('lid', self::maxLid($chunk_id), '<=')
@@ -770,7 +770,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *    the language code for which to delete target segments
    */
   public static function deleteSegmentTranslationsByChunkIdAndLanguage($chunk_id, $target_language) {
-    db_delete('locales_target')
+    db_delete('{locales_target}')
         ->condition('language', $target_language)
         ->condition('lid', self::minLid($chunk_id), '>=')
         ->condition('lid', self::maxLid($chunk_id), '<=')
@@ -782,7 +782,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * Get lingotek translation agent ID
    */
   public static function getLingotekTranslationAgentId() {
-    $result = db_select('lingotek_translation_agent', 'lta')
+    $result = db_select('{lingotek_translation_agent}', 'lta')
         ->fields('lta', array('id'))
         ->condition('name', 'Lingotek')
         ->execute();
@@ -797,7 +797,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     foreach ($document_xml as $drupal_field_name => $xml_obj) {
       $lids[] = self::getLidFromTag($drupal_field_name);
     }
-    $result = db_select('locales_target', 'lt')
+    $result = db_select('{locales_target}', 'lt')
         ->fields('lt', array('lid'))
         ->condition('lid', $lids, 'IN')
         ->condition('language', $target_language)
@@ -933,8 +933,8 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   }
   
   public static function getLidBySource($source_string) {
-    return db_select('locales_source', 's')
-        ->fields('s', array('lid'))
+    return db_select('{locales_source}', 's')
+            ->fields('s', array('lid'))
         ->condition('s.source', $source_string)
         ->execute()
         ->fetchField();

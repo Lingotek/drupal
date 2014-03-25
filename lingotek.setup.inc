@@ -619,7 +619,7 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
 function lingotek_setup_language_switcher_form($form, $form_state) {
   $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
 
-  $query = db_select('block', 'b');
+  $query = db_select('{block}', 'b');
   $query->fields('b');
   $query->condition('module', 'locale');
   $query->condition('delta', 'language');
@@ -706,8 +706,8 @@ function lingotek_setup_node_translation_settings_form($form, $form_state) {
   $form['lingotek_nodes_translation_method'] = $content_defaults['defaults']['lingotek_nodes_translation_method'];
   $form['lingotek_nodes_translation_method']['#weight'] = -3;
   
-  $c = db_select('node', 'n')
-    ->fields('n', array('tnid'))
+  $c = db_select('{node}', 'n')
+      ->fields('n', array('tnid'))
     ->condition('n.tnid', 0, '<>')
     ->distinct()
     ->countQuery()
@@ -764,8 +764,8 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
   lingotek_admin_entity_bundle_profiles_form_submit($form, $form_state);
   
   if ($form_state['values']['lingotek_nodes_translation_method'] == 'node' && $form_state['values']['lingotek_overwrite']) {
-    $nodes = db_select('node', 'n')
-      ->fields('n', array('nid', 'tnid'))
+    $nodes = db_select('{node}', 'n')
+        ->fields('n', array('nid', 'tnid'))
         ->where('n.nid <> n.tnid AND n.tnid <> 0')
         ->execute()
         ->fetchAll();
@@ -996,7 +996,7 @@ function lingotek_get_community_settings($community_identity, $return_complete =
   $options['project'] = array();
   $complete['project'] = array();
   $list_projects = $api->request("listProjects", array('community' => $community_identity));
-  if ($list_projects->results == "success") {
+  if (isset($list_projects->results) && $list_projects->results == "success") {
     foreach ($list_projects->projects as $project) {
       $complete['project'][$project->id] = $project;
       if ($project->state == 'Active') {

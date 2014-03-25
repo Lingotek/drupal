@@ -736,7 +736,7 @@ function lingotek_get_active_languages($get_details = FALSE) {
  */
 function lingotek_get_node_source_languages() {
   $lingo_langs = array();
-  $query = db_select('node', 'n')->distinct()
+  $query = db_select('{node}', 'n')->distinct()
       ->fields('n', array('language'));
   $query = $query->execute();
   $result = $query->fetchCol(0);
@@ -758,7 +758,7 @@ function lingotek_delete_target_language($lingotek_locale) {
   $result = FALSE;
 
   if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
-    db_update('languages')
+    db_update('{languages}')
         ->fields(array(
           //'enabled' => 0,
           'lingotek_enabled' => 0,
@@ -793,7 +793,7 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
     $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
-    db_update('languages')
+    db_update('{languages}')
         ->fields(array(
           'enabled' => 1,
           'lingotek_enabled' => $lingotek_enable ? 1 : 0,
@@ -920,7 +920,7 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_local
   if (!is_null($lingotek_locale)) {
     $field_data['lingotek_locale'] = $lingotek_locale;
   }
-  db_update('languages')
+  db_update('{languages}')
       ->fields($field_data)
       ->condition('language', $drupal_language_code)
       ->execute();
@@ -1063,7 +1063,7 @@ function lingotek_refresh_api_cache($show_messages = TRUE) {
  * Sets the priority of the Lingotek Translation module
  */
 function lingotek_set_priority() {
-  db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
+  db_update('{system}')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
 }
 
 /**
@@ -1161,7 +1161,7 @@ function lingotek_migration_3() {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($code, FALSE); //will return FALSE when lingotek_locales are passed in (so, they'll be skipped)
     if ($lingotek_locale) {
       $new_key = $field_name_prefix . $lingotek_locale;
-      $query = db_update('lingotek', $ret)
+      $query = db_update('{lingotek}', $ret)
           ->fields(array('lingokey' => $new_key))
           ->condition('lingokey', $old_key, '=');
       try {
@@ -1255,7 +1255,7 @@ function lingotek_list_entities_with_language($entity_type, $bundle, $language) 
 }
 
 function lingotek_list_nodes_translated_in_language($language, $bundle = NULL) {
-  $query = db_select('node')
+  $query = db_select('{node}')
       ->fields('node', array('tnid'));
   if (!is_null($bundle)) {
     $query->condition('node.type', $bundle);
@@ -1397,8 +1397,8 @@ function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
  *   a string containing the name of the given entity type
  */
 function lingotek_get_entity_count($entity_type) {
-  $query = db_select($entity_type, 'n')
-    ->fields('n')
+  $query = db_select('{' . $entity_type . '}', 'n')
+      ->fields('n')
     ->execute();
   $num_results = $query->rowCount();
   return $num_results;
@@ -1493,15 +1493,15 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
         $key = implode('_', array_slice($tmp_array, 2));
         $ref_tables[] = $key;
       }
-      $query = db_select($et, 'e')
+      $query = db_select('{' . $et . '}', 'e')
           ->fields('e', array('cid'));
-      $query->join('node', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
+      $query->join('{node}', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
     }
     else {
       $entity_info = entity_get_info($et);
       $bundle_field_name = $entity_info['entity keys']['bundle'];
       $id_field_name = $entity_info['entity keys']['id'];
-      $query = db_select($et, 'e')
+      $query = db_select('{' . $et . '}', 'e')
           ->fields('e', array($id_field_name))
           ->condition('e.' . $bundle_field_name, array_keys($entity_bundles), 'IN');
     }
@@ -1679,8 +1679,8 @@ function lingotek_has_unconventional_fc_translations() {
     'fca.language != fcb.language',
   );
   foreach (array_keys($field_collection_field_types) as $fc_field_name) {
-    $query = db_select('field_data_' . $fc_field_name, 'fca');
-    $query->join('field_data_' . $fc_field_name, 'fcb', implode(' AND ', $query_join_items) . ' AND fca.' . $fc_field_name . '_value != fcb.' . $fc_field_name . '_value');
+    $query = db_select('{field_data_' . $fc_field_name . '}', 'fca');
+    $query->join('{field_data_' . $fc_field_name . '}', 'fcb', implode(' AND ', $query_join_items) . ' AND fca.' . $fc_field_name . '_value != fcb.' . $fc_field_name . '_value');
     $query->groupBy('fca.entity_id');
     $query->fields('fca', array('entity_id'));
     $result = $query->execute();
