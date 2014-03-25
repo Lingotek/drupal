@@ -1031,7 +1031,7 @@ function lingotek_entity_save($entity, $entity_type) {
 
   $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
 
-  db_delete('lingotek_entity_metadata')
+  db_delete('{lingotek_entity_metadata}')
       ->condition('entity_type', $entity_type)
       ->condition('entity_id', $id)
       ->condition('entity_key', $remove, 'IN')
@@ -1041,7 +1041,7 @@ function lingotek_entity_save($entity, $entity_type) {
   $entity_changed = TRUE;
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
-    $query = db_insert('lingotek_entity_metadata')->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
+    $query = db_insert('{lingotek_entity_metadata}')->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
 
     foreach ($remove as $key) {
       if (isset($entity->lingotek[$key])) {
@@ -1333,7 +1333,7 @@ function lingotek_entity_load($entities, $entity_type) {
   $node_profile_defaults = lingotek_load_profile_defaults($entity_type); // return assoc array by node type
   $profiles_list = lingotek_get_profiles();
 
-  $result = db_select('lingotek_entity_metadata', 'l')
+  $result = db_select('{lingotek_entity_metadata}', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
       ->condition('l.entity_id', array_keys($entities), 'IN')
       ->condition('l.entity_type', $entity_type)
@@ -2050,8 +2050,8 @@ function lingotek_entity_delete($entity, $type) {
     $api = LingotekApi::instance();
     $api->removeDocument($entity->lingotek['document_id'], FALSE);
   }
-  db_delete('lingotek_entity_metadata')
-    ->condition('entity_type', $type)
+  db_delete('{lingotek_entity_metadata}')
+      ->condition('entity_type', $type)
     ->condition('entity_id', entity_extract_ids($type, $entity))
     ->execute();
 }

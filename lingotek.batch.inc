@@ -193,7 +193,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
 
       // get all nodes that have pending translations
       $key = 'target_sync_status_' . $lingotek_locale;
-      $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
+      $query = db_select('{lingotek_entity_metadata}', 'l')->fields('l');
       $query->condition('entity_type', 'node');
       $query->condition('entity_key', $key);
       $status_or = db_or()
@@ -206,7 +206,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       }
       // get all config chunks that have pending translations
       $key = 'target_sync_status_' . $lingotek_locale;
-      $query = db_select('lingotek_config_metadata', 'meta')->fields('meta');
+      $query = db_select('{lingotek_config_metadata}', 'meta')->fields('meta');
       $query->condition('config_key', $key);
       $status_or = db_or()
         ->condition('value', LingotekSync::STATUS_PENDING)

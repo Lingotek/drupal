@@ -87,7 +87,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The status of the target locale for the given chunk_id
    */
   public static function getTargetStatusById($chunk_id, $target_locale) {
-    $result = db_select('lingotek_config_metadata', 'meta')
+    $result = db_select('{lingotek_config_metadata}', 'meta')
         ->fields('meta', array('value'))
         ->condition('id', $chunk_id)
         ->condition('config_key', 'target_sync_status_' . $target_locale)
@@ -229,7 +229,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   the ID of a chunk of configuration segments
    */
   public static function getIdByDocId($doc_id) {
-    $query = db_select('lingotek_config_metadata', 'meta');
+    $query = db_select('{lingotek_config_metadata}', 'meta');
     $query->fields('meta', array('id'));
     $query->condition('config_key', 'document_id');
     $query->condition('value', $doc_id);
@@ -334,7 +334,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   An array containing anything for the chunk_id from table lingotek_config_metadata
    */
   protected static function getChunkMeta($chunk_id) {
-    $query = db_select('lingotek_config_metadata', 'l');
+    $query = db_select('{lingotek_config_metadata}', 'l');
     $query->fields('l', array('id', 'config_key', 'value'));
     $query->condition('l.id', $chunk_id);
     $result = $query->execute();
@@ -400,7 +400,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $chunk = FALSE;
 
     // Get the Chunk entries in the system associated with the document ID.
-    $query = db_select('lingotek_config_metadata', 'meta')
+    $query = db_select('{lingotek_config_metadata}', 'meta')
         ->fields('meta', array('id'))
         ->condition('config_key', 'document_id')
         ->condition('value', $lingotek_document_id)
@@ -480,7 +480,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   protected function metadata() {
     $metadata = array();
 
-    $results = db_select('lingotek_config_metadata', 'meta')
+    $results = db_select('{lingotek_config_metadata}', 'meta')
         ->fields('meta')
         ->condition('id', $this->cid)
         ->execute();
@@ -509,7 +509,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * Get the chunk's target translation status for the given locale
    */
   public function getTargetStatus($lingotek_locale) {
-    $result = db_select('lingotek_config_metadata', 'meta')
+    $result = db_select('{lingotek_config_metadata}', 'meta')
         ->fields('meta', array('value'))
         ->condition('id', $this->cid)
         ->condition('config_key', 'target_sync_status_' . $lingotek_locale)
@@ -603,7 +603,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The value for the specified key, if it exists.
    */
   public function getMetadataValue($key) {
-    return db_select('lingotek_config_metadata', 'meta')
+    return db_select('{lingotek_config_metadata}', 'meta')
             ->fields('meta', array('value'))
             ->condition('config_key', $key)
             ->condition('id', $this->cid)
@@ -623,7 +623,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
     $metadata = $this->metadata();
     $timestamp = time();
     if (!isset($metadata[$key])) {
-      db_insert('lingotek_config_metadata')
+      db_insert('{lingotek_config_metadata}')
           ->fields(array(
             'id' => $this->cid,
             'config_key' => $key,
@@ -634,7 +634,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
           ->execute();
     }
     else {
-      db_update('lingotek_config_metadata')
+      db_update('{lingotek_config_metadata}')
           ->fields(array(
             'value' => $value,
             'modified' => $timestamp
@@ -654,8 +654,8 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
   public function deleteMetadataValue($key) {
     $metadata = $this->metadata();
     if (isset($metadata[$key])) {
-      db_delete('lingotek_config_metadata')
-        ->condition('id', $this->cid)
+      db_delete('{lingotek_config_metadata}')
+          ->condition('id', $this->cid)
         ->condition('config_key', $key, 'LIKE')
         ->execute();
     }
@@ -946,8 +946,8 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
  */
 
   public static function getAllDocumentIds() {
-  $result = db_select('lingotek_config_metadata', 'c')
-      ->fields('c', array('value'))
+  $result = db_select('{lingotek_config_metadata}', 'c')
+        ->fields('c', array('value'))
       ->condition('c.config_key', 'document_id')
       ->execute();
   return $result->fetchCol();

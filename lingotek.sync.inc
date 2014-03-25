@@ -563,8 +563,8 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
       $entity_id = (isset($record['entity_id']) ? $record['entity_id'] : $record[1]);
       $entity_key = (isset($record['entity_key']) ? $record['entity_key'] : $record[2]);
       $value = (isset($record['value']) ? $record['value'] : $record[3]);
-      $query = db_merge('lingotek_entity_metadata')
-        ->key(array('entity_id' => $entity_id, 'entity_type' => $entity_type, 'entity_key' => $entity_key))
+      $query = db_merge('{lingotek_entity_metadata}')
+          ->key(array('entity_id' => $entity_id, 'entity_type' => $entity_type, 'entity_key' => $entity_key))
         ->fields(array(
             'entity_type' => $entity_type,
             'entity_id' => $entity_id,
@@ -656,8 +656,8 @@ function lingotek_update_config_progress($document_ids) {
 
     // insert status info for config
     foreach ($cfg_values as $record) {
-      $query = db_merge('lingotek_config_metadata')
-        ->key(array('id' => $record[0], 'config_key' => $record[1]))
+      $query = db_merge('{lingotek_config_metadata}')
+          ->key(array('id' => $record[0], 'config_key' => $record[1]))
         ->fields(array(
             'id' => $record[0],
             'config_key' => $record[1],
