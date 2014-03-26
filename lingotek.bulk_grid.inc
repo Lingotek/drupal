@@ -1347,7 +1347,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
 
     $actions = '';
-    $actions .= l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $entity_type . '/' . $entity_id . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
+    $actions .= lingotek_get_entity_edit_link($entity_type, $entity_id);
     $actions .= empty($disabled_class) ? $pm_link : $pm_icon;
     $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $entity_id . ',"edit"); return false;')));
 
@@ -1391,6 +1391,21 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
 
   return $table_data;
+}
+
+function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FALSE) {
+  $edit_link = "";
+  $query = array();
+  $query['destination'] = 'admin/settings/lingotek/manage/' . $entity_type;
+  switch ($entity_type) {
+    case 'fieldable_panels_pane':
+      $edit_link = 'admin/structure/fieldable-panels-panes/view/' . $entity_id . '/edit';
+      break;
+    default:
+      $edit_link = $entity_type . '/' . $entity_id . '/edit';
+      break;
+  }
+  return $url_only ? url($edit_link, array('query' => $query)) : l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $edit_link, array('html' => TRUE, 'attributes' => array('target' => '_blank'), 'query' => $query));
 }
 
 function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL) {
@@ -1622,7 +1637,7 @@ function lingotek_entity_delete_form_submit($form, &$form_state) {
   if (!empty($entity_ids)) {
     entity_delete_multiple($entity_type, $entity_ids);
     $count = count($entity_ids);
-    watchdog('content', 'Deleted @count entities.', array('@count' => $count));
+    watchdog('content', format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     drupal_set_message(format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     $form_state['executed'] = TRUE;
   }

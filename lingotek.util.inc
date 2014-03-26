@@ -618,7 +618,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
   //$types = array_keys($type_info);
 
-  $whitelist = array('node', 'comment', 'message_type'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
@@ -1041,6 +1041,10 @@ function lingotek_cleanup_field_languages_for_nodes() {
 
 function lingotek_cleanup_field_languages_for_comments() {
   lingotek_cleanup_field_languages('comment');
+}
+
+function lingotek_cleanup_field_languages_for_fieldable_panels_panes() {
+  lingotek_cleanup_field_languages('fieldable_panels_pane');
 }
 
 /**

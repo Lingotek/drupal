@@ -1906,6 +1906,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     );
   }
 
+  if (module_exists('fieldable_panels_panes')) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_fieldable_panels_panes'] = array(
+      'title' => t('Prepare FPPs'),
+      'desc' => t('Sets all <i>language neutral</i> fieldable panels panes (FPPs) to be @lang', array('@lang' => language_default('name'))),
+    );
+  }
+
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
     'desc' => t('Update all blocks to be translatable in the <i>Languages</i> settings.'),
