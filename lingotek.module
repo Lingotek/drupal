@@ -1383,19 +1383,19 @@ function lingotek_entity_insert($entity, $type) {
 /**
  * Implements hook_entity_update().
  */
-function lingotek_entity_update($entity, $type) {  
+function lingotek_entity_update($entity, $entity_type) {
   $managed_entity_types = array_keys(lingotek_managed_entity_types());
-  if (!in_array($type, $managed_entity_types)) {
+  if (!in_array($entity_type, $managed_entity_types)) {
     // nothing to do here
     return;
   }
-  if ($type == 'node' && !empty($entity->tnid) && ($entity->nid != $entity->tnid)) {//check to make sure it is not a target node
+  if ($entity_type == 'node' && !empty($entity->tnid) && ($entity->nid != $entity->tnid)) {//check to make sure it is not a target node
     return;
   }
 
-  list($id, $vid, $bundle) = entity_extract_ids($type, $entity);
+  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
 
-  lingotek_entity_save($entity, $type);
+  lingotek_entity_save($entity, $entity_type);
 }
 
 function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE, &$context = array()) {

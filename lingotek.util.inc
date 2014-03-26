@@ -313,17 +313,19 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
     } */
 
-  //URL Alias related to the page:
-  $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
-  if ($url_alias_translation == 1) {
-    $conditions = array('source' => 'node/' . $entity->nid);
-    if ($entity->language != LANGUAGE_NONE) {
-      $conditions['language'] = $entity->language;
-    }
-    $path = path_load($conditions);
-    if ($path !== FALSE) {
-      $url = $path['alias'];
-      $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+  if ($entity_type == 'node') {
+    //URL Alias related to the page:
+    $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
+    if ($url_alias_translation == 1) {
+      $conditions = array('source' => 'node/' . $entity->nid);
+      if ($entity->language != LANGUAGE_NONE) {
+        $conditions['language'] = $entity->language;
+      }
+      $path = path_load($conditions);
+      if ($path !== FALSE) {
+        $url = $path['alias'];
+        $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+      }
     }
   }
 
@@ -1475,7 +1477,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   }
   
   // get all entities that belond to those bundles
-  foreach ($bundles as $et => $entity_bundles) {
+  foreach ($bundles as $entity_type => $entity_bundles) {
     /*  THE SLOW BUT CORRECT WAY TO EXTRACT INFO
     $tmp_entities = entity_load($et);
     foreach ($tmp_entities as $tid => $tinfo) {
@@ -1486,28 +1488,28 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
     }
     */
     // THE OPTIMIZED WAY
-    if ($et == 'comment') {
+    if ($entity_type == 'comment') {
       $ref_tables = array();
       foreach (array_keys($entity_bundles) as $key) {
         $tmp_array = explode('_', $key);
         $key = implode('_', array_slice($tmp_array, 2));
         $ref_tables[] = $key;
       }
-      $query = db_select('{' . $et . '}', 'e')
+      $query = db_select('{' . $entity_type . '}', 'e')
           ->fields('e', array('cid'));
       $query->join('{node}', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
     }
     else {
-      $entity_info = entity_get_info($et);
+      $entity_info = entity_get_info($entity_type);
       $bundle_field_name = $entity_info['entity keys']['bundle'];
       $id_field_name = $entity_info['entity keys']['id'];
-      $query = db_select('{' . $et . '}', 'e')
+      $query = db_select('{' . $entity_info['base table'] . '}', 'e')
           ->fields('e', array($id_field_name))
           ->condition('e.' . $bundle_field_name, array_keys($entity_bundles), 'IN');
     }
     $results = $query->execute()->fetchCol();
     foreach ($results as $id) {
-      $entities[] = array('id' => $id, 'type' => $et);
+      $entities[] = array('id' => $id, 'type' => $entity_type);
     }
     // END OPTIMIZED WAY
   }
@@ -1840,8 +1842,7 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
 function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL ) {
   if (!$entity_ids || !is_array($entity_ids)) {
     $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $entity_type)
-      ->propertyCondition('status', 1);
+    $query->entityCondition('entity_type', $entity_type);
     $entities = $query->execute();
     $entity_ids = array_keys($entities);
   }

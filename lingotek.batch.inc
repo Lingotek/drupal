@@ -29,7 +29,7 @@ function lingotek_field_language_data_cleanup_batch_create($entity_type, $autose
   // undefined to the source language.
   $query1 = new EntityFieldQuery();
   $entities1 = $query1->entityCondition('entity_type', $entity_type)
-      ->propertyCondition('language', 'und', '=')
+      ->propertyCondition('language', LANGUAGE_NONE, '=')
       ->execute();
   if (isset($entities1[$entity_type])) {
     foreach ($entities1[$entity_type] as $entity) {

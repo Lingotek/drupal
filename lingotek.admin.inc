@@ -277,7 +277,7 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
   // Warning note when enabling nodes with existing Lingotek translations
   $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';
   if ($entity_type != 'field_collection_item' && lingotek_previously_managed_translations($entity_type)) {
-    $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">Note: If edits have been made to the local copy of translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek.</div>';
+    $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">' . t('Note: If edits have been made to the local copy of translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek') . '</div>';
   }
   $form['translation_' . $entity_type]['container']['overwrite_warning'] = array(
     '#markup' => $overwrite_markup,
@@ -2039,7 +2039,6 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
       $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
       $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('class' => array('ltk-entity')));
     }
-
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'), array('id' => 'ltk-config'));
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), t('Translation Profiles'), array('id' => 'ltk-profiles'));
     if ($show_advanced) {

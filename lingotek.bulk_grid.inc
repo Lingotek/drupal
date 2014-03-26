@@ -1044,7 +1044,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
 
   if ($entity_type == 'comment') {
-    $query->leftJoin('node', 'nn', 'nn.nid = n.nid');
+    $query->leftJoin('{node}', 'nn', 'nn.nid = n.nid');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'type');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
   }
@@ -1069,7 +1069,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   $localized_label_table = 'field_data_' . $label_col . '_field';
 
   if ($label_col && language_default()->language != $language->language && db_table_exists($localized_label_table)) {
-    $query->leftJoin($localized_label_table, 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
+    $query->leftJoin('{' . $localized_label_table . '}', 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
     $query->addField('t_title', $label_col . '_field_value', 'localized_title');
   }
 
