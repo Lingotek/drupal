@@ -1868,7 +1868,7 @@ function lingotek_is_node_translation($node = NULL) {
     return TRUE;
   }
   // The case of updating an existing node-based translation.
-  if ($node && isset($node->tnid) && $node->tnid !== 0 && $node->tnid !== $node->nid) {
+  if ($node && isset($node->tnid) && $node->tnid !== '0' && $node->tnid !== $node->nid) {
     return TRUE;
   }
   // Not a node-based translation.
