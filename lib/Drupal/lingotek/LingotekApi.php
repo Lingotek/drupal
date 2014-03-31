@@ -150,7 +150,7 @@ class LingotekApi {
 
     $this->addAdvancedParameters($parameters, $translatable_object);
 
-    $result = $this->request('updateContentDocument', $parameters);
+    $result = $this->request('updateContentDocumentAsync', $parameters);
 
     if ($result) {
       if (get_class($translatable_object) == 'LingotekConfigChunk') {
