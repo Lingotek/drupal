@@ -68,7 +68,7 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
 }
 
 function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   // Add revision_id to be the same as the entity_id if it was not found or if
   // it is a comment.

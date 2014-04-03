@@ -289,7 +289,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   $translatable = array();
 
   $translate = variable_get('lingotek_enabled_fields', array());
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
   if (empty($fields_desired) && lingotek_oneoff_translate($entity)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($entity_type, $bundle);
@@ -618,7 +618,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
   //$types = array_keys($type_info);
 
-  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane', 'taxonomy_term'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
@@ -1485,12 +1485,14 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
     /*  THE SLOW BUT CORRECT WAY TO EXTRACT INFO
     $tmp_entities = entity_load($et);
     foreach ($tmp_entities as $tid => $tinfo) {
-      list($entity_id, $vid, $bundle_name) = entity_extract_ids($et, $tinfo);
+      list($entity_id, $vid, $bundle_name) = lingotek_entity_extract_ids($et, $tinfo);
       if (isset($bundles[$et][$bundle_name])) {
         $entities[] = array('id' => $tid, 'type' => $et);
       }
     }
     */
+
+
     // THE OPTIMIZED WAY
     if ($entity_type == 'comment') {
       $ref_tables = array();
@@ -1502,18 +1504,21 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
       $query = db_select('{' . $entity_type . '}', 'e')
           ->fields('e', array('cid'));
       $query->join('{node}', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
+      $results = $query->execute()->fetchCol();
+      foreach ($results as $id) {
+        $entities[] = array('id' => $id, 'type' => $entity_type);
+      }
     }
     else {
-      $entity_info = entity_get_info($entity_type);
-      $bundle_field_name = $entity_info['entity keys']['bundle'];
-      $id_field_name = $entity_info['entity keys']['id'];
-      $query = db_select('{' . $entity_info['base table'] . '}', 'e')
-          ->fields('e', array($id_field_name))
-          ->condition('e.' . $bundle_field_name, array_keys($entity_bundles), 'IN');
-    }
-    $results = $query->execute()->fetchCol();
-    foreach ($results as $id) {
-      $entities[] = array('id' => $id, 'type' => $entity_type);
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', $entity_type)
+          ->entityCondition('bundle', array_keys($entity_bundles), 'IN');
+      $result = $query->execute();
+      if (isset($result[$entity_type])) {
+        foreach ($result[$entity_type] as $id => $entity_data) {
+          $entities[] = array('id' => $id, 'type' => $entity_type);
+        }
+      }
     }
     // END OPTIMIZED WAY
   }
@@ -1878,4 +1883,18 @@ function lingotek_is_node_translation($node = NULL) {
   }
   // Not a node-based translation.
   return FALSE;
+}
+
+function lingotek_entity_extract_ids($entity_type, $entity) {
+  try {
+    if ($entity_type == 'taxonomy_term') {
+      dpm($entity);
+    }
+    list($entity_id, $vid, $bundle_name) = entity_extract_ids($entity_type, $entity);
+  } catch (EntityMalformedException $ex) {
+    // check for non-standard entity types
+    if ($entity_type == 'taxonomy_term') {
+      // TODO: populate taxonomy_term's entity fields
+    }
+  }
 }
