@@ -102,14 +102,14 @@ function lingotek_schema() {
       'entity_type' => array(
         'description' => 'The entity type (node, comment, etc.).',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 128,
         'not null' => TRUE,
         'default' => '',
       ),
       'entity_key' => array(
         'description' => 'The ID for the Lingotek-associated value.',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 128,
         'not null' => TRUE,
         'default' => '',
       ),
@@ -778,4 +778,50 @@ function lingotek_update_7507() {
     $message = "The following content types have been reset from profile 'CUSTOM' to profile 'MANUAL': " . implode(', ', $custom_bundles) . "  (The 'CUSTOM' profile is now reserved for individual entities only and is no longer supported at the content-type level.)";
     return $message;
   }
+}
+
+/**
+ * Reduce the size of current entity_type and entity_key fields in the lingotek_entity_metadata table
+ */
+function lingotek_update_7508() {
+  $table = 'lingotek_entity_metadata';
+  $entity_type_spec = array(
+        'description' => 'The entity type (node, comment, etc.).',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+  );
+  $entity_key_spec = array(
+        'description' => 'The ID for the Lingotek-associated value.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+  );
+  $primary_key = array(
+    'entity_id',
+    'entity_type',
+    'entity_key',
+  );
+  $indexes = array(
+    'idx_entity_key' => array('entity_key'),
+    'idx_entity_type_and_key' => array('entity_type', 'entity_key'),
+    'idx_entity_key_and_value' => array('entity_key', 'value'),
+  );
+
+  // drop the related keys and indices
+  db_drop_primary_key($table);
+  foreach ($indexes as $index_name => $fields) {
+    db_drop_index($table, $index_name);
+  }
+  // update the fields to be 128 instead of 255
+  db_change_field($table, 'entity_type', 'entity_type', $entity_type_spec);
+  db_change_field($table, 'entity_key', 'entity_key', $entity_key_spec);
+  // add back related keys and indices
+  db_add_primary_key($table, $primary_key);
+  foreach ($indexes as $index_name => $fields) {
+    db_add_index($table, $index_name, $fields);
+  }
+  return t('Reduced field size of entity types and keys in the Lingotek entity metadata table.');
 }
