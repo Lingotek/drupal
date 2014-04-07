@@ -1502,18 +1502,21 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
       $query = db_select('{' . $entity_type . '}', 'e')
           ->fields('e', array('cid'));
       $query->join('{node}', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
+      $results = $query->execute()->fetchCol();
+      foreach ($results as $id) {
+        $entities[] = array('id' => $id, 'type' => $entity_type);
+      }
     }
     else {
-      $entity_info = entity_get_info($entity_type);
-      $bundle_field_name = $entity_info['entity keys']['bundle'];
-      $id_field_name = $entity_info['entity keys']['id'];
-      $query = db_select('{' . $entity_info['base table'] . '}', 'e')
-          ->fields('e', array($id_field_name))
-          ->condition('e.' . $bundle_field_name, array_keys($entity_bundles), 'IN');
-    }
-    $results = $query->execute()->fetchCol();
-    foreach ($results as $id) {
-      $entities[] = array('id' => $id, 'type' => $entity_type);
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', $entity_type)
+          ->entityCondition('bundle', array_keys($entity_bundles), 'IN');
+      $result = $query->execute();
+      if (isset($result[$entity_type])) {
+        foreach ($result[$entity_type] as $id => $entity_data) {
+          $entities[] = array('id' => $id, 'type' => $entity_type);
+        }
+      }
     }
     // END OPTIMIZED WAY
   }
