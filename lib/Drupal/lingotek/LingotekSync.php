@@ -334,7 +334,7 @@ class LingotekSync {
       $entity_base_table = $properties['base table'];
       $query = db_select('{' . $entity_base_table . '}', 't');
       $query->leftJoin('{lingotek_entity_metadata}', 'l', 'l.entity_id = '.$properties['entity keys']['id'].
-       ' AND l.entity_type = \''.$entity_base_table.'\''.
+       ' AND l.entity_type = \''.$m_entity_type.'\''.
        ' AND l.entity_key = \''.$target_key.'\' '
       );
 
