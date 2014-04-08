@@ -547,6 +547,13 @@ function lingotek_update_7403(&$sandbox) {
 function lingotek_update_7404(&$sandbox) {
   LingotekSync::updateNotifyUrl();
 
+  // lingotek_keystore() was modified as of update #7506 to
+  // require two additional fields: created and modified.  So, that
+  // update function is called here prior to running lingotek_keystore()
+  // as a forward-compatibility, since these fields are missing at the
+  // point of this update, while the db schema includes the fields already.
+  lingotek_update_7506($sandbox);
+
   $query = db_select('{lingotek}', 'l');
   $query->fields('l', array('nid'));
   $query->distinct('nid');
@@ -728,7 +735,7 @@ function lingotek_update_7505(&$sandbox) {
 /**
  * Add created and modified timestamps to lingotek schemas.
  */
-function lingotek_update_7506() {
+function lingotek_update_7506(&$sandbox) {
   $tables = array('lingotek_entity_metadata', 'lingotek_config_metadata');
   $fields = array('created', 'modified');
   $spec = array(
@@ -762,7 +769,7 @@ function lingotek_update_7506() {
 /**
  * Reset any bundles currently set to legacy profile 'CUSTOM' to be 'MANUAL'.
  */
-function lingotek_update_7507() {
+function lingotek_update_7507(&$sandbox) {
   $entity_profiles = variable_get('lingotek_entity_profiles', NULL);
   $custom_bundles = array();
   foreach ($entity_profiles as $entity_type => $bundles) {
@@ -783,7 +790,7 @@ function lingotek_update_7507() {
 /**
  * Reduce the size of current entity_type and entity_key fields in the lingotek_entity_metadata table
  */
-function lingotek_update_7508() {
+function lingotek_update_7508(&$sandbox) {
   $table = 'lingotek_entity_metadata';
   $entity_type_spec = array(
         'description' => 'The entity type (node, comment, etc.).',
