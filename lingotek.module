@@ -1630,7 +1630,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   }
 
   if (module_exists('rules')) {
-    rules_invoke_event('lingotek_entity_translation_post_download', new EntityDrupalWrapper($entity_type, $entity));
+    rules_invoke_event('lingotek_entity_translation_post_download', new EntityDrupalWrapper($entity_type, $storage_entity));
   }
 
   return TRUE;

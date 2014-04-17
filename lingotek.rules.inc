@@ -235,13 +235,13 @@ function lingotek_rules_event_info() {
   ),
     ),
     'lingotek_entity_translation_pre_download' => $defaults + array(
-  'label' => t('Before a translation is downloaded'),
+  'label' => t('Before a translation is downloaded (acting on source entity)'),
   'variables' => array(
     'entity' => array('type' => 'entity', 'label' => t('entity translation downloaded')),
   ),
     ),
     'lingotek_entity_translation_post_download' => $defaults + array(
-  'label' => t('After a translation was downloaded'),
+  'label' => t('After a translation was downloaded (acting on translated entity)'),
   'variables' => array(
     'entity' => array('type' => 'entity', 'label' => t('entity translation downloaded')),
   ),

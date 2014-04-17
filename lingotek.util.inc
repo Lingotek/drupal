@@ -680,6 +680,10 @@ function lingotek_translatable_field_details() {
     foreach ($field['bundles'] as $type => $instance) {
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
+        if (!isset($field['storage']['details']['sql']['FIELD_LOAD_CURRENT'])) {
+            LingotekLog::trace("field '$field_id' is marked as translatable but does not publish its details.  Skipping.");
+          continue;
+        }
         $field_db_table = array_keys($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
         $field_db_table = array_shift($field_db_table);
         $translatable_fields[$type][] = array(
