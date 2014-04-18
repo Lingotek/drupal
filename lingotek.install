@@ -247,6 +247,33 @@ function lingotek_schema_alter(&$schema) {
 
 }
 
+function lingotek_extend_metadata_tables() {
+  $tables = array('lingotek_entity_metadata', 'lingotek_config_metadata');
+  $fields = array('created', 'modified');
+  $spec = array(
+    'created' => array(
+      'type' => 'int',
+    'description' => "created timestamp",
+    'default' => 0,
+    'not null' => TRUE,
+  ),
+    'modified' => array(
+      'type' => 'int',
+      'description' => "last modified timestamp",
+      'default' => 0,
+      'not null' => TRUE,
+  ));
+  foreach ($tables as $table) {
+    foreach ($fields as $field) {
+      try {
+        db_add_field($table, $field, $spec[$field]);
+      } catch (Exception $ex) {
+        // already exists (no need to do anything)
+      }
+    }
+  }
+}
+
 /*
  * Update
  * 1. Create the mt-queue
@@ -546,13 +573,7 @@ function lingotek_update_7403(&$sandbox) {
  */
 function lingotek_update_7404(&$sandbox) {
   LingotekSync::updateNotifyUrl();
-
-  // lingotek_keystore() was modified as of update #7506 to
-  // require two additional fields: created and modified.  So, that
-  // update function is called here prior to running lingotek_keystore()
-  // as a forward-compatibility, since these fields are missing at the
-  // point of this update, while the db schema includes the fields already.
-  lingotek_update_7506($sandbox);
+  lingotek_extend_metadata_tables();
 
   $query = db_select('{lingotek}', 'l');
   $query->fields('l', array('nid'));
@@ -597,6 +618,7 @@ function lingotek_update_7406(&$sandbox) {
  * Creates an upgrade path for existing translated content to be inserted into entity_translation module table if necessary
  */
 function lingotek_update_7408(&$sandbox) {
+  lingotek_extend_metadata_tables();
   if (module_exists('entity_translation')) {
     $nid_list = array();
     $results = db_select('{lingotek}', 'l')
@@ -623,6 +645,7 @@ function lingotek_update_7408(&$sandbox) {
  * Adds support for translating additional entity types
  */
 function lingotek_update_7500(&$sandbox) {
+  lingotek_extend_metadata_tables();
   db_query("INSERT IGNORE INTO {lingotek_entity_metadata} (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
 FROM {lingotek}");
@@ -633,6 +656,7 @@ FROM {lingotek}");
  * Updates 'lingotek_account_plan_type' to be 'advanced' when 'enterprise'
  */
 function lingotek_update_7501(&$sandbox) { 
+  lingotek_extend_metadata_tables();
   $current_plan_type = variable_get('lingotek_account_plan_type');
   if ($current_plan_type == 'enterprise') {
     variable_set('lingotek_account_plan_type', 'advanced');
@@ -643,6 +667,7 @@ function lingotek_update_7501(&$sandbox) {
  * Migrates comment profile settings
  */
 function lingotek_update_7502(&$sandbox) {
+  lingotek_extend_metadata_tables();
   // migrate the old variable to the new
   $comment_settings = variable_get('lingotek_translate_comments_node_types'); // old variable
   if (!is_null($comment_settings)) {
@@ -688,6 +713,7 @@ function lingotek_update_7502(&$sandbox) {
  * Migrate any CUSTOM profile usage within entity_profiles
  */
 function lingotek_update_7503(&$sandbox) {
+  lingotek_extend_metadata_tables();
   $profiles = variable_get('lingotek_entity_profiles');
   foreach ($profiles as $profile_key => $profile) {
     foreach ($profile as $bundle => $profile_id) {
@@ -703,6 +729,7 @@ function lingotek_update_7503(&$sandbox) {
  * Add indexes to the lingotek_entity_metadata table
  */
 function lingotek_update_7504(&$sandbox) {
+  lingotek_extend_metadata_tables();
   $table = 'lingotek_entity_metadata';
   $indexes = array(
     'idx_entity_id' => array('entity_id'),
@@ -722,6 +749,7 @@ function lingotek_update_7504(&$sandbox) {
  * Remove unused entries from lingotek_entity_metadata table
  */
 function lingotek_update_7505(&$sandbox) {
+  lingotek_extend_metadata_tables();
   $delete = db_delete('{lingotek_entity_metadata}');
   $or = db_or();
   $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
@@ -736,33 +764,16 @@ function lingotek_update_7505(&$sandbox) {
  * Add created and modified timestamps to lingotek schemas.
  */
 function lingotek_update_7506(&$sandbox) {
-  $tables = array('lingotek_entity_metadata', 'lingotek_config_metadata');
-  $fields = array('created', 'modified');
-  $spec = array(
-    'created' => array(
-      'type' => 'int',
-    'description' => "created timestamp",
-    'default' => 0,
-    'not null' => TRUE,
-  ),
-    'modified' => array(
-      'type' => 'int',
-      'description' => "last modified timestamp",
-      'default' => 0,
-      'not null' => TRUE,
-  ));
-  $total = 0;
-  foreach ($tables as $table) {
-    foreach ($fields as $field) {
-      try {
-        db_add_field($table, $field, $spec[$field]);
-      } catch (Exception $ex) {
-        // already exists (no need to do anything)
-      }
-      $total++;
-    }
-  }
-  $message = "Creation and modification timestamps for Lingotek metadata have successfully been added ($total/$total).";
+
+  // lingotek_keystore() was modified as of update #7506 to
+  // require two additional fields: created and modified.  So, that
+  // update function is called in all previous update functions prior to 
+  // running lingotek_keystore() as a forward-compatibility, since these
+  // fields are missing at the point of previous updates, while the db
+  // schema includes the fields already.  This is the final call to it.
+  lingotek_extend_metadata_tables();
+
+  $message = "Creation and modification timestamps for Lingotek metadata have successfully been added.";
   return $message;
 }
 
