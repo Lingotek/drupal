@@ -1886,3 +1886,32 @@ function lingotek_is_node_translation($node = NULL) {
   // Not a node-based translation.
   return FALSE;
 }
+
+function lingotek_managed_entity($entity_type, $entity) {
+  try {
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  } catch (Exception $ex) {
+    // Skip modifying languages for any entity that does not support entity_extract_ids.
+    LingotekLog::trace("Function entity_extract_ids() not supported for entity type '$entity_type'.  Skipping.");
+    return FALSE;
+  }
+  // If there is no $id or $bundle property, then nothing to manage for now.
+  if (!$id || !$bundle) {
+    return FALSE;
+  }
+  // Check the entity itself for overrides.
+  $query = db_select('{lingotek_entity_metadata}', 'lem')
+      ->fields('lem', array('value'))
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_id', $id)
+      ->condition('lem.entity_key', 'profile');
+  $result = $query->execute()->fetchField();
+  if ($result === LingotekSync::PROFILE_DISABLED) {
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
+  // Check the entity's bundle.
+  return lingotek_enabled_bundle($entity_type, $bundle);
+}
