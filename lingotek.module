@@ -307,10 +307,10 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow/%/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
-    //'page callback' => 'lingotek_change_workflow',
-    //'page arguments' => array(5, 6),
-    'page callback' => 'lingotek_popup',
-    'page arguments' => array('change_workflow', 5, 6),
+    'page callback' => 'lingotek_change_workflow',
+    'page arguments' => array(5, 6),
+    //'page callback' => 'lingotek_popup',
+    //'page arguments' => array('get_change_workflow', 5, 6),
     'type' => MENU_CALLBACK,
   );
 
@@ -1630,7 +1630,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   }
 
   if (module_exists('rules')) {
-    rules_invoke_event('lingotek_entity_translation_post_download', new EntityDrupalWrapper($entity_type, $entity));
+    rules_invoke_event('lingotek_entity_translation_post_download', new EntityDrupalWrapper($entity_type, $storage_entity));
   }
 
   return TRUE;
@@ -2018,10 +2018,20 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
  * Implements hook_field_language_alter().
  */
 function lingotek_field_language_alter(&$display_language, $context) {
-  // If we have no language set on the entity itself, do nothing.
-  if (!isset($context['entity']->language) || empty($context['entity']->language)) {
+
+  $entity = $context['entity'];
+  $entity_type = $context['entity_type'];
+  // If no language is set on the entity itself, do nothing.
+  if (!isset($entity->language) || empty($entity->language)) {
     return;
   }
+
+  // If site admins have specifically excluded fallback behavior, or if the entity
+  // type is not handled by the Lingotek Translation module, then do nothing.
+  if (!variable_get('locale_field_language_fallback', TRUE) || !lingotek_managed_entity($entity_type, $entity)) {
+    return;
+  }
+
   // Comments may be in a state where content only exists in the source language
   // because Lingotek translation hasn't finished yet, or synchonization with
   // Lingotek hasn't yet occurred. In this case, fall back to displaying
@@ -2033,8 +2043,8 @@ function lingotek_field_language_alter(&$display_language, $context) {
     if ($is_field_collection) {
       continue;
     }
-    if (!isset($context['entity']->{$field}[$display_language_code])) {
-      $display_language[$field] = $context['entity']->language;
+    if (!isset($entity->{$field}[$display_language_code])) {
+      $display_language[$field] = $entity->language;
     }
   }
 }

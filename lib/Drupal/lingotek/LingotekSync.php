@@ -58,9 +58,9 @@ class LingotekSync {
     return $result;
   }
 
-  public static function setTargetStatus($entity_type, $entity_id, $lingotek_locale, $status) {
+  public static function setTargetStatus($entity_type, $entity_id, $lingotek_locale, $status, $update_on_dup = TRUE) {
     $key = 'target_sync_status_' . $lingotek_locale;
-    return lingotek_keystore($entity_type, $entity_id, $key, $status);
+    return lingotek_keystore($entity_type, $entity_id, $key, $status, $update_on_dup);
   }
   
   public static function setAllTargetStatus($entity_type, $entity_id, $status) {
@@ -102,6 +102,18 @@ class LingotekSync {
       $chunk = LingotekConfigChunk::loadById($i);
       if(is_object($chunk))
         $chunk->setTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
+    }
+  }
+
+  public static function insertTargetEntriesForAllEntities($lingotek_locale) {
+    // insert/update a target language for all entities
+    $query = db_select('{lingotek_entity_metadata}', 'meta')
+        ->fields('meta', array('entity_id', 'entity_type'))
+        ->condition('meta.entity_key', 'document_id');
+    $entities = $query->execute()->fetchAll();
+
+    foreach ($entities as $e) {
+      self::setTargetStatus($e->entity_type, $e->entity_id, $lingotek_locale, self::STATUS_PENDING);
     }
   }
 
@@ -334,7 +346,7 @@ class LingotekSync {
       $entity_base_table = $properties['base table'];
       $query = db_select('{' . $entity_base_table . '}', 't');
       $query->leftJoin('{lingotek_entity_metadata}', 'l', 'l.entity_id = '.$properties['entity keys']['id'].
-       ' AND l.entity_type = \''.$entity_base_table.'\''.
+       ' AND l.entity_type = \''.$m_entity_type.'\''.
        ' AND l.entity_key = \''.$target_key.'\' '
       );
 

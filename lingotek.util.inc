@@ -680,6 +680,10 @@ function lingotek_translatable_field_details() {
     foreach ($field['bundles'] as $type => $instance) {
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
+        if (!isset($field['storage']['details']['sql']['FIELD_LOAD_CURRENT'])) {
+            LingotekLog::trace("field '$field_id' is marked as translatable but does not publish its details.  Skipping.");
+          continue;
+        }
         $field_db_table = array_keys($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
         $field_db_table = array_shift($field_db_table);
         $translatable_fields[$type][] = array(
@@ -813,6 +817,9 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
       $projects = LingotekSync::getSyncProjects();
       foreach ($projects as $project_id) {
         $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
+        if ($result) {
+          LingotekSync::insertTargetEntriesForAllEntities($lingotek_locale);
+        }
       }
     }
   }
@@ -1491,8 +1498,6 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
       }
     }
     */
-
-
     // THE OPTIMIZED WAY
     if ($entity_type == 'comment') {
       $ref_tables = array();
@@ -1885,11 +1890,37 @@ function lingotek_is_node_translation($node = NULL) {
   return FALSE;
 }
 
+function lingotek_managed_entity($entity_type, $entity) {
+  try {
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  } catch (Exception $ex) {
+    // Skip modifying languages for any entity that does not support entity_extract_ids.
+    LingotekLog::trace("Function entity_extract_ids() not supported for entity type '$entity_type'.  Skipping.");
+    return FALSE;
+  }
+  // If there is no $id or $bundle property, then nothing to manage for now.
+  if (!$id || !$bundle) {
+    return FALSE;
+  }
+  // Check the entity itself for overrides.
+  $query = db_select('{lingotek_entity_metadata}', 'lem')
+      ->fields('lem', array('value'))
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_id', $id)
+      ->condition('lem.entity_key', 'profile');
+  $result = $query->execute()->fetchField();
+  if ($result === LingotekSync::PROFILE_DISABLED) {
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
+  // Check the entity's bundle.
+  return lingotek_enabled_bundle($entity_type, $bundle);
+}
+
 function lingotek_entity_extract_ids($entity_type, $entity) {
   try {
-    if ($entity_type == 'taxonomy_term') {
-      dpm($entity);
-    }
     list($entity_id, $vid, $bundle_name) = entity_extract_ids($entity_type, $entity);
   } catch (EntityMalformedException $ex) {
     // check for non-standard entity types
@@ -1898,3 +1929,4 @@ function lingotek_entity_extract_ids($entity_type, $entity) {
     }
   }
 }
+
