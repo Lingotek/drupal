@@ -103,7 +103,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       if (is_array($value)) {
         $keys = array_keys($value);
         if (count($keys) == 1) {
-          if ($keys[0] != '' && $keys[0] != 'all') {
+          if ($keys[0] !== '' && $keys[0] !== 'all') {
             $filter_set = TRUE;
           }
         }
@@ -113,7 +113,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       }
       else {
         // $value === '0' accounts for the case of the automatic profile
-        if ((!empty($value) && $value != 'all') || $value === '0') {
+        if ((!empty($value) && $value !== 'all') || $value === '0') {
           $filter_set = TRUE;
         }
       }
@@ -382,7 +382,7 @@ function lingotek_popup($form_id, $entity_type = 'node', $entity_ids = array(), 
   $output = ctools_modal_form_wrapper('lingotek_' . $form_id . '_form', $form_state);
 
   if (!empty($form_state['executed'])) {
-    lingotek_grid_action_submit($form, $form_state);
+    lingotek_grid_action_submit(NULL, $form_state);
     // Create ajax command array, dismiss the modal window.
     $commands = array();
     $commands[] = ctools_modal_command_dismiss();
@@ -517,8 +517,8 @@ function lingotek_grid_filter_submit($form, $form_state) {
  */
 function lingotek_grid_action_submit($form, $form_state) {
   $entity_ids = array();
-  $entity_type = $form_state['values']['entity_type'];
-  
+  $entity_type = isset($form_state['entity_type']) ? $form_state['entity_type'] : (isset($form_state['values']['entity_type']) ? $form_state['values']['entity_type'] : NULL);
+
   if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'actions_submit') { // If submitting an action
     foreach ($form_state['values']['the_grid'] as $value) {
       if ($value != 0) {
@@ -1015,17 +1015,17 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
   // Initialize Query and extend paginator and tablesort if necessary
   if ($count_only) {
-    $query = db_select($base_table, 'n');
+    $query = db_select('{' . $base_table . '}', 'n');
   }
   else {
-    $query = db_select($base_table, 'n')
+    $query = db_select('{' . $base_table . '}', 'n')
         ->extend('PagerDefault')
         ->extend('TableSort');
     $query->limit($limit)
         ->orderByHeader($form_state['values']['grid_header']);
   }
   if ($base_table == 'node') {
-    $query->innerJoin('node', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
+    $query->innerJoin('{node}', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
   }
 
   // Entity Title and Name of Content Type (type)
@@ -1044,7 +1044,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
 
   if ($entity_type == 'comment') {
-    $query->leftJoin('node', 'nn', 'nn.nid = n.nid');
+    $query->leftJoin('{node}', 'nn', 'nn.nid = n.nid');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'type');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
   }
@@ -1055,13 +1055,13 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     $query->addField('n', $info['entity keys']['bundle'], 'type');
   }
 
-  $query->addExpression("(SELECT COUNT(entity_id) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current_c');
+  $query->addExpression("(SELECT COUNT(entity_id) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current_c');
 
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='PENDING')", 't_pending');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='READY')", 't_ready');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='EDITED')", 't_edited');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM lingotek_entity_metadata WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 't_untracked');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='PENDING')", 't_pending');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='READY')", 't_ready');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='EDITED')", 't_edited');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 't_untracked');
 
   $filters = isset($_SESSION['grid_filters']) ? $_SESSION['grid_filters'] : array();
 
@@ -1069,34 +1069,34 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   $localized_label_table = 'field_data_' . $label_col . '_field';
 
   if ($label_col && language_default()->language != $language->language && db_table_exists($localized_label_table)) {
-    $query->leftJoin($localized_label_table, 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
+    $query->leftJoin('{' . $localized_label_table . '}', 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
     $query->addField('t_title', $label_col . '_field_value', 'localized_title');
   }
 
   // left joins are necessary here because some lingotek table keys might not exist
   // Lingotek Document ID
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_document_id', 'lingo_document_id.entity_type =\'' . $entity_type . '\' AND lingo_document_id.entity_id = ' . $eid . ' and lingo_document_id.entity_key = \'document_id\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_document_id', 'lingo_document_id.entity_type =\'' . $entity_type . '\' AND lingo_document_id.entity_id = ' . $eid . ' and lingo_document_id.entity_key = \'document_id\'');
   $query->addField('lingo_document_id', 'value', 'document_id');
 
   // Entity Upload Status
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
-  //$query->leftJoin('lingotek_entity_metadata', 'lingo_upload_status', 'lingo_upload_status.nid = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
+  //$query->leftJoin('{lingotek_entity_metadata}', 'lingo_upload_status', 'lingo_upload_status.nid = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\'');
   //$query->condition('lingo_upload_status.value', LingotekSync::STATUS_TARGET, '<>');
   $query->addField('lingo_upload_status', 'value', 'upload_status');
 
   // Profile Settings
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_profile', 'lingo_profile.entity_type =\'' . $entity_type . '\' AND lingo_profile.entity_id = ' . $eid . ' and lingo_profile.entity_key = \'profile\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_profile', 'lingo_profile.entity_type =\'' . $entity_type . '\' AND lingo_profile.entity_id = ' . $eid . ' and lingo_profile.entity_key = \'profile\'');
   $query->addField('lingo_profile', 'value', 'profile');
 
   // Last Uploaded Timestamp
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_last_uploaded', 'lingo_last_uploaded.entity_type =\'' . $entity_type . '\' AND lingo_last_uploaded.entity_id = ' . $eid . ' and lingo_last_uploaded.entity_key = \'last_uploaded\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_last_uploaded', 'lingo_last_uploaded.entity_type =\'' . $entity_type . '\' AND lingo_last_uploaded.entity_id = ' . $eid . ' and lingo_last_uploaded.entity_key = \'last_uploaded\'');
   $query->addField('lingo_last_uploaded', 'value', 'last_uploaded');
 
   // Any Upload Errors
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
   $query->addField('lingo_last_sync_error', 'value', 'last_sync_error');
 
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
   $query->addField('lingo_workflow', 'value', 'workflow');
 
   if (isset($filters['search_type']) && $filters['search_type'] == 'all') {
@@ -1104,14 +1104,14 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
 
   if (isset($filters['title'])) {
-    $title_query = db_select('field_data_title_field', 'tf')
+    $title_query = db_select('{field_data_title_field}', 'tf')
         ->distinct()
         ->fields('tf', array('entity_id'))
         ->condition('tf.title_field_value', '%' . $filters['title'] . '%', 'LIKE');
   }
 
   if (isset($filters['body'])) {
-    $body_query = db_select('field_data_body', 'tb')
+    $body_query = db_select('{field_data_body}', 'tb')
         ->distinct()
         ->fields('tb', array('entity_id'))
         ->condition('tb.body_value', '%' . $filters['body'] . '%', 'LIKE');
@@ -1347,7 +1347,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
 
     $actions = '';
-    $actions .= l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $entity_type . '/' . $entity_id . '/edit', array('html' => TRUE, 'attributes' => array('target' => '_blank')));
+    $actions .= lingotek_get_entity_edit_link($entity_type, $entity_id);
     $actions .= empty($disabled_class) ? $pm_link : $pm_icon;
     $actions .= ' ' . l('<i title="' . t('Set Lingotek Settings') . '" class="fa fa-gear"></i>', '', array('html' => TRUE, 'attributes' => array('onclick' => 'lingotek_perform_action(' . $entity_id . ',"edit"); return false;')));
 
@@ -1391,6 +1391,21 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
   }
 
   return $table_data;
+}
+
+function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FALSE) {
+  $edit_link = "";
+  $query = array();
+  $query['destination'] = 'admin/settings/lingotek/manage/' . $entity_type;
+  switch ($entity_type) {
+    case 'fieldable_panels_pane':
+      $edit_link = 'admin/structure/fieldable-panels-panes/view/' . $entity_id . '/edit';
+      break;
+    default:
+      $edit_link = $entity_type . '/' . $entity_id . '/edit';
+      break;
+  }
+  return $url_only ? url($edit_link, array('query' => $query)) : l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $edit_link, array('html' => TRUE, 'attributes' => array('target' => '_blank'), 'query' => $query));
 }
 
 function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL) {
@@ -1622,7 +1637,7 @@ function lingotek_entity_delete_form_submit($form, &$form_state) {
   if (!empty($entity_ids)) {
     entity_delete_multiple($entity_type, $entity_ids);
     $count = count($entity_ids);
-    watchdog('content', 'Deleted @count entities.', array('@count' => $count));
+    watchdog('content', format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     drupal_set_message(format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     $form_state['executed'] = TRUE;
   }

@@ -47,8 +47,8 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
 function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $update_on_dup = TRUE) {
   if ($entity_id == 'all') {
     $lingo_node = array();
-    $result = db_select('lingotek_entity_metadata', 'n')
-      ->condition('entity_type', $entity_type)
+    $result = db_select('{lingotek_entity_metadata}', 'n')
+        ->condition('entity_type', $entity_type)
       ->fields('n', array(db_escape_field('entity_id'), db_escape_field('entity_key'), db_escape_field('value')))
       ->execute();
     foreach ($result as $row) {
@@ -65,8 +65,8 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
     if ($key === "") {
       $lingo_node = array();
 
-      $result = db_select('lingotek_entity_metadata', 'n')
-        ->fields('n', array(db_escape_field('entity_key'), db_escape_field('value')))
+      $result = db_select('{lingotek_entity_metadata}', 'n')
+          ->fields('n', array(db_escape_field('entity_key'), db_escape_field('value')))
           ->condition('entity_type', $entity_type)
         ->condition(db_escape_field('entity_id'), $entity_id)
         ->execute();
@@ -78,8 +78,8 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
     }
     //Get value for the specified key, only returns the first match
     elseif ($value === "") {
-      $result = db_select('lingotek_entity_metadata', 'n')
-        ->fields('n', array(db_escape_field('value')))
+      $result = db_select('{lingotek_entity_metadata}', 'n')
+          ->fields('n', array(db_escape_field('value')))
         ->condition('entity_type', $entity_type)
         ->condition(db_escape_field('entity_id'), $entity_id)
         ->condition(db_escape_field('entity_key'), $key)
@@ -106,13 +106,13 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
       );
       $existing_value = lingotek_keystore($entity_type, $entity_id, $key);
       if ($existing_value === FALSE) { // insert
-        drupal_write_record('lingotek_entity_metadata', $row);
-        return "$entity_id : $key => $value (INSERTED)";
+        $success = drupal_write_record('lingotek_entity_metadata', $row);
+        return $success ? "$entity_id : $key => $value (INSERTED)" : "$entity_id : $key !=> $value (INSERT FAILED)";
       }
       elseif ($update_on_dup) { // key exists -> update
         unset($row[db_escape_field('created')]); // retain original created timestamp
-        drupal_write_record('lingotek_entity_metadata', $row, array(db_escape_field('entity_type'), db_escape_field('entity_id'), db_escape_field('entity_key')));
-        return "$entity_id : $key => $value (UPDATED)";
+        $success = drupal_write_record('lingotek_entity_metadata', $row, array(db_escape_field('entity_type'), db_escape_field('entity_id'), db_escape_field('entity_key')));
+        return $success ? "$entity_id : $key => $value (UPDATED)" : "$entity_id : $key !=> $value (UPDATE FAILED)";
       }
       else { // key exists -> ignore (ignore on duplicate key)
         return "$entity_id : $key => $existing_value (IGNORED)";
@@ -137,11 +137,11 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
  */
 
 function lingotek_keystore_delete($entity_type, $id, $key) {
-  $query = db_delete('lingotek_entity_metadata');
+  $query = db_delete('{lingotek_entity_metadata}');
   $query->condition('entity_type', $entity_type);
   $query->condition('entity_id', $id);
   $query->condition('entity_key', $key);
-  $query->execute();
+  return $query->execute();
 }
 
 /**
@@ -163,7 +163,7 @@ function lingotek_keystore_delete_multiple($entity_type, $entity_ids, $lingokey,
     $entity_ids = array($entity_ids);
   }
 
-  $query = db_select('lingotek_entity_metadata', 'l') // Make sure that the variable exists in the table for every input nid
+  $query = db_select('{lingotek_entity_metadata}', 'l') // Make sure that the variable exists in the table for every input nid
       ->fields('l', array('entity_id'))
       ->condition('entity_type', $entity_type)
       ->condition('entity_id', $entity_ids, 'IN')
@@ -171,7 +171,7 @@ function lingotek_keystore_delete_multiple($entity_type, $entity_ids, $lingokey,
   $delete_nids = $query->execute()->fetchCol();
 
   if (!empty($delete_nids)) {
-    $delete = db_delete('lingotek_entity_metadata') // delete for every input nid where the variable exists
+    $delete = db_delete('{lingotek_entity_metadata}') // delete for every input nid where the variable exists
         ->condition('entity_type', $entity_type)
         ->condition('entity_id', $delete_nids, 'IN')
         ->condition('entity_key', $lingokey, $condition)
@@ -180,14 +180,14 @@ function lingotek_keystore_delete_multiple($entity_type, $entity_ids, $lingokey,
 }
 
 function lingotek_keystore_delete_all($entity_type, $id) {
-  db_delete('lingotek_entity_metadata')
-    ->condition('entity_type', $entity_type)
+  db_delete('{lingotek_entity_metadata}')
+      ->condition('entity_type', $entity_type)
     ->condition('entity_id', $id)->execute();
 }
 
 function lingotek_keystore_delete_all_multiple($entity_type, $ids) {
-  db_delete('lingotek_entity_metadata')
-    ->condition('entity_type', $entity_type)
+  db_delete('{lingotek_entity_metadata}')
+      ->condition('entity_type', $entity_type)
     ->condition('entity_id', $ids, 'IN')->execute();
 }
 
@@ -313,17 +313,19 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
     } */
 
-  //URL Alias related to the page:
-  $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
-  if ($url_alias_translation == 1) {
-    $conditions = array('source' => 'node/' . $entity->nid);
-    if ($entity->language != LANGUAGE_NONE) {
-      $conditions['language'] = $entity->language;
-    }
-    $path = path_load($conditions);
-    if ($path !== FALSE) {
-      $url = $path['alias'];
-      $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+  if ($entity_type == 'node') {
+    //URL Alias related to the page:
+    $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
+    if ($url_alias_translation == 1) {
+      $conditions = array('source' => 'node/' . $entity->nid);
+      if ($entity->language != LANGUAGE_NONE) {
+        $conditions['language'] = $entity->language;
+      }
+      $path = path_load($conditions);
+      if ($path !== FALSE) {
+        $url = $path['alias'];
+        $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+      }
     }
   }
 
@@ -350,8 +352,8 @@ function lingotek_xml_fields($entity, $translatable, $language) {
     );
     if (module_exists('link')) {
       $target_keys['link'] = array(
-        'url' => '',
         'title' => '',
+        'url' => '',
       );
     }
 
@@ -390,8 +392,10 @@ function lingotek_xml_fields($entity, $translatable, $language) {
           $current_field = '<' . $element_name . '>';
           if (is_array($element_suffix)) {
             foreach ($element_suffix as $t_key => $t_val) {
-              $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
-              $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+              if (isset($delta[$t_key])) {
+                $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
+                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+              }
             }
           }
           else {
@@ -614,7 +618,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
   //$types = array_keys($type_info);
 
-  $whitelist = array('node', 'comment', 'message_type'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
@@ -676,6 +680,10 @@ function lingotek_translatable_field_details() {
     foreach ($field['bundles'] as $type => $instance) {
       if (field_is_translatable($type, $field)) {
         //echo '<br>Translatable: YES!' ;
+        if (!isset($field['storage']['details']['sql']['FIELD_LOAD_CURRENT'])) {
+            LingotekLog::trace("field '$field_id' is marked as translatable but does not publish its details.  Skipping.");
+          continue;
+        }
         $field_db_table = array_keys($field['storage']['details']['sql']['FIELD_LOAD_CURRENT']);
         $field_db_table = array_shift($field_db_table);
         $translatable_fields[$type][] = array(
@@ -734,7 +742,7 @@ function lingotek_get_active_languages($get_details = FALSE) {
  */
 function lingotek_get_node_source_languages() {
   $lingo_langs = array();
-  $query = db_select('node', 'n')->distinct()
+  $query = db_select('{node}', 'n')->distinct()
       ->fields('n', array('language'));
   $query = $query->execute();
   $result = $query->fetchCol(0);
@@ -756,7 +764,7 @@ function lingotek_delete_target_language($lingotek_locale) {
   $result = FALSE;
 
   if (is_string($lingotek_locale) && strlen($lingotek_locale)) {
-    db_update('languages')
+    db_update('{languages}')
         ->fields(array(
           //'enabled' => 0,
           'lingotek_enabled' => 0,
@@ -791,7 +799,7 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
     $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
-    db_update('languages')
+    db_update('{languages}')
         ->fields(array(
           'enabled' => 1,
           'lingotek_enabled' => $lingotek_enable ? 1 : 0,
@@ -809,6 +817,9 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
       $projects = LingotekSync::getSyncProjects();
       foreach ($projects as $project_id) {
         $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
+        if ($result) {
+          LingotekSync::insertTargetEntriesForAllEntities($lingotek_locale);
+        }
       }
     }
   }
@@ -918,7 +929,7 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_local
   if (!is_null($lingotek_locale)) {
     $field_data['lingotek_locale'] = $lingotek_locale;
   }
-  db_update('languages')
+  db_update('{languages}')
       ->fields($field_data)
       ->condition('language', $drupal_language_code)
       ->execute();
@@ -1039,6 +1050,10 @@ function lingotek_cleanup_field_languages_for_comments() {
   lingotek_cleanup_field_languages('comment');
 }
 
+function lingotek_cleanup_field_languages_for_fieldable_panels_panes() {
+  lingotek_cleanup_field_languages('fieldable_panels_pane');
+}
+
 /**
  * lingotek_refresh_api_cache utility
  */
@@ -1061,7 +1076,7 @@ function lingotek_refresh_api_cache($show_messages = TRUE) {
  * Sets the priority of the Lingotek Translation module
  */
 function lingotek_set_priority() {
-  db_update('system')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
+  db_update('{system}')->fields(array('weight' => 12))->condition('name', 'lingotek')->execute();
 }
 
 /**
@@ -1159,7 +1174,7 @@ function lingotek_migration_3() {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($code, FALSE); //will return FALSE when lingotek_locales are passed in (so, they'll be skipped)
     if ($lingotek_locale) {
       $new_key = $field_name_prefix . $lingotek_locale;
-      $query = db_update('lingotek', $ret)
+      $query = db_update('{lingotek}', $ret)
           ->fields(array('lingokey' => $new_key))
           ->condition('lingokey', $old_key, '=');
       try {
@@ -1253,7 +1268,7 @@ function lingotek_list_entities_with_language($entity_type, $bundle, $language) 
 }
 
 function lingotek_list_nodes_translated_in_language($language, $bundle = NULL) {
-  $query = db_select('node')
+  $query = db_select('{node}')
       ->fields('node', array('tnid'));
   if (!is_null($bundle)) {
     $query->condition('node.type', $bundle);
@@ -1395,8 +1410,8 @@ function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
  *   a string containing the name of the given entity type
  */
 function lingotek_get_entity_count($entity_type) {
-  $query = db_select($entity_type, 'n')
-    ->fields('n')
+  $query = db_select('{' . $entity_type . '}', 'n')
+      ->fields('n')
     ->execute();
   $num_results = $query->rowCount();
   return $num_results;
@@ -1437,7 +1452,7 @@ function lingotek_get_bundles_by_profile_id($profile_id) {
  * Return an array tree of entity_types -> entity_ids -> document_ids
  */
 function lingotek_get_document_id_tree() {
-  $query = db_select('lingotek_entity_metadata', 'lem')
+  $query = db_select('{lingotek_entity_metadata}', 'lem')
       ->fields('lem', array('entity_id', 'entity_type', 'value'))
       ->condition('lem.entity_key', 'document_id')
       ->execute();
@@ -1473,7 +1488,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   }
   
   // get all entities that belond to those bundles
-  foreach ($bundles as $et => $entity_bundles) {
+  foreach ($bundles as $entity_type => $entity_bundles) {
     /*  THE SLOW BUT CORRECT WAY TO EXTRACT INFO
     $tmp_entities = entity_load($et);
     foreach ($tmp_entities as $tid => $tinfo) {
@@ -1484,34 +1499,37 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
     }
     */
     // THE OPTIMIZED WAY
-    if ($et == 'comment') {
+    if ($entity_type == 'comment') {
       $ref_tables = array();
       foreach (array_keys($entity_bundles) as $key) {
         $tmp_array = explode('_', $key);
         $key = implode('_', array_slice($tmp_array, 2));
         $ref_tables[] = $key;
       }
-      $query = db_select($et, 'e')
+      $query = db_select('{' . $entity_type . '}', 'e')
           ->fields('e', array('cid'));
-      $query->join('node', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
+      $query->join('{node}', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
+      $results = $query->execute()->fetchCol();
+      foreach ($results as $id) {
+        $entities[] = array('id' => $id, 'type' => $entity_type);
+      }
     }
     else {
-      $entity_info = entity_get_info($et);
-      $bundle_field_name = $entity_info['entity keys']['bundle'];
-      $id_field_name = $entity_info['entity keys']['id'];
-      $query = db_select($et, 'e')
-          ->fields('e', array($id_field_name))
-          ->condition('e.' . $bundle_field_name, array_keys($entity_bundles), 'IN');
-    }
-    $results = $query->execute()->fetchCol();
-    foreach ($results as $id) {
-      $entities[] = array('id' => $id, 'type' => $et);
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', $entity_type)
+          ->entityCondition('bundle', array_keys($entity_bundles), 'IN');
+      $result = $query->execute();
+      if (isset($result[$entity_type])) {
+        foreach ($result[$entity_type] as $id => $entity_data) {
+          $entities[] = array('id' => $id, 'type' => $entity_type);
+        }
+      }
     }
     // END OPTIMIZED WAY
   }
   
   // subtract all entities specifically *not* set to the given profile
-  $query = db_select('lingotek_entity_metadata', 'lem')
+  $query = db_select('{lingotek_entity_metadata}', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
       ->condition('lem.value', $profile_id, is_array($profile_id) ? 'NOT IN' : '!=');
@@ -1543,7 +1561,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   }
 
   // add all entities specifically set to the given profile
-  $query = db_select('lingotek_entity_metadata', 'lem')
+  $query = db_select('{lingotek_entity_metadata}', 'lem')
       ->fields('lem', array('entity_id', 'entity_type'))
       ->condition('lem.entity_key', 'profile')
       ->condition('lem.value', $profile_id,  is_array($profile_id) ? 'IN' : '=');
@@ -1677,8 +1695,8 @@ function lingotek_has_unconventional_fc_translations() {
     'fca.language != fcb.language',
   );
   foreach (array_keys($field_collection_field_types) as $fc_field_name) {
-    $query = db_select('field_data_' . $fc_field_name, 'fca');
-    $query->join('field_data_' . $fc_field_name, 'fcb', implode(' AND ', $query_join_items) . ' AND fca.' . $fc_field_name . '_value != fcb.' . $fc_field_name . '_value');
+    $query = db_select('{field_data_' . $fc_field_name . '}', 'fca');
+    $query->join('{field_data_' . $fc_field_name . '}', 'fcb', implode(' AND ', $query_join_items) . ' AND fca.' . $fc_field_name . '_value != fcb.' . $fc_field_name . '_value');
     $query->groupBy('fca.entity_id');
     $query->fields('fca', array('entity_id'));
     $result = $query->execute();
@@ -1838,8 +1856,7 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
 function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL ) {
   if (!$entity_ids || !is_array($entity_ids)) {
     $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $entity_type)
-      ->propertyCondition('status', 1);
+    $query->entityCondition('entity_type', $entity_type);
     $entities = $query->execute();
     $entity_ids = array_keys($entities);
   }
@@ -1849,7 +1866,7 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
     // No disabled entities found.
     return FALSE;
   }
-  $query = db_select('lingotek_entity_metadata', 'lem');
+  $query = db_select('{lingotek_entity_metadata}', 'lem');
   $query->fields('lem', array('entity_id'))
       ->condition('lem.entity_id', $entity_ids, 'IN')
       ->condition('lem.entity_key', 'document_id');
@@ -1858,4 +1875,46 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
     return TRUE;
   }
   return FALSE;
+}
+
+function lingotek_is_node_translation($node = NULL) {
+  // The case of creating a new node-based translation.
+  if (isset($_GET['translation']) && isset($_GET['target']) && ($source_item = menu_link_load($_GET['translation']))) {
+    return TRUE;
+  }
+  // The case of updating an existing node-based translation.
+  if ($node && isset($node->tnid) && $node->tnid !== '0' && $node->tnid !== $node->nid) {
+    return TRUE;
+  }
+  // Not a node-based translation.
+  return FALSE;
+}
+
+function lingotek_managed_entity($entity_type, $entity) {
+  try {
+    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  } catch (Exception $ex) {
+    // Skip modifying languages for any entity that does not support entity_extract_ids.
+    LingotekLog::trace("Function entity_extract_ids() not supported for entity type '$entity_type'.  Skipping.");
+    return FALSE;
+  }
+  // If there is no $id or $bundle property, then nothing to manage for now.
+  if (!$id || !$bundle) {
+    return FALSE;
+  }
+  // Check the entity itself for overrides.
+  $query = db_select('{lingotek_entity_metadata}', 'lem')
+      ->fields('lem', array('value'))
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_id', $id)
+      ->condition('lem.entity_key', 'profile');
+  $result = $query->execute()->fetchField();
+  if ($result === LingotekSync::PROFILE_DISABLED) {
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
+  // Check the entity's bundle.
+  return lingotek_enabled_bundle($entity_type, $bundle);
 }

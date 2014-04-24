@@ -82,7 +82,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public static function loadByLingotekDocumentId($lingotek_document_id) {
     $entity = FALSE;
     
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
+    $query = db_select('{lingotek_entity_metadata}', 'l')->fields('l');
     $query->condition('entity_key', 'document_id');
     $query->condition('value', $lingotek_document_id);
     $result = $query->execute();
@@ -151,8 +151,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
   protected function metadata() {
     $metadata = array();
 
-    $results = db_select('lingotek_entity_metadata', 'meta')
-      ->fields('meta')
+    $results = db_select('{lingotek_entity_metadata}', 'meta')
+        ->fields('meta')
       ->condition('entity_id', $this->getId())
       ->condition('entity_type', $this->entity_type)
       ->execute();
@@ -174,8 +174,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   The value for the specified key, if it exists.
    */
   public function getMetadataValue($key) {
-    return db_select('lingotek_entity_metadata', 'meta')
-      ->fields('meta', array('value'))
+    return db_select('{lingotek_entity_metadata}', 'meta')
+            ->fields('meta', array('value'))
       ->condition('entity_key', $key)
       ->condition('entity_id', $this->getId())
       ->condition('entity_type', $this->getEntityType())
@@ -194,8 +194,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function setMetadataValue($key, $value) {
     $metadata = $this->metadata();
     if (!isset($metadata[$key])) {
-      db_insert('lingotek_entity_metadata')
-        ->fields(array(
+      db_insert('{lingotek_entity_metadata}')
+          ->fields(array(
           'entity_id' => $this->getId(),
           'entity_type' => $this->getEntityType(),
           'entity_key' => $key,
@@ -205,8 +205,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
 
     }
     else {
-      db_update('lingotek_entity_metadata')
-        ->fields(array(
+      db_update('{lingotek_entity_metadata}')
+          ->fields(array(
           'value' => $value
         ))
         ->condition('entity_id', $this->getId())
@@ -225,8 +225,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function deleteMetadataValue($key) {
     $metadata = $this->metadata();
     if (isset($metadata[$key])) {
-      db_delete('lingotek_entity_metadata')
-        ->condition('entity_id', $this->getId())
+      db_delete('{lingotek_entity_metadata}')
+          ->condition('entity_id', $this->getId())
         ->condition('entity_type', $this->getEntityType())
         ->condition('entity_key', $key, 'LIKE')
         ->execute();

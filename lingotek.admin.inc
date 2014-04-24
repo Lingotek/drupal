@@ -277,7 +277,7 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
   // Warning note when enabling nodes with existing Lingotek translations
   $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';
   if ($entity_type != 'field_collection_item' && lingotek_previously_managed_translations($entity_type)) {
-    $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">Note: If edits have been made to the local copy of translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek.</div>';
+    $overwrite_markup = '<div id="edit-lingotek-overwrite-warning" style="color: red;">' . t('Note: If edits have been made to the local copy of translations since disabling Lingotek, those edits will be lost when synchronizing with Lingotek') . '</div>';
   }
   $form['translation_' . $entity_type]['container']['overwrite_warning'] = array(
     '#markup' => $overwrite_markup,
@@ -804,7 +804,7 @@ function lingotek_admin_index_plural_targets(&$context=NULL) {
   if ($context) {
     $context['message'] = t('Indexing translation targets to preserve plurality');
   }
-  $plurals = db_select('locales_target', 't')
+  $plurals = db_select('{locales_target}', 't')
       ->fields('t', array('lid', 'plid', 'plural'))
       ->condition('plid', 0, '!=')
       ->execute()
@@ -930,7 +930,7 @@ function lingotek_admin_module_indexing_finished($success, $results) {
 }
 
 function lingotek_admin_get_enabled_modules() {
-  $query = db_select('system', 's')
+  $query = db_select('{system}', 's')
       ->fields('s', array('name', 'filename', 'type'))
       ->condition('s.type', array('module', 'theme'), 'IN')
       ->condition('s.status', '0', '!=')
@@ -941,7 +941,7 @@ function lingotek_admin_get_enabled_modules() {
 
 function lingotek_admin_prepare_blocks() {
   // update all blocks to be translatable in the Languages settings
-  $result = db_update('block')
+  $result = db_update('{block}')
       ->fields(array('i18n_mode' => LINGOTEK_I18N_ENABLED_VALUE))
       ->execute();
   if ($result) {
@@ -955,7 +955,7 @@ function lingotek_admin_prepare_blocks() {
 
 function lingotek_admin_prepare_taxonomies() {
   // update all taxonomies to be updated to use translation mode 'Localize'
-  $result = db_update('taxonomy_vocabulary')
+  $result = db_update('{taxonomy_vocabulary}')
       ->fields(array('i18n_mode' => LINGOTEK_TAXONOMY_LOCALIZE_VALUE))
       ->execute();
   if ($result) {
@@ -969,7 +969,7 @@ function lingotek_admin_prepare_taxonomies() {
 
 function lingotek_admin_prepare_menus() {
   // update all menus to use 'Translate and Localize' in the Multilingual Options
-  $result = db_update('menu_custom')
+  $result = db_update('{menu_custom}')
       ->fields(array('i18n_mode' => LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE))
       ->execute();
   if ($result) {
@@ -982,7 +982,7 @@ function lingotek_admin_prepare_menus() {
   // find all menu links that are not language-neutral and not part of a
   // translation set and update them to be language-neutral (so they will
   // be added to the locales_source table as a string to be translated)
-  $result = db_update('menu_links')
+  $result = db_update('{menu_links}')
       ->fields(array('language' => LANGUAGE_NONE))
       ->condition('language', LANGUAGE_NONE, '!=')
       ->condition('i18n_tsid', 0)
@@ -1109,7 +1109,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
 
   $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
 
-  $query = db_select('block', 'b');
+  $query = db_select('{block}', 'b');
   $query->fields('b');
   $query->condition('module', 'locale');
   $query->condition('delta', 'language');
@@ -1905,6 +1905,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     );
   }
 
+  if (module_exists('fieldable_panels_panes')) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_fieldable_panels_panes'] = array(
+      'title' => t('Prepare FPPs'),
+      'desc' => t('Sets all <i>language neutral</i> fieldable panels panes (FPPs) to be @lang', array('@lang' => language_default('name'))),
+    );
+  }
+
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
     'desc' => t('Update all blocks to be translatable in the <i>Languages</i> settings.'),
@@ -2030,32 +2037,24 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
 
   $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, t('Account'), array('id' => 'ltk-account'));
 
-  $connected = $api->testAuthentication();
-
-  if ($connected) {
-
-    foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
-      $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
-      $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('class' => array('ltk-entity')));
-    }
-
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'), array('id' => 'ltk-config'));
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), t('Translation Profiles'), array('id' => 'ltk-profiles'));
-    if ($show_advanced) {
-      $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE), t('Advanced Content Parsing'), array('id' => 'ltk-advanced-content-parsing'));
-    }
-
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), t('Preferences'), array('id' => 'ltk-prefs'));
-    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), 'Logging');
-
-    $utilities = array(
-      drupal_get_form('lingotek_admin_cleanup_form', $show_fieldset),
-      drupal_get_form('lingotek_admin_utilities_form', $show_fieldset),
-    );
-    $output['lingotek'][] = lingotek_wrap_in_fieldset($utilities, t('Utilities'));
+  foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
+    $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
+    $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('class' => array('ltk-entity')));
+  }
+  $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'), array('id' => 'ltk-config'));
+  $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), t('Translation Profiles'), array('id' => 'ltk-profiles'));
+  if ($show_advanced) {
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE), t('Advanced Content Parsing'), array('id' => 'ltk-advanced-content-parsing'));
   }
 
+  $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), t('Preferences'), array('id' => 'ltk-prefs'));
+  $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), 'Logging');
 
+  $utilities = array(
+    drupal_get_form('lingotek_admin_cleanup_form', $show_fieldset),
+    drupal_get_form('lingotek_admin_utilities_form', $show_fieldset),
+  );
+  $output['lingotek'][] = lingotek_wrap_in_fieldset($utilities, t('Utilities'));
 
   return $output;
 }
@@ -2082,7 +2081,7 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
     'theme' => $form_state['values']['theme']
   );
 
-  db_update('block')
+  db_update('{block}')
       ->fields(array(
         'status' => $block['status'],
         'weight' => $block['weight'],
@@ -2121,7 +2120,7 @@ function lingotek_admin_language_switcher_form_submit($form, $form_state) {
  */
 function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
   if ($form_state['values']['lingotek_advanced_parsing']) {
-    $results = db_select('lingotek', 'l')->fields('l', array('nid'))->distinct()->execute();
+    $results = db_select('{lingotek}', 'l')->fields('l', array('nid'))->distinct()->execute();
     $operations = array();
     foreach ($results as $result) {
       $node = lingotek_node_load_default($result->nid, NULL, TRUE);
