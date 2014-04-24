@@ -286,10 +286,10 @@ class LingotekSync {
         $query->condition($tnid_query);
       }
 
-      // exclude disabled nodes (including those that have disabled bundles)
-      $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_base_table);
+      // exclude disabled entities (including those that have disabled bundles)
+      $disabled_entity_ids = lingotek_get_entities_by_profile_id(LingotekSync::PROFILE_DISABLED, $entity_type);
       if (count($disabled_entity_ids)) {
-        $enabled_entity_ids = lingotek_get_enabled_entities_by_type($entity_base_table);
+        $enabled_entity_ids = lingotek_get_enabled_entities_by_type($entity_type);
         if (count($disabled_entity_ids) < count($enabled_entity_ids)) {
           $query->condition($properties['entity keys']['id'], array_merge(array(-1), array_keys($disabled_entity_ids)), "NOT IN"); //exclude disabled entities
         }
