@@ -1519,6 +1519,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
       $query->entityCondition('entity_type', $entity_type)
           ->entityCondition('bundle', array_keys($entity_bundles), 'IN');
       $result = $query->execute();
+      unset($query);
       if (isset($result[$entity_type])) {
         foreach ($result[$entity_type] as $id => $entity_data) {
           $entities[] = array('id' => $id, 'type' => $entity_type);
@@ -1538,7 +1539,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   }
   $result = $query->execute();
   $subtract_entity_ids = $result->fetchAll();
-  
+
   $doc_ids = lingotek_get_document_id_tree();
   $subtractions = array();
   foreach ($subtract_entity_ids as $sei) {
@@ -1853,28 +1854,37 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
   return lingotek_get_entities_by_profile_id($profile_ids, $entity_type);
 }
 
-function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL ) {
-  if (!$entity_ids || !is_array($entity_ids)) {
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $entity_type);
-    $entities = $query->execute();
-    $entity_ids = array_keys($entities);
+function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL) {
+
+  // retrieve all entities of the given type with document IDs
+  $query = db_select('{lingotek_entity_metadata}', 'lem');
+  $query->fields('lem', array('entity_id'))
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_key', 'document_id');
+  if ($entity_ids && is_array($entity_ids)) {
+    $query->condition('lem.entity_id', $entity_ids, 'IN');
   }
+  $result = $query->execute();
+  $entity_ids = $result->fetchCol();
+
+  if (!$entity_ids) {
+    return FALSE;
+  }
+
+  // filter the entity IDs by ones that still exist
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', $entity_type)
+      ->entityCondition('entity_id', $entity_ids, 'IN');
+  $entities = $query->execute();
+  $entity_ids = array_keys($entities[$entity_type]);
+
   $enabled_entities = lingotek_get_enabled_entities_by_type($entity_type);
   $entity_ids = array_diff($entity_ids, array_keys($enabled_entities));
   if (empty($entity_ids)) {
     // No disabled entities found.
     return FALSE;
   }
-  $query = db_select('{lingotek_entity_metadata}', 'lem');
-  $query->fields('lem', array('entity_id'))
-      ->condition('lem.entity_id', $entity_ids, 'IN')
-      ->condition('lem.entity_key', 'document_id');
-  $result = $query->execute();
-  if ($result->rowCount()) {
-    return TRUE;
-  }
-  return FALSE;
+  return TRUE;
 }
 
 function lingotek_is_node_translation($node = NULL) {
