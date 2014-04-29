@@ -836,7 +836,7 @@ function lingotek_grid_build_filters($form_state) {
   foreach ($profile_defaults as $key => $p) {
     $profiles[$key] = $p['name'];
   }
-  
+
   $filters = array(
     'nid' => array(
       '#type' => 'textfield',
@@ -885,15 +885,20 @@ function lingotek_grid_build_filters($form_state) {
         LingotekSync::STATUS_CURRENT => t('In Sync'),
       ),
       '#multiple' => FALSE,
-    ),
-    'content_type' => array(
+    )
+  );
+
+  // Include a content-type filter if there are bundles by which to filter.
+  $entity_info = entity_get_info($_SESSION['grid_entity_type']);
+  if (!empty($entity_info['bundles'])) {
+    $filters['content_type'] = array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
       '#title' => t('Content Type(s)'),
-      '#options' => array('all' => t('All')) + node_type_get_names(),
+      '#options' => array('all' => t('All')) + array_keys($entity_info['bundles']),
       '#multiple' => TRUE
-    ),
-  );
+    );
+  }
 
   return lingotek_grid_process_elements($filters, '', '__filter'); // Add prefix and suffix to the name of each filter element
 }
