@@ -31,6 +31,7 @@ function lingotek_field_language_data_cleanup_batch_create($entity_type, $autose
   $entities1 = $query1->entityCondition('entity_type', $entity_type)
       ->propertyCondition('language', LANGUAGE_NONE, '=')
       ->execute();
+  unset($query1);
   if (isset($entities1[$entity_type])) {
     foreach ($entities1[$entity_type] as $entity) {
       $entity_id = $entity->{$info['entity keys']['id']};
@@ -44,6 +45,7 @@ function lingotek_field_language_data_cleanup_batch_create($entity_type, $autose
   $query2 = new EntityFieldQuery();
   $entities2 = $query2->entityCondition('entity_type', $entity_type)
       ->execute();
+  unset($query2);
   if (isset($entities2[$entity_type])) {
     foreach ($entities2[$entity_type] as $entity) {
       $entity_id = $entity->{$info['entity keys']['id']};
