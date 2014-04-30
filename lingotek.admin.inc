@@ -1556,7 +1556,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $content_translation_note = '';
   if (!lingotek_node_based_trans_ready()) {
-    $content_translation_note = t("Note: Requires Content Translation module (translation) and Node Translation module (i18n_node).");
+    $content_translation_note = t("Note: Requires Content Translation module (translation) and Multilingual content module (i18n_node).");
   }
   
   $form['defaults']['lingotek_nodes_translation_method'] = array(
