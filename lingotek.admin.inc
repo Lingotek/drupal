@@ -489,6 +489,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
         '#value' => t('Save')
       )
     ),
+    '#validate' => array('lingotek_admin_additional_translation_settings_form_validate'),
     '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
   );
 
@@ -606,6 +607,14 @@ function lingotek_verify_modules_enabled($module_list) {
     return FALSE;
   }
   return TRUE;
+}
+
+function lingotek_admin_additional_translation_settings_form_validate($form, &$form_state) {
+  // check for required modules if config translation is enabled
+  $conf_opt_part = $form['additional_translation']['config'];
+  if (isset($conf_opt_part['lingotek_translate_config_views']['#value']) && $conf_opt_part['lingotek_translate_config_views']['#value'] !== 0) {
+    lingotek_verify_modules_enabled(array('i18nviews'));
+  }
 }
 
 function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=array()) {

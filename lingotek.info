@@ -21,7 +21,6 @@ dependencies[] = i18n_taxonomy
 dependencies[] = i18n_translation
 dependencies[] = i18n_variable
 dependencies[] = views
-dependencies[] = i18nviews
 dependencies[] = l10n_update
 dependencies[] = ctools
 dependencies[] = potx
