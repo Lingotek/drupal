@@ -200,23 +200,29 @@ Drupal.behaviors.lingotekAdminForm = {
 
       // set prep functions to disabled/enabled on initial page load
       $( function () {
-          if ($('#edit-config-lingotek-translate-config-blocks').is(':checked')) {
-            $('#lingotek_prepare_config_blocks').removeAttr('disabled');
-          } else {
-            $('#lingotek_prepare_config_blocks').attr('disabled',true);
-          }
+        if ($('#edit-config-lingotek-translate-config-builtins').is(':checked')) {
+          $('#lingotek_use_translation_from_drupal').removeAttr('disabled');
+        } else {
+          $('#lingotek_use_translation_from_drupal').attr('disabled',true);
+        }
+        
+        if ($('#edit-config-lingotek-translate-config-blocks').is(':checked')) {
+          $('#lingotek_prepare_config_blocks').removeAttr('disabled');
+        } else {
+          $('#lingotek_prepare_config_blocks').attr('disabled',true);
+        }
 
-          if ($('#edit-config-lingotek-translate-config-taxonomies').is(':checked')) {
-            $('#lingotek_prepare_config_taxonomies').removeAttr('disabled');
-          } else {
-            $('#lingotek_prepare_config_taxonomies').attr('disabled',true);
-          }
+        if ($('#edit-config-lingotek-translate-config-taxonomies').is(':checked')) {
+          $('#lingotek_prepare_config_taxonomies').removeAttr('disabled');
+        } else {
+          $('#lingotek_prepare_config_taxonomies').attr('disabled',true);
+        }
 
-          if ($('#edit-config-lingotek-translate-config-menus').is(':checked')) {
-            $('#lingotek_prepare_config_menus').removeAttr('disabled');
-          } else {
-            $('#lingotek_prepare_config_menus').attr('disabled',true);
-          }
+        if ($('#edit-config-lingotek-translate-config-menus').is(':checked')) {
+          $('#lingotek_prepare_config_menus').removeAttr('disabled');
+        } else {
+          $('#lingotek_prepare_config_menus').attr('disabled',true);
+        }
       });
 
       /*
