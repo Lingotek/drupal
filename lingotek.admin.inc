@@ -542,6 +542,10 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#default_value' => 1,
   );
 
+  if (variable_get('lingotek_use_translation_from_drupal', 0)) {
+    $fr['#attributes']['checked'] = 'checked';
+  }
+
   $options = array(
     'lingotek_translate_config_blocks' => array(t('Blocks'), t('Include translation for all translatable blocks.') . drupal_render($prep_blocks_chbx)),
     'lingotek_translate_config_taxonomies' => array(t('Taxonomy'), t('Include translation for all translatable taxonomy vocabularies and terms.') . drupal_render($prep_taxonomy_chbx)),
