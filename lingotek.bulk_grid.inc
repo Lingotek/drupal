@@ -962,7 +962,7 @@ function lingotek_grid_process_elements($elements, $prefix, $suffix) {
  *    Returns array of rows
  *    Populates The Grid
  */
-function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=FALSE) {
+function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only = FALSE) {
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;

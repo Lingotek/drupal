@@ -1025,7 +1025,7 @@ function lingotek_entity_save($entity, $entity_type) {
     return $entity;
   }
   
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   $has_not_been_uploaded = !isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id']);
 
@@ -1349,7 +1349,7 @@ function lingotek_entity_load($entities, $entity_type) {
 //    if (!lingotek_supported_type($entity->type)) {
 //      continue;
 //    }
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+    list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
     // Node profile inheritance heirarchy
     // Step 1: get global profile
@@ -1393,13 +1393,13 @@ function lingotek_entity_update($entity, $entity_type) {
     return;
   }
 
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   lingotek_entity_save($entity, $entity_type);
 }
 
 function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE, &$context = array()) {
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   if (isset($entity->lingotek_upload_override)) {
     if ($entity->lingotek_upload_override) {
@@ -1436,7 +1436,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     $entity = lingotek_entity_load_single($entity_type, $entity);
   }
   
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   
   LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type, '@id' => $id));
 
@@ -1551,7 +1551,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     return FALSE;
   }
 
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   if (module_exists('rules')) {
     rules_invoke_event('lingotek_entity_translation_pre_download', new EntityDrupalWrapper($entity_type, $entity));
@@ -2062,7 +2062,7 @@ function lingotek_entity_delete($entity, $type) {
   }
   db_delete('{lingotek_entity_metadata}')
       ->condition('entity_type', $type)
-    ->condition('entity_id', entity_extract_ids($type, $entity))
+    ->condition('entity_id', lingotek_entity_extract_ids($type, $entity))
     ->execute();
 }
 

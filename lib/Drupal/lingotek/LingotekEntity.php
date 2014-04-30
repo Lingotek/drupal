@@ -293,7 +293,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
    *   The ID associated with this object
    */
   public function getId() {
-    list($id, $vid, $bundle) = entity_extract_ids($this->entity_type, $this->entity);
+    list($id, $vid, $bundle) = lingotek_entity_extract_ids($this->entity_type, $this->entity);
     return $id;
   }
   

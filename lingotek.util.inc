@@ -289,7 +289,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   $translatable = array();
 
   $translate = variable_get('lingotek_enabled_fields', array());
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
   if (empty($fields_desired) && lingotek_oneoff_translate($entity)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($entity_type, $bundle);
@@ -618,7 +618,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
   //$types = array_keys($type_info);
 
-  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane', 'taxonomy_term'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
@@ -1492,7 +1492,7 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
     /*  THE SLOW BUT CORRECT WAY TO EXTRACT INFO
     $tmp_entities = entity_load($et);
     foreach ($tmp_entities as $tid => $tinfo) {
-      list($entity_id, $vid, $bundle_name) = entity_extract_ids($et, $tinfo);
+      list($entity_id, $vid, $bundle_name) = lingotek_entity_extract_ids($et, $tinfo);
       if (isset($bundles[$et][$bundle_name])) {
         $entities[] = array('id' => $tid, 'type' => $et);
       }
@@ -1928,3 +1928,15 @@ function lingotek_managed_entity($entity_type, $entity) {
   // Check the entity's bundle.
   return lingotek_enabled_bundle($entity_type, $bundle);
 }
+
+function lingotek_entity_extract_ids($entity_type, $entity) {
+  try {
+    list($entity_id, $vid, $bundle_name) = entity_extract_ids($entity_type, $entity);
+  } catch (EntityMalformedException $ex) {
+    // check for non-standard entity types
+    if ($entity_type == 'taxonomy_term') {
+      // TODO: populate taxonomy_term's entity fields
+    }
+  }
+}
+
