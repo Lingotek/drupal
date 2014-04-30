@@ -156,12 +156,9 @@ Drupal.behaviors.lingotekAdminForm = {
 
       //check/uncheck dependent-function boxes when select-all checkbox is checked
       $('th > .form-checkbox').change( function () {
-        console.log("the check all checkbox");
         if ($('th > .form-checkbox').is(':checked')) {
-          console.log("check all");
           $('.field.form-checkbox').removeAttr('disabled').attr('checked',true);
         } else {
-          console.log("uncheck all");
           $('.field.form-checkbox').removeAttr('checked').attr('disabled',true);
         }
       });
@@ -201,11 +198,31 @@ Drupal.behaviors.lingotekAdminForm = {
         return $(context).find('tbody tr').length + ' ' + Drupal.t('profiles')
       });
 
-      // set prep functions to disabled on initial page load
+      // set prep functions to disabled/enabled on initial page load
       $( function () {
-        $('#lingotek_prepare_config_blocks').attr('disabled', true);
-        $('#lingotek_prepare_config_taxonomies').attr('disabled', true);
-        $('#lingotek_prepare_config_menus').attr('disabled', true);
+        if ($('#edit-config-lingotek-translate-config-builtins').is(':checked')) {
+          $('#lingotek_use_translation_from_drupal').removeAttr('disabled');
+        } else {
+          $('#lingotek_use_translation_from_drupal').attr('disabled',true);
+        }
+        
+        if ($('#edit-config-lingotek-translate-config-blocks').is(':checked')) {
+          $('#lingotek_prepare_config_blocks').removeAttr('disabled');
+        } else {
+          $('#lingotek_prepare_config_blocks').attr('disabled',true);
+        }
+
+        if ($('#edit-config-lingotek-translate-config-taxonomies').is(':checked')) {
+          $('#lingotek_prepare_config_taxonomies').removeAttr('disabled');
+        } else {
+          $('#lingotek_prepare_config_taxonomies').attr('disabled',true);
+        }
+
+        if ($('#edit-config-lingotek-translate-config-menus').is(':checked')) {
+          $('#lingotek_prepare_config_menus').removeAttr('disabled');
+        } else {
+          $('#lingotek_prepare_config_menus').attr('disabled',true);
+        }
       });
 
       /*
