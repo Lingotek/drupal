@@ -156,12 +156,9 @@ Drupal.behaviors.lingotekAdminForm = {
 
       //check/uncheck dependent-function boxes when select-all checkbox is checked
       $('th > .form-checkbox').change( function () {
-        console.log("the check all checkbox");
         if ($('th > .form-checkbox').is(':checked')) {
-          console.log("check all");
           $('.field.form-checkbox').removeAttr('disabled').attr('checked',true);
         } else {
-          console.log("uncheck all");
           $('.field.form-checkbox').removeAttr('checked').attr('disabled',true);
         }
       });
