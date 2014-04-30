@@ -891,11 +891,14 @@ function lingotek_grid_build_filters($form_state) {
   // Include a content-type filter if there are bundles by which to filter.
   $entity_info = entity_get_info($_SESSION['grid_entity_type']);
   if (!empty($entity_info['bundles'])) {
+    $grid_bundles = array_map(function($val) {
+      return $val['label'];
+    }, $entity_info['bundles']);
     $filters['content_type'] = array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
       '#title' => t('Content Type(s)'),
-      '#options' => array('all' => t('All')) + array_keys($entity_info['bundles']),
+      '#options' => array('all' => t('All')) + $grid_bundles,
       '#multiple' => TRUE
     );
   }
@@ -1001,13 +1004,18 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     'translate_link' => array('data' => t('Translate')),
   );
   
-  if (!isset($entity_properties['changed']))
+  if (!isset($entity_properties['changed'])) {
     unset($header['changed']);
-  if (!$label_col)
+  }
+  if (!$label_col) {
     unset($header['title']);
-  if (!$bundle_col)
+  }
+  // Taxonomy terms require special handling of bundles because they do not
+  // have a bundle column in their table.
+  if (!$bundle_col && $entity_type != 'taxonomy_term') {
     unset($header['content_type']);
-  
+  }
+
   if (isset($entity_properties['changed'])) {
     $header['changed']['sort'] = 'desc';
   }
@@ -1052,6 +1060,11 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     $query->leftJoin('{node}', 'nn', 'nn.nid = n.nid');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'type');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
+  }
+  elseif ($entity_type == 'taxonomy_term') {
+    $query->innerJoin('{taxonomy_vocabulary}', 'tv', 'n.vid = tv.vid');
+    $query->addField('tv', 'name', 'tv_name');
+    $query->addField('tv', 'machine_name', 'type');
   }
   elseif ($bundle_col) {
     if ($info['entity keys']['bundle'] != 'type') {
@@ -1183,7 +1196,13 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
   //  Content Type
   if (isset($filters['content_type']) && !in_array('all', $filters['content_type'])) {
-    $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
+    // Special-case handling of taxonomy_term pseudo-entities
+    if ($entity_type == 'taxonomy_term') {
+      $query->condition('tv.machine_name', $filters['content_type'], 'IN');
+    }
+    else {
+      $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
+    }
   }
 
   if (isset($filters['profile']) && !in_array('all', $filters['profile'])) {
