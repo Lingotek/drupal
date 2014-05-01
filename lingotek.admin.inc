@@ -1486,6 +1486,15 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
+  // URL Alias Translation.
+  $form['defaults']['url_alias_translation'] = array(
+    '#type' => 'select',
+    '#title' => t('URL Alias Translation'),
+    '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern."),
+    '#options' => lingotek_get_url_alias_translations(),
+    '#default_value' => $form_state['values']['url_alias_translation'],
+  );
+
   if ($show_advanced) {
 
     // Community Translation
@@ -1494,19 +1503,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#title' => t('Allow Crowdsourced Translation'),
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => $form_state['values']['allow_community_translation'],
-    );
-
-    /*
-     * Misc. Options
-     */
-
-    // URL Alias Translation.
-    $form['defaults']['url_alias_translation'] = array(
-      '#type' => 'select',
-      '#title' => t('URL Alias Translation'),
-      '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern."),
-      '#options' => lingotek_get_url_alias_translations(),
-      '#default_value' => $form_state['values']['url_alias_translation'],
     );
   }
   
