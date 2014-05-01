@@ -1928,7 +1928,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
   if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
       'title' => t('Prepare taxonomy terms with custom fields'),
-      'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek to be @lang', array('@lang' => language_default('name'))),
+      'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
     );
   }
 
