@@ -996,13 +996,18 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     'translate_link' => array('data' => t('Translate')),
   );
   
-  if (!isset($entity_properties['changed']))
+  if (!isset($entity_properties['changed'])) {
     unset($header['changed']);
-  if (!$label_col)
+  }
+  if (!$label_col) {
     unset($header['title']);
-  if (!$bundle_col)
+  }
+  // Taxonomy terms require special handling of bundles because they do not
+  // have a bundle column in their table.
+  if (!$bundle_col && $entity_type != 'taxonomy_term') {
     unset($header['content_type']);
-  
+  }
+
   if (isset($entity_properties['changed'])) {
     $header['changed']['sort'] = 'desc';
   }
@@ -1047,6 +1052,11 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     $query->leftJoin('{node}', 'nn', 'nn.nid = n.nid');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'type');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
+  }
+  elseif ($entity_type == 'taxonomy_term') {
+    $query->innerJoin('{taxonomy_vocabulary}', 'tv', 'n.vid = tv.vid');
+    $query->addField('tv', 'name', 'tv_name');
+    $query->addField('tv', 'machine_name', 'type');
   }
   elseif ($bundle_col) {
     if ($info['entity keys']['bundle'] != 'type') {

@@ -618,12 +618,15 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
   //$types = array_keys($type_info);
 
-  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane', 'taxonomy_term'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
       $whitelist[] = 'field_collection_item';
     }
+  }
+  if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
+    $whitelist[] = 'taxonomy_term';
   }
   $whitelist = array_flip($whitelist);
   $enabled_types = array_intersect_key($type_info, $whitelist);
@@ -640,6 +643,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   }
   if (isset($enabled_types['field_collection_item'])) {
     $enabled_types['field_collection_item']['label'] = 'Field Collections';
+  }
+  if (isset($enabled_types['taxonomy_term'])) {
+    $enabled_types['taxonomy_term']['label'] = 'Taxonomy Terms';
   }
 
   return $enabled_types;
@@ -1052,6 +1058,10 @@ function lingotek_cleanup_field_languages_for_comments() {
 
 function lingotek_cleanup_field_languages_for_fieldable_panels_panes() {
   lingotek_cleanup_field_languages('fieldable_panels_pane');
+}
+
+function lingotek_cleanup_field_languages_for_taxonomy_terms() {
+  lingotek_cleanup_field_languages('taxonomy_term');
 }
 
 /**
@@ -1489,16 +1499,6 @@ function lingotek_get_entities_by_profile_id($profile_id, $entity_type = 'all', 
   
   // get all entities that belond to those bundles
   foreach ($bundles as $entity_type => $entity_bundles) {
-    /*  THE SLOW BUT CORRECT WAY TO EXTRACT INFO
-    $tmp_entities = entity_load($et);
-    foreach ($tmp_entities as $tid => $tinfo) {
-      list($entity_id, $vid, $bundle_name) = lingotek_entity_extract_ids($et, $tinfo);
-      if (isset($bundles[$et][$bundle_name])) {
-        $entities[] = array('id' => $tid, 'type' => $et);
-      }
-    }
-    */
-    // THE OPTIMIZED WAY
     if ($entity_type == 'comment') {
       $ref_tables = array();
       foreach (array_keys($entity_bundles) as $key) {
@@ -1869,6 +1869,7 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
   $query = db_select('{lingotek_entity_metadata}', 'lem');
   $query->fields('lem', array('entity_id'))
       ->condition('lem.entity_id', $entity_ids, 'IN')
+      ->condition('lem.entity_type', $entity_type)
       ->condition('lem.entity_key', 'document_id');
   $result = $query->execute();
   if ($result->rowCount()) {
@@ -1891,13 +1892,8 @@ function lingotek_is_node_translation($node = NULL) {
 }
 
 function lingotek_managed_entity($entity_type, $entity) {
-  try {
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
-  } catch (Exception $ex) {
-    // Skip modifying languages for any entity that does not support entity_extract_ids.
-    LingotekLog::trace("Function entity_extract_ids() not supported for entity type '$entity_type'.  Skipping.");
-    return FALSE;
-  }
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+
   // If there is no $id or $bundle property, then nothing to manage for now.
   if (!$id || !$bundle) {
     return FALSE;
@@ -1926,7 +1922,11 @@ function lingotek_entity_extract_ids($entity_type, $entity) {
     // check for non-standard entity types
     if ($entity_type == 'taxonomy_term') {
       // TODO: populate taxonomy_term's entity fields
+      $entity_id = $entity->tid;
+      $vid = NULL;
+      $bundle_name = $entity->type;
     }
   }
+  return array($entity_id, $vid, $bundle_name);
 }
 

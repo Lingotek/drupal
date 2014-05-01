@@ -522,7 +522,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   $prep_taxonomy_chbx = array(
     '#id' => 'lingotek_prepare_config_taxonomies',
     '#type' => 'checkbox',
-    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options.'),
+    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options. (Note: This will prevent translation of custom fields within taxonomy terms.)'),
     '#attributes' => array(
       'id' => array('lingotek_prepare_config_taxonomies'),
       'name' => 'lingotek_prepare_config_taxonomies',
@@ -1165,6 +1165,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
         ':input[name="enabled"]' => array('checked' => FALSE),
       ),
     ),
+  );
+
+  $form['prefs']['lingotek_advanced_taxonomy_terms'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable advanced handling of taxonomy terms'),
+    '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
+    '#default_value' => variable_get('lingotek_advanced_taxonomy_terms', FALSE),
   );
 
   $form['prefs']['lingotek_hide_tlmi'] = array(
@@ -1910,6 +1917,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     $cleanup_functions['lingotek_cleanup_field_languages_for_fieldable_panels_panes'] = array(
       'title' => t('Prepare FPPs'),
       'desc' => t('Sets all <i>language neutral</i> fieldable panels panes (FPPs) to be @lang', array('@lang' => language_default('name'))),
+    );
+  }
+
+  if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
+      'title' => t('Prepare taxonomy terms with custom fields'),
+      'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek to be @lang', array('@lang' => language_default('name'))),
     );
   }
 
