@@ -1799,6 +1799,9 @@ function lingotek_entity_info_alter(&$entity_info) {
   if (isset($entity_info['message_type'])) {
     $entity_info['message_type']['translation']['lingotek'] = TRUE;
   }
+  if (isset($entity_info['taxonomy_term'])) {
+    $entity_info['taxonomy_term']['translation']['lingotek'] = TRUE;
+  }
 }
 
 function lingotek_normalize_language($entity, $from_language_none = TRUE) {

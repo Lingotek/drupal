@@ -482,7 +482,8 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
   }
   $info = entity_get_info($entity_type);
   $label_field = $info['entity keys']['label'];
-  $language_field = $info['entity keys']['language'];
+  // Use 'language' as a fallback in case the entity doesn't give lang field.
+  $language_field = isset($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
   $context['message'] = t('Preparing translatable content for @entity_type: @entity_title', array('@entity_type' => $entity_type, '@entity_title' => $entity->$label_field));
   if (entity_language($entity_type, $entity) != 'und') {
     $translatable_fields = lingotek_translatable_fields();
