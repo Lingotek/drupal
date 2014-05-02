@@ -1299,8 +1299,10 @@ function lingotek_list_entities_with_field_in_language_by_bundle($entity_type, $
   }
   else {
     // Include only the enabled bundle types
-    $disabled_bundles = array_merge(array('-1'), lingotek_get_disabled_bundles($entity_type));
-    $query->entityCondition('bundle', $disabled_bundles, 'NOT IN');
+    $disabled_bundles = lingotek_get_disabled_bundles($entity_type);
+    if (!empty($disabled_bundles)) {
+      $query->entityCondition('bundle', $disabled_bundles, 'NOT IN');
+    }
   }
   if ($exclude_source) {
     $query->propertyCondition('language', $language, "!=");
