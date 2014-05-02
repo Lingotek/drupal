@@ -268,7 +268,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
     if ($this->entity_type == 'comment') {
       return $this->entity->subject;
     }
-    LingotekLog::info('Did not find a label for @entity_type #@entity_id, using default label.',
+    LingotekLog::info('Did not find a label for @entity_type #!entity_id, using default label.',
         array('@entity_type' => $this->entity_type, '@entity_id' => $this->entity_id));
     return $this->entity_type . " #" . $this->entity_id;
   }
