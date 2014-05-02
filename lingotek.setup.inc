@@ -820,6 +820,7 @@ function lingotek_setup_comment_translation_settings_form_submit($form, &$form_s
 }
 
 function lingotek_setup_additional_translation_settings_form($form, &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
   $form = lingotek_admin_additional_translation_settings_form($form, $form_state);
 
   if (is_array($_SESSION['lingotek_setup_path'])) {
