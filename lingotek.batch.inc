@@ -397,16 +397,17 @@ function lingotek_source_language_cleanup_batch_worker($entity_type, $entity_id,
 
   $loaded_entity = lingotek_entity_load_single($entity_type, $entity_id);
   $info = entity_get_info($entity_type);
-  if (!empty($info['entity keys']['language']) && isset($loaded_entity->{$info['entity keys']['language']})) {
-    $loaded_entity->{$info['entity keys']['language']} = $source_language;
+  // Default to string 'language' if no language-related entity key is found.
+  $language_field = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
+  if (isset($loaded_entity->$language_field) && $loaded_entity->$language_field != $source_language) {
+    $loaded_entity->$language_field = $source_language;
+    $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
+    entity_save($entity_type, $loaded_entity);
+    if (!isset($context['results']['entity_cleanup'])) {
+      $context['results']['entity_cleanup'] = 0;
+    }
+    $context['results']['entity_cleanup'] ++;
   }
-  $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
-  entity_save($entity_type, $loaded_entity);
-
-  if (!isset($context['results']['entity_cleanup'])) {
-    $context['results']['entity_cleanup'] = 0;
-  }
-  $context['results']['entity_cleanup'] ++;
 }
 
 /**
@@ -484,7 +485,7 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
   // Use 'language' as a fallback in case the entity doesn't give lang field.
   $language_field = isset($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
   $context['message'] = t('Preparing translatable content for @entity_type: @entity_title', array('@entity_type' => $entity_type, '@entity_title' => $entity->$label_field));
-  if (entity_language($entity_type, $entity) != 'und') {
+  if ($entity->$language_field != 'und') {
     $translatable_fields = lingotek_translatable_fields();
     foreach ($translatable_fields as $field_name) {
       if (!empty($entity->{$field_name}['und']) && empty($entity->{$field_name}[$entity->{$language_field}])) {
