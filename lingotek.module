@@ -1455,13 +1455,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   }
 
   // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
-  if (!isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id'])) {
-    $ln = LingotekEntity::load($entity, $entity_type);
-    $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
+  $ln = LingotekEntity::load($entity, $entity_type);
+  $entity_has_doc_id = $ln->getMetadataValue('document_id');
+  if ($entity_has_doc_id) {
+    $success = LingotekApi::instance()->updateContentDocument($ln);
   }
   else {
-    $ln = LingotekEntity::load($entity, $entity_type);
-    $success = LingotekApi::instance()->updateContentDocument($ln);
+    $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
   }
 
   if ($empty_context) {
