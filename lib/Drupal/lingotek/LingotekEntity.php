@@ -43,6 +43,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
     $this->language = $entity->language;
     $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language);
     $this->entity_type = $entity_type;
+    $this->info = entity_get_info($this->entity_type);
   }
   
   /**
@@ -261,11 +262,15 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getTitle() {
-    if ($this->entity_type == 'node') {
-      return $this->entity->title;
-    } else if ($this->entity_type == 'comment') {
+    if (!empty($this->info['entity keys']['label']) && !empty($this->entity->{$this->info['entity keys']['label']})) {
+      return $this->entity->{$this->info['entity keys']['label']};
+    }
+    if ($this->entity_type == 'comment') {
       return $this->entity->subject;
     }
+    LingotekLog::info('Did not find a label for @entity_type #@entity_id, using default label.',
+        array('@entity_type' => $this->entity_type, '@entity_id' => $this->entity_id));
+    return $this->entity_type . " #" . $this->entity_id;
   }
   
   public function getDescription() {
