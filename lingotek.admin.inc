@@ -1992,7 +1992,7 @@ function lingotek_admin_cleanup_form_submit($form, &$form_state) {
   // and their return value should be a set batch.
   $cleanup_batch = array(
     'title' => t('Lingotek Cleanup Utility Batch'),
-    'operations' => array('lingotek_cleanup_batch_init', array()),
+    'operations' => array(array('lingotek_cleanup_batch_init', array())),
     'file' => 'lingotek.util.inc',
   );
   batch_set($cleanup_batch);
