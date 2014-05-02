@@ -393,7 +393,7 @@ function lingotek_sync_download_target_finished($success, $results, $operations)
  */
 function lingotek_source_language_cleanup_batch_worker($entity_type, $entity_id, $source_language, &$context) {
 
-  $context['message'] = t("Setting language for @entity_type #@id to '@source_language", array('@entity_type' => $entity_type, '@id' => $entity_id, '@source_language' => $source_language));
+  $context['message'] = t("Setting language for @entity_type #@id to '@source_language'", array('@entity_type' => $entity_type, '@id' => $entity_id, '@source_language' => $source_language));
 
   $loaded_entity = lingotek_entity_load_single($entity_type, $entity_id);
   $info = entity_get_info($entity_type);
