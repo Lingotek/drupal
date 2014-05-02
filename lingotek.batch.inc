@@ -269,7 +269,6 @@ function lingotek_batch_disassociate_content() {
   $operations[] = array('lingotek_batch_disassociate_content_worker', array($api, $doc_ids));
 
 
-  $operations[] = array('LingotekSync::disassociateAllNodes', array());
   $operations[] = array('LingotekSync::disassociateAllEntities', array());
   $operations[] = array('LingotekSync::disassociateAllChunks', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
