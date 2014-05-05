@@ -1425,6 +1425,11 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
     case 'fieldable_panels_pane':
       $edit_link = 'admin/structure/fieldable-panels-panes/view/' . $entity_id . '/edit';
       break;
+    case 'taxonomy_term':
+      $edit_link = 'taxonomy/term/' . $entity_id . '/edit';
+      break;
+    case 'message_type':
+      return '';
     default:
       $edit_link = $entity_type . '/' . $entity_id . '/edit';
       break;
