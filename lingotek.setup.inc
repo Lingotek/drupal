@@ -72,7 +72,7 @@ function lingotek_setup_new_account_form() {
     '#type' => 'submit',
     '#value' => t('Next') // Create Account
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/account-settings', t('Already have an account?'));
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/account-settings', t('Enterprise Customers - Connect Here'));
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -245,7 +245,7 @@ function lingotek_setup_account_settings_form() {
   $form['lingotek_user_directions_1'] = array(
     '#type' => 'item',
     '#title' => 'Account Login',
-    '#description' => 'Connect an existing Lingotek account.'
+    '#description' => 'Connect an existing Lingotek account. This option is for users with an active paid TMS subscription.'
   );
 
   $form['lingotek_lid'] = array(
@@ -273,7 +273,7 @@ function lingotek_setup_account_settings_form() {
     '#type' => 'submit',
     '#value' => t('Next'), // Login
   );
-  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/new-account', t('Need to create an account?'));
+  $form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/new-account', t('No subscription? Go back and register for free.'));
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -820,6 +820,7 @@ function lingotek_setup_comment_translation_settings_form_submit($form, &$form_s
 }
 
 function lingotek_setup_additional_translation_settings_form($form, &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
   $form = lingotek_admin_additional_translation_settings_form($form, $form_state);
 
   if (is_array($_SESSION['lingotek_setup_path'])) {

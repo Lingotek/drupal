@@ -68,7 +68,7 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
 }
 
 function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_language_code, $url_alias_translation = 0) {
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   // Add revision_id to be the same as the entity_id if it was not found or if
   // it is a comment.
@@ -177,11 +177,9 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
             }
             $array_key = $target_key[$index];
             $db_field_name = $field['field_name'] . '_' . $array_key;
-            $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
-            //$node_field[$drupal_language_code][$delta][$array_key] = decode_entities($text);
+            $insert_array[$db_field_name] = lingotek_unfilter_placeholders($text);
             if (array_key_exists($entity->language, $node_field)) {
               if (array_key_exists('format', $node_field[$entity->language][0])) {
-                //$node_field[$drupal_language_code][$index]['format'] = $node_field[$node->language][0]['format'];
                 $format_db_field_name = $field['field_name'] . '_format';
                 $insert_array[$format_db_field_name] = $node_field[$entity->language][0]['format'];
               }

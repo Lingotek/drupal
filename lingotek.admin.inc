@@ -313,7 +313,7 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
       );
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
-      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: Field collections will be uploaded and downloaded at the same time as their parent.');
+      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing nodes except for the project, workflow, vault, and storage method (e.g. node/field).');
       break;
   }
 }
@@ -489,6 +489,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
         '#value' => t('Save')
       )
     ),
+    '#validate' => array('lingotek_admin_additional_translation_settings_form_validate'),
     '#submit' => array('lingotek_admin_additional_translation_settings_form_submit'),
   );
 
@@ -522,7 +523,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   $prep_taxonomy_chbx = array(
     '#id' => 'lingotek_prepare_config_taxonomies',
     '#type' => 'checkbox',
-    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options.'),
+    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options. (Note: This will prevent translation of custom fields within taxonomy terms.)'),
     '#attributes' => array(
       'id' => array('lingotek_prepare_config_taxonomies'),
       'name' => 'lingotek_prepare_config_taxonomies',
@@ -542,7 +543,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#default_value' => 1,
   );
 
-  if (variable_get('lingotek_use_translation_from_drupal', 1)) {
+  if (variable_get('lingotek_use_translation_from_drupal', 0)) {
     $fr['#attributes']['checked'] = 'checked';
   }
 
@@ -606,6 +607,14 @@ function lingotek_verify_modules_enabled($module_list) {
     return FALSE;
   }
   return TRUE;
+}
+
+function lingotek_admin_additional_translation_settings_form_validate($form, &$form_state) {
+  // check for required modules if config translation is enabled
+  $conf_opt_part = $form['additional_translation']['config'];
+  if (isset($conf_opt_part['lingotek_translate_config_views']['#value']) && $conf_opt_part['lingotek_translate_config_views']['#value'] !== 0) {
+    lingotek_verify_modules_enabled(array('i18nviews'));
+  }
 }
 
 function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=array()) {
@@ -1166,6 +1175,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     ),
   );
 
+  $form['prefs']['lingotek_advanced_taxonomy_terms'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable advanced handling of taxonomy terms'),
+    '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
+    '#default_value' => variable_get('lingotek_advanced_taxonomy_terms', FALSE),
+  );
+
   $form['prefs']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
@@ -1469,6 +1485,15 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
+  // URL Alias Translation.
+  $form['defaults']['url_alias_translation'] = array(
+    '#type' => 'select',
+    '#title' => t('URL Alias Translation'),
+    '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern."),
+    '#options' => lingotek_get_url_alias_translations(),
+    '#default_value' => $form_state['values']['url_alias_translation'],
+  );
+
   if ($show_advanced) {
 
     // Community Translation
@@ -1477,19 +1502,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#title' => t('Allow Crowdsourced Translation'),
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => $form_state['values']['allow_community_translation'],
-    );
-
-    /*
-     * Misc. Options
-     */
-
-    // URL Alias Translation.
-    $form['defaults']['url_alias_translation'] = array(
-      '#type' => 'select',
-      '#title' => t('URL Alias Translation'),
-      '#description' => t("Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern."),
-      '#options' => lingotek_get_url_alias_translations(),
-      '#default_value' => $form_state['values']['url_alias_translation'],
     );
   }
   
@@ -1546,7 +1558,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $content_translation_note = '';
   if (!lingotek_node_based_trans_ready()) {
-    $content_translation_note = t("Note: Requires Content Translation module (translation) and Node Translation module (i18n_node).");
+    $content_translation_note = t("Note: Requires Content Translation module (translation) and Multilingual content module (i18n_node).");
   }
   
   $form['defaults']['lingotek_nodes_translation_method'] = array(
@@ -1912,6 +1924,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     );
   }
 
+  if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
+      'title' => t('Prepare taxonomy terms with custom fields'),
+      'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
+    );
+  }
+
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
     'desc' => t('Update all blocks to be translatable in the <i>Languages</i> settings.'),
@@ -1972,7 +1991,7 @@ function lingotek_admin_cleanup_form_submit($form, &$form_state) {
   // and their return value should be a set batch.
   $cleanup_batch = array(
     'title' => t('Lingotek Cleanup Utility Batch'),
-    'operations' => array('lingotek_cleanup_batch_init', array()),
+    'operations' => array(array('lingotek_cleanup_batch_init', array())),
     'file' => 'lingotek.util.inc',
   );
   batch_set($cleanup_batch);

@@ -932,7 +932,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
 
   $content_translation_note = '';
   if (!lingotek_node_based_trans_ready()) {
-    $content_translation_note = t("Note: Requires Content Translation module (translation) and Node Translation module (i18n_node).");
+    $content_translation_note = t("Note: Requires Content Translation module (translation) and Multilingual content module (i18n_node).");
   }
 
   if (!$bulk_grid) {
@@ -976,16 +976,16 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#description' => t('When enabled, anonymous site visitors will be presented with a link allowing them to contribute translations for this node.'),
       '#default_value' => $node->lingotek['allow_community_translation'],
     );
-
-    // URL Alias Translation.
-    $form['lingotek']['url_alias_translation'] = array(
-      '#type' => 'select',
-      '#title' => t('URL Alias Translation'),
-      '#default_value' => $node->lingotek['url_alias_translation'],
-      '#options' => lingotek_get_url_alias_translations(),
-      '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern.'),
-    );
   }
+
+  // URL Alias Translation.
+  $form['lingotek']['url_alias_translation'] = array(
+    '#type' => 'select',
+    '#title' => t('URL Alias Translation'),
+    '#default_value' => $node->lingotek['url_alias_translation'],
+    '#options' => lingotek_get_url_alias_translations(),
+    '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern.'),
+  );
 
   if ($bulk_grid) {
     $form['submit'] = array(
@@ -1025,7 +1025,7 @@ function lingotek_entity_save($entity, $entity_type) {
     return $entity;
   }
   
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   $has_not_been_uploaded = !isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id']);
 
@@ -1323,9 +1323,9 @@ function lingotek_entity_load($entities, $entity_type) {
       lingotek_normalize_field_collection_language($entity_type, $e);
     }
   }
-  if ($entity_type == 'message_type') {
+  if ($entity_type == 'message_type' || $entity_type == 'taxonomy_term') {
     foreach ($entities as $e) {
-      lingotek_normalize_language($e);
+      lingotek_normalize_language($entity_type, $e);
     }
   }
 
@@ -1349,7 +1349,7 @@ function lingotek_entity_load($entities, $entity_type) {
 //    if (!lingotek_supported_type($entity->type)) {
 //      continue;
 //    }
-    list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+    list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
     // Node profile inheritance heirarchy
     // Step 1: get global profile
@@ -1393,13 +1393,13 @@ function lingotek_entity_update($entity, $entity_type) {
     return;
   }
 
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   lingotek_entity_save($entity, $entity_type);
 }
 
 function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE, &$context = array()) {
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   if (isset($entity->lingotek_upload_override)) {
     if ($entity->lingotek_upload_override) {
@@ -1436,7 +1436,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     $entity = lingotek_entity_load_single($entity_type, $entity);
   }
   
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   
   LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type, '@id' => $id));
 
@@ -1455,13 +1455,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   }
 
   // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
-  if (!isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id'])) {
-    $ln = LingotekEntity::load($entity, $entity_type);
-    $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
+  $ln = LingotekEntity::load($entity, $entity_type);
+  $entity_has_doc_id = $ln->getMetadataValue('document_id');
+  if ($entity_has_doc_id) {
+    $success = LingotekApi::instance()->updateContentDocument($ln);
   }
   else {
-    $ln = LingotekEntity::load($entity, $entity_type);
-    $success = LingotekApi::instance()->updateContentDocument($ln);
+    $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
   }
 
   if ($empty_context) {
@@ -1551,7 +1551,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     return FALSE;
   }
 
-  list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   if (module_exists('rules')) {
     rules_invoke_event('lingotek_entity_translation_pre_download', new EntityDrupalWrapper($entity_type, $entity));
@@ -1799,19 +1799,40 @@ function lingotek_entity_info_alter(&$entity_info) {
   if (isset($entity_info['message_type'])) {
     $entity_info['message_type']['translation']['lingotek'] = TRUE;
   }
+  if (isset($entity_info['taxonomy_term'])) {
+    $entity_info['taxonomy_term']['translation']['lingotek'] = TRUE;
+  }
 }
 
-function lingotek_normalize_language($entity, $from_language_none = TRUE) {
+function lingotek_normalize_language($entity_type, $entity, $read_only = TRUE) {
   $language = language_default();
   $site_lang = $language->language;
-  
-  foreach ($entity as $key => $value) {
-    if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
-      if ($from_language_none) {
+
+  if ($read_only) {
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
         $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
       }
-      elseif (isset($value[$site_lang])) {
+    }
+  }
+  else {
+    // Prepare the entity for saving.
+    if ($entity_type == 'taxonomy_term') {
+      // Prevent the term's name and description fields from being empty.
+      if (empty($entity->name) && !empty($entity->name_field[$site_lang][0]['value'])) {
+        $entity->name = $entity->name_field[$site_lang][0]['value'];
+      }
+      if (empty($entity->description) && !empty($entity->description_field[$site_lang][0]['value'])) {
+        $entity->description = $entity->description_field[$site_lang][0]['value'];
+      }
+    }
+
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists($site_lang, $value)) {
         $entity->{$key}[LANGUAGE_NONE] = $value[$site_lang];
+      }
+      else if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
+        $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
       }
     }
   }
@@ -1949,13 +1970,13 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
 
 /**
  * Implements hook_entity_presave().
-  */
-function lingotek_entity_presave($entity, $type) {
+ */
+function lingotek_entity_presave($entity, $entity_type) {
   if (module_exists('field_collection')) {
-    lingotek_normalize_field_collection_language($type, $entity, FALSE);
+    lingotek_normalize_field_collection_language($entity_type, $entity, FALSE);
   }
-  if ($type == 'message_type') {
-    lingotek_normalize_language($entity, FALSE);
+  if ($entity_type == 'message_type' || $entity_type == 'taxonomy_term') {
+    lingotek_normalize_language($entity_type, $entity, FALSE);
   }
 }
 
@@ -2062,7 +2083,7 @@ function lingotek_entity_delete($entity, $type) {
   }
   db_delete('{lingotek_entity_metadata}')
       ->condition('entity_type', $type)
-    ->condition('entity_id', entity_extract_ids($type, $entity))
+    ->condition('entity_id', lingotek_entity_extract_ids($type, $entity))
     ->execute();
 }
 

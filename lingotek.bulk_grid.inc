@@ -836,7 +836,7 @@ function lingotek_grid_build_filters($form_state) {
   foreach ($profile_defaults as $key => $p) {
     $profiles[$key] = $p['name'];
   }
-  
+
   $filters = array(
     'nid' => array(
       '#type' => 'textfield',
@@ -885,15 +885,23 @@ function lingotek_grid_build_filters($form_state) {
         LingotekSync::STATUS_CURRENT => t('In Sync'),
       ),
       '#multiple' => FALSE,
-    ),
-    'content_type' => array(
+    )
+  );
+
+  // Include a content-type filter if there are bundles by which to filter.
+  $entity_info = entity_get_info($_SESSION['grid_entity_type']);
+  if (!empty($entity_info['bundles'])) {
+    $grid_bundles = array_map(function($val) {
+      return $val['label'];
+    }, $entity_info['bundles']);
+    $filters['content_type'] = array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
       '#title' => t('Content Type(s)'),
-      '#options' => array('all' => t('All')) + node_type_get_names(),
+      '#options' => array('all' => t('All')) + $grid_bundles,
       '#multiple' => TRUE
-    ),
-  );
+    );
+  }
 
   return lingotek_grid_process_elements($filters, '', '__filter'); // Add prefix and suffix to the name of each filter element
 }
@@ -957,7 +965,7 @@ function lingotek_grid_process_elements($elements, $prefix, $suffix) {
  *    Returns array of rows
  *    Populates The Grid
  */
-function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=FALSE) {
+function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only = FALSE) {
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;
@@ -996,13 +1004,18 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     'translate_link' => array('data' => t('Translate')),
   );
   
-  if (!isset($entity_properties['changed']))
+  if (!isset($entity_properties['changed'])) {
     unset($header['changed']);
-  if (!$label_col)
+  }
+  if (!$label_col) {
     unset($header['title']);
-  if (!$bundle_col)
+  }
+  // Taxonomy terms require special handling of bundles because they do not
+  // have a bundle column in their table.
+  if (!$bundle_col && $entity_type != 'taxonomy_term') {
     unset($header['content_type']);
-  
+  }
+
   if (isset($entity_properties['changed'])) {
     $header['changed']['sort'] = 'desc';
   }
@@ -1047,6 +1060,11 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
     $query->leftJoin('{node}', 'nn', 'nn.nid = n.nid');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'type');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
+  }
+  elseif ($entity_type == 'taxonomy_term') {
+    $query->innerJoin('{taxonomy_vocabulary}', 'tv', 'n.vid = tv.vid');
+    $query->addField('tv', 'name', 'tv_name');
+    $query->addField('tv', 'machine_name', 'type');
   }
   elseif ($bundle_col) {
     if ($info['entity keys']['bundle'] != 'type') {
@@ -1178,7 +1196,13 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only=F
 
   //  Content Type
   if (isset($filters['content_type']) && !in_array('all', $filters['content_type'])) {
-    $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
+    // Special-case handling of taxonomy_term pseudo-entities
+    if ($entity_type == 'taxonomy_term') {
+      $query->condition('tv.machine_name', $filters['content_type'], 'IN');
+    }
+    else {
+      $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
+    }
   }
 
   if (isset($filters['profile']) && !in_array('all', $filters['profile'])) {
@@ -1401,6 +1425,11 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
     case 'fieldable_panels_pane':
       $edit_link = 'admin/structure/fieldable-panels-panes/view/' . $entity_id . '/edit';
       break;
+    case 'taxonomy_term':
+      $edit_link = 'taxonomy/term/' . $entity_id . '/edit';
+      break;
+    case 'message_type':
+      return '';
     default:
       $edit_link = $entity_type . '/' . $entity_id . '/edit';
       break;
