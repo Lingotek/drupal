@@ -244,7 +244,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   if ($setup_complete) {
-    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => $entity_type));
+    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => strtolower($entity_type_info['label'])));
   }
 
   lingotek_admin_add_entity_specific_changes($form, $form_state, $entity_type);
