@@ -1323,9 +1323,9 @@ function lingotek_entity_load($entities, $entity_type) {
       lingotek_normalize_field_collection_language($entity_type, $e);
     }
   }
-  if ($entity_type == 'message_type') {
+  if ($entity_type == 'message_type' || $entity_type == 'taxonomy_term') {
     foreach ($entities as $e) {
-      lingotek_normalize_language($e);
+      lingotek_normalize_language($entity_type, $e);
     }
   }
 
@@ -1804,17 +1804,35 @@ function lingotek_entity_info_alter(&$entity_info) {
   }
 }
 
-function lingotek_normalize_language($entity, $from_language_none = TRUE) {
+function lingotek_normalize_language($entity_type, $entity, $read_only = TRUE) {
   $language = language_default();
   $site_lang = $language->language;
-  
-  foreach ($entity as $key => $value) {
-    if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
-      if ($from_language_none) {
+
+  if ($read_only) {
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
         $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
       }
-      elseif (isset($value[$site_lang])) {
+    }
+  }
+  else {
+    // Prepare the entity for saving.
+    if ($entity_type == 'taxonomy_term') {
+      // Prevent the term's name and description fields from being empty.
+      if (empty($entity->name) && !empty($entity->name_field[$site_lang][0]['value'])) {
+        $entity->name = $entity->name_field[$site_lang][0]['value'];
+      }
+      if (empty($entity->description) && !empty($entity->description_field[$site_lang][0]['value'])) {
+        $entity->description = $entity->description_field[$site_lang][0]['value'];
+      }
+    }
+
+    foreach ($entity as $key => $value) {
+      if (is_array($value) && array_key_exists($site_lang, $value)) {
         $entity->{$key}[LANGUAGE_NONE] = $value[$site_lang];
+      }
+      else if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
+        $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
       }
     }
   }
@@ -1952,13 +1970,13 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
 
 /**
  * Implements hook_entity_presave().
-  */
-function lingotek_entity_presave($entity, $type) {
+ */
+function lingotek_entity_presave($entity, $entity_type) {
   if (module_exists('field_collection')) {
-    lingotek_normalize_field_collection_language($type, $entity, FALSE);
+    lingotek_normalize_field_collection_language($entity_type, $entity, FALSE);
   }
-  if ($type == 'message_type') {
-    lingotek_normalize_language($entity, FALSE);
+  if ($entity_type == 'message_type' || $entity_type == 'taxonomy_term') {
+    lingotek_normalize_language($entity_type, $entity, FALSE);
   }
 }
 
