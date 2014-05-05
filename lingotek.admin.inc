@@ -313,7 +313,7 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
       );
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
-      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: Field collections will be uploaded and downloaded at the same time as their parent.');
+      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing nodes except for the project, workflow, vault, and storage method (e.g. node/field).');
       break;
   }
 }
