@@ -946,22 +946,10 @@ function lingotek_enable_language_by_code($drupal_language_code, $lingotek_local
  * Get only the languages that are enabled
  */
 function lingotek_get_target_locales($codes_only = TRUE) {
-  $target_languages = db_query("SELECT * FROM {languages} WHERE enabled = :enabled", array(':enabled' => 1))->fetchAll();
+  $target_languages = db_query("SELECT * FROM {languages} WHERE lingotek_enabled = :enabled", array(':enabled' => 1))->fetchAll();
   $target_codes = array();
   foreach ($target_languages as $target_language) {
     $target_codes[] = $target_language->lingotek_locale;
-  }
-  return $codes_only ? $target_codes : $target_languages;
-}
-
-/**
- * Get only the languages that are enabled
- */
-function lingotek_get_target_languages($codes_only = TRUE) {
-  $target_languages = db_query("SELECT * FROM {languages} WHERE enabled = :enabled", array(':enabled' => 1))->fetchAll();
-  $target_codes = array();
-  foreach ($target_languages as $target_language) {
-    $target_codes[] = $target_language->language;
   }
   return $codes_only ? $target_codes : $target_languages;
 }
