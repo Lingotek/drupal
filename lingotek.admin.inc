@@ -1732,13 +1732,12 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       //'#group' => 'administrative_settings',
   );
 
+  /*$btn_disassociate_translations = array(
+    '#type' => 'markup',
+    '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate'), array('attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action'))),
+  );*/
   $btn_disassociate_translations = array(
-    '#type' => 'submit',
-    '#value' => t('Disassociate'),
-    '#submit' => array('lingotek_batch_disassociate_content'),
-    '#attributes' => array(
-      'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content will have to be retranslated.') . '");'
-    ),
+    '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate/', array('html' => TRUE, 'attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
   );
 
   $btn_callback_url_update = array(
@@ -1798,6 +1797,52 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   return $form;
 }
+
+function lingotek_disassociate_all_translations() {
+  ctools_include('node.pages', 'node', '');
+  ctools_include('modal');
+  ctools_include('ajax');
+  ctools_modal_add_js();
+
+  $form_state = array(
+    'ajax' => TRUE,
+  );
+  $output = ctools_modal_form_wrapper('lingotek_disassociate_all_form', $form_state);
+
+  if (!empty($form_state['executed'])) {
+    lingotek_grid_action_submit(NULL, $form_state);
+    // Create ajax command array, dismiss the modal window.
+    $commands = array();
+    $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_reload();
+    print ajax_render($commands);
+    drupal_exit();
+  }
+
+  print ajax_render($output);
+}
+
+function lingotek_disassociate_all_form($form, $form_state) {
+  $form = array(
+    '#title' => t('Disassociate all translations'),
+    );
+  $form['confirm'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Also remove all document from Lingotek TMS'),
+    '#default_value' => FALSE,
+    );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Disassociate All Translations'),
+    );
+
+  return $form;
+}
+
+function lingotek_disassociate_all_form_submit($form_state, $form) {
+  lingotek_batch_disassociate_content($form_state['confirm']['#checked']);
+}
+
 
 /**
  * Troubleshooting and Logging Form

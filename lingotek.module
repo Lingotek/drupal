@@ -464,6 +464,16 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate'] = array(
+    'title' => 'Lingotek Disassociate All Content',
+    'description' => 'This will disassociate all content from their translation',
+    'file' => 'lingotek.admin.inc',
+    'page callback' => 'lingotek_disassociate_all_translations',
+    'page arguments' => array(),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer lingotek')
+  );
+
   return $items;
 }
 

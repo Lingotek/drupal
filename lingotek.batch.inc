@@ -253,7 +253,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
 /**
  * Batch Create: Lingotek Disassociate Translations
  */
-function lingotek_batch_disassociate_content() {
+function lingotek_batch_disassociate_content($remove_from_TMS) {
   $doc_ids = LingotekSync::getAllLocalDocIds();
   $api = LingotekApi::instance();
   $operations = array();
