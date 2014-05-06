@@ -1732,12 +1732,13 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       //'#group' => 'administrative_settings',
   );
 
-  /*$btn_disassociate_translations = array(
+  /* $btn_disassociate_translations = array(
     '#type' => 'markup',
     '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate'), array('attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action'))),
-  );*/
+    ); */
   $btn_disassociate_translations = array(
-    '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate/', array('html' => TRUE, 'attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+    '#type' => 'markup',
+    '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate/', array('html' => TRUE, 'attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action')))),
   );
 
   $btn_callback_url_update = array(
@@ -1755,7 +1756,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   // Start: Not sure why, but without these below, the table buttons do not work properly
   $form['utilities'][] = array_merge($btn_callback_refresh_api_cache, array('#attributes' => array('style' => 'display: none;')));
   $form['utilities'][] = array_merge($btn_callback_url_update, array('#attributes' => array('style' => 'display: none;')));
-  $form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
+  //$form['utilities'][] = array_merge($btn_disassociate_translations, array('#attributes' => array('style' => 'display: none;')));
   // End: Not sure why
 
   $rows = array(
@@ -1808,16 +1809,6 @@ function lingotek_disassociate_all_translations() {
     'ajax' => TRUE,
   );
   $output = ctools_modal_form_wrapper('lingotek_disassociate_all_form', $form_state);
-
-  if (!empty($form_state['executed'])) {
-    lingotek_grid_action_submit(NULL, $form_state);
-    // Create ajax command array, dismiss the modal window.
-    $commands = array();
-    $commands[] = ctools_modal_command_dismiss();
-    $commands[] = ctools_ajax_command_reload();
-    print ajax_render($commands);
-    drupal_exit();
-  }
 
   print ajax_render($output);
 }
