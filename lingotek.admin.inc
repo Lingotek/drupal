@@ -311,9 +311,11 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
         '#description' => t('Set all <i>language neutral</i> comments (and underlying fields) for enabled comment types to be @language.', array('@language' => language_default('name'))),
         '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
       );
+      //$form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing comments except for the project, workflow, vault, and storage method (e.g. node/field).');
+      break;
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
-      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing comments except for the project, workflow, vault, and storage method (e.g. node/field).');
+      $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: Field collections will be uploaded and downloaded at the same time as their parent.');
       break;
   }
 }
@@ -1732,13 +1734,36 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       //'#group' => 'administrative_settings',
   );
 
-  /* $btn_disassociate_translations = array(
-    '#type' => 'markup',
-    '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate'), array('attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action'))),
-    ); */
+  drupal_add_js(array(
+    'lingotek-disassociate-style' => array(
+      'modalSize' => array(
+        'type' => 'fixed',
+        'width' => 450,
+        'height' => 200,
+      ),
+      'modalOptions' => array(
+        'opacity' => .55,
+        'background' => '#000',
+      ),
+      'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'animation' => 'fadeIn',
+    ),
+  ), 'setting');
+
+  ctools_include('ajax');
+
+  $form['url'] = array(
+    '#type' => 'hidden',
+    // The name of the class is the #id of $btn_disassociate_translations with "-url" suffix. 
+    '#attributes' => array('class' => array('ctools-lingotek-disassociate-button-url')), 
+    '#value' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate/'),
+  );
+
   $btn_disassociate_translations = array(
-    '#type' => 'markup',
-    '#markup' => l(t('Disassociate'), LINGOTEK_MENU_MAIN_BASE_URL . '/disassociate/', array('html' => TRUE, 'attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action')))),
+    '#type' => 'button', 
+    '#value' => 'Disassociate', 
+    '#attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-lingotek-disassociate-style')), 
+    '#id' => 'ctools-lingotek-disassociate-button',
   );
 
   $btn_callback_url_update = array(
@@ -1808,7 +1833,18 @@ function lingotek_disassociate_all_translations() {
   $form_state = array(
     'ajax' => TRUE,
   );
+
   $output = ctools_modal_form_wrapper('lingotek_disassociate_all_form', $form_state);
+
+  if ($form_state['executed']) {
+    $commands = array();
+    $commands[] = ctools_modal_command_dismiss(t('Login Success'));
+    // In typical usage you will do something else here, such as update a
+    // div with HTML or redirect the page based upon the results of the modal
+    // form.
+    print ajax_render($commands);
+    exit;
+  }
 
   print ajax_render($output);
 }
@@ -1831,7 +1867,20 @@ function lingotek_disassociate_all_form($form, $form_state) {
 }
 
 function lingotek_disassociate_all_form_submit($form_state, $form) {
-  lingotek_batch_disassociate_content($form_state['confirm']['#checked']);
+  $doc_ids = LingotekSync::getAllLocalDocIds();
+  $api = LingotekApi::instance();
+  $operations = array();
+
+  $remove_from_tms = $form_state['confirm']['#value'];
+
+  if ($remove_from_tms) { //disassociate on TMS
+    lingotek_batch_disassociate_content_worker($api, $doc_ids);
+  }
+
+  //disassociate on CMS
+  LingotekSync::disassociateAllEntities();
+  LingotekSync::disassociateAllChunks();
+  drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 }
 
 
