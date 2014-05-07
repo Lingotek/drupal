@@ -1877,14 +1877,25 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
   return TRUE;
 }
 
+/**
+ * Return the translation source node ID, if it exists, FALSE otherwise
+ *
+ * @param object $node
+ * @return mixed translation source node ID or FALSE if not node translation
+ */
 function lingotek_is_node_translation($node = NULL) {
   // The case of creating a new node-based translation.
-  if (isset($_GET['translation']) && isset($_GET['target']) && ($source_item = menu_link_load($_GET['translation']))) {
-    return TRUE;
+  if (isset($_GET['translation']) && isset($_GET['target']) && (entity_load_single('node', (int) $_GET['translation']))) {
+    return $_GET['translation'];
+  }
+  // locate a translation source node ID, if available
+  $tnid = !empty($node->tnid) && $node->tnid !== $node->nid && $node->tnid !== 0 ? $node->tnid : NULL;
+  if (!$tnid) {
+    $tnid = !empty($node->translation_source->nid) && (empty($node->nid) || ($node->nid !== $node->translation_source->nid && $node->nid !== 0)) ? $node->translation_source->nid : NULL;
   }
   // The case of updating an existing node-based translation.
-  if ($node && isset($node->tnid) && $node->tnid !== '0' && $node->tnid !== $node->nid) {
-    return TRUE;
+  if ($tnid) {
+    return $tnid;
   }
   // Not a node-based translation.
   return FALSE;
