@@ -239,13 +239,6 @@ function lingotek_bulk_grid_form($form, $form_state) {
   ctools_modal_add_js();
 
   drupal_add_js(array(
-    'customize-table' => array(
-      'modalSize' => array(
-        //'type' => 'fixed',
-        //'width' => 200,
-        //'height' => 200,
-      ),
-    ),
     'set-filters' => array(
       'modalSize' => array(
         'type' => 'fixed',

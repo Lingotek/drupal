@@ -1344,8 +1344,19 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
       $edit_link = '<i class="fa fa-gear fa-lg ltk-disabled-icon"></i>';
     }
     else {
-      $edit_link = '<a href="' . url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key) . '" class="ctools-use-modal" title="' . t('Edit') . '"><i class="fa fa-gear fa-lg"></i></a>';
+      $edit_link = '<a href="' . url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/' . $key) . '" class="ctools-use-modal ctools-modal-lingotek-style" title="' . t('Edit') . '"><i class="fa fa-gear fa-lg"></i></a>';
     }
+
+    // styling for modals
+    drupal_add_js(array(
+      'lingotek-style' => array(
+        'modalSize' => array(
+          'contentRight' => 27,
+        ),
+        'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+        'animation' => 'fadeIn',
+      ),
+    ), 'setting');
 
     $count_by_entity_type = lingotek_admin_profile_usage($key);
     $count_types = lingotek_admin_profile_usage_by_types($key);
@@ -1836,14 +1847,12 @@ function lingotek_disassociate_all_translations() {
 
   $output = ctools_modal_form_wrapper('lingotek_disassociate_all_form', $form_state);
 
-  if ($form_state['executed']) {
+  if (!empty($form_state['executed'])) {
     $commands = array();
-    $commands[] = ctools_modal_command_dismiss(t('Login Success'));
-    // In typical usage you will do something else here, such as update a
-    // div with HTML or redirect the page based upon the results of the modal
-    // form.
+    $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_reload();
     print ajax_render($commands);
-    exit;
+    drupal_exit();
   }
 
   print ajax_render($output);
