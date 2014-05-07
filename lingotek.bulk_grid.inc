@@ -1699,6 +1699,12 @@ function lingotek_entity_disassociate_form($form, $form_state, $entity_ids = arr
     '#collapsed' => $collapse_fieldset,
   );
 
+  $form['disassociate_translations']['confirm'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Also remove all document(s) from Lingotek TMS'),
+    '#default_value' => FALSE,
+    );
+
   $form['disassociate_translations']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Disassociate Translations'),
@@ -1736,6 +1742,12 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'node_sync_status');
   foreach ($entity_ids as $entity_id) {
     LingotekSync::setAllTargetStatus($entity_type, $entity_id, LingotekSync::STATUS_UNTRACKED);
+  }
+
+  $remove_from_tms = $form_state['values']['confirm'];
+
+  if ($remove_from_tms) { //disassociate on TMS
+    lingotek_batch_disassociate_content_worker($api, $doc_ids);
   }
 
   drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity.', 'Translations disassociated for @count entities.'));

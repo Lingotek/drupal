@@ -1810,7 +1810,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       array('data' => array(
           '#type' => 'markup',
           '#prefix' => t('Disassociate All Translations') . ' <i>' . t('(use with caution)') . '</i>' . '<div class="description">',
-          '#markup' => t("Should only be used to change the Lingotek project or TM vault associated with the node’s translation. Disassociates node translations on Lingotek’s servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the node’s content to restart the translation process."),
+          '#markup' => t("Should only be used to change the Lingotek project or TM vault associated with the node’s translation. Option to disassociate node translations on Lingotek’s servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the node’s content to restart the translation process."),
           '#suffix' => '</div>'
         )),
       array('data' => $btn_disassociate_translations)
@@ -1855,7 +1855,7 @@ function lingotek_disassociate_all_form($form, $form_state) {
     );
   $form['confirm'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Also remove all document from Lingotek TMS'),
+    '#title' => t('Also remove all documents from Lingotek TMS'),
     '#default_value' => FALSE,
     );
   $form['submit'] = array(
