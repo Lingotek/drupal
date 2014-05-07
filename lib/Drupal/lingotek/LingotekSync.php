@@ -674,6 +674,14 @@ class LingotekSync {
     $query->addField('base', $id_key);
     $query->leftJoin('{lingotek_entity_metadata}', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
 
+    if ($entity_type == 'node') {
+      // Exclude any target nodes created using node-based translation.
+      $tnid_query = db_or();
+      $tnid_query->condition('base.tnid', 0);
+      $tnid_query->where('base.tnid = base.nid');
+      $query->condition($tnid_query);
+    }
+
     $or = db_or();
     $or->condition('upload.value', LingotekSync::STATUS_EDITED);
     $or->isNull('upload.value');
