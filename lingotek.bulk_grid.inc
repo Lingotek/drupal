@@ -151,6 +151,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/' . $entity_type, array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
 
   );
+
   $form['disassociate_translations'] = array(
     '#markup' => l(t('Disassociate translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/' . $entity_type, array('attributes' => array('id' => 'reset-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-hidden-modal-trigger')))),
   );
@@ -250,7 +251,10 @@ function lingotek_bulk_grid_form($form, $form_state) {
         'type' => 'fixed',
         'width' => 500,
         'height' => 500,
+        'contentRight' => 27,
       ),
+      'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'animation' => 'fadeIn',
     ),
   ), 'setting');
   
