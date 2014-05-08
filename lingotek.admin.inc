@@ -1350,9 +1350,6 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     // styling for modals
     drupal_add_js(array(
       'lingotek-style' => array(
-        'modalSize' => array(
-          'contentRight' => 27,
-        ),
         'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
         'animation' => 'fadeIn',
       ),
@@ -1750,11 +1747,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
       'modalSize' => array(
         'type' => 'fixed',
         'width' => 450,
-        'height' => 200,
-      ),
-      'modalOptions' => array(
-        'opacity' => .55,
-        'background' => '#000',
+        'height' => 250,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
       'animation' => 'fadeIn',
