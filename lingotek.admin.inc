@@ -1761,8 +1761,6 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     ),
   ), 'setting');
 
-  ctools_include('ajax');
-
   $form['url'] = array(
     '#type' => 'hidden',
     // The name of the class is the #id of $btn_disassociate_translations with "-url" suffix. 
@@ -1772,7 +1770,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
 
   $btn_disassociate_translations = array(
     '#type' => 'button', 
-    '#value' => 'Disassociate', 
+    '#value' => t('Disassociate'), 
     '#attributes' => array('class' => array('ctools-use-modal', 'ctools-modal-lingotek-disassociate-style')), 
     '#id' => 'ctools-lingotek-disassociate-button',
   );
@@ -1835,14 +1833,17 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   return $form;
 }
 
-function lingotek_disassociate_all_translations() {
+function lingotek_disassociate_all_translations($form_id, $entity_type = 'node', $entity_ids = array(), $extra = "") {
   ctools_include('node.pages', 'node', '');
   ctools_include('modal');
   ctools_include('ajax');
-  ctools_modal_add_js();
+
+  $entity_ids = !is_array($entity_ids) ? explode(',', $entity_ids) : $entity_ids;
 
   $form_state = array(
     'ajax' => TRUE,
+    'entity_ids' => $entity_ids,
+    'entity_type' => $entity_type,
   );
 
   $output = ctools_modal_form_wrapper('lingotek_disassociate_all_form', $form_state);
@@ -1858,16 +1859,31 @@ function lingotek_disassociate_all_translations() {
   print ajax_render($output);
 }
 
-function lingotek_disassociate_all_form($form, $form_state) {
-  $form = array(
-    '#title' => t('Disassociate all translations'),
-    );
-  $form['confirm'] = array(
+function lingotek_disassociate_all_form($form, $form_state, $entity_ids = array(), $collapse_fieldset = TRUE) {
+
+  if (isset($form_state['entity_ids']) && empty($entity_ids)) {
+    $entity_ids = $form_state['entity_ids'];
+    $collapse_fieldset = FALSE;
+  }
+
+  $form = array();
+  if (!is_array($entity_ids)) {
+    $entity_ids = array($entity_ids);
+  }
+
+  $form['disassociate_all_translations'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Disassociate All Translations'),
+    '#collapsible' => $collapse_fieldset,
+    '#collapsed' => $collapse_fieldset,
+  );
+
+  $form['disassociate_all_translations']['confirm'] = array(
     '#type' => 'checkbox',
     '#title' => t('Also remove all documents from Lingotek TMS'),
     '#default_value' => FALSE,
     );
-  $form['submit'] = array(
+  $form['disassociate_all_translations']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Disassociate All Translations'),
     );
@@ -1880,7 +1896,7 @@ function lingotek_disassociate_all_form_submit($form_state, $form) {
   $api = LingotekApi::instance();
   $operations = array();
 
-  $remove_from_tms = $form_state['confirm']['#value'];
+  $remove_from_tms = $form_state['disassociate_all_translations']['confirm']['#value'];
 
   if ($remove_from_tms) { //disassociate on TMS
     lingotek_batch_disassociate_content_worker($api, $doc_ids);
