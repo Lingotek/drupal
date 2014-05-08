@@ -284,22 +284,20 @@ function lingotek_bulk_grid_form($form, $form_state) {
     );
   }
 
-  if (count($table_data) >= $limit || $page > 1) {
-    $form['limit_select'] = array(
-      '#type' => 'select',
-      '#prefix' => '<div id="page-limit">',
-      '#suffix' =>  ' ' . t('results per page') . '</div>',
-      '#options' => array(
-        10 => '10',
-        25 => '25',
-        50 => '50',
-        100 => '100',
-        250 => '250',
-        500 => '500',
-      ),
-      '#default_value' => $limit,
-    );
-  }
+  $form['limit_select'] = array(
+    '#type' => 'select',
+    '#prefix' => '<div id="page-limit">',
+    '#suffix' =>  ' ' . t('results per page') . '</div>',
+    '#options' => array(
+      10 => '10',
+      25 => '25',
+      50 => '50',
+      100 => '100',
+      250 => '250',
+      500 => '500',
+    ),
+    '#default_value' => $limit,
+  );
 
   return $form;
 }
