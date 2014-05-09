@@ -33,6 +33,11 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     $localized_node = new stdClass();
     $localized_node->type = $node->type;
     node_object_prepare($localized_node);
+
+    // Grandfather the lingotek settings (ie. profile, etc.) on the new node.
+    if (!empty($node->lingotek)) {
+      $localized_node->lingotek = $node->lingotek;
+    }
     $localized_node->title = $node->title . ' (' . $drupal_language_code . ')';
     $localized_node->tnid = $node->tnid;
     $localized_node->language = $drupal_language_code;
