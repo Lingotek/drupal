@@ -826,7 +826,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
       $lid = self::getLidFromTag($drupal_field_name);
       if (!in_array($lid, $non_lingotek_locales_targets)) {
         $content = (string) $xml_obj->element;
-        $content = lingotek_unfilter_placeholders($content);
+        $content = lingotek_unfilter_placeholders(decode_entities($content));
         $plural_lid = array_key_exists($lid, $plural_mapping);
         $rows += array(
           ":l_$icount" => $lid,
