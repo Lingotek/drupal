@@ -859,13 +859,20 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/form.css');
 
   $show_advanced = LingotekAccount::instance()->showAdvanced();
+  $enabled_languages = lingotek_get_target_locales(TRUE);
+  $node_language = Lingotek::convertDrupal2Lingotek($node->language);
 
   // Vertical Tab.
   // (When the Lingotek module is enabled, then show the translation tab unless
-  // the node is *not* managed by Lingotek *and* it is a node-based translation
-  // of a different (source) node.
-  if (lingotek_is_node_translation($node) && isset($node->translation_source->lingotek['profile']) && $node->translation_source->lingotek['profile'] === LingotekSync::PROFILE_DISABLED) {
-    return $form;
+  // the node is *not* managed by Lingotek or the language is *not* managed by
+  // Lingotek, *and* it is a node-based translation of a different (source) node.
+  if (lingotek_is_node_translation($node)) {
+    if (isset($node->translation_source->lingotek['profile']) && $node->translation_source->lingotek['profile'] === LingotekSync::PROFILE_DISABLED) {
+      return $form;
+    }
+    if (!in_array($node_language, $enabled_languages)) {
+      return $form;
+    }
   }
   $title = t('Translation Management');
 
@@ -883,8 +890,6 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#tree' => TRUE,
   );
 
-  $enabled_languages = lingotek_get_target_locales(TRUE);
-  $node_language = Lingotek::convertDrupal2Lingotek($node->language);
   if (lingotek_is_node_translation($node) && in_array($node_language, $enabled_languages)) {
     $form['lingotek']['note'] = array(
       '#markup' => t('This is a target node for the language code: @lang. To change
