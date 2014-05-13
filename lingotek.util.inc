@@ -258,7 +258,7 @@ function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
   $translatable_field_types = lingotek_get_translatable_field_types();
   $desired_fields = array();
   foreach ($all_fields as $field_name => $field_info) {
-    if (in_array($field_info['body']['widget']['type'], $translatable_field_types)) {
+    if (in_array($field_info['widget']['type'], $translatable_field_types)) {
       $desired_fields[$field_name] = $field_name;
     }
   }

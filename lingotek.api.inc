@@ -133,8 +133,8 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
         $index = 0;
         if (module_exists('link') && $field['type'] == 'link_field') {
           $target_key = array(
-            'url',
             'title',
+            'url',
           );
         }
         if (!is_array($target_key)) {
@@ -185,7 +185,16 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
               $field['translatable'] = 1;
               field_update_field($field);
             }
-            $array_key = $target_key[$index];
+
+            $is_link = in_array('url', $target_key);
+            $without_title = (count($content) == 1);
+
+            if ($is_link && $without_title) {
+              $array_key = $target_key[1];
+            }
+            else {
+              $array_key = $target_key[$index];
+            }
             $db_field_name = $field['field_name'] . '_' . $array_key;
             $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
             if (array_key_exists($entity->language, $node_field)) {
