@@ -643,7 +643,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $node = $form['#node'];
     $is_node_translation = lingotek_is_node_translation($node);
     lingotek_entity_load(array($node), 'node');
-    if (lingotek_supported_type($form['type']['#value']) && $is_node_translation) { // lingotek translated content type
+    if (lingotek_supported_type($form['type']['#value']) && (!$is_node_translation || lingotek_enabled_langcode($node->language))) { // lingotek translated content type
       $form['language']['#default_value'] = lingotek_get_source_language();
     }
   }
