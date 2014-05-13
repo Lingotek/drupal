@@ -641,6 +641,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   if (!isset($form['nid']['#value'])) { // add mode (no node id set)
     $node = $form['#node'];
+    $is_node_translation = lingotek_is_node_translation($node);
     lingotek_entity_load(array($node), 'node');
     if (lingotek_supported_type($form['type']['#value']) && $is_node_translation) { // lingotek translated content type
       $form['language']['#default_value'] = lingotek_get_source_language();
@@ -650,8 +651,8 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     // Node exists, updating.
     $nid = $form['nid']['#value'];
     $node = lingotek_node_load_default($nid);
+    $is_node_translation = lingotek_is_node_translation($node);
   }
-  $is_node_translation = lingotek_is_node_translation($node);
 
   global $language;
   $drupal_language_code = $language->language;
