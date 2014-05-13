@@ -1915,19 +1915,13 @@ function lingotek_managed_entity($entity_type, $entity) {
       ->condition('lem.entity_id', $id)
       ->condition('lem.entity_key', 'profile');
   $result = $query->execute()->fetchField();
-  if ($result === LingotekSync::PROFILE_DISABLED) {
-    return FALSE;
-  }
-  else {
-    // Return FALSE if it is node-based translation of a disabled language.
-    if ($entity_type == 'node' && lingotek_is_node_translation($entity)) {
-      $enabled_languages = lingotek_get_target_locales(TRUE);
-      $node_language = Lingotek::convertDrupal2Lingotek($entity->language);
-      if (!in_array($node_language, $enabled_languages)) {
-        return FALSE;
-      }
+  if ($result !== FALSE) {
+    if ($result === LingotekSync::PROFILE_DISABLED) {
+      return FALSE;
     }
-    return TRUE;
+    else {
+      return TRUE;
+    }
   }
   // Check the entity's bundle.
   return lingotek_enabled_bundle($entity_type, $bundle);
@@ -1948,3 +1942,11 @@ function lingotek_entity_extract_ids($entity_type, $entity) {
   return array($entity_id, $vid, $bundle_name);
 }
 
+function lingotek_enabled_langcode($langcode) {
+  $enabled_languages = lingotek_get_target_locales(TRUE);
+  $requested_language = Lingotek::convertDrupal2Lingotek($langcode);
+  if (in_array($requested_language, $enabled_languages)) {
+    return TRUE;
+  }
+  return FALSE;
+}
