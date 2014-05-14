@@ -151,6 +151,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/' . $entity_type, array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
 
   );
+
   $form['disassociate_translations'] = array(
     '#markup' => l(t('Disassociate translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/' . $entity_type, array('attributes' => array('id' => 'reset-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-hidden-modal-trigger')))),
   );
@@ -238,19 +239,14 @@ function lingotek_bulk_grid_form($form, $form_state) {
   ctools_modal_add_js();
 
   drupal_add_js(array(
-    'customize-table' => array(
-      'modalSize' => array(
-        //'type' => 'fixed',
-        //'width' => 200,
-        //'height' => 200,
-      ),
-    ),
     'set-filters' => array(
       'modalSize' => array(
         'type' => 'fixed',
         'width' => 500,
-        'height' => 500,
+        'height' => 768,
       ),
+      'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'animation' => 'fadeIn',
     ),
   ), 'setting');
   
@@ -288,22 +284,20 @@ function lingotek_bulk_grid_form($form, $form_state) {
     );
   }
 
-  if (count($table_data) >= $limit || $page > 1) {
-    $form['limit_select'] = array(
-      '#type' => 'select',
-      '#prefix' => '<div id="page-limit">',
-      '#suffix' =>  ' ' . t('results per page') . '</div>',
-      '#options' => array(
-        10 => '10',
-        25 => '25',
-        50 => '50',
-        100 => '100',
-        250 => '250',
-        500 => '500',
-      ),
-      '#default_value' => $limit,
-    );
-  }
+  $form['limit_select'] = array(
+    '#type' => 'select',
+    '#prefix' => '<div id="page-limit">',
+    '#suffix' =>  ' ' . t('results per page') . '</div>',
+    '#options' => array(
+      10 => '10',
+      25 => '25',
+      50 => '50',
+      100 => '100',
+      250 => '250',
+      500 => '500',
+    ),
+    '#default_value' => $limit,
+  );
 
   return $form;
 }
@@ -1699,6 +1693,12 @@ function lingotek_entity_disassociate_form($form, $form_state, $entity_ids = arr
     '#collapsed' => $collapse_fieldset,
   );
 
+  $form['disassociate_translations']['confirm'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Also remove all document(s) from Lingotek TMS'),
+    '#default_value' => FALSE,
+    );
+
   $form['disassociate_translations']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Disassociate Translations'),
@@ -1731,7 +1731,14 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
   $doc_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $entity_ids);
 
   $api = LingotekApi::instance();
-  $api->removeDocument($doc_ids);
+  $remove_from_tms = $form_state['values']['confirm'];
+  if ($remove_from_tms) { //disassociate on TMS
+    $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
+    if (!$result) {
+      drupal_set_message(t('Failed to remove documents from Lingotek TMS.'), 'status', FALSE);
+      return;
+    }
+  }
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'document_id');
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'node_sync_status');
   foreach ($entity_ids as $entity_id) {

@@ -33,6 +33,11 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     $localized_node = new stdClass();
     $localized_node->type = $node->type;
     node_object_prepare($localized_node);
+
+    // Grandfather the lingotek settings (ie. profile, etc.) on the new node.
+    if (!empty($node->lingotek)) {
+      $localized_node->lingotek = $node->lingotek;
+    }
     $localized_node->title = $node->title . ' (' . $drupal_language_code . ')';
     $localized_node->tnid = $node->tnid;
     $localized_node->language = $drupal_language_code;
@@ -62,6 +67,11 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
         
     node_save($localized_node);
     lingotek_keystore('node', $localized_node->nid, 'node_sync_status', 'TARGET');
+    // Child node should keep its parent node's profile, for rules integration.
+    $parent_profile = lingotek_keystore('node', $node->nid, 'profile');
+    if ($parent_profile !== FALSE) {
+      lingotek_keystore('node', $localized_node->nid, 'profile', $parent_profile);
+    }
   }
 
   return $localized_node;
@@ -123,8 +133,8 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
         $index = 0;
         if (module_exists('link') && $field['type'] == 'link_field') {
           $target_key = array(
-            'url',
             'title',
+            'url',
           );
         }
         if (!is_array($target_key)) {
@@ -175,9 +185,18 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
               $field['translatable'] = 1;
               field_update_field($field);
             }
-            $array_key = $target_key[$index];
+
+            $is_link = in_array('url', $target_key);
+            $without_title = (count($content) == 1);
+
+            if ($is_link && $without_title) {
+              $array_key = $target_key[1];
+            }
+            else {
+              $array_key = $target_key[$index];
+            }
             $db_field_name = $field['field_name'] . '_' . $array_key;
-            $insert_array[$db_field_name] = lingotek_unfilter_placeholders($text);
+            $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
             if (array_key_exists($entity->language, $node_field)) {
               if (array_key_exists('format', $node_field[$entity->language][0])) {
                 $format_db_field_name = $field['field_name'] . '_format';
