@@ -833,6 +833,9 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
     }
     else {
       drupal_set_message(t($lingotek_locale . ' could not be added as a language for Lingotek to translate.'), 'error', FALSE);
+      LingotekLog::error("Target language could not be added: @drupal_language_code (@lingotek_locale)", array(
+        '@drupal_language_code' => $drupal_language_code,
+        '@lingotek_locale' => $lingotek_locale));
     }
   }
 
