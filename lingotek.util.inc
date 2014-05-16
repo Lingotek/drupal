@@ -802,31 +802,37 @@ function lingotek_delete_target_language($lingotek_locale) {
  */
 function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 1, $lingotek_locale = NULL, $api_add = TRUE) {
   $result = FALSE;
+  $one_success = FALSE;  //tracks if any result has been true
 
-  if (is_string($drupal_language_code) && strlen($drupal_language_code)) {
+  if (is_string($drupal_language_code) && strlen($drupal_language_code) && $lingotek_enable && $lingotek_locale && $api_add) {
     $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
-    db_update('{languages}')
-        ->fields(array(
-          'enabled' => 1,
-          'lingotek_enabled' => $lingotek_enable ? 1 : 0,
-          'lingotek_locale' => $lingotek_locale
-        ))
-        ->condition('language', $drupal_language_code)
-        ->execute();
-    drupal_static_reset('language_list');
-    LingotekLog::info("Target language added: @drupal_language_code (@lingotek_locale)", array(
-      '@drupal_language_code' => $drupal_language_code,
-      '@lingotek_locale' => $lingotek_locale));
 
-    if ($lingotek_enable && $lingotek_locale && $api_add) { // Add the Target Language to the Lingotek Project.
-      $api = LingotekApi::instance();
-      $projects = LingotekSync::getSyncProjects();
-      foreach ($projects as $project_id) {
-        $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
-        if ($result) {
-          LingotekSync::insertTargetEntriesForAllEntities($lingotek_locale);
-        }
+    $api = LingotekApi::instance();
+    $projects = LingotekSync::getSyncProjects();
+    foreach ($projects as $project_id) {
+      $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
+      if ($result) {
+        LingotekSync::insertTargetEntriesForAllEntities($lingotek_locale);
       }
+      $one_success = $one_success || $result;
+    }
+
+    if ($one_success == TRUE) {
+      db_update('{languages}')
+          ->fields(array(
+            'enabled' => 1,
+            'lingotek_enabled' => $lingotek_enable ? 1 : 0,
+            'lingotek_locale' => $lingotek_locale
+          ))
+          ->condition('language', $drupal_language_code)
+          ->execute();
+      drupal_static_reset('language_list');
+      LingotekLog::info("Target language added: @drupal_language_code (@lingotek_locale)", array(
+        '@drupal_language_code' => $drupal_language_code,
+        '@lingotek_locale' => $lingotek_locale));
+    }
+    else {
+      drupal_set_message(t($lingotek_locale . ' could not be added as a language for Lingotek to translate.'), 'error', FALSE);
     }
   }
 
