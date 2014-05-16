@@ -1285,6 +1285,9 @@ function lingotek_node_view($node, $view_mode) {
   }
 }
 
+/**
+ * Implements hook_node_presave.
+ */
 function lingotek_node_presave($node) {
   // Make sure the title isn't overwritten with the translation when using the title module.
   if (module_exists('title') && array_key_exists('title_field', $node)) {
@@ -1315,6 +1318,21 @@ function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
   return $node;
 }
 
+/**
+ * Implements hook_taxonomy_term_presave.
+ */
+function lingotek_taxonomy_term_presave($term) {
+  // Make sure the name and description labels are preserved after translation.
+  if (module_exists('title')) {
+    if (array_key_exists('name_field', $term) && isset($term->name_field[$term->language][0]['value'])) {
+      $term->name = $term->name_field[$term->language][0]['value'];
+    }
+    if (array_key_exists('description_field', $term) && isset($term->description_field[$term->language][0]['value'])) {
+      $term->description = $term->description_field[$term->language][0]['value'];
+    }
+  }
+}
+
 /*
  * The function entity_load_single is not in core but rather in the entity module
  * which we currently do not have as a dependency.
@@ -1342,15 +1360,10 @@ function lingotek_entity_load($entities, $entity_type) {
   if (empty($entities)) {
     return;
   }
-  
-  if ($entity_type == 'field_collection_item') {
+  $special_entities = array('field_collection_item', 'message_type', 'taxonomy_term');
+  if (in_array($entity_type, $special_entities)) {
     foreach ($entities as $e) {
-      lingotek_normalize_field_collection_language($entity_type, $e);
-    }
-  }
-  if ($entity_type == 'message_type' || $entity_type == 'taxonomy_term') {
-    foreach ($entities as $e) {
-      lingotek_normalize_language($entity_type, $e);
+      lingotek_normalize_special_field_language($entity_type, $e);
     }
   }
 
@@ -1829,40 +1842,6 @@ function lingotek_entity_info_alter(&$entity_info) {
   }
 }
 
-function lingotek_normalize_language($entity_type, $entity, $read_only = TRUE) {
-  $language = language_default();
-  $site_lang = $language->language;
-
-  if ($read_only) {
-    foreach ($entity as $key => $value) {
-      if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
-        $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
-      }
-    }
-  }
-  else {
-    // Prepare the entity for saving.
-    if ($entity_type == 'taxonomy_term') {
-      // Prevent the term's name and description fields from being empty.
-      if (empty($entity->name) && !empty($entity->name_field[$site_lang][0]['value'])) {
-        $entity->name = $entity->name_field[$site_lang][0]['value'];
-      }
-      if (empty($entity->description) && !empty($entity->description_field[$site_lang][0]['value'])) {
-        $entity->description = $entity->description_field[$site_lang][0]['value'];
-      }
-    }
-
-    foreach ($entity as $key => $value) {
-      if (is_array($value) && array_key_exists($site_lang, $value)) {
-        $entity->{$key}[LANGUAGE_NONE] = $value[$site_lang];
-      }
-      else if (is_array($value) && array_key_exists(LANGUAGE_NONE, $value)) {
-        $entity->{$key}[$site_lang] = $value[LANGUAGE_NONE];
-      }
-    }
-  }
-}
-
 function lingotek_get_fc_parent($entity) {
   $query = new EntityFieldQuery();
   $query->fieldCondition($entity->fieldInfo(), 'revision_id', $entity->revision_id);
@@ -1919,33 +1898,18 @@ function lingotek_get_host_language($entity, $read_only = TRUE) {
   return $site_default_langcode;
 }
 
-function lingotek_is_valid_field_collection_entity($entity_type) {
-  $field_collection_types = array('node', 'field_collection_item');
-  if (in_array($entity_type, $field_collection_types)) {
-    return TRUE;
-  }
-  return FALSE;
-}
-
-function lingotek_normalize_field_collection_language($entity_type, $entity, $read_only = TRUE) {
-
-  if (!lingotek_is_valid_field_collection_entity($entity_type)) {
-    return;
-  }
+function lingotek_normalize_special_field_language($entity_type, $entity, $read_only = TRUE) {
 
   $host_language = lingotek_get_host_language($entity, $read_only);
-  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
-  if (!$field_collection_field_types) { // if there are no field collections existing, nothing to do
-    return;
-  }
+  $excluded_fields = field_read_fields(array('type' => 'field_collection'));
 
   foreach ($entity as $key => $value) { // for each field in the entity
-    // if the given field belongs to a field collection then normalize the languages
-    if (isset($field_collection_field_types[$key])) {
+    // if the given field is a member of the field types then normalize the languages
+    if (isset($excluded_fields[$key])) {
       continue;
     }
 
-    if (is_array($value) && ($entity instanceof FieldCollectionItemEntity)) {
+    if (is_array($value)) {
       // On entity load, LANGUAGE_NONE should be the authority,
       // meaning the most current changes should be stored there.
       if ($read_only) {
@@ -1954,7 +1918,7 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
         }
       }
       // On entity save, LANGUAGE_NONE and host language must
-      // both be destinations for changes so that field collection content
+      // both be destinations for changes so that special-field content
       // will continue to be visible if the Lingotek module is disabled
       else {
         if (count($value) == 1) { // initial creation, so only one language exists
@@ -1989,7 +1953,6 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
         }
       }
     }
-    
   }
 }
 
@@ -1997,12 +1960,11 @@ function lingotek_normalize_field_collection_language($entity_type, $entity, $re
  * Implements hook_entity_presave().
  */
 function lingotek_entity_presave($entity, $entity_type) {
-  if (module_exists('field_collection')) {
-    lingotek_normalize_field_collection_language($entity_type, $entity, FALSE);
+  $special_entities = array('field_collection', 'taxonomy_term', 'message_type');
+  if (!in_array($entity_type, $special_entities)) {
+    return;
   }
-  if ($entity_type == 'message_type' || $entity_type == 'taxonomy_term') {
-    lingotek_normalize_language($entity_type, $entity, FALSE);
-  }
+  lingotek_normalize_special_field_language($entity_type, $entity, FALSE);
 }
 
 /**
@@ -2120,7 +2082,7 @@ function lingotek_form_alter(&$form, &$form_state, $form_id) {
 
     global $language;
     $enabled_languages = lingotek_get_target_locales(TRUE);
-    $lingotek_locale = Lingotek::convertDrupal2Lingotek($form_state['node']->language);
+    $lingotek_locale = !empty($form_state['node']) ? Lingotek::convertDrupal2Lingotek($form_state['node']->language) : NULL;
     if (!in_array($lingotek_locale, $enabled_languages)) {
       return;
     }
