@@ -2416,12 +2416,7 @@ function lingotek_menu_link_update($link) {
  *   TRUE or FALSE
  */
 function lingotek_translate_menu_link($link) {
-  // Handle new link creation.
   if (isset($link['lingotek_translate']) && $link['lingotek_translate'] == LANGUAGE_NONE) {
-    return TRUE;
-  }
-  // Handle link update.
-  if ($link['language'] == LANGUAGE_NONE) {
     return TRUE;
   }
   return FALSE;
