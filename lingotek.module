@@ -1636,6 +1636,9 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     $storage_entity = lingotek_get_translated_node($entity, $drupal_language_code);
   }
   else {
+    if (module_exists('entity_translation') && ($entity_type != 'node' || $storage_method == 'field')) {
+      lingotek_entity_translation_save_status($entity_type, $entity, array($drupal_language_code));
+    }
     $storage_entity = $entity;
   }
 

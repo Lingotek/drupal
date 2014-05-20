@@ -1220,30 +1220,52 @@ function lingotek_profile_condition($entity_type, $table_alias, $table_profile, 
   return $or;
 }
 
-function lingotek_entity_translation_save_status($node, $language_codes, $status_request = NULL) {
-  $handler = entity_translation_get_handler('node', $node);
+function lingotek_entity_translation_save_status($entity_type, $entity, $language_codes, $status_request = NULL) {
+
+  global $user;
   $languages_updated = array();
   $updates = 0;
+  if (!entity_translation_enabled($entity_type)) {
+    return array($languages_updated, $updates);
+  }
+  if ($entity_type == 'node' && !entity_translation_node_supported_type($entity->type)) {
+    return array($languages_updated, $updates);
+  }
+
+  $handler = entity_translation_get_handler($entity_type, $entity);
+  $source_langcode = lingotek_entity_langcode($entity_type, $entity);
+
+  $translations = $handler->getTranslations();
+  if (empty($translations->original)) {
+    $handler->initTranslations();
+    $handler->saveTranslations();
+  }
 
   foreach ($language_codes as $langcode) {
     if ($langcode !== 0) {
-      // set node (source or target as specified) flag (in the entity_translation table) as published or unpublished
       $et_params = array(
         'language' => $langcode,
-        );
-      if ($langcode != $node->language) {
-        $et_params['source'] = $node->language;
+        'translate' => isset($entity->translate) ? $entity->translate : 0,
+        'uid' => !empty($entity->uid) ? $entity->uid : $user->uid,
+        'changed' => time(),
+      );
+      if ($langcode != $source_langcode) {
+        $et_params['source'] = $source_langcode;
       }
       if ($status_request !== NULL) {
         $et_params['status'] = $status_request;
       }
       else {
-        // check for the current status, if any, and set to published as a default
-        if (isset($node->translations->data[$node->language])
-            && !isset($node->translations->data[$langcode])) {
-          $et_params['status'] = $node->translations->data[$node->language]['status'];
+        // Check for a current status for the given langcode.
+        if (isset($entity->translations->data[$langcode]['status'])) {
+          $et_params['status'] = $entity->translations->data[$langcode]['status'];
+        }
+        // If the current langcode doesn't have status, get from parent entity.
+        else if (isset($entity->translations->data[$entity->language])) {
+          $et_params['status'] = $entity->translations->data[$entity->language]['status'];
         }
         else {
+          // Set to published as a default.
           $et_params['status'] = 1; // published
         }
       }
@@ -1958,4 +1980,11 @@ function lingotek_enabled_langcode($langcode) {
     return TRUE;
   }
   return FALSE;
+}
+
+function lingotek_entity_langcode($entity_type, $entity) {
+  $info = entity_get_info($entity_type);
+  // Default to string 'language' if no language-related entity key is found.
+  $lang_key = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
+  return !empty($entity->$lang_key) ? $entity->$lang_key : NULL;
 }
