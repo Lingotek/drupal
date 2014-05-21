@@ -264,7 +264,7 @@ function lingotek_publish_form_submit($form, $form_state) {
     $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0;
     $language_codes = $form_state['values']['languages'];
 
-    list($languages_updated, $updates) = lingotek_entity_translation_save_status($node, $language_codes, $status_request);
+    list($languages_updated, $updates) = lingotek_entity_translation_save_status('node', $node, $language_codes, $status_request);
 
     $publish_status_text = $status_request ? 'published' : 'unpublished';
     $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";
@@ -288,6 +288,20 @@ function lingotek_publish_form_submit($form, $form_state) {
  *   A Drupal render array of the page contents.
  */
 function lingotek_pm($node) {
+
+  $storage_method = $node->lingotek['lingotek_nodes_translation_method'];
+  if (lingotek_managed_by_entity_translation($node->type) && $storage_method == 'field') {
+
+    $handler = entity_translation_get_handler('node', $node);
+    $handler->initPathScheme();
+
+    // Initialize translations if they are empty.
+    $translations = $handler->getTranslations();
+    if (empty($translations->original)) {
+      $handler->initTranslations();
+      $handler->saveTranslations();
+    }
+  }
   // Display all of the appropriate node management sections (e.g., Upload, Download, Publish)
 
   $output = array(
