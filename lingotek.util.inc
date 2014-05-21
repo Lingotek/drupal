@@ -1261,7 +1261,7 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
           $et_params['status'] = $entity->translations->data[$langcode]['status'];
         }
         // If the current langcode doesn't have status, get from parent entity.
-        else if (isset($entity->translations->data[$entity->language])) {
+        elseif (isset($entity->translations->data[$entity->language])) {
           $et_params['status'] = $entity->translations->data[$entity->language]['status'];
         }
         else {
