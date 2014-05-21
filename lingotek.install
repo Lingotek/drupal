@@ -515,7 +515,7 @@ function lingotek_update_7401(&$sandbox) {
   );
 
   foreach ($agents as $a) {
-    db_merge('{lingotek_translation_agent}')
+    db_merge('lingotek_translation_agent')
         ->key(array('id' => $a['id']))
         ->fields(array('id' => $a['id'], 'name' => $a['name']))
         ->execute();
