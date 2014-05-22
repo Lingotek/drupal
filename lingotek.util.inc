@@ -647,6 +647,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (isset($enabled_types['taxonomy_term'])) {
     $enabled_types['taxonomy_term']['label'] = 'Taxonomy Terms';
   }
+  if (isset($enabled_types['fieldable_panels_pane'])) {
+    $enabled_types['fieldable_panels_pane']['label'] = 'Fieldable Panels Panes';
+  }
 
   return $enabled_types;
 }
