@@ -803,10 +803,9 @@ function lingotek_delete_target_language($lingotek_locale) {
 function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 1, $lingotek_locale = NULL, $api_add = TRUE) {
   $result = FALSE;
   $one_success = FALSE;  //tracks if any result has been true
+  $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
 
   if (is_string($drupal_language_code) && strlen($drupal_language_code) && $lingotek_enable && $lingotek_locale && $api_add) {
-    $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
-
     $api = LingotekApi::instance();
     $projects = LingotekSync::getSyncProjects();
     foreach ($projects as $project_id) {
