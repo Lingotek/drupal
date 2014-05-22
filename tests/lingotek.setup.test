@@ -79,17 +79,7 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->drupalPost(NULL,  array(), 'Next');
     $this->assertText('The default language switcher is now enabled.', 'Step 4: Default Language Switcher');
 
-    // //3: Source Language
-    // $settings = array(
-    //   'lingotek_install_source_language' => 'English'
-    // );
-    // $this->drupalPost(NULL,  array(), 'Next');
-    // $this->assertText('Your language settings have been saved.', 'Step 4: Source Language');
-
     //5: Content
-    // $settings = array(
-    //   'lingotek_nodes_translation_method' => 'field',
-    // );
     $this->drupalPost(NULL, array(), 'Next');
     $this->assertText('Your content types have been updated.', 'Step 5: Content');
 
@@ -100,6 +90,12 @@ class LingotekTestCase extends DrupalWebTestCase {
     //7: Config + Bulk Operations
     $this->drupalPost(NULL, array(), 'Finish');
     $this->assertText('The configuration options have been saved.', 'Step 7: Config + Bulk Operations');
+
+    //Unit test for addTargetLanguage to succeed
+    $lingotek_locale = 'fr_FR';
+    $drupal_language_code = 'fr';
+    $response = lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale);
+    $this->assertTrue($response, 'Set target language passing');
 
 //    $this->addLanguage('es');
 //    $this->addLanguage('de');

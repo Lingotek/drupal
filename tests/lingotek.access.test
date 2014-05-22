@@ -39,3 +39,4 @@ class LingotekAccessFunctionalTest extends LingotekFunctionalTest {
     $this->assertNoRaw($lingotek_html);
     $this->drupalLogout();
   }
+}
