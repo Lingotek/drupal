@@ -40,7 +40,7 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->drupalGet('admin/config/lingotek/setup');
     $this->assertUrl('admin/config/lingotek/new-account', array(), 'Redirect to first step of start page');
 
-    //1: Account Settings
+    // 1: Account Settings.
     $settings = array(
       'lingotek_lid' => 'bisle',
       'lingotek_pid' => 'lingotek',
@@ -49,8 +49,7 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->drupalPost('admin/config/lingotek/account-settings', $settings, 'Next');
     $this->assertText('Your account settings have been saved.', '<b>Step 1: Account Settings - Abililty to login</b>');
 
-    //2: Community
-
+    // 2: Community.
     $settings = array(
       'lingotek_site_community' => 'ABCDEFGH'
     );
@@ -59,8 +58,7 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->drupalPost(NULL, $settings, 'Next');
     $this->assertText('Your site has been securely connected to your community (ABCDEFGH).', 'Step 2: Community Selected');
 
-    //3: TM Vault
-
+    // 3: TM Vault.
     $settings = array(
       'project_new_or_existing' => 1,
       'project_new' => 'Automated Test Project',
@@ -72,64 +70,74 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->assertText('Your Lingotek project, workflow, and vault selections have been setup and saved.', 'Step 3: Project, Workflow, and TM Vault');
 
 
-    //4: Default Language Switcher
+    // 4: Default Language Switcher.
     $settings = array(
       'region' => 'Sidebar first'
     );
     $this->drupalPost(NULL,  array(), 'Next');
     $this->assertText('The default language switcher is now enabled.', 'Step 4: Default Language Switcher');
 
-    //5: Content
+    // 5: Content.
     $this->drupalPost(NULL, array(), 'Next');
     $this->assertText('Your content types have been updated.', 'Step 5: Content');
 
-    //6: Comments
+    // 6: Comments.
     $this->drupalPost(NULL, array(), 'Next');
     $this->assertText('Your content types have been updated.', 'Step 6: Content');
 
-    //7: Config + Bulk Operations
+    // 7: Config + Bulk Operations.
     $this->drupalPost(NULL, array(), 'Finish');
     $this->assertText('The configuration options have been saved.', 'Step 7: Config + Bulk Operations');
 
-    //Unit test for addTargetLanguage to succeed
-    $lingotek_locale = 'fr_FR';
-    $drupal_language_code = 'fr';
-    $response = lingotek_set_target_language($drupal_language_code, 1, $lingotek_locale);
-    $this->assertTrue($response, 'Set target language passing');
+    // Unit test for add_target_language to succeed.
+    $response = lingotek_add_target_language('fr_FR');
+    $this->assertTrue($response, 'add_target_language("fr_FR") succeeds');
+    $response = lingotek_add_target_language('en_US');
+    $this->assertTrue($response, 'add_target_language("en_US") succeeds');
 
-//    $this->addLanguage('es');
-//    $this->addLanguage('de');
+    $this->drupalGet('admin/settings/lingotek');
+    $enabled_languages = db_select('languages', 'l')
+      ->fields('l', array('name'))
+      ->condition('l.lingotek_enabled', 1)
+      ->execute()
+      ->fetchAllAssoc('name');
+    debug($enabled_languages);
+    $this->assertEqual(array_key_exists('English', $enabled_languages), 1, 'English was Lingotek enabled');
+    $this->assertEqual(array_key_exists('French', $enabled_languages), 1, 'French was Lingotek enabled');
+    $this->assertEqual(array_key_exists('Chinese', $enabled_languages), 0, 'Chinese was not Lingotek enabled');
 
-//    $settings = array(
-//      'type' => 'article',
-//    );
-//    $n = $this->drupalCreateNode($settings);
-//    debug($n);
-
+    // Add a node with some content.
     $settings = array(
       'title_field[und][0][value]' => 'Hello',
       'body[und][0][value]' => 'World',
     );
     $this->drupalPost('node/add/article', $settings, 'Save');
+    $this->assertText('Article Hello has been created.', 'Node created successfully.');
+    $this->assertText('Hello sent to Lingotek successfully.', 'Node uploaded to Lingotek.');
 
+    // Store the node id.
     $url_parts = explode('/', $this->getUrl());
     $nid = array_pop($url_parts);
     $n = node_load($nid);
     debug($nid);
 
-    $status = lingotek_keystore('node', $n->nid, 'node_sync_status');
-    debug($status);
-    $this->assertEqual($status, LingotekSync::STATUS_CURRENT, 'NODE_SYNC_STATES set correctly');
+    // We'll upload the content to TMS, update the page, then download the translated content.
+    $this->drupalGet('admin/settings/lingotek/manage/upload-edited/node');
+    // This is usually long enough to wait before the translation is ready but it may take longer occasionally.
+    sleep(15);
+    $this->drupalGet('admin/settings/lingotek/manage/update/node');
+    $this->assertText('Target translations progress checked and updated', 'Uploaded and updated progress of translations.');
+    $this->drupalGet('admin/settings/lingotek/manage/download-ready/node');
+    $this->assertText('downloaded.', 'Downloaded translations completed.');
 
-    $doc_id = lingotek_keystore('node', $n->nid, 'document_id');
-    debug($doc_id);
-    $this->assertEqual($doc_id, $doc_id);
+    // Go to the French node we created and check the translation
+    $this->drupalGet('fr/node/' . $n->nid);
+    $this->assertText('Monde', 'Node was properly translated to French.');
 
-    sleep(1);
-
+    // Check if you can download translations.
     $this->drupalGet('node/' . $n->nid . '/lingotek_pm');
     $this->assertNoText('Upload');
-    $this->assertText('PROCESSING', 'Found "Download Translations" on page');
+    $this->assertText('Download Translations', 'User has the ability to download translations');
     debug('Finished setup');
 
   }
