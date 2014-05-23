@@ -1206,7 +1206,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   }
 
   if (isset($filters['profile']) && !in_array('all', $filters['profile'])) {
-    $profiled_entities = lingotek_get_entities_by_profile_id($filters['profile'], $entity_type);
+    $profiled_entities = lingotek_get_entities_by_profile_and_entity_type($filters['profile'], $entity_type);
     $profiled_entity_ids = array(-1);
     foreach ($profiled_entities as $p) {
       $profiled_entity_ids[] = $p['id'];

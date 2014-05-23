@@ -215,7 +215,6 @@ function lingotek_form_bulk_sync($form, $form_state) {
   $form['upload'] = array(
     '#type' => 'fieldset',
     '#title' => t('Upload config for translation'),
-    //'#description' => t('Translation management defaults used when creating new nodes. At the node level, these settings can be adjusted.'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#group' => 'administrative_settings',

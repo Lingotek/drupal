@@ -427,7 +427,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
  */
 function lingotek_admin_profile_usage($profile_id) {
   $entity_counts = array();
-  $entities = lingotek_get_entities_by_profile_id($profile_id);
+  $entities = lingotek_get_all_entities_by_profile($profile_id);
   // count up the entities by type
   foreach ($entities as $e) {
     if (isset($entity_counts[$e['type']])) {
@@ -1684,7 +1684,7 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
         $workflow_id = $form_state['values']['workflow_id'];
         $prefill_phase = $form_state['values']['prefill_phase_select'];
   
-        $entities = lingotek_get_entities_by_profile_id($profile_id);
+        $entities = lingotek_get_all_entities_by_profile($profile_id);
         
         $api = LingotekApi::instance();
         $document_ids = array();
