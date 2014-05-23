@@ -1828,7 +1828,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
   return $form;
 }
 
-function lingotek_disassociate_all_translations($form_id, $entity_type = 'node', $entity_ids = array(), $extra = "") {
+function lingotek_disassociate_all_translations($entity_type = 'node', $entity_ids = array(), $extra = "") {
   ctools_include('node.pages', 'node', '');
   ctools_include('modal');
   ctools_include('ajax');
