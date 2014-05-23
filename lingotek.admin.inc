@@ -132,11 +132,12 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   $enable_all_manual =  l(t('(set all to manual)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', '1'); return false;")));  
   $disable_all =  l(t('(disable all)'), '#', array('attributes' => array('onclick' => "lingotekSetAll('" . $selector . "', 'DISABLED'); return false;")));
 
-  $links = $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all;
+  $title_str = ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?'));
+  $links_str = t('') . ' ' . $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all;
 
   $form['translation_' . $entity_type] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?')),
+    '#title' => check_plain($title_str),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#group' => 'administrative_settings',
@@ -148,7 +149,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
 
   $form['translation_' . $entity_type][] = array(
     '#type' => 'item',
-    '#description' => t('Choose what you want translated:') . ' ' . $links,
+    '#description' => filter_xss($links_str),
   );
 
   $rows = array();
@@ -475,11 +476,12 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   $setup_complete = (!lingotek_is_config_missing());
   $account = LingotekAccount::instance();
   $show_advanced = $account->showAdvanced();
+  $title_str = ($setup_complete ? t('Configuration Translation') : t('Which additional items do you want translated?'));
 
   // Configuration translation (ie. taxonomies, menus, etc.)
   $form['additional_translation'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
-    '#title' => ($setup_complete ? t('Configuration Translation') : t('Which additional items do you want translated?')),
+    '#title' => check_plain($title_str),
     //'#description' => t('Enable/disable and set defaults for comment translation.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -910,7 +912,7 @@ function lingotek_admin_module_indexing_finished($success, $results) {
           '!delete' => $total['delete'],
         ));
       }
-      drupal_set_message(implode("<br />\n", $messages));
+      drupal_set_message(filter_xss(implode("<br />\n", $messages)));
 
       // Warning for disallowed HTML.
       if ($total_skip) {
