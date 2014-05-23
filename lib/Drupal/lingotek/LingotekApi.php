@@ -215,10 +215,8 @@ class LingotekApi {
     }
 
     if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
-      // Assuming the the call only fails for 1) an invalid OAuth key or 2) No documents in TMS.
-      if ($new_translation_target->results == 'success' || $new_translation_target->error == 'No documents to add a translation target to.') {
-        return TRUE;
-      }
+      // If the request went through, there was no OAuth error and we should enable.
+      return TRUE;
     }
     return FALSE;
   }

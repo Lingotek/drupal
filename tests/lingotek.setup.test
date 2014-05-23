@@ -90,10 +90,19 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->assertText('The configuration options have been saved.', 'Step 7: Config + Bulk Operations');
 
     // Unit test for add_target_language to succeed.
-    $response = lingotek_add_target_language('fr_FR');
-    $this->assertTrue($response, 'add_target_language("fr_FR") succeeds');
     $response = lingotek_add_target_language('en_US');
     $this->assertTrue($response, 'add_target_language("en_US") succeeds');
+    $response = lingotek_add_target_language('fr_FR');
+    $this->assertTrue($response, 'add_target_language("fr_FR") succeeds');
+
+    // Unit test for add_target_language to fail
+    $oauth = variable_get('lingotek_oauth_consumer_id');
+    debug($oauth);
+    variable_set('lingotek_oauth_consumer_id', $oauth . '---');
+    debug(variable_get('lingotek_oauth_consumer_id '));
+    $response = lingotek_add_target_language('zh_TW');
+    $this->assertTrue($response, 'add_target_language("zh_TW") fails');
+    variable_set('lingotek_oauth_consumer_id', $oauth);
 
     $this->drupalGet('admin/settings/lingotek');
     $enabled_languages = db_select('languages', 'l')
@@ -128,7 +137,7 @@ class LingotekTestCase extends DrupalWebTestCase {
     $this->drupalGet('admin/settings/lingotek/manage/update/node');
     $this->assertText('Target translations progress checked and updated', 'Uploaded and updated progress of translations.');
     $this->drupalGet('admin/settings/lingotek/manage/download-ready/node');
-    $this->assertText('downloaded.', 'Downloaded translations completed.');
+    $this->assertText('downloaded.', 'Downloaded translations completed. May fail because translations were not ready yet.');
 
     // Go to the French node we created and check the translation
     $this->drupalGet('fr/node/' . $n->nid);
