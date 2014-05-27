@@ -1404,7 +1404,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
       'document_id' => $row->document_id ? : t('N/A'),
       'content_type' => isset($info['bundles'][$row->type]['label']) ? $info['bundles'][$row->type]['label'] : $row->type,
       'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
-      'workflow' => ($row->workflow ? (isset($workflows[$row->workflow]) ? check_plain($workflows[$row->workflow]) : $row->workflow) : ''),
+      'workflow' => ($row->lingotek['workflow_id'] ? (isset($workflows[$row->lingotek['workflow_id']]) ? check_plain($workflows[$row->lingotek['workflow_id']]) : $row->lingotek['workflow_id']) : ''),
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
     );
 
