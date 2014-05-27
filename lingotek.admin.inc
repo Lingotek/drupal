@@ -68,24 +68,6 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
 }
 
 /**
- * Account Status Submit Handler
- * @param type $form
- * @param type $form_state
- */
-function lingotek_admin_account_status_form_submit($form, &$form_state) {
-  $account = LingotekAccount::instance();
-  $result = $account->getAccountStatus(); // Returns false on fail.
-
-  if ($result === FALSE) { // There was a problem retrieving the account status.
-    drupal_set_message(t('There was an error retrieving your account status.  Please try again later.'), 'error');
-  }
-  else { // We got a valid account status.  Send the user back to the Lingotek settings page, via the second cache clearer.
-    drupal_set_message(t('Your account status has been updated.'));
-    menu_rebuild();
-  }
-}
-
-/**
  * Content translation form
  */
 function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity_type,  $show_fieldset = FALSE) {
@@ -1304,7 +1286,6 @@ function lingotek_admin_connection_form($form, &$form_state, $show_fieldset = FA
       '#markup' => theme('table', array('header' => array(), 'rows' => array(
           array('TMS:', LINGOTEK_API_SERVER),
           array('GMC:', LINGOTEK_GMC_SERVER),
-        //array('Billing:', LINGOTEK_BILLING_SERVER),
         //array('AP Key:', LINGOTEK_AP_OAUTH_KEY),
         //array('AP Secret:', LINGOTEK_AP_OAUTH_SECRET),
     )))
