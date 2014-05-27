@@ -1485,6 +1485,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   }
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+    $context['results']['disabled'][] = $id;
     return;
   }
 

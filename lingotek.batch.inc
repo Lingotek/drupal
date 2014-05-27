@@ -291,8 +291,8 @@ function lingotek_sync_upload_node_finished($success, $results, $operations) {
     $count = isset($results['uploads']) ? $results['uploads'] : 0;
     $message = format_plural($count, 'One entity uploaded to Lingotek.', '@count entities uploaded to Lingotek.');
     $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'entity id', 'entity ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
-    $message .= ($count === 0) ? ' ' . t("<i>(Note: entities with the Disabled profile must be set to an enabled profile to be uploaded)</i>") : "";
-    $status = ($count === 0) ? 'warning' : 'status';
+    $message .= (isset($results['disabled'])) ? ' ' . t("<i>(Note: entities with the Disabled profile must be set to an enabled profile to be uploaded)</i>") : "";
+    $status = (isset($results['disabled'])) ? 'warning' : 'status';
     drupal_set_message($message, $status);
   }
   else {
