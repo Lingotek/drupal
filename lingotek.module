@@ -1963,7 +1963,7 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  * Implements hook_entity_presave().
  */
 function lingotek_entity_presave($entity, $entity_type) {
-  $special_entities = array('field_collection', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
+  $special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
   if (!in_array($entity_type, $special_entities)) {
     return;
   }
