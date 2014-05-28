@@ -1473,7 +1473,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if (is_numeric($entity)) {
     $entity = lingotek_entity_load_single($entity_type, $entity);
   }
-  
+
+  // Exclude translated nodes (targets) created using node-based translation.
+  if ($entity_type == 'node' && $entity->tnid !== '0' && $entity->tnid !== $entity->nid) {
+    LingotekLog::trace('Skipping upload of node @id, since it is a translation target.', array('@id' => $id));
+    return;
+  }
+
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   
   LingotekLog::trace('Uploading @type @id for translation', array('@type' => $entity_type, '@id' => $id));
