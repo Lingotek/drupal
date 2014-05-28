@@ -72,23 +72,20 @@ function lingotek_field_language_data_cleanup_batch_create($entity_type, $autose
     }
   }
 
-  if (count($operations) > 0) {
+  $batch = array(
+    'title' => t('Lingotek Field Language Updater'),
+    'operations' => $operations,
+    'finished' => 'lingotek_field_language_data_cleanup_batch_finished',
+    'file' => 'lingotek.batch.inc'
+  );
 
-    $batch = array(
-      'title' => t('Lingotek Field Language Updater'),
-      'operations' => $operations,
-      'finished' => 'lingotek_field_language_data_cleanup_batch_finished',
-      'file' => 'lingotek.batch.inc'
-    );
-
-    if ($autoset_batch) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
-      batch_set($batch);
-      batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
-    }
-    else {
-      return $batch;
-    }
-  } // END:  if operations
+  if ($autoset_batch) { // If this batch was NOT created from a form_submit() handler, do this to initiate the batch.
+    batch_set($batch);
+    batch_process('<front>'); // Needed if not inside a form _submit handler.  Setting redirect in batch_process.
+  }
+  else {
+    return $batch;
+  }
 }
 
 /**
@@ -521,6 +518,9 @@ function lingotek_field_language_data_cleanup_batch_finished($success, $results,
     if (isset($results['field_cleanup'])) {
       $num_nodes = (int) $results['field_cleanup'];
       drupal_set_message(format_plural($num_nodes, t('Added language-specific fields for @count entity with language-neutral fields.', array('@count' => $num_nodes)), t('Added language-specific fields for @count entities with language-neutral fields.', array('@count' => $num_nodes))));
+    }
+    else {
+      drupal_set_message(t('No requested entities currently require any preparation.'), 'status', FALSE);
     }
   }
 }
