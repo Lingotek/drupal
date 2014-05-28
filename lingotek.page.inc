@@ -263,8 +263,9 @@ function lingotek_publish_form_submit($form, $form_state) {
     $node = lingotek_node_load_default($form_state['values']['node_id']);
     $status_request = $form_state['triggering_element']['#id'] == 'publish' ? 1 : 0;
     $language_codes = $form_state['values']['languages'];
+    $addtl_params = array('status_request' => $status_request);
 
-    list($languages_updated, $updates) = lingotek_entity_translation_save_status('node', $node, $language_codes, $status_request);
+    list($languages_updated, $updates) = lingotek_entity_translation_save_status('node', $node, $language_codes, $addtl_params);
 
     $publish_status_text = $status_request ? 'published' : 'unpublished';
     $languages_updated_html = "<ul><li>" . implode("</li><li>", $languages_updated) . "</li></ul>";

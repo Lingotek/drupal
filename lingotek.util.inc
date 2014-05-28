@@ -1064,6 +1064,39 @@ function lingotek_cleanup_field_languages_for_taxonomy_terms() {
 }
 
 /**
+ * Report all Lingotek translations to the Entity Translation module
+ */
+function lingotek_cleanup_notify_entity_translation() {
+  $entity_list = array();
+  $results = db_select('{lingotek_entity_metadata}', 'l')
+      ->fields('l', array('entity_id', 'entity_type', 'entity_key', 'created', 'modified'))
+    ->condition('entity_key', 'target_sync_status_%', 'LIKE')
+    ->condition('value', LingotekSync::STATUS_CURRENT)
+    ->execute();
+  $total_updates = 0;
+  foreach ($results as $r) {
+    $locale = str_replace('target_sync_status_', '', $r->entity_key);
+    $entity = lingotek_entity_load_single($r->entity_type, $r->entity_id);
+    if ($entity) {
+      $info = entity_get_info($r->entity_type);
+      $bundle_name = !empty($info['entity keys']['bundle']) ? $info['entity keys']['bundle'] : NULL;
+      if ($bundle_name && lingotek_managed_by_entity_translation($entity->$bundle_name)) {
+        $addtl_params = array('created' => $r->created, 'changed' => $r->modified);
+        list($languages_updated, $updates) = lingotek_entity_translation_save_status($r->entity_type, $entity, array(Lingotek::convertLingotek2Drupal($locale)), $addtl_params);
+        $total_updates += $updates;
+      }
+    }
+  }
+  if ($total_updates > 0) {
+    $translation_str = format_plural($total_updates, t('translation was'), t('translations were'));
+    drupal_set_message(t('@num_updates @translations reported to the Entity Translation module.', array('@num_updates' => $total_updates, '@translations' => $translation_str)));
+  }
+  else {
+    drupal_set_message(t('The Entity Translation module was already aware of all current translations.'));
+  }
+}
+
+/**
  * lingotek_refresh_api_cache utility
  */
 function lingotek_refresh_api_cache($show_messages = TRUE) {
@@ -1222,7 +1255,10 @@ function lingotek_profile_condition($entity_type, $table_alias, $table_profile, 
   return $or;
 }
 
-function lingotek_entity_translation_save_status($entity_type, $entity, $language_codes, $status_request = NULL) {
+/**
+ * Save a translation to the Entity Translation table with status and additional parameters
+ */
+function lingotek_entity_translation_save_status($entity_type, $entity, $language_codes, $addtl_params = NULL) {
 
   global $user;
   $languages_updated = array();
@@ -1249,13 +1285,16 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
         'language' => $langcode,
         'translate' => isset($entity->translate) ? $entity->translate : 0,
         'uid' => !empty($entity->uid) ? $entity->uid : $user->uid,
-        'changed' => time(),
+        'changed' => !empty($addtl_params['changed']) ? $addtl_params['changed'] : time(),
       );
+      if (!empty($addtl_params['created'])) {
+        $et_params['created'] = $addtl_params['created'];
+      }
       if ($langcode != $source_langcode) {
         $et_params['source'] = $source_langcode;
       }
-      if ($status_request !== NULL) {
-        $et_params['status'] = $status_request;
+      if (!empty($addtl_params['status_request'])) {
+        $et_params['status'] = $addtl_params['status_request'];
       }
       else {
         // Check for a current status for the given langcode.

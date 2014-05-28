@@ -1994,27 +1994,34 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   $cleanup_functions['lingotek_cleanup_field_languages_for_nodes'] = array(
     'title' => t('Prepare nodes'),
-    'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang', array('@lang' => language_default('name'))),
+    'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang.', array('@lang' => language_default('name'))),
   );
+
+  if (module_exists('entity_translation')) {
+    $cleanup_functions['lingotek_cleanup_notify_entity_translation'] = array(
+      'title' => t('Sync with Entity Translation'),
+      'desc' => t('Reports all translations managed by Lingotek to the Entity Translation module.'),
+    );
+  }
 
   if (module_exists('comment')) {
     $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
       'title' => t('Prepare comments'),
-      'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
+      'desc' => t('Sets all <i>language neutral</i> comments (and underlying fields) to be @lang.', array('@lang' => language_default('name'))),
     );
   }
 
   if (module_exists('fieldable_panels_panes')) {
     $cleanup_functions['lingotek_cleanup_field_languages_for_fieldable_panels_panes'] = array(
       'title' => t('Prepare FPPs'),
-      'desc' => t('Sets all <i>language neutral</i> fieldable panels panes (FPPs) to be @lang', array('@lang' => language_default('name'))),
+      'desc' => t('Sets all <i>language neutral</i> fieldable panels panes (FPPs) to be @lang.', array('@lang' => language_default('name'))),
     );
   }
 
   if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
       'title' => t('Prepare taxonomy terms with custom fields'),
-      'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang', array('@lang' => language_default('name'))),
+      'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang.', array('@lang' => language_default('name'))),
     );
   }
 
@@ -2053,7 +2060,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   $cleanup_functions['lingotek_add_missing_locales'] = array(
     'title' => t('Add missing locales'),
-    'desc' => t('Fills in any missing locale values to the <i>languages</i> table'),
+    'desc' => t('Fills in any missing locale values to the <i>languages</i> table.'),
   );
 
   $form['cleanup']['grid'] = array(
