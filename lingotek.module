@@ -1476,7 +1476,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
 
   // Exclude translated nodes (targets) created using node-based translation.
   if ($entity_type == 'node' && $entity->tnid !== '0' && $entity->tnid !== $entity->nid) {
-    LingotekLog::trace('Skipping upload of node @id, since it is a translation target.', array('@id' => $id));
+    LingotekLog::trace('Skipping upload of node @id, since it is a translation target.', array('@id' => $entity->nid));
     return;
   }
 
