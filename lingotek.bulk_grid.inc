@@ -172,7 +172,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   if ($entity_type == 'node') {
     $form['node/add'] = array(
-      '#markup' => l('<i class="fa fa-plus" style="margin-left: 15px; margin-right: 2px;"></i> ' . t('Add content') . '<div style="margin: 15px 0;"></div>', 'node/add', array('html' => TRUE, 'attributes' => array('title' => t('Add content'))))
+      '#markup' => l('<i class="fa fa-plus" style="margin-left: 15px; padding-right: 4px;"></i>' . t('Add content') . '<div style="margin: 15px 0;"></div>', 'node/add', array('html' => TRUE, 'attributes' => array('title' => t('Add content'))))
     );
   }
 
