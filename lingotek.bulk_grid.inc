@@ -130,7 +130,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
   );
   /*$form['filter_popup'] = array(
-    '#markup' => l('<i class="fa-search fa-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'lingotek-action')))),
+    '#markup' => l('<i class="fa-search fa-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-large', 'lingotek-action')))),
   );*/
   $last_updated = variable_get('lingotek_pending_last_updated', NULL);
   $message = t('Check status of in-progress translations (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ' . t('ago') : t('Never')));
@@ -148,25 +148,25 @@ function lingotek_bulk_grid_form($form, $form_state) {
   );
 
   $form['edit_settings'] = array(
-    '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/' . $entity_type, array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+    '#markup' => l(t('Edit Settings'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/edit/' . $entity_type, array('attributes' => array('id' => 'edit-settings-link', 'class' => array('ctools-use-modal', 'ctools-modal-large')))),
 
   );
 
   $form['disassociate_translations'] = array(
-    '#markup' => l(t('Disassociate translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/' . $entity_type, array('attributes' => array('id' => 'reset-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-hidden-modal-trigger')))),
+    '#markup' => l(t('Disassociate translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/' . $entity_type, array('attributes' => array('id' => 'reset-link', 'class' => array('ctools-use-modal', 'ctools-modal-small', 'ltk-hidden-modal-trigger')))),
   );
   $form['delete'] = array(
-    '#markup' => l(t('Delete selected content'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/delete/' . $entity_type, array('attributes' => array('id' => 'delete-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-hidden-modal-trigger')))),
+    '#markup' => l(t('Delete selected content'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/delete/' . $entity_type, array('attributes' => array('id' => 'delete-link', 'class' => array('ctools-use-modal', 'ctools-modal-small', 'ltk-hidden-modal-trigger')))),
   );
   $form['pop_up_link'] = array(
-    '#markup' => l(t('Hidden pop-up'), '', array('attributes' => array('id' => 'popup-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-hidden-modal-trigger')))),
+    '#markup' => l(t('Hidden pop-up'), '', array('attributes' => array('id' => 'popup-link', 'class' => array('ctools-use-modal', 'ctools-modal-large', 'ltk-hidden-modal-trigger')))),
   );
 
   $api = LingotekApi::instance();
   $workflows = $api->listWorkflows();
   if (is_array($workflows) && count($workflows) > 1) {
     $form['change_workflow'] = array(
-      '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow/' . $entity_type, array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-set-filters')))),
+      '#markup' => l(t('Change Workflow'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/change-workflow/' . $entity_type, array('attributes' => array('id' => 'change-workflow-link', 'class' => array('ctools-use-modal', 'ctools-modal-large')))),
     );
   }
 
@@ -179,7 +179,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
-    '#title' => l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action')))) . ' ' . t('Search') . ': ',
+    '#title' => l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-large', 'ltk-action')))) . ' ' . t('Search') . ': ',
     '#size' => 30,
   );
 
@@ -202,7 +202,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   );
 
   $form['advanced_link'] = array(
-    '#markup' => l(t('Advanced') . '<span style="margin: 0 5px;"></span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-set-filters', 'ltk-action'))))
+    '#markup' => l(t('Advanced') . '<span style="margin: 0 5px;"></span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-large', 'ltk-action'))))
   );
 
   if ($filter_set) {
@@ -245,11 +245,23 @@ function lingotek_bulk_grid_form($form, $form_state) {
   ctools_modal_add_js();
 
   drupal_add_js(array(
-    'set-filters' => array(
+    'small' => array(
       'modalSize' => array(
         'type' => 'fixed',
-        'width' => 500,
-        'height' => 768,
+        'width' => 450,
+        'height' => 400,
+      ),
+      'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'animation' => 'fadeIn',
+    ),
+  ), 'setting');
+
+  drupal_add_js(array(
+    'large' => array(
+      'modalSize' => array(
+        'type' => 'scale',
+        'width' => .6,
+        'height' => .8,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
       'animation' => 'fadeIn',
