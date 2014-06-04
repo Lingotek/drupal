@@ -11,10 +11,12 @@ Drupal.behaviors.lingotekAdminForm = {
     //when a content type checkbox is clicked
     $('.form-select', context).change( function() {
       isEnabled = $(this).val() != 'DISABLED';
+      var totalChecked = $(this).parents('tr').find('.form-checkbox:checked').length;
+
       $(this).parents('tr').find('.form-checkbox').each( function() {
-        if(isEnabled) {
+        if(isEnabled && totalChecked === 0) {
           $(this).attr('checked', isEnabled);
-        } else {
+        } else if (!isEnabled) {
           $(this).removeAttr('checked');
         }
       })
