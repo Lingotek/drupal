@@ -2320,8 +2320,7 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       $form['lingotek']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['lingotek']['workflow_id']);
     }
     else {
-      $form['lingotek']['prefill_phase_select']['#options'] = array('-1' => '(first choose a workflow)');
-      $form['lingotek']['prefill_phase_select']['#disabled'] = TRUE;
+      $form['lingotek']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['workflow_id']);
     }
   }
 
