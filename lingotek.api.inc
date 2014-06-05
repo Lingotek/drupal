@@ -197,6 +197,9 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
             }
             $db_field_name = $field['field_name'] . '_' . $array_key;
             $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
+            if ($db_field_name == 'title_field_value' && strlen($insert_array[$db_field_name]) > 254) {
+              $insert_array[$db_field_name] = substr($insert_array[$db_field_name], 0, 254);
+            }
             if (array_key_exists($entity->language, $node_field)) {
               if (array_key_exists('format', $node_field[$entity->language][0])) {
                 $format_db_field_name = $field['field_name'] . '_format';
