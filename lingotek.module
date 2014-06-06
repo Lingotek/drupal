@@ -1475,7 +1475,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   }
 
   // Exclude translated nodes (targets) created using node-based translation.
-  if ($entity_type == 'node' && $entity->tnid !== '0' && $entity->tnid !== $entity->nid) {
+  if ($entity_type == 'node' && $entity->tnid != 0 && $entity->tnid != $entity->nid) {
     LingotekLog::trace('Skipping upload of node @id, since it is a translation target.', array('@id' => $entity->nid));
     return;
   }
@@ -1988,7 +1988,7 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
     // Copy the fields to match the language of the comment.
 
     $default_language = language_default('language'); // 'es', 'de', 'en', etc.
-    $comment_language = $form['language']['#value'];
+    $comment_language = !empty($form['language']['#value']) ? $form['language']['#value'] : NULL;
     $comment_bundle = $form['#bundle'];
     $comment_fields = array_keys(field_info_instances('comment', $comment_bundle));
 
