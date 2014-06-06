@@ -1829,7 +1829,7 @@ function lingotek_comment_view($comment, $view_mode, $langcode) {
   }
   
   global $language;
-  if ($comment->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
+  if ($comment->lingotek['profile'] != LingotekSync::PROFILE_DISABLED && isset($comment->lingotek['last_uploaded'])) {
     $comment->content['lingotek_link']['#markup'] = lingotek_workbench_icon('comment', $comment->cid, Lingotek::convertDrupal2Lingotek($language->language));
   }
 }
