@@ -127,7 +127,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $results_last = $results_first + count($table_data) - 1;
 
   $form['customize'] = array(
-    '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-customize-table', 'lingotek-action')))),
+    '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize', array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-large', 'lingotek-action')))),
   );
   /*$form['filter_popup'] = array(
     '#markup' => l('<i class="fa-search fa-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters', array('html' => TRUE, 'attributes' => array('title' => 'Set Filters', 'class' => array('ctools-use-modal', 'ctools-modal-large', 'lingotek-action')))),
@@ -1274,6 +1274,27 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $workflows = $api->listWorkflows();
 
   $types = _node_types_build()->types;
+
+  foreach ($table_data_raw as &$row) {
+    if ($row->language != $language->language) {
+      // Changing the target node ID in case it is a node translation.
+      $node_trans = db_select('node', 'n')
+          ->fields('n')
+          ->condition('tnid', $row->nid, '=')
+          ->execute()
+          ->fetchAllAssoc('language');
+      $target_nid = array_key_exists($language->language, $node_trans) ? $node_trans[$language->language]->nid : $row->nid;
+
+      // If there is a title in the native language, use that title, else use the source language.
+      $native_lang = db_select('field_revision_title_field', 'n')
+          ->fields('n')
+          ->condition('entity_id', $target_nid, '=')
+          ->condition('language', $language->language, '=')
+          ->execute()
+          ->fetchAssoc();
+      $row->title = $native_lang['title_field_value'] ? $native_lang['title_field_value'] : $row->title;
+    }
+  }
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
   foreach ($table_data_raw as $row) {
