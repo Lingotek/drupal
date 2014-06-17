@@ -1293,7 +1293,7 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
       if ($langcode != $source_langcode) {
         $et_params['source'] = $source_langcode;
       }
-      if (!empty($addtl_params['status_request'])) {
+      if (isset($addtl_params['status_request'])) {
         $et_params['status'] = $addtl_params['status_request'];
       }
       else {
