@@ -94,6 +94,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
  */
 function lingotek_notifications() {
 
+  drupal_page_is_cacheable(FALSE);
   LingotekLog::trace('Received <pre>@data</pre>', array('@data' => var_export($_GET, TRUE)), 'callback');
 
   $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;// uuid
