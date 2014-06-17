@@ -1224,7 +1224,11 @@ function lingotek_get_profiles() {
   return $profiles;
 }
 
-  function lingotek_get_profile_settings($profile_id) {
+function lingotek_set_profiles($profiles) {
+  variable_set('lingotek_profiles', $profiles);
+}
+
+function lingotek_get_profile_settings($profile_id) {
   // merge of global profile settings and profile-specific settings
   $profiles = lingotek_get_profiles();
   $global_profile = lingotek_get_global_profile();
@@ -1233,7 +1237,10 @@ function lingotek_get_profiles() {
 }
 
 function lingotek_set_profile_settings($profile_id, $settings) {
-  // reverse merge, saving the differences and stomping the rest
+  // Profiles need to know each of their settings, since each profile
+  // changes independently from all others.  There is no direct
+  // inheritance tree for profiles.  There is only inheritance for
+  // entities -> bundles.
   $global_profile = lingotek_get_global_profile();
   $profiles = lingotek_get_profiles();
   $differences = array_diff($settings, $global_profile);
@@ -1396,19 +1403,19 @@ function lingotek_entity_load($entities, $entity_type) {
     // Node profile inheritance heirarchy
     // Step 1: get global profile
     $entity->lingotek = $global_profile;
-    // Step 2: add default profiles
-    if (array_key_exists($bundle, $node_profile_defaults)) {
-      $entity->lingotek = array_merge($entity->lingotek, $node_profile_defaults[$bundle]);
-    }
-    // Step 3: add node-specific profile
+    // Step 2a: add entity-specific profile, if it exists
     if ($id && isset($values[$id]['profile']) && is_numeric($values[$id]['profile'])) {
       $entity->lingotek = array_merge($entity->lingotek, $profiles_list[$values[$id]['profile']]);
     }
-    // Step 4: add node-specific overrides
+    // Step 2b: otherwise, add bundle-specific profile
+    elseif (array_key_exists($bundle, $node_profile_defaults)) {
+      $entity->lingotek = array_merge($entity->lingotek, $node_profile_defaults[$bundle]);
+    }
+    // Step 3: add node-specific overrides
     if ($id && isset($values[$id])) {
       $entity->lingotek = array_merge($entity->lingotek, $values[$id]);
     }
-    // Step 5: if no profile, then disabled.
+    // Step 4: if no profile, then disabled.
     if (!isset($entity->lingotek['profile']) || !strlen($entity->lingotek['profile'])) {
       $entity->lingotek['profile'] = LingotekSync::PROFILE_DISABLED;
     }
