@@ -1275,7 +1275,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
   $types = _node_types_build()->types;
 
-  foreach ($table_data_raw as &$row) {
+  foreach ($table_data_raw as $key => $row) {
     if ($row->language != $language->language) {
       // Changing the target node ID in case it is a node translation.
       $node_trans = db_select('node', 'n')
@@ -1292,7 +1292,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
           ->condition('language', $language->language, '=')
           ->execute()
           ->fetchAssoc();
-      $row->title = $native_lang['title_field_value'] ? $native_lang['title_field_value'] : $row->title;
+      $table_data_raw[$key]->title = $native_lang['title_field_value'] ? $native_lang['title_field_value'] : $row->title;
     }
   }
 
