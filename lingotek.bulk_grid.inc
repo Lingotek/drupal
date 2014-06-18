@@ -1293,6 +1293,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
           ->execute()
           ->fetchAssoc();
       $table_data_raw[$key]->title = $native_lang['title_field_value'] ? $native_lang['title_field_value'] : $row->title;
+      $table_data_raw[$key]->nid = $native_lang['title_field_value'] ? $native_lang['entity_id'] : $row->nid;
     }
   }
 
