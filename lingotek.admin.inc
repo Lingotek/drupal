@@ -131,7 +131,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
 
   $form['translation_' . $entity_type][] = array(
     '#type' => 'item',
-    '#description' => filter_xss($links_str),
+    '#description' => $links_str,
   );
 
   $rows = array();
