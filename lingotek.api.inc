@@ -106,7 +106,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
       $path = path_load($conditions);
       if ($path !== FALSE) {
         $conditions['language'] = $drupal_language_code;
-        if ($path['alias'] != $target) {
+        if ($path['alias'] != $target || $entity->language != $drupal_language_code) {
           $original = path_load($conditions);
           $conditions['alias'] = $target;
           if ($original === FALSE) {
