@@ -1276,7 +1276,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $types = _node_types_build()->types;
 
   foreach ($table_data_raw as $key => $row) {
-    if ($row->language != $language->language) {
+    if ($row->language != $language->language && array_key_exists('nid', $row)) {
       // Changing the target node ID in case it is a node translation.
       $node_trans = db_select('node', 'n')
           ->fields('n')
