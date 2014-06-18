@@ -231,6 +231,12 @@ Drupal.behaviors.lingotekAdminForm = {
         return $(context).find('tbody tr').length + ' ' + Drupal.t('profiles')
       });
 
+      // change enable text to be accurate for translating field collections
+      $(function(){
+        $('#edit-translation-field-collection-item > .form-item > .description').children().first().remove();
+        $('#edit-translation-field-collection-item > .form-item > .description').children().first().text('(enable all)');
+      });
+
       /*
       // prefs summary
       $('fieldset#ltk-prefs', context).drupalSetSummary(function (context) {
