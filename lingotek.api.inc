@@ -106,7 +106,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
       $path = path_load($conditions);
       if ($path !== FALSE) {
         $conditions['language'] = $drupal_language_code;
-        if ($path['alias'] != $target) {
+        if ($path['alias'] != $target || $entity->language != $drupal_language_code) {
           $original = path_load($conditions);
           $conditions['alias'] = $target;
           if ($original === FALSE) {
@@ -197,6 +197,10 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
             }
             $db_field_name = $field['field_name'] . '_' . $array_key;
             $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
+            if ($db_field_name == 'title_field_value' && strlen($insert_array[$db_field_name]) > 254) {
+              $insert_array[$db_field_name] = substr($insert_array[$db_field_name], 0, 254);
+              LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => language_list('language')[$insert_array['language']]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($insert_array['language'])));
+            }
             if (array_key_exists($entity->language, $node_field)) {
               if (array_key_exists('format', $node_field[$entity->language][0])) {
                 $format_db_field_name = $field['field_name'] . '_format';
