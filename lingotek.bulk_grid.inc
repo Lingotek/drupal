@@ -1098,7 +1098,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   global $language;
   $localized_label_table = 'field_data_' . $label_col . '_field';
 
-  if ($label_col && language_default()->language != $language->language && db_table_exists($localized_label_table)) {
+  if ($label_col && db_table_exists($localized_label_table)) {
     $query->leftJoin('{' . $localized_label_table . '}', 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $language->language . '\'');
     $query->addField('t_title', $label_col . '_field_value', 'localized_title');
   }
@@ -1274,28 +1274,6 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $workflows = $api->listWorkflows();
 
   $types = _node_types_build()->types;
-
-  foreach ($table_data_raw as $key => $row) {
-    if ($row->language != $language->language && array_key_exists('nid', $row)) {
-      // Changing the target node ID in case it is a node translation.
-      $node_trans = db_select('node', 'n')
-          ->fields('n')
-          ->condition('tnid', $row->nid, '=')
-          ->execute()
-          ->fetchAllAssoc('language');
-      $target_nid = array_key_exists($language->language, $node_trans) ? $node_trans[$language->language]->nid : $row->nid;
-
-      // If there is a title in the native language, use that title, else use the source language.
-      $native_lang = db_select('field_revision_title_field', 'n')
-          ->fields('n')
-          ->condition('entity_id', $target_nid, '=')
-          ->condition('language', $language->language, '=')
-          ->execute()
-          ->fetchAssoc();
-      $table_data_raw[$key]->title = $native_lang['title_field_value'] ? $native_lang['title_field_value'] : $row->title;
-      $table_data_raw[$key]->nid = $native_lang['title_field_value'] ? $native_lang['entity_id'] : $row->nid;
-    }
-  }
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
   foreach ($table_data_raw as $row) {
