@@ -628,7 +628,6 @@ function lingotek_permission() {
  *   The ID of the form being altered.
  */
 function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
-
   if (!user_access('manage projects')) {
     return;
   }
@@ -1648,6 +1647,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   }
 
   $storage_method = $entity->lingotek['lingotek_nodes_translation_method'];
+  $node_based_translation = $entity_type == 'node' && $storage_method == 'node';
   $url_alias_translation = $entity->lingotek['url_alias_translation'];
 
   if ($entity_type == 'node' && $storage_method == 'node') { //node-based translations
@@ -1660,7 +1660,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     $storage_entity = $entity;
   }
 
-  lingotek_process_entity_xml($xml, $storage_entity, $entity_type, $drupal_language_code, $url_alias_translation);
+  lingotek_process_entity_xml($xml, $storage_entity, $entity_type, $drupal_language_code, $node_based_translation, $url_alias_translation);
 
   if ($entity_type == 'node') {
     //Fix for pathauto expecting the form:
@@ -2072,7 +2072,9 @@ function lingotek_field_language_alter(&$display_language, $context) {
     if ($is_field_collection) {
       continue;
     }
-    if (!isset($entity->{$field}[$display_language_code])) {
+    // Use the entity language if the field does not have an entry in the display
+    // language and if it is not a node-based source or translation.
+    if (!isset($entity->{$field}[$display_language_code]) && (empty($entity->tnid) || $entity->tnid === 0)) {
       $display_language[$field] = $entity->language;
     }
   }

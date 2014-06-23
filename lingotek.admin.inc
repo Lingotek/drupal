@@ -321,6 +321,8 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
   $entity_profiles = variable_get('lingotek_entity_profiles', array());
   $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
 
+  $field_based_translation = variable_get('lingotek_nodes_translation_method') == 'field' ? TRUE : FALSE;
+
   foreach ($form_state['input'] as $key => $value) {
     // Look for Selected Content Types and Fields.
     if (FALSE !== strpos($key, '_SEPERATOR_')) {
@@ -339,12 +341,14 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
           if ($currently_enabled_content_type == '0') {
             variable_set('language_content_type_' . $content_type, '1');
           }
-          // Set this field to 'translatable'.
-          // Update the field via the Field API (Instead of the direct db_update)
-          $field = field_info_field($content_field);
-          $is_field_collection = key_exists($content_field, $field_collection_field_types);
-          $field['translatable'] = $is_field_collection ? 0 : 1;
-          field_update_field($field);
+          // Set this field to 'translatable' if using field-based translation.
+          if ($field_based_translation) {
+            // Update the field via the Field API (Instead of the direct db_update)
+            $field = field_info_field($content_field);
+            $is_field_collection = key_exists($content_field, $field_collection_field_types);
+            $field['translatable'] = $is_field_collection ? 0 : 1;
+            field_update_field($field);
+          }
         }
       }
     } // END:  Selected Content Types and Fields
@@ -368,8 +372,9 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
             $enabled_fields[$entity_type][$content_type][] = $field_name;
             $field = field_info_field($field_name);
             $is_field_collection = key_exists($field_name, $field_collection_field_types);
-            $field['translatable'] = $is_field_collection ? 0 : 1;
-            $operations[] = array('field_update_field', array($field)); //field_update_field($field);
+            if ($field_based_translation && !$is_field_collection) {
+              $operations[] = array('field_update_field', array($field)); //field_update_field($field);
+            }
           }
         }
       }
@@ -1558,7 +1563,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $content_translation_note = '';
   if (!lingotek_node_based_trans_ready()) {
-    $content_translation_note = t("Note: Requires Content Translation module (translation) and Multilingual content module (i18n_node).");
+    $content_translation_note = t("This method requires Content Translation module (translation) and Multilingual content module (i18n_node).");
   }
   
   $form['defaults']['lingotek_nodes_translation_method'] = array(
@@ -1569,10 +1574,10 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       'node' => t('<strong>Node Translation</strong>  - create a new node per language'),
     ),
     'field' => array(
-      '#description' => t('A newer and recommended method. Newer versions of Drupal are expected to use this method.'),
+      '#description' => t('A newer and recommended method. Newer versions of Drupal are expected to use this method.  Note: If this method is selected, all fields chosen for Lingotek translation (below) will be marked as translatable in the Drupal field configuration.'),
     ),
     'node' => array(
-      '#description' => t('The classical method. Use for backwards compatibility. <i>@note</i>', array('@note' => $content_translation_note)),
+      '#description' => t('The classical method. Use for backwards compatibility.  Note: If this method is selected, fields chosen for Lingotek translation will *not* be marked as translatable in the Drupal field configuration.  Instead, translations will be saved as language-neutral, allowing the node to dictate the language.  This method will not work for translating other entity types, such as taxonomy terms and messages.  <i>@note</i>', array('@note' => $content_translation_note)),
     ),
 
     '#default_value' => isset($form_state['values']['lingotek_nodes_translation_method']) ? $form_state['values']['lingotek_nodes_translation_method'] : 'field',

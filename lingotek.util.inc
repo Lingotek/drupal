@@ -2037,3 +2037,10 @@ function lingotek_entity_langcode($entity_type, $entity) {
   $lang_key = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
   return !empty($entity->$lang_key) ? $entity->$lang_key : NULL;
 }
+
+function lingotek_get_source_node($node) {
+  if (!empty($node->tnid)) {
+    return lingotek_entity_load_single('node', $node->tnid);
+  }
+  return lingotek_entity_load_single('node', $node->nid);
+}
