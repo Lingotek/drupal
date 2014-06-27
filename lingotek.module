@@ -2463,3 +2463,17 @@ function lingotek_set_menu_link_language($link_id, $langcode) {
       ->condition('mlid', $link_id)
       ->execute();
 }
+
+/*
+ * Implements hook_node_type_insert().
+ *
+ * @param object $info
+ *   the node type object that is being created
+ *
+ * Defaults new content type's translation profile to be disabled
+ */
+function lingotek_node_type_insert($info) {
+  $profiles = variable_get('lingotek_entity_profiles');
+  $profiles['node'][$info->type] = 'DISABLED';
+  variable_set('lingotek_entity_profiles', $profiles);
+}
