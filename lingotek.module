@@ -2465,15 +2465,18 @@ function lingotek_set_menu_link_language($link_id, $langcode) {
 }
 
 /*
- * Implements hook_node_type_insert().
+ * Implements hook_field_attach_create_bundle().
  *
- * @param object $info
- *   the node type object that is being created
+ * @param string $entity_type
+ *   the name of the entity type of the bundle being created
  *
- * Defaults new content type's translation profile to be disabled
+ * @param string $bundle
+ *   the name of the bundle that is being created
+ *
+ * Defaults new bundle's translation profile to be disabled
  */
-function lingotek_node_type_insert($info) {
+function lingotek_field_attach_create_bundle($entity_type, $bundle) {
   $profiles = variable_get('lingotek_entity_profiles');
-  $profiles['node'][$info->type] = 'DISABLED';
+  $profiles[$entity_type][$bundle] = LingotekSync::PROFILE_DISABLED;
   variable_set('lingotek_entity_profiles', $profiles);
 }
