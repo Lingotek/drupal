@@ -1890,8 +1890,9 @@ function lingotek_get_fc_parent($entity) {
   }
 }
 
-function lingotek_get_host_language($entity, $read_only = TRUE) {
-  if (isset($entity->language)) {
+function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
+  // The language attribute for field collections will be empty.
+  if (!empty($entity->language)) {
     return $entity->language;
   }
 
@@ -1901,7 +1902,7 @@ function lingotek_get_host_language($entity, $read_only = TRUE) {
   if (!$read_only && isset($_POST['language'])) {
     return $_POST['language'];
   }
-  $host = lingotek_get_fc_parent($entity);
+  $host = (module_exists('field_collection') && $entity_type == 'field_collection_item' ? lingotek_get_fc_parent($entity) : NULL);
   if (!$host) {
     // unable to locate parent.  Abort.
     return $site_default_langcode;
@@ -1930,7 +1931,7 @@ function lingotek_get_host_language($entity, $read_only = TRUE) {
 
 function lingotek_normalize_special_field_language($entity_type, $entity, $read_only = TRUE) {
 
-  $host_language = lingotek_get_host_language($entity, $read_only);
+  $host_language = lingotek_get_host_language($entity_type, $entity, $read_only);
   $excluded_fields = field_read_fields(array('type' => 'field_collection'));
 
   foreach ($entity as $key => $value) { // for each field in the entity
