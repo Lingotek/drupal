@@ -275,19 +275,6 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
 
   if ($setup_complete) {
     $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => strtolower($entity_type_info['label'])));
-    if ($entity_type === 'node') {
-      $form['translation_node']['override'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Override one-off translations'),
-        '#description' => t('Checking this will apply the changed profiles to all nodes, even nodes that have previously been configured independent of the rest of their content type.'),
-        '#default_value' => 0,
-      );
-      $form['translation_node']['changed_profiles'] = array(
-        '#type' => 'hidden',
-        '#title' => t('The profiles that have been changed'),
-        '#default_value' => 10,
-      );
-    }
   }
 
   lingotek_admin_add_entity_specific_changes($form, $form_state, $entity_type);
@@ -368,10 +355,6 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
  */
 function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) {
 
-  $override_oneoffs = $form_state['input']['override'];
-
-  $changed_profiles = json_decode($form_state['input']['changed_profiles']);
-
   $entity_type = $form_state['input']['entity_type'];
 
   if (isset($form_state['values']['lingotek_nodes_translation_method'])) {
@@ -448,12 +431,6 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
       $content_type = substr($key, strlen('profile_'));
       $entity_profiles[$entity_type][$content_type] = $value;
       variable_set('lingotek_entity_profiles', $entity_profiles);
-      $this_changed = isset($changed_profiles->{$content_type});
-      if ($override_oneoffs && $this_changed) {
-        $delete_keys = "'hash', 'last_uploaded', 'node_sync_status', 'profile'";
-        $query = db_query("DELETE lem.* FROM node AS n JOIN lingotek_entity_metadata AS lem ON n.nid = lem.entity_id WHERE entity_key IN (" . $delete_keys . ") AND type = '" . $content_type . "'");
-        $query->execute();
-      }
     }
     // Look for any prepare/cleanup functions to record for future running
     if (FALSE !== strpos($key, 'lingotek_function')) {

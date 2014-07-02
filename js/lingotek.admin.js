@@ -121,8 +121,6 @@ Drupal.behaviors.lingotekAdminForm = {
       }
     });
 
-    var changed_profiles = {};
-
     //ensure that there is a vertical tab set
     if($('.vertical-tabs').length != 0) {
 
@@ -158,7 +156,6 @@ Drupal.behaviors.lingotekAdminForm = {
 
         var $entity_utility_options = $(this).find('.js-utility-options');
         var $entity_profile_selects = $(this).find('select');
-        var $entity_override = $(this).find('.form-item-override');
 
         function turn_on() {
           $entity_utility_options.find('input[type="checkbox"]').attr('checked', true);
@@ -168,15 +165,7 @@ Drupal.behaviors.lingotekAdminForm = {
           $entity_utility_options.find('input[type="checkbox"]').attr('checked', false);
           $entity_utility_options.hide();
         }
-        function hide_override() {
-          $('.form-item-override').hide();
-          $('.form-item-override').find('input[type="checkbox"]').attr('checked', false);
-        }
-        function show_override() {
-          $('.form-item-override').show();
-        }
         turn_off();// disable by default
-        hide_override();
 
         $entity_profile_selects.each(function() {
           var $ddl = $(this);
@@ -186,22 +175,6 @@ Drupal.behaviors.lingotekAdminForm = {
           var $ddl = $(this);
           var initial = $ddl.data('initial');
           var current = $ddl.val();
-          var name = this.name.substring(8);
-          if (initial != current) {
-            changed_profiles[name] = 1;
-          } else if (changed_profiles[name]) {
-            delete changed_profiles[name];
-          }
-
-          if(jQuery.isEmptyObject(changed_profiles)) {
-            hide_override();
-          } else {
-            show_override();
-          }
-
-          // store changed_profiles somewhere in HTML so PHP can pick it up
-          $("[name='changed_profiles']").val(JSON.stringify(changed_profiles));
-
           if (initial == 'DISABLED' && current != 'DISABLED') {
             turn_on();
           } else {
