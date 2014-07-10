@@ -1981,6 +1981,29 @@ function lingotek_is_node_translation($node = NULL) {
   return FALSE;
 }
 
+/**
+ * Return true if the node's profile is set to node-based translation,
+ * false otherwise.
+ *
+ * @param object $node
+ * @return True or False
+ */
+function lingotek_uses_node_translation($node = NULL) {
+
+  if (empty($node->lingotek['profile'])) {
+    return FALSE;
+  }
+
+  $profile_info = lingotek_get_profile_settings($node->lingotek['profile']);
+  if ($profile_info['lingotek_nodes_translation_method'] == 'node') {
+    return TRUE;
+  }
+
+  // Not using node-based translation.
+  return FALSE;
+}
+
+
 function lingotek_managed_entity($entity_type, $entity) {
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 

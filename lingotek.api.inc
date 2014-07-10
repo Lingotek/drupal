@@ -82,7 +82,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
 
   // Set $node_based if the entity type is a node, inherit otherwise.
   if ($entity_type == 'node') {
-    $node_based_translation = lingotek_is_node_translation($entity) ? TRUE : FALSE;
+    $node_based_translation = lingotek_uses_node_translation($entity) ? TRUE : FALSE;
   }
   // Must check for entity type and node-based translation, as the entity type
   // could be a field collection nested within a node-based node.
