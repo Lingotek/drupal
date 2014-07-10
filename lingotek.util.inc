@@ -710,63 +710,6 @@ function lingotek_translatable_field_details() {
 // --- Active and Target Language management Functions
 
 /**
- * Get the currently active languages for this Drupal installation.
- */
-function lingotek_get_active_languages($get_details = FALSE) {
-  $active_languages = current(language_list('enabled'));
-
-  if ($get_details === FALSE) {
-    $active_languages = array_keys($active_languages);
-  }
-  /*
-    Get_Details -> FALSE
-    array (
-    0 => 'en',
-    1 => 'es',
-    )
-
-    Get_Details -> TRUE
-    array (
-    'en' =>
-    stdClass::__set_state(array(
-    'language' => 'en',
-    'name' => 'English',
-    'native' => 'English',
-    'direction' => '0',
-    'enabled' => '1',
-    'plurals' => '0',
-    'formula' => '',
-    'domain' => '',
-    'prefix' => '',
-    'weight' => '0',
-    'javascript' => '',
-    )),
-   */
-
-  return $active_languages;
-}
-
-/**
- * Get numbered array with all node source languages
- */
-function lingotek_get_node_source_languages() {
-  $lingo_langs = array();
-  $query = db_select('{node}', 'n')->distinct()
-      ->fields('n', array('language'));
-  $query = $query->execute();
-  $result = $query->fetchCol(0);
-  foreach ($result as $lang) {
-    $lingo_lang = Lingotek::convertDrupal2Lingotek($lang);
-    if ($lingo_lang) {
-      $lingo_langs[$lingo_lang] = $lingo_lang;
-    }
-  }
-  return $lingo_langs;
-}
-
-// END:  lingotek_get_active_languages()
-
-/**
  * Flags a target language as active:FALSE in the Target Language tracking.
  */
 function lingotek_delete_target_language($lingotek_locale) {
