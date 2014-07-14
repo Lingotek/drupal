@@ -646,12 +646,13 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // 1. the form is in Add mode
   // 2. this is a node content type that we translate
   // 3. the language is one enabled for lingotek translation
+  // 4. Localizing target content is not allowed (a profile setting)
 
   if (!isset($form['nid']['#value'])) { // add mode (no node id set)
     $node = $form['#node'];
     $is_node_translation = lingotek_is_node_translation($node);
     lingotek_entity_load(array($node), 'node');
-    if (lingotek_supported_type($form['type']['#value']) && (!$is_node_translation || lingotek_enabled_langcode($node->language))) { // lingotek translated content type
+    if (lingotek_supported_type($form['type']['#value']) && (!$is_node_translation || (lingotek_enabled_langcode($node->language) && !$node->lingotek['allow_target_localization']))) { // lingotek translated content type
       $form['language']['#default_value'] = lingotek_get_source_language();
     }
   }
@@ -1183,11 +1184,14 @@ function lingotek_entity_save($entity, $entity_type) {
 function lingotek_get_language_override_form_submit($form, $form_state) {
   // Store the current language of the field data, if different from the stated node language.
   if (!empty($form_state['node']->nid)) {
+    $source_node = lingotek_get_source_node($form_state['node']);
+    $stated_language = Lingotek::convertDrupal2Lingotek($form_state['node']->language);
+    $metadata_key = 'source_language_' . $stated_language;
     if (!empty($form_state['values']['language_override'])) {
-      lingotek_keystore('node', $form_state['node']->nid, 'source_language', $form_state['values']['language_override']);
+      lingotek_keystore('node', $source_node->nid, $metadata_key, $form_state['values']['language_override']);
     }
     else {
-      lingotek_keystore_delete('node', $form_state['node']->nid, 'source_language');
+      lingotek_keystore_delete('node', $source_node->nid, $metadata_key);
     }
   }
 }
@@ -2187,7 +2191,8 @@ function lingotek_form_alter(&$form, &$form_state, $form_id) {
 
     // Protect node-based translations from being edited directly in Drupal.
     $source_nid = lingotek_is_node_translation($form_state['node']);
-    if (($source_nid) && lingotek_enabled_langcode($form_state['node']->language) && !$form_state['node']->lingotek['allow_target_localization']) {
+    $node = node_load($source_nid);
+    if ($source_nid && lingotek_enabled_langcode($node->language) && !$node->lingotek['allow_target_localization']) {
       $content_type = $form['type']['#value'];
       $lingotek_fields = variable_get('lingotek_enabled_fields');
       $enabled_fields = !empty($lingotek_fields['node'][$content_type]) ? $lingotek_fields['node'][$content_type] : NULL;
