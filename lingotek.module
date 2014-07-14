@@ -1030,6 +1030,20 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   );
 
   if ($show_advanced) {
+    // Target Localization
+    $form['lingotek']['allow_target_localization'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow Target Localization'),
+      '#description' => t('When enabled, localized target-language content can be created in Drupal and then uploaded for in-place translation.  Note: to prevent loss of the original localized content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
+      '#default_value' => $node->lingotek['allow_target_localization'],
+    );
+    // Source Overwriting
+    $form['lingotek']['allow_source_overwriting'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow Crowdsourced Translation'),
+      '#description' => t('When enabled, source content may be created initially in a language other than the one set in Drupal and then translated in place of the original source content (ie. no separate target content will be created).  Note: to prevent the loss of the source content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
+      '#default_value' => $node->lingotek['allow_source_overwriting'],
+    );
     // Community Translation
     $form['lingotek']['allow_community_translation'] = array(
       '#type' => 'checkbox',
@@ -1227,6 +1241,8 @@ function lingotek_get_global_profile() {
     'lingotek_nodes_translation_method' => variable_get('lingotek_nodes_translation_method'),
     'create_lingotek_document' => 0,
     'sync_method' => 0,
+    'allow_target_localization' => 0,
+    'allow_source_overwriting' => 0,
     'allow_community_translation' => 0,
     'url_alias_translation' => 0,
     'node_sync_status' => LingotekSync::STATUS_EDITED,
@@ -2213,6 +2229,8 @@ function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeab
       'name',
       'create_lingotek_document',
       'sync_method',
+      'allow_target_localization',
+      'allow_source_overwriting',
       'allow_community_translation',
       'url_alias_translation',
       'workflow_id',
