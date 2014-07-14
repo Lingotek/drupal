@@ -618,11 +618,11 @@ function lingotek_update_config_progress($document_ids) {
         $chunk = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
         switch ($error->status) {
           case 'IN_QUEUE':
-            $chunk->setMetadataValue('chunk_sync_status', LingotekSync::STATUS_PENDING);
+            $chunk->setMetadataValue('upload_status', LingotekSync::STATUS_PENDING);
             break;
           case 'NOT_FOUND':
           default:
-            $chunk->setMetadataValue('chunk_sync_status', LingotekSync::STATUS_FAILED);
+            $chunk->setMetadataValue('upload_status', LingotekSync::STATUS_FAILED);
             LingotekLog::error('Received unexpected error status (@status) from Lingotek for config chunk #@id: <pre>@error</pre>', array('@status' => $error->status, '@id' => $chunk, '@error' => $error));
         }
       }

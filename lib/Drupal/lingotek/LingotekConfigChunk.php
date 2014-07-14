@@ -537,7 +537,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * Set the chunk's status in the config metadata table
    */
   public function setStatus($status) {
-    $this->setMetadataValue('chunk_sync_status', $status);
+    $this->setMetadataValue('upload_status', $status);
     return $this;
   }
 
