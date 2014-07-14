@@ -688,6 +688,8 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     return;
   }
 
+  $form = array_merge($form, lingotek_get_language_override_form($form, $form_state, $node));
+
   $api = LingotekApi::instance();
 
   // show workflow-change option only if there are more than one workflow and if it's an existing node
@@ -820,6 +822,32 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
       '#suffix' => '</div>',
     );
   }
+}
+
+/**
+ * Display the Lingotek language-override form field
+ */
+function lingotek_get_language_override_form($form, &$form_state, $node = NULL) {
+  $locales = lingotek_get_target_locales(FALSE);
+  $lang_options = array();
+  foreach ($locales as $l => $v) {
+    $lang_options[$v->language] = $v->name;
+  }
+  unset($lang_options[$node->language]);
+  $form['language_override'] = array(
+    '#type' => 'select',
+    '#title' => t('Language Override'),
+    '#description' => t('Specify the language of the data currently contained in the fields if different from the language set for this node.'),
+    '#options' => $lang_options,
+    '#empty_option' => '(none)',
+  );
+  if (!empty($node->lingotek['source_language'])) {
+    $form['language_override']['#default_value'] = $node->lingotek['source_language'];
+  }
+
+  $form['actions']['submit']['#submit'][] = 'lingotek_get_language_override_form_submit';
+
+  return $form;
 }
 
 /**
@@ -1136,8 +1164,20 @@ function lingotek_entity_save($entity, $entity_type) {
   return $entity;
 }
 
+function lingotek_get_language_override_form_submit($form, $form_state) {
+  // Store the current language of the field data, if different from the stated node language.
+  if (!empty($form_state['node']->nid)) {
+    if (!empty($form_state['values']['language_override'])) {
+      lingotek_keystore('node', $form_state['node']->nid, 'source_language', $form_state['values']['language_override']);
+    }
+    else {
+      lingotek_keystore_delete('node', $form_state['node']->nid, 'source_language');
+    }
+  }
+}
+
 function lingotek_get_node_settings_form_submit($form, $form_state) {
-  if (isset($form_state['nids']) && !empty($form_state['nids'])) {
+  if (!empty($form_state['nids'])) {
     $nids = $form_state['nids'];
 
     $entity_type = $form_state['entity_type'];
@@ -1153,7 +1193,7 @@ function lingotek_get_node_settings_form_submit($form, $form_state) {
 }
 
 function lingotek_get_change_workflow_form_submit($form, $form_state) {
-  if (isset($form_state['nids']) && !empty($form_state['nids'])) {
+  if (!empty($form_state['nids'])) {
     $nids = $form_state['nids'];
     $workflow_id = $form_state['values']['lingotek']['workflow_id'];
     if (isset($form_state['values']['lingotek']['prefill_phases_checkbox']) && $form_state['values']['lingotek']['prefill_phases_checkbox']) {
