@@ -844,7 +844,8 @@ function lingotek_get_language_override_form($form, &$form_state, $node = NULL) 
     '#options' => $lang_options,
     '#empty_option' => '(none)',
   );
-  if (!empty($node->lingotek['source_language'])) {
+  $language_override = 'source_language_' . Lingotek::convertDrupal2Lingotek($formstate['values']['language']);
+  if (!empty($node->lingotek[$language_override])) {
     $form['language_override']['#default_value'] = $node->lingotek['source_language'];
   }
 
