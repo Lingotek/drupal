@@ -514,11 +514,11 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
         list($entity_id, $entity_type) = LingotekSync::getEntityIdFromDocId($doc_id, $entity_type);
         switch ($error->status) {
           case 'IN_QUEUE':
-            lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_PENDING);
+            lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_PENDING);
             break;
           case 'NOT_FOUND':
           default:
-            lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_FAILED);
+            lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_FAILED);
             lingotek_keystore($entity_type, $entity_id, 'last_sync_error', substr($error, 0, 255));
             LingotekLog::error('Received unexpected error status (@status) from Lingotek for @entity_type #@id: <pre>@error</pre>', array('@status' => $error->status, '@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
         }
@@ -552,9 +552,9 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
         }
       }
       // update source status when necessary
-      $entity_source_status = lingotek_keystore($entity_type, $entity_id, 'node_sync_status');
+      $entity_source_status = lingotek_keystore($entity_type, $entity_id, 'upload_status');
       if ($entity_source_status == LingotekSync::STATUS_FAILED || $entity_source_status == LingotekSync::STATUS_PENDING) {
-        lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+        lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_CURRENT);
       }
     }
 

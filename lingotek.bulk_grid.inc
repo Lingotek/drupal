@@ -1109,8 +1109,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $query->addField('lingo_document_id', 'value', 'document_id');
 
   // Entity Upload Status
-  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
-  //$query->leftJoin('{lingotek_entity_metadata}', 'lingo_upload_status', 'lingo_upload_status.nid = ' . $eid . ' and lingo_upload_status.entity_key = \'node_sync_status\'');
+  $query->leftJoin('{lingotek_entity_metadata}', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'upload_status\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
+  //$query->leftJoin('{lingotek_entity_metadata}', 'lingo_upload_status', 'lingo_upload_status.nid = ' . $eid . ' and lingo_upload_status.entity_key = \'upload_status\'');
   //$query->condition('lingo_upload_status.value', LingotekSync::STATUS_TARGET, '<>');
   $query->addField('lingo_upload_status', 'value', 'upload_status');
 
@@ -1758,7 +1758,7 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
     }
   }
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'document_id');
-  lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'node_sync_status');
+  lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'upload_status');
   foreach ($entity_ids as $entity_id) {
     LingotekSync::setAllTargetStatus($entity_type, $entity_id, LingotekSync::STATUS_UNTRACKED);
   }

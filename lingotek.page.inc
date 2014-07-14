@@ -315,7 +315,7 @@ function lingotek_pm($node) {
     ),
   );
   
-  $sync_status = $node->lingotek['node_sync_status'];
+  $sync_status = $node->lingotek['upload_status'];
 
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
@@ -335,7 +335,7 @@ function lingotek_pm($node) {
 
   if (lingotek_supported_node($node) && Lingotek::isSupportedLanguage($node->language)) {
 
-    if (($node->lingotek['node_sync_status'] == LingotekSync::STATUS_EDITED)) {
+    if (($node->lingotek['upload_status'] == LingotekSync::STATUS_EDITED)) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);
       $output['content_push'] = array(
         '#markup' => drupal_render($content_push_form),

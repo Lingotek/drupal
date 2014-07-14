@@ -73,7 +73,7 @@ class LingotekSync {
   }
 
   public static function setNodeStatus($node_id, $status) {
-    return lingotek_keystore('node', $node_id, 'node_sync_status', $status);
+    return lingotek_keystore('node', $node_id, 'upload_status', $status);
   }
 
   public static function getSyncProjects() {
@@ -654,7 +654,7 @@ class LingotekSync {
     $query->condition('entity_type', 'node');
     $query->addField('l', 'entity_id', 'nid');
     if($source) {
-      $query->condition('entity_key', 'node_sync_status');
+      $query->condition('entity_key', 'upload_status');
     } else {
       $query->condition('entity_key', 'target_sync_status_%', 'LIKE');
     }
@@ -669,14 +669,14 @@ class LingotekSync {
 //    $query = db_select('{lingotek_entity_metadata}', 'l')
 //      ->distinct()
 //      ->condition('entity_type', $entity_type)
-//      ->condition('entity_key', 'node_sync_status')
+//      ->condition('entity_key', 'upload_status')
 //      ->condition('value', LingotekSync::STATUS_EDITED);
 //    $query->addField('l', 'entity_id');
     $info = entity_get_info($entity_type);
     $id_key = $info['entity keys']['id'];
     $query = db_select('{' . $info['base table'] . '}', 'base');
     $query->addField('base', $id_key);
-    $query->leftJoin('{lingotek_entity_metadata}', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
+    $query->leftJoin('{lingotek_entity_metadata}', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'upload_status\'');
 
     if ($entity_type == 'node') {
       // Exclude any target nodes created using node-based translation.

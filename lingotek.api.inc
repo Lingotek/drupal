@@ -66,7 +66,7 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     }
         
     node_save($localized_node);
-    lingotek_keystore('node', $localized_node->nid, 'node_sync_status', 'TARGET');
+    lingotek_keystore('node', $localized_node->nid, 'upload_status', 'TARGET');
     // Child node should keep its parent node's profile, for rules integration.
     $parent_profile = lingotek_keystore('node', $node->nid, 'profile');
     if ($parent_profile !== FALSE) {

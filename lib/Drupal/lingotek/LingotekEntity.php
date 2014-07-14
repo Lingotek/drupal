@@ -344,7 +344,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
 
   public function setStatus($status) {
-    $this->setMetadataValue('node_sync_status', $status);
+    $this->setMetadataValue('upload_status', $status);
     return $this;
   }
 

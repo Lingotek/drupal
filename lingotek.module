@@ -985,9 +985,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#value' => $node->lingotek['document_id'],
   );
 
-  $form['lingotek']['node_sync_status'] = array(
+  $form['lingotek']['upload_status'] = array(
     '#type' => 'value',
-    '#value' => $node->lingotek['node_sync_status'],
+    '#value' => $node->lingotek['upload_status'],
   );
 
   $form['lingotek']['content_begin'] = array(
@@ -1163,7 +1163,7 @@ function lingotek_entity_save($entity, $entity_type) {
       if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_UNTRACKED);
       }
-      elseif ($entity->lingotek['node_sync_status'] != LingotekSync::STATUS_TARGET) {
+      elseif ($entity->lingotek['upload_status'] != LingotekSync::STATUS_TARGET) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
       }
     }
@@ -1251,7 +1251,7 @@ function lingotek_get_global_profile() {
     'allow_source_overwriting' => 0,
     'allow_community_translation' => 0,
     'url_alias_translation' => 0,
-    'node_sync_status' => LingotekSync::STATUS_EDITED,
+    'upload_status' => LingotekSync::STATUS_EDITED,
     'project_id' => variable_get('lingotek_project'),
     'workflow_id' => variable_get('lingotek_workflow'),
     'vault_id' => variable_get('lingotek_vault'),
@@ -1356,7 +1356,7 @@ function lingotek_node_view($node, $view_mode) {
 
   $can_translate = user_access('translation') && ($node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED);
   $uploaded_to_lingotek = (isset($node->lingotek['document_id']) && !empty($node->lingotek['document_id']));
-  $is_target = $node->lingotek['node_sync_status'] == 'TARGET';
+  $is_target = $node->lingotek['upload_status'] == 'TARGET';
 
   $source_id = $is_target ? $node->tnid : $node->nid;
 
@@ -1531,7 +1531,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
     return;
   }
 
-  if (isset($entity->lingotek['node_sync_status']) && ($entity->lingotek['node_sync_status'] == LingotekSync::STATUS_TARGET)) {
+  if (isset($entity->lingotek['upload_status']) && ($entity->lingotek['upload_status'] == LingotekSync::STATUS_TARGET)) {
     return;
   }
 
@@ -1539,11 +1539,11 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
     return;
   }
 
-  if (!$changed && $entity->lingotek['node_sync_status'] == 'CURRENT') {
+  if (!$changed && $entity->lingotek['upload_status'] == 'CURRENT') {
     return; //entity has no changes.
   }
 
-  lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_EDITED);
+  lingotek_keystore($entity_type, $id, 'upload_status', LingotekSync::STATUS_EDITED);
 
   if ($entity->lingotek['create_lingotek_document']) {
     lingotek_entity_upload($entity, $entity_type, $context);
@@ -1593,7 +1593,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if ($empty_context) {
     if ($success) {
       drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
-      lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+      lingotek_keystore($entity_type, $id, 'upload_status', LingotekSync::STATUS_CURRENT);
     }
     else {
       drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $ln->getTitle())), 'error');
@@ -1606,7 +1606,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
         $context['results']['uploaded_nids'] = array();
       }
       $context['results']['uploaded_nids'][] = $id;
-      lingotek_keystore($entity_type, $id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+      lingotek_keystore($entity_type, $id, 'upload_status', LingotekSync::STATUS_CURRENT);
     }
     else {
       $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
@@ -2608,7 +2608,7 @@ function lingotek_clear_exceptions_form($form, $form_state) {
 
 function lingotek_clear_exceptions_form_submit($form_state, $form) {
   $content_type = $form_state['bundle_name']['#value'];
-  $delete_keys = "'hash', 'last_uploaded', 'node_sync_status', 'profile'";
+  $delete_keys = "'hash', 'last_uploaded', 'upload_status', 'profile'";
   $query = db_query("DELETE lem.* FROM node AS n JOIN lingotek_entity_metadata AS lem ON n.nid = lem.entity_id WHERE entity_key IN (" . $delete_keys . ") AND type = '" . $content_type . "'");
   $query->execute();
   drupal_set_message(t('All translation profile exceptions for ' . $content_type . ' have been removed.'));

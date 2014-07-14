@@ -29,9 +29,9 @@ function lingotek_json_output_cors($var = NULL, $status = "200", $params = array
  * Example usage (GET):
  *    lingotek_keystore($entity_type, 'all') - returns all entities and properties
  *    lingotek_keystore($entity_type, 5) - returns all properties for the specified Entity ID (i.e., 5)
- *    lingotek_keystore($entity_type, 5,'node_sync_status') - returns the value for the specified property (i.e., node_sync_status) for the specified Entity ID (i.e., 5)
+ *    lingotek_keystore($entity_type, 5,'upload_status') - returns the value for the specified property (i.e., upload_status) for the specified Entity ID (i.e., 5)
  * Example usage (SET):
- *     lingotek_keystore($entity_type, 5,'node_sync_status','CURRENT') - sets the value to 'CURRENT' for the property 'node_sync_status' of Entity 5 of type $entity_type
+ *     lingotek_keystore($entity_type, 5,'upload_status','CURRENT') - sets the value to 'CURRENT' for the property 'upload_status' of Entity 5 of type $entity_type
  *
  * @param $nid
  *  Entity ID.
