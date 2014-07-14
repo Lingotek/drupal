@@ -844,8 +844,9 @@ function lingotek_get_language_override_form($form, &$form_state, $node = NULL) 
     '#options' => $lang_options,
     '#empty_option' => '(none)',
   );
-  $language_override = 'source_language_' . Lingotek::convertDrupal2Lingotek($formstate['values']['language']);
-  if (!empty($node->lingotek[$language_override])) {
+  global $language;
+  $language_override = !empty($form_state['values']['language']) ? 'source_language_' . Lingotek::convertDrupal2Lingotek($form_state['values']['language']) : NULL;
+  if ($language_override && !empty($node->lingotek[$language_override])) {
     $form['language_override']['#default_value'] = $node->lingotek['source_language'];
   }
 
@@ -1158,14 +1159,23 @@ function lingotek_entity_save($entity, $entity_type) {
     else {
       lingotek_keystore_delete($entity_type, $id, 'profile');
     }
+
     // If the hash changed, handle target statuses
     $entity_changed = lingotek_entity_changed($entity_type, $entity, $id);
     if ($entity_changed) {
       if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_UNTRACKED);
       }
-      elseif ($entity->lingotek['upload_status'] != LingotekSync::STATUS_TARGET) {
-        LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
+      else {
+        // if this is a node-based translation target and target localization is enabled, set to TARGET_EDITED
+        // TODO: 
+
+        // if this is a source node and target localization is enabled, set all targets to TARGET_LOCALIZE
+        // TODO:
+        
+        if ($entity->lingotek['upload_status'] != LingotekSync::STATUS_TARGET) {
+          LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
+        }
       }
     }
   }

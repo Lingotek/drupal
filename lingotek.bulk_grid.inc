@@ -1094,6 +1094,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='".LingotekSync::STATUS_UNTRACKED."')", 't_untracked');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='".LingotekSync::STATUS_TARGET_LOCALIZE."')", 't_target_localize');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='".LingotekSync::STATUS_TARGET_EDITED."')", 't_target_edited');
+  $query->addExpression("(SELECT GROUP_CONCAT(CONCAT(SUBSTRING(entity_key, 17, 10), ':' , value)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'source_language_%')", 'lang_override');
 
   $filters = isset($_SESSION['grid_filters']) ? $_SESSION['grid_filters'] : array();
 
@@ -1332,8 +1333,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     array_multisort($locales, SORT_ASC, $statuses);
 
     $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
+    $allow_source_overwriting = !empty($profiles[$row->lingotek['profile']]['allow_source_overwriting']);
+    $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
 
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $row->language); // show translation statuses
+    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
 
     $configuration = '';
 
@@ -1369,7 +1372,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
     $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
     if ($language_col) {
-      $source .= ($row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name));
+      $source .= lingotek_get_upload_string($row, $languages);
     }
     $source .= '</span>';
     $linked_statuses = array(LingotekSync::STATUS_EDITED, LingotekSync::STATUS_FAILED);
@@ -1449,7 +1452,7 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
   return $url_only ? url($edit_link, array('query' => $query)) : l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $edit_link, array('html' => TRUE, 'attributes' => array('target' => '_blank'), 'query' => $query));
 }
 
-function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL) {
+function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE) {
   $html = "";
 
   $legend = array(
@@ -1483,7 +1486,7 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
       $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled; //array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
       $lang_code = $lingotek_languages[$original_locale]->language;
       $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
-      if (!is_null($source_language) && $lang_code === $source_language) {
+      if (!$allow_source_overwriting && !is_null($source_language) && $lang_code === $source_language) {
         continue; // hide source language targets (shouldn't exist anyways)
       }
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
@@ -1768,4 +1771,30 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
   }
 
   drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity.', 'Translations disassociated for @count entities.'));
+}
+
+/**
+ * Display the overridden language, if any
+ */
+function lingotek_get_upload_string($row, $languages) {
+  if (!empty($row->lang_override)) {
+    $overrides = explode(',', $row->lang_override);
+    $override_map = array();
+    foreach ($overrides as $o) {
+      list($k, $v) = explode(':', $o);
+      $override_map[$k] = $v;
+    }
+    $drupal_source_locale = Lingotek::convertDrupal2Lingotek($row->language);
+    $actual_source_lang = !empty($override_map[$drupal_source_locale]) ? $override_map[$drupal_source_locale] : NULL;
+    if (empty($actual_source_lang)) {
+      $response = t($languages[$row->language]->name);
+    }
+    else {
+      $response = '<span title="Marked for Drupal as ' . $languages[$row->language]->name . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
+    }
+  }
+  else {
+    $response = $row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name);
+  }
+  return $response;
 }
