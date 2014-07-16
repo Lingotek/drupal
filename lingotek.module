@@ -1630,7 +1630,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   
   lingotek_keystore($entity_type, $id, 'last_uploaded', time());
   
-  $source = isset($entity->language) ? $entity->language : language_default()->language;
+  $source = isset($ln->language) ? $ln->language : language_default()->language;
   $source = Lingotek::convertDrupal2Lingotek($source);
   $languages = Lingotek::getLanguagesWithoutSource($source);
 
@@ -1684,7 +1684,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     return FALSE;
   }
 
-  if ($entity->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
+  if ($entity->language == Lingotek::convertLingotek2Drupal($lingotek_locale) && empty($entity->lingotek['allow_source_overwriting'])) {
     return FALSE;
   }
 
