@@ -1757,7 +1757,7 @@ function lingotek_batch_identify_translations($process_batch = FALSE) {
     $entity_ids = lingotek_list_nodes_translated_in_language($langcode);
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
     foreach ($entity_ids as $entity_id) {
-      $operations[] = array('lingotek_batch_keystore_worker', array($entity_type, $entity_id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT, FALSE));
+      $operations[] = array('lingotek_batch_keystore_worker', array($entity_type, $entity_id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_UNTRACKED, FALSE));
     }
   }
 
