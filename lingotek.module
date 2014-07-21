@@ -1314,6 +1314,14 @@ function lingotek_node_presave($node) {
       $node->title = $node->title_field[$node->language][0]['value'];
     }
   }
+
+  // Setting node menu language to neutral, so that it can be localized.
+  if (isset($node->menu)) {
+    $link = $node->menu;
+    if (lingotek_translate_menu_link($link)) {
+      $node->menu['language'] = LANGUAGE_NONE;
+    }
+  }
 }
 
 /**
