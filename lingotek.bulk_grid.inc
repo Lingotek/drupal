@@ -1790,7 +1790,9 @@ function lingotek_get_upload_string($row, $languages) {
       $response = t($languages[$row->language]->name);
     }
     else {
-      $response = '<span title="Marked for Drupal as ' . $languages[$row->language]->name . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
+      $marked_language = t($languages[$row->language]->name);
+      $actual_language = t($languages[$actual_source_lang]->name);
+      $response = '<span title="' . t('Language Override: This source content is marked as @marked_language in Drupal but is written in @actual_language.', array('@marked_language' => $marked_language, '@actual_language' => $actual_language)) . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
     }
   }
   else {
