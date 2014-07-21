@@ -665,8 +665,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   global $language;
   $drupal_language_code = $language->language;
+  $ln = LingotekEntity::load($node, 'node');
 
-  if ($drupal_language_code != $node->language && lingotek_node_pushed($node) && !$is_node_translation) {
+  if ($drupal_language_code != $ln->language && lingotek_node_pushed($node) && !$is_node_translation) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
     LingotekSync::setTargetStatus('node', $node->nid, $lingotek_locale, LingotekSync::STATUS_PENDING); //set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native', $lingotek_locale) . " (" . $drupal_language_code . ")";
@@ -842,7 +843,7 @@ function lingotek_get_language_override_form($form, &$form_state, $node = NULL) 
     '#title' => t('Language Override'),
     '#description' => t('Specify the language of the data currently contained in the fields if different from the language set for this node.'),
     '#options' => $lang_options,
-    '#empty_option' => '(none)',
+    '#empty_option' => t('(same)'),
   );
   global $language;
   $language_override = !empty($form_state['values']['language']) ? 'source_language_' . Lingotek::convertDrupal2Lingotek($form_state['values']['language']) : NULL;
