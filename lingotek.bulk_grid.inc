@@ -1485,6 +1485,11 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     if (key_exists($original_locale, $lingotek_languages)) {
       $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled; //array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
       $lang_code = $lingotek_languages[$original_locale]->language;
+
+       if (!is_null($source_language) && $lang_code === $source_language) {
+         continue; // hide source language targets (shouldn't exist anyways)
+       }
+
       $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
       if (!$allow_source_overwriting && !is_null($source_language) && $lang_code === $source_language) {
         continue; // hide source language targets (shouldn't exist anyways)
