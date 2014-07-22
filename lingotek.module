@@ -2503,11 +2503,8 @@ function lingotek_clear_exceptions_modal($bundle_name) {
   ctools_include('modal');
   ctools_include('ajax');
 
-  $entity_ids = !is_array($entity_ids) ? explode(',', $entity_ids) : $entity_ids;
-
   $form_state = array(
     'ajax' => TRUE,
-    'entity_ids' => $entity_ids,
     'entity_type' => 'node',
     'bundle_name' => $bundle_name,
   );
