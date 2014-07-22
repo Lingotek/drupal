@@ -845,10 +845,13 @@ function lingotek_get_language_override_form($form, &$form_state, $node = NULL) 
     '#options' => $lang_options,
     '#empty_option' => t('(same)'),
   );
-  global $language;
-  $language_override = !empty($form_state['values']['language']) ? 'source_language_' . Lingotek::convertDrupal2Lingotek($form_state['values']['language']) : NULL;
+  $source_language = !empty($form_state['values']['language']) ? $form_state['values']['language'] : NULL;
+  if (!$source_language) {
+    $source_language = !empty($form_state['node']->language) ? $form_state['node']->language : NULL;
+  }
+  $language_override = !empty($source_language) ? 'source_language_' . Lingotek::convertDrupal2Lingotek($source_language) : NULL;
   if ($language_override && !empty($node->lingotek[$language_override])) {
-    $form['language_override']['#default_value'] = $node->lingotek['source_language'];
+    $form['language_override']['#default_value'] = $node->lingotek[$language_override];
   }
 
   $form['actions']['submit']['#submit'][] = 'lingotek_get_language_override_form_submit';
@@ -1198,12 +1201,13 @@ function lingotek_get_language_override_form_submit($form, $form_state) {
   if (!empty($form_state['node']->nid)) {
     $source_node = lingotek_get_source_node($form_state['node']);
     $stated_language = Lingotek::convertDrupal2Lingotek($form_state['node']->language);
-    $metadata_key = 'source_language_' . $stated_language;
+    $source_lang_metadata_key = 'source_language_' . $stated_language;
     if (!empty($form_state['values']['language_override'])) {
-      lingotek_keystore('node', $source_node->nid, $metadata_key, $form_state['values']['language_override']);
+      lingotek_keystore('node', $source_node->nid, $source_lang_metadata_key, $form_state['values']['language_override']);
+      lingotek_keystore('node', $source_node->nid, $source_lang_metadata_key, $form_state['values']['language_override']);
     }
     else {
-      lingotek_keystore_delete('node', $source_node->nid, $metadata_key);
+      lingotek_keystore_delete('node', $source_node->nid, $source_lang_metadata_key);
     }
   }
 }
@@ -1600,6 +1604,9 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   }
   else {
     $success = LingotekApi::instance()->addContentDocument($ln, TRUE);
+    if (!empty($ln->lingotek['allow_source_overwriting'])) {
+      lingotek_keystore($entity_type, $id, 'original_language', $ln->language);
+    }
   }
 
   if ($empty_context) {
@@ -1734,7 +1741,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   $url_alias_translation = $entity->lingotek['url_alias_translation'];
 
   if ($entity_type == 'node' && $storage_method == 'node') { //node-based translations
-    $storage_entity = lingotek_get_translated_node($entity, $drupal_language_code);
+    $storage_entity = lingotek_get_target_node($entity, $drupal_language_code);
   }
   else {
     if (module_exists('entity_translation') && ($entity_type != 'node' || $storage_method == 'field')) {
