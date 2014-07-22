@@ -1127,8 +1127,15 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $query->leftJoin('{lingotek_entity_metadata}', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
   $query->addField('lingo_last_sync_error', 'value', 'last_sync_error');
 
+  // Any specifically defined workflow
   $query->leftJoin('{lingotek_entity_metadata}', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
   $query->addField('lingo_workflow', 'value', 'workflow');
+
+  // Original source language of the entity, in case of source overwriting option
+  if ($entity_type == 'node') {
+    $query->leftJoin('{lingotek_entity_metadata}', 'lingo_orig_lang', $eid . ' = lingo_orig_lang.entity_id and lingo_orig_lang.entity_type =\'' . $entity_type . '\' and lingo_orig_lang.entity_key = \'original_language\'');
+    $query->addField('lingo_orig_lang', 'value', 'original_lang');
+  }
 
   if (isset($filters['search_type']) && $filters['search_type'] == 'all') {
     $filters['title'] = $filters['body'] = $filters['search'];
@@ -1336,7 +1343,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     $allow_source_overwriting = !empty($profiles[$row->lingotek['profile']]['allow_source_overwriting']);
     $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
 
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
+    $source_language = lingotek_row_source_language($row);
+    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $source_language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
 
     $configuration = '';
 
@@ -1779,9 +1787,31 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
 }
 
 /**
- * Display the overridden language, if any
+ * Display the language string (including overridden language, if any)
  */
 function lingotek_get_upload_string($row, $languages) {
+  $actual_source_lang = lingotek_row_source_language($row);
+  $lang_overridden = !empty($row->lang_override) ? TRUE : FALSE;
+  $marked_language = !empty($languages[$row->language]->name) ? t($languages[$row->language]->name) : t('Unnamed (@language_code)', array('@language_code' => $row->language));
+  $actual_language = !empty($languages[$actual_source_lang]->name) ? t($languages[$actual_source_lang]->name) : t('Unnamed (@language_code)', array('@language_code' => $actual_source_lang));
+  if ($actual_source_lang != $row->language) {
+    $response = '<span title="' . t('Language Override: This source content is marked as @marked_language in Drupal but is written in @actual_language.', array('@marked_language' => $marked_language, '@actual_language' => $actual_language)) . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
+  }
+  elseif ($lang_overridden) {
+    // Overridden language now matches language set in Drupal
+    $original_language = !empty($languages[$row->original_lang]->name) ? t($languages[$row->original_lang]->name) : t('Unnamed (@language_code)', array('@language_code' => $row->original_lang));
+    $response = '<span title="' . t('Language Override: This source content was uploaded as @original_language to Lingotek but is now @marked_language. Re-uploading this in its current state may corrupt the translation for this document.', array('@marked_language' => $marked_language, '@original_language' => $original_language)) . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
+  }
+  else {
+    $response = $row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name);
+  }
+  return $response;
+}
+
+/**
+ * Return source language code to be used by Lingotek
+ */
+function lingotek_row_source_language($row) {
   if (!empty($row->lang_override)) {
     $overrides = explode(',', $row->lang_override);
     $override_map = array();
@@ -1790,18 +1820,10 @@ function lingotek_get_upload_string($row, $languages) {
       $override_map[$k] = $v;
     }
     $drupal_source_locale = Lingotek::convertDrupal2Lingotek($row->language);
-    $actual_source_lang = !empty($override_map[$drupal_source_locale]) ? $override_map[$drupal_source_locale] : NULL;
-    if (empty($actual_source_lang)) {
-      $response = t($languages[$row->language]->name);
-    }
-    else {
-      $marked_language = t($languages[$row->language]->name);
-      $actual_language = t($languages[$actual_source_lang]->name);
-      $response = '<span title="' . t('Language Override: This source content is marked as @marked_language in Drupal but is written in @actual_language.', array('@marked_language' => $marked_language, '@actual_language' => $actual_language)) . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
+    $overridden_source_lang = !empty($override_map[$drupal_source_locale]) ? $override_map[$drupal_source_locale] : NULL;
+    if (!empty($overridden_source_lang)) {
+      return $overridden_source_lang;
     }
   }
-  else {
-    $response = $row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name);
-  }
-  return $response;
+  return $row->language;
 }
