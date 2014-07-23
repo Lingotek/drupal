@@ -667,7 +667,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   if ($drupal_language_code != $node->language && lingotek_node_pushed($node) && !$is_node_translation && lingotek_enabled_langcode($drupal_language_code)) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
-    LingotekSync::setTargetStatus('node', $node->nid, $lingotek_locale, LingotekSync::STATUS_PENDING); //set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native', $lingotek_locale) . " (" . $drupal_language_code . ")";
     if ($node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
       $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
