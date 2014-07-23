@@ -204,10 +204,18 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     );
 
     if ($entity_type == 'node') {
+      $target_ids = db_select('lingotek_entity_metadata', 'lem')
+          ->fields('lem', array('entity_id'))
+          ->condition('entity_key', 'node_sync_status')
+          ->condition('entity_type', 'node')
+          ->condition('value', 'TARGET')
+          ->execute()
+          ->fetchCol();
       $query = db_select('lingotek_entity_metadata', 'lem')
           ->fields('lem')
           ->condition('lem.entity_key', 'profile')
-          ->condition('lem.entity_type', 'node');
+          ->condition('lem.entity_type', 'node')
+          ->condition('lem.entity_id', $target_ids, 'NOT IN');
 
       $query->join('node', 'n', 'lem.entity_id = n.nid AND n.type = \'' . $bundle_name . '\'');
 
