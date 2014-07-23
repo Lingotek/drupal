@@ -642,6 +642,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   }
   $show_advanced = LingotekAccount::instance()->showAdvanced();
 
+  global $language;
+  $drupal_language_code = $language->language;
+
   // On node create, set the language select box to our source language, if the following are true:
   // 1. the form is in Add mode
   // 2. this is a node content type that we translate
@@ -662,10 +665,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     $is_node_translation = lingotek_is_node_translation($node);
   }
 
-  global $language;
-  $drupal_language_code = $language->language;
-
-  if ($drupal_language_code != $node->language && lingotek_node_pushed($node) && !$is_node_translation) {
+  if ($drupal_language_code != $node->language && lingotek_node_pushed($node) && !$is_node_translation && lingotek_enabled_langcode($drupal_language_code)) {
     $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
     LingotekSync::setTargetStatus('node', $node->nid, $lingotek_locale, LingotekSync::STATUS_PENDING); //set to pending so any changes will be downloaded on next sync
     $language_text = lingotek_language_field_lookup('native', $lingotek_locale) . " (" . $drupal_language_code . ")";
