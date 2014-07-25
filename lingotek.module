@@ -2136,7 +2136,11 @@ function lingotek_form_alter(&$form, &$form_state, $form_id) {
 
     // Protect node-based translations from being edited directly in Drupal.
     $source_nid = lingotek_is_node_translation($form_state['node']);
-    if (($source_nid) && lingotek_enabled_langcode($form_state['node']->language)) {
+    $source_node = $source_nid ? lingotek_entity_load_single('node', $source_nid) : $form_state['node'];
+
+    // If a node-based translation is attempted directly on the site and the source node is managed by Lingotek
+    // and the target language is also managed by Lingotek, then gray out fields enabled for Lingotek translation
+    if (($source_nid) && lingotek_enabled_langcode($form_state['node']->language) && lingotek_managed_entity('node', $source_node)) {
       $content_type = $form['type']['#value'];
       $lingotek_fields = variable_get('lingotek_enabled_fields');
       $enabled_fields = !empty($lingotek_fields['node'][$content_type]) ? $lingotek_fields['node'][$content_type] : NULL;
