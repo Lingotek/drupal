@@ -640,184 +640,88 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   if (!user_access('manage projects')) {
     return;
   }
-  $show_advanced = LingotekAccount::instance()->showAdvanced();
 
-  global $language;
-  $drupal_language_code = $language->language;
-
-  // On node create, set the language select box to our source language, if the following are true:
-  // 1. the form is in Add mode
-  // 2. this is a node content type that we translate
-  // 3. the language is one enabled for lingotek translation
-
-  if (!isset($form['nid']['#value'])) { // add mode (no node id set)
-    $node = $form['#node'];
-    $is_node_translation = lingotek_is_node_translation($node);
-    lingotek_entity_load(array($node), 'node');
-    if (lingotek_supported_type($form['type']['#value']) && (!$is_node_translation || lingotek_enabled_langcode($node->language))) { // lingotek translated content type
-      $form['language']['#default_value'] = lingotek_get_source_language();
-    }
+  // Load the node and also the source node if different (node-based translation)
+  $node = $form_state['node'];
+  $nid = $node->nid ? $node->nid : 0;
+  lingotek_entity_load(array($nid => $node), 'node');
+  if (!empty($node->tnid)) {
+    $source_node = lingotek_entity_load_single('node', $node->tnid);
   }
   else {
-    // Node exists, updating.
-    $nid = $form['nid']['#value'];
-    $node = lingotek_node_load_default($nid);
-    $is_node_translation = lingotek_is_node_translation($node);
+    $source_node = $node;
+  }
+  if (!empty($node->nid)) {
+    // Load the most current revision of the node
+    $node = lingotek_node_load_default($node->nid);
+  }
+  $source_nid = lingotek_is_node_translation($node);
+  if (!$source_nid && !empty($node->nid)) {
+    $source_nid = $node->nid;
   }
 
-  if ($drupal_language_code != $node->language && lingotek_node_pushed($node) && !$is_node_translation && lingotek_enabled_langcode($drupal_language_code)) {
-    $lingotek_locale = Lingotek::convertDrupal2Lingotek($drupal_language_code);
-    $language_text = lingotek_language_field_lookup('native', $lingotek_locale) . " (" . $drupal_language_code . ")";
-    if ($node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
-      $edit_translation_message = t('Editing the fields below will only change the content of the source language, not the translation.');
-      $translation_edit_link = lingotek_get_workbench_url($node->lingotek['document_id'], $lingotek_locale, t('Edit Translation: @language_text', array('@language_text' => $language_text)));
-      $edit_translation_message .= "<br/>" . $translation_edit_link;
-      drupal_set_message($edit_translation_message, 'warning', FALSE);
-    }
+  // Get the current language
+  global $language;
+  $drupal_language = $language->language;
+  $node_language = $node->language;
+  if (lingotek_uses_node_translation($source_node) && $node_language != 'und') {
+    // a node-based edit, so use the node's language'
+    $current_language = $node_language;
+  }
+  else {
+    // must either be a new node or field-based so use $language->language
+    $current_language = $drupal_language;
   }
 
-  if (!isset($nid)) {
-    $nid = NULL;
-  }
+  // Include the translation-management tab always
+  $form = lingotek_get_node_settings_form($form, $form_state, $node);
+  $form = lingotek_add_workflow_settings_form($form, $form_state, $node);
+  $form = lingotek_add_advanced_form($form, $form_state, $node);
+  $form = lingotek_add_menu_link_form($form, $form_state, $node);
 
-  $form = array_merge($form, lingotek_get_node_settings_form($form, $form_state, $node));
-
-  // Don't modify form if it is node-based translation of a disabled language.
-  if ($is_node_translation && !lingotek_enabled_langcode($node->language)) {
+  // No more changes to the node form if the node or language aren't enabled for Lingotek translation
+  if (!lingotek_enabled_langcode($current_language) || !lingotek_managed_entity('node', $source_node)) {
     return;
   }
 
-  $api = LingotekApi::instance();
-
-  // show workflow-change option only if there are more than one workflow and if it's an existing node
-  $workflows = $api->listWorkflows();
-  if ($workflows && count($workflows) > 1) {
-    $form['lingotek']['workflow_id'] = array(
-      '#type' => 'select',
-      '#title' => t('Workflow'),
-      '#prefix' => '<div id="prefill-phases-div">',
-      '#description' => t('Choose the Workflow to associate with this content item.'),
-      '#default_value' => $node->lingotek['workflow_id'],
-      '#options' => $workflows,
-      '#empty_option' => '(select one)',
-    );
-    if (!$nid) { // don't show prefill stuff on new nodes
-      $form['lingotek']['workflow_id']['#suffix'] = '</div>';
-    }
-    else {
-      // add the callback and checkbox and phase-select
-      $form['lingotek']['workflow_id']['#ajax'] = array(
-        'callback' => 'lingotek_get_change_workflow_form_callback',
-        'wrapper' => 'prefill-phases-div',
-        'method' => 'replace',
-        'effect' => 'fade',
-      );
-      $form['lingotek']['prefill_phases_checkbox'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Restore to a phase in the new workflow'),
-        '#default_value' => TRUE,
-        '#description' => t('Prefill the new workflow with translations from the previous workflow'),
-        '#states' => array(
-          'invisible' => array(':input[name="lingotek[workflow_id]"]' => array('value' => $node->lingotek['workflow_id'])),
-        )
-      );
-
-      $form['lingotek']['prefill_phase_select'] = array(
-        '#title' => t("Desired Prefill Phase"),
-        '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
-        '#type' => 'select',
-        '#states' => array(
-          'visible' => array(':input[name="lingotek[workflow_id]"]' => array('!value' => $node->lingotek['workflow_id']),
-            array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => TRUE))),
-        ),
-        '#suffix' => '</div>',
-      );
-      if (isset($form_state['values']['lingotek']['workflow_id']) && $form_state['values']['lingotek']['workflow_id'] != NULL) {
-        $form['lingotek']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['lingotek']['workflow_id']);
-      }
-      else {
-        $form['lingotek']['prefill_phase_select']['#options'] = array('-1' => '(first choose a workflow)');
-        $form['lingotek']['prefill_phase_select']['#disabled'] = TRUE;
-      }
+  ///////////////////////////////////////////////////////////////////////
+  // FROM HERE DOWN, LINGOTEK MANAGES BOTH THE NODE AND THE LANGUAGE
+  ///////////////////////////////////////////////////////////////////////
+  // Disable the language field if the node is synced with lingotek
+  if (!empty($form_state['node']->nid)) {
+    $document_id = lingotek_keystore('node', $form_state['node']->nid, 'document_id');
+    if (isset($document_id) && $document_id != 0) {
+      $form['language']['#disabled'] = TRUE;
     }
   }
 
-  if ($show_advanced) {
-    // Only show these options if the Lingotek document hasn't yet been created.
-    if (!$node->lingotek['document_id'] && class_exists('LingotekApi')) {
+  // Disable all Lingotek-managed fields if the current language isn't the source language
+  if ($current_language != $source_node->language) {
+    $lingotek_fields = variable_get('lingotek_enabled_fields');
+    $enabled_fields = !empty($lingotek_fields['node'][$node->type]) ? $lingotek_fields['node'][$node->type] : NULL;
+    if (!$enabled_fields && lingotek_oneoff_translate($node)) {
+      $enabled_fields = lingotek_get_translatable_fields_by_content_type('node', $node->type);
+    }
+    foreach ($enabled_fields as $field) {
+      $form[$field]['#disabled'] = TRUE;
+    }
+    $form['actions']['submit']['#disabled'] = TRUE;
 
-      // Available projects.
-      if ($projects = $api->listProjects()) {
+    $workbench = 'node/' . $source_nid . '/lingotekworkbench/' . Lingotek::convertDrupal2Lingotek($current_language);
+    //$source_link = base_path() . $source_node->language . '/node/' . $source_nid . '/edit';
+    $enabled_languages = language_list();
+    $source_language_obj = !empty($enabled_languages[$source_node->language]) ? $enabled_languages[$source_node->language] : $language;
+    $source_link = l(t('source content'), 'node/' . $source_nid . '/edit', array('language' => $source_language_obj));
 
-        $form['lingotek']['project_id'] = array(
-          '#type' => 'select',
-          '#title' => 'Project',
-          '#description' => t('Select the translation project with which this item should be associated.'),
-          '#default_value' => $node->lingotek['project_id'],
-          '#options' => $projects,
-        );
-      }
+    $message = t('Some fields are not editable because the translations are managed by lingotek.
+      To edit this content in the source language go to the !source_link.', array('!source_link' => $source_link));
 
-      // Translation Memory (TM) Vault.
-      if ($vaults = $api->listVaults()) {
-        $form['lingotek']['vault_id'] = array(
-          '#type' => 'select',
-          '#title' => t('TM Vault'),
-          '#description' => t('Choose the TM vault to associate with this content item.'),
-          '#default_value' => $node->lingotek['vault_id'],
-          '#options' => $vaults,
-        );
-      }
-    } // END:  Document not created yet
-  }
+    $link = l(t('Lingotek workbench'), $workbench, array('attributes' => array('target' => '_blank')));
 
-  $form['lingotek']['content_end'] = array(
-    '#markup' => '</div>',
-  );
+    $message .= '<br>' . t('To make changes to this translation you can go to the !url.', array('!url' => $link));
 
-  $form['lingotek']['advanced'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Advanced'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'developer_settings',
-    '#access' => user_access('use lingotek developer tools'),
-  );
-  $form['lingotek']['advanced']['document_id'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Document Id'),
-    '#description' => t("Read/Overwrite the document ID associated with the document.  This can break the translation process but can also be used to help figure out if something is wrong."),
-    '#default_value' => $node->lingotek['document_id'],
-  );
-  $form['lingotek']['advanced']['current_lingonode'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Node Data'),
-    '#value' => isset($nid) ? (json_encode(lingotek_keystore('node', $nid))) : t('None'),
-    '#disabled' => TRUE,
-    '#attributes' => array('rows' => '2')
-  );
 
-  if (isset($form['menu']['link'])) {
-    // if menu translation is enabled, if the default language is english,
-    // and if either 'english' or 'language neutral' is selected for the node
-    // being created, then show the option to set the menu item as 'und' for
-    // i18n_string translation.
-    $i18n_language = 'en';
-
-    $form['menu']['link']['lingotek_translate'] = array(
-      '#type' => 'select',
-      '#title' => 'Menu translation through Lingotek',
-      '#description' => t('Select whether to allow this link to be translated into all enabled languages.'),
-      '#default_value' => isset($form_state['node']->menu['language']) ? $form_state['node']->menu['language'] : 'und',
-      '#options' => array('und' => 'Allow link to be translated', 'en' => 'Show link only in English'),
-      '#prefix' => '<div id="edit-menu-english">',
-      '#suffix' => '</div>',
-    );
-    $form['menu']['link']['nonenglish_info'] = array(
-      '#markup' => t('<div id="edit-menu-non-english">Note: This menu item will be visible only in this node\'s currently selected language.  If you want this menu link to be available for all languages, you must add it directly through the Menus administration tool as an English string and then save the menu item as "Language Neutral".</div>'),
-      '#prefix' => '<div id="edit-menu-non-english">',
-      '#suffix' => '</div>',
-    );
+    drupal_set_message($message, 'warning', FALSE);
   }
 }
 
@@ -1397,12 +1301,12 @@ function lingotek_entity_load($entities, $entity_type) {
   $node_profile_defaults = lingotek_load_profile_defaults($entity_type); // return assoc array by node type
   $profiles_list = lingotek_get_profiles();
 
-  $result = db_select('{lingotek_entity_metadata}', 'l')
+  $query = db_select('{lingotek_entity_metadata}', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
       ->condition('l.entity_id', array_keys($entities), 'IN')
       ->condition('l.entity_type', $entity_type)
-      ->condition('l.entity_key', 'target_%', 'NOT LIKE')
-      ->execute();
+      ->condition('l.entity_key', 'target_%', 'NOT LIKE');
+  $result = $query->execute();
 
   $values = array();
   foreach ($result as $record) {
@@ -2113,60 +2017,6 @@ function lingotek_entity_delete($entity, $type) {
     ->execute();
 }
 
-/**
- * Implements hook_form_alter().
- */
-function lingotek_form_alter(&$form, &$form_state, $form_id) {
-  if (substr($form_id, -9) == 'node_form') {
-
-    global $language;
-    $enabled_languages = lingotek_get_target_locales(TRUE);
-    $lingotek_locale = !empty($form_state['node']) ? Lingotek::convertDrupal2Lingotek($form_state['node']->language) : NULL;
-    if (!in_array($lingotek_locale, $enabled_languages)) {
-      return;
-    }
-
-    //disable the language field if the node is synced with lingotek
-    if (isset($form['#entity']->nid)) {
-      $document_id = lingotek_keystore('node', $form['#entity']->nid, 'document_id');
-      if (isset($document_id) && $document_id != 0) {
-        $form['language']['#disabled'] = TRUE;
-      }
-    }
-
-    // Protect node-based translations from being edited directly in Drupal.
-    $source_nid = lingotek_is_node_translation($form_state['node']);
-    $source_node = $source_nid ? lingotek_entity_load_single('node', $source_nid) : $form_state['node'];
-
-    // If a node-based translation is attempted directly on the site and the source node is managed by Lingotek
-    // and the target language is also managed by Lingotek, then gray out fields enabled for Lingotek translation
-    if (($source_nid) && lingotek_enabled_langcode($form_state['node']->language) && lingotek_managed_entity('node', $source_node)) {
-      $content_type = $form['type']['#value'];
-      $lingotek_fields = variable_get('lingotek_enabled_fields');
-      $enabled_fields = !empty($lingotek_fields['node'][$content_type]) ? $lingotek_fields['node'][$content_type] : NULL;
-      if (!$enabled_fields && lingotek_oneoff_translate($form_state['node'])) {
-        $enabled_fields = lingotek_get_translatable_fields_by_content_type('node', $content_type);
-      }
-      foreach ($enabled_fields as $field) {
-        $form[$field]['#disabled'] = TRUE;
-      }
-      $form['actions']['submit']['#disabled'] = TRUE;
-
-      $workbench = 'node/' . $source_nid . '/lingotekworkbench/' . $lingotek_locale;
-
-      $message = t('Some fields are not editable because the translations are managed by lingotek.
-        To edit this content in the source language go to the ') . l(t('source node'), 'node/' . $source_nid . '/edit') . '.';
-
-      $link = l(t('Lingotek workbench'), $workbench, array('attributes' => array('target' => '_blank')));
-
-      $message .= '<br>' . t('To make changes to this translation you can go to the !url.', array('!url' => $link));
-
-
-      drupal_set_message($message);
-    }
-  }
-}
-
 function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeable = TRUE) {
   $profile_fields = array();
 
@@ -2555,4 +2405,147 @@ function lingotek_clear_exceptions_form_submit($form_state, $form) {
   $delete_query = db_query("DELETE lem.* FROM node AS n JOIN lingotek_entity_metadata AS lem ON n.nid = lem.entity_id WHERE entity_key IN (" . $delete_keys . ") AND type = '" . $content_type . "'");
   $delete_query->execute();
   drupal_set_message(t('All translation profile exceptions for ' . $content_type . ' have been removed.'));
+}
+
+function lingotek_add_workflow_settings_form($form, $form_state, $node) {
+  // show workflow-change option only if there are more than one workflow and if it's an existing node
+  $workflows = LingotekApi::instance()->listWorkflows();
+  if ($workflows && count($workflows) > 1) {
+    $form['lingotek']['workflow_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Workflow'),
+      '#prefix' => '<div id="prefill-phases-div">',
+      '#description' => t('Choose the Workflow to associate with this content item.'),
+      '#default_value' => $node->lingotek['workflow_id'],
+      '#options' => $workflows,
+      '#empty_option' => '(select one)',
+    );
+    if (empty($node->nid)) { // don't show prefill stuff on new nodes
+      $form['lingotek']['workflow_id']['#suffix'] = '</div>';
+    }
+    else {
+      // add the callback and checkbox and phase-select
+      $form['lingotek']['workflow_id']['#ajax'] = array(
+        'callback' => 'lingotek_get_change_workflow_form_callback',
+        'wrapper' => 'prefill-phases-div',
+        'method' => 'replace',
+        'effect' => 'fade',
+      );
+      $form['lingotek']['prefill_phases_checkbox'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Restore to a phase in the new workflow'),
+        '#default_value' => TRUE,
+        '#description' => t('Prefill the new workflow with translations from the previous workflow'),
+        '#states' => array(
+          'invisible' => array(':input[name="lingotek[workflow_id]"]' => array('value' => $node->lingotek['workflow_id'])),
+        )
+      );
+
+      $form['lingotek']['prefill_phase_select'] = array(
+        '#title' => t("Desired Prefill Phase"),
+        '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
+        '#type' => 'select',
+        '#states' => array(
+          'visible' => array(':input[name="lingotek[workflow_id]"]' => array('!value' => $node->lingotek['workflow_id']),
+            array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => TRUE))),
+        ),
+        '#suffix' => '</div>',
+      );
+      if (isset($form_state['values']['lingotek']['workflow_id']) && $form_state['values']['lingotek']['workflow_id'] != NULL) {
+        $form['lingotek']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($form_state['values']['lingotek']['workflow_id']);
+      }
+      else {
+        $form['lingotek']['prefill_phase_select']['#options'] = array('-1' => '(first choose a workflow)');
+        $form['lingotek']['prefill_phase_select']['#disabled'] = TRUE;
+      }
+    }
+  }
+  return $form;
+}
+
+function lingotek_add_advanced_form($form, $form_state, $node) {
+  $show_advanced = LingotekAccount::instance()->showAdvanced();
+  if ($show_advanced) {
+    // Only show these options if the Lingotek document hasn't yet been created.
+    if (!$node->lingotek['document_id'] && class_exists('LingotekApi')) {
+
+      // Available projects.
+      if ($projects = LingotekApi::instance()->listProjects()) {
+
+        $form['lingotek']['project_id'] = array(
+          '#type' => 'select',
+          '#title' => 'Project',
+          '#description' => t('Select the translation project with which this item should be associated.'),
+          '#default_value' => $node->lingotek['project_id'],
+          '#options' => $projects,
+        );
+      }
+
+      // Translation Memory (TM) Vault.
+      if ($vaults = LingotekApi::instance()->listVaults()) {
+        $form['lingotek']['vault_id'] = array(
+          '#type' => 'select',
+          '#title' => t('TM Vault'),
+          '#description' => t('Choose the TM vault to associate with this content item.'),
+          '#default_value' => $node->lingotek['vault_id'],
+          '#options' => $vaults,
+        );
+      }
+    } // END:  Document not created yet
+  }
+
+  $form['lingotek']['content_end'] = array(
+    '#markup' => '</div>',
+  );
+
+  $form['lingotek']['advanced'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Advanced'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#group' => 'developer_settings',
+    '#access' => user_access('use lingotek developer tools'),
+  );
+  $form['lingotek']['advanced']['document_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Document Id'),
+    '#description' => t("Read/Overwrite the document ID associated with the document.  This can break the translation process but can also be used to help figure out if something is wrong."),
+    '#default_value' => $node->lingotek['document_id'],
+  );
+  $form['lingotek']['advanced']['current_lingonode'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Node Data'),
+    '#value' => !empty($node->nid) ? (json_encode(lingotek_keystore('node', $node->nid))) : t('None'),
+    '#disabled' => TRUE,
+    '#attributes' => array('rows' => '2')
+  );
+
+  return $form;
+}
+
+function lingotek_add_menu_link_form($form, $form_state, $node) {
+  if (isset($form['menu']['link'])) {
+    // if menu translation is enabled, if the default language is english,
+    // and if either 'english' or 'language neutral' is selected for the node
+    // being created, then show the option to set the menu item as 'und' for
+    // i18n_string translation.
+    $i18n_language = 'en';
+
+    $form['menu']['link']['lingotek_translate'] = array(
+      '#type' => 'select',
+      '#title' => 'Menu translation through Lingotek',
+      '#description' => t('Select whether to allow this link to be translated into all enabled languages.'),
+      '#default_value' => isset($form_state['node']->menu['language']) ? $form_state['node']->menu['language'] : 'und',
+      '#options' => array('und' => 'Allow link to be translated', 'en' => 'Show link only in English'),
+      '#prefix' => '<div id="edit-menu-english">',
+      '#suffix' => '</div>',
+    );
+    $form['menu']['link']['nonenglish_info'] = array(
+      '#markup' => t('<div id="edit-menu-non-english">Note: This menu item will be visible only in this node\'s currently selected language.  If you want this menu link to be available for all languages, you must add it directly through the Menus administration tool as an English string and then save the menu item as "Language Neutral".</div>'),
+      '#prefix' => '<div id="edit-menu-non-english">',
+      '#suffix' => '</div>',
+    );
+  }
+
+  return $form;
 }
