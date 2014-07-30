@@ -50,7 +50,18 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     $localized_node->sticky = $node->sticky;
     $localized_node->status = $node->status;
     $localized_node->create_lingotek_document = FALSE;
-    
+
+    // Grandfather field settings/values from source node to target.
+    $source_fields = field_info_instances('node', $node->type);
+    foreach (array_keys($source_fields) as $key) {
+      $copied_field = $node->$key;
+      if (!empty($copied_field[$node->language])) {
+        $copied_field[$localized_node->language] = $copied_field[$node->language];
+        unset($copied_field[$node->language]);
+      }
+      $localized_node->$key = $copied_field;
+    }
+
     $lingotek_fields = variable_get('lingotek_enabled_fields');
     foreach ($lingotek_fields['node'][$localized_node->type] as $field_name) {
       $field = $node->$field_name;
