@@ -642,7 +642,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Load the node and also the source node if different (node-based translation)
   $node = $form_state['node'];
-  $nid = $node->nid ? $node->nid : 0;
+  $nid = !empty($node->nid) ? $node->nid : 0;
   lingotek_entity_load(array($nid => $node), 'node');
   if (!empty($node->tnid)) {
     $source_node = lingotek_entity_load_single('node', $node->tnid);
