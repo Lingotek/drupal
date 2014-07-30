@@ -1251,6 +1251,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
   );
 
+  $form[$fkey]['lingotek_always_show_translate_tabs'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Always show non-Lingotek translate tabs'),
+    '#default_value' => variable_get('lingotek_always_show_translate_tabs'),
+    '#description' => t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
+  );
+
   $form[$fkey]['lingotek_account_plan_type'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable Advanced Features'),

@@ -490,10 +490,9 @@ function lingotek_menu() {
  * Implements hook_menu_alter().
  */
 function lingotek_menu_alter(&$items) {
-  // If the Entity Translation module is enabled alongside Lingotek,
-  // allow nodes that haven't yet been associated with Lingotek to be
+  // If set, allow nodes that are not associated with Lingotek to be
   // translated using Entity Translation's tools.
-  if (module_exists('entity_translation')) {
+  if (!variable_get('lingotek_always_show_translate_tabs', FALSE)) {
 
     $translate_path = 'node/%node/translate';
     $lingotek_access_callback = 'lingotek_entity_translation_node_tab_access';
