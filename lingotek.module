@@ -686,7 +686,12 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   ///////////////////////////////////////////////////////////////////////
   // FROM HERE DOWN, LINGOTEK MANAGES BOTH THE NODE AND THE LANGUAGE
   ///////////////////////////////////////////////////////////////////////
-  // Disable the language field if the node is synced with lingotek
+  // Set the default language on new node creation.
+  if (empty($source_node->nid)) {
+    $form['language']['#default_value'] = lingotek_get_source_language();
+  }
+
+// Disable the language field if the node is synced with Lingotek.
   if (!empty($node->nid)) {
     $document_id = lingotek_keystore('node', $node->nid, 'document_id');
     if (isset($document_id) && $document_id != 0) {
