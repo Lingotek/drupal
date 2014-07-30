@@ -687,15 +687,16 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // FROM HERE DOWN, LINGOTEK MANAGES BOTH THE NODE AND THE LANGUAGE
   ///////////////////////////////////////////////////////////////////////
   // Disable the language field if the node is synced with lingotek
-  if (!empty($form_state['node']->nid)) {
-    $document_id = lingotek_keystore('node', $form_state['node']->nid, 'document_id');
+  if (!empty($node->nid)) {
+    $document_id = lingotek_keystore('node', $node->nid, 'document_id');
     if (isset($document_id) && $document_id != 0) {
       $form['language']['#disabled'] = TRUE;
     }
   }
 
-  // Disable all Lingotek-managed fields if the current language isn't the source language
-  if ($current_language != $source_node->language) {
+  // Disable all Lingotek-managed fields if the node already exists and the
+  // current language isn't the source language.
+  if (!empty($source_node->nid) && $current_language != $source_node->language) {
     $lingotek_fields = variable_get('lingotek_enabled_fields');
     $enabled_fields = !empty($lingotek_fields['node'][$node->type]) ? $lingotek_fields['node'][$node->type] : NULL;
     if (!$enabled_fields && lingotek_oneoff_translate($node)) {
