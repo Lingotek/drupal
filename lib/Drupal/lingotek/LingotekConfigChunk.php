@@ -13,9 +13,14 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    * The Drupal entity type associated with this class
    */
 
-  const DRUPAL_ENTITY_TYPE = 'config_chunk';
+  const DRUPAL_ENTITY_TYPE = 'config_set';
   const TAG_PREFIX = 'config_';
   const TAG_PREFIX_LENGTH = 7; // length of 'config_'
+
+  /**
+   * The title of the document
+   */
+  protected $title = NULL;
 
   /**
    * A Drupal config_chunk.
@@ -116,7 +121,18 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The title of the current chunk
    */
   public function getTitle() {
-    return 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';
+    if ($this->title) {
+      return $this->title;
+    }
+    $this->title = 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';
+    return $this->title;
+  }
+
+  /**
+   * Set the display name for the document in the TMS
+   */
+  public function setTitle($title) {
+    $this->title = $title;
   }
 
   /**
@@ -126,7 +142,7 @@ class LingotekConfigChunk implements LingotekTranslatableEntity {
    *   The description of the current chunk
    */
   public function getDescription() {
-    return 'Drupal configuration (' . $this->min_lid . '-' . $this->max_lid . ')';//'Drupal configuration strings (locales source table) between ' . $this->min_lid . ' and ' . $this->max_lid . '.';
+    return $this->getTitle();
   }
 
   /**

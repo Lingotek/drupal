@@ -1950,9 +1950,13 @@ function lingotek_uses_node_translation($node = NULL) {
 function lingotek_managed_entity($entity_type, $entity) {
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
-  // If there is no $id or $bundle property, then nothing to manage for now.
-  if (!$id || !$bundle) {
+  // If there is no $bundle property, then nothing to manage for now.
+  if (!$bundle) {
     return FALSE;
+  }
+  // If this is being newly created, see if the content type is enabled
+  if (!$id) {
+    return lingotek_enabled_bundle($entity_type, $bundle);
   }
   // Check the entity itself for overrides.
   $query = db_select('{lingotek_entity_metadata}', 'lem')
@@ -1969,7 +1973,7 @@ function lingotek_managed_entity($entity_type, $entity) {
       return TRUE;
     }
   }
-  // Check the entity's bundle.
+  // No overrides, so check the entity's bundle.
   return lingotek_enabled_bundle($entity_type, $bundle);
 }
 
