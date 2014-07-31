@@ -22,6 +22,11 @@ class LingotekEntity implements LingotekTranslatableEntity {
   protected $entity_type;
   
   /**
+   * The title of the document
+   */
+  protected $title = NULL;
+
+  /**
    * A reference to the Lingotek API.
    *
    * @var LingotekApi
@@ -262,15 +267,25 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getTitle() {
+    if (!empty($this->title)) {
+      return $this->title;
+    }
     if (!empty($this->info['entity keys']['label']) && !empty($this->entity->{$this->info['entity keys']['label']})) {
-      return $this->entity->{$this->info['entity keys']['label']};
+      $this->title = $this->entity->{$this->info['entity keys']['label']};
     }
-    if ($this->entity_type == 'comment') {
-      return $this->entity->subject;
+    elseif ($this->entity_type == 'comment') {
+      $this->title = $this->entity->subject;
     }
-    LingotekLog::info('Did not find a label for @entity_type #!entity_id, using default label.',
-        array('@entity_type' => $this->entity_type, '@entity_id' => $this->entity_id));
-    return $this->entity_type . " #" . $this->entity_id;
+    else {
+      LingotekLog::info('Did not find a label for @entity_type #!entity_id, using default label.',
+          array('@entity_type' => $this->entity_type, '@entity_id' => $this->entity_id));
+      $this->title = $this->entity_type . " #" . $this->entity_id;
+    }
+    return $this->title;
+  }
+
+  public function setTitle($title) {
+    $this->title = $title;
   }
   
   public function getDescription() {

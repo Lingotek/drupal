@@ -311,6 +311,7 @@ function lingotek_sync_upload_config_chunk($cid, &$context) {
   
   $api = LingotekApi::instance();
   $chunk = LingotekSync::getConfigChunk($cid);
+  module_invoke_all('lingotek_pre_upload', $chunk);
 
   // Push this chunk for translation.
   if ($existing_document = $chunk->hasLingotekDocId()) {

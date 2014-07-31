@@ -1437,6 +1437,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   // Items that are only accessible on node add or edit forms for nodes not yet sent to Lingotek.
   $ln = LingotekEntity::load($entity, $entity_type);
   $entity_has_doc_id = $ln->getMetadataValue('document_id');
+  module_invoke_all('lingotek_pre_upload', $ln);
   if ($entity_has_doc_id) {
     $success = LingotekApi::instance()->updateContentDocument($ln);
   }
