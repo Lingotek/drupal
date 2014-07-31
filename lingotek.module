@@ -674,9 +674,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   // Include the translation-management tab always
   $form = lingotek_get_node_settings_form($form, $form_state, $node);
-  $form = lingotek_add_workflow_settings_form($form, $form_state, $node);
-  $form = lingotek_add_advanced_form($form, $form_state, $node);
-  $form = lingotek_add_menu_link_form($form, $form_state, $node);
 
   // No more changes to the node form if the node or language aren't enabled for Lingotek translation
   if (!lingotek_enabled_langcode($current_language) || !lingotek_managed_entity('node', $source_node)) {
@@ -935,6 +932,11 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#submit' => array('lingotek_get_node_settings_form_submit'),
     );
   }
+
+  // include additional form components
+  $form = lingotek_add_workflow_settings_form($form, $form_state, $node);
+  $form = lingotek_add_advanced_form($form, $form_state, $node);
+  $form = lingotek_add_menu_link_form($form, $form_state, $node);
 
   return $form;
 }
