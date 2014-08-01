@@ -1770,7 +1770,7 @@ function lingotek_comment_view($comment, $view_mode, $langcode) {
     }
   }
   
-  if (user_access('translation') && !empty($comment->lingotek['profile']) && $comment->lingotek['profile'] != LingotekSync::PROFILE_DISABLED && !empty($comment->lingotek['last_uploaded']) && !empty($comment->lingotek['document_id'])) {
+  if (user_access('translation') && isset($comment->lingotek['profile']) && $comment->lingotek['profile'] != LingotekSync::PROFILE_DISABLED && !empty($comment->lingotek['last_uploaded']) && !empty($comment->lingotek['document_id'])) {
     global $language;
     $comment->content['lingotek_link']['#markup'] = lingotek_workbench_icon('comment', $comment->cid, Lingotek::convertDrupal2Lingotek($language->language));
   }
