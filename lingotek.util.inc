@@ -1933,7 +1933,7 @@ function lingotek_is_node_translation($node = NULL) {
  */
 function lingotek_uses_node_translation($node = NULL) {
 
-  if (empty($node->lingotek['profile'])) {
+  if (!isset($node->lingotek['profile'])) {
     return FALSE;
   }
 
