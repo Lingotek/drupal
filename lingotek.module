@@ -561,7 +561,7 @@ function lingotek_entity_translation_node_tab_access() {
       return FALSE;
     }
 
-    if (entity_translation_node_supported_type($node->type)) {
+    if (module_exists('entity_translation') && entity_translation_node_supported_type($node->type)) {
       // This is not a Lingotek-supported type, but is a type
       // that is set up for Entity Translation.
       // Fall back to the Entity Translation module's access callback.
