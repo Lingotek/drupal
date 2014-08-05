@@ -838,6 +838,17 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#description' => t("The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
   );
 
+  // With the Translation Management tab in place, disable it and return the
+  // form if Lingotek hasn't been set up yet.
+  if (!lingotek_is_module_setup(FALSE)) {
+    $lingotek_setup_link = l(t('set up the module'), 'admin/settings/lingotek');
+    $form['lingotek']['lingotek_setup_note'] = array(
+      '#type' => 'item',
+      '#description' => t("To begin Lingotek Translation, please !set_up_the_module.", array('!set_up_the_module' => $lingotek_setup_link)),
+    );
+    return $form;
+  }
+
   $form['lingotek']['profile'] = array(
     '#type' => 'select',
     '#title' => t('Translation Profile'),
@@ -1708,11 +1719,15 @@ function lingotek_set_default_advanced_xml($force = FALSE) {
 /**
  * Checks to make sure the Lingotek Translation module setup completed successfully.  If its not, the user is directed to the setup wizard.
  */
-function lingotek_is_module_setup() {
-  $redirect = lingotek_is_config_missing();
-  if (!is_bool($redirect)) {
-    drupal_goto($redirect); // If something is missing - Go to the Setup Process
+function lingotek_is_module_setup($redirect = TRUE) {
+  $redirect_link = lingotek_is_config_missing();
+  if (!is_bool($redirect_link)) {
+    if ($redirect == FALSE) {
+      return FALSE; // Link is there, so the module is not completely set up.
+    }
+    drupal_goto($redirect_link); // If something is missing - Go to the Setup Process
   }
+  return TRUE;
 }
 
 /**
