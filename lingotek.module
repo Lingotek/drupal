@@ -544,9 +544,6 @@ function lingotek_module_implements_alter(&$implementations, $hook) {
  * @see entity_translation_node_tab_access().
  */
 function lingotek_entity_translation_node_tab_access() {
-  if (!module_exists('entity_translation')) {
-    return FALSE;
-  }
   $args = func_get_args();
   $node = array_shift($args);
   if ($node->language !== LANGUAGE_NONE) {
@@ -564,7 +561,7 @@ function lingotek_entity_translation_node_tab_access() {
       return FALSE;
     }
 
-    if (entity_translation_node_supported_type($node->type)) {
+    if (module_exists('entity_translation') && entity_translation_node_supported_type($node->type)) {
       // This is not a Lingotek-supported type, but is a type
       // that is set up for Entity Translation.
       // Fall back to the Entity Translation module's access callback.
@@ -575,7 +572,7 @@ function lingotek_entity_translation_node_tab_access() {
       return entity_translation_tab_access('node', $node);
     }
 
-    if (entity_translation_node('node', $node) && lingotek_node_based_trans_ready()) {
+    if (lingotek_node_based_trans_ready()) {
       // This node is set up to use the Translation module's
       // node translation (as opposed to Entity Translation).
       return _translation_tab_access($node);
