@@ -1194,37 +1194,40 @@ function lingotek_get_profile_options() {
  * Implements hook_node_view().
  */
 function lingotek_node_view($node, $view_mode) {
+  // add to the node view only in full view mode.
+  if ($view_mode != 'full') {
+    return;
+  }
   if (!lingotek_managed_entity('node', $node)) {
     return;
   }
   global $language, $first_load, $user;
 
-  $lingotek_document_id = isset($node->lingotek['document_id']) ? $node->lingotek['document_id'] : NULL;
-  $community_translation_allowed = isset($node->lingotek['allow_community_translation']) ? $node->lingotek['allow_community_translation'] : FALSE;
-  if ($view_mode == 'full' && $community_translation_allowed && $lingotek_document_id && lingotek_supported_type($node->type) && Lingotek::isSupportedLanguage($node->language)) {
+  $source_node = lingotek_get_source_node($node);
+  $lingotek_has_doc_id = !empty($source_node->lingotek['document_id']);
+  $community_translation_allowed = !empty($source_node->lingotek['allow_community_translation']);
+  if ($community_translation_allowed && $lingotek_has_doc_id && lingotek_supported_type($source_node->type) && Lingotek::isSupportedLanguage($node->language)) {
 
-    if ($language->language != $node->language) {
-      $link = lingotek_get_workbench_url($node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
+    if ($language->language != $source_node->language) {
+      $link = lingotek_get_workbench_url($source_node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
       if ($link != '') {
         $message = t('The translation of this page is still being worked on.') . " ";
         $message .= $link . '&nbsp;';
         if (lingotek_access($node, 'manage projects')) {
-          $message .= '<span style="font-size: 80%">[' . l(t('progress'), 'node/' . $node->nid . '/lingotek_pm', array('html' => TRUE)) . ']</span>';
+          $message .= '<span style="font-size: 80%">[' . l(t('progress'), 'node/' . $source_node->nid . '/lingotek_pm', array('html' => TRUE)) . ']</span>';
         }
         drupal_set_message($message, 'warning', FALSE);
       }
     }
   }
 
-  $can_translate = user_access('translation') && ($node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED);
-  $uploaded_to_lingotek = (isset($node->lingotek['document_id']) && !empty($node->lingotek['document_id']));
+  $can_translate = user_access('translation') && ($source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED);
+  $uploaded_to_lingotek = !empty($source_node->lingotek['document_id']);
   $is_target = $node->lingotek['node_sync_status'] == 'TARGET';
-
-  $source_id = $is_target ? $node->tnid : $node->nid;
 
   if ($can_translate && $uploaded_to_lingotek || $is_target) {
     global $language;
-    $node->content['lingotek_link']['#markup'] = lingotek_workbench_icon('node', $source_id, Lingotek::convertDrupal2Lingotek($language->language));
+    $node->content['lingotek_link']['#markup'] = lingotek_workbench_icon('node', $source_node->nid, Lingotek::convertDrupal2Lingotek($language->language));
   }
 }
 
