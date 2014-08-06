@@ -707,7 +707,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     foreach ($enabled_fields as $field) {
       $form[$field]['#disabled'] = TRUE;
     }
-    $form['actions']['submit']['#disabled'] = TRUE;
 
     $workbench = 'node/' . $source_nid . '/lingotekworkbench/' . Lingotek::convertDrupal2Lingotek($current_language);
     //$source_link = base_path() . $source_node->language . '/node/' . $source_nid . '/edit';
