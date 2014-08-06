@@ -1199,15 +1199,17 @@ function lingotek_get_profile_options() {
  * Implements hook_node_view().
  */
 function lingotek_node_view($node, $view_mode) {
+  global $language, $first_load, $user;
+
   // add to the node view only in full view mode.
   if ($view_mode != 'full') {
     return;
   }
   $source_node = lingotek_get_source_node($node);
-  if (!lingotek_managed_entity('node', $source_node)) {
+  if (!lingotek_managed_entity('node', $source_node) || !lingotek_enabled_langcode($language->language)) {
     return;
   }
-  global $language, $first_load, $user;
+
   $lingotek_has_doc_id = !empty($source_node->lingotek['document_id']);
   $community_translation_allowed = !empty($source_node->lingotek['allow_community_translation']);
   if ($community_translation_allowed && $lingotek_has_doc_id && lingotek_supported_type($source_node->type) && Lingotek::isSupportedLanguage($node->language)) {
