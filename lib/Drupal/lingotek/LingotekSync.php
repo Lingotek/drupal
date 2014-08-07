@@ -15,8 +15,11 @@ class LingotekSync {
   const STATUS_FAILED = 'FAILED';    // The node or target translation has failed during processing
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
-  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation and should be ignored by Lingotek (used for node storage)
+  const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation (ignored for upload by Lingotek)
   const STATUS_UNTRACKED = 'UNTRACKED'; // A translation was discovered that is not currently managed by Lingotek
+  const STATUS_TARGET_LOCALIZE = 'TARGET_LOCALIZE'; // A localization must be made of the source before uploading to Lingotek
+  const STATUS_TARGET_EDITED = 'TARGET_EDITED'; // A localized version is ready for uploading to Lingotek
+
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
   const PROFILE_AUTOMATIC = 0;
@@ -44,6 +47,8 @@ class LingotekSync {
       'STATUS_READY' => self::STATUS_READY,
       'STATUS_TARGET' => self::STATUS_TARGET,
       'STATUS_UNTRACKED' => self::STATUS_UNTRACKED,
+      'STATUS_TARGET_LOCALIZE' => self::STATUS_TARGET_LOCALIZE,
+      'STATUS_TARGET_EDITED' => self::STATUS_TARGET_EDITED,
     );
   }
 
@@ -73,7 +78,7 @@ class LingotekSync {
   }
 
   public static function setNodeStatus($node_id, $status) {
-    return lingotek_keystore('node', $node_id, 'node_sync_status', $status);
+    return lingotek_keystore('node', $node_id, 'upload_status', $status);
   }
 
   public static function getSyncProjects() {
@@ -654,7 +659,7 @@ class LingotekSync {
     $query->condition('entity_type', 'node');
     $query->addField('l', 'entity_id', 'nid');
     if($source) {
-      $query->condition('entity_key', 'node_sync_status');
+      $query->condition('entity_key', 'upload_status');
     } else {
       $query->condition('entity_key', 'target_sync_status_%', 'LIKE');
     }
@@ -669,14 +674,14 @@ class LingotekSync {
 //    $query = db_select('{lingotek_entity_metadata}', 'l')
 //      ->distinct()
 //      ->condition('entity_type', $entity_type)
-//      ->condition('entity_key', 'node_sync_status')
+//      ->condition('entity_key', 'upload_status')
 //      ->condition('value', LingotekSync::STATUS_EDITED);
 //    $query->addField('l', 'entity_id');
     $info = entity_get_info($entity_type);
     $id_key = $info['entity keys']['id'];
     $query = db_select('{' . $info['base table'] . '}', 'base');
     $query->addField('base', $id_key);
-    $query->leftJoin('{lingotek_entity_metadata}', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'node_sync_status\'');
+    $query->leftJoin('{lingotek_entity_metadata}', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'upload_status\'');
 
     if ($entity_type == 'node') {
       // Exclude any target nodes created using node-based translation.

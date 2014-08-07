@@ -15,7 +15,15 @@ $GLOBALS['_lingotek_client'] = new LingotekSession();
  *  The language which we are dealing with
  */
 
-function lingotek_get_translated_node($node, $drupal_language_code) {
+function lingotek_get_target_node($node, $drupal_language_code) {
+
+  // Allow the source to be overwritten as the target, if applicable, and update
+  // the current language to be the same as the target.
+  if ($node->language == $drupal_language_code && !empty($node->lingotek['allow_source_overwriting'])) {
+    lingotek_keystore('node', $node->nid, 'source_language_' . Lingotek::convertDrupal2Lingotek($drupal_language_code), $drupal_language_code);
+    return $node;
+  }
+
   $tset = translation_node_get_translations($node->nid);
 
   if ($node->tnid == 0) {
@@ -77,7 +85,7 @@ function lingotek_get_translated_node($node, $drupal_language_code) {
     }
         
     node_save($localized_node);
-    lingotek_keystore('node', $localized_node->nid, 'node_sync_status', 'TARGET');
+    lingotek_keystore('node', $localized_node->nid, 'upload_status', LingotekSync::STATUS_TARGET);
     // Child node should keep its parent node's profile, for rules integration.
     $parent_profile = lingotek_keystore('node', $node->nid, 'profile');
     if ($parent_profile !== FALSE) {

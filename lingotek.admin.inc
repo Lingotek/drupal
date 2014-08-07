@@ -206,7 +206,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     if ($entity_type == 'node') {
       $target_ids = db_select('lingotek_entity_metadata', 'lem')
           ->fields('lem', array('entity_id'))
-          ->condition('entity_key', 'node_sync_status')
+          ->condition('entity_key', 'upload_status')
           ->condition('entity_type', 'node')
           ->condition('value', 'TARGET')
           ->execute()
@@ -1464,6 +1464,8 @@ function lingotek_admin_profile_manage($profile_id) {
       'lingotek_nodes_translation_method' => 'field',
       'create_lingotek_document' => 1,
       'sync_method' => 1,
+      'allow_target_localization' => 0,
+      'allow_source_overwriting' => 0,
       'allow_community_translation' => 0,
       'url_alias_translation' => 0,
     );
@@ -1565,6 +1567,20 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   if ($show_advanced) {
 
+    // Target Localization
+    $form['defaults']['allow_target_localization'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow Target Localization'),
+      '#description' => t('When enabled, localized target-language content can be created in Drupal and then uploaded for in-place translation.  Note: to prevent loss of the original localized content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
+      '#default_value' => $form_state['values']['allow_target_localization'],
+    );
+    // Source Overwriting
+    $form['defaults']['allow_source_overwriting'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow Source Overwriting'),
+      '#description' => t('When enabled, source content may be created initially in a language other than the one set in Drupal and then translated in place of the original source content (ie. no separate target content will be created).  Note: to prevent the loss of the source content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
+      '#default_value' => $form_state['values']['allow_source_overwriting'],
+    );
     // Community Translation
     $form['defaults']['allow_community_translation'] = array(
       '#type' => 'checkbox',

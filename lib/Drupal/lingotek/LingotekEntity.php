@@ -45,10 +45,9 @@ class LingotekEntity implements LingotekTranslatableEntity {
    */
   private function __construct($entity, $entity_type) {
     $this->entity = $entity;
-    $this->language = $entity->language;
-    $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language);
     $this->entity_type = $entity_type;
     $this->info = entity_get_info($this->entity_type);
+    $this->setLanguage();
   }
   
   /**
@@ -318,7 +317,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getSourceLocale() {
-    return Lingotek::convertDrupal2Lingotek($this->entity->language);
+    return Lingotek::convertDrupal2Lingotek($this->language);
   }
   
   public function getDocumentName() {
@@ -359,7 +358,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
 
   public function setStatus($status) {
-    $this->setMetadataValue('node_sync_status', $status);
+    $this->setMetadataValue('upload_status', $status);
     return $this;
   }
 
@@ -381,5 +380,24 @@ class LingotekEntity implements LingotekTranslatableEntity {
       }
     }
     return $this;
+  }
+
+  /**
+   * Set the entity's language to be used by Lingotek, which will
+   * sometimes be different from the stated Drupal language.
+   */
+  public function setLanguage($language = NULL) {
+    if (empty($language)) {
+      $drupal_locale = Lingotek::convertDrupal2Lingotek($this->entity->language);
+      if (!empty($this->entity->lingotek['allow_source_overwriting']) && !empty($this->entity->lingotek['source_language_' . $drupal_locale])) {
+        $language = $this->entity->lingotek['source_language_' . $drupal_locale];
+      }
+      else {
+        $language = $this->entity->language;
+      }
+    }
+    $this->language = $language;
+    $this->locale = Lingotek::convertDrupal2Lingotek($this->language);
+    $this->language_targets = Lingotek::getLanguagesWithoutSource($this->locale);
   }
 }

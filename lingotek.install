@@ -702,7 +702,7 @@ function lingotek_update_7502(&$sandbox) {
         }
         else { // remove status when source language equal to target language
           lingotek_keystore_delete($entity_type, $entity_id, "target_sync_status_$lingotek_locale");
-          lingotek_keystore($entity_type, $entity_id, 'node_sync_status', LingotekSync::STATUS_CURRENT);
+          lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_CURRENT);
         }
       }
     }
@@ -871,4 +871,30 @@ function lingotek_update_7509(&$sandbox) {
     db_add_index($table, $index_name, $fields);
   }
   return t('Reduced field size of value column in the Lingotek entity metadata table.');
+}
+
+/**
+ * Change node_sync_status to upload_status in lingotek-specific metadata tables
+ */
+function lingotek_update_7600(&$sandbox) {
+  $num_updated = db_update('lingotek_entity_metadata')
+    ->fields(array(
+      'entity_key' => 'upload_status',
+    ))
+    ->condition('entity_key', 'node_sync_status')
+    ->execute();
+  return t('Changed the name of the node_sync_status variable in the Lingotek entity metadata table to be upload_status (@num_updated rows affected).', array('@num_updated' => $num_updated));
+}
+
+/**
+ * Change chunk_sync_status to upload_status in lingotek-specific metadata tables
+ */
+function lingotek_update_7601(&$sandbox) {
+  $num_updated = db_update('lingotek_config_metadata')
+    ->fields(array(
+      'config_key' => 'upload_status',
+    ))
+    ->condition('config_key', 'chunk_sync_status')
+    ->execute();
+  return t('Changed the name of the chunk_sync_status variable in the Lingotek config metadata table to be upload_status (@num_updated rows affected).', array('@num_updated' => $num_updated));
 }

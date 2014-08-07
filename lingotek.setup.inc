@@ -774,7 +774,7 @@ function lingotek_setup_node_translation_settings_form_submit($form, &$form_stat
     
     foreach ($nodes as $row) {
       $ops[] = array('lingotek_keystore', array('node', $row->nid, 'profile', LingotekSync::PROFILE_DISABLED));
-      $ops[] = array('lingotek_keystore', array('node', $row->nid, 'node_sync_status', LingotekSync::STATUS_TARGET));
+      $ops[] = array('lingotek_keystore', array('node', $row->nid, 'upload_status', LingotekSync::STATUS_TARGET));
     }
 
     $batch = array(
