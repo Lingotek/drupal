@@ -710,63 +710,6 @@ function lingotek_translatable_field_details() {
 // --- Active and Target Language management Functions
 
 /**
- * Get the currently active languages for this Drupal installation.
- */
-function lingotek_get_active_languages($get_details = FALSE) {
-  $active_languages = current(language_list('enabled'));
-
-  if ($get_details === FALSE) {
-    $active_languages = array_keys($active_languages);
-  }
-  /*
-    Get_Details -> FALSE
-    array (
-    0 => 'en',
-    1 => 'es',
-    )
-
-    Get_Details -> TRUE
-    array (
-    'en' =>
-    stdClass::__set_state(array(
-    'language' => 'en',
-    'name' => 'English',
-    'native' => 'English',
-    'direction' => '0',
-    'enabled' => '1',
-    'plurals' => '0',
-    'formula' => '',
-    'domain' => '',
-    'prefix' => '',
-    'weight' => '0',
-    'javascript' => '',
-    )),
-   */
-
-  return $active_languages;
-}
-
-/**
- * Get numbered array with all node source languages
- */
-function lingotek_get_node_source_languages() {
-  $lingo_langs = array();
-  $query = db_select('{node}', 'n')->distinct()
-      ->fields('n', array('language'));
-  $query = $query->execute();
-  $result = $query->fetchCol(0);
-  foreach ($result as $lang) {
-    $lingo_lang = Lingotek::convertDrupal2Lingotek($lang);
-    if ($lingo_lang) {
-      $lingo_langs[$lingo_lang] = $lingo_lang;
-    }
-  }
-  return $lingo_langs;
-}
-
-// END:  lingotek_get_active_languages()
-
-/**
  * Flags a target language as active:FALSE in the Target Language tracking.
  */
 function lingotek_delete_target_language($lingotek_locale) {
@@ -1981,12 +1924,39 @@ function lingotek_is_node_translation($node = NULL) {
   return FALSE;
 }
 
+/**
+ * Return true if the node's profile is set to node-based translation,
+ * false otherwise.
+ *
+ * @param object $node
+ * @return True or False
+ */
+function lingotek_uses_node_translation($node = NULL) {
+
+  if (!isset($node->lingotek['profile'])) {
+    return FALSE;
+  }
+
+  $profile_info = lingotek_get_profile_settings($node->lingotek['profile']);
+  if ($profile_info['lingotek_nodes_translation_method'] == 'node') {
+    return TRUE;
+  }
+
+  // Not using node-based translation.
+  return FALSE;
+}
+
+
 function lingotek_managed_entity($entity_type, $entity) {
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
-  // If there is no $id or $bundle property, then nothing to manage for now.
-  if (!$id || !$bundle) {
+  // If there is no $bundle property, then nothing to manage for now.
+  if (!$bundle) {
     return FALSE;
+  }
+  // If this is being newly created, see if the content type is enabled
+  if (!$id) {
+    return lingotek_enabled_bundle($entity_type, $bundle);
   }
   // Check the entity itself for overrides.
   $query = db_select('{lingotek_entity_metadata}', 'lem')
@@ -2003,7 +1973,7 @@ function lingotek_managed_entity($entity_type, $entity) {
       return TRUE;
     }
   }
-  // Check the entity's bundle.
+  // No overrides, so check the entity's bundle.
   return lingotek_enabled_bundle($entity_type, $bundle);
 }
 

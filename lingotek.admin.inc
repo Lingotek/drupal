@@ -190,7 +190,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     }
     
     $default_profile = $setup_complete ? LingotekSync::PROFILE_DISABLED : 0;
-    
+
     $fr2 = array();
     $fr2['profile_' . $bundle_name] = array(
       '#type' => 'select',
@@ -202,16 +202,73 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
         'class' => array('field'),
       ),
     );
-    $rows[$bundle_name] = array(
-      array('data' => $bundle['label'], 'width' => '20%'),
-      array('data' => drupal_render($fr2)),
-      array('data' => drupal_render($fr), 'width' => '65%'),
-    );
+
+    if ($entity_type == 'node') {
+      $target_ids = db_select('lingotek_entity_metadata', 'lem')
+          ->fields('lem', array('entity_id'))
+          ->condition('entity_key', 'node_sync_status')
+          ->condition('entity_type', 'node')
+          ->condition('value', 'TARGET')
+          ->execute()
+          ->fetchCol();
+      $query = db_select('lingotek_entity_metadata', 'lem')
+          ->fields('lem')
+          ->condition('lem.entity_key', 'profile')
+          ->condition('lem.entity_type', 'node');
+      if (!empty($target_ids)) {
+        $query->condition('lem.entity_id', $target_ids, 'NOT IN');
+      }
+
+      $query->join('node', 'n', 'lem.entity_id = n.nid AND n.type = \'' . $bundle_name . '\'');
+
+      $exception_num = $query->execute()
+          ->rowCount();
+
+      $options = array(
+        'attributes' => array('class' => array('ctools-use-modal ctools-modal-lingotek-small lingotek-center'), 'title' => 'Remove all profile exceptions for this content type'),
+        );
+
+      drupal_add_js(array(
+        'lingotek-small' => array(
+          'modalSize' => array(
+            'type' => 'fixed',
+            'width' => 450,
+            'height' => 400,
+          ),
+          'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+          'animation' => 'fadeIn',
+        ),
+      ), 'setting');
+
+      $title = $exception_num > 0 ? l($exception_num, LINGOTEK_MENU_MAIN_BASE_URL . '/clearexceptions/' . $bundle_name, $options) : $exception_num;
+
+      $fr3 = array(
+        '#type' => 'item',
+        '#markup' => $title,
+      );
+
+      $rows[$bundle_name] = array(
+        array('data' => $bundle['label'], 'width' => '20%'),
+        array('data' => drupal_render($fr2)),
+        array('data' => drupal_render($fr3), 'style' => 'text-align:center'),
+        array('data' => drupal_render($fr), 'width' => '65%'),
+      );
+    }
+    else {
+      $rows[$bundle_name] = array(
+        array('data' => $bundle['label'], 'width' => '20%'),
+        array('data' => drupal_render($fr2)),
+        array('data' => drupal_render($fr), 'width' => '65%'),
+      );
+    }
   }
 
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
 
-  if ($entity_type == 'field_collection_item') {
+  if ($entity_type == 'node') {
+    $header = array(t('Content Type'), t('Translation Profile *'), t('Exceptions'), t('Fields'));
+  }
+  elseif ($entity_type == 'field_collection_item') {
     $header = array(t('Collection Name'), t('Status *'), t('Fields'));
   }
 
@@ -1191,6 +1248,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#title' => t('Show language label on node pages'),
     '#default_value' => variable_get('lingotek_show_language_label'),
     '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
+  );
+
+  $form[$fkey]['lingotek_always_show_translate_tabs'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Always show non-Lingotek translate tabs'),
+    '#default_value' => variable_get('lingotek_always_show_translate_tabs'),
+    '#description' => t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
   );
 
   $form[$fkey]['lingotek_account_plan_type'] = array(
