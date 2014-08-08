@@ -754,7 +754,8 @@ function lingotek_get_language_override_form($form, &$form_state, $node = NULL) 
     '#title' => t('Language Override'),
     '#description' => t('Specify the language of the data currently contained in the fields if different from the language set for this node.'),
     '#options' => $lang_options,
-    '#empty_option' => t('(same)'),
+    '#empty_option' => t('(none)'),
+    '#weight' => 50, // place this field just after the language field
   );
   $source_language = !empty($form_state['values']['language']) ? $form_state['values']['language'] : NULL;
   if (!$source_language) {
