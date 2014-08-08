@@ -1711,9 +1711,14 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
   }
   elseif (empty($status)) {
-    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
+    // If the status is not there, then perhaps this is an in-place translation,
+    // so before creating a new 'pending' status for a missing language,
+    // first make sure the language is not the same as the node's original language.
+    if (empty($entity->lingotek['original_language']) || $lingotek_locale != Lingotek::convertDrupal2Lingotek($entity->lingotek['original_language'])) {
+      lingotek_keystore($entity_type, $id, 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_PENDING);
+    }
   }
-  
+
   if ($context) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
     if (!isset($context['results']['downloaded_node_targets']) || !is_array($context['results']['downloaded_node_targets'])) {
