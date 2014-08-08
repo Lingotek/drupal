@@ -1777,12 +1777,14 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
   if ($remove_from_tms) { //disassociate on TMS
     $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
     if (!$result) {
-      drupal_set_message(t('Failed to remove documents from Lingotek TMS.'), 'status', FALSE);
+      drupal_set_message(t('Failed to remove documents from Lingotek TMS.'), 'warning', FALSE);
       return;
     }
   }
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'document_id');
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'upload_status');
+  lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'original_language');
+  lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'source_language_%', 'LIKE');
   foreach ($entity_ids as $entity_id) {
     LingotekSync::setAllTargetStatus($entity_type, $entity_id, LingotekSync::STATUS_UNTRACKED);
   }
