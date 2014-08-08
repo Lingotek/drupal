@@ -653,7 +653,7 @@ function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale)
   $entity = lingotek_entity_load_single($entity_type, $entity_id);
   $ln = LingotekEntity::load($entity, $entity_type);
 
-  if ($ln->language == $drupal_language_code) {
+  if ($ln->language == $drupal_language_code && empty($entity->lingotek['allow_source_overwriting'])) {
     drupal_goto($entity_type . '/' . $entity_id . '/edit');
   }
   else {

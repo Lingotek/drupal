@@ -1294,32 +1294,32 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
       $dots_length = strlen($dots);
       $row->title = substr($row->title, 0, $title_truncate_length - $dots_length) . $dots;
     }
-    $icon = '';
+    $upload_icon = '';
     if ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
-      $icon = '<i class="fa fa-minus-square" style="color: #999;" title="' . t('Lingotek is disabled') . '"></i>';
+      $upload_icon = '<i class="fa fa-minus-square" style="color: #999;" title="' . t('Lingotek is disabled') . '"></i>';
     }
     elseif (!is_null($row->upload_status)) {
       switch ($row->upload_status) {
         case LingotekSync::STATUS_EDITED:
-          $icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
+          $upload_icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
           break;
         case LingotekSync::STATUS_CURRENT:
-          $icon = '<i class="fa fa-check-square" title="' . t('Uploaded to Lingotek') . '"></i>';
+          $upload_icon = '<i class="fa fa-check-square" title="' . t('Uploaded to Lingotek') . '"></i>';
           break;
         case LingotekSync::STATUS_PENDING:
-          $icon = '<i class="fa fa-square" title="' . t('Upload to Lingotek in progress') . '"></i>';
+          $upload_icon = '<i class="fa fa-square" title="' . t('Upload to Lingotek in progress') . '"></i>';
           break;
         case LingotekSync::STATUS_FAILED:
           $error = $row->last_sync_error ? $row->last_sync_error : '';
-          $icon = '<i class="fa fa-warning" style="color: darkorange;" title="' . t('Lingotek processing failed @error', array('@error' => ': ' . $error)) . '"></i>';
+          $upload_icon = '<i class="fa fa-warning" style="color: darkorange;" title="' . t('Lingotek processing failed @error', array('@error' => ': ' . $error)) . '"></i>';
           break;
         default:
-          $icon = '<i class="fa fa-question-circle" style="color: darkorange;" title="' . t('Unknown upload status') . ': ' . check_plain($row->upload_status) . '"></i>';
+          $upload_icon = '<i class="fa fa-question-circle" style="color: darkorange;" title="' . t('Unknown upload status') . ': ' . check_plain($row->upload_status) . '"></i>';
           break;
       }
     }
     else {
-      $icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
+      $upload_icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
     }
 
     $list_statuses = array('pending', 'ready', 'current', 'edited', 'untracked', 'target_localize', 'target_edited');
@@ -1343,9 +1343,12 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     $allow_source_overwriting = !empty($profiles[$row->lingotek['profile']]['allow_source_overwriting']);
     $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
 
-    $source_language = lingotek_row_source_language($row);
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $source_language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
-
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
+    if (!empty($translation_icons['source'])) {
+      $row->overridden_source_target_icon = $translation_icons['source'];
+      unset($translation_icons['source']);
+    }
+    $target_icons_str = implode('', array_values($translation_icons));
     $configuration = '';
 
     $disabled_class = $disabled ? ' ltk-disabled-icon' : '';
@@ -1378,7 +1381,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
     // Source
 
-    $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
+    $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $upload_icon . ' ';
     if ($language_col) {
       $source .= lingotek_get_upload_string($row, $languages);
     }
@@ -1422,7 +1425,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
       'nid' => $row->{$entity_id_key} ? : t('??'),
       'title' => $title,
       'language' => $source,
-      'translations' => $translations,
+      'translations' => $target_icons_str,
       'configuration' => $configuration,
       'document_id' => $row->document_id ? : t('N/A'),
       'content_type' => isset($info['bundles'][$row->type]['label']) ? $info['bundles'][$row->type]['label'] : $row->type,
@@ -1461,7 +1464,7 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
 }
 
 function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE) {
-  $html = "";
+  $icons = array();
 
   $legend = array(
     LingotekSync::STATUS_PENDING => t('In progress'),
@@ -1493,11 +1496,6 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
     if (key_exists($original_locale, $lingotek_languages)) {
       $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled; //array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
       $lang_code = $lingotek_languages[$original_locale]->language;
-
-       if (!is_null($source_language) && $lang_code === $source_language) {
-         continue; // hide source language targets (shouldn't exist anyways)
-       }
-
       $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
       if (!$allow_source_overwriting && !is_null($source_language) && $lang_code === $source_language) {
         continue; // hide source language targets (shouldn't exist anyways)
@@ -1509,12 +1507,18 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
         $css_classes .= $disabled ? ' target-disabled' : '';
         $tip = $languages[$lang_code]->name . ' - ' . $legend[$status];
         $status = $disabled ? LingotekSync::STATUS_UNTRACKED : $status; // all disabled entities should link to view page (not workbench)
-        $html .= l($lang_code, $link_map[$status] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_classes))));
+        $current_icon = l($lang_code, $link_map[$status] . $lingotek_locale, array('attributes' => array('target' => '_blank', 'title' => $tip, 'class' => array('language-icon', $css_classes))));
+        if (!is_null($source_language) && $lang_code === $source_language) {
+          $icons['source'] = $current_icon;
+        }
+        else {
+          $icons[$lang_code] = $current_icon;
+        }
       }
     }
   }
 
-  return $html;
+  return $icons;
 }
 
 /**
@@ -1794,13 +1798,15 @@ function lingotek_get_upload_string($row, $languages) {
   $lang_overridden = !empty($row->lang_override) ? TRUE : FALSE;
   $marked_language = !empty($languages[$row->language]->name) ? t($languages[$row->language]->name) : t('Unnamed (@language_code)', array('@language_code' => $row->language));
   $actual_language = !empty($languages[$actual_source_lang]->name) ? t($languages[$actual_source_lang]->name) : t('Unnamed (@language_code)', array('@language_code' => $actual_source_lang));
-  if ($actual_source_lang != $row->language) {
-    $response = '<span title="' . t('Language Override: This source content is marked as @marked_language in Drupal but is written in @actual_language.', array('@marked_language' => $marked_language, '@actual_language' => $actual_language)) . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
-  }
-  elseif ($lang_overridden) {
-    // Overridden language now matches language set in Drupal
-    $original_language = !empty($languages[$row->original_lang]->name) ? t($languages[$row->original_lang]->name) : t('Unnamed (@language_code)', array('@language_code' => $row->original_lang));
-    $response = '<span title="' . t('Language Override: This source content was uploaded as @original_language to Lingotek but is now @marked_language. Re-uploading this in its current state may corrupt the translation for this document.', array('@marked_language' => $marked_language, '@original_language' => $original_language)) . '">' . t($languages[$actual_source_lang]->name) . '&nbsp;(' . $row->language . '*)</span>';
+  $original_language = !empty($languages[$row->original_lang]->name) ? t($languages[$row->original_lang]->name) : $actual_language;
+  if ($lang_overridden) {
+    if ($actual_source_lang != $row->language) {
+      $span_title = t('Language Override: This source content is marked as @marked_language in Drupal but is written in @actual_language.', array('@marked_language' => $marked_language, '@actual_language' => $actual_language));
+    }
+    else {
+      $span_title = t('Language Override: This source content was uploaded as @original_language to Lingotek but is now @marked_language. Re-uploading this in its current state may corrupt the translation for this document.', array('@marked_language' => $marked_language, '@original_language' => $original_language));
+    }
+    $response = '<span title="' . $span_title . '">' . t($original_language) . (!empty($row->overridden_source_target_icon) ? '&nbsp;&nbsp;&nbsp;' . $row->overridden_source_target_icon : '') . '</span>';
   }
   else {
     $response = $row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name);

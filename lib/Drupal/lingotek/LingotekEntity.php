@@ -47,7 +47,12 @@ class LingotekEntity implements LingotekTranslatableEntity {
     $this->entity = $entity;
     $this->entity_type = $entity_type;
     $this->info = entity_get_info($this->entity_type);
-    $this->setLanguage();
+    if (!empty($entity->language_override)) {
+      $this->setLanguage($entity->language_override);
+    }
+    else {
+      $this->setLanguage();
+    }
   }
   
   /**

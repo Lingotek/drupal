@@ -692,7 +692,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // FROM HERE DOWN, LINGOTEK MANAGES BOTH THE NODE AND THE LANGUAGE
   ///////////////////////////////////////////////////////////////////////
 
-  if ($node->lingotek['allow_source_overwriting'] || ($is_node_translation && $node->lingotek['allow_target_localization'])) {
+  if ($node->lingotek['allow_source_overwriting'] || (lingotek_is_node_translation($node) && $node->lingotek['allow_target_localization'])) {
     $form = array_merge($form, lingotek_get_language_override_form($form, $form_state, $node));
   }
 
