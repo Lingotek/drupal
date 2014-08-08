@@ -1514,10 +1514,22 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     $entity = lingotek_entity_load_single($entity_type, $entity);
   }
 
-  // Exclude translated nodes (targets) created using node-based translation.
-  if ($entity_type == 'node' && $entity->tnid != 0 && $entity->tnid != $entity->nid) {
-    LingotekLog::trace('Skipping upload of node @id, since it is a translation target.', array('@id' => $entity->nid));
-    return;
+  if ($entity_type == 'node') {
+    // Exclude translated nodes (targets) created using node-based translation.
+    if ($entity->tnid != 0 && $entity->tnid != $entity->nid) {
+      LingotekLog::trace('Skipping upload of node @id, since it is a translation target.', array('@id' => $entity->nid));
+      return;
+    }
+    // Exclude completed in-place translations, as they would overwrite the source document with target content
+    $source_lang_str = 'source_language_' . Lingotek::convertDrupal2Lingotek($entity->language);
+    if (!empty($entity->lingotek['original_language']) && !empty($entity->lingotek[$source_lang_str])) {
+      $original_language = $entity->lingotek['original_language'];
+      $current_language = $entity->lingotek[$source_lang_str];
+      if ($original_language != $current_language) {
+        LingotekLog::trace('Skipping upload of node @id, since it is the result of an in-place translation and uploading it would replace the original document contents on the Lingotek TMS.', array('@id' => $entity->nid));
+        return;
+      }
+    }
   }
 
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
