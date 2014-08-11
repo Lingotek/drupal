@@ -2093,4 +2093,5 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   $remove_from_tms = $form_state['values']['confirm'];
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
+  */
 }

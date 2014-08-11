@@ -209,14 +209,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     return $existing_sid;
   }
 
-  /*
-   * Deprecated 
-   */
-
-  public static function getIdBySegment($lid) {
-    return intval($lid / LINGOTEK_CONFIG_SET_SIZE) + 1;
-  }
-
   protected static function assignSetId($lid) {
     // get the $lid's textgroup
     $textgroup = db_select('{locales_source}', 'l')

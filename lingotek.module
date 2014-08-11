@@ -161,19 +161,6 @@ function lingotek_menu() {
     'page arguments' => array(5),
   );
 
-  // Tab: Bulk Management
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/sync'] = array(
-    'title' => 'Config',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 4,
-    'access arguments' => array('administer lingotek'),
-    'description' => 'Bulk management of config translations',
-    'file' => 'lingotek.sync.inc',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_form_bulk_sync')
-  );
-  $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/sync'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/sync'];
-
   // Content Update Notifications Callback
   $items[LINGOTEK_NOTIFY_URL] = array(
     'title' => 'Content Translation Notifications',

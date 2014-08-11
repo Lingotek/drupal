@@ -705,7 +705,7 @@ class LingotekSync {
   public static function getConfigSetIdsToUpload() {
     $query = db_select('{lingotek_config_metadata}', 'lcm')
         ->fields('lcm', array('id'))
-        ->condition('config_key', 'set_sync_status')
+        ->condition('config_key', 'upload_status')
         ->condition('value', LingotekSync::STATUS_EDITED);
     $set_ids = $query->execute()->fetchCol();
     return $set_ids;
