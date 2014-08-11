@@ -74,7 +74,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
       break;
     }
 
-    if ($trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($document_id)) {
+    if ($trans_obj = LingotekConfigSet::loadByLingotekDocumentId($document_id)) {
       break;
     }
 
@@ -414,7 +414,7 @@ function lingotek_form_bulk_sync_submit($form, $form_state) {
   $vals = $form_state['values'];
 
   if ($vals['op'] == 'Force Download All') {
-    $document_ids = LingotekConfigChunk::getAllDocumentIds();
+    $document_ids = LingotekConfigSet::getAllDocumentIds();
     $available_targets = Lingotek::getLanguages();
     unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
     $download_targets = array();
@@ -604,7 +604,7 @@ function lingotek_update_config_progress($document_ids) {
   if (!is_array($document_ids)) {
     $document_ids = array($document_ids);
   }
-  $project_id = variable_get('lingotek_project', NULL);
+  $project_id = LingotekConfigSet::getProjectId();
 
   $progress_report = $api->getProgressReport($project_id, $document_ids);
 
@@ -615,21 +615,21 @@ function lingotek_update_config_progress($document_ids) {
     
     if (isset($progress_report->errors)) {
       foreach (get_object_vars($progress_report->errors) as $doc_id => $error) {
-        $chunk = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
+        $set = LingotekConfigSet::loadByLingotekDocumentId($doc_id);
         switch ($error->status) {
           case 'IN_QUEUE':
-            $chunk->setMetadataValue('upload_status', LingotekSync::STATUS_PENDING);
+            $set->setMetadataValue('upload_status', LingotekSync::STATUS_PENDING);
             break;
           case 'NOT_FOUND':
           default:
-            $chunk->setMetadataValue('upload_status', LingotekSync::STATUS_FAILED);
+            $set->setMetadataValue('upload_status', LingotekSync::STATUS_FAILED);
             LingotekLog::error('Received unexpected error status (@status) from Lingotek for config chunk #@id: <pre>@error</pre>', array('@status' => $error->status, '@id' => $chunk, '@error' => $error));
         }
       }
     }
     
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
-      $trans_obj = LingotekConfigChunk::loadByLingotekDocumentId($doc_id);
+      $trans_obj = LingotekConfigSet::loadByLingotekDocumentId($doc_id);
       if (!$trans_obj) {
         LingotekLog::error("Lingotek doc ID '@doc_id' not found", array('@doc_id' => $doc_id));
         continue;
@@ -649,7 +649,7 @@ function lingotek_update_config_progress($document_ids) {
           else { // If the workflow is not complete
             $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
           }
-          $cfg_values[] = array($trans_obj->cid, 'target_sync_status_' . $language, $to_status);
+          $cfg_values[] = array($trans_obj->sid, 'target_sync_status_' . $language, $to_status);
         }
       }
     }

@@ -248,23 +248,35 @@ function lingotek_menu() {
     $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/' . $machine_name] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name];
   }
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/config'] = array(
+    'title' => 'Config New',
+    'description' => 'Bulk grid of content translations',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -8,
+    'access arguments' => array('administer lingotek'),
+    'description' => 'Bulk grid of config translations',
+    'file' => 'lingotek.config.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lingotek_bulk_grid_form')
+  );
+
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_grid_customize',
-    'page arguments' => array(),
+    'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_filters_popup',
-    'page arguments' => array(),
+    'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
 
-  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/clear/%'] = array(
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/clear/filters/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_grid_clear_filters_page',
@@ -1215,6 +1227,7 @@ function lingotek_get_profiles_by_name($include_custom = FALSE, $use_tfunction =
     $profile_options[LingotekSync::PROFILE_CUSTOM] = $use_tfunction ? t('Custom') : 'Custom';
   }
   $profile_options[LingotekSync::PROFILE_DISABLED] = $use_tfunction ? t('Disabled') : 'Disabled';
+  $profile_options[LingotekSync::PROFILE_CONFIG] = $use_tfunction ? t('Config') : 'Config';
 
   return $profile_options;
 }
@@ -1381,6 +1394,12 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
   $entity = NULL;
   if ($entity_type == 'node') {
     $entity = lingotek_node_load_default($entity_id);
+  }
+  elseif ($entity_type == 'config') {
+    $set_id = LingotekConfigSet::getSetId($entity_id);
+    $doc_id = LingotekConfigSet::getDocId($set_id);
+    $entity->lingotek['document_id'] = $doc_id;
+    $entity->language = 'placeholder for the config language';
   }
   else {
     $entities = entity_load($entity_type, array($entity_id));

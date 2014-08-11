@@ -624,21 +624,87 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#default_value' => $defaults,
   );
 
+  $profiles = variable_get('lingotek_profiles');
+  $config_profile = isset($profiles[LingotekSync::PROFILE_CONFIG]) ? $profiles[LingotekSync::PROFILE_CONFIG] : NULL;
+
   $workflows = $api->listWorkflows();
   if (is_array($workflows) && count($workflows) > 1) {
-    $form['additional_translation']['lingotek_translate_config_options']['lingotek_translate_config_workflow_id'] = array(
+    $form['additional_translation']['lingotek_translate_config_options']['workflow_id'] = array(
       '#type' => 'select',
       '#title' => t('Workflow'),
       '#description' => t('This workflow will be used for handling these additional translation items.'),
       '#options' => $workflows,
-      '#default_value' => variable_get('lingotek_translate_config_workflow_id', ''),
+      '#default_value' => isset($config_profile['workflow_id']) ? $config_profile['workflow_id'] : '',
+    );
+
+    $stored_profile = lingotek_get_profile_settings(LingotekSync::PROFILE_CONFIG);
+    $stored_workflow_id =  (isset($stored_profile['workflow_id']) ? $stored_profile['workflow_id'] : '');
+    $selected_workflow_id = (isset($form_state['values']['workflow_id']) ? $form_state['values']['workflow_id'] : $stored_workflow_id);
+
+    $form['additional_translation']['prefill_phase_select'] = array(
+      '#title' => t("Desired Prefill Phase"),
+      '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
+      '#type' => 'select',
+    );
+    $form['additional_translation']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($selected_workflow_id);
+  }
+
+  // Projects
+  $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
+  $id = variable_get('lingotek_project', '');
+
+  if ($id == '' || !array_key_exists($id, $projects)) { //No project id set, project deleted, or community changed to one without that project.  Try to find the Drupal project
+    $id = array_search($site, $projects);
+    if ($id === False) { //Setup a default Drupal project
+      $id = lingotek_add_project($site);
+      $projects = (class_exists('LingotekApi')) ? $api->listProjects() : array();
+    }
+    else { //Assign to an existing Drupal project
+      variable_set('lingotek_project', $id);
+    }
+  }
+  
+  if ($projects && count($projects) > 1) {
+    $sorted = asort($projects);
+    $form['additional_translation']['project_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Default Project'),
+      '#options' => $projects,
+      '#description' => t('The default Lingotek Project with which translations will be associated.'),
+      '#default_value' => isset($config_profile['project_id']) ? $config_profile['project_id'] : $id,
+    );
+  }
+
+  // Vaults
+  $vaults = $api->listVaults();
+  $current_vault_id = variable_get('lingotek_vault', '');
+  $personal_vault_count = ( isset($vaults['Personal Vaults']) ) ? count($vaults['Personal Vaults']) : 0;
+  $community_vault_count = ( isset($vaults['Community Vaults']) ) ? count($vaults['Community Vaults']) : 0;
+
+  // If no vault id is set, and we don't have any personal vaults, then create one and add it to our project.
+  if (( $current_vault_id == '' ) && ( $personal_vault_count == 0 ) && ( $community_vault_count == 0 )) {
+    $current_project_id = variable_get('lingotek_project', '');
+    // But only if we have a ProjectID.
+    if ($current_project_id != '') {
+      $current_vault_id = lingotek_add_vault($site);
+      lingotek_add_vault_to_project();
+    }
+  }
+
+  if ($personal_vault_count + $community_vault_count > 1) {
+    $form['additional_translation']['vault_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Default Vault'),
+      '#options' => $vaults,
+      '#description' => t('The default Translation Memory Vault where translations are saved.'),
+      '#default_value' => isset($config_profile['vault_id']) ? $config_profile['vault_id'] : $current_vault_id,
     );
   }
 
   if ($setup_complete) {
     $form['additional_translation']['lingotek_translate_config_options']['view_status'] = array(
       '#type' => 'item',
-      '#description' => t('You can view the progress of the configuration translations on the <a href="@link">Translate Interface</a> page', array('@link' => url('admin/config/regional/translate'))),
+      '#description' => t('You can view the progress of the configuration translations on the <a href="@link">Translate Interface</a> page', array('@link' => url('admin/settings/lingotek/manage/config'))),
     );
   }
   return $form;
@@ -739,6 +805,8 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
     lingotek_admin_setup_nonbuiltins_batch($additional_operations);
   }
 
+  lingotek_save_config_profile($form_state);
+
   // if this function is being called as part of the setup process, continue to
   // the dashboard to make sure they get a language configured.  Otherwise,
   // put them back to the settings page when finished.
@@ -755,6 +823,29 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   else {
     drupal_goto($final_destination);
   }
+}
+
+function lingotek_save_config_profile($form_state) {
+  $profile = array(
+    'project_id' => $form_state['values']['project_id'],
+    'vault_id' => $form_state['values']['vault_id'],
+    'name' => 'lingotek_config',
+    'workflow_id' => $form_state['values']['workflow_id'],
+  );
+
+  // Might also save the prefill phase here?
+
+  $profile_index = LingotekSync::PROFILE_CONFIG;
+  lingotek_set_profile_settings($profile_index, $profile);
+
+  // Change all other workflows retroactively
+  $workflow_id = $form_state['values']['workflow_id'];
+  $prefill_phase = $form_state['values']['prefill_phase_select'];
+  $document_ids = LingotekConfigSet::getAllConfigDocIds();
+  // This just changes the workflow in the lingotek_config_metadata table, I assume we want to do this.
+  //    lingotek_keystore($entity['type'], $entity['id'], 'workflow_id', $workflow_id);
+  $api = LingotekApi::instance();
+  $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
 }
 
 function lingotek_admin_setup_nonbuiltins_batch($operations) {
@@ -846,9 +937,9 @@ function lingotek_admin_save_queued_strings() {
     if (strpos($k, "\0")) {
       list($singular, $plural) = explode("\0", $k);
       locale($singular, $context=NULL, $langcode='und');
-      $single_lid = LingotekConfigChunk::getLidBySource($singular);
+      $single_lid = LingotekConfigSet::getLidBySource($singular);
       locale($plural, $context=NULL, $langcode='und');
-      $plural_lid = LingotekConfigChunk::getLidBySource($plural);
+      $plural_lid = LingotekConfigSet::getLidBySource($plural);
       $plural_map[$plural_lid] = array('plid' => $single_lid, 'plural' => 1);
     }
     else {
@@ -1398,7 +1489,11 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $profiles_excluded_from_editing = array('CUSTOM', 'DISABLED');
 
   foreach ($profiles as $key => $profile_name) {
-    if (in_array((string)$key, $profiles_excluded_from_editing)) {
+    if ($key === LingotekSync::PROFILE_CONFIG) {
+      // Don't show the config profile in this list.
+      continue;
+    }
+    elseif (in_array((string)$key, $profiles_excluded_from_editing)) {
       $edit_link = '<i class="fa fa-gear fa-lg ltk-disabled-icon"></i>';
     }
     else {
@@ -1971,7 +2066,7 @@ function lingotek_disassociate_all_form_submit($form_state, $form) {
 
   //disassociate on CMS
   LingotekSync::disassociateAllEntities();
-  LingotekSync::disassociateAllChunks();
+  LingotekSync::disassociateAllSets();
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 }
 

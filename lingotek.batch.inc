@@ -160,8 +160,7 @@ function lingotek_get_sync_upload_batch_elements($entity_type, $upload_nids = ar
  * Sync - Upload Config Batch Elements:  Creates the batch elements for config (ie. menus, taxonomies,
  * etc.), that need to be uploaded.
  */
-function lingotek_get_sync_upload_config_batch_elements($upload_configs = array()) {
-
+function lingotek_get_sync_upload_config_batch_elements($set_ids = array()) {
   // pull outstanding imports from localize.drupal.org, if desired
   if (variable_get('lingotek_use_translation_from_drupal')) {
     module_load_include('admin.inc', 'lingotek');
@@ -170,9 +169,9 @@ function lingotek_get_sync_upload_config_batch_elements($upload_configs = array(
   }
 
   $operations = array();
-  if (is_array($upload_configs)) {
-    foreach ($upload_configs as $cid) {
-      $operations[] = array('lingotek_sync_upload_config_chunk', array($cid));
+  if (is_array($set_ids)) {
+    foreach ($set_ids as $sid) {
+      $operations[] = array('lingotek_sync_upload_config_set', array($sid));
     }
   }
   return $operations;
@@ -215,7 +214,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       $ran = FALSE;
       while ($record = $result->fetchAssoc()) {
         $ran = TRUE;
-        $operations[] = array('lingotek_sync_download_chunk_target', array($record['id'], $lingotek_locale, $sync_success_target));
+        $operations[] = array('lingotek_sync_download_config_target', array($record['id'], $lingotek_locale, $sync_success_target));
       }
       if ($ran) {
         $operations[] = array('drupal_flush_all_caches', array());
@@ -223,8 +222,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
     }
   }
   elseif (is_array($download_targets)) {
-    $doc_ids = array();
-    $updates = array();
+  $doc_ids = array();
     foreach ($download_targets as $download_target) {
       list($id, $entity_type) = LingotekSync::getEntityIdFromDocId($download_target->document_id);
       if ($id != NULL) {
@@ -233,15 +231,14 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
         $operations[] = array('lingotek_entity_download', array($id, $entity_type, $lingotek_locale));
       }
       else { // since no node was found associated with the document ID, check config chunks
-        $cid = LingotekConfigChunk::getIdByDocId($download_target->document_id);
-        if ($cid) {
+        $sid = LingotekConfigSet::getIdByDocId($download_target->document_id);
+        if ($sid) {
           $lingotek_locale = $download_target->locale;
-          $operations[] = array('lingotek_sync_download_chunk_target', array($cid, $lingotek_locale, $sync_success_target));
+          $operations[] = array('lingotek_sync_download_config_target', array($sid, $lingotek_locale, $sync_success_target));
         }
       }
     }
     $doc_ids = array_unique($doc_ids);
-    $operations = array_merge($updates, $operations);
   }
 
   return $operations;
@@ -267,7 +264,7 @@ function lingotek_batch_disassociate_content($remove_from_TMS) {
 
 
   $operations[] = array('LingotekSync::disassociateAllEntities', array());
-  $operations[] = array('LingotekSync::disassociateAllChunks', array());
+  $operations[] = array('LingotekSync::disassociateAllSets', array());
   drupal_set_message(t('All local translations have been disassociated from Lingotek.'));
 
   $batch = array(
@@ -286,7 +283,9 @@ function lingotek_batch_disassociate_content_worker($api, $doc_id) {
 function lingotek_sync_upload_node_finished($success, $results, $operations) {
   if ($success) {
     $count = isset($results['uploads']) ? $results['uploads'] : 0;
-    $message = format_plural($count, 'One entity uploaded to Lingotek.', '@count entities uploaded to Lingotek.');
+    $node_message = format_plural($count, 'One entity uploaded to Lingotek.', '@count entities uploaded to Lingotek.');
+    $config_message = format_plural($count, 'Uploaded one set of config items to Lingotek.', 'Uploaded @count sets of config items to Lingotek.');
+    $message = isset($results['uploaded_nids']) ? $node_message : $config_message;
     $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'entity id', 'entity ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
     $message .= (isset($results['disabled'])) ? ' ' . t("<i>(Note: entities with the Disabled profile must be set to an enabled profile to be uploaded)</i>") : "";
     $status = (isset($results['disabled'])) ? 'warning' : 'status';
@@ -299,57 +298,46 @@ function lingotek_sync_upload_node_finished($success, $results, $operations) {
 }
 
 /**
- * Upload Batch Worker Function: Upload Config Chunk for Translation
+ * Upload Batch Worker Function: Upload Config Set for Translation
  */
-function lingotek_sync_upload_config_chunk($cid, &$context) {
-
-  LingotekLog::trace('upload config chunk: @chunk_id', array('@chunk_id' => $cid));
-
-    if ($context) {
-    $context['message'] = t('Uploading configuration set @cid for translation', array('@cid' => $cid));
+function lingotek_sync_upload_config_set($set_id, &$context) {
+  if ($context) {
+    $context['message'] = t('Uploading configuration set @sid for translation', array('@sid' => $set_id));
   }
-  
   $api = LingotekApi::instance();
-  $chunk = LingotekSync::getConfigChunk($cid);
-  module_invoke_all('lingotek_pre_upload', $chunk);
-
-  // Push this chunk for translation.
-  if ($existing_document = $chunk->hasLingotekDocId()) {
+  $set = LingotekSync::getConfigSet($set_id);
+  module_invoke_all('lingotek_pre_upload', $set);
+  if ($existing_document = $set->hasLingotekDocId()) {
     LingotekLog::trace('existing document: @existing', array('@existing' => $existing_document));
-    // Update an existing Lingotek Document.
-    $result = $api->updateContentDocument($chunk);
+    $result = $api->updateContentDocument($set);
   }
   else {
-    // Create a new Lingotek Document.
-    $result = $api->addContentDocument($chunk, TRUE);
+    $result = $api->addContentDocument($set, TRUE);
   }
 
-  // WTD: This section has not been updated to accommodate results from config-chunk documents,
-  // as I couldn't find where the references to $context were being used after making this call
   if ($result) {
     $context['results']['uploads'] = isset($context['results']['uploads']) && is_numeric($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     if (!isset($context['results']['uploaded_cids']) || !is_array($context['results']['uploaded_cids'])) {
       $context['results']['uploaded_cids'] = array();
     }
-    $context['results']['uploaded_cids'][] = $cid;
+    $context['results']['uploaded_cids'][] = $set_id;
   }
   else {
     $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;
     if (!isset($context['results']['upload_fail_cids']) || !is_array($context['results']['upload_fail_cids'])) {
       $context['results']['upload_fail_cids'] = array();
     }
-    $context['results']['upload_fail_cids'][] = $cid;
+    $context['results']['upload_fail_cids'][] = $set_id;
   }
 }
 
-function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_success_status, &$context) {
-  
+function lingotek_sync_download_config_target($set_id, $lingotek_locale, $sync_success_status, &$context) {
   if ($context) {
-    $context['message'] = t('Downloading "@locale" translation for configuration set #@cid', array('@locale' => $lingotek_locale, '@cid' => $cid));
+    $context['message'] = t('Downloading "@locale" translation for configuration set #@set_id', array('@locale' => $lingotek_locale, '@set_id' => $set_id));
   }
-  
-  LingotekLog::trace('download chunk: @chunk_id (@language)', array('@chunk_id' => $cid, '@language' => $lingotek_locale));
-  $trans_obj = LingotekConfigChunk::loadById($cid);
+
+  LingotekLog::trace('download chunk: @set_id (@language)', array('@set_id' => $set_id, '@language' => $lingotek_locale));
+  $trans_obj = LingotekConfigSet::loadById($set_id);
   if ($trans_obj) {
     $result = $trans_obj->downloadTriggered($lingotek_locale);
   }
@@ -358,14 +346,14 @@ function lingotek_sync_download_chunk_target($cid, $lingotek_locale, $sync_succe
     if (!isset($context['results']['downloaded_chunk_targets']) || !is_array($context['results']['downloaded_chunk_targets'])) {
       $context['results']['downloaded_chunk_targets'] = array();
     }
-    $context['results']['downloaded_chunk_targets'][] = array("cid" => $cid, "locale" => $lingotek_locale);
+    $context['results']['downloaded_chunk_targets'][] = array("cid" => $set_id, "locale" => $lingotek_locale);
   }
   else {
     $context['results']['download_fails'] = isset($context['results']['download_fails']) && is_numeric($context['results']['download_fails']) ? $context['results']['download_fails'] + 1 : 1;
     if (!isset($context['results']['download_fail_chunk_targets']) || !is_array($context['results']['download_fail_chunk_targets'])) {
       $context['results']['download_fail_chunk_targets'] = array();
     }
-    $context['results']['download_fail_chunk_targets'][] = array("cid" => $cid, "locale" => $lingotek_locale);
+    $context['results']['download_fail_chunk_targets'][] = array("cid" => $set_id, "locale" => $lingotek_locale);
   }
 }
 
@@ -558,4 +546,39 @@ function lingotek_batch_keystore_worker($entity_type, $entity_id, $key, $value, 
   $result = lingotek_keystore($entity_type, $entity_id, $key, $value, $update_on_dup);
   $context['message'] = t('Updating tracking information for @et #@eid', array('@et' => $entity_type, '@eid' => $entity_id));
   $context['results'][] = $result;
+}
+
+function lingotek_config_update_selected($lids) {
+  $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
+  if (empty($set_ids)) {
+    drupal_set_message(t('No statuses to be updated.'), 'status', FALSE);
+    return;
+  }
+  $document_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
+  $batch = array(
+    'title' => t('Syncing Translation Progress with Lingotek'),
+    'finished' => 'lingotek_config_progress_update_finished',
+  );
+  $operations = array();
+
+  $segment = array();
+  $offset = 0;
+  $offset_interval = 5;
+  do {
+    $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
+    if (!empty($segment)) {
+      $operations[] = array('lingotek_update_config_progress', array($segment));
+    }
+    $offset += $offset_interval;
+  } while (count($segment) >= $offset_interval);
+
+  $batch['operations'] = $operations;
+  $redirect = 'admin/settings/lingotek/manage/config';
+
+  batch_set($batch);
+  batch_process($redirect);
+}
+
+function lingotek_config_progress_update_finished() {
+  drupal_set_message(t('Finished updating statuses. The statuses for all previously selected configuration items are now up to date.'));
 }

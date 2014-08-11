@@ -874,6 +874,24 @@ function lingotek_update_7509(&$sandbox) {
 }
 
 /**
+ * Adds the lingotek_config_map table.
+ */
+function lingotek_update_7510(&$sandbox) {
+  $module = 'lingotek';
+  $table = 'lingotek_config_map';
+  if (!db_table_exists($table)) {
+    $schema = drupal_get_schema_unprocessed($module, $table);
+    db_create_table($table, $schema);
+    $output = t('Table @table was created.', array('@table' => $table));
+  }
+  else {
+    $output = t('The @table table already exists. No action taken.', array('@table' => $table));
+  }
+
+  return $output;
+}
+
+/**
  * Change node_sync_status to upload_status in lingotek-specific metadata tables
  */
 function lingotek_update_7600(&$sandbox) {

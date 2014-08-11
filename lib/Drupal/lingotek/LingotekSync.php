@@ -22,13 +22,14 @@ class LingotekSync {
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
+  const PROFILE_CONFIG = 'CONFIG';
   const PROFILE_AUTOMATIC = 0;
   const PROFILE_MANUAL = 1;
 
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
-    if ($chunk_id = LingotekConfigChunk::getIdByDocId($doc_id)) {
-      return LingotekConfigChunk::getTargetStatusById($chunk_id, $lingotek_locale);
+    if ($chunk_id = LingotekConfigSet::getIdByDocId($doc_id)) {
+      return LingotekConfigSet::getTargetStatusById($chunk_id, $lingotek_locale);
     }
     else {
       list($entity_id, $entity_type) = self::getEntityIdFromDocId($doc_id);
@@ -96,7 +97,7 @@ class LingotekSync {
     return $projects;
   }
 
-  public static function insertTargetEntriesForAllChunks($lingotek_locale) {
+  public static function insertTargetEntriesForAllSets($lingotek_locale) {
     // insert/update a target language for all chunks
     $query = db_select('{lingotek_config_metadata}', 'meta')
         ->fields('meta', array('id'))
@@ -104,9 +105,10 @@ class LingotekSync {
     $ids = $query->execute()->fetchCol();
 
     foreach ($ids as $i) {
-      $chunk = LingotekConfigChunk::loadById($i);
-      if(is_object($chunk))
-        $chunk->setTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
+      $set = LingotekConfigSet::loadById($i);
+      if (is_object($set)) {
+        $set->setTargetsStatus(self::STATUS_PENDING, $lingotek_locale);
+      }
     }
   }
 
@@ -387,9 +389,9 @@ class LingotekSync {
   //lingotek_count_chunks
   public static function getChunkCountByStatus($status) {
     $all_lids = count(self::getAllChunkLids());
-    $dirty_lids = count(self::getDirtyChunkLids());
+    $dirty_lids = count(self::getDirtySetLids());
     $current_lids = $all_lids - $dirty_lids;
-    $chunk_size = LINGOTEK_CONFIG_CHUNK_SIZE;
+    $chunk_size = LINGOTEK_CONFIG_SET_SIZE;
     $num_edited_docs = round(($all_lids - $dirty_lids) / $chunk_size);
     $num_total_docs = round($all_lids / $chunk_size);
     $num_pending_docs = count(self::getChunksWithPendingTranslations());
@@ -523,7 +525,7 @@ class LingotekSync {
     // or ones that were not translated by Lingotek.
     // use the first addtl language as the query's base.
     $first_lang = array_shift($drupal_codes);
-    $lingotek_id = LingotekConfigChunk::getLingotekTranslationAgentId();
+    $lingotek_id = LingotekConfigSet::getLingotekTranslationAgentId();
     $primary_or = db_or()
         ->condition('lt0.i18n_status', 0)
         ->condition('lt0.translation_agent_id', $lingotek_id, '!=');
@@ -544,10 +546,10 @@ class LingotekSync {
     return $query;
   }
 
-  public static function getConfigChunk($chunk_id) {
-    // return LingotekConfigChunk object containing all segments
-    // for the given chunk id.
-    return LingotekConfigChunk::loadById($chunk_id);
+  public static function getConfigSet($set_id) {
+    // return LingotekConfigSet object containing all segments
+    // for the given sest id.
+    return LingotekConfigSet::loadById($set_id);
   }
 
   public static function getAllChunkLids() {
@@ -557,7 +559,7 @@ class LingotekSync {
     return $query->execute()->fetchCol();
   }
 
-  public static function getDirtyChunkLids() {
+  public static function getDirtySetLids() {
     // return the list of all lids from the locale_source table *not* fully translated
     $source_language = language_default();
     if (!isset($source_language->lingotek_locale)) {
@@ -575,7 +577,7 @@ class LingotekSync {
     }
     // get the list of all segments that need updating
     // that belong to the textgroups the user wants translated
-    $textgroups = array_merge(array(-1), LingotekConfigChunk::getTextgroupsForTranslation());
+    $textgroups = array_merge(array(-1), LingotekConfigSet::getTextgroupsForTranslation());
     $max_length = variable_get('lingotek_config_max_source_length', LINGOTEK_CONFIG_MAX_SOURCE_LENGTH);
     $query = db_select('{locales_source}', 'ls');
     $query->fields('ls', array('lid'))
@@ -600,10 +602,10 @@ class LingotekSync {
     // as the segment ID of the first segment in the chunk, divided by
     // the configured chunk size.  So, segments 1 through [chunk size] would
     // be in chunk #1, etc.
-    $lids = self::getDirtyChunkLids();
+    $lids = self::getDirtySetLids();
     $chunk_ids = array();
     foreach ($lids as $lid) {
-      $id = LingotekConfigChunk::getIdBySegment($lid);
+      $id = LingotekConfigSet::getSetId($lid);
       if (array_key_exists($id, $chunk_ids)) {
         $chunk_ids[$id]++;
       }
@@ -699,7 +701,16 @@ class LingotekSync {
     $result = $query->execute()->fetchCol();
     return $result;
   }
-  
+
+  public static function getConfigSetIdsToUpload() {
+    $query = db_select('{lingotek_config_metadata}', 'lcm')
+        ->fields('lcm', array('id'))
+        ->condition('config_key', 'set_sync_status')
+        ->condition('value', LingotekSync::STATUS_EDITED);
+    $set_ids = $query->execute()->fetchCol();
+    return $set_ids;
+  }
+
   public static function getEntityIdsByStatusAndTarget($entity_type, $status, $target_language = '%') {
     $query = db_select('{lingotek_entity_metadata}', 'l')
         ->distinct()
@@ -741,6 +752,24 @@ class LingotekSync {
     return $doc_ids;
   }
 
+  public static function getSetIdsFromLids($lids) {
+    $query = db_select('{lingotek_config_map}', 'l');
+    $query->addField('l', 'set_id');
+    $query->condition('lid', $lids, 'IN');
+    $sids = $query->execute()->fetchCol();
+    return $sids;
+  }
+
+  public static function getConfigDocIdsFromSetIds($sids) {
+    $query = db_select('{lingotek_config_metadata}', 'l');
+    $query->addField('l', 'value');
+    $query->condition('id', $sids, 'IN');
+    $query->condition('config_key', 'document_id');
+    $doc_ids = $query->execute()->fetchCol();
+
+    return $doc_ids;
+  }
+
   public static function getChunkIdsByStatus($status) {
     $query = db_select('{lingotek_config_metadata}', 'meta');
     $query->fields('meta', array('id'));
@@ -756,7 +785,7 @@ class LingotekSync {
     db_truncate('{lingotek_entity_metadata}')->execute();
   }
 
-  public static function disassociateAllChunks() {
+  public static function disassociateAllSets() {
     db_truncate('{lingotek_config_metadata}')->execute();
   }
 
