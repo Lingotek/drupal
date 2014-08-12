@@ -211,6 +211,28 @@ function lingotek_schema() {
       'id',
     ),
   );
+  $schema['lingotek_config_map'] = array(
+    'description' => 'An assignment of lids from locales_source and locales_target to set_ids for translation by Lingotek.',
+    'fields' => array(
+      'lid' => array(
+        'description' => 'The ID assigned by the i18n_string module.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'set_id' => array(
+        'description' => 'The ID of the set assigned to the string by the Lingotek Translation module.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array(
+      'lid',
+    ),
+  );
 
   return $schema;
 }
