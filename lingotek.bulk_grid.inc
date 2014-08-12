@@ -1520,7 +1520,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     }
     $target_icons_str = implode('', array_values($translation_icons));
     $configuration = lingotek_render_configuration($row, $profiles, $disabled_class);
-    $source = lingotek_render_source($row, $icon, $languages, $language_col, $entity_id);
+    $source = lingotek_render_source($entity_type, $row, $icon, $languages, $language_col);
     $actions = lingotek_render_actions($entity_type, $entity_id, $disabled_class);
     $title = $label_col ? lingotek_render_title($row, $info, $language) : '';
 
@@ -1604,14 +1604,15 @@ function lingotek_render_title($row, $info, $language) {
   return $title;
 }
 
-function lingotek_render_source($row, $icon, $languages, $language_col, $entity_id = 'Config Temporary Placeholder') {
+function lingotek_render_source($entity_type, $row, $icon, $languages, $language_col) {
+  $id = ($entity_type == 'config' ? $row->lid : $row->nid);
   $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
   $source .= ($language_col ? lingotek_get_upload_string($row, $languages) : '');
   $source .= '</span>';
   $linked_statuses = array(LingotekSync::STATUS_EDITED, LingotekSync::STATUS_FAILED);
   $needs_upload = (in_array($row->upload_status, $linked_statuses) || empty($row->upload_status)) && $row->lingotek['profile'] != LingotekSync::PROFILE_DISABLED;
   if ($needs_upload) { // add link for upload
-    $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $entity_id . ',\'upload\')">' . $source . '</span>';
+    $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $id . ',\'upload\')">' . $source . '</span>';
   }
   return $source;
 }

@@ -90,7 +90,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $disabled, $row->language); // show translation statuses
     $target_icons_str = implode('', array_values($translation_icons));
     $icon = lingotek_source_uploaded_icon($row);
-    $source_uploaded = lingotek_render_source($row, $icon, $languages, 'language');
+    $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
     $set_id = LingotekConfigSet::getSetId($lid, FALSE);
     $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
 
@@ -128,7 +128,7 @@ function lingotek_config_start_query() {
   $query->addField('lingo_document_id', 'value', 'document_id');
 
   // Entity Upload Status
-  $query->leftJoin('{lingotek_config_metadata}', 'lingo_upload_status', 'lingo_upload_status.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_upload_status.config_key = \'set_sync_status\' AND lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
+  $query->leftJoin('{lingotek_config_metadata}', 'lingo_upload_status', 'lingo_upload_status.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_upload_status.config_key = \'upload_status\' AND lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
   $query->addField('lingo_upload_status', 'value', 'upload_status');
 
   $query->fields('s', array('source', 'location', 'context', 'lid', 'textgroup'));
