@@ -57,7 +57,7 @@ define('LINGOTEK_NOTIFY_URL', 'lingotek/notify'); // notification callback URL
 /**
  * Defines the config documents' segment size in rows, config strings' maxlength, Localize magic number for taxonomies
  */
-define('LINGOTEK_CONFIG_SET_SIZE', 2);
+define('LINGOTEK_CONFIG_SET_SIZE', 100);
 define('LINGOTEK_CONFIG_MAX_SOURCE_LENGTH', 4096);
 define('LINGOTEK_I18N_ENABLED_VALUE', 1);
 define('LINGOTEK_TAXONOMY_LOCALIZE_VALUE', 1);
