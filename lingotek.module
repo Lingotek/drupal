@@ -236,7 +236,7 @@ function lingotek_menu() {
   }
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/config'] = array(
-    'title' => 'Config New',
+    'title' => 'Config',
     'description' => 'Bulk grid of content translations',
     'type' => MENU_LOCAL_TASK,
     'weight' => -8,
