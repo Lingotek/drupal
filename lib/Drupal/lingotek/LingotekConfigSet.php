@@ -219,11 +219,12 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
     $open_set_id = self::getOpenSet($textgroup);
     // will this work if the set_id is 0? or should it be if !($open_set_id === FALSE)?
-    if (!$open_set_id) {
+    if ($open_set_id === FALSE) {
       $open_set_id = self::createSet($textgroup);
     }
     // assign lid to that set
-    db_insert('{lingotek_config_map}')
+    db_merge('{lingotek_config_map}')
+        ->key(array('lid' => $lid))
         ->fields(array(
           'lid' => $lid,
           'set_id' => $open_set_id,
@@ -286,8 +287,10 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
   protected static function createSet($textgroup) {
     $timestamp = time();
-    $new_set_id = db_insert('{lingotek_config_metadata}')
+    $next_id = self::getNextSetId();
+    db_insert('{lingotek_config_metadata}')
         ->fields(array(
+          'id' => $next_id,
           'config_key' => 'textgroup',
           'value' => $textgroup,
           'created' => $timestamp,
@@ -295,7 +298,17 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ))
         ->execute();
 
-    return $new_set_id;
+    return $next_id;
+  }
+
+  protected static function getNextSetId() {
+    $query = db_select('{lingotek_config_metadata}', 'lcm');
+    $query->addExpression('MAX(id)');
+    $max_set_id = $query->execute()->fetchField();
+    if ($max_set_id) {
+      return (int) $max_set_id + 1;
+    }
+    return 1;
   }
 
   public static function getDocId($set_id) {
