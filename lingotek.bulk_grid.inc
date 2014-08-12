@@ -2045,7 +2045,7 @@ function lingotek_get_upload_string($row, $languages) {
   $lang_overridden = !empty($row->lang_override) ? TRUE : FALSE;
   $marked_language = !empty($languages[$row->language]->name) ? t($languages[$row->language]->name) : t('Unnamed (@language_code)', array('@language_code' => $row->language));
   $actual_language = !empty($languages[$actual_source_lang]->name) ? t($languages[$actual_source_lang]->name) : t('Unnamed (@language_code)', array('@language_code' => $actual_source_lang));
-  $original_language = !empty($languages[$row->original_lang]->name) ? t($languages[$row->original_lang]->name) : $actual_language;
+  $original_language = !empty($row->original_lang) && !empty($languages[$row->original_lang]->name) ? t($languages[$row->original_lang]->name) : $actual_language;
   if ($lang_overridden) {
     if ($actual_source_lang != $row->language) {
       $span_title = t('Language Override: This source content is marked as @marked_language in Drupal but is written in @actual_language.', array('@marked_language' => $marked_language, '@actual_language' => $actual_language));
