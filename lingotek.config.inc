@@ -87,7 +87,8 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     $source_text = htmlentities($row->{'source'});
     $source_text = lingotek_truncate_grid_text($source_text, 55);
 
-    $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $disabled, $row->language); // show translation statuses
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $disabled, $row->language); // show translation statuses
+    $target_icons_str = implode('', array_values($translation_icons));
     $icon = lingotek_source_uploaded_icon($row);
     $source_uploaded = lingotek_render_source($row, $icon, $languages, 'language');
     $set_id = LingotekConfigSet::getSetId($lid, FALSE);
@@ -100,7 +101,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       'location' => $row->{'location'},
       'context' => $row->{'context'},
       'textgroup' => $row->{'textgroup'},
-      'translations' => strlen($translations) ? $translations : t('N/A'),
+      'translations' => strlen($target_icons_str) ? $target_icons_str : t('N/A'),
       'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
       'set_name' => $set_name
     );
