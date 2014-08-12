@@ -1194,7 +1194,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   // Field collection entities have one, but it is called 'langcode'.
   // Message type entities have one, and it is called 'language'; but currently it does not appear in their entity keys.
   // So, the $language_col looks for the correct language field, and then guesses it is 'language' if it doesn't find one.
-  $language_col = isset($info['entity keys']['language']) && $info['entity keys']['language'] ? $info['entity keys']['language'] : 'language';
+  $language_col = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
 
   $table_data = array();
   $limit = isset($_SESSION['limit_select']) ? $_SESSION['limit_select'] : 10;
@@ -1520,7 +1520,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     }
     $target_icons_str = implode('', array_values($translation_icons));
     $configuration = lingotek_render_configuration($row, $profiles, $disabled_class);
-    $source = lingotek_render_source($row, $icon, $languages, $entity_id);
+    $source = lingotek_render_source($row, $icon, $languages, $language_col, $entity_id);
     $actions = lingotek_render_actions($entity_type, $entity_id, $disabled_class);
     $title = $label_col ? lingotek_render_title($row, $info, $language) : '';
 
@@ -1604,7 +1604,7 @@ function lingotek_render_title($row, $info, $language) {
   return $title;
 }
 
-function lingotek_render_source($row, $icon, $languages, $entity_id = 'Config Temporary Placeholder') {
+function lingotek_render_source($row, $icon, $languages, $language_col, $entity_id = 'Config Temporary Placeholder') {
   $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
   $source .= ($language_col ? lingotek_get_upload_string($row, $languages) : '');
   $source .= '</span>';

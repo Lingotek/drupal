@@ -89,7 +89,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
 
     $translations = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $disabled, $row->language); // show translation statuses
     $icon = lingotek_source_uploaded_icon($row);
-    $source_uploaded = lingotek_render_source($row, $icon, $languages);
+    $source_uploaded = lingotek_render_source($row, $icon, $languages, 'language');
     $set_id = LingotekConfigSet::getSetId($lid, FALSE);
     $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
 
