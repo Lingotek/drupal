@@ -2015,3 +2015,11 @@ function lingotek_get_source_node($node) {
   }
   return lingotek_entity_load_single('node', $node->nid);
 }
+
+function lingotek_is_inplace_source_download($entity_type, $entity, $lingotek_locale) {
+  if ($entity_type == 'node' && !empty($entity->lingotek['allow_source_overwriting']) && !empty($entity->lingotek['original_language']) && $entity->language == Lingotek::convertLingotek2Drupal($lingotek_locale)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
