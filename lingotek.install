@@ -230,7 +230,7 @@ function lingotek_schema() {
       ),
     ),
     'primary key' => array(
-      'id',
+      'lid',
     ),
   );
 
