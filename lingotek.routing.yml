@@ -1,0 +1,22 @@
+lingotek.dashboard:
+  path: '/admin/lingotek'
+  defaults:
+    _content: '\Drupal\lingotek\Controller\LingotekController::content'
+    _title: 'Lingotek Translation Dashboard'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.settings:
+  path: '/admin/lingotek/settings'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekSettingsForm'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.manage:
+  path: '/admin/lingotek/manage/{entity_type}'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekManageForm'
+    entity_type: 'node_type'
+  requirements:
+    _permission: 'administer lingotek'

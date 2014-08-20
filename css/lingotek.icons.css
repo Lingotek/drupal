@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Styling for Lingotek toolbar icons.
+ */
+
+/* Bar formatting */
+.toolbar-bar .toolbar-icon-translation:before {
+  background-image: url("../icons/bebebe/lingotek-chevron.png");
+}
+.no-svg .toolbar-bar .toolbar-icon-translation:before {
+  background-image: url("../icons/bebebe/lingotek-chevron.png");
+}
+.toolbar-bar .toolbar-icon-translation:active:before,
+.toolbar-bar .toolbar-icon-translation.active:before {
+  background-image: url("../icons/ffffff/lingotek-chevron.png");
+}
+.no-svg .toolbar-bar .toolbar-icon-translation:active:before,
+.no-svg .toolbar-bar .toolbar-icon-translation.active:before {
+  background-image: url("../icons/ffffff/lingotek-chevron.png");
+}
+
+
+/* Tray formatting */
+.toolbar-tray .toolbar-icon-translation:before {
+  background-image: url("../icons/787878/lingotek-chevron.png");
+}
+.no-svg .toolbar-tray .toolbar-icon-translation:before {
+  background-image: url("../icons/787878/lingotek-chevron.png");
+}
+.toolbar-tray .toolbar-icon-translation:active:before,
+.toolbar-tray .toolbar-icon-translation.active:before {
+  background-image: url("../icons/000000/lingotek-chevron.png");
+}
+.no-svg .toolbar-tray .toolbar-icon-translation:active:before,
+.no-svg .toolbar-tray .toolbar-icon-translation.active:before {
+  background-image: url("../icons/000000/lingotek-chevron.png");
+}

@@ -1,0 +1,6 @@
+lingotek:
+  version: VERSION
+  js:
+  css:
+    theme:
+      css/base.css: {}

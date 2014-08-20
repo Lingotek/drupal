@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * Implements hook_permission().
+ */
+function lingotek_permission() {
+  return array(
+    'administer lingotek' => array(
+      'title' => t('Administer Lingotek'),
+      'description' => t('Access the administrative settings for the module.')
+    ),
+    'translation' => array(
+      'title' => t('Translate'),
+      'description' => t('Access to the translate content (e.g., the "Translations" tab will be available on nodes, comments will be translatable)')
+    ),
+    'manage projects' => array(
+      'title' => t('Project Management'),
+      'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')
+    ),
+    'use lingotek developer tools' => array(
+      'title' => t('Developer'),
+      'description' => t('Access developer tools useful for detailed information and debugging')
+    ),
+  );
+}
+
+/**
+ * Implements hook_toolbar().
+ */
+function lingotek_toolbar() {
+  $items = array();
+
+  $items['translation'] = array(
+    '#type' => 'toolbar_item',
+    '#attached' => array(
+      'css' => array(
+        drupal_get_path('module', 'lingotek') . '/css/lingotek.icons.css',
+      ),
+    ),
+  );
+
+  return $items;
+}
+
