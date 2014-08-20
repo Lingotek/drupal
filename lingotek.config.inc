@@ -169,7 +169,12 @@ function lingotek_config_add_query_filters(&$query, $filters) {
 
   // Upload Status
   if (isset($filters['upload_status']) && $filters['upload_status'] != 'all') {
-    $query->condition('lingo_upload_status.value', $filters['upload_status']);
+    if ($filters['upload_status'] == 'never') {
+      $query->isNull('lingo_upload_status.value');
+    }
+    else {
+      $query->condition('lingo_upload_status.value', $filters['upload_status']);
+    }
   }
 }
 

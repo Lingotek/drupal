@@ -1095,8 +1095,9 @@ function lingotek_config_build_filters($form_state) {
       '#title' => t('Upload Status'),
       '#options' => array(
         'all' => t('All'),
-        LingotekSync::STATUS_EDITED => t('Out of Sync'),
-        LingotekSync::STATUS_CURRENT => t('In Sync'),
+        LingotekSync::STATUS_EDITED => t('Edited (needs reupload)'),
+        LingotekSync::STATUS_CURRENT => t('Current (uploaded)'),
+        'never' => t('Never uploaded'),
       ),
       '#multiple' => FALSE,
     )
