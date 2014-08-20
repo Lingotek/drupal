@@ -100,7 +100,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       'source_uploaded' => $source_uploaded,
       'location' => $row->{'location'},
       'context' => $row->{'context'},
-      'textgroup' => $row->{'textgroup'},
+      'textgroup' => $row->{'textgroup'} == 'default' ? 'built-in interface' : $row->{'textgroup'},
       'translations' => strlen($target_icons_str) ? $target_icons_str : t('N/A'),
       'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
       'set_name' => $set_name
@@ -142,7 +142,7 @@ function lingotek_config_add_query_filters(&$query, $filters) {
   }
 
   if (isset($filters['textgroup']) && $filters['textgroup'] == 'interface') {
-    $query->condition('textgroup', 'interface');
+    $query->condition('textgroup', 'default');
   }
   elseif (isset($filters['textgroup']) && $filters['textgroup'] == 'menu') {
     $query->condition('textgroup', 'menu');
