@@ -1605,7 +1605,15 @@ function lingotek_render_title($row, $info, $language) {
 }
 
 function lingotek_render_source($entity_type, $row, $icon, $languages, $language_col) {
-  $id = ($entity_type == 'config' ? $row->lid : $row->nid);
+  if ($entity_type == 'node') {
+    $id = $row->nid;
+  }
+  elseif ($entity_type == 'comment') {
+    $id = $row->cid;
+  }
+  elseif ($entity_type == 'config') {
+    $id = $row->lid;
+  }
   $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
   $source .= ($language_col ? lingotek_get_upload_string($row, $languages) : '');
   $source .= '</span>';
