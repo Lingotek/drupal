@@ -1,7 +1,7 @@
 lingotek.dashboard:
   path: '/admin/lingotek'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekController::content'
+    _form: '\Drupal\lingotek\Form\LingotekSetupForm'
     _title: 'Lingotek Translation Dashboard'
   requirements:
     _permission: 'administer lingotek'

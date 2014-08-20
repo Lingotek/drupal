@@ -1,0 +1,15 @@
+default:
+preference:
+  advanced_parsing: true
+  advanced_taxonomy_terms: true
+account:
+  type: basic
+  login: rbailey@lingotek.com
+  token: null
+  first_name: Rob
+  last_name: Bailey
+  email: rbailey@lingotek.com
+translate:
+  entity: null
+  config: null
+  interface: null
