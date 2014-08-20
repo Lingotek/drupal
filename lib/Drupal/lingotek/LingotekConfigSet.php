@@ -130,6 +130,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->condition('config_key', 'textgroup')
         ->execute()
         ->fetchField();
+    $textgroup = ($textgroup == 'default') ? 'Built-in Interface' : $textgroup;
 
     $all_from_group = db_select('{lingotek_config_metadata}', 'l')
         ->fields('l', array('id'))
@@ -139,7 +140,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->execute()
         ->fetchCol();
     $num_in_group = array_search($this->sid, $all_from_group);
-    $this->title = ucfirst($textgroup) . ' ' . $num_in_group;
+    $this->title = ucfirst($textgroup) . ' ' . (1 + $num_in_group);
     return $this->title;
   }
 
@@ -163,6 +164,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->condition('config_key', 'textgroup')
         ->execute()
         ->fetchField();
+    $textgroup = ($textgroup == 'default') ? 'Built-in Interface' : $textgroup;
 
     $all_from_group = db_select('{lingotek_config_metadata}', 'l')
         ->fields('l', array('id'))
@@ -172,7 +174,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->execute()
         ->fetchCol();
     $num_in_group = array_search($set_id, $all_from_group);
-    return ucfirst($textgroup) . ' ' . $num_in_group;
+    return ucfirst($textgroup) . ' ' . (1 + $num_in_group);
   }
 
   /**
