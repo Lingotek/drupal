@@ -1272,6 +1272,8 @@ function lingotek_get_profile_options() {
   $profile_options[LingotekSync::PROFILE_CUSTOM] = t('Custom');
   $profile_options[LingotekSync::PROFILE_DISABLED] = t('Disabled');
 
+  unset($profile_options[LingotekSync::PROFILE_CONFIG]);
+
   return $profile_options;
 }
 
