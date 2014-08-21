@@ -938,6 +938,47 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   /**
+   * Return bool if a specific lid is dirty
+   *
+   * @param int
+   *    a single lid
+   */
+  public static function isLidDirty($lid) {
+    $query = db_select('{lingotek_config_map}', 'lcm')
+        ->fields('lcm', array('dirty'))
+        ->condition('lid', $lid)
+        ->execute();
+    $dirty = $query->fetchField();
+    return $dirty;
+  }
+
+  /**
+   * Mark as dirty all lids passed, in the lingotek_config_map table
+   *
+   * @param array
+   *    the list of lids that are dirty
+   */
+  public static function markDirtyLids($lids) {
+    db_update('{lingotek_config_map}')
+        ->fields(array('dirty' => 1))
+        ->condition('lid', $lids, 'IN')
+        ->execute();
+  }
+
+  /**
+   * Mark as clean all lids passed, in the lingotek_config_map table
+   *
+   * @param array
+   *    the list of lids that are clean
+   */
+  public static function markCleanLids($lids) {
+    db_update('{lingotek_config_map}')
+        ->fields(array('dirty' => 0))
+        ->condition('lid', $lids, 'IN')
+        ->execute();
+  }
+
+  /**
    * Delete all target segments for a given set
    *
    * @param int
