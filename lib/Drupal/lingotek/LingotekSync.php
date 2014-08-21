@@ -386,31 +386,6 @@ class LingotekSync {
     return $total_count;
   }
 
-  //lingotek_count_chunks
-  public static function getChunkCountByStatus($status) {
-    $all_lids = count(self::getAllChunkLids());
-    $dirty_lids = count(self::getDirtySetLids());
-    $current_lids = $all_lids - $dirty_lids;
-    $chunk_size = LINGOTEK_CONFIG_SET_SIZE;
-    $num_edited_docs = round(($all_lids - $dirty_lids) / $chunk_size);
-    $num_total_docs = round($all_lids / $chunk_size);
-    $num_pending_docs = count(self::getChunksWithPendingTranslations());
-    $num_curr_docs = $num_total_docs - $num_edited_docs - $num_pending_docs;
-    $num_curr_docs = ($num_curr_docs > 0 ? $num_curr_docs : 0);
-
-    if ($status == self::STATUS_EDITED) {
-      return $num_edited_docs;
-    }
-    elseif ($status == self::STATUS_PENDING) {
-      return $num_pending_docs;
-    }
-    elseif ($status == self::STATUS_CURRENT) {
-      return $num_curr_docs;
-    }
-    LingotekLog::error('Unknown config-chunk status: @status', array('@status' => $status));
-    return 0;
-  }
-
   public static function getTargetNodeCountByStatus($status, $lingotek_locale) {
     $target_prefix = 'target_sync_status_';
     $target_key = $target_prefix . $lingotek_locale;
@@ -550,13 +525,6 @@ class LingotekSync {
     // return LingotekConfigSet object containing all segments
     // for the given sest id.
     return LingotekConfigSet::loadById($set_id);
-  }
-
-  public static function getAllChunkLids() {
-    // return the list of all lids
-    $query = db_select('{locales_source}', 'ls')
-        ->fields('ls', array('lid'));
-    return $query->execute()->fetchCol();
   }
 
   public static function getDirtySetLids() {
