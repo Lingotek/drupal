@@ -4,11 +4,11 @@ preference:
   advanced_taxonomy_terms: true
 account:
   type: basic
-  login: rbailey@lingotek.com
+  login: null
   token: null
-  first_name: Rob
-  last_name: Bailey
-  email: rbailey@lingotek.com
+  first_name: null
+  last_name: null
+  email: null
 translate:
   entity: null
   config: null
