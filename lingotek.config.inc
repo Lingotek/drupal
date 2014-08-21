@@ -130,8 +130,10 @@ function lingotek_config_start_query() {
   // Entity Upload Status
   $query->leftJoin('{lingotek_config_metadata}', 'lingo_upload_status', 'lingo_upload_status.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_upload_status.config_key = \'upload_status\' AND lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
   $query->addField('lingo_upload_status', 'value', 'upload_status');
-
   $query->fields('s', array('source', 'location', 'context', 'lid', 'textgroup'));
+  // Only show items in textgroups that are selected for translation on Config Settings page.
+  $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation();
+  $query->condition('s.textgroup', $translatable_textgroups, 'IN');
 
   return $query;
 }
