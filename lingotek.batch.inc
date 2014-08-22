@@ -232,7 +232,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       }
       else { // since no node was found associated with the document ID, check config chunks
         $sid = LingotekConfigSet::getIdByDocId($download_target->document_id);
-        if ($sid) {
+        if ($sid !== FALSE) {
           $lingotek_locale = $download_target->locale;
           $operations[] = array('lingotek_sync_download_config_target', array($sid, $lingotek_locale, $sync_success_target));
         }
