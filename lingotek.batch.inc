@@ -302,7 +302,7 @@ function lingotek_sync_upload_node_finished($success, $results, $operations) {
  */
 function lingotek_sync_upload_config_set($set_id, &$context) {
   if ($context) {
-    $context['message'] = t('Uploading configuration set @sid for translation', array('@sid' => $set_id));
+    $context['message'] = t('Uploading configuration set #@sid for translation', array('@sid' => (1 + $set_id)));
   }
   $api = LingotekApi::instance();
   $set = LingotekSync::getConfigSet($set_id);

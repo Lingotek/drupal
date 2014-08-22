@@ -720,10 +720,10 @@ function lingotek_config_build_column_checkboxes($form_state) {
       '#title' => t('ID'),
       '#default_value' => isset($_SESSION['config_custom'][$prefix . 'lid' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'lid' . $suffix] : in_array('lid', $columns['defaults']),
     ),
-    'textgroup' => array(
+    'set_name' => array(
       '#type' => 'checkbox',
-      '#title' => t('Textgroup'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'textgroup' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'textgroup' . $suffix] : in_array('textgroup', $columns['defaults']),
+      '#title' => t('Config Set Name'),
+      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'set_name' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'set_name' . $suffix] : in_array('set_name', $columns['defaults']),
     ),
     'source' => array(
       '#type' => 'checkbox',
@@ -755,10 +755,10 @@ function lingotek_config_build_column_checkboxes($form_state) {
       '#title' => t('Document ID'),
       '#default_value' => isset($_SESSION['config_custom'][$prefix . 'doc_id' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'doc_id' . $suffix] : in_array('doc_id', $columns['defaults']),
     ),
-    'set_name' => array(
+    'textgroup' => array(
       '#type' => 'checkbox',
-      '#title' => t('Config Set Name'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'set_name' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'set_name' . $suffix] : in_array('set_name', $columns['defaults']),
+      '#title' => t('Textgroup'),
+      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'textgroup' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'textgroup' . $suffix] : in_array('textgroup', $columns['defaults']),
     ),
   );
   $column_elements = array_intersect_key($column_elements, $columns['columns']); // Reduces the output columns to the defaults specified in 'lingotek_grid_define_columns'
@@ -954,22 +954,21 @@ function lingotek_config_define_columns() {
   $columns = array(
     'columns' => array(
       'lid',
-      'textgroup',
+      'set_name',
       'source',
       'source_uploaded',
       'translations',
       'location',
       'context',
       'doc_id',
-      'set_name',
+      'textgroup',
     ),
     'defaults' => array(
       'lid',
-      'textgroup',
+      'set_name',
       'source',
       'source_uploaded',
       'translations',
-      'set_name',
     ),
   );
   $columns['columns'] = array_combine($columns['columns'], $columns['columns']);

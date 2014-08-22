@@ -17,15 +17,15 @@ function lingotek_config_filter_inline_submit($form, $form_state) {
 
 function lingotek_config_header() {
   $header = array(// Define the tentative source header
-    'lid' => array('data' => t('ID'), 'field' => 'lid'),
-    'textgroup' => array('data' => t('Textgroup'), 'field' => 'textgroup'),
-    'source' => array('data' => t('Source'), 'field' => 'source', 'width' => '20%'),
+    'lid' => array('data' => t('ID'), 'field' => 'lid', 'width' => '2%'),
+    'set_name' => array('data' => t('Config Set Name'), 'field' => 'set_id', 'width' => '15%'),
+    'source' => array('data' => t('Source'), 'field' => 'source', 'width' => '25%'),
     'source_uploaded' => array('data' => t('Source Uploaded'), 'field' => 'source_uploaded'),
     'translations' => array('data' => t('Translations')),
     'location' => array('data' => t('Location'), 'field' => 'location'),
     'context' => array('data' => t('Context'), 'field' => 'context'),
     'doc_id' => array('data' => t('Doc ID'), 'field' => 'doc_id', 'display' => 'none'),
-    'set_name' => array('data' => t('Config Set Name'), 'field' => 'set_id'),
+    'textgroup' => array('data' => t('Textgroup'), 'field' => 'textgroup'),
   );
 
   return $header;
@@ -154,9 +154,6 @@ function lingotek_config_add_query_filters(&$query, $filters) {
   }
   elseif (isset($filters['textgroup']) && $filters['textgroup'] == 'blocks') {
     $query->condition('textgroup', 'block');
-  }
-  elseif (isset($filters['textgroup']) && $filters['textgroup'] == 'default') {
-    $query->condition('textgroup', 'default');
   }
 
   // Lingotek Document ID
