@@ -2,24 +2,23 @@
 
 /**
  * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsForm.
+ * Contains \Drupal\lingotek\Form\LingotekSetupForm.
  */
 
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Config\Context\ContextInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Configure text display settings for this page.
+ * Configure Lingotek
  */
-class LingotekSettingsForm extends ConfigFormBase {
+class LingotekConnectForm extends ConfigFormBase {
 
   /**
-   * Constructs a \Drupal\lingotek\Form\LingotekSettingsForm object.
+   * Constructs a \Drupal\lingotek\Form\LingotekConnectForm object.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   The factory for configuration objects.
@@ -41,19 +40,20 @@ class LingotekSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function getFormID() {
-    return 'lingotek.settings_form';
+    return 'lingotek.connect_form';
   }
 
-  /**
-   * {@inheritdoc}
+  /** * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    /*
+     * SOMETHING FOR THE RETURN TRIP
     $config = $this->configFactory->get('lingotek.settings');
-    $case = $config->get('case');
-    $form['lingotek_case'] = array(
-      '#type' => 'radios',
+    $login = $config->get('account.login');
+    $form['lingotek_login'] = array(
+      '#type' => 'radio',
       '#title' => $this->t('Configure Lingotek World Text'),
-      '#default_value' => $case,
+      '#default_value' => $login,
       '#options' => array(
         'upper' => $this->t('UPPER'),
         'title' => $this->t('Title'),
@@ -62,6 +62,18 @@ class LingotekSettingsForm extends ConfigFormBase {
     );
 
     return parent::buildForm($form, $form_state);
+    */
+
+    $form = parent::buildForm($form, $form_state);
+    if (!isset($form['#attached'])) {
+      $form['#attached'] = array();
+    }
+    if (!isset($form['#attached']['js'])) {
+      $form['#attached']['js'] = array();
+    }
+      $form['#attached']['js'][] = drupal_get_path('module', 'lingotek') . '/js/connect.js';
+
+
   }
 
   /**
@@ -69,7 +81,7 @@ class LingotekSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->configFactory->get('lingotek.settings')
-      ->set('case', $form_state['values']['lingotek_case'])
+      ->set('account.login', $form_state['values']['lingotek_login'])
       ->save();
 
     parent::submitForm($form, $form_state);

@@ -9,6 +9,7 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -44,10 +45,11 @@ class LingotekSetupForm extends ConfigFormBase {
     return 'lingotek.setup_form';
   }
 
-  /**
-   * {@inheritdoc}
+  /** * {@inheritdoc}
    */
-  public function buildForm(array $form, array &$form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
+
+    $form = parent::buildForm($form, $form_state);
 
     $config = $this->config('lingotek.settings');
     $current_login_id = $config->get('account.login');
@@ -86,24 +88,20 @@ class LingotekSetupForm extends ConfigFormBase {
       '#maxlength' => 128,
       '#required' => TRUE,
     );
-  
-    $form['lingotek_button_spacer'] = array('#markup' => '<div>&nbsp;</div>');
-  
-    $form['actions']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Next'), // Create Account
-      '#button_type' => 'primary'
-    );
-    //$form['lingotek_back_button'] = lingotek_setup_link('admin/config/lingotek/account-settings', t('Enterprise Customers - Connect Here'));
-    //$form['lingotek_support_footer'] = lingotek_support_footer();
 
-    return parent::buildForm($form, $form_state);
+    $form['lingotek_spacer_above'] = array('#markup' => '<span>&nbsp;</span>');
+    $form['actions']['submit']['#value'] = $this->t('Next');
+    $form['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+    $form['actions']['lingotek_back_button'] = SELF::getEnterpriseFormBtn('admin/config/lingotek/account-settings', t('Enterprise Customers - Connect Here'));
+    $form['lingotek_spacer_below'] = array('#markup' => '<span>&nbsp;</span>');
+    $form['lingotek_support_footer'] = SELF::getSupportFooter();
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, array &$form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->configFactory->get('lingotek.settings')
       ->set('case', $form_state['values']['lingotek_case'])
       ->save();
@@ -111,4 +109,27 @@ class LingotekSetupForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
   }
 
+  public static function getEnterpriseFormBtn($path = 'admin/config/lingotek/new-account', $text = 'Previous Step') {
+    return array(
+      '#markup' => '<span style="margin-right: 15px;">' . l($text, $path) . '</span>',
+      '#weight' => 100,
+    );
+  }
+
+  public static function getSupportFooter() {
+    return array(
+      '#theme' => 'table',
+      '#header' => array(),
+      '#rows' => array(
+        array(t('<strong>Support Hours:</strong><br>9am - 6pm MDT'),
+          t('<strong>Phone:</strong><br> (801) 331-7777'),
+          t('<strong>Email:</strong><br> <a href="mailto:support@lingotek.com">support@lingotek.com</a>')
+        )
+      ),
+      '#attributes' => array(
+        '#style' => 'width:500px; margin-top: 20px; border-width: 2px; border-style: solid; border-color: black;'
+      ),
+      '#weight' => 110,
+    );
+  }
 }
