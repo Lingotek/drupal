@@ -38,15 +38,11 @@ function lingotek_perform_action(nid, action) {
     }
   }
 
-  var message_shown = false;
+  var message_already_shown = false;
 
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
       $('.form-checkbox').change(function() {
-        if (message_shown !== true) {
-          $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some checkboxes are automatically checked to indicate that.</div>');
-          message_shown = true;
-        }
         var cells_of_selected_row = $(this).parents("tr").children();
 
         var selected_set_name = cells_of_selected_row.children('.set_name').text();
@@ -56,16 +52,22 @@ function lingotek_perform_action(nid, action) {
         var rows_with_incompletes = rows_in_same_set.children().children('.target-pending, .target-ready').parent().parent();
         var checkboxes = rows_with_incompletes.children().children().children("input");
         var all_chechboxes_in_set = rows_in_same_set.children().children().children("input");
+        var clicked_is_not_current = $(this).parents("tr").children().children('.target-pending, .target-ready').length;
         if ($(this).is(':checked')) {
           checkboxes.attr('checked',true);
           rows_with_incompletes.addClass('selected');
         }
-        else if ($(this).parents("tr").children().children('.target-pending, .target-ready').length) {
+        else if (clicked_is_not_current) {
           all_chechboxes_in_set.attr('checked',false);
           rows_in_same_set.removeClass('selected');
         }
         else {
           // only uncheck the box that was clicked
+        }
+
+        if (!message_already_shown && rows_with_incompletes.length) {
+          $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some checkboxes are automatically checked to indicate that.</div>');
+          message_shown = true;
         }
       });
 

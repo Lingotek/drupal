@@ -1729,12 +1729,12 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
         $status = strtoupper($statuses[$key]);
         $status = $disabled && strtoupper($status) != LingotekSync::STATUS_CURRENT ? LingotekSync::STATUS_UNTRACKED : $status;
-        // Check if it's dirty, if so keep the status, if not use LingotekSync::STATUS_CURRENT. This is to prevent an entire config set from showing as dirty and needing action taken.
-        $dirty = FALSE;
+        // Check if it's current, if so use LingotekSync::STATUS_CURRENT, if not keep the status. This is to prevent an entire config set from showing as dirty and needing action taken.
+        $current = FALSE;
         if ($entity_type == 'config') {
-          $dirty = LingotekConfigSet::isLidDirty($entity_id);
+          $current = LingotekConfigSet::isLidCurrent($entity_id);
         }
-        $status = $dirty ? $status : LingotekSync::STATUS_CURRENT;
+        $status = $current ? LingotekSync::STATUS_CURRENT : $status;
         $css_classes = 'target-' . strtolower($status);
         $css_classes .= $disabled ? ' target-disabled' : '';
         $tip = $languages[$lang_code]->name . ' - ' . $legend[$status];

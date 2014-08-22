@@ -938,14 +938,14 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   /**
-   * Return bool if a specific lid is dirty
+   * Return bool if a specific lid is current
    *
    * @param int
    *    a single lid
    */
-  public static function isLidDirty($lid) {
+  public static function isLidCurrent($lid) {
     $query = db_select('{lingotek_config_map}', 'lcm')
-        ->fields('lcm', array('dirty'))
+        ->fields('lcm', array('current'))
         ->condition('lid', $lid)
         ->execute();
     $dirty = $query->fetchField();
@@ -953,27 +953,16 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   /**
-   * Mark as dirty all lids passed, in the lingotek_config_map table
+   * Mark all lids passed as current or not, in the lingotek_config_map table
    *
    * @param array
-   *    the list of lids that are dirty
+   *    the list of lids that are current
+   * @param int
+   *    1 to mark it current, else 0
    */
-  public static function markDirtyLids($lids) {
+  public static function markLidsCurrent($lids, $current = 1) {
     db_update('{lingotek_config_map}')
-        ->fields(array('dirty' => 1))
-        ->condition('lid', $lids, 'IN')
-        ->execute();
-  }
-
-  /**
-   * Mark as clean all lids passed, in the lingotek_config_map table
-   *
-   * @param array
-   *    the list of lids that are clean
-   */
-  public static function markCleanLids($lids) {
-    db_update('{lingotek_config_map}')
-        ->fields(array('dirty' => 0))
+        ->fields(array('current' => $current))
         ->condition('lid', $lids, 'IN')
         ->execute();
   }

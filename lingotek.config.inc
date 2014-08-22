@@ -217,7 +217,7 @@ function lingotek_config_action_submit($form, $form_state) {
 }
 
 function lingotek_config_upload_selected($lids) {
-  LingotekConfigSet::markDirtyLids($lids);
+  LingotekConfigSet::markLidsCurrent($lids, 0);
   $batch = array(
     'title' => t('Uploading Content To Lingotek'),
     'finished' => 'lingotek_sync_upload_node_finished'
@@ -240,7 +240,7 @@ function lingotek_config_upload_selected($lids) {
 }
 
 function lingotek_config_download_selected($lids) {
-  LingotekConfigSet::markCleanLids($lids);
+  LingotekConfigSet::markLidsCurrent($lids);
   $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
   if (empty($set_ids)) {
     drupal_set_message(t('Make sure those configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
