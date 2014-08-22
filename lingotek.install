@@ -230,7 +230,8 @@ function lingotek_schema() {
       ),
       'current' => array(
         'description' => 'Tells whether the translation for the individual config item is dirty and needs to be updated or not.',
-        'type' => 'binary',
+        'type' => 'int',
+        'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
       ),

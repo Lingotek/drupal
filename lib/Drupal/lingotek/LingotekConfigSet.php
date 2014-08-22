@@ -961,10 +961,12 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    1 to mark it current, else 0
    */
   public static function markLidsCurrent($lids, $current = 1) {
-    db_update('{lingotek_config_map}')
-        ->fields(array('current' => $current))
-        ->condition('lid', $lids, 'IN')
-        ->execute();
+    $query = db_update('{lingotek_config_map}')
+        ->fields(array('current' => $current));
+    if ($lids != 'all') {
+      $query->condition('lid', $lids, 'IN');
+    }
+    $query->execute();
   }
 
   /**

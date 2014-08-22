@@ -66,8 +66,8 @@ function lingotek_perform_action(nid, action) {
         }
 
         if (!message_already_shown && rows_with_incompletes.length) {
-          $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some checkboxes are automatically checked to indicate that.</div>');
-          message_shown = true;
+          $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some checkboxes are automatically checked.</div>');
+          message_already_shown = true;
         }
       });
 
