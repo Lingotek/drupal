@@ -132,7 +132,7 @@ function lingotek_config_start_query() {
   $query->addField('lingo_upload_status', 'value', 'upload_status');
   $query->fields('s', array('source', 'location', 'context', 'lid', 'textgroup'));
   // Only show items in textgroups that are selected for translation on Config Settings page.
-  $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation();
+  $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation() ? : array('no textgroups selected');
   $query->condition('s.textgroup', $translatable_textgroups, 'IN');
 
   return $query;
