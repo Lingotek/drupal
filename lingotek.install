@@ -924,7 +924,7 @@ function lingotek_update_7600(&$sandbox) {
  * Truncate lingotek_config_metadata table in preparation for new config handling.
  */
 function lingotek_update_7601(&$sandbox) {
-  db_truncate('{lingotek_config_metadata}');
+  db_truncate('{lingotek_config_metadata}')->execute();
   return t('Truncated table containing Lingotek config metadata such as document ID\'s and translation status for config strings.');
 }
 

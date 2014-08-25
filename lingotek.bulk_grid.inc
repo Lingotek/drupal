@@ -969,6 +969,7 @@ function lingotek_config_define_columns() {
       'source',
       'source_uploaded',
       'translations',
+      'textgroup',
     ),
   );
   $columns['columns'] = array_combine($columns['columns'], $columns['columns']);
