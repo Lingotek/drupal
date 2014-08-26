@@ -1513,8 +1513,9 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     $disabled_class = $disabled ? ' ltk-disabled-icon' : '';
     $allow_source_overwriting = !empty($profiles[$row->lingotek['profile']]['allow_source_overwriting']);
     $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
+    $existing_translations = array();
 
-    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $existing_translations, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
     if (!empty($translation_icons['source'])) {
       $row->overridden_source_target_icon = $translation_icons['source'];
       unset($translation_icons['source']);
@@ -1690,7 +1691,7 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
   return $url_only ? url($edit_link, array('query' => $query)) : l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $edit_link, array('html' => TRUE, 'attributes' => array('target' => '_blank'), 'query' => $query));
 }
 
-function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id = NULL, $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE) {
+function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $existing_translations = array(), $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE) {
   $icons = array();
 
   $legend = array(
@@ -1718,6 +1719,7 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
   );
 
   $lingotek_languages = Lingotek::getLanguages();
+  $locales = empty($locales) ? $existing_translations : $locales;
 
   foreach ($locales as $key => $original_locale) {
     if (key_exists($original_locale, $lingotek_languages)) {
@@ -1728,14 +1730,21 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
         continue; // hide source language targets (shouldn't exist anyways)
       }
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
-        $status = strtoupper($statuses[$key]);
+        $status = array_key_exists($key, $statuses) ? strtoupper($statuses[$key]) : FALSE;
         $status = $disabled && strtoupper($status) != LingotekSync::STATUS_CURRENT ? LingotekSync::STATUS_UNTRACKED : $status;
-        // Check if it's current, if so use LingotekSync::STATUS_CURRENT, if not keep the status. This is to prevent an entire config set from showing as dirty and needing action taken.
-        $current = FALSE;
         if ($entity_type == 'config') {
+          // Check if it's current, if so use LingotekSync::STATUS_CURRENT, if not keep the status. This is to prevent an entire config set from showing as dirty and needing action taken.
           $current = LingotekConfigSet::isLidCurrent($entity_id);
+          if ($current) {
+            $status = LingotekSync::STATUS_CURRENT;
+          }
+          elseif (in_array($original_locale, $existing_translations) && !$status) {
+            $status = LingotekSync::STATUS_UNTRACKED;
+          }
+          elseif (!$status) {
+            continue;
+          }
         }
-        $status = $current ? LingotekSync::STATUS_CURRENT : $status;
         $css_classes = 'target-' . strtolower($status);
         $css_classes .= $disabled ? ' target-disabled' : '';
         $tip = $languages[$lang_code]->name . ' - ' . $legend[$status];

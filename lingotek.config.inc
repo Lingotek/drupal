@@ -56,11 +56,14 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       ->fetchAllAssoc('lid');
 
   $languages = language_list();
+  $lingotek_languages = Lingotek::getLanguages();
   $global_profile = lingotek_get_global_profile();
   $list_statuses = array('pending', 'ready', 'current', 'edited', 'untracked');
 
   // If there are no results, this will make sure there's no error, how is this handled with bulk_grid?
   $table_data = isset($table_data) ? $table_data : array();
+  $lids = array_keys($table_data_raw);
+  $existing_translations = !empty($lids) ? lingotek_config_add_existing_translations($lids, $lingotek_languages) : array();
   //parse the queried data and put it into different cells
   foreach ($table_data_raw as $row) {
     $lid = $row->{'lid'};
@@ -87,7 +90,10 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     $source_text = htmlentities($row->{'source'});
     $source_text = lingotek_truncate_grid_text($source_text, 55);
 
-    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $disabled, $row->language); // show translation statuses
+    //if there are no translations in locales, check if there are existing translations in locales_target, make sure you should the proper status for it in the table when it is an existing translation. Maybe make existing translation a bool?
+    $existing_translation = array_key_exists($lid, $existing_translations) ? $existing_translations[$lid] : array();
+
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $existing_translation, $disabled, $row->language); // show translation statuses
     $target_icons_str = implode('', array_values($translation_icons));
     $icon = lingotek_source_uploaded_icon($row);
     $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
@@ -110,6 +116,23 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   }
 
   return $table_data;
+}
+
+function lingotek_config_add_existing_translations($lids, $lang_codes) {
+  $query = db_select('{locales_target}', 'lt')
+      ->fields('lt', array('lid', 'language'));
+  $query->condition('lid', $lids, 'IN');
+  $result = $query->execute()->fetchAll();
+
+  $existing_translations = array();
+  foreach ($result as $key => $value) {
+    $lang = Lingotek::convertDrupal2Lingotek($value->language);
+    // This check is performed in lang_icons anyway so you might remove it
+    if (array_key_exists($lang, $lang_codes)) {
+      $existing_translations[$value->lid][] = Lingotek::convertDrupal2Lingotek($value->language);
+    }
+  }
+  return $existing_translations;
 }
 
 function lingotek_config_start_query() {
@@ -138,7 +161,7 @@ function lingotek_config_start_query() {
   return $query;
 }
 
-function lingotek_config_add_query_filters(&$query, $filters) {
+function lingotek_config_add_query_filters($query, $filters) {
   if (isset($filters['search']) && strlen($filters['search'])) {
     $query->condition('source', '%' . $filters['search'] . '%', 'LIKE');
   }

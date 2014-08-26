@@ -948,8 +948,8 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->fields('lcm', array('current'))
         ->condition('lid', $lid)
         ->execute();
-    $dirty = $query->fetchField();
-    return $dirty;
+    $current = $query->fetchField();
+    return $current;
   }
 
   /**
