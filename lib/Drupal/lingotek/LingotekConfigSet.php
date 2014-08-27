@@ -1156,14 +1156,14 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function getProjectId() {
     $profiles = variable_get('lingotek_profiles');
     $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
-    $project_id = $config_profile->project_id ? $config_profile->project_id : variable_get('lingotek_project', '');
+    $project_id = $config_profile['project_id'] ? $config_profile['project_id'] : variable_get('lingotek_project', '');
     return $project_id;
   }
 
    public function getVaultId() {
     $profiles = variable_get('lingotek_profiles');
     $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
-    $vault_id = $config_profile->vault_id ? $config_profile->vault_id : variable_get('lingotek_vault', '');
+    $vault_id = $config_profile['vault_id'] ? $config_profile['vault_id'] : variable_get('lingotek_vault', '');
     return $vault_id;
   }
 

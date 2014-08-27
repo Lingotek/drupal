@@ -826,11 +826,16 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 }
 
 function lingotek_save_config_profile($form_state) {
+  $project_id = $form_state['values']['project_id'] ? : variable_get('lingotek_project', '');
+  $vault_id = $form_state['values']['vault_id'] ? : variable_get('lingotek_vault', '');
+  $workflow_id = $form_state['values']['workflow_id'] ? : variable_get('lingotek_translate_config_workflow_id', '');
+  $prefill_phase = $form_state['values']['prefill_phase_select'] ? : NULL;
+
   $profile = array(
-    'project_id' => $form_state['values']['project_id'],
-    'vault_id' => $form_state['values']['vault_id'],
+    'project_id' => $project_id,
+    'vault_id' => $vault_id,
     'name' => 'lingotek_config',
-    'workflow_id' => $form_state['values']['workflow_id'],
+    'workflow_id' => $workflow_id,
   );
 
   // Might also save the prefill phase here?
@@ -839,11 +844,7 @@ function lingotek_save_config_profile($form_state) {
   lingotek_set_profile_settings($profile_index, $profile);
 
   // Change all other workflows retroactively
-  $workflow_id = $form_state['values']['workflow_id'];
-  $prefill_phase = $form_state['values']['prefill_phase_select'];
   $document_ids = LingotekConfigSet::getAllConfigDocIds();
-  // This just changes the workflow in the lingotek_config_metadata table, I assume we want to do this.
-  //    lingotek_keystore($entity['type'], $entity['id'], 'workflow_id', $workflow_id);
   $api = LingotekApi::instance();
   $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
 }
