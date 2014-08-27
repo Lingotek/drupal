@@ -769,6 +769,10 @@ function lingotek_config_build_column_checkboxes($form_state) {
 function lingotek_grid_update($entity_type) {
   if ($entity_type == 'config') {
     $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_PENDING);
+    if (empty($lids)) {
+      drupal_set_message(t('There are no in-progress translations to check.'));
+      drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
+    }
     lingotek_config_update_selected($lids);
     return;
   }
@@ -843,8 +847,7 @@ function lingotek_grid_download_ready($entity_type) {
 function lingotek_grid_upload_edited($entity_type) {
   if($entity_type === 'config') {
     // Only get the ones that need to be uploaded.
-    $lids = LingotekSync::getDirtySetLids();
-    // $lids = LingotekConfigSet::getAllSegmentIds();
+    $lids = LingotekConfigSet::getLidsToUpdate();
     lingotek_config_upload_selected($lids);
     return;
   }

@@ -721,6 +721,9 @@ class LingotekSync {
   }
 
   public static function getSetIdsFromLids($lids) {
+    if (empty($lids)) {
+      return $lids;
+    }
     $query = db_select('{lingotek_config_map}', 'l');
     $query->addField('l', 'set_id');
     $query->condition('lid', $lids, 'IN');

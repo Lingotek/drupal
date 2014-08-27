@@ -469,6 +469,9 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
   public static function getLidsFromSets($set_ids) {
     $set_ids = is_array($set_ids) ? $set_ids : array($set_ids);
+    if (empty($set_ids)) {
+      return array();
+    }
     $lids = db_select('{lingotek_config_map}', 'lcm')
         ->fields('lcm', array('lid'))
         ->condition('set_id', $set_ids, 'IN')
@@ -925,7 +928,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   /**
    * Mark as dirty all target segments passed, in the locales targets
    *
-   * @param array
+   * @param array $dirty_lids
    *    the list of segments that need updating
    */
   public static function restoreDirtyLids($dirty_lids) {
@@ -940,7 +943,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   /**
    * Return bool if a specific lid is current
    *
-   * @param int
+   * @param int $lid
    *    a single lid
    */
   public static function isLidCurrent($lid) {
@@ -953,11 +956,11 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   /**
-   * Mark all lids passed as current or not, in the lingotek_config_map table
+   * Mark all lids passed as current or not current, in the lingotek_config_map table
    *
-   * @param array
+   * @param array $lids
    *    the list of lids that are current
-   * @param int
+   * @param int $current
    *    1 to mark it current, else 0
    */
   public static function markLidsCurrent($lids, $current = 1) {
@@ -967,6 +970,28 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $query->condition('lid', $lids, 'IN');
     }
     $query->execute();
+  }
+
+  /**
+   * Get all lids marked as current or not, in the lingotek_config_map table
+   *
+   * @param int $current
+   *    1 to get lids of all current segments, 0 to get lids for segments that are not current
+   * @param array $lids
+   *    a subset of lids to check, defaults to look for all current segments
+   */
+  public static function getLidsToUpdate($current = 0, $lids = 'all') {
+    $query = db_select('{lingotek_config_map}', 'lcm')
+        ->fields('lcm', array('lid'))
+        ->condition('current', $current);
+    if ($lids !== 'all') {
+      $query->condition('lcm.lid', $lids, 'IN');
+    }
+    $query->join('locales_source', 'ls', "lcm.lid = ls.lid");
+    $textgroups = array_merge(array(-1), LingotekConfigSet::getTextgroupsForTranslation());
+    $query->condition('ls.textgroup', $textgroups, 'IN');
+    $lids = $query->execute()->fetchCol();
+    return $lids;
   }
 
   /**

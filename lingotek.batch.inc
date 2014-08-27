@@ -280,12 +280,12 @@ function lingotek_batch_disassociate_content_worker($api, $doc_id) {
   return $api->removeDocument($doc_id);
 }
 
-function lingotek_sync_upload_node_finished($success, $results, $operations) {
+function lingotek_sync_upload_node_finished($success, $results, $operations, $config = FALSE) {
   if ($success) {
     $count = isset($results['uploads']) ? $results['uploads'] : 0;
     $node_message = format_plural($count, 'One entity uploaded to Lingotek.', '@count entities uploaded to Lingotek.');
     $config_message = format_plural($count, 'Uploaded one set of config items to Lingotek.', 'Uploaded @count sets of config items to Lingotek.');
-    $message = isset($results['uploaded_nids']) ? $node_message : $config_message;
+    $message = $config === TRUE ? $config_message : $node_message;
     $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'entity id', 'entity ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
     $message .= (isset($results['disabled'])) ? ' ' . t("<i>(Note: entities with the Disabled profile must be set to an enabled profile to be uploaded)</i>") : "";
     $status = (isset($results['disabled'])) ? 'warning' : 'status';
@@ -295,6 +295,10 @@ function lingotek_sync_upload_node_finished($success, $results, $operations) {
     $message = t('Finished with an error.');
     drupal_set_message($message, 'error');
   }
+}
+
+function lingotek_sync_upload_config_finished($success, $results, $operations) {
+  lingotek_sync_upload_node_finished($success, $results, $operations, TRUE);
 }
 
 /**
@@ -549,7 +553,7 @@ function lingotek_batch_keystore_worker($entity_type, $entity_id, $key, $value, 
 }
 
 function lingotek_config_update_selected($lids) {
-  $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
+  $set_ids = !empty($lids) ? array_unique(LingotekSync::getSetIdsFromLids($lids)) : array();
   if (empty($set_ids)) {
     drupal_set_message(t('No statuses to be updated.'), 'status', FALSE);
     return;

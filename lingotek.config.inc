@@ -232,18 +232,21 @@ function lingotek_config_action_submit($form, $form_state) {
       elseif ($action == 'delete' || $action == 'reset') {
         // ajax ctools modal employed (see lingotek_bulk_grid_form() and lingotek.bulk_grid.js)
       }
-      else {
-        drupal_set_message(t('havent added this functionality for config yet'), 'status', FALSE);
-      }
     }
   }
 }
 
 function lingotek_config_upload_selected($lids) {
-  LingotekConfigSet::markLidsCurrent($lids, 0);
+  if (empty($lids)) {
+    drupal_set_message(t('No config items have been edited and need to be uploaded at this time. To translate a config item for the first time, check the corresponding box and upload.'), 'status', FALSE);
+    drupal_goto('admin/settings/lingotek/manage/config');
+  }
+  $not_current = 0;
+  LingotekConfigSet::markLidsCurrent($lids, $not_current);
+
   $batch = array(
     'title' => t('Uploading Content To Lingotek'),
-    'finished' => 'lingotek_sync_upload_node_finished'
+    'finished' => 'lingotek_sync_upload_config_finished'
   );
 
   $set_ids = array();
@@ -263,12 +266,12 @@ function lingotek_config_upload_selected($lids) {
 }
 
 function lingotek_config_download_selected($lids) {
-  LingotekConfigSet::markLidsCurrent($lids);
   $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
   if (empty($set_ids)) {
-    drupal_set_message(t('Make sure those configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
-    return;
+    drupal_set_message(t('No translations to download at this time. Make configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
+    drupal_goto('admin/settings/lingotek/manage/config');
   }
+  LingotekConfigSet::markLidsCurrent($lids);
   $document_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
   $available_targets = Lingotek::getLanguages();
   unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
