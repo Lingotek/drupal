@@ -960,14 +960,27 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *
    * @param array $lids
    *    the list of lids that are current
-   * @param int $current
-   *    1 to mark it current, else 0
    */
-  public static function markLidsCurrent($lids, $current = 1) {
+  public static function markLidsNotCurrent($lids) {
     $query = db_update('{lingotek_config_map}')
-        ->fields(array('current' => $current));
+        ->fields(array('current' => 0));
     if ($lids != 'all') {
       $query->condition('lid', $lids, 'IN');
+    }
+    $query->execute();
+  }
+
+  /**
+   * Mark all sets passed as current, in the lingotek_config_map table
+   *
+   * @param array $set_ids
+   *    the list of lids that are current
+   */
+  public static function markSetsCurrent($set_ids) {
+    $query = db_update('{lingotek_config_map}')
+        ->fields(array('current' => 1));
+    if ($set_ids != 'all') {
+      $query->condition('set_id', $set_ids, 'IN');
     }
     $query->execute();
   }

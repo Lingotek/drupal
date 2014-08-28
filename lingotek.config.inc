@@ -254,8 +254,7 @@ function lingotek_config_upload_selected($lids) {
     drupal_set_message(t('No config items have been edited and need to be uploaded at this time. To translate a config item for the first time, check the corresponding box and upload.'), 'status', FALSE);
     drupal_goto('admin/settings/lingotek/manage/config');
   }
-  $not_current = 0;
-  LingotekConfigSet::markLidsCurrent($lids, $not_current);
+  LingotekConfigSet::markLidsNotCurrent($lids);
 
   $batch = array(
     'title' => t('Uploading Content To Lingotek'),
@@ -284,7 +283,7 @@ function lingotek_config_download_selected($lids) {
     drupal_set_message(t('No translations to download at this time. Make configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
     drupal_goto('admin/settings/lingotek/manage/config');
   }
-  LingotekConfigSet::markLidsCurrent($lids);
+  LingotekConfigSet::markSetsCurrent($set_ids);
   $document_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
   $available_targets = Lingotek::getLanguages();
   unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
