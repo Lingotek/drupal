@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\lingotek\Form\LingotekSetupForm.
+ * Contains \Drupal\lingotek\Form\LingotekSetupConnectForm.
  */
 
 namespace Drupal\lingotek\Form;
@@ -15,10 +15,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Configure Lingotek
  */
-class LingotekConnectForm extends ConfigFormBase {
+class LingotekSetupConnectForm extends ConfigFormBase {
 
   /**
-   * Constructs a \Drupal\lingotek\Form\LingotekConnectForm object.
+   * Constructs a \Drupal\lingotek\Form\LingotekSetupConnectForm object.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   The factory for configuration objects.
@@ -46,23 +46,8 @@ class LingotekConnectForm extends ConfigFormBase {
   /** * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    /*
-     * SOMETHING FOR THE RETURN TRIP
     $config = $this->configFactory->get('lingotek.settings');
     $login = $config->get('account.login');
-    $form['lingotek_login'] = array(
-      '#type' => 'radio',
-      '#title' => $this->t('Configure Lingotek World Text'),
-      '#default_value' => $login,
-      '#options' => array(
-        'upper' => $this->t('UPPER'),
-        'title' => $this->t('Title'),
-      ),
-      '#description' => $this->t('Choose the case of your "Lingotek, world!" message.'),
-    );
-
-    return parent::buildForm($form, $form_state);
-    */
 
     $form = parent::buildForm($form, $form_state);
     if (!isset($form['#attached'])) {
@@ -71,19 +56,35 @@ class LingotekConnectForm extends ConfigFormBase {
     if (!isset($form['#attached']['js'])) {
       $form['#attached']['js'] = array();
     }
-      $form['#attached']['js'][] = drupal_get_path('module', 'lingotek') . '/js/connect.js';
 
+    $form['#attached']['js'][] = drupal_get_path('module', 'lingotek') . '/js/connect.js';
+    $form['intro'] = array(
+      '#type' => 'markup',
+      '#markup' => $this->t('Get started by clicking the button below to connect your Lingotek account to this Drupal site.'),
+      //'#markup' => $test_class->doSomething(),
+    );
+    //$form['actions']['submit']['#value'] = $this->t('Connect Account');
+    unset($form['actions']['submit']);
+    $form['actions']['output'][] = array(
+      '#theme' => 'menu_local_action',
+      '#link' => array(
+        'title' => t('Connect to Lingotek'),
+        'href' => 'https://cms.lingotek.com/',
+        'localized_options' => array(
+          'attributes' => array(
+            'title' => t('Connect to Lingotek'),
+          )
+        )
+      ),
+    );
 
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->configFactory->get('lingotek.settings')
-      ->set('account.login', $form_state['values']['lingotek_login'])
-      ->save();
-
-    parent::submitForm($form, $form_state);
+    // do nothing for now
   }
 }

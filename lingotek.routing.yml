@@ -6,6 +6,14 @@ lingotek.dashboard:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.connect:
+  path: '/admin/lingotek/connect'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekSetupConnectForm'
+    _title: 'Connect to Lingotek'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.settings:
   path: '/admin/lingotek/settings'
   defaults:

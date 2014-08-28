@@ -94,7 +94,7 @@ class LingotekSetupForm extends ConfigFormBase {
     $form['actions']['lingotek_button_spacer'] = array('#markup' => '<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
     $form['actions']['lingotek_back_button'] = SELF::getEnterpriseFormBtn('admin/config/lingotek/account-settings', t('Enterprise Customers - Connect Here'));
     $form['lingotek_spacer_below'] = array('#markup' => '<span>&nbsp;</span>');
-    $form['lingotek_support_footer'] = SELF::getSupportFooter();
+    //$form['lingotek_support_footer'] = SELF::getSupportFooter();
     return $form;
   }
 
