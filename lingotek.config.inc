@@ -60,7 +60,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   $global_profile = lingotek_get_global_profile();
   $list_statuses = array('pending', 'ready', 'current', 'edited', 'untracked');
 
-  // If there are no results, this will make sure there's no error, how is this handled with bulk_grid?
+  // If there are no results, this will make sure there's no error.
   $table_data = isset($table_data) ? $table_data : array();
   $lids = array_keys($table_data_raw);
   $existing_translations = !empty($lids) ? lingotek_config_add_existing_translations($lids, $lingotek_languages) : array();
@@ -73,27 +73,39 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
 
     $locales = array();
     $statuses = array();
+    $locale_statuses = array();
+    $current = LingotekConfigSet::isLidCurrent($lid);
 
     foreach ($list_statuses as $status) {
-      $key = 't_' . $status;
-      foreach (explode(',', $row->$key) as $l) {
-        if (!empty($l)) {
-          $locales[] = $l;
-          $statuses[] = $status;
+      foreach (explode(',', $row->$status) as $locale) {
+        if (!empty($locale)) {
+          $locale_statuses[$locale] = $current ? 'current' : $status;
         }
       }
     }
 
-    array_multisort($locales, SORT_ASC, $statuses);
-    $disabled = FALSE;
+    $dirty = $row->dirty ? explode(',', $row->dirty) : array();
+    // If a config string changes, it gets marked as not current (dirty) in locales_target but remains current in lingotek_config_map. $edited checks for this combo.
+    $edited = $current && $dirty;
+    if ($edited) {
+      foreach ($dirty as $key => $lang) {
+        $locale = Lingotek::convertDrupal2Lingotek($lang);
+        $locale_statuses[$locale] = 'edited';
+      }
+    }
 
-    $source_text = htmlentities($row->{'source'});
-    $source_text = lingotek_truncate_grid_text($source_text, 55);
+    ksort($locale_statuses);
+    //if there are no translations in locales, check if there are existing translations in locales_target
+    if (empty($locale_statuses) && array_key_exists($lid, $existing_translations)) {
+      foreach ($existing_translations[$lid] as $existing_lang) {
+        $locale_statuses[$existing_lang] = 'untracked';
+      }
+    }
 
-    //if there are no translations in locales, check if there are existing translations in locales_target, make sure you should the proper status for it in the table when it is an existing translation. Maybe make existing translation a bool?
-    $existing_translation = array_key_exists($lid, $existing_translations) ? $existing_translations[$lid] : array();
+    $escaped_source = htmlentities($row->{'source'});
+    $source_text = lingotek_truncate_grid_text($escaped_source, 55);
 
-    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $lid, $existing_translation, $disabled, $row->language); // show translation statuses
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $lid, $locale_statuses, FALSE, $row->language); // show translation statuses
     $target_icons_str = implode('', array_values($translation_icons));
     $icon = lingotek_source_uploaded_icon($row);
     $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
@@ -140,11 +152,12 @@ function lingotek_config_start_query() {
 
   // Gets sync statuses for each language.
   $query->addExpression("(SELECT COUNT(id) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current_c');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='PENDING')", 't_pending');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='READY')", 't_ready');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='EDITED')", 't_edited');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 't_untracked');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='PENDING')", 'pending');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='READY')", 'ready');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 'current');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='EDITED')", 'edited');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'untracked');
+  $query->addExpression("(SELECT GROUP_CONCAT(language) FROM {locales_target} WHERE lid = s.lid AND i18n_status = 1)", 'dirty');
 
   // Lingotek Document ID
   $query->leftJoin('{lingotek_config_metadata}', 'lingo_document_id', 'lingo_document_id.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_document_id.config_key = \'document_id\'');
@@ -157,7 +170,7 @@ function lingotek_config_start_query() {
   // Only show items in textgroups that are selected for translation on Config Settings page.
   $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation() ? : array('no textgroups selected');
   $query->condition('s.textgroup', $translatable_textgroups, 'IN');
-
+  
   return $query;
 }
 

@@ -728,6 +728,25 @@ class LingotekSync {
     $query->addField('l', 'set_id');
     $query->condition('lid', $lids, 'IN');
     $sids = $query->execute()->fetchCol();
+
+    /*
+    if (empty($lids)) {
+      return $lids;
+    }
+    $query = db_select('{lingotek_config_map}', 'l');
+    $query->addField('l', 'set_id');
+    $query->condition('lid', $lids, 'IN');
+    $result = $query->execute()->fetchAllAssoc('lid');
+    $lids_in_a_set = array_keys($result);
+    $lids_not_in_a_set = array_diff($lids, $lids_in_a_set);
+
+    $sids = array();
+    foreach($result as $set) {
+      $sid[] = $set->set_id;
+    }
+
+    */
+
     return $sids;
   }
 

@@ -1497,28 +1497,25 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     $icon = lingotek_source_uploaded_icon($row);
     $list_statuses = array('pending', 'ready', 'current', 'edited', 'untracked');
 
-    $locales = array();
-    $statuses = array();
+    $locales_statuses = array();
 
     foreach ($list_statuses as $status) {
       $key = 't_' . $status;
-      foreach (explode(',', $row->$key) as $l) {
-        if (!empty($l)) {
-          $locales[] = $l;
-          $statuses[] = $status;
+      foreach (explode(',', $row->$key) as $locale) {
+        if (!empty($locale)) {
+          $locales_statuses[$locale] = $status;
         }
       }
     }
 
-    array_multisort($locales, SORT_ASC, $statuses);
+    ksort($locales_statuses);
 
     $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
     $disabled_class = $disabled ? ' ltk-disabled-icon' : '';
     $allow_source_overwriting = !empty($profiles[$row->lingotek['profile']]['allow_source_overwriting']);
     $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
-    $existing_translations = array();
 
-    $translation_icons = lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $existing_translations, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $entity_id, $locales_statuses, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
     if (!empty($translation_icons['source'])) {
       $row->overridden_source_target_icon = $translation_icons['source'];
       unset($translation_icons['source']);
@@ -1694,7 +1691,7 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
   return $url_only ? url($edit_link, array('query' => $query)) : l('<i title="' . t('Edit') . '" class="fa fa-edit"></i>', $edit_link, array('html' => TRUE, 'attributes' => array('target' => '_blank'), 'query' => $query));
 }
 
-function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $entity_id, $existing_translations = array(), $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE) {
+function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statuses = array(), $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE) {
   $icons = array();
 
   $legend = array(
@@ -1722,32 +1719,20 @@ function lingotek_lang_icons($entity_type, $languages, $locales, $statuses, $ent
   );
 
   $lingotek_languages = Lingotek::getLanguages();
-  $locales = empty($locales) ? $existing_translations : $locales;
 
-  foreach ($locales as $key => $original_locale) {
-    if (key_exists($original_locale, $lingotek_languages)) {
-      $locale_enabled = $lingotek_languages[$original_locale]->lingotek_enabled; //array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
-      $lang_code = $lingotek_languages[$original_locale]->language;
-      $lingotek_locale = $lingotek_languages[$original_locale]->lingotek_locale;
+  foreach ($locale_statuses as $locale => $locale_status) {
+    // if it's lingotek enabled
+    if (key_exists($locale, $lingotek_languages)) {
+      // could this ever be false? I thought all $lingotek_languages would be enabled
+      $locale_enabled = $lingotek_languages[$locale]->lingotek_enabled; //array_key_exists($locale, $lingotek_languages) ? $lingotek_languages[$locale]->lingotek_enabled : FALSE;
+      $lang_code = $lingotek_languages[$locale]->language;
+      $lingotek_locale = $lingotek_languages[$locale]->lingotek_locale;
       if (!$allow_source_overwriting && !is_null($source_language) && $lang_code === $source_language) {
         continue; // hide source language targets (shouldn't exist anyways)
       }
       if ($locale_enabled) { // exclude language translations that are not lingotek_enabled (we may consider showing everything later)
-        $status = array_key_exists($key, $statuses) ? strtoupper($statuses[$key]) : FALSE;
+        $status = strtoupper($locale_status);
         $status = $disabled && strtoupper($status) != LingotekSync::STATUS_CURRENT ? LingotekSync::STATUS_UNTRACKED : $status;
-        if ($entity_type == 'config') {
-          // Check if it's current, if so use LingotekSync::STATUS_CURRENT, if not keep the status. This is to prevent an entire config set from showing as dirty and needing action taken.
-          $current = LingotekConfigSet::isLidCurrent($entity_id);
-          if ($current) {
-            $status = LingotekSync::STATUS_CURRENT;
-          }
-          elseif (in_array($original_locale, $existing_translations) && !$status) {
-            $status = LingotekSync::STATUS_UNTRACKED;
-          }
-          elseif (!$status) {
-            continue;
-          }
-        }
         $css_classes = 'target-' . strtolower($status);
         $css_classes .= $disabled ? ' target-disabled' : '';
         $tip = $languages[$lang_code]->name . ' - ' . $legend[$status];

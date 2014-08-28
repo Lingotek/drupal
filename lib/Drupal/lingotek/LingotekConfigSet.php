@@ -164,7 +164,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->condition('config_key', 'textgroup')
         ->execute()
         ->fetchField();
-    $textgroup = ($textgroup == 'default') ? 'Built-in Interface' : $textgroup;
 
     $all_from_group = db_select('{lingotek_config_metadata}', 'l')
         ->fields('l', array('id'))
@@ -174,6 +173,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->execute()
         ->fetchCol();
     $num_in_group = array_search($set_id, $all_from_group);
+    $textgroup = ($textgroup == 'default') ? 'Built-in Interface' : $textgroup;
     return ucfirst($textgroup) . ' ' . (1 + $num_in_group);
   }
 
