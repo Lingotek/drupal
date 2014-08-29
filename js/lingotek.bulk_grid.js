@@ -64,8 +64,10 @@ function lingotek_perform_action(nid, action) {
         else {
           // only uncheck the box that was clicked
         }
+        var this_row_incomplete = $.inArray($(this).parents('tr')[0], rows_with_incompletes) !== -1;
+        var other_rows_with_incompletes = rows_with_incompletes.length - this_row_incomplete;
 
-        if (!message_already_shown && rows_with_incompletes.length) {
+        if (!message_already_shown && other_rows_with_incompletes > 0) {
           $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some checkboxes are automatically checked.</div>');
           message_already_shown = true;
         }
