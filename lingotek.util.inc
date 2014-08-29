@@ -812,7 +812,7 @@ function lingotek_lookup_locale_exists($drupal_language_code) {
  * Adds the target language as being enabled.
  */
 function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
-  LingotekConfigSet::markLidsCurrent('all', 0);
+  LingotekConfigSet::markLidsNotCurrent('all');
   if (is_null($lingotek_locale)) {
     return FALSE;
   }
