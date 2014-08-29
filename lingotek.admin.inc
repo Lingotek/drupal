@@ -628,7 +628,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   $config_profile = isset($profiles[LingotekSync::PROFILE_CONFIG]) ? $profiles[LingotekSync::PROFILE_CONFIG] : NULL;
 
   $workflows = $api->listWorkflows();
-  if (is_array($workflows) && count($workflows) > 1) {
+  if (is_array($workflows) && count($workflows) > 0) {
     $form['additional_translation']['lingotek_translate_config_options']['workflow_id'] = array(
       '#type' => 'select',
       '#title' => t('Workflow'),
@@ -664,7 +664,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     }
   }
   
-  if ($projects && count($projects) > 1) {
+  if ($projects && count($projects) > 0) {
     $sorted = asort($projects);
     $form['additional_translation']['project_id'] = array(
       '#type' => 'select',
