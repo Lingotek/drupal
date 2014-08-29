@@ -1,19 +1,27 @@
 lingotek.dashboard:
   path: '/admin/lingotek'
   defaults:
-    _form: '\Drupal\lingotek\Form\LingotekSetupForm'
+    _content: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardPage'
     _title: 'Lingotek Translation Dashboard'
   requirements:
     _permission: 'administer lingotek'
 
-lingotek.connect:
-  path: '/admin/lingotek/connect'
+lingotek.setup_connect:
+  path: '/admin/lingotek/setup/connect'
   defaults:
-    _form: '\Drupal\lingotek\Form\LingotekSetupConnectForm'
+    _content: '\Drupal\lingotek\Controller\LingotekSetupController::connectPage'
     _title: 'Connect to Lingotek'
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.setup_community:
+  path: '/admin/lingotek/setup/community'
+  defaults:
+    _content: '\Drupal\lingotek\Controller\LingotekSetupController::communityPage'
+    _title: 'Choose Community'
+  requirements:
+    _permission: 'administer lingotek'
+    
 lingotek.settings:
   path: '/admin/lingotek/settings'
   defaults:

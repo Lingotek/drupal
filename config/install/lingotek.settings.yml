@@ -3,12 +3,10 @@ preference:
   advanced_parsing: true
   advanced_taxonomy_terms: true
 account:
-  type: basic
-  login: null
-  token: null
-  first_name: null
-  last_name: null
-  email: null
+  host: 'https://cms.lingotek.com'
+  authorize_path: 'auth/authorize.html'
+  default_client_id: 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
+  type: 'basic'
 translate:
   entity: null
   config: null

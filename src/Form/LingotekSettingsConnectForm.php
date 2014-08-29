@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\lingotek\Form\LingotekSetupConnectForm.
+ * Contains \Drupal\lingotek\Form\LingotekSettingsConnectForm.
  */
 
 namespace Drupal\lingotek\Form;
@@ -15,10 +15,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Configure Lingotek
  */
-class LingotekSetupConnectForm extends ConfigFormBase {
+class LingotekSettingsConnectForm extends ConfigFormBase {
 
   /**
-   * Constructs a \Drupal\lingotek\Form\LingotekSetupConnectForm object.
+   * Constructs a \Drupal\lingotek\Form\LingotekSettingsConnectForm object.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   The factory for configuration objects.
@@ -47,7 +47,12 @@ class LingotekSetupConnectForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->configFactory->get('lingotek.settings');
-    $login = $config->get('account.login');
+    // build the redirecting link for authentication to Lingotek
+    $host = $config->get('account.host');
+    $auth_path = $config->get('account.authorize_path');
+    $id = $config->get('account.default_client_id');
+    $return_uri = url(current_path(), array('absolute' => TRUE)) . '?success=true';
+    $login = $config->get('account.type');
 
     $form = parent::buildForm($form, $form_state);
     if (!isset($form['#attached'])) {
@@ -61,21 +66,25 @@ class LingotekSetupConnectForm extends ConfigFormBase {
     $form['intro'] = array(
       '#type' => 'markup',
       '#markup' => $this->t('Get started by clicking the button below to connect your Lingotek account to this Drupal site.'),
-      //'#markup' => $test_class->doSomething(),
     );
     //$form['actions']['submit']['#value'] = $this->t('Connect Account');
     unset($form['actions']['submit']);
-    $form['actions']['output'][] = array(
+
+    $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri);
+
+    $form['actions']['submit'][] = array(
       '#theme' => 'menu_local_action',
       '#link' => array(
         'title' => t('Connect to Lingotek'),
-        'href' => 'https://cms.lingotek.com/',
+        'href' => $lingotek_connect_link,
         'localized_options' => array(
           'attributes' => array(
             'title' => t('Connect to Lingotek'),
+            'class' => array('button--primary'),
           )
         )
       ),
+      '#button_type' => 'primary',
     );
 
     return $form;
