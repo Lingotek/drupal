@@ -49,7 +49,7 @@ function lingotek_perform_action(nid, action) {
 
         var rows_in_same_set = $("tr").children().children('.set_name:contains("' + selected_set_name + '")').parent().parent();
 
-        var rows_with_incompletes = rows_in_same_set.children().children('.target-pending, .target-ready').parent().parent();
+        var rows_with_incompletes = rows_in_same_set.children().children('.target-pending, .target-ready, .target-edited').parent().parent();
         var checkboxes = rows_with_incompletes.children().children().children("input");
         var all_chechboxes_in_set = rows_in_same_set.children().children().children("input");
         var clicked_is_not_current = $(this).parents("tr").children().children('.target-pending, .target-ready').length;
