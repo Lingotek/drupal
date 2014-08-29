@@ -280,7 +280,7 @@ function lingotek_config_upload_selected($lids) {
 function lingotek_config_download_selected($lids) {
   $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
   if (empty($set_ids)) {
-    drupal_set_message(t('No translations to download at this time. Make configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
+    drupal_set_message(t('No translations to download at this time. Make sure configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
     drupal_goto('admin/settings/lingotek/manage/config');
   }
   LingotekConfigSet::markSetsCurrent($set_ids);
