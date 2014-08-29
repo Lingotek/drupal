@@ -66,8 +66,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $this->language->lingotek_locale = Lingotek::convertDrupal2Lingotek($this->language->language);
     }
     $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language->lingotek_locale);
-    $this->min_lid = $this->getMinLid();
-    $this->max_lid = $this->getMaxLid();
   }
 
   /**
@@ -343,10 +341,10 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *   the ID of a set of configuration segments
    */
   public static function setSegmentStatusToCurrentById($set_id) {
+    $lids = self::getLidsFromSets($set_id);
     $result = db_update('locales_target')
         ->fields(array('i18n_status' => I18N_STRING_STATUS_CURRENT))
-        ->condition('lid', self::minLid($set_id), '>=')
-        ->condition('lid', self::maxLid($set_id), '<=')
+        ->condition('lid', $lids, 'IN')
         ->condition('translation_agent_id', self::getLingotekTranslationAgentId())
         ->execute();
   }
@@ -426,7 +424,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     // get any segments that should be associated with this set
     // if segments exist, return a LingotekConfigSet instance
     // otherwise, return FALSE
-    $set_segments = self::getAllSegments($set_id);
+    $set_segments = self::getLidsFromSets($set_id);
     if ($set_segments) {
       $set = new LingotekConfigSet($set_id);
       $set->setApi(LingotekApi::instance());
@@ -521,44 +519,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $response[$record->config_key] = $record->value;
     }
     return $response;
-  }
-
-  /**
-   * Return lid lower limit for the given set ID
-   *
-   * @param int $set_id
-   *
-   * @return int
-   *   the lower limit for the given set ID
-   */
-  public static function minLid($set_id) {
-    return (($set_id - 1) * LINGOTEK_CONFIG_SET_SIZE) + 1;
-  }
-
-  /**
-   * Return lid upper limit for the given set ID
-   *
-   * @param int $set_id
-   *
-   * @return int
-   *   the upper limit for the given set ID
-   */
-  public static function maxLid($set_id) {
-    return $set_id * LINGOTEK_CONFIG_SET_SIZE;
-  }
-
-  protected function getMinLid() {
-    if ($this->set_id) {
-      return self::minLid($this->set_id);
-    }
-    return (intval(key($this->source_data) / $this->set_size) * $this->set_size) + 1;
-  }
-
-  protected function getMaxLid() {
-    if ($this->set_id) {
-      return self::maxLid($this->set_id);
-    }
-    return (intval(key($this->source_data) / $this->set_size) * $this->set_size) + $this->set_size;
   }
 
   /**

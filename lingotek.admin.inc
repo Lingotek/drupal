@@ -517,6 +517,7 @@ function lingotek_admin_profile_usage_by_types($profile_id) {
 function lingotek_admin_additional_translation_settings_form($form, &$form_state, $show_fieldset = FALSE) {
   global $base_url;
   $api = LingotekApi::instance();
+  $site = variable_get('site_name', 'Drupal Site');
   $setup_complete = (!lingotek_is_config_missing());
   $account = LingotekAccount::instance();
   $show_advanced = $account->showAdvanced();
@@ -691,7 +692,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     }
   }
 
-  if ($personal_vault_count + $community_vault_count > 1) {
+  if ($personal_vault_count + $community_vault_count > 0) {
     $form['additional_translation']['vault_id'] = array(
       '#type' => 'select',
       '#title' => t('Default Vault'),
