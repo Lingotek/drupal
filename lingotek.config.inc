@@ -119,7 +119,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       'location' => $row->{'location'},
       'context' => $row->{'context'},
       'textgroup' => $row->{'textgroup'} == 'default' ? 'built-in interface' : $row->{'textgroup'},
-      'translations' => strlen($target_icons_str) ? $target_icons_str : t('N/A'),
+      'translations' => $target_icons_str,
       'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
       'set_name' => '<span class="set_name">' . $set_name . '</span>'
     );
