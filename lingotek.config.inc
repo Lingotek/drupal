@@ -88,6 +88,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     // If a config string changes, it gets marked as not current (dirty) in locales_target but remains current in lingotek_config_map. $edited checks for this combo.
     $edited = $current && $dirty;
     if ($edited) {
+      $row->upload_status = LingotekSync::STATUS_EDITED;
       foreach ($dirty as $key => $lang) {
         $locale = Lingotek::convertDrupal2Lingotek($lang);
         $locale_statuses[$locale] = 'edited';
