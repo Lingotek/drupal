@@ -327,7 +327,8 @@ function lingotek_update_config_progress($document_ids) {
   if (!is_array($document_ids)) {
     $document_ids = array($document_ids);
   }
-  $project_id = LingotekConfigSet::getProjectId();
+  $config_profile = lingotek_get_profile_settings(LingotekSync::PROFILE_CONFIG);
+  $project_id = array_key_exists('project_id', $config_profile) ? $config_profile['project_id'] : variable_get('lingotek_project', '');
 
   $progress_report = $api->getProgressReport($project_id, $document_ids);
 

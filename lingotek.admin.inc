@@ -841,8 +841,6 @@ function lingotek_save_config_profile($form_state) {
     'sync_method' => 1,
   );
 
-  // Might also save the prefill phase here?
-
   $profile_index = LingotekSync::PROFILE_CONFIG;
   lingotek_set_profile_settings($profile_index, $profile);
 

@@ -1122,21 +1122,21 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function getWorkflowId() {
     $profiles = variable_get('lingotek_profiles');
     $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
-    $workflow_id = $config_profile['workflow_id'] ? $config_profile['workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
+    $workflow_id = array_key_exists('workflow_id', $config_profile) ? $config_profile['workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
     return $workflow_id;
   }
 
   public function getProjectId() {
     $profiles = variable_get('lingotek_profiles');
     $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
-    $project_id = $config_profile['project_id'] ? $config_profile['project_id'] : variable_get('lingotek_project', '');
+    $project_id = array_key_exists('project_id', $config_profile) ? $config_profile['project_id'] : variable_get('lingotek_project', '');
     return $project_id;
   }
 
    public function getVaultId() {
     $profiles = variable_get('lingotek_profiles');
     $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
-    $vault_id = $config_profile['vault_id'] ? $config_profile['vault_id'] : variable_get('lingotek_vault', '');
+    $vault_id = array_key_exists('vault_id', $config_profile) ? $config_profile['vault_id'] : variable_get('lingotek_vault', '');
     return $vault_id;
   }
 
