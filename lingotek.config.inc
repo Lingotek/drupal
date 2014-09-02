@@ -43,7 +43,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   $filters = isset($_SESSION['grid_filters']) ? $_SESSION['grid_filters'] : array();
   $query = lingotek_config_start_query();
   lingotek_config_add_query_filters($query, $filters);
-  // test commit
+
   if ($count_only) {
     $result = $query->execute();
     return $result->rowCount();
