@@ -165,10 +165,12 @@ function lingotek_bulk_grid_form($form, $form_state) {
     );
   }
 
+  $modal_size = $is_config ? 'ctools-modal-lingotek-small' : 'ctools-modal-lingotek-large';
+  $modal_classes = array('ctools-use-modal', $modal_size, 'ltk-action');
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
-    '#title' => l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-large', 'ltk-action')))) . ' ' . t('Search') . ': ',
+    '#title' => l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => $modal_classes))) . ' ' . t('Search') . ': ',
     '#size' => 30,
   );
 
@@ -195,7 +197,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   );
 
   $form['advanced_link'] = array(
-    '#markup' => l(t('Advanced') . '<span style="margin: 0 5px;"></span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-large', 'ltk-action'))))
+    '#markup' => l(t('Advanced') . '<span style="margin: 0 5px;"></span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => $modal_classes)))
   );
 
   if ($filter_set) {
@@ -1086,12 +1088,12 @@ function lingotek_config_build_filters($form_state) {
       '#title' => t('Doc ID is'),
       '#size' => 10,
     ),
-    'source_language' => array(
+    /*'source_language' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['search_language']) ? $_SESSION['grid_filters']['search_language'] : 'all',
       '#title' => t('Language to search in'),
       '#options' => $search_languages,
-    ),
+    ),*/
     'upload_status' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['upload_status']) ? $_SESSION['grid_filters']['upload_status'] : 'all',
