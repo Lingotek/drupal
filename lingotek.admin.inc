@@ -837,8 +837,8 @@ function lingotek_save_config_profile($form_state) {
     'vault_id' => $vault_id,
     'name' => 'lingotek_config',
     'workflow_id' => $workflow_id,
-    'create_lingotek_document' => 1,
-    'sync_method' => 1,
+    'create_lingotek_document' => 0,
+    'sync_method' => 0,
   );
 
   $profile_index = LingotekSync::PROFILE_CONFIG;
