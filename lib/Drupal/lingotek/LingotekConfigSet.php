@@ -954,17 +954,24 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    a subset of lids to check, defaults to look for all current segments
    */
   public static function getLidsToUpdate($current = 0, $lids = 'all') {
+    $textgroups = array_merge(array(-1), LingotekConfigSet::getTextgroupsForTranslation());
+
     $query = db_select('{lingotek_config_map}', 'lcm')
-        ->fields('lcm', array('lid'))
-        ->condition('current', $current);
+        ->fields('lcm', array('lid'));
     if ($lids !== 'all') {
       $query->condition('lcm.lid', $lids, 'IN');
     }
     $query->join('locales_source', 'ls', "lcm.lid = ls.lid");
-    $textgroups = array_merge(array(-1), LingotekConfigSet::getTextgroupsForTranslation());
     $query->condition('ls.textgroup', $textgroups, 'IN');
+
+    $query->join('locales_target', 'lt', "lcm.lid = lt.lid");
+    $or = db_or();
+    $or->condition('lcm.current', $current);
+    $or->condition('lt.i18n_status', 1);
+    $query->condition($or);
+
     $lids = $query->execute()->fetchCol();
-    return $lids;
+    return array_unique($lids);
   }
 
   /**
