@@ -21,7 +21,7 @@ function lingotek_config_header() {
     'set_name' => array('data' => t('Config Set Name'), 'field' => 'set_id', 'width' => '15%'),
     'source' => array('data' => t('Source'), 'field' => 'source', 'width' => '25%'),
     'source_uploaded' => array('data' => t('Source Uploaded')),
-    'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
+    'translations' => array('data' => t('Translations'), 'field' => 'current_target_count'),
     'location' => array('data' => t('Location'), 'field' => 'location'),
     'context' => array('data' => t('Context'), 'field' => 'context'),
     'doc_id' => array('data' => t('Doc ID'), 'field' => 'document_id', 'display' => 'none'),
@@ -154,7 +154,7 @@ function lingotek_config_start_query($form_state) {
       ->orderByHeader($form_state['values']['grid_header']);
 
   // Gets sync statuses for each language.
-  $query->addExpression("(SELECT COUNT(id) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 't_current_c');
+  $query->addExpression("(SELECT COUNT(*) FROM {locales_target} target LEFT JOIN {lingotek_config_map} map ON map.lid = target.lid WHERE map.lid = s.lid AND map.current = 1 AND target.i18n_status = 0)", 'current_target_count');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='PENDING')", 'pending');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='READY')", 'ready');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 'current');
