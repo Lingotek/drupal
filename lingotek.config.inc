@@ -254,17 +254,6 @@ function lingotek_config_action_submit($form, $form_state) {
 }
 
 function lingotek_config_upload_selected($lids) {
-  if (empty($lids)) {
-    drupal_set_message(t('No config items have been edited and need to be uploaded at this time. To translate a config item for the first time, check the corresponding box and upload.'), 'status', FALSE);
-    drupal_goto('admin/settings/lingotek/manage/config');
-  }
-  LingotekConfigSet::markLidsNotCurrent($lids);
-
-  $batch = array(
-    'title' => t('Uploading Content To Lingotek'),
-    'finished' => 'lingotek_sync_upload_config_finished'
-  );
-
   $set_ids = array();
   // You need to iterate through this (with multiple db queries) because this function will also assign the item to a new set and create a new set if necessary. With one query to get all set_ids, it might not do that.
   foreach ($lids as $lid) {
@@ -272,6 +261,20 @@ function lingotek_config_upload_selected($lids) {
     $set_ids[] = $set_id;
   }
   $unique_set_ids = array_unique($set_ids);
+
+  $not_current_lids = LingotekConfigSet::getEditedLidsInSets($unique_set_ids);
+
+  if (empty($not_current_lids)) {
+    drupal_set_message(t('No config items have been edited and need to be uploaded at this time. To translate a config item for the first time, check the corresponding box and upload.'), 'status', FALSE);
+    drupal_goto('admin/settings/lingotek/manage/config');
+  }
+
+  LingotekConfigSet::markLidsNotCurrent($not_current_lids);
+
+  $batch = array(
+    'title' => t('Uploading Content To Lingotek'),
+    'finished' => 'lingotek_sync_upload_config_finished'
+  );
 
   $operations = lingotek_get_sync_upload_config_batch_elements($unique_set_ids);
   $batch['operations'] = $operations;

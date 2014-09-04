@@ -885,6 +885,20 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     return $result->fetchCol();
   }
 
+  public static function getEditedLidsInSets($set_ids) {
+    $set_ids = is_array($set_ids) ? $set_ids : array($set_ids);
+    $query = db_select('{lingotek_config_map}', 'lcm')
+        ->fields('lcm', array('lid'))
+        ->condition('set_id', $set_ids, 'IN')
+        ->condition('current', 1);
+    $query->join('{locales_target}', 'lt', 'lt.lid = lcm.lid');
+    $query->condition('i18n_status', 1);
+    dpq($query);
+    $result = $query->execute()->fetchCol();
+    $edited_lids = array_unique($result);
+    return $edited_lids;
+  }
+
   /**
    * Mark as dirty all target segments passed, in the locales targets
    *
