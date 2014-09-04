@@ -9,7 +9,6 @@ namespace Drupal\lingotek\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,13 +26,6 @@ abstract class LingotekControllerBase extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * Lingotek module-specific settings
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $settings;
-
-  /**
    * A logger instance.
    *
    * @var \Psr\Log\LoggerInterface
@@ -46,10 +38,11 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    */
-  public function __construct(Request $request, FormBuilderInterface $form_builder, LoggerInterface $logger) {
+  public function __construct(Request $request, ContainerInterface $container) {
     $this->request = $request;
-    $this->formBuilder = $form_builder;
-    $this->logger = $logger;
+    $this->container = $container;
+    $this->formBuilder = $container->get('form_builder');
+    $this->logger = $container->get('logger.factory')->get('lingotek');
 
     $this->checkSetup();
   }
@@ -59,11 +52,7 @@ abstract class LingotekControllerBase extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     $request_stack = $container->get('request_stack');
-    return new static(
-      $request_stack->getCurrentRequest(),
-      $container->get('form_builder'),
-      $container->get('logger.factory')->get('lingotek')
-    );
+    return new static($request_stack->getCurrentRequest(), $container);
   }
 
   /**
@@ -104,6 +93,17 @@ abstract class LingotekControllerBase extends ControllerBase {
   protected function checkSetup() {
     if (!$this->setupCompleted()) {
       return $this->redirect('lingotek.setup_connect');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function redirect($route_name, $route_parameters = array(), $status = 302) {
+    $router = $this->container->get('router');
+    // TODO: initialize the route first, if it doesn't exist yet.
+    if ($router->getRouteCollection()->get($route_name)) {
+      return parent::redirect($route_name, $route_parameters, $status);
     }
   }
 

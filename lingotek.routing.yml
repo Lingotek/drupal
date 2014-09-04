@@ -6,11 +6,11 @@ lingotek.dashboard:
   requirements:
     _permission: 'administer lingotek'
 
-lingotek.setup_connect:
-  path: '/admin/lingotek/setup/connect'
+lingotek.setup_account:
+  path: '/admin/lingotek/setup/account'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekSetupController::connectPage'
-    _title: 'Connect to Lingotek'
+    _content: '\Drupal\lingotek\Controller\LingotekSetupController::accountPage'
+    _title: 'Lingotek Account Info'
   requirements:
     _permission: 'administer lingotek'
 
@@ -19,6 +19,14 @@ lingotek.setup_community:
   defaults:
     _content: '\Drupal\lingotek\Controller\LingotekSetupController::communityPage'
     _title: 'Choose Community'
+  requirements:
+    _permission: 'administer lingotek'
+    
+lingotek.setup_project_vault:
+  path: '/admin/lingotek/setup/project-vault'
+  defaults:
+    _content: '\Drupal\lingotek\Controller\LingotekSetupController::projectVaultPage'
+    _title: 'Choose Project and Vault'
   requirements:
     _permission: 'administer lingotek'
     

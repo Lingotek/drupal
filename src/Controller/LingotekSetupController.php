@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\lingotek\Controller\LingotekControllerBase;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Returns responses for lingotek module setup routes.
@@ -19,18 +18,47 @@ class LingotekSetupController extends LingotekControllerBase {
    * @return array
    *   The connection form.
    */
-  public function connectPage() {
-    if ($this->setupCompleted()) {
+  public function accountPage() {
+    if ($this->setupCompleted() || $this->receivedToken()) {
+      $this->saveToken($this->receivedToken());
+      $account_info = $this->fetchAccountInfo();
+      $this->saveAccountInfo($account_info);
       return $this->getLingotekForm('LingotekSettingsAccountForm');
-    }
-    elseif ($this->connected()) {
-      return $this->redirect('lingotek.setup_community');
     }
     return $this->getLingotekForm('LingotekSettingsConnectForm');
   }
 
   public function communityPage() {
     return $this->getLingotekForm('LingotekSettingsCommunityForm');
+  }
+
+  public function projectVaultPage() {
+    return $this->getLingotekForm('LingotekSettingsProjectVaultForm');
+  }
+
+  protected function receivedToken() {
+    return $this->request->get('access_token');
+  }
+
+  protected function saveToken($token) {
+    if (!empty($token)) {
+      $this->config('lingotek.settings')->set('access_token', $token)->save();
+    }
+  }
+
+  protected function saveAccountInfo($account_info) {
+    if (!empty($account_info)) {
+      $settings = $this->config('lingotek.settings');
+      foreach ($account_info as $key => $val) {
+        $settings->set($key, $value);
+      }
+      $settings->save();
+    }
+  }
+
+  protected function fetchAccountInfo() {
+    $api = $this->container->get('lingotek.api');
+    $login = $api->fetchLogin();
   }
 
 }
