@@ -262,7 +262,8 @@ function lingotek_config_upload_selected($lids) {
   }
   $unique_set_ids = array_unique($set_ids);
 
-  $not_current_lids = LingotekConfigSet::getEditedLidsInSets($unique_set_ids);
+  $edited_lids = LingotekConfigSet::getEditedLidsInSets($unique_set_ids);
+  $not_current_lids = array_merge($lids, $edited_lids);
 
   if (empty($not_current_lids)) {
     drupal_set_message(t('No config items have been edited and need to be uploaded at this time. To translate a config item for the first time, check the corresponding box and upload.'), 'status', FALSE);

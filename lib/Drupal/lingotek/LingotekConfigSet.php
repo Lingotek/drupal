@@ -893,7 +893,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->condition('current', 1);
     $query->join('{locales_target}', 'lt', 'lt.lid = lcm.lid');
     $query->condition('i18n_status', 1);
-    dpq($query);
     $result = $query->execute()->fetchCol();
     $edited_lids = array_unique($result);
     return $edited_lids;
