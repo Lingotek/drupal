@@ -638,7 +638,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    */
   public function hasLingotekDocId() {
     $has_id = array_key_exists('document_id', $this->source_meta);
-    if ($has_id && ($this->source_meta['document_id'] > 0)) {
+    if ($has_id && (strlen($this->source_meta['document_id']) > 0)) {
       return TRUE;
     }
     return FALSE;
