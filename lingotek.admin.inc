@@ -90,6 +90,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   $translate = isset($translate[$entity_type]) ? $translate[$entity_type] : array();
 
   $profiles_options = lingotek_get_profiles_by_name(); // these will come translated via the t-function
+  unset($profiles_options[LingotekSync::PROFILE_CONFIG]);
 
   if ($entity_type == 'field_collection_item') {
     $profiles_options = array(
