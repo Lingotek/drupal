@@ -262,7 +262,7 @@ function lingotek_config_upload_selected($lids) {
   }
   $unique_set_ids = array_unique($set_ids);
 
-  $edited_lids = LingotekConfigSet::getEditedLidsInSets($unique_set_ids);
+  $edited_lids = !empty($unique_set_ids) ? LingotekConfigSet::getEditedLidsInSets($unique_set_ids) : array();
   $not_current_lids = array_merge($lids, $edited_lids);
 
   if (empty($not_current_lids)) {
