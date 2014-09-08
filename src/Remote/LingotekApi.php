@@ -5,122 +5,82 @@
  * Contains \Drupal\lingotek\Remote\LingotekApi.
  */
 
-namespace Drupal\lingotek\Remote
+namespace Drupal\lingotek\Remote;
 
 use Drupal\lingotek\Remote\LingotekApiInterface;
-use Drupal\Core\Config\ConfigFactory;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
-use Psr\Log\LoggerInterface;
+use Drupal\lingotek\Remote\LingotekHttp;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/*
+ * a simple connector to the Lingotek Translation API
+ */
 class LingotekApi implements LingotekApiInterface {
   
   /**
    * The HTTP client to interact with the Lingotek service.
    *
-   * @var \GuzzleHttp\ClientInterface
+   * @var \Drupal\lingotek\Remote\LingotekHttp
    */
-  protected $httpClient;
-
-  /**
-   * A logger instance.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
+  protected $lingotekClient;
 
   /**
    * Constructs a LingotekApi object.
-   *
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   A Guzzle client object.
-   * @param \Drupal\Core\Config\ConfigFactory $config
-   *   A logger instance.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   A logger instance.
    */
-  protected function __construct(ClientInterface $http_client, ConfigFactory $config, LoggerInterface $logger) {
-    $this->httpClient = $http_client;
-    $this->config = $config;
-    $this->logger = $logger;
+  public function __construct(LingotekHttp $lingotek_http_client) {
+    $this->lingotekClient = $lingotek_http_client;
   }
 
   public static function create(ContainerInterface $container) {
-    if (empty(self::$instance)) {
-      self::$instance = new static(
-        $container->get('http_client'),
-        $container->get('config.factory'),
-        $container->get('logger.factory')->get('lingotek')
-      );
-    }
-    return self::$instance;
-  }
-
-  public function get_token_details($access_token) {
-  }
-
-  public function upload_document($args) {
-  }
-
-  public function patch_document($id, $args) {
-  }
-
-  public function delete_document($id) {
-  }
-
-  public function get_documents($args = array()) {
-  }
-
-  public function document_exists($id) {
-  }
-
-  public function get_translations_status($id) {
-  }
-
-  public function request_translation($id, $locale) {
-  }
-
-  public function get_translation($id, $locale) {
-  }
-
-  public function delete_translation($id, $locale) {
-  }
-
-  public function get_connect_url($redirect_uri) {
-  }
-
-  public function get_communities() {
-  }
-
-  public function get_projects($community_id) {
-  }
-
-  public function get_vaults($community_id) {
-  }
-
-  public function get_workflows($community_id) {
-  }
-
-  protected function request($path, $params = array(), $method = 'GET') {
-    $default_params = array(
-      'token' => $this->getToken(),
+    return new static(
+      $container->get('lingotek.http_client')
     );
-    $request = $this->httpClient->createRequest($method, $path);
-    $request->addHeader('header stuff from WP module');
+  }
 
-    try {
-      $response = $this->httpClient->send($request);
-    }
-    catch (RequestException $e) {
-      $this->logger->warning('Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
-      drupal_set_message(t('Request to Lingotek service failed: %error', array('%error' => $e->getMessage())) , 'warning');
-      return FALSE;
-    }
+  public function getAccountInfo() {
+    $access_token = $this->lingotekClient->getCurrentToken();
+    $account_info = $this->lingotekClient->get('/auth/oauth2/access_token_info?access_token=' . $access_token);
+    return $account_info;
+  }
 
-    $message = $response->getBody(TRUE);
-    $token = $response->getHeader('access_token')
-    // TODO: save token to state info.
-    return $message;
+  public function uploadDocument($args) {
+  }
+
+  public function patchDocument($id, $args) {
+  }
+
+  public function deleteDocument($id) {
+  }
+
+  public function getDocuments($args = array()) {
+  }
+
+  public function documentExists($id) {
+  }
+
+  public function getTranslationStatus($id) {
+  }
+
+  public function requestTranslation($id, $locale) {
+  }
+
+  public function getTranslation($id, $locale) {
+  }
+
+  public function deleteTranslation($id, $locale) {
+  }
+
+  public function getConnectUrl($redirect_uri) {
+  }
+
+  public function getCommunities() {
+  }
+
+  public function getProjects($community_id) {
+  }
+
+  public function getVaults($community_id) {
+  }
+
+  public function getWorkflows($community_id) {
   }
 }

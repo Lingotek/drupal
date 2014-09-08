@@ -42,23 +42,22 @@ class LingotekSetupController extends LingotekControllerBase {
 
   protected function saveToken($token) {
     if (!empty($token)) {
-      $this->config('lingotek.settings')->set('access_token', $token)->save();
+      $this->config('lingotek.settings')->set('account.access_token', $token)->save();
     }
   }
 
   protected function saveAccountInfo($account_info) {
     if (!empty($account_info)) {
       $settings = $this->config('lingotek.settings');
-      foreach ($account_info as $key => $val) {
-        $settings->set($key, $value);
-      }
+      $settings->set('account.login_id', $account_info['login_id']);
+      $settings->set('account.access_token', $account_info['id']);
       $settings->save();
     }
   }
 
   protected function fetchAccountInfo() {
     $api = $this->container->get('lingotek.api');
-    $login = $api->fetchLogin();
+    return $api->getAccountInfo();
   }
 
 }

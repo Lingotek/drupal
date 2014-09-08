@@ -8,9 +8,8 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Config\Context\ContextInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -41,7 +40,7 @@ class LingotekSettingsCommunityForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function getFormID() {
-    return 'lingotek.settings_form';
+    return 'lingotek.setup_community_form';
   }
 
   /**

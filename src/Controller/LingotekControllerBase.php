@@ -42,6 +42,7 @@ abstract class LingotekControllerBase extends ControllerBase {
     $this->request = $request;
     $this->container = $container;
     $this->formBuilder = $container->get('form_builder');
+    $this->settings = $this->config('lingotek.settings');
     $this->logger = $container->get('logger.factory')->get('lingotek');
 
     $this->checkSetup();
@@ -63,7 +64,7 @@ abstract class LingotekControllerBase extends ControllerBase {
   public function connected() {
     $access_token = $this->request->query->get('access_token');
     if ($access_token) {
-      $this->config('lingotek.settings')->set('access_token', $access_token);
+      $this->settings->set('access_token', $access_token)->save();
       return TRUE;
     }
     return FALSE;
@@ -75,6 +76,10 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @return boolean TRUE if connected, FALSE otherwise.
    */
   public function setupCompleted() {
+    $info = $this->settings->get('account');
+    if (!empty($info['access_token']) && !empty($info['login_id'])) {
+      return TRUE;
+    }
     return FALSE;
   }
 
