@@ -52,13 +52,13 @@ function lingotek_perform_action(nid, action) {
         var rows_with_incompletes = rows_in_same_set.children().children('.target-pending, .target-ready, .target-edited').parent().parent();
         var checkboxes = rows_with_incompletes.children().children().children("input");
         var all_chechboxes_in_set = rows_in_same_set.children().children().children("input");
-        var clicked_is_not_current = $(this).parents("tr").children().children('.target-pending, .target-ready').length;
+        var clicked_is_not_current = $(this).parents("tr").children().children('.target-pending, .target-ready, .target-edited').length;
         if ($(this).is(':checked')) {
-          checkboxes.attr('checked',true);
+          // checkboxes.attr('checked',true);
           rows_with_incompletes.addClass('selected');
         }
         else if (clicked_is_not_current) {
-          all_chechboxes_in_set.attr('checked',false);
+          // all_chechboxes_in_set.attr('checked',false);
           rows_in_same_set.removeClass('selected');
         }
         else {
@@ -68,7 +68,7 @@ function lingotek_perform_action(nid, action) {
         var other_rows_with_incompletes = rows_with_incompletes.length - this_row_incomplete;
 
         if (!message_already_shown && other_rows_with_incompletes > 0) {
-          $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some checkboxes are automatically checked.</div>');
+          $('#edit-grid-container').prepend('<div class="messages warning">All items in the same config set will be updated simultaneously, therefore some items are automatically highlighted. Disassociation will occur on an individual basis and only checked items will be affected.</div>');
           message_already_shown = true;
         }
       });

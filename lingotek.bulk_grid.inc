@@ -2109,4 +2109,7 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
   */
+  if (!empty($lids)) {
+    LingotekConfigSet::disassociateSegments($lids);
+  }
 }
