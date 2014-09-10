@@ -345,7 +345,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $result = db_update('locales_target')
         ->fields(array('i18n_status' => I18N_STRING_STATUS_CURRENT))
         ->condition('lid', $lids, 'IN')
-        ->condition('translation_agent_id', self::getLingotekTranslationAgentId())
         ->execute();
   }
 
