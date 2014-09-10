@@ -8,33 +8,14 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Form\ConfigFormBase;
+use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure text display settings for this page.
  */
-class LingotekSettingsCommunityForm extends ConfigFormBase {
-
-  /**
-   * Constructs a \Drupal\lingotek\Form\LingotekSettingsCommunityForm object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactory $config_factory
-   *   The factory for configuration objects.
-   */
-  public function __construct(ConfigFactory $config_factory) {
-    parent::__construct($config_factory);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory')
-    );
-  }
+class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 
   /**
    * {@inheritdoc}
@@ -47,29 +28,43 @@ class LingotekSettingsCommunityForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->configFactory->get('lingotek.settings');
-    $case = $config->get('case');
-    $form['lingotek_case'] = array(
-      '#type' => 'radios',
-      '#title' => $this->t('Configure Lingotek World Text'),
-      '#default_value' => $case,
-      '#options' => array(
-        'upper' => $this->t('UPPER'),
-        'title' => $this->t('Title'),
-      ),
-      '#description' => $this->t('Choose the case of your "Lingotek, world!" message.'),
+    $form = parent::buildForm($form, $form_state);
+
+    $communities = $this->settings->get('account.communities');
+
+    $form['lingotek_user_directions_1'] = array(
+      '#markup' => '<p>Your account is associated with multiple Lingotek communities.</p>
+      <p>Select the community to associate this site with:</p>');
+    $community_options = array();
+    foreach ($communities as $id => $name) {
+      $community_options[$id] = $name . ' (' . $id . ')';
+    }
+
+    $form['lingotek_site_community'] = array(
+      '#title' => t('Community'),
+      '#type' => 'select',
+      '#options' => $community_options,
+      '#required' => TRUE,
     );
 
-    return parent::buildForm($form, $form_state);
+    $form['lingotek_communities'] = array(
+      '#type' => 'hidden',
+      '#value' => json_encode($communities)
+    );
+
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Next')
+    );
+
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->configFactory->get('lingotek.settings')
-      ->set('case', $form_state['values']['lingotek_case'])
-      ->save();
+    $this->settings->set('account.community', $form_state['values']['community'])->save();
 
     parent::submitForm($form, $form_state);
   }

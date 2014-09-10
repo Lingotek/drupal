@@ -19,16 +19,30 @@ class LingotekSetupController extends LingotekControllerBase {
    *   The connection form.
    */
   public function accountPage() {
-    if ($this->setupCompleted() || $this->receivedToken()) {
+    if ($this->setupCompleted()) {
+      return $this->getLingotekForm('LingotekSettingsAccountForm');
+    }
+    if ($this->receivedToken()) {
       $this->saveToken($this->receivedToken());
       $account_info = $this->fetchAccountInfo();
       $this->saveAccountInfo($account_info);
+      drupal_set_message($this->t('Your account settings have been saved.'));
       return $this->getLingotekForm('LingotekSettingsAccountForm');
     }
     return $this->getLingotekForm('LingotekSettingsConnectForm');
   }
 
   public function communityPage() {
+    $communities = $this->api->getCommunities();
+    if (empty($communities)) {
+      // TODO: Log an error that no communities exist.
+      return $this->redirect('lingotek.setup_account');
+    }
+    $this->settings->set('account.communities', $communities)->save();
+    if (count($communities) == 1) {
+      // No choice necessary, redirect to next page.
+      return $this->redirect('lingotek.setup_project_vault');
+    }
     return $this->getLingotekForm('LingotekSettingsCommunityForm');
   }
 
@@ -56,8 +70,7 @@ class LingotekSetupController extends LingotekControllerBase {
   }
 
   protected function fetchAccountInfo() {
-    $api = $this->container->get('lingotek.api');
-    return $api->getAccountInfo();
+    return $this->api->getAccountInfo();
   }
 
 }

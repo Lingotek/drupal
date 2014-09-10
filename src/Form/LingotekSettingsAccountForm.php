@@ -7,34 +7,13 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Form\ConfigFormBase;
+use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure Lingotek
  */
-class LingotekSettingsAccountForm extends ConfigFormBase {
-
-  /**
-   * Constructs a \Drupal\lingotek\Form\LingotekSettingsAccountForm object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactory $config_factory
-   *   The factory for configuration objects.
-   */
-  public function __construct(ConfigFactory $config_factory) {
-    parent::__construct($config_factory);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory')
-    );
-  }
+class LingotekSettingsAccountForm extends LingotekConfigFormBase {
 
   /**
    * {@inheritdoc}
@@ -81,8 +60,6 @@ class LingotekSettingsAccountForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Everything is saved in the previous step, so redirect to community form.
     $form_state->setRedirect('lingotek.setup_community');
-
-    parent::submitForm($form, $form_state);
   }
 
 }

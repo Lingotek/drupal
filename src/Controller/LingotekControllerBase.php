@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Psr\Log\LoggerInterface;
@@ -19,11 +20,39 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class LingotekControllerBase extends ControllerBase {
 
   /**
+   * A Symfony request instance
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
+   * A lingotek api instance
+   *
+   * @var \Drupal\lingotek\Remote\LingotekApiInterface
+   */
+  protected $api;
+
+  /**
    * The form builder.
    *
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
+
+  /**
+   * A config instance for lingotek.settings.
+   *
+   * @var TBD
+   */
+  protected $settings;
+
+  /**
+   * A router instance for controlling redirects.
+   *
+   * @var TBD
+   */
+  protected $router;
 
   /**
    * A logger instance.
@@ -38,12 +67,11 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    */
-  public function __construct(Request $request, ContainerInterface $container) {
+  public function __construct(Request $request, LingotekApiInterface $lingotek_api, FormBuilderInterface $form_builder) {
     $this->request = $request;
-    $this->container = $container;
-    $this->formBuilder = $container->get('form_builder');
+    $this->api = $lingotek_api;
+    $this->formBuilder = $form_builder;
     $this->settings = $this->config('lingotek.settings');
-    $this->logger = $container->get('logger.factory')->get('lingotek');
 
     $this->checkSetup();
   }
@@ -53,7 +81,9 @@ abstract class LingotekControllerBase extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     $request_stack = $container->get('request_stack');
-    return new static($request_stack->getCurrentRequest(), $container);
+    return new static(
+        $request_stack->getCurrentRequest(), $container->get('lingotek.api'), $container->get('form_builder')
+    );
   }
 
   /**
@@ -101,15 +131,13 @@ abstract class LingotekControllerBase extends ControllerBase {
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function redirect($route_name, $route_parameters = array(), $status = 302) {
-    $router = $this->container->get('router');
-    // TODO: initialize the route first, if it doesn't exist yet.
-    if ($router->getRouteCollection()->get($route_name)) {
-      return parent::redirect($route_name, $route_parameters, $status);
-    }
-  }
-
+//  /**
+//   * {@inheritdoc}
+//   */
+//  public function redirect($route_name, $route_parameters = array(), $status = 302) {
+//    // TODO: initialize the route first, if it doesn't exist yet.
+//    if ($this->router->getRouteCollection()->get($route_name)) {
+//      return parent::redirect($route_name, $route_parameters, $status);
+//    }
+//  }
 }

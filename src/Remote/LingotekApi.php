@@ -73,6 +73,16 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function getCommunities() {
+    $response = $this->lingotekClient->get('/api/community?limit=50');
+    $communities = array();
+    if (!empty($response['entities'])) {
+      foreach ($response['entities'] as $community) {
+        if (!empty($community['properties']['id']) && !empty($community['properties']['title'])) {
+          $communities[$community['properties']['id']] = $community['properties']['title'];
+        }
+      }
+    }
+    return $communities;
   }
 
   public function getProjects($community_id) {
