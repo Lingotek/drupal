@@ -1568,7 +1568,11 @@ function lingotek_admin_profile_manage($profile_id) {
       'url_alias_translation' => 0,
     );
     end($profiles);
-    $profile_id = key($profiles) + 1; //set the id to one more than the last
+    // Set ID to one more than the current count, and then increment as needed.
+    $profile_id = count($profiles) + 1;
+    while (isset($profiles[$profile_id])) {
+      $profile_id++;
+    }
   }
   else {
      $profile = lingotek_get_global_profile();
