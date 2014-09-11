@@ -8,6 +8,20 @@
 Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
  
+    $('#lingotek-oauth-secret-btn').click( function() {
+      console.log("clicked");
+      $('#lingotek-oauth-secret').toggle();
+      $('#lingotek-oauth-secret-placeholder').toggle();
+      if($('#lingotek-oauth-secret-btn i').hasClass('fa-lock')){
+        $('#lingotek-oauth-secret-btn i').addClass('fa-unlock');
+        $('#lingotek-oauth-secret-btn i').removeClass('fa-lock');
+      }
+      else {
+        $('#lingotek-oauth-secret-btn i').addClass('fa-lock');
+        $('#lingotek-oauth-secret-btn i').removeClass('fa-unlock')
+      }
+    });
+
     //when a content type checkbox is clicked
     $('.form-select', context).change( function() {
       isEnabled = $(this).val() != 'DISABLED';

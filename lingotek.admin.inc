@@ -53,8 +53,12 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array(t('Enterprise:'), ($show_advanced ? '<span style="color: green;">' . t('Yes') . '</span>' : '<span>' . t('No') . '</span>')),
         array(t('Activation Name:'), $activation_details),
         array(t('Community Identifier:'), variable_get('lingotek_community_identifier', '')),
-        array(t('OAuth Key:'), variable_get('lingotek_oauth_consumer_id', '')),
-        array(t('OAuth Secret:'), variable_get('lingotek_oauth_consumer_secret', '')),
+        array(
+          t('OAuth Credentials:') . ' <a id="lingotek-oauth-secret-btn"><i class="fa fa-lock fa-lg'
+          . '" alt="' . t('lock/unlock') . '" style="cursor: pointer;"></i></a>',
+          variable_get('lingotek_oauth_consumer_id', '') . ' <span class="description">['.t('key').']</span> <span id="lingotek-oauth-secret" style="display:none;"><br/>'.
+          variable_get('lingotek_oauth_consumer_secret', '') . ' <span class="description">['.t('secret').']</span> </span>'
+        ),
         array(t('Workflow ID:'), variable_get('lingotek_workflow', '')),
         array(t('Integration Method ID:'), variable_get('lingotek_integration_method', '')),
         array(t('External ID:'), variable_get('lingotek_login_id', '')),
