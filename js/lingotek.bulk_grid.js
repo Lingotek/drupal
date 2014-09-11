@@ -50,15 +50,11 @@ function lingotek_perform_action(nid, action) {
         var rows_in_same_set = $("tr").children().children('.set_name:contains("' + selected_set_name + '")').parent().parent();
 
         var rows_with_incompletes = rows_in_same_set.children().children('.target-pending, .target-ready, .target-edited').parent().parent();
-        var checkboxes = rows_with_incompletes.children().children().children("input");
-        var all_chechboxes_in_set = rows_in_same_set.children().children().children("input");
-        var clicked_is_not_current = $(this).parents("tr").children().children('.target-pending, .target-ready, .target-edited').length;
+        var boxes_checked = rows_in_same_set.children().children().children("input:checkbox:checked").length;
         if ($(this).is(':checked')) {
-          // checkboxes.attr('checked',true);
           rows_with_incompletes.addClass('selected');
         }
-        else if (clicked_is_not_current) {
-          // all_chechboxes_in_set.attr('checked',false);
+        else if (boxes_checked <= 0) {
           rows_in_same_set.removeClass('selected');
         }
         else {
