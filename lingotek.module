@@ -960,6 +960,15 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#description' => t('When enabled, completed translations will automatically be downloaded from Lingotek.<br/>When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
   );
 
+  // URL Alias Translation.
+  $form['lingotek']['url_alias_translation'] = array(
+    '#type' => 'select',
+    '#title' => t('URL Alias Translation'),
+    '#default_value' => $node->lingotek['url_alias_translation'],
+    '#options' => lingotek_get_url_alias_translations(),
+    '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern.'),
+  );
+
   if ($show_advanced) {
     /* REMOVED UNTIL FEATURE IS IMPLEMENTED
     // Target Localization
@@ -985,15 +994,6 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#default_value' => $node->lingotek['allow_community_translation'],
     );
   }
-
-  // URL Alias Translation.
-  $form['lingotek']['url_alias_translation'] = array(
-    '#type' => 'select',
-    '#title' => t('URL Alias Translation'),
-    '#default_value' => $node->lingotek['url_alias_translation'],
-    '#options' => lingotek_get_url_alias_translations(),
-    '#description' => t('Choose how you would like to translate the URL alias. The last option requires that you install both the Title and Pathauto modules, and define a path pattern.'),
-  );
 
   if ($bulk_grid) {
     $form['submit'] = array(
