@@ -8,33 +8,14 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Form\ConfigFormBase;
+use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure Lingotek
  */
-class LingotekSettingsConnectForm extends ConfigFormBase {
-
-  /**
-   * Constructs a \Drupal\lingotek\Form\LingotekSettingsConnectForm object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactory $config_factory
-   *   The factory for configuration objects.
-   */
-  public function __construct(ConfigFactory $config_factory) {
-    parent::__construct($config_factory);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory')
-    );
-  }
+class LingotekSettingsConnectForm extends LingotekConfigFormBase {
 
   /**
    * {@inheritdoc}
@@ -46,14 +27,13 @@ class LingotekSettingsConnectForm extends ConfigFormBase {
   /** * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->configFactory->get('lingotek.settings');
 
     // build the redirecting link for authentication to Lingotek
-    $host = $config->get('account.host');
-    $auth_path = $config->get('account.authorize_path');
-    $id = $config->get('account.default_client_id');
+    $host = $this->L->get('account.host');
+    $auth_path = $this->L->get('account.authorize_path');
+    $id = $this->L->get('account.default_client_id');
     $return_uri = url(current_path(), array('absolute' => TRUE)) . '?success=true';
-    $login = $config->get('account.type');
+    $login = $this->L->get('account.type');
 
     $form = parent::buildForm($form, $form_state);
     if (!isset($form['#attached'])) {

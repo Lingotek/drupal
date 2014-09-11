@@ -7,65 +7,64 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Config\ConfigFactory;
-use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\lingotek\Form\LingotekConfigFormBase;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Configure text display settings for this page.
  */
 class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getFormID() {
-    return 'lingotek.setup_community_form';
-  }
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getFormID() {
+		return 'lingotek.setup_community_form';
+	}
 
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $form = parent::buildForm($form, $form_state);
+	/**
+	 * {@inheritdoc}
+	 */
+	public function buildForm(array $form, FormStateInterface $form_state) {
+		$form = parent::buildForm($form, $form_state);
 
-    $communities = $this->settings->get('account.communities');
+		$community_id = $this->L->get('defaults.community');
+		$communities  = $this->L->getCommunities();
 
-    $form['lingotek_user_directions_1'] = array(
-      '#markup' => '<p>Your account is associated with multiple Lingotek communities.</p>
-      <p>Select the community to associate this site with:</p>');
-    $community_options = array();
-    foreach ($communities as $id => $name) {
-      $community_options[$id] = $name . ' (' . $id . ')';
-    }
+		$form['lingotek_user_directions_1'] = array(
+			'#markup' => '<p>' . t('Your account is associated with multiple Lingotek communities.') . '</p>
+      <p>' . t('Select the community that you would like associate with this site:') . '</p>');
+		$community_options = array();
+		foreach ($communities as $id => $name) {
+			$community_options[$id] = $name . ' (' . $id . ')';
+		}
 
-    $form['lingotek_site_community'] = array(
-      '#title' => t('Community'),
-      '#type' => 'select',
-      '#options' => $community_options,
-      '#required' => TRUE,
-    );
+		$form['community'] = array(
+			'#title'         => t('Community'),
+			'#type'          => 'select',
+			'#options'       => $community_options,
+			'#default_value' => $community_id,
+			'#required'      => TRUE,
+		);
 
-    $form['lingotek_communities'] = array(
-      '#type' => 'hidden',
-      '#value' => json_encode($communities)
-    );
+		$form['lingotek_communities'] = array(
+			'#type'  => 'hidden',
+			'#value' => json_encode($communities)
+		);
 
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Next')
-    );
+		// Provide new button to continue
+		$form['actions']['submit']['#value'] = t('Next');
 
-    return $form;
-  }
+		return $form;
+	}
 
-  /**
-   * {@inheritdoc}
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->settings->set('account.community', $form_state['values']['community'])->save();
-
-    parent::submitForm($form, $form_state);
-  }
+	/**
+	 * {@inheritdoc}
+	 */
+	public function submitForm(array &$form, FormStateInterface $form_state) {
+		$this->L->set('defaults.community', $form_state['values']['community']);
+		$form_state->setRedirect('lingotek.setup_defaults');
+		parent::submitForm($form, $form_state);
+	}
 }

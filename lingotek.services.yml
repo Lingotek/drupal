@@ -1,4 +1,7 @@
 services:
+  lingotek:
+    class: Drupal\lingotek\Lingotek
+    arguments: ['@lingotek.api', '@config.factory']
   lingotek.http_client:
     class: Drupal\lingotek\Remote\LingotekHttp
     arguments: ['@http_client', '@config.factory']

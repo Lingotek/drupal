@@ -33,21 +33,22 @@ class LingotekSetupController extends LingotekControllerBase {
   }
 
   public function communityPage() {
-    $communities = $this->api->getCommunities();
+    $communities = $this->L->getCommunities();
     if (empty($communities)) {
       // TODO: Log an error that no communities exist.
       return $this->redirect('lingotek.setup_account');
     }
-    $this->settings->set('account.communities', $communities)->save();
+    $this->L->set('account.resources.community', $communities);
     if (count($communities) == 1) {
-      // No choice necessary, redirect to next page.
+      // No choice necessary. Save and advance to next page.
+      $this->L->set('defaults.community', current(array_keys($communities)));
       return $this->redirect('lingotek.setup_project_vault');
     }
     return $this->getLingotekForm('LingotekSettingsCommunityForm');
   }
 
-  public function projectVaultPage() {
-    return $this->getLingotekForm('LingotekSettingsProjectVaultForm');
+  public function defaultsPage() {
+    return $this->getLingotekForm('LingotekSettingsDefaultsForm');
   }
 
   protected function receivedToken() {
@@ -56,21 +57,19 @@ class LingotekSetupController extends LingotekControllerBase {
 
   protected function saveToken($token) {
     if (!empty($token)) {
-      $this->config('lingotek.settings')->set('account.access_token', $token)->save();
+      $this->L->set('account.access_token', $token);
     }
   }
 
   protected function saveAccountInfo($account_info) {
     if (!empty($account_info)) {
-      $settings = $this->config('lingotek.settings');
-      $settings->set('account.login_id', $account_info['login_id']);
-      $settings->set('account.access_token', $account_info['id']);
-      $settings->save();
+      $this->L->set('account.login_id', $account_info['login_id']);
+      $this->L->set('account.access_token', $account_info['id']);
     }
   }
 
   protected function fetchAccountInfo() {
-    return $this->api->getAccountInfo();
+    return $this->L->getAccountInfo();
   }
 
 }

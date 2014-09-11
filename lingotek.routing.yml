@@ -21,15 +21,15 @@ lingotek.setup_community:
     _title: 'Choose Community'
   requirements:
     _permission: 'administer lingotek'
-    
-lingotek.setup_project_vault:
-  path: '/admin/lingotek/setup/project-vault'
+
+lingotek.setup_defaults:
+  path: '/admin/lingotek/setup/defaults'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekSetupController::projectVaultPage'
-    _title: 'Choose Project and Vault'
+    _content: '\Drupal\lingotek\Controller\LingotekSetupController::defaultsPage'
+    _title: 'Choose Defaults'
   requirements:
     _permission: 'administer lingotek'
-    
+
 lingotek.settings:
   path: '/admin/lingotek/settings'
   defaults:

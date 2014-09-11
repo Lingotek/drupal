@@ -1,4 +1,4 @@
-default:
+defaults:
 preference:
   advanced_parsing: true
   advanced_taxonomy_terms: true
@@ -7,6 +7,11 @@ account:
   authorize_path: 'auth/authorize.html'
   default_client_id: 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
   type: 'basic'
+  resources:
+    community:
+    project:
+    workflow:
+    vault:
 translate:
   entity: null
   config: null

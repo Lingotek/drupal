@@ -7,7 +7,7 @@
 
 namespace Drupal\lingotek\Controller;
 
-use Drupal\lingotek\Remote\LingotekApiInterface;
+use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Psr\Log\LoggerInterface;
@@ -27,11 +27,11 @@ abstract class LingotekControllerBase extends ControllerBase {
   protected $request;
 
   /**
-   * A lingotek api instance
+   * A lingotek connector object
    *
-   * @var \Drupal\lingotek\Remote\LingotekApiInterface
+   * @var \Drupal\lingotek\LingotekInterface
    */
-  protected $api;
+  protected $L;
 
   /**
    * The form builder.
@@ -39,13 +39,6 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
-
-  /**
-   * A config instance for lingotek.settings.
-   *
-   * @var TBD
-   */
-  protected $settings;
 
   /**
    * A router instance for controlling redirects.
@@ -67,11 +60,10 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    */
-  public function __construct(Request $request, LingotekApiInterface $lingotek_api, FormBuilderInterface $form_builder) {
+  public function __construct(Request $request, LingotekInterface $lingotek, FormBuilderInterface $form_builder) {
     $this->request = $request;
-    $this->api = $lingotek_api;
+    $this->L = $lingotek;
     $this->formBuilder = $form_builder;
-    $this->settings = $this->config('lingotek.settings');
 
     $this->checkSetup();
   }
@@ -82,7 +74,7 @@ abstract class LingotekControllerBase extends ControllerBase {
   public static function create(ContainerInterface $container) {
     $request_stack = $container->get('request_stack');
     return new static(
-        $request_stack->getCurrentRequest(), $container->get('lingotek.api'), $container->get('form_builder')
+        $request_stack->getCurrentRequest(), $container->get('lingotek'), $container->get('form_builder')
     );
   }
 
@@ -94,7 +86,7 @@ abstract class LingotekControllerBase extends ControllerBase {
   public function connected() {
     $access_token = $this->request->query->get('access_token');
     if ($access_token) {
-      $this->settings->set('access_token', $access_token)->save();
+      $this->L->set('access_token', $access_token);
       return TRUE;
     }
     return FALSE;
@@ -106,7 +98,7 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @return boolean TRUE if connected, FALSE otherwise.
    */
   public function setupCompleted() {
-    $info = $this->settings->get('account');
+    $info = $this->L->get('account');
     if (!empty($info['access_token']) && !empty($info['login_id'])) {
       return TRUE;
     }
@@ -127,7 +119,7 @@ abstract class LingotekControllerBase extends ControllerBase {
    */
   protected function checkSetup() {
     if (!$this->setupCompleted()) {
-      return $this->redirect('lingotek.setup_connect');
+      //return $this->redirect('lingotek.setup_account');
     }
   }
 
