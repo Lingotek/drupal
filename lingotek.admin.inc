@@ -56,8 +56,9 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array(
           t('OAuth Credentials:') . ' <a id="lingotek-oauth-secret-btn"><i class="fa fa-lock fa-lg'
           . '" alt="' . t('lock/unlock') . '" style="cursor: pointer;"></i></a>',
-          variable_get('lingotek_oauth_consumer_id', '') . ' <span class="description">['.t('key').']</span> <span id="lingotek-oauth-secret" style="display:none;"><br/>'.
-          variable_get('lingotek_oauth_consumer_secret', '') . ' <span class="description">['.t('secret').']</span> </span>'
+          '<input type="text" value="'.variable_get('lingotek_oauth_consumer_id', '') . '" readonly="readonly" style="background: none; width: 80%;"/><span class="description">'.t('Key').'</span>' . '<br/></span><span id="lingotek-oauth-secret" style="display:none;">'.
+          '<input type="text" value="'.variable_get('lingotek_oauth_consumer_secret', '') . '" readonly="readonly" style="background: none; width: 80%;"/>' . '</span>'.'<span id="lingotek-oauth-secret-placeholder">'.
+          '<input type="password" value="'.variable_get('lingotek_oauth_consumer_secret', '') . '" readonly="readonly" style="background: none; width: 80%;"/></span><span class="description">'.t('Secret').'</span>'
         ),
         array(t('Workflow ID:'), variable_get('lingotek_workflow', '')),
         array(t('Integration Method ID:'), variable_get('lingotek_integration_method', '')),
