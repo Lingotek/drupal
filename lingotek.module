@@ -961,6 +961,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   );
 
   if ($show_advanced) {
+    /* REMOVED UNTIL FEATURE IS IMPLEMENTED
     // Target Localization
     $form['lingotek']['allow_target_localization'] = array(
       '#type' => 'checkbox',
@@ -968,6 +969,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
       '#description' => t('When enabled, localized target-language content can be created in Drupal and then uploaded for in-place translation.  Note: to prevent loss of the original localized content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
       '#default_value' => $node->lingotek['allow_target_localization'],
     );
+    */
     // Source Overwriting
     $form['lingotek']['allow_source_overwriting'] = array(
       '#type' => 'checkbox',
