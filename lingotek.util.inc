@@ -250,6 +250,11 @@ function lingotek_get_translatable_field_types() {
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
+  // Allow override of translatable fields using the variables table.
+  $included_fields_override = variable_get('lingotek_translatable_field_types', array());
+  if (!empty($included_fields_override)) {
+    $included_fields = $included_fields_override;
+  }
   return $included_fields;
 }
 
