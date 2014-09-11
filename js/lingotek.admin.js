@@ -8,15 +8,17 @@
 Drupal.behaviors.lingotekAdminForm = {
   attach: function (context) {
  
+    // show/hide oauth secret
     $('#lingotek-oauth-secret-btn').click( function() {
-      console.log("clicked");
-      $('#lingotek-oauth-secret').toggle();
-      $('#lingotek-oauth-secret-placeholder').toggle();
       if($('#lingotek-oauth-secret-btn i').hasClass('fa-lock')){
+        $('#lingotek-oauth-secret-placeholder').hide();
+        $('#lingotek-oauth-secret').show();
         $('#lingotek-oauth-secret-btn i').addClass('fa-unlock');
         $('#lingotek-oauth-secret-btn i').removeClass('fa-lock');
       }
       else {
+        $('#lingotek-oauth-secret').hide();
+        $('#lingotek-oauth-secret-placeholder').show();
         $('#lingotek-oauth-secret-btn i').addClass('fa-lock');
         $('#lingotek-oauth-secret-btn i').removeClass('fa-unlock')
       }
@@ -238,17 +240,6 @@ Drupal.behaviors.lingotekAdminForm = {
         $('#edit-translation-field-collection-item > .form-item > .description').children().first().text('(enable all)');
       });
 
-      /*
-      // prefs summary
-      $('fieldset#ltk-prefs', context).drupalSetSummary(function (context) {
-        $list = [];
-        return  'Selected: '+ $(context).find('input:checkbox:checked:enabled').length + '/'+ $(context).find('input:checkbox').length;
-        $(context).find('input:checkbox').each(function( index ) {
-          var label = $(this).attr('checked') ? '1' : '0';
-          $list.push(label);
-        });
-        return $list.join('-');
-      });*/
     }
   }
 };
