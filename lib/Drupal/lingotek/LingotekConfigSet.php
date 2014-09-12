@@ -122,23 +122,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     if ($this->title) {
       return $this->title;
     }
-    $textgroup = db_select('{lingotek_config_metadata}', 'l')
-        ->fields('l', array('value'))
-        ->condition('id', $this->sid)
-        ->condition('config_key', 'textgroup')
-        ->execute()
-        ->fetchField();
-
-    $all_from_group = db_select('{lingotek_config_metadata}', 'l')
-        ->fields('l', array('id'))
-        ->condition('config_key', 'textgroup')
-        ->condition('value', $textgroup)
-        ->orderBy('id')
-        ->execute()
-        ->fetchCol();
-    $num_in_group = array_search($this->sid, $all_from_group);
-    $textgroup = ($textgroup == 'default') ? 'Built-in Interface' : $textgroup;
-    $this->title = ucfirst($textgroup) . ' ' . (1 + $num_in_group);
+    $this->title = self::getTitleBySetId($this->sid);
     return $this->title;
   }
 
@@ -830,7 +814,11 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function downloadTriggered($lingotek_locale) {
+  public function downloadTriggered($lingotek_locale, $callback = TRUE) {
+    // If this is triggered by the callback and the profile is not automatic, don't download.
+    if ($callback && !$this->lingotek['sync_method']) {
+      return FALSE;
+    }
     $metadata = $this->metadata();
     $document_id = $metadata['document_id'];
 
@@ -859,6 +847,11 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $this->setTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
 
     return TRUE;
+  }
+
+  public function download($lingotek_locale) {
+    $triggered_by_callback = FALSE;
+    $this->downloadTriggered($lingotek_locale, $triggered_by_callback);
   }
 
   /**
