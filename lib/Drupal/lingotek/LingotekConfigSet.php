@@ -1211,6 +1211,10 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   public function preDownload($lingotek_locale, $completed) {
+    // needs to set status to READY
+    if ($completed) {
+      $this->setTargetsStatus(LingotekSync::STATUS_READY, $lingotek_locale);
+    }
   }
 
   public function postDownload($lingotek_locale, $completed) {
