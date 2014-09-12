@@ -318,7 +318,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 }
 
 function lingotek_grid_action_options($is_config) {
-  $delete_text = $is_config ? t('Delete selected content') : t('Delete selected translations');
+  $delete_text = $is_config ? t('Delete selected translations') : t('Delete selected content');
   $action_options = array(
     'select' => t('Select an action'),
     'upload' => t('Upload source for translation'),
