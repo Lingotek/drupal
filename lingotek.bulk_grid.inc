@@ -318,12 +318,13 @@ function lingotek_bulk_grid_form($form, $form_state) {
 }
 
 function lingotek_grid_action_options($is_config) {
+  $delete_text = $is_config ? t('Delete selected content') : t('Delete selected translations');
   $action_options = array(
     'select' => t('Select an action'),
     'upload' => t('Upload source for translation'),
     'sync' => t('Check progress of translations'),
     'reset' => t('Disassociate translations'),
-    'delete' => t('Delete selected content'),
+    'delete' => $delete_text,
   );
 
   if($is_config) {
@@ -1954,10 +1955,10 @@ function lingotek_config_delete_form_submit($form, &$form_state) {
   }
 
   if (!empty($lids)) {
-    LingotekConfigSet::deleteSegments($lids);
+    LingotekConfigSet::deleteSegmentTranslations($lids);
     $count = count($lids);
-    watchdog('content', format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
-    drupal_set_message(format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
+    watchdog('content', format_plural($count, 'Deleted translations for 1 entity.', 'Deleted translations for @count entities.'));
+    drupal_set_message(format_plural($count, 'Deleted translations for 1 entity.', 'Deleted translations for @count entities.'));
     $form_state['executed'] = TRUE;
   }
   $form_state['redirect'] = LINGOTEK_MENU_MAIN_BASE_URL . '/manage';

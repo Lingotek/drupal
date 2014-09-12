@@ -1003,12 +1003,8 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->execute();
   }
 
-  public static function deleteSegments($lids) {
+  public static function deleteSegmentTranslations($lids) {
     $lids = is_array($lids) ? $lids : array($lids);
-    db_delete('{locales_source}')
-        ->condition('lid', $lids, 'IN')
-        ->execute();
-
     db_delete('{locales_target}')
         ->condition('lid', $lids, 'IN')
         ->execute();
