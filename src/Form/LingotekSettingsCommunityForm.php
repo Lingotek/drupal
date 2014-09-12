@@ -30,8 +30,10 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 		$form = parent::buildForm($form, $form_state);
 
 		$community_id = $this->L->get('default.community');
-		$communities  = $this->L->getCommunities();
+		$communities  = $this->L->getCommunities(TRUE);
 
+    dpm($communities);
+    
 		$form['lingotek_user_directions_1'] = array(
 			'#markup' => '<p>' . t('Your account is associated with multiple Lingotek communities.') . '</p>
       <p>' . t('Select the community that you would like associate with this site:') . '</p>');

@@ -33,6 +33,10 @@ class Lingotek implements LingotekInterface {
     return self::$instance;
   }
 
+  public function getAccountInfo() {
+    return $this->api->getAccountInfo();
+  }
+
   public function getResources($force = FALSE) {
     return array(
       'community' => $this->getCommunities($force),
@@ -48,8 +52,8 @@ class Lingotek implements LingotekInterface {
 
   public function getCommunities($force = FALSE) {
     $data = $this->get('account.resources.community');
-    if (empty($data)) {
-      $data = $this->api->getCommunities();
+    if (empty($data) || $force) {
+      $data = $this->api->getCommunities($force);
       $this->set('account.resources.community', $data);
     }
     return $data;
