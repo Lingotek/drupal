@@ -1080,7 +1080,7 @@ function lingotek_load_profile_defaults($entity_type) {
   $profile_map = array();
   if (array_key_exists($entity_type, $entity_profile_defaults)) {
     foreach ($entity_profile_defaults[$entity_type] as $k => $v) {
-      $profile_map[$k] = is_numeric($v) ? $profile_defaults[$v] : array();
+      $profile_map[$k] = is_numeric($v) && !empty($profile_defaults[$v]) ? $profile_defaults[$v] : array();
       $profile_map[$k]['profile'] = $v;
       unset($profile_map[$k]['name']);
     }
