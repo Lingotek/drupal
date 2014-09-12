@@ -51,24 +51,25 @@ class Lingotek implements LingotekInterface {
   }
 
   public function getCommunities($force = FALSE) {
-    $data = $this->get('account.resources.community');
+    $resources_key = 'account.resources.community';
+    $data = $this->get($resources_key);
     if (empty($data) || $force) {
       $data = $this->api->getCommunities($force);
-      $this->set('account.resources.community', $data);
+      $this->set($resources_key, $data);
     }
     return $data;
   }
 
   public function getVaults($force = FALSE) {
-    return $this->getSetting('account.resources.vault', 'getVaults', $force);
+    return $this->getResource('account.resources.vault', 'getVaults', $force);
   }
 
-  public function getProjects() {
-    return $this->getSetting('account.resources.projects', 'getProjects', $force);
+  public function getProjects($force = FALSE) {
+    return $this->getResource('account.resources.project', 'getProjects', $force);
   }
 
-  public function getWorkflows() {
-    return $this->getSetting('account.resources.workflow', 'getWorkflows', $force);
+  public function getWorkflows($force = FALSE) {
+    return $this->getResource('account.resources.workflow', 'getWorkflows', $force);
   }
 
   public function get($key) {
@@ -79,25 +80,24 @@ class Lingotek implements LingotekInterface {
     $this->config->set($key, $value)->save();
   }
 
-  // TODO: NEEDS RENAME?
-  protected function getSetting($key, $func, $force = FALSE) {
-    $data = $this->get($key);
+  protected function getResource($resources_key, $func, $force = FALSE) {
+    $data = $this->get($resources_key);
     if (empty($data) || $force) {
       $community_id = $this->get('default.community');
       $data = $this->api->$func($community_id);
-      $this->setDefaultIfNotSet($key, $data);
-      $this->set($key, $data);
+      $this->set($resources_key, $data);
+      $default_key = 'default.' . end(explode(".", $resources_key));
+      $this->setValidDefaultIfNotSet($default_key, $data);
     }
     return $data;
   }
 
-  protected function setDefaultIfNotSet($key, $values) {
-    $dkey = 'default.' . $key;
-    if (empty($this->get($dkey))) {
-      if (is_array($values)) {
-        $value = current(array_keys($values));
-        $this->set($dkey, $value);
-      }
+  protected function setValidDefaultIfNotSet($default_key, $resources) {
+    $default_value = $this->get($default_key);
+    $valid_resource_ids = array_keys($resources);
+    if (empty($this->get($default_key)) || !in_array($default_value, $valid_resource_ids)) {
+      $value = current($valid_resource_ids);
+      $this->set($default_key, $value);
     }
   }
 

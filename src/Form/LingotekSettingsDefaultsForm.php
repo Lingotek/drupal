@@ -15,6 +15,16 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
 
+  protected $defaults_labels;
+
+  public function init(){
+    $this->defaults_labels = array(
+      'project' => $this->t('Default Project'),
+      'workflow' => $this->t('Default Workflow'),
+      'vault' => $this->t('Default Vault')
+    );
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -26,17 +36,14 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    dpm($this->L->getDefaults());
+    $this->init();
 
-    $defaults_labels = array(
-      'project' => $this->t('Default Project'),
-      'workflow' => $this->t('Default Workflow'),
-      'vault' => $this->t('Default Vault')
-    );
     $defaults = $this->L->getDefaults();
     $resources = $this->L->getResources();
+    //dpm("defaults:"); dpm($defaults);
+    //dpm("resources:"); dpm($resources);
 
-    foreach($defaults_labels as $key => $label){
+    foreach($this->defaults_labels as $key => $label){
       $form[$key] = array(
         '#title' => $label,
         '#type' => 'select',
@@ -53,8 +60,11 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    //$this->L->set('default',);
-
+    $form_values = $form_state->getValues();
+    foreach($this->defaults_labels as $key => $label){
+      $this->L->set('default.'.$key, $form_values[$key]);
+    }
+    $form_state->setRedirect('lingotek.dashboard');
     parent::submitForm($form, $form_state);
   }
 }

@@ -30,9 +30,9 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 		$form = parent::buildForm($form, $form_state);
 
 		$community_id = $this->L->get('default.community');
-		$communities  = $this->L->getCommunities(TRUE);
+    $communities  = $this->L->getCommunities();
 
-    dpm($communities);
+    //dpm($this->L->get());
     
 		$form['lingotek_user_directions_1'] = array(
 			'#markup' => '<p>' . t('Your account is associated with multiple Lingotek communities.') . '</p>
@@ -65,8 +65,11 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 	 * {@inheritdoc}
 	 */
 	public function submitForm(array &$form, FormStateInterface $form_state) {
-		$this->L->set('default.community', $form_state->getValues()['community']);
-		$form_state->setRedirect('lingotek.setup_defaults');
-		parent::submitForm($form, $form_state);
-	}
+    $form_values = $form_state->getValues();
+    $this->L->set('default.community', $form_values['community']);
+    $this->L->getResources(TRUE); // update resources based on newly selected community
+    $form_state->setRedirect('lingotek.setup_defaults');
+    parent::submitForm($form, $form_state);
+  }
+
 }
