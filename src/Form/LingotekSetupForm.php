@@ -102,9 +102,7 @@ class LingotekSetupForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->configFactory->get('lingotek.settings')
-      ->set('case', $form_state['values']['lingotek_case'])
-      ->save();
+    $this->configFactory->get('lingotek.settings')->save();
 
     parent::submitForm($form, $form_state);
   }

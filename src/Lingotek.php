@@ -43,7 +43,7 @@ class Lingotek implements LingotekInterface {
   }
 
   public function getDefaults() {
-    return $this->get('defaults');
+    return $this->get('default');
   }
 
   public function getCommunities($force = FALSE) {
@@ -75,10 +75,11 @@ class Lingotek implements LingotekInterface {
     $this->config->set($key, $value)->save();
   }
 
+  // TODO: NEEDS RENAME?
   protected function getSetting($key, $func, $force = FALSE) {
     $data = $this->get($key);
     if (empty($data) || $force) {
-      $community_id = $this->get('defaults.community');
+      $community_id = $this->get('default.community');
       $data = $this->api->$func($community_id);
       $this->setDefaultIfNotSet($key, $data);
       $this->set($key, $data);
@@ -87,7 +88,7 @@ class Lingotek implements LingotekInterface {
   }
 
   protected function setDefaultIfNotSet($key, $values) {
-    $dkey = 'defaults.' . $key;
+    $dkey = 'default.' . $key;
     if (empty($this->get($dkey))) {
       if (is_array($values)) {
         $value = current(array_keys($values));

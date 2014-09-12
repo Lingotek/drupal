@@ -53,7 +53,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    //$this->L->set('defaults',);
+    //$this->L->set('default',);
 
     parent::submitForm($form, $form_state);
   }

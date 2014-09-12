@@ -1,6 +1,17 @@
 <?php
 
 /**
+ * @file lingotek.module
+ * 
+ * Implements Drupal-related hooks for the Lingotek Translation module.
+ */
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+
+/**
  * Implements hook_permission().
  */
 function lingotek_permission() {

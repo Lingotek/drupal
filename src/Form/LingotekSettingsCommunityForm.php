@@ -29,7 +29,7 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 	public function buildForm(array $form, FormStateInterface $form_state) {
 		$form = parent::buildForm($form, $form_state);
 
-		$community_id = $this->L->get('defaults.community');
+		$community_id = $this->L->get('default.community');
 		$communities  = $this->L->getCommunities();
 
 		$form['lingotek_user_directions_1'] = array(
@@ -63,7 +63,7 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 	 * {@inheritdoc}
 	 */
 	public function submitForm(array &$form, FormStateInterface $form_state) {
-		$this->L->set('defaults.community', $form_state['values']['community']);
+		$this->L->set('default.community', $form_state->getValues()['community']);
 		$form_state->setRedirect('lingotek.setup_defaults');
 		parent::submitForm($form, $form_state);
 	}
