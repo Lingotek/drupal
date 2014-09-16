@@ -6,6 +6,14 @@ lingotek.dashboard:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.dashboard_stats:
+  path: '/admin/lingotek/dashboard_stats'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardStatsPage'
+    _title: 'Lingotek Dashboard Stats'
+  requirements:
+    _access: 'TRUE'
+
 lingotek.setup_account:
   path: '/admin/lingotek/setup/account'
   defaults:
