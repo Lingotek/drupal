@@ -309,7 +309,7 @@ function lingotek_sync_upload_config_set($set_id, &$context) {
     $context['message'] = t('Uploading configuration set #@sid for translation', array('@sid' => ($set_id)));
   }
   $api = LingotekApi::instance();
-  $set = LingotekSync::getConfigSet($set_id);
+  $set = LingotekConfigSet::loadById($set_id);
   module_invoke_all('lingotek_pre_upload', $set);
   if ($existing_document = $set->hasLingotekDocId()) {
     LingotekLog::trace('existing document: @existing', array('@existing' => $existing_document));

@@ -1995,6 +1995,11 @@ function lingotek_entity_extract_ids($entity_type, $entity) {
       $vid = NULL;
       $bundle_name = $entity->type;
     }
+    else {
+      $entity_id = NULL;
+      $vid = NULL;
+      $bundle_name = NULL;
+    }
   }
   return array($entity_id, $vid, $bundle_name);
 }

@@ -523,7 +523,7 @@ class LingotekSync {
 
   public static function getConfigSet($set_id) {
     // return LingotekConfigSet object containing all segments
-    // for the given sest id.
+    // for the given set id.
     return LingotekConfigSet::loadById($set_id);
   }
 

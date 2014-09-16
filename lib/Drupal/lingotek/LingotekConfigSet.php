@@ -202,7 +202,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->fetchField();
 
     $open_set_id = self::getOpenSet($textgroup);
-    // will this work if the set_id is 0? or should it be if !($open_set_id === FALSE)?
     if ($open_set_id === FALSE) {
       $open_set_id = self::createSet($textgroup);
     }
