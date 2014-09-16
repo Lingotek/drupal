@@ -343,7 +343,7 @@ function lingotek_sync_download_config_target($set_id, $lingotek_locale, $sync_s
   LingotekLog::trace('download chunk: @set_id (@language)', array('@set_id' => $set_id, '@language' => $lingotek_locale));
   $config_set = LingotekConfigSet::loadById($set_id);
   if ($config_set) {
-    $result = $config_set->download($lingotek_locale);
+    $result = $config_set->downloadTriggered($lingotek_locale);
   }
   if ($result) {
     $context['results']['downloads'] = isset($context['results']['downloads']) && is_numeric($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;

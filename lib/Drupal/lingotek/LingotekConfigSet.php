@@ -814,11 +814,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * @return bool
    *   TRUE if the content updates succeeded, FALSE otherwise.
    */
-  public function downloadTriggered($lingotek_locale, $callback = TRUE) {
-    // If this is triggered by the callback and the profile is not automatic, don't download.
-    if ($callback && !$this->lingotek['sync_method']) {
-      return FALSE;
-    }
+  public function downloadTriggered($lingotek_locale) {
     $metadata = $this->metadata();
     $document_id = $metadata['document_id'];
 
@@ -847,11 +843,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $this->setTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
 
     return TRUE;
-  }
-
-  public function download($lingotek_locale) {
-    $triggered_by_callback = FALSE;
-    $this->downloadTriggered($lingotek_locale, $triggered_by_callback);
   }
 
   /**
@@ -1211,10 +1202,13 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   public function preDownload($lingotek_locale, $completed) {
-    // needs to set status to READY
-    if ($completed) {
+    // If auto download is turned off, you need to uncomment these lines and set status to READY.
+    /* if ($completed) {
       $this->setTargetsStatus(LingotekSync::STATUS_READY, $lingotek_locale);
-    }
+      // The following lines mark the whole set as ready rather than just the changed items.
+      $lids = array_keys(self::getAllSegments($set_id));
+      self::markLidsNotCurrent($lids)
+    } */
   }
 
   public function postDownload($lingotek_locale, $completed) {
