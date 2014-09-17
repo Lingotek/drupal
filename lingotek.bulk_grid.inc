@@ -1515,7 +1515,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
     $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
     $disabled_class = $disabled ? ' ltk-disabled-icon' : '';
-    $allow_source_overwriting = !empty($profiles[$row->lingotek['profile']]['allow_source_overwriting']);
+    $allow_source_overwriting = !empty($row->lingotek['allow_source_overwriting']);
     $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
 
     $translation_icons = lingotek_lang_icons($entity_type, $languages, $entity_id, $locales_statuses, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
