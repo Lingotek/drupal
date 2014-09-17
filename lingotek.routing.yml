@@ -41,14 +41,15 @@ lingotek.setup_defaults:
 lingotek.settings:
   path: '/admin/lingotek/settings'
   defaults:
-    _form: '\Drupal\lingotek\Form\LingotekSettingsForm'
+    _content: '\Drupal\lingotek\Controller\LingotekSettingsController::content'
+    _title: 'Translation Settings'
   requirements:
     _permission: 'administer lingotek'
 
 lingotek.manage:
-  path: '/admin/lingotek/manage/{entity_type}'
+  path: '/admin/lingotek/manage'
   defaults:
-    _form: '\Drupal\lingotek\Form\LingotekManageForm'
-    entity_type: 'node_type'
+    _content: '\Drupal\lingotek\Controller\LingotekManagementController::content'
+    _title: 'Manage Translations'
   requirements:
     _permission: 'administer lingotek'

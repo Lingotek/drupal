@@ -1,0 +1,18 @@
+# put in all of our local tasks here
+lingotek.dashboard:
+  route_name: lingotek.dashboard
+  base_route: lingotek.dashboard
+  title: 'Dashboard'
+  weight: -10
+
+lingotek.manage:
+  route_name: lingotek.manage
+  base_route: lingotek.dashboard
+  title: 'Manage'
+  weight: -9
+
+lingotek.settings:
+  route_name: lingotek.settings
+  base_route: lingotek.dashboard
+  title: 'Settings'
+  weight: -8
