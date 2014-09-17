@@ -124,6 +124,7 @@ lingotek.forms = lingotek.forms || {};
                   $('.form-item-language-override').show();
                 }
                 else {
+                  $('.form-item-language-override option[value=""]').attr('selected', 'selected');
                   $('.form-item-language-override').hide();
                 }
             }
@@ -133,6 +134,7 @@ lingotek.forms = lingotek.forms || {};
                   $('.form-item-language-override').show();
                 }
                 else {
+                  $('.form-item-language-override option[value=""]').attr('selected', 'selected');
                   $('.form-item-language-override').hide();
                 }
             }
