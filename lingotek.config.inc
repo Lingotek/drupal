@@ -305,9 +305,7 @@ function lingotek_config_download_selected($lids) {
     }
   }
   $redirect = 'admin/settings/lingotek/manage/config';
-  $current = lingotek_get_sync_download_batch_elements($download_targets, LingotekSync::STATUS_CURRENT);
-  $pending = lingotek_get_sync_download_batch_elements($download_targets, LingotekSync::STATUS_PENDING);
-  $operations = array_merge($current, $pending);
+  $operations = lingotek_get_sync_download_batch_elements($download_targets, LingotekSync::STATUS_PENDING);
   $batch = array(
     'title' => t('Syncing Content and Translations'),
     'operations' => $operations,
