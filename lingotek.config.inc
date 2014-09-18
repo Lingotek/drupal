@@ -84,12 +84,10 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       }
     }
 
-    $dirty = $row->dirty ? explode(',', $row->dirty) : array();
-    // If a config string changes, it gets marked as not current (dirty) in locales_target but remains current in lingotek_config_map. $edited checks for this combo.
-    $edited = $current && $dirty;
+    $edited = $row->source_edited ? explode(',', $row->source_edited) : array();
     if ($edited) {
       $row->upload_status = LingotekSync::STATUS_EDITED;
-      foreach ($dirty as $key => $lang) {
+      foreach ($edited as $key => $lang) {
         $locale = Lingotek::convertDrupal2Lingotek($lang);
         $locale_statuses[$locale] = 'edited';
       }
@@ -160,7 +158,7 @@ function lingotek_config_start_query($form_state) {
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 'current');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='EDITED')", 'edited');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'untracked');
-  $query->addExpression("(SELECT GROUP_CONCAT(language) FROM {locales_target} WHERE lid = s.lid AND i18n_status = 1)", 'dirty');
+  $query->addExpression("(SELECT GROUP_CONCAT(language) FROM {locales_target} WHERE lid = s.lid AND i18n_status = 1)", 'source_edited');
   $query->addExpression("(SELECT set_id FROM {lingotek_config_map} lcm WHERE lcm.lid = s.lid)", 'set_id');
 
   // Lingotek Document ID

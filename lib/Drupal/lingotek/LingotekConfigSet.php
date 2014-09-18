@@ -444,6 +444,8 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       }
       else {
         LingotekLog::warning("Config item @id was not sent to Lingotek for translation because it exceeds the max length of 4096 characters.", array('@id' => $r['lid']));
+        // Remove it from the set in the config_map table so it doesn't get marked as uploaded or translated.
+        self::disassociateSegments($r['lid']);
       }
     }
 
