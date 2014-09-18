@@ -84,7 +84,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       }
     }
 
-    $edited = $row->source_edited ? explode(',', $row->source_edited) : array();
+    $edited = $row->source_edited && $current !== FALSE ? explode(',', $row->source_edited) : array();
     if ($edited) {
       $row->upload_status = LingotekSync::STATUS_EDITED;
       foreach ($edited as $key => $lang) {
