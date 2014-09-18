@@ -253,7 +253,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   protected static function hasMaxChars($set_id) {
-    $lids = array_keys(self::getAllSegments($set_id));
+    $lids = self::getLidsFromSets($set_id);
     if (!empty($lids)) {
       $query = db_select('locales_source', 'ls')
           ->fields('ls', array('source'))
@@ -441,6 +441,9 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     while ($r = $results->fetchAssoc()) {
       if(strlen($r['source']) < $max_length) {
         $response[$r['lid']] = $r['source'];
+      }
+      else {
+        LingotekLog::warning("Config item @id was not sent to Lingotek for translation because it exceeds the max length of 4096 characters.", array('@id' => $r['lid']));
       }
     }
 
@@ -856,7 +859,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    the language code for which to get the segments that need updating
    */
   public static function getDirtyLidsBySetIdAndLanguage($set_id, $language) {
-    $lids = array_keys(self::getAllSegments($set_id));
+    $lids = self::getLidsFromSets($set_id);
     $result = db_select('{locales_target}', 'lt')
         ->fields('lt', array('lid'))
         ->condition('lid', $lids, 'IN')
@@ -978,7 +981,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    the language code for which to delete target segments
    */
   public static function deleteSegmentTranslationsBySetIdAndLanguage($set_id, $target_language) {
-    $lids = array_keys(self::getAllSegments($set_id));
+    $lids = self::getLidsFromSets($set_id);
     db_delete('{locales_target}')
         ->condition('language', $target_language)
         ->condition('lid', $lids, 'IN')
