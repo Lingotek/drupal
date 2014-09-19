@@ -90,7 +90,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *   The status of the target locale for the given set_id
    */
   public static function getTargetStatusById($set_id, $target_locale) {
-    $result = db_select('{lingotek_config_metadata}', 'meta')
+    $result = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('value'))
         ->condition('id', $set_id)
         ->condition('config_key', 'target_sync_status_' . $target_locale)
@@ -140,14 +140,14 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *   The title of the current set
    */
   public static function getTitleBySetId($set_id) {
-    $textgroup = db_select('{lingotek_config_metadata}', 'l')
+    $textgroup = db_select('lingotek_config_metadata', 'l')
         ->fields('l', array('value'))
         ->condition('id', $set_id)
         ->condition('config_key', 'textgroup')
         ->execute()
         ->fetchField();
 
-    $all_from_group = db_select('{lingotek_config_metadata}', 'l')
+    $all_from_group = db_select('lingotek_config_metadata', 'l')
         ->fields('l', array('id'))
         ->condition('config_key', 'textgroup')
         ->condition('value', $textgroup)
@@ -180,7 +180,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    */
   public static function getSetId($lid, $assign = TRUE) {
     // Check if the lid already has a set:
-    $existing_sid = db_select('{lingotek_config_map}', 'l')
+    $existing_sid = db_select('lingotek_config_map', 'l')
         ->fields('l', array('set_id'))
         ->condition('lid', $lid)
         ->execute()
@@ -195,7 +195,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
   protected static function assignSetId($lid) {
     // get the $lid's textgroup
-    $textgroup = db_select('{locales_source}', 'l')
+    $textgroup = db_select('locales_source', 'l')
         ->fields('l', array('textgroup'))
         ->condition('lid', $lid)
         ->execute()
@@ -206,7 +206,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $open_set_id = self::createSet($textgroup);
     }
     // assign lid to that set
-    db_merge('{lingotek_config_map}')
+    db_merge('lingotek_config_map')
         ->key(array('lid' => $lid))
         ->fields(array(
           'lid' => $lid,
@@ -219,7 +219,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   protected static function getOpenSet($textgroup) {
     $full_sets = self::getFullSets();
 
-    $query = db_select('{lingotek_config_metadata}', 'l')
+    $query = db_select('lingotek_config_metadata', 'l')
         ->fields('l', array('id'))
         ->condition('config_key', 'textgroup')
         ->condition('value', $textgroup);
@@ -240,13 +240,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   protected static function getFullSets() {
-    $query = db_query('SELECT set_id, COUNT(*) c FROM lingotek_config_map GROUP BY set_id HAVING c >= :max_size', array(':max_size' => LINGOTEK_CONFIG_SET_SIZE));
-    /* $query = db_select('lingotek_config_map', 'lcm')
-      ->fields('lcm', array('set_id'))
-      ->groupBy('set_id');
-      $query->addExpression('COUNT(lcm.lid)', 'c');
-      $query->havingCondition('c', LINGOTEK_CONFIG_SET_SIZE, '>=');
-      $query->execute(); */
+    $query = db_query('SELECT set_id, COUNT(*) c FROM {lingotek_config_map} GROUP BY set_id HAVING c >= :max_size', array(':max_size' => LINGOTEK_CONFIG_SET_SIZE));
 
     $full_sets = $query->fetchCol();
     return $full_sets;
@@ -271,7 +265,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   protected static function createSet($textgroup) {
     $timestamp = time();
     $next_id = self::getNextSetId();
-    db_insert('{lingotek_config_metadata}')
+    db_insert('lingotek_config_metadata')
         ->fields(array(
           'id' => $next_id,
           'config_key' => 'textgroup',
@@ -285,7 +279,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   protected static function getNextSetId() {
-    $query = db_select('{lingotek_config_metadata}', 'lcm');
+    $query = db_select('lingotek_config_metadata', 'lcm');
     $query->addExpression('MAX(id)');
     $max_set_id = $query->execute()->fetchField();
     if ($max_set_id) {
@@ -295,7 +289,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   public static function getDocId($set_id) {
-    $doc_id = db_select('{lingotek_config_metadata}', 'l')
+    $doc_id = db_select('lingotek_config_metadata', 'l')
         ->fields('l', array('value'))
         ->condition('id', $set_id)
         ->condition('config_key', 'document_id')
@@ -305,7 +299,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   public static function getAllConfigDocIds() {
-    $doc_ids = db_select('{lingotek_config_metadata}', 'l')
+    $doc_ids = db_select('lingotek_config_metadata', 'l')
         ->fields('l', array('value'))
         ->condition('config_key', 'document_id')
         ->execute()
@@ -346,7 +340,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     // except for the i18n_status field, which should preserve its
     // currently-set flags, and the plid and plural fields which just
     // take default values for now.
-    db_merge('{locales_target}')
+    db_merge('locales_target')
         ->key(array('lid' => $lid, 'language' => $target_language,))
         ->fields(array(
           'lid' => $lid,
@@ -367,7 +361,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *   the ID of a set of configuration segments
    */
   public static function getIdByDocId($doc_id) {
-    $query = db_select('{lingotek_config_metadata}', 'meta');
+    $query = db_select('lingotek_config_metadata', 'meta');
     $query->fields('meta', array('id'));
     $query->condition('config_key', 'document_id');
     $query->condition('value', $doc_id);
@@ -431,7 +425,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       return $lids;
     }
 
-    $results = db_select('{locales_source}', 'ls')
+    $results = db_select('locales_source', 'ls')
         ->fields('ls', array('lid', 'source'))
         ->condition('lid', $lids, 'IN')
         ->orderBy('lid')
@@ -457,7 +451,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     if (empty($set_ids)) {
       return array();
     }
-    $lids = db_select('{lingotek_config_map}', 'lcm')
+    $lids = db_select('lingotek_config_map', 'lcm')
         ->fields('lcm', array('lid'))
         ->condition('set_id', $set_ids, 'IN')
         ->execute()
@@ -466,7 +460,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   protected static function getLidsForTextgroup($textgroup) {
-    $query = db_select('{locales_source}', 'ls')
+    $query = db_select('locales_source', 'ls')
         ->fields('ls', array('lid'))
         ->condition('textgroup', $textgroup)
         ->execute();
@@ -477,7 +471,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
   public static function getLidsByStatus($status) {
     $target_language_search = '%';
-    $query = db_select('{lingotek_config_metadata}', 'l');
+    $query = db_select('lingotek_config_metadata', 'l');
     $query->fields('l', array('id'));
     $query->condition('config_key', 'target_sync_status_' . $target_language_search, 'LIKE');
     $query->condition('value', $status);
@@ -497,7 +491,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *   An array containing anything for the set_id from table lingotek_config_metadata
    */
   protected static function getSetMeta($set_id) {
-    $query = db_select('{lingotek_config_metadata}', 'l');
+    $query = db_select('lingotek_config_metadata', 'l');
     $query->fields('l', array('id', 'config_key', 'value'));
     $query->condition('l.id', $set_id);
     $result = $query->execute();
@@ -525,7 +519,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $set = FALSE;
 
     // Get the set entries in the system associated with the document ID.
-    $query = db_select('{lingotek_config_metadata}', 'meta')
+    $query = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('id'))
         ->condition('config_key', 'document_id')
         ->condition('value', $lingotek_document_id)
@@ -606,7 +600,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   protected function metadata() {
     $metadata = array();
 
-    $results = db_select('{lingotek_config_metadata}', 'meta')
+    $results = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta')
         ->condition('id', $this->sid)
         ->execute();
@@ -635,7 +629,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * Get the set's target translation status for the given locale
    */
   public function getTargetStatus($lingotek_locale) {
-    $result = db_select('{lingotek_config_metadata}', 'meta')
+    $result = db_select('lingotek_config_metadata', 'meta')
         ->fields('meta', array('value'))
         ->condition('id', $this->sid)
         ->condition('config_key', 'target_sync_status_' . $lingotek_locale)
@@ -729,7 +723,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *   The value for the specified key, if it exists.
    */
   public function getMetadataValue($key) {
-    return db_select('{lingotek_config_metadata}', 'meta')
+    return db_select('lingotek_config_metadata', 'meta')
             ->fields('meta', array('value'))
             ->condition('config_key', $key)
             ->condition('id', $this->sid)
@@ -749,7 +743,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $metadata = $this->metadata();
     $timestamp = time();
     if (!isset($metadata[$key])) {
-      db_insert('{lingotek_config_metadata}')
+      db_insert('lingotek_config_metadata')
           ->fields(array(
             'id' => $this->sid,
             'config_key' => $key,
@@ -760,7 +754,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
           ->execute();
     }
     else {
-      db_update('{lingotek_config_metadata}')
+      db_update('lingotek_config_metadata')
           ->fields(array(
             'value' => $value,
             'modified' => $timestamp
@@ -780,7 +774,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function deleteMetadataValue($key) {
     $metadata = $this->metadata();
     if (isset($metadata[$key])) {
-      db_delete('{lingotek_config_metadata}')
+      db_delete('lingotek_config_metadata')
           ->condition('id', $this->sid)
         ->condition('config_key', $key, 'LIKE')
         ->execute();
@@ -862,7 +856,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    */
   public static function getDirtyLidsBySetIdAndLanguage($set_id, $language) {
     $lids = self::getLidsFromSets($set_id);
-    $result = db_select('{locales_target}', 'lt')
+    $result = db_select('locales_target', 'lt')
         ->fields('lt', array('lid'))
         ->condition('lid', $lids, 'IN')
         ->condition('language', $language)
@@ -874,11 +868,11 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
   public static function getEditedLidsInSets($set_ids) {
     $set_ids = is_array($set_ids) ? $set_ids : array($set_ids);
-    $query = db_select('{lingotek_config_map}', 'lcm')
+    $query = db_select('lingotek_config_map', 'lcm')
         ->fields('lcm', array('lid'))
         ->condition('set_id', $set_ids, 'IN')
         ->condition('current', 1);
-    $query->join('{locales_target}', 'lt', 'lt.lid = lcm.lid');
+    $query->join('locales_target', 'lt', 'lt.lid = lcm.lid');
     $query->condition('i18n_status', 1);
     $result = $query->execute()->fetchCol();
     $edited_lids = array_unique($result);
@@ -907,7 +901,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    a single lid
    */
   public static function isLidCurrent($lid) {
-    $query = db_select('{lingotek_config_map}', 'lcm')
+    $query = db_select('lingotek_config_map', 'lcm')
         ->fields('lcm', array('current'))
         ->condition('lid', $lid)
         ->execute();
@@ -922,7 +916,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    the list of lids that are current
    */
   public static function markLidsNotCurrent($lids) {
-    $query = db_update('{lingotek_config_map}')
+    $query = db_update('lingotek_config_map')
         ->fields(array('current' => 0));
     if ($lids != 'all') {
       $query->condition('lid', $lids, 'IN');
@@ -937,7 +931,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *    the list of lids that are current
    */
   public static function markSetsCurrent($set_ids) {
-    $query = db_update('{lingotek_config_map}')
+    $query = db_update('lingotek_config_map')
         ->fields(array('current' => 1));
     if ($set_ids != 'all') {
       $query->condition('set_id', $set_ids, 'IN');
@@ -956,7 +950,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public static function getLidsToUpdate($current = 0, $lids = 'all') {
     $textgroups = array_merge(array(-1), LingotekConfigSet::getTextgroupsForTranslation());
 
-    $query = db_select('{lingotek_config_map}', 'lcm')
+    $query = db_select('lingotek_config_map', 'lcm')
         ->fields('lcm', array('lid'));
     if ($lids !== 'all') {
       $query->condition('lcm.lid', $lids, 'IN');
@@ -984,7 +978,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    */
   public static function deleteSegmentTranslationsBySetIdAndLanguage($set_id, $target_language) {
     $lids = self::getLidsFromSets($set_id);
-    db_delete('{locales_target}')
+    db_delete('locales_target')
         ->condition('language', $target_language)
         ->condition('lid', $lids, 'IN')
         ->condition('translation_agent_id', self::getLingotekTranslationAgentId())
@@ -993,18 +987,18 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
   public static function deleteSegmentTranslations($lids) {
     $lids = is_array($lids) ? $lids : array($lids);
-    db_delete('{locales_target}')
+    db_delete('locales_target')
         ->condition('lid', $lids, 'IN')
         ->execute();
 
-    db_delete('{lingotek_config_map}')
+    db_delete('lingotek_config_map')
         ->condition('lid', $lids, 'IN')
         ->execute();
   }
 
   public static function disassociateSegments($lids) {
     $lids = is_array($lids) ? $lids : array($lids);
-    db_delete('{lingotek_config_map}')
+    db_delete('lingotek_config_map')
         ->condition('lid', $lids, 'IN')
         ->execute();
   }
@@ -1013,7 +1007,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * Get lingotek translation agent ID
    */
   public static function getLingotekTranslationAgentId() {
-    $result = db_select('{lingotek_translation_agent}', 'lta')
+    $result = db_select('lingotek_translation_agent', 'lta')
         ->fields('lta', array('id'))
         ->condition('name', 'Lingotek')
         ->execute();
@@ -1028,7 +1022,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     foreach ($document_xml as $drupal_field_name => $xml_obj) {
       $lids[] = self::getLidFromTag($drupal_field_name);
     }
-    $result = db_select('{locales_target}', 'lt')
+    $result = db_select('locales_target', 'lt')
         ->fields('lt', array('lid'))
         ->condition('lid', $lids, 'IN')
         ->condition('language', $target_language)
@@ -1173,7 +1167,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
   
   public static function getLidBySource($source_string) {
-    return db_select('{locales_source}', 's')
+    return db_select('locales_source', 's')
             ->fields('s', array('lid'))
         ->condition('s.source', $source_string)
         ->execute()
@@ -1185,7 +1179,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
  */
 
   public static function getAllDocumentIds() {
-  $result = db_select('{lingotek_config_metadata}', 'c')
+  $result = db_select('lingotek_config_metadata', 'c')
         ->fields('c', array('value'))
       ->condition('c.config_key', 'document_id')
       ->execute();

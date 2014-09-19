@@ -63,10 +63,10 @@ function lingotek_uninstall() {
   db_drop_field('languages', 'lingotek_enabled');
   db_drop_field('languages', 'lingotek_locale');
   db_drop_field('locales_target', 'translation_agent_id');
-  db_drop_table('{lingotek}'); // leave this here until we move it to an update function
-  db_drop_table('{lingotek_config_metadata}');
-  db_drop_table('{lingotek_entity_metadata}');
-  db_drop_table('{lingotek_translation_agent}');
+  db_drop_table('lingotek'); // leave this here until we move it to an update function
+  db_drop_table('lingotek_config_metadata');
+  db_drop_table('lingotek_entity_metadata');
+  db_drop_table('lingotek_translation_agent');
 }
 
 /**
@@ -313,7 +313,7 @@ function lingotek_update_7200(&$sandbox) {
   drupal_load('module', 'lingotek');
 
   if (!isset($sandbox['progress'])) {
-    $result = db_select('{lingotek}', 'n')->distinct(TRUE)->fields('n', array(db_escape_field('nid')))->execute();
+    $result = db_select('lingotek', 'n')->distinct(TRUE)->fields('n', array(db_escape_field('nid')))->execute();
     $nodes = array();
     foreach ($result as $row) {
       array_push($nodes, $row->nid);
@@ -354,7 +354,7 @@ function lingotek_update_7201(&$sandbox) {
 
   if ($default_lingotek_project) {
     if (!isset($sandbox['progress'])) {
-      $result = db_select('{lingotek}', 'l')
+      $result = db_select('lingotek', 'l')
           ->distinct(TRUE)
           ->fields('l', array('nid'))
           ->execute();
@@ -604,7 +604,7 @@ function lingotek_update_7404(&$sandbox) {
   LingotekSync::updateNotifyUrl();
   lingotek_extend_metadata_tables();
 
-  $query = db_select('{lingotek}', 'l');
+  $query = db_select('lingotek', 'l');
   $query->fields('l', array('nid'));
   $query->distinct('nid');
   $result = $query->execute();
@@ -650,7 +650,7 @@ function lingotek_update_7408(&$sandbox) {
   lingotek_extend_metadata_tables();
   if (module_exists('entity_translation')) {
     $nid_list = array();
-    $results = db_select('{lingotek}', 'l')
+    $results = db_select('lingotek', 'l')
         ->fields('l', array('nid', 'lingokey'))
       ->condition('lingokey', 'target_sync_status_%', 'LIKE')
       ->condition('lingovalue', LingotekSync::STATUS_CURRENT)
@@ -677,7 +677,7 @@ function lingotek_update_7500(&$sandbox) {
   lingotek_extend_metadata_tables();
   db_query("INSERT IGNORE INTO {lingotek_entity_metadata} (entity_id, entity_type, entity_key, value)
 SELECT nid as entity_id, 'node' as entity_type, lingokey as entity_key, lingovalue as value
-FROM {lingotek}");
+FROM lingotek");
   //db_drop_table('lingotek');// as soon as this is running in an update function remove it from the uninstall function above
 }
 
@@ -714,7 +714,7 @@ function lingotek_update_7502(&$sandbox) {
   // set assumed status of CURRENT for all comment translations
   // select all comment entity ids in the lingotek_entity_metadata table
   $entity_type = 'comment';
-  $query = db_select('{lingotek_entity_metadata}', 'l');
+  $query = db_select('lingotek_entity_metadata', 'l');
   $query->fields('l', array('entity_id'))->condition('entity_type', $entity_type);
   $query->distinct('entity_id');
   $result = $query->execute();
@@ -779,7 +779,7 @@ function lingotek_update_7504(&$sandbox) {
  */
 function lingotek_update_7505(&$sandbox) {
   lingotek_extend_metadata_tables();
-  $delete = db_delete('{lingotek_entity_metadata}');
+  $delete = db_delete('lingotek_entity_metadata');
   $or = db_or();
   $or->condition('entity_key', 'target_sync_progress_%', 'LIKE');
   $or->condition('entity_key', 'target_sync_last_progress_updated_%', 'LIKE');
@@ -924,7 +924,7 @@ function lingotek_update_7600(&$sandbox) {
  * Truncate lingotek_config_metadata table in preparation for new config handling.
  */
 function lingotek_update_7601(&$sandbox) {
-  db_truncate('{lingotek_config_metadata}')->execute();
+  db_truncate('lingotek_config_metadata')->execute();
   return t('Truncated table containing Lingotek config metadata such as document ID\'s and translation status for config strings.');
 }
 

@@ -28,7 +28,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
 
   if ($node->tnid == 0) {
     $node->tnid = $node->nid;
-    db_update('{node}')
+    db_update('node')
         ->fields(array('tnid' => $node->nid))
       ->condition('nid', $node->nid)
       ->execute();

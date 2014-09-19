@@ -1050,7 +1050,7 @@ function lingotek_entity_save($entity, $entity_type) {
 
   $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
 
-  db_delete('{lingotek_entity_metadata}')
+  db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $entity_type)
       ->condition('entity_id', $id)
       ->condition('entity_key', $remove, 'IN')
@@ -1060,7 +1060,7 @@ function lingotek_entity_save($entity, $entity_type) {
   $entity_changed = TRUE;
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
-    $query = db_insert('{lingotek_entity_metadata}')->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
+    $query = db_insert('lingotek_entity_metadata')->fields(array('entity_type', 'entity_id', 'entity_key', 'value'));
 
     foreach ($remove as $key) {
       if (isset($entity->lingotek[$key])) {
@@ -1358,7 +1358,7 @@ function lingotek_node_presave($node) {
  */
 function lingotek_node_load_default($nid, $vid = NULL, $reset = FALSE) {
   if ($vid == NULL) {
-    $query = db_select('{node_revision}', 'nr')
+    $query = db_select('node_revision', 'nr')
         ->condition('nid', $nid, '=');
     $query->addExpression('MAX(vid)', 'max_vid');
     $vid = $query->execute()->fetchField();
@@ -1427,7 +1427,7 @@ function lingotek_entity_load($entities, $entity_type) {
   $node_profile_defaults = lingotek_load_profile_defaults($entity_type); // return assoc array by node type
   $profiles_list = lingotek_get_profiles();
 
-  $query = db_select('{lingotek_entity_metadata}', 'l')
+  $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
       ->condition('l.entity_id', array_keys($entities), 'IN')
       ->condition('l.entity_type', $entity_type)
@@ -2168,7 +2168,7 @@ function lingotek_entity_delete($entity, $type) {
     $api = LingotekApi::instance();
     $api->removeDocument($entity->lingotek['document_id'], FALSE);
   }
-  db_delete('{lingotek_entity_metadata}')
+  db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $type)
     ->condition('entity_id', lingotek_entity_extract_ids($type, $entity))
     ->execute();
@@ -2487,7 +2487,7 @@ function lingotek_translate_menu_link($link) {
  *   the two-digit language code to be set for the menu link
  */
 function lingotek_set_menu_link_language($link_id, $langcode) {
-  $updated = db_update('{menu_links}')
+  $updated = db_update('menu_links')
       ->fields(array('language' => $langcode))
       ->condition('mlid', $link_id)
       ->execute();
@@ -2561,7 +2561,7 @@ function lingotek_clear_exceptions_form($form, $form_state) {
 function lingotek_clear_exceptions_form_submit($form_state, $form) {
   $content_type = $form_state['bundle_name']['#value'];
   $delete_keys = "'allow_community_translation', 'create_lingotek_document', 'sync_method', 'url_alias_translation', 'profile'";
-  $delete_query = db_query("DELETE lem.* FROM node AS n JOIN lingotek_entity_metadata AS lem ON n.nid = lem.entity_id WHERE entity_key IN (" . $delete_keys . ") AND type = '" . $content_type . "'");
+  $delete_query = db_query("DELETE lem.* FROM {node} AS n JOIN lingotek_entity_metadata AS lem ON n.nid = lem.entity_id WHERE entity_key IN (" . $delete_keys . ") AND type = '" . $content_type . "'");
   $delete_query->execute();
   drupal_set_message(t('All translation profile exceptions for ' . $content_type . ' have been removed.'));
 }
