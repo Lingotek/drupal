@@ -74,30 +74,39 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     $locales = array();
     $statuses = array();
     $locale_statuses = array();
-    $current = LingotekConfigSet::isLidCurrent($lid);
+    $item_is_current = LingotekConfigSet::isLidCurrent($lid);
+    $item_has_translations = array_key_exists($lid, $existing_translations);
+    $source_was_edited = $row->source_edited && $item_is_current !== FALSE ? explode(',', $row->source_edited) : array();
 
     foreach ($list_statuses as $status) {
       foreach (explode(',', $row->$status) as $locale) {
         if (!empty($locale)) {
-          $locale_statuses[$locale] = $current ? 'current' : $status;
+          $locale_statuses[$locale] = $item_is_current ? 'current' : $status;
         }
       }
     }
 
-    $edited = $row->source_edited && $current !== FALSE ? explode(',', $row->source_edited) : array();
-    if ($edited) {
+    $item_belongs_to_set = !empty($locale_statuses);
+
+    if ($source_was_edited) {
       $row->upload_status = LingotekSync::STATUS_EDITED;
-      foreach ($edited as $key => $lang) {
+      foreach ($source_was_edited as $key => $lang) {
         $locale = Lingotek::convertDrupal2Lingotek($lang);
         $locale_statuses[$locale] = 'edited';
       }
     }
 
     ksort($locale_statuses);
-    //if there are no translations in locales, check if there are existing translations in locales_target
-    if (empty($locale_statuses) && array_key_exists($lid, $existing_translations)) {
-      foreach ($existing_translations[$lid] as $existing_lang) {
-        $locale_statuses[$existing_lang] = 'untracked';
+    if ($item_belongs_to_set) {
+      if (!$item_has_translations && $item_is_current) {
+        unset($locale_statuses);
+        $locale_statuses = array();
+        $row->upload_status = NULL;
+      }
+    }
+    elseif ($item_has_translations) { // No translations in locales + translations in locales_target = Untracked.
+      foreach ($existing_translations[$lid] as $existing_locale) {
+        $locale_statuses[$existing_locale] = 'untracked';
       }
     }
 
