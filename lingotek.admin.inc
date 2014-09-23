@@ -1129,6 +1129,7 @@ function lingotek_admin_prepare_menus() {
   $result = db_update('menu_custom')
       ->fields(array('i18n_mode' => LINGOTEK_MENU_LOCALIZE_TRANSLATE_VALUE))
       ->execute();
+  menu_cache_clear_all();
   if ($result) {
     drupal_set_message(format_plural($result, t('Set 1 menu to <i>Translate and Localize</i>.'), t('Set @num menus to <i>Translate and Localize</i>.', array('@num' => (int) $result))));
   }
