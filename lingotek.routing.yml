@@ -53,3 +53,11 @@ lingotek.manage:
     _title: 'Manage Translations'
   requirements:
     _permission: 'administer lingotek'
+
+lingotek.batch:
+  path: '/admin/lingotek/batch/{action}/{entity_type}/{entity_id}'
+  defaults:
+    _content: '\Drupal\lingotek\Controller\LingotekBatchController::dispatch'
+    _title: 'Upload Translations'
+  requirements:
+    _permission: 'administer lingotek'

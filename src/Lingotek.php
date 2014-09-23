@@ -21,6 +21,19 @@ class Lingotek implements LingotekInterface {
   protected $api;
   protected $config;
 
+  // Translation Status.
+  const STATUS_EDITED = 'EDITED';
+  const STATUS_PENDING = 'PENDING';
+  const STATUS_CURRENT = 'CURRENT';
+  const STATUS_READY = 'READY';
+  const STATUS_FAILED = 'FAILED';
+  const STATUS_UNTRACKED = 'UNTRACKED';
+  
+  // Translation Profile.
+  const PROFILE_DISABLED = 'DISABLED';
+  const PROFILE_AUTOMATIC = 'AUTO';
+  const PROFILE_MANUAL = 'MANUAL';
+
   public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config) {
     $this->api = $api;
     $this->config = $config->get('lingotek.settings');
@@ -80,6 +93,22 @@ class Lingotek implements LingotekInterface {
     $this->config->set($key, $value)->save();
   }
 
+  public function uploadDocument($title, $content, $locale = NULL) {
+
+
+    // Handle adding site defaults to the upload here, and leave
+    // the handling of the upload call itself to the API.
+    $defaults = array(
+      'format' => 'JSON',
+      'project_id' => $this->get('default.project'),
+      'workflow_id' => $this->get('default.workflow'),
+    );
+    $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
+    $response = $this->api->uploadDocument($args);
+
+    // TODO: Response code should be 202 on success
+    return $response;
+  }
   protected function getResource($resources_key, $func, $force = FALSE) {
     $data = $this->get($resources_key);
     if (empty($data) || $force) {
@@ -99,6 +128,10 @@ class Lingotek implements LingotekInterface {
       $value = current($valid_resource_ids);
       $this->set($default_key, $value);
     }
+  }
+
+  public function getTargetStatus($doc_id, $locale) {
+
   }
 
 }

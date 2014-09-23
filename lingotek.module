@@ -6,10 +6,10 @@
  * Implements Drupal-related hooks for the Lingotek Translation module.
  */
 
+use Drupal\lingotek\Lingotek;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
-
 
 /**
  * Implements hook_permission().
@@ -53,3 +53,59 @@ function lingotek_toolbar() {
   return $items;
 }
 
+/**
+ * Implements hook_entity_create().
+ */
+function lingotek_entity_create(EntityInterface $entity) {
+  // Only act on content entities.
+  if (!($entity instanceof ContentEntityInterface)) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function lingotek_entity_update(EntityInterface $entity) {
+  // Only act on content entities.
+  if (!($entity instanceof ContentEntityInterface)) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function lingotek_entity_delete(EntityInterface $entity) {
+  // Only act on content entities.
+  if (!($entity instanceof ContentEntityInterface)) {
+    return;
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // TODO: add profile info and etc. to the node form.
+}
+
+
+function lingotek_operation_content_upload($entity_type, $entity_id) {
+  // Prepare the entity's translatable content for upload.
+  $container = \Drupal::getContainer();
+  $entity = entity_load($entity_type, $entity_id);
+  $te = LingotekTranslatableEntity::load($container, $entity);
+  $source_data = json_encode($te->getSourceData());
+
+  $L = $container->get('lingotek');
+  $doc_id = $L->uploadDocument($entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label(), $source_data, 'en_US');
+  if ($doc_id) {
+    $te->setDocId($doc_id);
+    $te->setSourceStatus(Lingotek::STATUS_EDITED);
+  }
+}
+
+function lingotek_operation_content_upload_finished() {
+  // Nothing to do here for now.
+}
