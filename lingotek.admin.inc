@@ -1669,7 +1669,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   if ($show_advanced) {
 
-    /* OPTION REMOVED UNTIL FEATURE IS IMPLEMENTED
+    /* OPTIONS REMOVED UNTIL FEATURE IS IMPLEMENTED
     // Target Localization
     $form['defaults']['allow_target_localization'] = array(
       '#type' => 'checkbox',
@@ -1677,7 +1677,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#description' => t('When enabled, localized target-language content can be created in Drupal and then uploaded for in-place translation.  Note: to prevent loss of the original localized content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
       '#default_value' => $form_state['values']['allow_target_localization'],
     );
-    */
     // Source Overwriting
     $form['defaults']['allow_source_overwriting'] = array(
       '#type' => 'checkbox',
@@ -1685,6 +1684,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#description' => t('When enabled, source content may be created initially in a language other than the one set in Drupal and then translated in place of the original source content (ie. no separate target content will be created).  Note: to prevent the loss of the source content when using this option, you should have a versioning tool enabled for Drupal, such as Workbench Moderation.'),
       '#default_value' => $form_state['values']['allow_source_overwriting'],
     );
+    */
     // Community Translation
     $form['defaults']['allow_community_translation'] = array(
       '#type' => 'checkbox',
