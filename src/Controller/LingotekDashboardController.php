@@ -24,6 +24,20 @@ class LingotekDashboardController extends LingotekControllerBase {
   public function dashboardPage(Request $request) {
     $cms_data = $this->getDashboardInfo();
     $string = '<h2>' . t('Dashboard') . '</h2><script>var cms_data = ' . json_encode($cms_data, JSON_PRETTY_PRINT) . '</script> <link rel="stylesheet" href="http://gmc.lingotek.com/v2/styles/ltk.css"> <script src="http://gmc.lingotek.com/v2/ltk.min.js"></script> <div ltk-dashboard ng-app="LingotekApp" style="margin-top: -15px;"></div>';
+    $temp_d8_hack = <<<EOD
+  <script>
+    var \$body = $('body');
+    var fix44 = function(){
+      if(parseInt(\$body.css('width'), 10) > 12000) {
+        \$body.css('width','');
+      }
+    };
+  $( document ).ready(function() {
+    setInterval(function(){fix44()},100)
+  });
+  </script>
+EOD;
+    $string .= $temp_d8_hack;
     return $string;
   }
 
