@@ -215,7 +215,9 @@ class LingotekLocale {
   );
   public static $language_mapping_d2l_exceptions = array(
     'zh-hans' => 'zh_CN',
-    'zh-hant' => 'zh_TW'
+    'zh-hant' => 'zh_TW',
+    'zh_HANS' => 'zh_CN',
+    'zh_HANT' => 'zh_TW'
   );
 
   /**
@@ -231,17 +233,37 @@ class LingotekLocale {
    *   FALSE otherwise.
    */
   public static function convertDrupal2Lingotek($drupal_language_code, $enabled_check = TRUE) {
+    $lingotek_locale = $drupal_language_code;
+    
+    $exceptions = self::$language_mapping_d2l_exceptions;
+    if (array_key_exists($drupal_language_code, $exceptions)) {
+      $lingotek_locale = $exceptions[$drupal_language_code];
+    }
+    else {
+      // If the code contains a dash then, keep it specific
+      $dash_pos = strpos($drupal_language_code, "-");
+      if ($dash_pos !== FALSE) {
+        $lang = substr($drupal_language_code, 0, $dash_pos);
+        $loc = strtoupper(substr($drupal_language_code, $dash_pos + 1));
+        $lingotek_locale = $lang . '_' . $loc;
+      } // If it is generic then use the mapping to pick a specific
+      elseif (isset(self::$language_map[$drupal_language_code])) {
+        $lingotek_locale = self::$language_map[$drupal_language_code];
+      }
+    }
+    return $lingotek_locale;
 
-    $lingotek_locale = FALSE;
+    /*
+    lingotek_locale = FALSE;
 
     // standard conversion
     if (!$enabled_check) {
-      // If the code contains a dash then, keep it specific 
       $exceptions = self::$language_mapping_d2l_exceptions;
       if (array_key_exists($drupal_language_code, $exceptions)) {
         $lingotek_locale = $exceptions[$drupal_language_code];
       }
       else {
+        // If the code contains a dash then, keep it specific
         $dash_pos = strpos($drupal_language_code, "-");
         if ($dash_pos !== FALSE) {
           $lang = substr($drupal_language_code, 0, $dash_pos);
@@ -255,9 +277,10 @@ class LingotekLocale {
       return $lingotek_locale;
     }
 
-    // check to see if the lingotek_locale is set in the drupal
+    // check to see if the lingotek_locale is set in the drupal languages
     $languages = \Drupal::languageManager()->getLanguages();
     return !empty($languages[$drupal_language_code]) && !empty(self::$language_map[$drupal_language_code]) ? self::$language_map[$drupal_language_code] : FALSE;
+    */
   }
 
   /**

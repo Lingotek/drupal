@@ -6,11 +6,11 @@ lingotek.dashboard:
   requirements:
     _permission: 'administer lingotek'
 
-lingotek.dashboard_stats:
-  path: '/admin/lingotek/dashboard_stats'
+lingotek.dashboard_endpoint:
+  path: '/admin/lingotek/dashboard_endpoint'
   defaults:
-    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardStatsPage'
-    _title: 'Lingotek Dashboard Stats'
+    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardEndpoint'
+    _title: 'Lingotek Dashboard Endpoint'
   requirements:
     _access: 'TRUE'
 
