@@ -357,10 +357,10 @@ function lingotek_grid_search_options() {
 function lingotek_config_search_options() {
   $search_options = array(
     'all' => t('All text groups'),
+    'blocks' => t('Blocks'),
     'interface' => t('Built-in interface'),
     'menu' => t('Menu'),
     'taxonomy' => t('Taxonomy'),
-    'blocks' => t('Blocks'),
   );
 
   return $search_options;
