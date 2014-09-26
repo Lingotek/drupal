@@ -1620,6 +1620,9 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   elseif ($entity_type == 'config') {
     $id = $row->lid;
   }
+  elseif ($entity_type == 'taxonomy_term') {
+    $id = $row->tid;
+  }
   $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
   $source .= ($language_col ? lingotek_get_upload_string($row, $languages) : '');
   $source .= '</span>';
