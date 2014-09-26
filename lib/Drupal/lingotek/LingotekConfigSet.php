@@ -839,7 +839,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     // assign set status to current
     $this->setStatus(LingotekSync::STATUS_CURRENT);
     $this->setTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
-    LingotekConfigSet::markSetsCurrent($this->sid);
+    self::markSetsCurrent($this->sid);
 
     return TRUE;
   }
@@ -931,7 +931,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * @param array $set_ids
    *    the list of lids that are current
    */
-  public static function markSetsCurrent($set_ids) {
+  protected static function markSetsCurrent($set_ids) {
     $query = db_update('lingotek_config_map')
         ->fields(array('current' => 1));
     if ($set_ids != 'all') {
