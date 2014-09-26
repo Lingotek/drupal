@@ -190,17 +190,22 @@ function lingotek_config_add_query_filters($query, $filters) {
     $query->condition('source', '%' . $filters['search'] . '%', 'LIKE');
   }
 
-  if (isset($filters['textgroup']) && $filters['textgroup'] == 'interface') {
-    $query->condition('textgroup', 'default');
-  }
-  elseif (isset($filters['textgroup']) && $filters['textgroup'] == 'menu') {
-    $query->condition('textgroup', 'menu');
-  }
-  elseif (isset($filters['textgroup']) && $filters['textgroup'] == 'taxonomy') {
-    $query->condition('textgroup', 'taxonomy');
-  }
-  elseif (isset($filters['textgroup']) && $filters['textgroup'] == 'blocks') {
-    $query->condition('textgroup', 'block');
+  if (isset($filters['textgroup'])) {
+    if ($filters['textgroup'] == 'interface') {
+      $query->condition('textgroup', 'default');
+    }
+    elseif ($filters['textgroup'] == 'menu') {
+      $query->condition('textgroup', 'menu');
+    }
+    elseif ($filters['textgroup'] == 'taxonomy') {
+      $query->condition('textgroup', 'taxonomy');
+    }
+    elseif ($filters['textgroup'] == 'blocks') {
+      $query->condition('textgroup', 'blocks');
+    }
+    elseif ($filters['textgroup'] == 'field') {
+      $query->condition('textgroup', 'field');
+    }
   }
 
   // Lingotek Document ID
