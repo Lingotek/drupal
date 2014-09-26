@@ -1,4 +1,13 @@
+/**
+ * @file
+ * Lingotek base styles.
+ */
 
+/**
+ * Lingotek Translation icon in admin menu.
+ * 
+ * @see lingotek.icons.css
+ */
 .toolbar-icon-translation:before {
   background-image: url("/modules/lingotek/images/lingotek_787878.png");
 }

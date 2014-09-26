@@ -48,8 +48,8 @@ class LingotekTranslatableEntity {
   public static function loadByDocId($doc_id) {
     $entity = FALSE;
 
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l');
-    $query->condition('entity_key', 'doc_id');
+    $query = db_select('lingotek_entity_metadata', 'l')->fields('l', array('entity_id', 'entity_type'));
+    $query->condition('entity_key', 'document_id');
     $query->condition('value', $doc_id);
     $result = $query->execute();
 
@@ -57,8 +57,16 @@ class LingotekTranslatableEntity {
       $id = $record['entity_id'];
       $entity_type = $record['entity_type'];
     }
-    $entity = self::loadById($id, $entity_type);
+    if ($id && $entity_type) {
+      $entity = self::loadById($id, $entity_type);
+    }
     return $entity;
+  }
+
+  public static function loadById($id, $entity_type) {
+    $container = \Drupal::getContainer();
+    $entity = entity_load($entity_type, $id);
+    return self::load($container, $entity);
   }
 
   public function getSourceData() {
@@ -171,7 +179,7 @@ class LingotekTranslatableEntity {
     $query = db_select('lingotek_entity_metadata', 'meta')
         ->fields('meta')
         ->condition('entity_id', $this->entity->id())
-        ->condition('entity_type', $this->entity->bundle());
+        ->condition('entity_type', $this->entity->getEntityTypeId());
     if ($key) {
       $query->condition('entity_key', $key);
     }
@@ -198,7 +206,7 @@ class LingotekTranslatableEntity {
    *   The value for a name/value pair.
    */
   public function setMetadata($key, $value) {
-    $metadata = $this->metadata();
+    $metadata = $this->getMetadata();
     if (!isset($metadata[$key])) {
       db_insert('lingotek_entity_metadata')
           ->fields(array(

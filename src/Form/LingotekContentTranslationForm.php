@@ -7,6 +7,8 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -36,6 +38,9 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $lte = \Drupal\lingotek\LingotekTranslatableEntity::load(\Drupal::getContainer(), $entity);
     $doc_id = $lte->getDocId();
     $source_status = $lte->getSourceStatus();
+    $status_check_needed = ($source_status == Lingotek::STATUS_PENDING) ? TRUE : FALSE;
+    $targets_ready = FALSE;
+
 
     $form_state->set('entity', $entity);
     $overview = $build['content_translation_overview'];
@@ -59,27 +64,60 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           '#type' => 'checkbox',
           '#disabled' => TRUE,
         );
-        $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
-        $this->addOperationLink($option, 'Upload', $path, $language);
+
+        // Check-Progress button if the source upload status is PENDING.
+        if ($source_status == Lingotek::STATUS_PENDING &&!empty($doc_id)) {
+          $path = '/admin/lingotek/entity/check_upload/' . $doc_id;
+          $this->addOperationLink($option, 'Check Upload Status', $path, $language);
+        }
+        // Upload button if the status is EDITED or non-existent.
+        elseif ($source_status != Lingotek::STATUS_PENDING) {
+          $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
+          $this->addOperationLink($option, 'Upload', $path, $language);
+        }
       }
       else {
-        // TODO: Add the download operation if entity uploaded and language
-        // is enabled for Lingotek translation.
+        $this->removeOperationLink($option, 'Add');
+
+        // Add-Targets button if languages haven't been added.
+        $target_status = $lte->getTargetStatus(LingotekLocale::convertDrupal2Lingotek($langcode));
+        if (empty($target_status)) {
+          $path = '/admin/lingotek/entity/addLanguageSingle/' . $entity_type . '/' . $entity->id();
+        }
+        // Download button if translations are READY or CURRENT.
+        elseif ($target_status != Lingotek::STATUS_PENDING) {
+          $path = '/admin/lingotek/batch/downloadSingle/' . $entity_type . '/' . $entity->id();
+          $this->addOperationLink($option, 'Download', $path, $language);
+          $targets_ready = TRUE;
+        }
+        // Check-Progress button if the source upload status is PENDING.
+        else {
+          $path = '/admin/lingotek/batch/checkTargetStatus/' . $entity_type . '/' . $entity->id();
+          $this->addOperationLink($option, 'Check Status', $path, $language);
+          $status_check_needed = TRUE;
+        }
       }
 
       $form['languages']['#options'][$langcode] = $option;
     }
     $form['actions']['#type'] = 'actions';
 
-    $form['actions']['request'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Download selected translations'),
-      '#validate' => array(array($this, 'validateForm')),
-      '#submit' => array(array($this, 'submitForm')),
-      '#button_type' => 'primary',
-      '#disabled' => TRUE,
-    );
-
+    if ($status_check_needed) {
+      $form['actions']['request'] = array(
+        '#type' => 'submit',
+        '#value' => $this->t('Check Progress'),
+        '#submit' => array(array($this, 'submitForm')),
+        '#button_type' => 'primary',
+      );
+    }
+    elseif ($targets_ready) {
+      $form['actions']['request'] = array(
+        '#type' => 'submit',
+        '#value' => $this->t('Download selected translations'),
+        '#submit' => array(array($this, 'submitForm')),
+        '#button_type' => 'primary',
+      );
+    }
     return $form;
   }
 
@@ -102,6 +140,10 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       'language' => $language,
       'href' => $path,
     );
+  }
+
+  protected function removeOperationLink(array &$option, $name) {
+    unset($option[COL_OPERATIONS]['data']['#links'][strtolower($name)]);
   }
 
 }

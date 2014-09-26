@@ -16,7 +16,7 @@ interface LingotekApiInterface {
   public function uploadDocument($args);
   public function patchDocument($id, $args);
   public function deleteDocument($id);
-  public function getDocuments($args = array());
+  public function getDocument($id);
   public function documentExists($id);
   public function getTranslationStatus($id);
   public function requestTranslation($id, $locale);

@@ -18,11 +18,24 @@ class LingotekBatchController extends LingotekControllerBase {
   public function uploadSingle($entity_type, $entity_id) {
     $batch = array(
       'title' => $this->t('Uploading content to Lingotek'),
-      'finished' => 'lingotek_operation_content_upload_finished',
       'operations' => $this->getUploadOperations($entity_type, array($entity_id)),
+      'finished' => 'lingotek_operation_content_upload_finished',
+      'file' => drupal_get_path('module', 'lingotek') . '/lingotek.batch.inc',
     );
     batch_set($batch);
-    batch_process(current_path());
+    return batch_process("$entity_type/$entity_id/translations");
+  }
+
+  public function checkUploadStatus($entity_type, $entity_id) {
+    // TODO
+  }
+
+  public function checkTargetStatus($entity_type, $entity_id) {
+    // TODO
+  }
+
+  public function addLanguageSingle($entity_type, $entity_id) {
+    // TODO
   }
 
   protected function getUploadOperations($entity_type, $entity_ids) {

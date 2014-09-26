@@ -61,18 +61,13 @@ class LingotekHttp implements LingotekHttpInterface {
     }
     try {
       $response = $this->httpClient->send($request);
-      $data     = $response->json();
-      $token    = $response->getHeader('access_token');
     }
      catch (RequestException $e) {
       watchdog('lingotek', 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
       drupal_set_message(t('Request to Lingotek service failed: %error', array('%error' => $e->getMessage())), 'warning');
       return FALSE;
     }
-    if (!empty($token)) {
-      // TODO: save token to state info.
-    }
-    return $data;
+    return $response;
   }
 
   /*

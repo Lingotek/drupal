@@ -58,6 +58,54 @@ lingotek.batch:
   path: '/admin/lingotek/batch/{action}/{entity_type}/{entity_id}'
   defaults:
     _content: '\Drupal\lingotek\Controller\LingotekBatchController::dispatch'
-    _title: 'Upload Translations'
+    _title: 'Upload Source Batch'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.entity.check_upload:
+  path: '/admin/lingotek/entity/check_upload/{doc_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::checkUpload'
+    _title: 'Check Upload'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.entity.check_targets:
+  path: '/admin/lingotek/entity/check_targets/{doc_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::checkTargets'
+    _title: 'Check Targets'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.entity.add_target:
+  path: '/admin/lingotek/entity/add_target/{doc_id}/{locale}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::addTarget'
+    _title: 'Add Target'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.entity.upload:
+  path: '/admin/lingotek/entity/upload/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::upload'
+    _title: 'Upload Source'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.entity.update:
+  path: '/admin/lingotek/entity/update/{doc_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::update'
+    _title: 'Update Source'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.entity.download:
+  path: '/admin/lingotek/entity/download/{doc_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::download'
+    _title: 'Check Upload'
   requirements:
     _permission: 'administer lingotek'

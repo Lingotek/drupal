@@ -43,12 +43,14 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function uploadDocument($args) {
-    //$this->lingotekClient->formatAsMultipart($args);
     $response = $this->lingotekClient->post($this->api_url . '/api/document', $args);
-    if (!empty($response['properties']['id'])) {
-      return $response['properties']['id'];
+    if ($response->getStatusCode() == '202') {
+      $data = $response->json();
+      if (!empty($data['properties']['id'])) {
+        return $data['properties']['id'];
+      }
     }
-    // TODO: log failure message
+    // TODO: log warning
     return FALSE;
   }
 
@@ -58,7 +60,9 @@ class LingotekApi implements LingotekApiInterface {
   public function deleteDocument($id) {
   }
 
-  public function getDocuments($args = array()) {
+  public function getDocument($id) {
+    $response = $this->lingotekClient->get($this->api_url . '/api/document', array('doc_id' => $id));
+    return $response;
   }
 
   public function documentExists($id) {

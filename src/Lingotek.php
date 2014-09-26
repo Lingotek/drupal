@@ -9,13 +9,16 @@ namespace Drupal\lingotek;
 
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Routing\UrlGeneratorTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /*
  * The connecting class between Drupal and Lingotek
  */
 
 class Lingotek implements LingotekInterface {
+  use UrlGeneratorTrait;
 
   protected static $instance;
   protected $api;
@@ -94,8 +97,6 @@ class Lingotek implements LingotekInterface {
   }
 
   public function uploadDocument($title, $content, $locale = NULL) {
-
-
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
     $defaults = array(
@@ -109,6 +110,17 @@ class Lingotek implements LingotekInterface {
     // TODO: Response code should be 202 on success
     return $response;
   }
+
+  public function documentImported($doc_id) {
+    // For now, a passthrough to the API object so the controllers do not
+    // need to include that class.
+    $response = $this->api->getDocument($doc_id);
+    if ($response->getStatusCode() == '200') {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
   protected function getResource($resources_key, $func, $force = FALSE) {
     $data = $this->get($resources_key);
     if (empty($data) || $force) {
@@ -133,5 +145,24 @@ class Lingotek implements LingotekInterface {
   public function getTargetStatus($doc_id, $locale) {
 
   }
+
+  /**
+   * Returns a redirect response object for the specified route.
+   *
+   * @param string $route_name
+   *   The name of the route to which to redirect.
+   * @param array $route_parameters
+   *   Parameters for the route.
+   * @param int $status
+   *   The HTTP redirect status code for the redirect. The default is 302 Found.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect response object that may be returned by any controller.
+   */
+  public function redirect($route_name, array $route_parameters = array(), $status = 302) {
+    $url = $this->url($route_name, $route_parameters, ['absolute' => TRUE]);
+    return new RedirectResponse($url, $status);
+  }
+
 
 }
