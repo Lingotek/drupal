@@ -839,6 +839,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     // assign set status to current
     $this->setStatus(LingotekSync::STATUS_CURRENT);
     $this->setTargetsStatus(LingotekSync::STATUS_CURRENT, $lingotek_locale);
+    LingotekConfigSet::markSetsCurrent($this->sid);
 
     return TRUE;
   }
@@ -934,6 +935,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $query = db_update('lingotek_config_map')
         ->fields(array('current' => 1));
     if ($set_ids != 'all') {
+      $set_ids = is_array($set_ids) ? $set_ids : array($set_ids);
       $query->condition('set_id', $set_ids, 'IN');
     }
     $query->execute();

@@ -303,7 +303,6 @@ function lingotek_config_download_selected($lids) {
     drupal_set_message(t('No translations to download at this time. Make sure configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
     drupal_goto('admin/settings/lingotek/manage/config');
   }
-  LingotekConfigSet::markSetsCurrent($set_ids);
   $document_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
   $available_targets = Lingotek::getLanguages();
   unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
