@@ -359,6 +359,7 @@ function lingotek_config_search_options() {
     'all' => t('All text groups'),
     'blocks' => t('Blocks'),
     'interface' => t('Built-in interface'),
+    'field' => t('Field labels'),
     'menu' => t('Menu'),
     'taxonomy' => t('Taxonomy'),
   );
