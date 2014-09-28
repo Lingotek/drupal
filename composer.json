@@ -23,6 +23,5 @@
     "source": "http://cgit.drupalcode.org/lingotek"
   },
   "minimum-stability": "dev",
-  "require": {
-  }
+  "require": { }
 }
