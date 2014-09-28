@@ -1,0 +1,28 @@
+{
+  "name": "drupal/lingotek",
+  "description": "The Lingotek translation management and automation module.",
+  "type": "drupal-module",
+  "homepage": "http://drupal.org/project/lingotek",
+  "authors": [
+    {
+      "name": "Rob Bailey",
+      "email": "rbailey@lingotek.com",
+      "homepage": "https://github.com/robertdbailey",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Matt Smith",
+      "email": "msmith@lingotek.com",
+      "homepage": "https://github.com/smithworx",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "http://drupal.org/project/issues/lingotek",
+    "irc": "irc://irc.freenode.org/drupal-contribute",
+    "source": "http://cgit.drupalcode.org/lingotek"
+  },
+  "minimum-stability": "dev",
+  "require": {
+  }
+}
