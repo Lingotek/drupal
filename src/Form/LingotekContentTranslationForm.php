@@ -57,9 +57,11 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $additional_links = array();
 
     foreach ($languages as $langcode => $language) {
+      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
       $option = array_shift($overview['#rows']);
       if ($langcode == $entity_langcode) {
-        // This is the source object so we disable the checkbox for this row.
+        // Buttons for the ENTITY SOURCE LANGUAGE
+        // We disable the checkbox for this row.
         $form['languages'][$langcode] = array(
           '#type' => 'checkbox',
           '#disabled' => TRUE,
@@ -71,18 +73,21 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           $this->addOperationLink($option, 'Check Upload Status', $path, $language);
         }
         // Upload button if the status is EDITED or non-existent.
-        elseif ($source_status != Lingotek::STATUS_PENDING) {
+        elseif ($source_status == Lingotek::STATUS_EDITED) {
           $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
           $this->addOperationLink($option, 'Upload', $path, $language);
         }
       }
       else {
+        // Buttons for the ENTITY TARGET LANGUAGE
         $this->removeOperationLink($option, 'Add');
 
+        $target_status = $lte->getTargetStatus($locale);
+
         // Add-Targets button if languages haven't been added.
-        $target_status = $lte->getTargetStatus(LingotekLocale::convertDrupal2Lingotek($langcode));
-        if (empty($target_status)) {
-          $path = '/admin/lingotek/entity/addLanguageSingle/' . $entity_type . '/' . $entity->id();
+        if ($source_status === Lingotek::STATUS_CURRENT && !empty($doc_id) && !isset($target_status)) {
+          $path = '/admin/lingotek/entity/add_target/' . $doc_id . '/' . $locale;
+          $this->addOperationLink($option, 'Add this language', $path, $language);
         }
         // Download button if translations are READY or CURRENT.
         elseif ($target_status != Lingotek::STATUS_PENDING) {

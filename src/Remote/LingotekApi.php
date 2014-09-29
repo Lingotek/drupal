@@ -61,8 +61,7 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function getDocument($id) {
-    $response = $this->lingotekClient->get($this->api_url . '/api/document', array('doc_id' => $id));
-    return $response;
+    return $this->lingotekClient->get($this->api_url . '/api/document', array('doc_id' => $id));
   }
 
   public function documentExists($id) {
@@ -72,6 +71,7 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function requestTranslation($id, $locale) {
+    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/', array('locale_code' => $locale));
   }
 
   public function getTranslation($id, $locale) {

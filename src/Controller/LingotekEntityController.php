@@ -32,7 +32,19 @@ class LingotekEntityController extends LingotekControllerBase {
   }
 
   public function addTarget($doc_id, $locale) {
-
+    $te = LingotekTranslatableEntity::loadByDocId($doc_id);
+    if (!$te) {
+      // TODO: log warning
+      return $this->translationsPageRedirect($te->entity);
+    }
+    if ($this->L->addTarget($doc_id, $locale)) {
+      $te->setTargetStatus($locale, Lingotek::STATUS_PENDING);
+      drupal_set_message(t("Locale '@locale' was added as a translation target for @entity_type #@entity_id.", array('@locale' => $locale, '@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())));
+    }
+    else {
+      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type #@entity_id.", array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())), 'warning');
+    }
+    return $this->translationsPageRedirect($te->entity);
   }
 
   public function upload($entity_type, $entity_id) {

@@ -211,7 +211,7 @@ class LingotekTranslatableEntity {
       db_insert('lingotek_entity_metadata')
           ->fields(array(
             'entity_id' => $this->entity->id(),
-            'entity_type' => $this->entity->bundle(),
+            'entity_type' => $this->entity->getEntityTypeId(),
             'entity_key' => $key,
             'value' => $value,
           ))
@@ -223,7 +223,7 @@ class LingotekTranslatableEntity {
             'value' => $value
           ))
           ->condition('entity_id', $this->entity->id())
-          ->condition('entity_type', $this->entity->bundle())
+          ->condition('entity_type', $this->entity->getEntityTypeId())
           ->condition('entity_key', $key)
           ->execute();
     }

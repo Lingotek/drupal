@@ -121,6 +121,14 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  public function addTarget($doc_id, $locale) {
+    $response = $this->api->requestTranslation($doc_id, $locale);
+    if ($response->getStatusCode() == '200') {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
   protected function getResource($resources_key, $func, $force = FALSE) {
     $data = $this->get($resources_key);
     if (empty($data) || $force) {
