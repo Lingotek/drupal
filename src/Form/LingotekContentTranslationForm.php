@@ -98,7 +98,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         // Download button if translations are READY or CURRENT.
         elseif ($target_status !== NULL) {
           $path = '/admin/lingotek/entity/download/' . $doc_id . '/' . $locale;
-          $this->addOperationLink($option, 'Download', $path, $language);
+          $this->addOperationLink($option, 'Download completed translation', $path, $language);
           $targets_ready = TRUE;
         }
       }
