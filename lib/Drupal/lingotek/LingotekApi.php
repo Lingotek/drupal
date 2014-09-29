@@ -105,7 +105,7 @@ class LingotekApi {
           $translatable_object->setLastError(is_array($result->errors) ? array_shift($result->errors) : $result->errors);
           return FALSE;
         }
-        if (get_class($translatable_object) == 'LingotekConfigChunk') {
+        if (get_class($translatable_object) == 'LingotekConfigSet') {
           $translatable_object->setDocumentId($result->id);
           $translatable_object->setProjectId($project_id);
           $translatable_object->setStatus(LingotekSync::STATUS_CURRENT);
@@ -115,7 +115,7 @@ class LingotekApi {
           // source entry between the time the dirty segments are pulled and the time
           // they are set to current at this point.  This same race condition exists
           // for nodes as well; however, the odds may be lower due to number of entries.
-          LingotekConfigChunk::setSegmentStatusToCurrentById($translatable_object->getId());
+          LingotekConfigSet::setSegmentStatusToCurrentById($translatable_object->getId());
         }
         else {
           // node assumed (based on two functions below...
@@ -153,7 +153,7 @@ class LingotekApi {
     $result = $this->request('updateContentDocumentAsync', $parameters);
 
     if ($result) {
-      if (get_class($translatable_object) == 'LingotekConfigChunk') {
+      if (get_class($translatable_object) == 'LingotekConfigSet') {
         $translatable_object->setStatus(LingotekSync::STATUS_CURRENT);
         $translatable_object->setTargetsStatus(LingotekSync::STATUS_PENDING);
 
@@ -161,7 +161,7 @@ class LingotekApi {
         // source entry between the time the dirty segments are pulled and the time
         // they are set to current at this point.  This same race condition exists
         // for nodes as well; however, the odds may be lower due to number of entries.
-        LingotekConfigChunk::setSegmentStatusToCurrentById($translatable_object->getId());
+        LingotekConfigSet::setSegmentStatusToCurrentById($translatable_object->getId());
       }
     }
 
