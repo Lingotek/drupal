@@ -47,13 +47,13 @@ class LingotekHttp implements LingotekHttpInterface {
    *
    * @since 0.1
    */
-  public function request($path, $args = array(), $method = 'GET') {
+  public function request($path, $args = array(), $method = 'GET', $use_multipart = FALSE) {
     $url     = $this->config->get('account.host') . $path;
     $request = $this->httpClient->createRequest($method, $url);
     $request->setHeaders($this->headers);
     if ($method == 'POST') {
       $postBody = $request->getBody();
-      $postBody->forceMultipartUpload(true);
+      $postBody->forceMultipartUpload($use_multipart);
       $postBody->replaceFields($args);
     }
     elseif (!empty($args)) {
@@ -80,8 +80,8 @@ class LingotekHttp implements LingotekHttpInterface {
   /*
    * send a POST request
    */
-  public function post($path, $args = array()) {
-    return $this->request($path, $args, 'POST');
+  public function post($path, $args = array(), $use_multipart = FALSE) {
+    return $this->request($path, $args, 'POST', $use_multipart);
   }
 
   /*

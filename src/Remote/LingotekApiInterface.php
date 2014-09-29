@@ -13,13 +13,14 @@ interface LingotekApiInterface {
   
   public static function create(ContainerInterface $container);
   public function getAccountInfo();
-  public function uploadDocument($args);
+  public function addDocument($args);
+
   public function patchDocument($id, $args);
   public function deleteDocument($id);
   public function getDocument($id);
   public function documentExists($id);
-  public function getTranslationStatus($id);
-  public function requestTranslation($id, $locale);
+  public function getDocumentStatus($id);
+  public function addDocumentTranslation($id, $locale);
   public function getTranslation($id, $locale);
   public function deleteTranslation($id, $locale);
   public function getConnectUrl($redirect_uri);

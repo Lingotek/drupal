@@ -68,12 +68,12 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         );
 
         // Check-Progress button if the source upload status is PENDING.
-        if ($source_status == Lingotek::STATUS_PENDING &&!empty($doc_id)) {
+        if ($source_status === Lingotek::STATUS_PENDING && !empty($doc_id)) {
           $path = '/admin/lingotek/entity/check_upload/' . $doc_id;
           $this->addOperationLink($option, 'Check Upload Status', $path, $language);
         }
         // Upload button if the status is EDITED or non-existent.
-        elseif ($source_status == Lingotek::STATUS_EDITED) {
+        elseif ($source_status === Lingotek::STATUS_EDITED || $source_status === NULL) {
           $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
           $this->addOperationLink($option, 'Upload', $path, $language);
         }
@@ -89,17 +89,17 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           $path = '/admin/lingotek/entity/add_target/' . $doc_id . '/' . $locale;
           $this->addOperationLink($option, 'Add this language', $path, $language);
         }
+        // Check-Progress button if the source upload status is PENDING.
+        elseif ($target_status === Lingotek::STATUS_PENDING) {
+          $path = '/admin/lingotek/entity/check_target/' . $doc_id . '/' . $locale;
+          $this->addOperationLink($option, 'Check translation status', $path, $language);
+          $status_check_needed = TRUE;
+        }
         // Download button if translations are READY or CURRENT.
-        elseif ($target_status != Lingotek::STATUS_PENDING) {
-          $path = '/admin/lingotek/batch/downloadSingle/' . $entity_type . '/' . $entity->id();
+        elseif ($target_status !== NULL) {
+          $path = '/admin/lingotek/entity/download/' . $doc_id . '/' . $locale;
           $this->addOperationLink($option, 'Download', $path, $language);
           $targets_ready = TRUE;
-        }
-        // Check-Progress button if the source upload status is PENDING.
-        else {
-          $path = '/admin/lingotek/batch/checkTargetStatus/' . $entity_type . '/' . $entity->id();
-          $this->addOperationLink($option, 'Check Status', $path, $language);
-          $status_check_needed = TRUE;
         }
       }
 

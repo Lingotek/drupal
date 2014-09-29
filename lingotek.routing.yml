@@ -70,10 +70,10 @@ lingotek.entity.check_upload:
   requirements:
     _permission: 'administer lingotek'
 
-lingotek.entity.check_targets:
-  path: '/admin/lingotek/entity/check_targets/{doc_id}'
+lingotek.entity.check_target:
+  path: '/admin/lingotek/entity/check_target/{doc_id}/{locale}'
   defaults:
-    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::checkTargets'
+    _controller: '\Drupal\lingotek\Controller\LingotekEntityController::checkTarget'
     _title: 'Check Targets'
   requirements:
     _permission: 'administer lingotek'
@@ -103,7 +103,7 @@ lingotek.entity.update:
     _permission: 'administer lingotek'
 
 lingotek.entity.download:
-  path: '/admin/lingotek/entity/download/{doc_id}'
+  path: '/admin/lingotek/entity/download/{doc_id}/{locale}'
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekEntityController::download'
     _title: 'Check Upload'

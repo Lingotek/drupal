@@ -31,7 +31,7 @@ class Lingotek implements LingotekInterface {
   const STATUS_READY = 'READY';
   const STATUS_FAILED = 'FAILED';
   const STATUS_UNTRACKED = 'UNTRACKED';
-  
+  const PROGRESS_COMPLETE = 100;
   // Translation Profile.
   const PROFILE_DISABLED = 'DISABLED';
   const PROFILE_AUTOMATIC = 'AUTO';
@@ -105,7 +105,7 @@ class Lingotek implements LingotekInterface {
       'workflow_id' => $this->get('default.workflow'),
     );
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
-    $response = $this->api->uploadDocument($args);
+    $response = $this->api->addDocument($args);
 
     // TODO: Response code should be 202 on success
     return $response;
@@ -122,8 +122,8 @@ class Lingotek implements LingotekInterface {
   }
 
   public function addTarget($doc_id, $locale) {
-    $response = $this->api->requestTranslation($doc_id, $locale);
-    if ($response->getStatusCode() == '200') {
+    $response = $this->api->addDocumentTranslation($doc_id, $locale);
+    if ($response->getStatusCode() == '201') {
       return TRUE;
     }
     return FALSE;
@@ -151,8 +151,17 @@ class Lingotek implements LingotekInterface {
     }
   }
 
-  public function getTargetStatus($doc_id, $locale) {
-
+  public function getDocumentStatus($doc_id) {
+    // For now, a passthrough to the API object so the controllers do not
+    // need to include that class.
+    $response = $this->api->getDocumentStatus($doc_id);
+    if ($response->getStatusCode() == '200') {
+      $progress = !empty($response->json()['properties']['progress']) ? $response->json()['properties']['progress'] : NULL;
+      if ($progress === self::PROGRESS_COMPLETE) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**

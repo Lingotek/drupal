@@ -42,8 +42,8 @@ class LingotekApi implements LingotekApiInterface {
     return $account_info;
   }
 
-  public function uploadDocument($args) {
-    $response = $this->lingotekClient->post($this->api_url . '/api/document', $args);
+  public function addDocument($args) {
+    $response = $this->lingotekClient->post($this->api_url . '/api/document', $args, TRUE);
     if ($response->getStatusCode() == '202') {
       $data = $response->json();
       if (!empty($data['properties']['id'])) {
@@ -67,11 +67,12 @@ class LingotekApi implements LingotekApiInterface {
   public function documentExists($id) {
   }
 
-  public function getTranslationStatus($id) {
+  public function getDocumentStatus($id) {
+    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/status');
   }
 
-  public function requestTranslation($id, $locale) {
-    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/', array('locale_code' => $locale));
+  public function addDocumentTranslation($id, $locale) {
+    return $this->lingotekClient->post($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
   }
 
   public function getTranslation($id, $locale) {
