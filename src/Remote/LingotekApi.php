@@ -81,7 +81,7 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function getTranslation($id, $locale) {
-    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
+    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/content', array('locale_code' => $locale));
   }
 
   public function deleteTranslation($id, $locale) {

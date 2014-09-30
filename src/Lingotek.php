@@ -171,7 +171,7 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     $response = $this->api->getTranslation($doc_id, $locale);
     if ($response->getStatusCode() == '200') {
-      return TRUE;
+      return $response->json();
     }
     return FALSE;
   }

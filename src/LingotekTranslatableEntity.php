@@ -115,7 +115,7 @@ class LingotekTranslatableEntity {
     // translated fields to their entity.
 
     /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $langcode = $this->L->convertLingotek2Drupal($locale);
+    $langcode = LingotekLocale::convertLingotek2Drupal($locale);
     if (!$langcode) {
       // TODO: log warning that downloaded translation's langcode is not enabled.
       return FALSE;
@@ -281,9 +281,9 @@ class LingotekTranslatableEntity {
   }
 
   public function download($locale) {
-    $response = $this->L->download($this->getDocId(), $locale);
-    if ($response) {
-      $this->saveTargetData($response->json(), $locale);
+    $data = $this->L->downloadDocument($this->getDocId(), $locale);
+    if ($data) {
+      $this->saveTargetData($data, $locale);
       $this->setTargetStatus(Lingotek::STATUS_CURRENT);
       return $response;
     }
