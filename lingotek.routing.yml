@@ -9,8 +9,16 @@ lingotek.dashboard:
 lingotek.dashboard_endpoint:
   path: '/admin/lingotek/dashboard_endpoint'
   defaults:
-    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardEndpoint'
+    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::endpoint'
     _title: 'Lingotek Dashboard Endpoint'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.notify:
+  path: '/lingotek/notify'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekNotificationController::endpoint'
+    _title: 'Lingotek Notification Receiver'
   requirements:
     _access: 'TRUE'
 

@@ -27,7 +27,12 @@ class LingotekTranslatableEntity {
   /**
    * The title of the document
    */
-  protected $title = NULL;
+  protected $title;
+
+  /*
+   * The source locale code
+   */
+  protected $locale;
 
   /**
    * Constructs a LingotekTranslatableEntity object.
@@ -67,6 +72,11 @@ class LingotekTranslatableEntity {
     $container = \Drupal::getContainer();
     $entity = entity_load($entity_type, $id);
     return self::load($container, $entity);
+  }
+
+  public function getSourceLocale() {
+    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language()->id());
+    return $this->locale;
   }
 
   public function getSourceData() {
@@ -162,7 +172,7 @@ class LingotekTranslatableEntity {
     return $this->setMetadata('document_id', $id);
   }
 
-    /**
+  /**
    * Gets a Lingotek metadata value for the given key.
    *
    * @param string $key
@@ -177,9 +187,9 @@ class LingotekTranslatableEntity {
     $metadata = array();
 
     $query = db_select('lingotek_entity_metadata', 'meta')
-        ->fields('meta')
-        ->condition('entity_id', $this->entity->id())
-        ->condition('entity_type', $this->entity->getEntityTypeId());
+            ->fields('meta')
+            ->condition('entity_id', $this->entity->id())
+            ->condition('entity_type', $this->entity->getEntityTypeId());
     if ($key) {
       $query->condition('entity_key', $key);
     }
@@ -209,25 +219,75 @@ class LingotekTranslatableEntity {
     $metadata = $this->getMetadata();
     if (!isset($metadata[$key])) {
       db_insert('lingotek_entity_metadata')
-          ->fields(array(
-            'entity_id' => $this->entity->id(),
-            'entity_type' => $this->entity->getEntityTypeId(),
-            'entity_key' => $key,
-            'value' => $value,
-          ))
-          ->execute();
-    }
-    else {
+              ->fields(array(
+                  'entity_id' => $this->entity->id(),
+                  'entity_type' => $this->entity->getEntityTypeId(),
+                  'entity_key' => $key,
+                  'value' => $value,
+              ))
+              ->execute();
+    } else {
       db_update('lingotek_entity_metadata')
-          ->fields(array(
-            'value' => $value
-          ))
-          ->condition('entity_id', $this->entity->id())
-          ->condition('entity_type', $this->entity->getEntityTypeId())
-          ->condition('entity_key', $key)
-          ->execute();
+              ->fields(array(
+                  'value' => $value
+              ))
+              ->condition('entity_id', $this->entity->id())
+              ->condition('entity_type', $this->entity->getEntityTypeId())
+              ->condition('entity_key', $key)
+              ->execute();
     }
     return $this;
+  }
+
+  public function checkSourceStatus() {
+    if ($this->L->documentImported($this->getDocId())) {
+      $this->setSourceStatus(Lingotek::STATUS_CURRENT);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  public function checkTargetStatus($locale) {
+    $current_status = $this->getTargetStatus($locale);
+    if (($current_status == Lingotek::STATUS_PENDING) && $this->L->getDocumentStatus($this->getDocId())) {
+      $this->setTargetStatus($locale, Lingotek::STATUS_READY);
+      $current_status = $this->getTargetStatus($locale);
+    }
+    return $current_status;
+  }
+
+  public function addTarget($locale) {
+    if ($this->L->addTarget($this->getDocId(), $locale)) {
+      $this->setTargetStatus($locale, Lingotek::STATUS_PENDING);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  public function upload() {
+    $source_data = json_encode($this->getSourceData());
+    $document_name = $this->entity->bundle() . ' (' . $this->entity->getEntityTypeId() . '): ' . $this->entity->label();
+    $doc_id = $this->L->uploadDocument($document_name, $source_data, $this->getSourceLocale());
+    if ($doc_id) {
+      $this->setDocId($doc_id);
+      $this->setSourceStatus(Lingotek::STATUS_PENDING);
+      return $doc_id;
+    }
+    return FALSE;
+  }
+
+  public function update($doc_id) {
+    //TO-DO: PATCH /document
+  }
+
+  public function download($locale) {
+    $response = $this->L->download($this->getDocId(), $locale);
+    if ($response) {
+      $this->saveTargetData($response->json(), $locale);
+      $this->setTargetStatus(Lingotek::STATUS_CURRENT);
+      return $response;
+    }
+    return FALSE;
   }
 
 }

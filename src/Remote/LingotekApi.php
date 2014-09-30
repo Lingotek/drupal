@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /*
  * a simple connector to the Lingotek Translation API
  */
+
 class LingotekApi implements LingotekApiInterface {
 
   /**
@@ -31,8 +32,8 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public static function create(ContainerInterface $container) {
-    return new static (
-      $container->get('lingotek.http_client')
+    return new static(
+            $container->get('lingotek.http_client')
     );
   }
 
@@ -44,6 +45,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function addDocument($args) {
     $response = $this->lingotekClient->post($this->api_url . '/api/document', $args, TRUE);
+
     if ($response->getStatusCode() == '202') {
       $data = $response->json();
       if (!empty($data['properties']['id'])) {
@@ -55,9 +57,11 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function patchDocument($id, $args) {
+
   }
 
   public function deleteDocument($id) {
+
   }
 
   public function getDocument($id) {
@@ -65,23 +69,27 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function documentExists($id) {
+
   }
 
   public function getDocumentStatus($id) {
     return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/status');
   }
 
-  public function addDocumentTranslation($id, $locale) {
+  public function addTranslation($id, $locale) {
     return $this->lingotekClient->post($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
   }
 
   public function getTranslation($id, $locale) {
+    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
   }
 
   public function deleteTranslation($id, $locale) {
+    return $this->lingotekClient->delete($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
   }
 
   public function getConnectUrl($redirect_uri) {
+
   }
 
   public function getCommunities() {
@@ -115,4 +123,5 @@ class LingotekApi implements LingotekApiInterface {
     }
     return $formatted_response;
   }
+
 }

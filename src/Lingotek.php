@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 
 class Lingotek implements LingotekInterface {
+
   use UrlGeneratorTrait;
 
   protected static $instance;
@@ -55,10 +56,10 @@ class Lingotek implements LingotekInterface {
 
   public function getResources($force = FALSE) {
     return array(
-      'community' => $this->getCommunities($force),
-      'project' => $this->getProjects($force),
-      'vault' => $this->getVaults($force),
-      'workflow' => $this->getWorkflows($force)
+        'community' => $this->getCommunities($force),
+        'project' => $this->getProjects($force),
+        'vault' => $this->getVaults($force),
+        'workflow' => $this->getWorkflows($force)
     );
   }
 
@@ -100,9 +101,9 @@ class Lingotek implements LingotekInterface {
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
     $defaults = array(
-      'format' => 'JSON',
-      'project_id' => $this->get('default.project'),
-      'workflow_id' => $this->get('default.workflow'),
+        'format' => 'JSON',
+        'project_id' => $this->get('default.project'),
+        'workflow_id' => $this->get('default.workflow'),
     );
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
     $response = $this->api->addDocument($args);
@@ -122,7 +123,7 @@ class Lingotek implements LingotekInterface {
   }
 
   public function addTarget($doc_id, $locale) {
-    $response = $this->api->addDocumentTranslation($doc_id, $locale);
+    $response = $this->api->addTranslation($doc_id, $locale);
     if ($response->getStatusCode() == '201') {
       return TRUE;
     }
@@ -156,10 +157,21 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     $response = $this->api->getDocumentStatus($doc_id);
     if ($response->getStatusCode() == '200') {
-      $progress = !empty($response->json()['properties']['progress']) ? $response->json()['properties']['progress'] : NULL;
+      $progress_json = $response->json();
+      $progress = !empty($progress_json['properties']['progress']) ? $progress_json['properties']['progress'] : NULL;
       if ($progress === self::PROGRESS_COMPLETE) {
         return TRUE;
       }
+    }
+    return FALSE;
+  }
+
+  public function downloadDocument($doc_id, $locale) {
+    // For now, a passthrough to the API object so the controllers do not
+    // need to include that class.
+    $response = $this->api->getTranslation($doc_id, $locale);
+    if ($response->getStatusCode() == '200') {
+      return TRUE;
     }
     return FALSE;
   }
@@ -182,5 +194,16 @@ class Lingotek implements LingotekInterface {
     return new RedirectResponse($url, $status);
   }
 
+  public static function d($data, $label = NULL, $die = FALSE) {
+    echo '<pre style="background: #f3f3f3; color: #000">';
+    if (is_string($label)) {
+      echo '<h1>' . $label . '</h1>';
+    }
+    print_r($data);
+    echo '</pre>';
+    if ($die || is_bool($label) && $label) {
+      die();
+    }
+  }
 
 }
