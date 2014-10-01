@@ -119,8 +119,7 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   protected function setDefaultHeaders() {
-    $this->addHeader('Accept', 'application/json');
-    $this->addHeader('Content-Type', 'application/json');
+    $this->addHeader('Accept', '*/*');
     if ($token = $this->config->get('account.access_token')) {
       $this->addHeader('Authorization', 'bearer ' . $token);
     }
