@@ -57,11 +57,20 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function patchDocument($id, $args) {
+    $response = $this->lingotekClient->patch($this->api_url . '/api/document', $args, TRUE);
 
+    if ($response->getStatusCode() == '202') {
+      $data = $response->json();
+      if (!empty($data['properties']['id'])) {
+        return $data['properties']['id'];
+      }
+    }
+    // TODO: log warning
+    return FALSE;
   }
 
   public function deleteDocument($id) {
-
+    return $this->lingotekClient->delete($this->api_url . '/api/document', array('doc_id' => $id));
   }
 
   public function getDocument($id) {

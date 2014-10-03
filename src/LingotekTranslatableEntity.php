@@ -75,7 +75,7 @@ class LingotekTranslatableEntity {
   }
 
   public function getSourceLocale() {
-    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language()->id());
+    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language()->id);
     return $this->locale;
   }
 
@@ -120,6 +120,7 @@ class LingotekTranslatableEntity {
       // TODO: log warning that downloaded translation's langcode is not enabled.
       return FALSE;
     }
+
     // initialize the translation on the Drupal side, if necessary
     if (!$this->entity->hasTranslation($langcode)) {
       $this->entity->addTranslation($langcode, $this->entity->toArray());
@@ -136,7 +137,7 @@ class LingotekTranslatableEntity {
         }
       }
     }
-    $translation->save();
+    $result = $translation->save();
     return $this;
   }
 
@@ -256,12 +257,18 @@ class LingotekTranslatableEntity {
     return $current_status;
   }
 
+  //perhaps this function should be protected
   public function addTarget($locale) {
     if ($this->L->addTarget($this->getDocId(), $locale)) {
       $this->setTargetStatus($locale, Lingotek::STATUS_PENDING);
       return TRUE;
     }
     return FALSE;
+  }
+
+  public function requestTranslations() {
+    // request translations via the API for all specified languages (in profile or all)
+    Lingotek::d($this->L->config);
   }
 
   public function upload() {
@@ -284,7 +291,8 @@ class LingotekTranslatableEntity {
     $data = $this->L->downloadDocument($this->getDocId(), $locale);
     if ($data) {
       $this->saveTargetData($data, $locale);
-      $this->setTargetStatus(Lingotek::STATUS_CURRENT);
+      //Lingotek::d("HI");
+      //$this->setTargetStatus(Lingotek::STATUS_CURRENT);
       return $response;
     }
     return FALSE;

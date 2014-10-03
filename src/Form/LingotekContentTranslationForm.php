@@ -80,23 +80,24 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       }
       else {
         // Buttons for the ENTITY TARGET LANGUAGE
-        $this->removeOperationLink($option, 'Add');
 
         $target_status = $lte->getTargetStatus($locale);
 
         // Add-Targets button if languages haven't been added.
         if ($source_status === Lingotek::STATUS_CURRENT && !empty($doc_id) && !isset($target_status)) {
           $path = '/admin/lingotek/entity/add_target/' . $doc_id . '/' . $locale;
-          $this->addOperationLink($option, 'Add this language', $path, $language);
+          $this->addOperationLink($option, 'Request translation', $path, $language);
         }
         // Check-Progress button if the source upload status is PENDING.
         elseif ($target_status === Lingotek::STATUS_PENDING) {
+          $this->removeOperationLink($option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/check_target/' . $doc_id . '/' . $locale;
           $this->addOperationLink($option, 'Check translation status', $path, $language);
           $status_check_needed = TRUE;
         }
         // Download button if translations are READY or CURRENT.
         elseif ($target_status !== NULL) {
+          $this->removeOperationLink($option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/download/' . $doc_id . '/' . $locale;
           $this->addOperationLink($option, 'Download completed translation', $path, $language);
           $targets_ready = TRUE;

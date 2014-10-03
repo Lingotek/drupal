@@ -53,18 +53,14 @@ EOD;
         $direction = $request->get('direction');
         if (isset($language, $lingotek_locale, $direction)) {
           $rtl = ($direction == 'RTL') ? LanguageInterface::DIRECTION_RTL : LanguageInterface::DIRECTION_LTR;
-
           $langcode = LingotekLocale::generateLingotek2Drupal($lingotek_locale);
-
           $l = ConfigurableLanguage::create(array(
                       'id' => $langcode,
                       'name' => $language,
                       'native' => $native,
                       'direction' => $rtl,
           ));
-
           $l->save();
-
           $response += $this->getLanguageReport($langcode);
           $http_status_code = 200;
         }

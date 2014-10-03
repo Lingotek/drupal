@@ -65,7 +65,7 @@ class LingotekHttp implements LingotekHttpInterface {
      catch (RequestException $e) {
       watchdog('lingotek', 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
       drupal_set_message(t('Request to Lingotek service failed: %error', array('%error' => $e->getMessage())), 'warning');
-      return FALSE;
+      throw $e;
     }
     return $response;
   }
@@ -81,7 +81,12 @@ class LingotekHttp implements LingotekHttpInterface {
    * send a POST request
    */
   public function post($path, $args = array(), $use_multipart = FALSE) {
-    return $this->request($path, $args, 'POST', $use_multipart);
+    try {
+      $response = $this->request($path, $args, 'POST', $use_multipart);
+    } catch (Exception $e) {
+      throw $e;
+    }
+    return $response;
   }
 
   /*
