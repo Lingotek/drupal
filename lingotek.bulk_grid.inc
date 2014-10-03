@@ -332,7 +332,7 @@ function lingotek_grid_action_options($is_config) {
   }
   else {
     $action_options['edit'] = t('Edit translation settings');
-    $actions_submit['workflow'] = t('Change workflow');
+    $action_options['workflow'] = t('Change workflow');
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
   }
 
