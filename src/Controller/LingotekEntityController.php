@@ -70,7 +70,7 @@ class LingotekEntityController extends LingotekControllerBase {
     if ($te->download($locale)) {
       drupal_set_message(t('The translation of @entity_type #@entity_id into @locale has been downloaded.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id(), '@locale' => $locale)));
     } else {
-      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale failed to download.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id(), '@locale' => $locale)));
+      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale failed to download.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id(), '@locale' => $locale)), 'error');
     }
     return $this->translationsPageRedirect($te->entity);
   }
