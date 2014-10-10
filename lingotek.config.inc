@@ -34,13 +34,7 @@ function lingotek_config_header() {
 function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only = FALSE) {
   $columns = isset($form_state['values']['columns']) ? $form_state['values']['columns'] : array();
   $header = lingotek_config_header();
-  foreach ($header as $title => $data) { // Refine the source header using the selected columns
-    if (array_key_exists($title, $columns) && $columns[$title]) {
-      $form_state['values']['grid_header'][$title] = $data;
-    }
-  }
-
-  $filters = isset($_SESSION['grid_filters']) ? $_SESSION['grid_filters'] : array();
+  $form_state['values']['grid_header'] = lingotek_bulk_grid_refine_source_header($header, $columns);
   $query = lingotek_config_start_query($form_state);
   lingotek_config_add_query_filters($query, $filters);
 
@@ -55,85 +49,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       ->execute()
       ->fetchAllAssoc('lid');
 
-  $languages = language_list();
-  $lingotek_languages = Lingotek::getLanguages();
-  $global_profile = lingotek_get_global_profile();
-  $list_statuses = array('pending', 'ready', 'current', 'edited', 'untracked');
-
-  // If there are no results, this will make sure there's no error.
-  $table_data = isset($table_data) ? $table_data : array();
-  $lids = array_keys($table_data_raw);
-  $existing_translations = !empty($lids) ? lingotek_config_add_existing_translations($lids, $lingotek_languages) : array();
-  //parse the queried data and put it into different cells
-  foreach ($table_data_raw as $row) {
-    $lid = $row->{'lid'};
-    $row->lingotek = $global_profile;
-    $row->lingotek['profile'] = 1;
-    $row->language = 'en';
-
-    $locales = array();
-    $statuses = array();
-    $locale_statuses = array();
-    $item_is_current = LingotekConfigSet::isLidCurrent($lid);
-    $item_has_translations = array_key_exists($lid, $existing_translations);
-    $source_was_edited = $row->source_edited && $item_is_current !== FALSE ? explode(',', $row->source_edited) : array();
-
-    foreach ($list_statuses as $status) {
-      foreach (explode(',', $row->$status) as $locale) {
-        if (!empty($locale)) {
-          $locale_statuses[$locale] = $item_is_current ? 'current' : $status;
-        }
-      }
-    }
-
-    $item_belongs_to_set = !empty($locale_statuses);
-
-    if ($source_was_edited) {
-      $row->upload_status = LingotekSync::STATUS_EDITED;
-      foreach ($source_was_edited as $key => $lang) {
-        $locale = Lingotek::convertDrupal2Lingotek($lang);
-        $locale_statuses[$locale] = 'edited';
-      }
-    }
-
-    ksort($locale_statuses);
-    if ($item_belongs_to_set) {
-      if (!$item_has_translations && $item_is_current) {
-        unset($locale_statuses);
-        $locale_statuses = array();
-        $row->upload_status = NULL;
-      }
-    }
-    elseif ($item_has_translations) { // No translations in locales + translations in locales_target = Untracked.
-      foreach ($existing_translations[$lid] as $existing_locale) {
-        $locale_statuses[$existing_locale] = 'untracked';
-      }
-    }
-
-    $escaped_source = htmlentities($row->{'source'});
-    $source_text = lingotek_truncate_grid_text($escaped_source, 55);
-
-    $translation_icons = lingotek_lang_icons($entity_type, $languages, $lid, $locale_statuses, FALSE, $row->language); // show translation statuses
-    $target_icons_str = implode('', array_values($translation_icons));
-    $icon = lingotek_source_uploaded_icon($row);
-    $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
-    $set_id = LingotekConfigSet::getSetId($lid, FALSE);
-    $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
-
-    $data = array(
-      'lid' => $lid ? : t('??'),
-      'source' => $source_text,
-      'source_uploaded' => $source_uploaded,
-      'location' => $row->{'location'},
-      'context' => $row->{'context'},
-      'textgroup' => $row->{'textgroup'} == 'default' ? 'built-in interface' : $row->{'textgroup'},
-      'translations' => $target_icons_str,
-      'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
-      'set_name' => '<span class="set_name">' . $set_name . '</span>'
-    );
-
-    $table_data[$lid] = $data;
-  }
+  $table_data = lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type);
 
   return $table_data;
 }
@@ -185,7 +101,11 @@ function lingotek_config_start_query($form_state) {
   return $query;
 }
 
-function lingotek_config_add_query_filters($query, $filters) {
+function lingotek_config_add_query_filters($query) {
+  if (!isset($_SESSION['grid_filters'])) {
+    return;
+  }
+  $filters = $_SESSION['grid_filters'];
   if (isset($filters['search']) && strlen($filters['search'])) {
     $query->condition('source', '%' . $filters['search'] . '%', 'LIKE');
   }
@@ -208,15 +128,7 @@ function lingotek_config_add_query_filters($query, $filters) {
     }
   }
 
-  // Lingotek Document ID
-  if (isset($filters['document_id']) && $filters['document_id'] != '') {
-    if ($filters['document_id'] == 'None') {
-      $query->condition('lingo_document_id.value', NULL);
-    }
-    else {
-      $query->condition('lingo_document_id.value', $filters['document_id']);
-    }
-  }
+  lingotek_filter_by_document_id($query, $filters);
 
   // Upload Status
   if (isset($filters['upload_status']) && $filters['upload_status'] != 'all') {
@@ -227,6 +139,78 @@ function lingotek_config_add_query_filters($query, $filters) {
       $query->condition('lingo_upload_status.value', $filters['upload_status']);
     }
   }
+}
+
+function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
+  $lingotek_languages = Lingotek::getLanguages();
+
+  $lids = array_keys($table_data_raw);
+  $existing_translations = !empty($lids) ? lingotek_config_add_existing_translations($lids, $lingotek_languages) : array();
+
+  $languages = language_list();
+  $global_profile = lingotek_get_global_profile();
+  $table_data = array();
+  foreach ($table_data_raw as $row) {
+    $lid = $row->{'lid'};
+    $row->lingotek = $global_profile;
+    $row->lingotek['profile'] = 1;
+    $row->language = 'en';
+
+    $locale_statuses = lingotek_build_locales_statuses($row, FALSE);
+    $item_is_current = LingotekConfigSet::isLidCurrent($lid);
+    $item_has_translations = array_key_exists($lid, $existing_translations);
+    $source_was_edited = $row->source_edited && $item_is_current !== FALSE ? explode(',', $row->source_edited) : array();
+
+    $item_belongs_to_set = !empty($locale_statuses);
+
+    if ($source_was_edited) {
+      $row->upload_status = LingotekSync::STATUS_EDITED;
+      foreach ($source_was_edited as $key => $lang) {
+        $locale = Lingotek::convertDrupal2Lingotek($lang);
+        $locale_statuses[$locale] = 'edited';
+      }
+    }
+
+    $not_uploaded_to_lingotek = !$item_has_translations && $item_is_current;
+    ksort($locale_statuses);
+    if ($item_belongs_to_set) {
+      if ($not_uploaded_to_lingotek) {
+        unset($locale_statuses);
+        $locale_statuses = array();
+        $row->upload_status = NULL;
+      }
+    }
+    elseif ($item_has_translations) { // No translations in locales + translations in locales_target = Untracked.
+      foreach ($existing_translations[$lid] as $existing_locale) {
+        $locale_statuses[$existing_locale] = 'untracked';
+      }
+    }
+
+    $escaped_source = htmlentities($row->{'source'});
+    $source_text = lingotek_truncate_grid_text($escaped_source, 55);
+
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $lid, $locale_statuses, FALSE, $row->language); // show translation statuses
+    $target_icons_str = implode('', array_values($translation_icons));
+    $icon = lingotek_source_uploaded_icon($row);
+    $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
+    $set_id = LingotekConfigSet::getSetId($lid, FALSE);
+    $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
+
+    $data = array(
+      'lid' => $lid ? : t('??'),
+      'source' => $source_text,
+      'source_uploaded' => $source_uploaded,
+      'location' => $row->{'location'},
+      'context' => $row->{'context'},
+      'textgroup' => $row->{'textgroup'} == 'default' ? 'built-in interface' : $row->{'textgroup'},
+      'translations' => $target_icons_str,
+      'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
+      'set_name' => '<span class="set_name">' . $set_name . '</span>'
+    );
+
+    $table_data[$lid] = $data;
+  }
+  return $table_data;
 }
 
 /**
