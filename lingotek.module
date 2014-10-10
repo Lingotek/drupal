@@ -12,6 +12,7 @@ include_once 'lingotek.remote.inc';
 include_once 'lingotek.sync.inc';
 include_once 'lingotek.batch.inc';
 include_once 'lingotek.bulk_grid.inc';
+include_once 'lingotek.admin.inc';
 
 /**
  * Auto-loader function used for upgrades
