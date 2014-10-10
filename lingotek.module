@@ -221,6 +221,9 @@ function lingotek_menu() {
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'];
 
   $entity_types = lingotek_managed_entity_types();
+  if(!isset($entity_types['taxonomy_term'])) {
+    $entity_types['taxonomy_term']['label'] = 'Taxonomy Terms';
+  }
   foreach ($entity_types as $machine_name => $entity_type) {
     $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name] = array(
       'title' => $entity_type['label'],
