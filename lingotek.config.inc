@@ -36,7 +36,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   $header = lingotek_config_header();
   $form_state['values']['grid_header'] = lingotek_bulk_grid_refine_source_header($header, $columns);
   $query = lingotek_config_start_query($form_state);
-  lingotek_config_add_query_filters($query, $filters);
+  lingotek_config_add_query_filters($query);
 
   if ($count_only) {
     $result = $query->execute();
