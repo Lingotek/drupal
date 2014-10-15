@@ -112,7 +112,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       $form['actions']['request'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Check Progress'),
-        '#submit' => array(array($this, 'submitForm')),
+        '#submit' => array('::submitForm'),
         '#button_type' => 'primary',
       );
     }
@@ -120,10 +120,15 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       $form['actions']['request'] = array(
         '#type' => 'submit',
         '#value' => $this->t('Download selected translations'),
-        '#submit' => array(array($this, 'submitForm')),
+        '#submit' => array('::submitForm'),
         '#button_type' => 'primary',
       );
     }
+    $form['fieldset']['entity'] = array(
+      '#type' => 'value',
+      '#value' => $entity,
+    );
+
     return $form;
   }
 
@@ -131,6 +136,16 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   function submitForm(array &$form, FormStateInterface $form_state) {
+    $form_values = $form_state->getValues();
+    $entity = $form_values['entity'];
+    $selected_langcodes = $form_values['languages'];
+    $locales = array();
+    foreach ($selected_langcodes as $langcode => $selected) {
+      if ($selected) {
+        $locales[] = LingotekLocale::convertDrupal2Lingotek($langcode);
+      }
+    }
+
   }
 
   /*

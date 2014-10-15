@@ -23,7 +23,6 @@ interface LingotekApiInterface {
   public function addTranslation($id, $locale);
   public function getTranslation($id, $locale);
   public function deleteTranslation($id, $locale);
-  public function getConnectUrl($redirect_uri);
   public function getCommunities();
   public function getProjects($community_id);
   public function getVaults($community_id);

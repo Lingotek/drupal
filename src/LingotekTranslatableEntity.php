@@ -127,17 +127,13 @@ class LingotekTranslatableEntity {
     }
     $translation = $this->entity->getTranslation($langcode);
     foreach ($data as $name => $field_data) {
-      foreach (element_children($field_data) as $delta) {
-        $field_item = $field_data[$delta];
-        foreach (element_children($field_item) as $property) {
-          $property_data = $field_item[$property];
-          if (isset($property_data['#translation']['#text'])) {
-            $translation->get($name)->offsetGet($delta)->set($property, $property_data['#translation']['#text']);
-          }
+      foreach ($field_data as $delta => $delta_data) {
+        foreach ($delta_data as $property => $property_data) {
+          $translation->get($name)->offsetGet($delta)->set($property, $property_data);
         }
       }
     }
-    $result = $translation->save();
+    $translation->save();
     return $this;
   }
 
@@ -251,8 +247,8 @@ class LingotekTranslatableEntity {
   public function checkTargetStatus($locale) {
     $current_status = $this->getTargetStatus($locale);
     if (($current_status == Lingotek::STATUS_PENDING) && $this->L->getDocumentStatus($this->getDocId())) {
-      $this->setTargetStatus($locale, Lingotek::STATUS_READY);
-      $current_status = $this->getTargetStatus($locale);
+      $current_status = Lingotek::STATUS_READY;
+      $this->setTargetStatus($locale, $current_status);
     }
     return $current_status;
   }
@@ -268,7 +264,6 @@ class LingotekTranslatableEntity {
 
   public function requestTranslations() {
     // request translations via the API for all specified languages (in profile or all)
-    Lingotek::d($this->L->config);
   }
 
   public function upload() {
@@ -291,9 +286,8 @@ class LingotekTranslatableEntity {
     $data = $this->L->downloadDocument($this->getDocId(), $locale);
     if ($data) {
       $this->saveTargetData($data, $locale);
-      //Lingotek::d("HI");
-      //$this->setTargetStatus(Lingotek::STATUS_CURRENT);
-      return $response;
+      $this->setTargetStatus($locale, Lingotek::STATUS_CURRENT);
+      return TRUE;
     }
     return FALSE;
   }

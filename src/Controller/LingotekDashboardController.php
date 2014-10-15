@@ -24,6 +24,9 @@ class LingotekDashboardController extends LingotekControllerBase {
    *   The dashboard form, or a redirect to the connect page.
    */
   public function dashboardPage(Request $request) {
+    if ($redirect = $this->checkSetup()) {
+      return $redirect;
+    }
     $cms_data = $this->getDashboardInfo();
     $string = '<h2>' . t('Dashboard') . '</h2><script>var cms_data = ' . json_encode($cms_data, JSON_PRETTY_PRINT) . '</script> <link rel="stylesheet" href="http://gmc.lingotek.com/v2/styles/ltk.css"> <script src="http://gmc.lingotek.com/v2/ltk.min.js"></script> <div ltk-dashboard ng-app="LingotekApp" style="margin-top: -15px;"></div>';
     $d8_css_hack = <<<EOD
@@ -38,7 +41,9 @@ EOD;
   }
 
   public function endpoint(Request $request) {
-
+    if ($redirect = $this->checkSetup()) {
+      return $redirect;
+    }
     $request_method = $request->getMethod();
 
     $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
@@ -113,8 +118,8 @@ EOD;
       }
       $source_total += $language_report['source']['total'];
       $target_total += $language_report['target']['total'];
-      $source_totals = self::arraySumValues($source_totals, $language_report['source']['types']);
-      $target_totals = self::arraySumValues($target_totals, $language_report['target']['types']);
+      $source_totals = self::calcLanguageTotals($source_totals, $language_report['source']['types']);
+      $target_totals = self::calcLanguageTotals($target_totals, $language_report['target']['types']);
     }
     if (is_null($lingotek_locale_requested)) {
       $response = array(
@@ -147,7 +152,7 @@ EOD;
         "cms_tag" => 'CMS TAG HERE',
         "locale" => "en_US", // FIX: should be currently selected locale
         "module_version" => '1.x',
-        "endpoint_url" => $base_root . \Drupal::url('lingotek.dashboard_endpoint'),
+        "endpoint_url" => $base_root . $this->url('lingotek.dashboard_endpoint'),
     );
   }
 
@@ -221,17 +226,17 @@ EOD;
    * Sums the values of the arrays be there keys (PHP 4, PHP 5)
    * array array_sum_values ( array array1 [, array array2 [, array ...]] )
    */
-  private static function arraySumValues() {
+  private static function calcLanguageTotals() {
     $return = array();
     $intArgs = func_num_args();
     $arrArgs = func_get_args();
     if ($intArgs < 1) {
-      trigger_error('Warning: Wrong parameter count for arraySumValues()', E_USER_WARNING);
+      trigger_error('Warning: Wrong parameter count for calcLanguageTotals()', E_USER_WARNING);
     }
 
     foreach ($arrArgs as $arrItem) {
       if (!is_array($arrItem)) {
-        trigger_error('Warning: Wrong parameter values for arraySumValues()', E_USER_WARNING);
+        trigger_error('Warning: Wrong parameter values for calcLanguageTotals()', E_USER_WARNING);
       }
       foreach ($arrItem as $k => $v) {
         if (!key_exists($k, $return)) {

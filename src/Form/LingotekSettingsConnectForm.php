@@ -7,10 +7,9 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Config\ConfigFactory;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Url;
 
 /**
  * Configure Lingotek
@@ -32,7 +31,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     $host = $this->L->get('account.host');
     $auth_path = $this->L->get('account.authorize_path');
     $id = $this->L->get('account.default_client_id');
-    $return_uri = url(current_path(), array('absolute' => TRUE)) . '?success=true';
+    $return_uri = new Url('lingotek.setup_account', array('success' => 'true'), array('absolute' => TRUE));
     $login = $this->L->get('account.type');
 
     $form = parent::buildForm($form, $form_state);
@@ -51,7 +50,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     //$form['actions']['submit']['#value'] = $this->t('Connect Account');
     unset($form['actions']['submit']);
 
-    $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri);
+    $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri->toString());
 
     $form['actions']['submit'][] = array(
       '#theme' => 'menu_local_action',

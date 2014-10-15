@@ -9,6 +9,7 @@ namespace Drupal\lingotek\Remote;
 
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\lingotek\Remote\LingotekHttpInterface;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /*
@@ -38,14 +39,23 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function getAccountInfo() {
-    $access_token = $this->lingotekClient->getCurrentToken();
-    $account_info = $this->lingotekClient->get('/auth/oauth2/access_token_info?access_token=' . $access_token);
+    try {
+      $access_token = $this->lingotekClient->getCurrentToken();
+      $account_info = $this->lingotekClient->get('/auth/oauth2/access_token_info?access_token=' . $access_token);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get account info: ' . $e->getMessage());
+    }
     return $account_info;
   }
 
   public function addDocument($args) {
-    $response = $this->lingotekClient->post($this->api_url . '/api/document', $args, TRUE);
-
+    try {
+      $response = $this->lingotekClient->post($this->api_url . '/api/document', $args, TRUE);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to add document: ' . $e->getMessage());
+    }
     if ($response->getStatusCode() == '202') {
       $data = $response->json();
       if (!empty($data['properties']['id'])) {
@@ -57,8 +67,12 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function patchDocument($id, $args) {
-    $response = $this->lingotekClient->patch($this->api_url . '/api/document', $args, TRUE);
-
+    try {
+      $response = $this->lingotekClient->patch($this->api_url . '/api/document', $args, TRUE);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
+    }
     if ($response->getStatusCode() == '202') {
       $data = $response->json();
       if (!empty($data['properties']['id'])) {
@@ -70,61 +84,115 @@ class LingotekApi implements LingotekApiInterface {
   }
 
   public function deleteDocument($id) {
-    return $this->lingotekClient->delete($this->api_url . '/api/document', array('doc_id' => $id));
+    try {
+      $response = $this->lingotekClient->delete($this->api_url . '/api/document', array('doc_id' => $id));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to delete document: ' . $e->getMessage());
+    }
+    return $response;
   }
 
   public function getDocument($id) {
-    return $this->lingotekClient->get($this->api_url . '/api/document', array('doc_id' => $id));
+    try {
+      $response = $this->lingotekClient->get($this->api_url . '/api/document', array('doc_id' => $id));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
+    }
+    return $response;
   }
 
   public function documentExists($id) {
-
+    // TODO
+    throw new Exception('Not implemented');
   }
 
   public function getDocumentStatus($id) {
-    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/status');
+    try {
+      $response = $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/status');
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get document status: ' . $e->getMessage());
+    }
+    return $response;
   }
 
   public function addTranslation($id, $locale) {
-    return $this->lingotekClient->post($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
+    try {
+      $response = $this->lingotekClient->post($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
+    }
+    return $response;
   }
 
   public function getTranslation($id, $locale) {
-    return $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/content', array('locale_code' => $locale));
+    try {
+      $response = $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/content', array('locale_code' => $locale));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
+    }
+    return $response;
   }
 
   public function deleteTranslation($id, $locale) {
-    return $this->lingotekClient->delete($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
-  }
-
-  public function getConnectUrl($redirect_uri) {
-
+    try {
+      $response = $this->lingotekClient->delete($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
+    }
+    return $response;
   }
 
   public function getCommunities() {
-    $response = $this->lingotekClient->get('/api/community?limit=50');
+    try {
+      $response = $this->lingotekClient->get('/api/community?limit=50');
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get communities: ' . $e->getMessage());
+    }
     return $this->formatResponse($response);
   }
 
   public function getProjects($community_id) {
-    $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id));
+    try {
+      $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get projects: ' . $e->getMessage());
+    }
     return $this->formatResponse($response);
   }
 
   public function getVaults($community_id) {
-    $response = $this->lingotekClient->get('/api/vault', array('community_id' => $community_id));
+    try {
+      $response = $this->lingotekClient->get('/api/vault', array('community_id' => $community_id));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get vaults: ' . $e->getMessage());
+    }
     return $this->formatResponse($response);
   }
 
   public function getWorkflows($community_id) {
-    $response = $this->lingotekClient->get('/api/workflow', array('community_id' => $community_id));
+    try {
+      $response = $this->lingotekClient->get('/api/workflow', array('community_id' => $community_id));
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get workflows: ' . $e->getMessage());
+    }
     return $this->formatResponse($response);
   }
 
   protected function formatResponse($response) {
     $formatted_response = array();
-    if (!empty($response['entities'])) {
-      foreach ($response['entities'] as $entity) {
+    $json_response = $response->json();
+    if (!empty($json_response['entities'])) {
+      foreach ($json_response['entities'] as $entity) {
         if (!empty($entity['properties']['id']) && !empty($entity['properties']['title'])) {
           $formatted_response[$entity['properties']['id']] = $entity['properties']['title'];
         }

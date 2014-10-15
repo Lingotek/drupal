@@ -10,8 +10,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /*
  * a simple wrapper to Drupal http functions
- *
- * @since 0.1
  */
 class LingotekHttp implements LingotekHttpInterface {
 
@@ -63,7 +61,7 @@ class LingotekHttp implements LingotekHttpInterface {
       $response = $this->httpClient->send($request);
     }
      catch (RequestException $e) {
-      watchdog('lingotek', 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
+      watchdog_exception('lingotek', 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
       drupal_set_message(t('Request to Lingotek service failed: %error', array('%error' => $e->getMessage())), 'warning');
       throw $e;
     }

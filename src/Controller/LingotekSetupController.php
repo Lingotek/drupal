@@ -33,6 +33,9 @@ class LingotekSetupController extends LingotekControllerBase {
   }
 
   public function communityPage() {
+    if ($redirect = $this->checkSetup()) {
+      return $redirect;
+    }
     $communities = $this->L->getCommunities();
     if (empty($communities)) {
       // TODO: Log an error that no communities exist.
@@ -48,6 +51,9 @@ class LingotekSetupController extends LingotekControllerBase {
   }
 
   public function defaultsPage() {
+    if ($redirect = $this->checkSetup()) {
+      return $redirect;
+    }
     return $this->getLingotekForm('LingotekSettingsDefaultsForm');
   }
 
@@ -61,7 +67,7 @@ class LingotekSetupController extends LingotekControllerBase {
     }
   }
 
-  protected function saveAccountInfo($account_info) {
+  protected function  saveAccountInfo($account_info) {
     if (!empty($account_info)) {
       $this->L->set('account.login_id', $account_info['login_id']);
       $this->L->set('account.access_token', $account_info['id']);

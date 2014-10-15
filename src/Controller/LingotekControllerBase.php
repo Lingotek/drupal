@@ -10,7 +10,7 @@ namespace Drupal\lingotek\Controller;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
-use Psr\Log\LoggerInterface;
+use Drupal\Core\Routing\UrlGeneratorTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,6 +18,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Base class for handling all Lingotek-related routes.
  */
 abstract class LingotekControllerBase extends ControllerBase {
+
+  use UrlGeneratorTrait;
 
   /**
    * A Symfony request instance
@@ -64,8 +66,6 @@ abstract class LingotekControllerBase extends ControllerBase {
     $this->request = $request;
     $this->L = $lingotek;
     $this->formBuilder = $form_builder;
-
-    $this->checkSetup();
   }
 
   /**
@@ -116,11 +116,15 @@ abstract class LingotekControllerBase extends ControllerBase {
 
   /**
    * Verify the Lingotek Translation module has been properly initialized.
+   *
+   * @return mixed \Symfony\Component\HttpFoundation\RedirectResponse or FALSE
+   *   A redirect response object, or FALSE if setup is complete.
    */
   protected function checkSetup() {
     if (!$this->setupCompleted()) {
-      //return $this->redirect('lingotek.setup_account');
+      return $this->redirect('lingotek.setup_account');
     }
+    return FALSE;
   }
 
 //  /**

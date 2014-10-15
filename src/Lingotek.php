@@ -51,7 +51,18 @@ class Lingotek implements LingotekInterface {
   }
 
   public function getAccountInfo() {
-    return $this->api->getAccountInfo();
+    try {
+      $response = $this->api->getAccountInfo();
+    }
+    catch (LingotekApiException $e) {
+      // TODO: log a warning
+      return FALSE;
+    }
+    if ($response) {
+      return $response->json();
+    }
+    // TODO: log a warning
+    return FALSE;
   }
 
   public function getResources($force = FALSE) {
