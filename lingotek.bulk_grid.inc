@@ -960,27 +960,25 @@ function lingotek_grid_define_columns($entity_type) {
 function lingotek_config_define_columns() {
   $columns = array(
     'columns' => array(
-      'lid',
-      'set_name',
-      'source',
-      'source_uploaded',
-      'translations',
-      'location',
-      'context',
-      'doc_id',
-      'textgroup',
+      'lid' => 'lid',
+      'set_name' => 'set_name',
+      'source' => 'source',
+      'source_uploaded' => 'source_uploaded',
+      'translations' => 'translations',
+      'location' => 'location',
+      'context' => 'context',
+      'doc_id' => 'doc_id',
+      'textgroup' => 'textgroup',
     ),
     'defaults' => array(
-      'lid',
-      'set_name',
-      'source',
-      'source_uploaded',
-      'translations',
-      'textgroup',
+      'lid' => 'lid',
+      'set_name' => 'set_name',
+      'source' => 'source',
+      'source_uploaded' => 'source_uploaded',
+      'translations' => 'translations',
+      'textgroup' => 'textgroup',
     ),
   );
-  $columns['columns'] = array_combine($columns['columns'], $columns['columns']);
-  $columns['defaults'] = array_combine($columns['defaults'], $columns['defaults']);
   return $columns;
 }
 
