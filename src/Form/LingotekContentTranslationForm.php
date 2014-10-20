@@ -100,6 +100,8 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           $this->removeOperationLink($option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/download/' . $doc_id . '/' . $locale;
           $this->addOperationLink($option, 'Download completed translation', $path, $language);
+          $path = '/admin/lingotek/workbench/' . $doc_id . '/' . $locale;
+          $this->addOperationLink($option, 'Edit', $path, $language);
           $targets_ready = TRUE;
         }
       }

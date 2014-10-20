@@ -117,3 +117,11 @@ lingotek.entity.download:
     _title: 'Check Upload'
   requirements:
     _permission: 'administer lingotek'
+
+lingotek.workbench:
+  path: '/admin/lingotek/workbench/{doc_id}/{locale}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekWorkbenchController::loadDocument'
+    _title: 'Use Lingotek Workbench'
+  requirements:
+    _permission: 'administer lingotek'
