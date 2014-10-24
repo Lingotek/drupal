@@ -693,19 +693,19 @@ function lingotek_grid_build_column_checkboxes($form_state) {
     'last_downloaded' => array(
       '#type' => 'checkbox',
       '#title' => t('Time Last Downloaded'),
-      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'last_downloaded' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'last_downloaded' . $suffix] : in_array('last_downloaded', $columns['defaults']),
+      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'last_downloaded' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'last_downloaded' . $suffix] : in_array('last_downloaded', $columns['defaults']),
     ),
     'actions' => array(
       '#type' => 'checkbox',
       '#title' => t('Actions'),
-      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'actions' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'actions' . $suffix] : in_array('actions', $columns['defaults']),
+      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'actions' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'actions' . $suffix] : in_array('actions', $columns['defaults']),
     ),
   );
   if ($form_state['entity_type'] == 'taxonomy_term') {
-    $column_elements['translation_mode'] = array(
+    $column_elements['description'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Translate Mode'),
-      '#default_value' => isset($_SESSION['grid_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION['grid_custom'][$prefix . 'nid' . $suffix] : in_array('nid', $columns['defaults']),
+      '#title' => t('Description'),
+      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix] : in_array('nid', $columns['defaults']),
     );
   }
   $column_elements = array_intersect_key($column_elements, $columns['columns']); // Reduces the output columns to the defaults specified in 'lingotek_grid_define_columns'
@@ -951,8 +951,8 @@ function lingotek_grid_define_columns($entity_type) {
     'changed' => 'changed',
   );
   if ($entity_type == 'taxonomy_term') {
-    $columns['columns']['translation_mode'] = 'translation_mode';
-    $columns['defaults']['translation_mode'] = 'translation_mode';
+    $columns['columns']['description'] = 'description';
+    $columns['defaults']['description'] = 'description';
   }
   return $columns;
 }
@@ -1193,8 +1193,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     'nid' => array('data' => t('ID'), 'field' => 'n.' . $entity_id_key),
     'content_type' => array('data' => t('Content Type'), 'field' => 'type'),
     'title' => array('data' => t('Title'), 'field' => 'n.' . $label_col),
+    'description' => array('data' => t('Description')),
     'language' => array('data' => t('Source Uploaded')), //, 'field' => 'upload_status'),
-    'translation_mode' => array('data' => t('Translate Mode')),
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
     'configuration' => array('data' => t('Profile')),
     'workflow' => array('data' => t('Workflow'), 'field' => 'workflow'),
@@ -1298,10 +1298,18 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
   }
   elseif ($entity_type == 'taxonomy_term') {
+    $query->addField('n', 'description');
+
     $query->innerJoin('taxonomy_vocabulary', 'tv', 'n.vid = tv.vid');
     $query->addField('tv', 'name', 'tv_name');
     $query->addField('tv', 'machine_name', 'type');
     $query->addField('tv', 'i18n_mode', 'translation_mode');
+
+    $query->leftJoin('field_data_name_field', 'nf', 'n.tid = nf.entity_id');
+    $query->addField('nf', 'entity_id', 'replaced');
+    // This or will exclude localized and replaced terms but we might just want to note that they're managed from config
+    // $or = db_or()->isNotNull('nf.entity_id')->condition('tv.i18n_mode', 1, '<>');
+    // $query->condition($or);
   }
   elseif ($bundle_col) {
     if ($info['entity keys']['bundle'] != 'type') {
@@ -1559,7 +1567,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
       'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
       'workflow' => ($row->lingotek['workflow_id'] ? (isset($workflows[$row->lingotek['workflow_id']]) ? check_plain($workflows[$row->lingotek['workflow_id']]) : $row->lingotek['workflow_id']) : ''),
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
-      'translation_mode' => lingotek_get_translation_mode($row),
+      'description' => isset($row->description) ? $row->description : '',
     );
 
     if (isset($entity_properties['changed'])) {

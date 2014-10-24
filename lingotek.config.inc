@@ -97,7 +97,12 @@ function lingotek_config_start_query($form_state) {
   // Only show items in textgroups that are selected for translation on Config Settings page.
   $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation() ? : array('no textgroups selected');
   $query->condition('s.textgroup', $translatable_textgroups, 'IN');
-  
+  $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source');
+  $query->addField('term_name', 'tid', 'taxonomy_term_name');
+
+  $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source');
+  $query->addField('term_description', 'tid', 'taxonomy_term_description');
+
   return $query;
 }
 
@@ -156,6 +161,11 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $row->lingotek['profile'] = 1;
     $row->language = 'en';
 
+    $taxonomy_with_custom_field = lingotek_term_has_custom_field($row);
+    if ($taxonomy_with_custom_field) {
+      continue;
+    }
+
     $locale_statuses = lingotek_build_locales_statuses($row, FALSE);
     $item_is_current = LingotekConfigSet::isLidCurrent($lid);
     $item_has_translations = array_key_exists($lid, $existing_translations);
@@ -211,6 +221,21 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $table_data[$lid] = $data;
   }
   return $table_data;
+}
+
+function lingotek_term_has_custom_field($row) {
+  $id_from_term = isset($row->taxonomy_term_name) ? $row->taxonomy_term_name : FALSE;
+  $taxonomy_term = isset($row->taxonomy_term_description) ? $row->taxonomy_term_description : $id_from_term;
+  if ($taxonomy_term) {
+    $terms = entity_load('taxonomy_term');
+    $term = $terms[$taxonomy_term];
+    foreach ($term as $field => $item) {
+      if (substr($field, 0, 6) == 'field_') {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
 }
 
 /**
