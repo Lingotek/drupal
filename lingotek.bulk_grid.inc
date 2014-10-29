@@ -645,6 +645,12 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Title'),
       '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'title' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'title' . $suffix] : in_array('title', $columns['defaults']),
     ),
+    'description' => array(
+      '#type' => 'checkbox',
+      '#disabled' => 'true',
+      '#title' => t('Description'),
+      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'description' . $suffix] : in_array('description', $columns['defaults']),
+    ),
     'language' => array(
       '#type' => 'checkbox',
       '#title' => t('Source Uploaded'),
@@ -702,11 +708,8 @@ function lingotek_grid_build_column_checkboxes($form_state) {
     ),
   );
   if ($form_state['entity_type'] == 'taxonomy_term') {
-    $column_elements['description'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Description'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix] : in_array('nid', $columns['defaults']),
-    );
+    $column_elements['description']['#disabled'] = 'true';
+    $column_elements['title']['#disabled'] = 'true';
   }
   $column_elements = array_intersect_key($column_elements, $columns['columns']); // Reduces the output columns to the defaults specified in 'lingotek_grid_define_columns'
 
