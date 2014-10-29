@@ -143,14 +143,19 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete);
     $fields = lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate);
     $oneoffs = ($entity_type == 'node') ? lingotek_node_settings_row_oneoffs($bundle_name) : NULL;
+    $translation_mode = ($entity_type == 'taxonomy_term') ? lingotek_get_translation_mode($bundle_name) : NULL;
+    $entity_specifics = array('oneoffs' => $oneoffs, 'translation_mode' => $translation_mode);
 
-    $rows[$bundle_name] = lingotek_node_settings_row($bundle, $profiles, $fields, $oneoffs);
+    $rows[$bundle_name] = lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics);
   }
 
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
 
   if ($entity_type == 'node') {
     $header = array(t('Content Type'), t('Translation Profile *'), t('Exceptions'), t('Fields'));
+  }
+  elseif ($entity_type == 'taxonomy_term') {
+    $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Fields'));
   }
   elseif ($entity_type == 'field_collection_item') {
     $header = array(t('Collection Name'), t('Status *'), t('Fields'));
@@ -308,19 +313,48 @@ function lingotek_oneoff_count($bundle_name) {
   return $exception_num;
 }
 
-function lingotek_node_settings_row($bundle, $profiles, $fields, $oneoffs = NULL) {
-  if (is_null($oneoffs)) {
+function lingotek_get_translation_mode($bundle) {
+  $query = db_select('taxonomy_vocabulary', 't')
+      ->fields('t', array('i18n_mode'))
+      ->condition('machine_name', $bundle)
+      ->execute();
+  $result = $query->fetchField();
+  $modes = array(
+    '0' => 'No',
+    '1' => 'Localize',
+    '2' => 'Fixed',
+    '4' => 'Translate',
+  );
+
+  $translation_mode = array(
+    '#type' => 'item',
+    '#markup' => $modes[$result],
+  );
+
+  return $translation_mode;
+}
+
+function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics) {
+  if ($entity_type == 'node') {
     $row = array(
       array('data' => $bundle['label'], 'width' => '20%'),
       array('data' => drupal_render($profiles)),
+      array('data' => drupal_render($entity_specifics['oneoffs']), 'style' => 'text-align:center'),
       array('data' => drupal_render($fields), 'width' => '65%'),
+    );
+  }
+  else if ($entity_type == 'taxonomy_term') {
+    $row = array(
+      array('data' => $bundle['label'], 'width' => '20%'),
+      array('data' => drupal_render($profiles)),
+      array('data' => drupal_render($entity_specifics['translation_mode']), 'width' => '15%'),
+      array('data' => drupal_render($fields), 'width' => '50%'),
     );
   }
   else {
     $row = array(
       array('data' => $bundle['label'], 'width' => '20%'),
       array('data' => drupal_render($profiles)),
-      array('data' => drupal_render($oneoffs), 'style' => 'text-align:center'),
       array('data' => drupal_render($fields), 'width' => '65%'),
     );
   }

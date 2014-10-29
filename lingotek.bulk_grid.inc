@@ -1578,19 +1578,6 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
   return $table_data;
 }
 
-function lingotek_get_translation_mode($row) {
-  $modes = array(
-    '0' => 'No',
-    '1' => 'Localize',
-    '2' => 'Fixed',
-    '4' => 'Translate',
-  );
-
-  $translation_mode = isset($row->translation_mode) ? $modes[$row->translation_mode] : '';
-
-  return $translation_mode;
-}
-
 function lingotek_truncate_grid_text($string, $truncate_length) {
   if (strlen($string) > $truncate_length) {
     $dots = '...';
