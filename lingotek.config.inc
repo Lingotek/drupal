@@ -98,10 +98,17 @@ function lingotek_config_start_query($form_state) {
   $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation() ? : array('no textgroups selected');
   $query->condition('s.textgroup', $translatable_textgroups, 'IN');
   $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source');
-  $query->addField('term_name', 'tid', 'taxonomy_term_name');
+  $query->addField('term_name', 'tid', 'tid_from_name');
 
   $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source');
-  $query->addField('term_description', 'tid', 'taxonomy_term_description');
+  $query->addField('term_description', 'tid', 'tid_from_description');
+
+  // Need to join on the TV table twice, first if the item is a title of a term, second if the item is the description of a term.
+  $query->leftJoin('taxonomy_vocabulary', 'tv1', 'term_name.vid = tv1.vid');
+  $query->addField('tv1', 'i18n_mode', 'translate_mode_from_name');
+
+  $query->leftJoin('taxonomy_vocabulary', 'tv2', 'term_description.vid = tv2.vid');
+  $query->addField('tv2', 'i18n_mode', 'translate_mode_from_description');
 
   return $query;
 }
@@ -161,8 +168,18 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $row->lingotek['profile'] = 1;
     $row->language = 'en';
 
+    if (isset($row->translate_mode_from_description)) {
+      $i18n_mode = $row->translate_mode_from_description;
+    }
+    elseif (isset($row->translate_mode_from_name)) {
+      $i18n_mode = $row->translate_mode_from_name;
+    }
+    else {
+      $i18n_mode = '0';
+    }
+
     $taxonomy_with_custom_field = lingotek_term_has_custom_field($row);
-    if ($taxonomy_with_custom_field) {
+    if ($taxonomy_with_custom_field && $i18n_mode == 1) {
       continue;
     }
 
@@ -224,11 +241,11 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
 }
 
 function lingotek_term_has_custom_field($row) {
-  $id_from_term = isset($row->taxonomy_term_name) ? $row->taxonomy_term_name : FALSE;
-  $taxonomy_term = isset($row->taxonomy_term_description) ? $row->taxonomy_term_description : $id_from_term;
-  if ($taxonomy_term) {
+  $tid_from_term = isset($row->tid_from_name) ? $row->tid_from_name : FALSE;
+  $tid = isset($row->tid_from_description) ? $row->tid_from_description : $tid_from_term;
+  if ($tid) {
     $terms = entity_load('taxonomy_term');
-    $term = $terms[$taxonomy_term];
+    $term = $terms[$tid];
     foreach ($term as $field => $item) {
       if (substr($field, 0, 6) == 'field_') {
         return TRUE;
