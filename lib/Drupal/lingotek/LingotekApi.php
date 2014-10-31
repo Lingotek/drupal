@@ -823,13 +823,14 @@ class LingotekApi {
       $consumer_key = variable_get('lingotek_oauth_consumer_id', '');
       $consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
       if (!empty($consumer_key) && !empty($consumer_secret)) {
-        $valid_connection = ($this->request('validateApiKeys')) ? TRUE : FALSE;
-      }
-      else {
-        $valid_connection = FALSE;
+        $valid_connection = $this->request('validateApiKeys');
+        if (!empty($valid_connection->results) && $valid_connection->results != 'fail') {
+          $valid_connection = TRUE;
+          return $valid_connection;
+        }
       }
     }
-
+    $valid_connection = FALSE;
     return $valid_connection;
   }
 
