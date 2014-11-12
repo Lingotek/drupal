@@ -140,12 +140,55 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   $rows = array();
 
   foreach ($bundles as $bundle_name => $bundle) {
-    $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete);
     $fields = lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate);
     $oneoffs = ($entity_type == 'node') ? lingotek_node_settings_row_oneoffs($bundle_name) : NULL;
     $translation_mode = ($entity_type == 'taxonomy_term') ? lingotek_get_translation_mode($bundle_name) : NULL;
-    $entity_specifics = array('oneoffs' => $oneoffs, 'translation_mode' => $translation_mode);
+    $config_handled = $entity_type == 'taxonomy_term' && empty($fields);
+    $translation_handling = $config_handled ? array('#markup' => 'Config') : array('#markup' => 'Bundle');
+    $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $fields);
+    $entity_specifics = array('oneoffs' => $oneoffs, 'translation_mode' => $translation_mode, 'translation_handling' => $translation_handling);
 
+    if ($entity_type == 'taxonomy_term' && empty($fields)) {
+      $fields = array(
+        'config' => array(
+          '#markup' => t('These fields are translated from the config tab')
+        )
+      );
+    }
+    else if ($entity_type == 'taxonomy_term') {
+      $required_field_titles = array('name', 'description');
+      foreach ($required_field_titles as $field_name) {
+        if (empty($fields[$field_name . '_field'])) {
+          $message = ucfirst($field_name) . t(' (Note: field will be created.)');
+          $fields[$field_name . '_field'] = array(
+            '#type' => 'checkbox',
+            '#title' => check_plain($message),
+            '#attributes' => array(
+              'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
+              'name' => 'title_swap_' . $bundle_name,
+              'class' => array('field'),
+            ),
+            '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
+            '#states' => array(
+              'invisible' => array(
+                ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
+              ),
+            ),
+          );
+        }
+      }
+      $name_and_description = array(
+        'name_field' => $fields['name_field'],
+        'description_field' => $fields['description_field'],
+      );
+      unset($fields['name_field']);
+      unset($fields['description_field']);
+      $fields = $name_and_description + $fields;
+    }
+
+    if ($translation_mode['#markup'] == 'Fixed' || $translation_mode['#markup'] == 'No') {
+      continue;
+    }
     $rows[$bundle_name] = lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics);
   }
 
@@ -155,7 +198,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $header = array(t('Content Type'), t('Translation Profile *'), t('Exceptions'), t('Fields'));
   }
   elseif ($entity_type == 'taxonomy_term') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
   }
   elseif ($entity_type == 'field_collection_item') {
     $header = array(t('Collection Name'), t('Status *'), t('Fields'));
@@ -186,20 +229,35 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   return $form;
 }
 
-function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete) {
+function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $fields) {
   $default_profile = $setup_complete ? LingotekSync::PROFILE_DISABLED : 0;
 
   $profiles = array();
-  $profiles['profile_' . $bundle_name] = array(
-    '#type' => 'select',
-    '#options' => $profiles_options,
-    '#value' => isset($entity_profiles[$entity_type][$bundle_name]) ? $entity_profiles[$entity_type][$bundle_name] : $default_profile,
-    '#attributes' => array(
-      'id' => array('edit-form-item-profile-' . $bundle_name),
-      'name' => 'profile_' . $bundle_name,
-      'class' => array('field'),
-    ),
-  );
+  if ($entity_type == 'taxonomy_term' && empty($fields)) {
+    $profiles['profile_' . $bundle_name] = array(
+      '#type' => 'select',
+      '#options' => array('DISABLED' => 'See config tab'),
+      '#value' => 'DISABLED',
+      '#attributes' => array(
+        'id' => array('edit-form-item-profile-' . $bundle_name),
+        'name' => 'profile_' . $bundle_name,
+        'class' => array('field'),
+        'disabled' => TRUE,
+      ),
+    );
+  }
+  else {
+    $profiles['profile_' . $bundle_name] = array(
+      '#type' => 'select',
+      '#options' => $profiles_options,
+      '#value' => isset($entity_profiles[$entity_type][$bundle_name]) ? $entity_profiles[$entity_type][$bundle_name] : $default_profile,
+      '#attributes' => array(
+        'id' => array('edit-form-item-profile-' . $bundle_name),
+        'name' => 'profile_' . $bundle_name,
+        'class' => array('field'),
+      ),
+    );
+  }
 
   return $profiles;
 }
@@ -348,6 +406,7 @@ function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $
       array('data' => $bundle['label'], 'width' => '20%'),
       array('data' => drupal_render($profiles)),
       array('data' => drupal_render($entity_specifics['translation_mode']), 'width' => '15%'),
+      array('data' => drupal_render($entity_specifics['translation_handling'])),
       array('data' => drupal_render($fields), 'width' => '50%'),
     );
   }

@@ -241,8 +241,15 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
 }
 
 function lingotek_term_has_custom_field($row) {
-  $tid_from_term = isset($row->tid_from_name) ? $row->tid_from_name : FALSE;
-  $tid = isset($row->tid_from_description) ? $row->tid_from_description : $tid_from_term;
+  if (isset($row->tid)) {
+    $tid = $row->tid;
+  }
+  elseif (isset($row->tid_from_name)) {
+    $tid = $row->tid_from_name;
+  }
+  elseif (isset($row->tid_from_description)) {
+    $tid = $row->tid_from_description;
+  }
   if ($tid) {
     $terms = entity_load('taxonomy_term');
     $term = $terms[$tid];

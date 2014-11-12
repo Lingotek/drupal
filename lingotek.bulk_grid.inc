@@ -1576,6 +1576,11 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     if (isset($entity_properties['changed'])) {
       $data['changed'] = $row->changed ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->changed))) : t('Never');
     }
+
+    if ($row->translation_mode === '1' && !lingotek_term_has_custom_field($row)) {
+      // change profile to disabled
+      continue;
+    }
     $table_data[$entity_id] = $data;
   }
   return $table_data;
