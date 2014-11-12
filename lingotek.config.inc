@@ -162,7 +162,6 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
   $languages = language_list();
   $global_profile = lingotek_get_global_profile();
   $table_data = array();
-  $excluded_rows = array();
   foreach ($table_data_raw as $row) {
     $lid = $row->{'lid'};
     $row->lingotek = $global_profile;
@@ -181,7 +180,6 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
 
     $taxonomy_with_custom_field = lingotek_term_has_custom_field($row);
     if ($taxonomy_with_custom_field && $i18n_mode == 1 || $i18n_mode == 4) {
-      array_push($excluded_rows, $row);
       continue;
     }
 
