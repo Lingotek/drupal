@@ -630,7 +630,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
       $whitelist[] = 'field_collection_item';
     }
   }
-  if (module_exists('taxonomy')) {
+  if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $whitelist[] = 'taxonomy_term';
   }
   $whitelist = array_flip($whitelist);

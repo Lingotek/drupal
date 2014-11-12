@@ -1389,6 +1389,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     ),
   );
 
+  $form['prefs']['lingotek_advanced_taxonomy_terms'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable advanced handling of taxonomy terms'),
+    '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
+    '#default_value' => variable_get('lingotek_advanced_taxonomy_terms', FALSE),
+  );
+
   $form['prefs']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
@@ -2271,7 +2278,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     );
   }
 
-  if (module_exists('taxonomy')) {
+  if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
       'title' => t('Prepare taxonomy terms with custom fields'),
       'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang.', array('@lang' => language_default('name'))),
