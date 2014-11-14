@@ -1007,6 +1007,7 @@ function lingotek_grid_build_filters($form_state) {
   foreach ($profile_defaults as $key => $p) {
     $profiles[$key] = $p['name'];
   }
+  unset($profiles['CONFIG']);
   asort($profiles);
 
   $filters = array(
