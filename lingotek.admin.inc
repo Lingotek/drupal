@@ -72,6 +72,10 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
   return $form;
 }
 
+function lingotek_label_compare($a, $b) {
+  return strcasecmp($a['label'], $b['label']);
+}
+
 /**
  * Content translation form
  */
@@ -80,6 +84,9 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   $setup_complete = (!lingotek_is_config_missing());
   $entity_type_info = entity_get_info($entity_type);
   $bundles = $entity_type_info['bundles'];
+
+  // sort alphabetically by label
+  uasort($bundles, 'lingotek_label_compare');
 
   // Add the default bundle related to message types, if applicable.
   if ($entity_type == 'message_type' && module_exists('message')) {
