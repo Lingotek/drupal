@@ -162,36 +162,6 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
         )
       );
     }
-    else if ($entity_type == 'taxonomy_term') {
-      $required_field_titles = array('name', 'description');
-      foreach ($required_field_titles as $field_name) {
-        if (empty($fields[$field_name . '_field'])) {
-          $message = ucfirst($field_name) . t(' (Note: field will be created.)');
-          $fields[$field_name . '_field'] = array(
-            '#type' => 'checkbox',
-            '#title' => check_plain($message),
-            '#attributes' => array(
-              'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
-              'name' => 'title_swap_' . $bundle_name,
-              'class' => array('field'),
-            ),
-            '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
-            '#states' => array(
-              'invisible' => array(
-                ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
-              ),
-            ),
-          );
-        }
-      }
-      $name_and_description = array(
-        'name_field' => $fields['name_field'],
-        'description_field' => $fields['description_field'],
-      );
-      unset($fields['name_field']);
-      unset($fields['description_field']);
-      $fields = $name_and_description + $fields;
-    }
 
     if ($translation_mode['#markup'] == 'Fixed' || $translation_mode['#markup'] == 'No') {
       continue;
@@ -299,30 +269,52 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
     }
   }
 
-  $missing_title = !isset($fields['title_field']) && $entity_type == 'node';
   $missing_subject = !isset($fields['subject_field']) && $entity_type == 'comment';
-  if ($missing_title || $missing_subject) {
-    $message = $entity_type == 'node' ? t('Title (Note: field will be created.)') : t('Subject (Note: field will be created.)');
-    $fields['title_field'] = array(
-      '#type' => 'checkbox',
-      '#title' => check_plain($message),
-      '#attributes' => array(
-        'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
-        'name' => 'title_swap_' . $bundle_name,
-        'class' => array('field'),
-      ),
-      '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
-      '#states' => array(
-        'invisible' => array(
-          ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
+  $missing_name = !isset($fields['name_field']) && $entity_type == 'taxonomy_term';
+  $missing_description = !isset($fields['description_field']) && $entity_type == 'taxonomy_term';
+  $missing_fields = array();
+  if (!isset($fields['title_field']) && $entity_type == 'node') {
+    $missing_fields[] = 'title';
+  }
+  if (!isset($fields['subject_field']) && $entity_type == 'comment') {
+    $missing_fields[] = 'subject';
+  }
+  if (!isset($fields['name_field']) && $entity_type == 'taxonomy_term') {
+    $missing_fields[] = 'name';
+  }
+  if (!isset($fields['description_field']) && $entity_type == 'taxonomy_term') {
+    $missing_fields[] = 'description';
+  }
+
+  if (!empty($missing_fields)) {
+    foreach ($missing_fields as $missing_field) {
+      $message = t(ucfirst($missing_field) . ' (Note: field will be created.)');
+      $fields[$missing_field . '_field'] = array(
+        '#type' => 'checkbox',
+        '#title' => check_plain($message),
+        '#attributes' => array(
+          'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
+          'name' => 'title_swap_' . $bundle_name . '_' . $missing_field,
+          'class' => array('field'),
         ),
-      ),
-    );
-    if (!$setup_complete) {
-      $fields['title_field']['#attributes']['checked'] = 'checked';
+        '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
+        '#states' => array(
+          'invisible' => array(
+            ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
+          ),
+        ),
+      );
+      if (!$setup_complete) {
+        $fields['title_field']['#attributes']['checked'] = 'checked';
+      }
     }
   }
+  uasort($fields, 'lingotek_title_compare');
   return $fields;
+}
+
+function lingotek_title_compare($a, $b) {
+  return strcasecmp($a['#title'], $b['#title']);
 }
 
 function lingotek_node_settings_row_oneoffs($bundle_name) {
@@ -545,12 +537,14 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
       // And only if set to swap
       if ($value != 0) {
         $content_type = substr($key, strlen('title_swap_'));
+        $field_array = explode('_', $content_type);
+        $legacy_field = array_pop($field_array);
+        $content_type = implode('_', $field_array);
 
-        //check to make sure that the content type is enabled
+//check to make sure that the content type is enabled
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
           // Do the actual title replacement
           $bundle = $content_type;
-          $legacy_field = $entity_type == 'node' ? 'title' : 'subject';
 
           // Use the Title module to migrate the content.
           if (title_field_replacement_toggle($entity_type, $bundle, $legacy_field)) {
