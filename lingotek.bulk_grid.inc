@@ -993,13 +993,13 @@ function lingotek_config_define_columns() {
  */
 function lingotek_grid_build_filters($form_state) {
   $languages = language_list();
-  $source_languages = array('all' => t('All Languages'));
+  $source_languages = array();
   foreach ($languages as $code => $language) {
     $source_languages[$code] = t($language->name) . ' (' . $language->lingotek_locale . ')';
   }
+  asort($source_languages);
 
   $profiles = array();
-  $profiles['all'] = 'All';
   $profiles[LingotekSync::PROFILE_CUSTOM] = t('Custom');
   $profiles[LingotekSync::PROFILE_DISABLED] = t('Disabled');
 
@@ -1007,6 +1007,7 @@ function lingotek_grid_build_filters($form_state) {
   foreach ($profile_defaults as $key => $p) {
     $profiles[$key] = $p['name'];
   }
+  asort($profiles);
 
   $filters = array(
     'nid' => array(
@@ -1025,13 +1026,13 @@ function lingotek_grid_build_filters($form_state) {
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['source_language']) ? $_SESSION['grid_filters']['source_language'] : 'all',
       '#title' => t('Source Language'),
-      '#options' => $source_languages,
+      '#options' => array('all' => t('All Languages')) + $source_languages,
     ),
     'profile' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['profile']) ? $_SESSION['grid_filters']['profile'] : 'all',
       '#title' => t('Translation Profile'),
-      '#options' => $profiles,
+      '#options' => array('all' => 'All') + $profiles,
       '#multiple' => TRUE
     ),
     'upload_status' => array(
@@ -1053,6 +1054,7 @@ function lingotek_grid_build_filters($form_state) {
     $grid_bundles = array_map(function($val) {
       return $val['label'];
     }, $entity_info['bundles']);
+    asort($grid_bundles);
     $filters['content_type'] = array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
