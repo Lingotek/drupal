@@ -250,7 +250,7 @@ function lingotek_term_has_custom_field($row) {
   elseif (isset($row->tid_from_description)) {
     $tid = $row->tid_from_description;
   }
-  if ($tid) {
+  if (isset($tid)) {
     $terms = entity_load('taxonomy_term');
     $term = $terms[$tid];
     foreach ($term as $field => $item) {
