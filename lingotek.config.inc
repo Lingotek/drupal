@@ -169,17 +169,16 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $row->language = 'en';
 
     if (isset($row->translate_mode_from_description)) {
-      $i18n_mode = $row->translate_mode_from_description;
+      $row->translation_mode = $row->translate_mode_from_description;
     }
     elseif (isset($row->translate_mode_from_name)) {
-      $i18n_mode = $row->translate_mode_from_name;
+      $row->translation_mode = $row->translate_mode_from_name;
     }
     else {
-      $i18n_mode = '0';
+      $row->translation_mode = '0';
     }
 
-    $taxonomy_with_custom_field = lingotek_term_has_custom_field($row);
-    if ($taxonomy_with_custom_field && $i18n_mode == 1 || $i18n_mode == 4) {
+    if (isset($row->translation_mode) && lingotek_hide_taxonomy_term($row, $entity_type)) {
       continue;
     }
 
@@ -254,7 +253,9 @@ function lingotek_term_has_custom_field($row) {
     $terms = entity_load('taxonomy_term');
     $term = $terms[$tid];
     foreach ($term as $field => $item) {
-      if (substr($field, 0, strlen('field_')) == 'field_' || substr($field, -strlen('_field')) === '_field') {
+      $has_custom_field = substr($field, 0, strlen('field_')) == 'field_';
+      $has_replaced_field = substr($field, -strlen('_field')) === '_field';
+      if ($has_custom_field || $has_replaced_field) {
         return TRUE;
       }
     }
