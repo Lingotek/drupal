@@ -254,7 +254,7 @@ function lingotek_term_has_custom_field($row) {
     $terms = entity_load('taxonomy_term');
     $term = $terms[$tid];
     foreach ($term as $field => $item) {
-      if (substr($field, 0, 6) == 'field_') {
+      if (substr($field, 0, strlen('field_')) == 'field_' || substr($field, -strlen('_field')) === '_field') {
         return TRUE;
       }
     }
