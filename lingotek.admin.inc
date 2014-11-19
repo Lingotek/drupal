@@ -150,12 +150,12 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $fields = lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate);
     $oneoffs = ($entity_type == 'node') ? lingotek_node_settings_row_oneoffs($bundle_name) : NULL;
     $translation_mode = ($entity_type == 'taxonomy_term') ? lingotek_get_translation_mode($bundle_name) : NULL;
-    $config_handled = $entity_type == 'taxonomy_term' && empty($fields);
+    $config_handled = $entity_type == 'taxonomy_term' && empty(field_info_instances($entity_type, $bundle_name));
     $translation_handling = $config_handled ? array('#markup' => 'Config') : array('#markup' => 'Bundle');
-    $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $fields);
+    $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete);
     $entity_specifics = array('oneoffs' => $oneoffs, 'translation_mode' => $translation_mode, 'translation_handling' => $translation_handling);
 
-    if ($entity_type == 'taxonomy_term' && empty($fields)) {
+    if ($entity_type == 'taxonomy_term' && empty(field_info_instances($entity_type, $bundle_name))) {
       $fields = array(
         'config' => array(
           '#markup' => t('These fields are translated from the config tab')
@@ -206,11 +206,11 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   return $form;
 }
 
-function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $fields) {
+function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete) {
   $default_profile = $setup_complete ? LingotekSync::PROFILE_DISABLED : 0;
 
   $profiles = array();
-  if ($entity_type == 'taxonomy_term' && empty($fields)) {
+  if ($entity_type == 'taxonomy_term' && empty(field_info_instances($entity_type, $bundle_name))) {
     $profiles['profile_' . $bundle_name] = array(
       '#type' => 'select',
       '#options' => array('DISABLED' => 'See config tab'),
@@ -269,9 +269,6 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
     }
   }
 
-  $missing_subject = !isset($fields['subject_field']) && $entity_type == 'comment';
-  $missing_name = !isset($fields['name_field']) && $entity_type == 'taxonomy_term';
-  $missing_description = !isset($fields['description_field']) && $entity_type == 'taxonomy_term';
   $missing_fields = array();
   if (!isset($fields['title_field']) && $entity_type == 'node') {
     $missing_fields[] = 'title';
