@@ -2473,7 +2473,7 @@ function lingotek_translate_menu_link($link) {
     return TRUE;
   }
   // Handle link update.
-  if ($link['language'] == LANGUAGE_NONE) {
+  if (array_key_exists('language', $link) && $link['language'] == LANGUAGE_NONE) {
     return TRUE;
   }
   return FALSE;
