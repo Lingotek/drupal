@@ -156,7 +156,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $config_handled);
     $entity_specifics = array('oneoffs' => $oneoffs, 'translation_mode' => $translation_mode, 'translation_handling' => $translation_handling);
 
-    if ($entity_type == 'taxonomy_term' && empty($original_fields)) {
+    if ($config_handled) {
       $fields = array(
         'config' => array(
           '#markup' => t('These fields are translated from the config tab')
