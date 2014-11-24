@@ -1472,6 +1472,23 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#title' => t('Always show non-Lingotek translate tabs'),
     '#default_value' => variable_get('lingotek_always_show_translate_tabs'),
     '#description' => t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
+    '#attributes' => array(
+      'name' => 'lingotek_always_show_translate_tabs',
+    ),
+  );
+
+  $form[$fkey]['lingotek_allow_local_edits'] = array(
+    '#prefix' => '<div style="margin-left: 20px;">',
+    '#suffix' => '</div>',
+    '#type' => 'checkbox',
+    '#title' => t('Allow local editing of Lingotek translations'),
+    '#default_value' => variable_get('lingotek_allow_local_edits'),
+    '#description' => t('If checked, local editing of translations managed by Lingotek will be allowed. (Note: any changes made may be overwritten if the translation is downloaded from Lingotek again.).'),
+    '#states' => array(
+      'invisible' => array(
+        ':input[name="lingotek_always_show_translate_tabs"]' => array('checked' => FALSE),
+      ),
+    ),
   );
 
   $form[$fkey]['lingotek_account_plan_type'] = array(
