@@ -1615,6 +1615,9 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   $source = isset($ln->language) ? $ln->language : language_default()->language;
   $source = Lingotek::convertDrupal2Lingotek($source);
   $languages = Lingotek::getLanguagesWithoutSource($source);
+  if ($entity_type == 'taxonomy_term' && $entity->language == LANGUAGE_NONE && !empty($languages['en_US'])) {
+    unset($languages['en_US']);
+  }
 
   // Add pending statuses for all languages on successful upload only
   if ($success) {

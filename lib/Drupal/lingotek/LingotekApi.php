@@ -70,8 +70,12 @@ class LingotekApi {
 
     $project_id = $translatable_object->getProjectId();
 
-    $source_lingotek_locale = $translatable_object->getSourceLocale();
-    $source_language = isset($source_lingotek_locale) && !empty($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
+    $source_language = $translatable_object->getSourceLocale();
+    if (empty($source_language)) {
+      drupal_set_message('Some entities not uploaded because the source language was language neutral.', 'warning', FALSE);
+      LingotekLog::warning('Document @docname not uploaded. Language was language neutral.', array('@docname' => $translatable_object->getDocumentName()));
+      return FALSE;
+    }
 
     if ($project_id) {
       $parameters = array(

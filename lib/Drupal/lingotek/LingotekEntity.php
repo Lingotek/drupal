@@ -322,6 +322,13 @@ class LingotekEntity implements LingotekTranslatableEntity {
   }
   
   public function getSourceLocale() {
+    if ($this->entity_type == 'taxonomy_term') {
+      $vocabulary = taxonomy_vocabulary_machine_name_load($this->vocabulary_machine_name);
+      // If vocab uses 'Localize', change language from undefined to English.
+      if ($vocabulary->i18n_mode == '1') {
+        return 'en_US';
+      }
+    }
     return Lingotek::convertDrupal2Lingotek($this->language);
   }
   

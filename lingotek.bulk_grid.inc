@@ -799,6 +799,10 @@ function lingotek_grid_download_selected($entity_type, $entity_ids, $target_loca
   $entities = entity_load($entity_type, $entity_ids);
   foreach ($entities as $entity) {
     foreach ($target_locales as $locale) {
+      // Skip language neutral taxonomy terms because their source is really English.
+      if ($entity_type == 'taxonomy_term' && $entity->language == LANGUAGE_NONE && $locale == 'en_US') {
+        continue;
+      }
       $operations[] = array('lingotek_entity_download', array($entity, $entity_type, $locale));
     }
   }
@@ -1698,6 +1702,7 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   }
   elseif ($entity_type == 'taxonomy_term') {
     $id = $row->tid;
+    $row->language = isset($row->translation_mode) && $row->translation_mode == '1' ? 'en' : $row->language;
   }
   $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
   $source .= ($language_col ? lingotek_get_upload_string($row, $languages) : '');
