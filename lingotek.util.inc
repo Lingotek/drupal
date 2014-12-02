@@ -2034,3 +2034,10 @@ function lingotek_is_inplace_source_download($entity_type, $entity, $lingotek_lo
   return FALSE;
 }
 
+function lingotek_notify_if_no_languages_added() {
+  // if no languages have been enabled for Lingotek Translation,
+  // add a warning message.
+  if (empty(lingotek_get_target_locales())) {
+    drupal_set_message(t('No languages are enabled yet for Lingotek Translation.  Please add one or more languages (located under "Your site Languages" on the Dashboard tab).'), 'warning');
+  }
+}

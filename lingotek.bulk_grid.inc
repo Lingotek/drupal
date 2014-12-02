@@ -41,6 +41,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $path_to_lingotek = drupal_get_path('module', 'lingotek');
   lingotek_is_module_setup();
+  lingotek_notify_if_no_languages_added();
 
   // Output success messages for actions
   if (isset($_SESSION['lingotek_edit_nodes'])) {

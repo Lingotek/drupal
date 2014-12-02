@@ -942,7 +942,6 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
         && end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
     $final_destination = 'admin/settings/lingotek';
   }
-
   if (count(batch_get())) {
     batch_process($final_destination);
   }
@@ -2449,6 +2448,7 @@ function lingotek_admin_cleanup_form_submit($form, &$form_state) {
 function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset = TRUE) {
 
   lingotek_is_module_setup();
+  lingotek_notify_if_no_languages_added();
   $account = LingotekAccount::instance();
 
   $api = LingotekApi::instance();
