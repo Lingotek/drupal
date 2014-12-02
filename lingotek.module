@@ -1876,7 +1876,6 @@ function lingotek_is_config_missing() {
     'lingotek_project',
     'lingotek_workflow',
     'lingotek_vault',
-    'lingotek_enabled_fields',
     'lingotek_oauth_consumer_id',
     'lingotek_oauth_consumer_secret',
   );
@@ -1892,14 +1891,16 @@ function lingotek_is_config_missing() {
       elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
         return 'admin/config/lingotek/project-vault-select';
       }
-      elseif ($required_variable == 'lingotek_enabled_fields') {
-        return 'admin/config/lingotek/node-translation-settings';
-      }
       elseif ($required_variable == 'lingotek_oauth_consumer_id' || $required_variable == 'lingotek_oauth_consumer_secret') {
         return TRUE;
       }
     }
   }
+  // special handling of lingotek_enabled_fields, since none could be selected
+  if (variable_get('lingotek_enabled_fields', FALSE) === FALSE) {
+    return 'admin/config/lingotek/node-translation-settings';
+  }
+
   return FALSE; // all required configuration variables are set
 }
 
