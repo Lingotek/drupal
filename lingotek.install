@@ -658,7 +658,7 @@ function lingotek_update_7408(&$sandbox) {
     foreach ($results as $r) {
       $nid_list[$r->nid] = str_replace('target_sync_status_', '', $r->lingokey);
     }
-    
+
     foreach ($nid_list as $nid => $locale) {
       $node = lingotek_node_load_default($nid, NULL, TRUE);
       if ($node) {
@@ -684,7 +684,7 @@ FROM lingotek");
 /**
  * Updates 'lingotek_account_plan_type' to be 'advanced' when 'enterprise'
  */
-function lingotek_update_7501(&$sandbox) { 
+function lingotek_update_7501(&$sandbox) {
   lingotek_extend_metadata_tables();
   $current_plan_type = variable_get('lingotek_account_plan_type');
   if ($current_plan_type == 'enterprise') {
@@ -796,7 +796,7 @@ function lingotek_update_7506(&$sandbox) {
 
   // lingotek_keystore() was modified as of update #7506 to
   // require two additional fields: created and modified.  So, that
-  // update function is called in all previous update functions prior to 
+  // update function is called in all previous update functions prior to
   // running lingotek_keystore() as a forward-compatibility, since these
   // fields are missing at the point of previous updates, while the db
   // schema includes the fields already.  This is the final call to it.
@@ -948,4 +948,21 @@ function lingotek_update_7603(&$sandbox) {
   $default_profile = array();
   lingotek_save_config_profile($default_profile);
   return t('Created Lingotek translation profile for config items.');
+}
+
+/**
+ * Erase translation profiles for bundles that no longer exist.
+ */
+function lingotek_update_7604(&$sandbox) {
+  $entity_profiles = variable_get('lingotek_entity_profiles');
+  foreach ($entity_profiles as $entity_type => $bundles) {
+    $entity_bundles = field_info_bundles($entity_type);
+    foreach ($bundles as $bundle_name => $profile) {
+      if (!array_key_exists($bundle_name, $entity_bundles)) {
+        unset($entity_profiles[$entity_type][$bundle_name]);
+      }
+    }
+  }
+  variable_set('lingotek_entity_profiles', $entity_profiles);
+  return t('Removed Lingotek translation profiles for bundles that not longer exist.');
 }

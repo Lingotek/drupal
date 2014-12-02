@@ -2714,3 +2714,11 @@ function lingotek_add_menu_link_form($form, $form_state, $node) {
 
   return $form;
 }
+
+function lingotek_field_attach_delete_bundle($entity_type, $bundle, $instances) {
+  $entity_profiles = variable_get('lingotek_entity_profiles');
+  if (isset($entity_profiles[$entity_type][$bundle])) {
+    unset($entity_profiles[$entity_type][$bundle]);
+    variable_set('lingotek_entity_profiles', $entity_profiles);
+  }
+}
