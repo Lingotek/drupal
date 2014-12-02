@@ -311,6 +311,9 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
 }
 
 function lingotek_title_compare($a, $b) {
+  if (empty($a['#title']) or empty($b['#title'])) {
+    return 0;
+  }
   return strcasecmp($a['#title'], $b['#title']);
 }
 
