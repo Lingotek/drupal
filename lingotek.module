@@ -1900,6 +1900,9 @@ function lingotek_is_config_missing() {
   if (variable_get('lingotek_enabled_fields', FALSE) === FALSE) {
     return 'admin/config/lingotek/node-translation-settings';
   }
+  if (variable_get('lingotek_translate_config', FALSE) === FALSE) {
+    return 'admin/config/lingotek/additional-translation-settings';
+  }
 
   return FALSE; // all required configuration variables are set
 }

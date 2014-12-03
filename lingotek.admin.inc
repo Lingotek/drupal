@@ -195,6 +195,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
 
   if ($setup_complete) {
     $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => strtolower($entity_type_info['label'])));
+    $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => lingotek_get_tab_id($entity_type)));
   }
 
   lingotek_admin_add_entity_specific_changes($form, $form_state, $entity_type);
@@ -203,7 +204,6 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     '#type' => 'submit',
     '#value' => t('Save'),
   );
-  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => lingotek_get_tab_id($entity_type)));
 
   return $form;
 }
@@ -834,7 +834,10 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       '#description' => t('You can view the progress of the configuration translations on the <a href="@link">Translate Interface</a> page', array('@link' => url('admin/settings/lingotek/manage/config'))),
     );
   }
-  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-config'));
+  $setup_complete = (!lingotek_is_config_missing());
+  if ($setup_complete) {
+    $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-config'));
+  }
   return $form;
 }
 
