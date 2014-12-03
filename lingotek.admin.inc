@@ -210,6 +210,10 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
 
 function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $config_handled) {
   $default_profile = $setup_complete ? LingotekSync::PROFILE_DISABLED : 0;
+  // Disable automatic profile as the default for comments during setup
+  if ($entity_type == 'comment') {
+    $default_profile = LingotekSync::PROFILE_DISABLED;
+  }
   $profiles = array();
   if ($config_handled) {
     $profiles['profile_' . $bundle_name] = array(
@@ -496,7 +500,8 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
   }
 
   $enabled_fields = variable_get('lingotek_enabled_fields', array());
-  unset($enabled_fields[$entity_type]);
+  // Reset fields for the entity type but leave its existence there
+  $enabled_fields[$entity_type] = array();
   $operations = array();
 
   $entity_profiles = variable_get('lingotek_entity_profiles', array());
