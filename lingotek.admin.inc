@@ -203,6 +203,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     '#type' => 'submit',
     '#value' => t('Save'),
   );
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => lingotek_get_tab_id($entity_type)));
 
   return $form;
 }
@@ -600,7 +601,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     $cur_path = current_path();
     if ($cur_path == 'admin/settings/lingotek/settings' ||
         $cur_path == LINGOTEK_MENU_LANG_BASE_URL . '/settings') {
-      $redirect = $cur_path;
+      $redirect = $cur_path . '#' . lingotek_get_tab_id($entity_type);
     }
     else {
       $redirect = lingotek_get_entity_setup_path($entity_type, TRUE);
@@ -833,6 +834,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       '#description' => t('You can view the progress of the configuration translations on the <a href="@link">Translate Interface</a> page', array('@link' => url('admin/settings/lingotek/manage/config'))),
     );
   }
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-config'));
   return $form;
 }
 
@@ -940,13 +942,15 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   if (  isset($_SESSION['lingotek_setup_path'])
         && is_array($_SESSION['lingotek_setup_path'])
         && end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
+    // Remove the setup path so future checks will not think setup just completed.
+    unset($_SESSION['lingotek_setup_path']);
     $final_destination = 'admin/settings/lingotek';
   }
   if (count(batch_get())) {
     batch_process($final_destination);
   }
   else {
-    drupal_goto($final_destination);
+    drupal_goto($final_destination, array('fragment' => 'ltk-config'));
   }
 }
 
@@ -1371,6 +1375,7 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
   /*
    * Configuration
    */
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-prefs'));
   $form['prefs'] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => t('Preferences'),
@@ -1387,7 +1392,6 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     ),
     '#submit' => array('lingotek_admin_prefs_form_submit')
   );
-
 
   $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
 
@@ -1690,6 +1694,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $form['add'] = array(
     '#markup' => t('<p><a href="@url" class="ctools-use-modal"><i class="fa fa-plus" style="padding-right:3px"></i>Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
   );
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-profiles'));
 
   return $form;
 }
@@ -1740,6 +1745,7 @@ function lingotek_admin_profile_manage($profile_id) {
     // Create ajax command array, dismiss the modal window.
     $commands = array();
     $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_redirect('admin/settings/lingotek/settings', 0, array('fragment' => 'ltk-profiles'));
     $commands[] = ctools_ajax_command_reload();
     print ajax_render($commands);
     drupal_exit();
@@ -1765,6 +1771,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
 
   $show_advanced = $account->showAdvanced();
 
+  //$form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-profiles'));
   $form['defaults']['profile_id'] = array(
     '#type' => 'value',
     '#value' => $form_state['values']['profile_id'],
@@ -2142,6 +2149,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
     '#markup' => theme('table', array('header' => $header, 'rows' => $rows))
   );
 
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-utils'));
   return $form;
 }
 
@@ -2281,6 +2289,9 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
     '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
     '#default_value' => variable_get('lingotek_flush_cache', 0),
   );
+
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-logging'));
+
   return $form;
 }
 
@@ -2407,6 +2418,8 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   $rows = array();
 
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-utils'));
+
   return $form;
 }
 
@@ -2442,7 +2455,7 @@ function lingotek_admin_cleanup_form_submit($form, &$form_state) {
     }
   }
   // Execute all set batches and then return.
-  batch_process('admin/settings/lingotek/settings');
+  batch_process();
 }
 
 function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset = TRUE) {
@@ -2489,7 +2502,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
 
   foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
     $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
-    $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('class' => array('ltk-entity')));
+    $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('id' => lingotek_get_tab_id($machine_name), 'class' => array('ltk-entity')));
   }
   $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'), array('id' => 'ltk-config'));
   $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), t('Translation Profiles'), array('id' => 'ltk-profiles'));
@@ -2498,13 +2511,13 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   }
 
   $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_prefs_form', $show_fieldset), t('Preferences'), array('id' => 'ltk-prefs'));
-  $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), 'Logging');
+  $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_logging_form', $show_fieldset), t('Logging'), array('id' => 'ltk-logging'));
 
   $utilities = array(
     drupal_get_form('lingotek_admin_cleanup_form', $show_fieldset),
     drupal_get_form('lingotek_admin_utilities_form', $show_fieldset),
   );
-  $output['lingotek'][] = lingotek_wrap_in_fieldset($utilities, t('Utilities'));
+  $output['lingotek'][] = lingotek_wrap_in_fieldset($utilities, t('Utilities'), array('id' => 'ltk-utils'));
 
   return $output;
 }
@@ -2592,4 +2605,8 @@ function lingotek_handle_advanced_xml_upgrade($form, $form_state) {
 
     batch_set($batch);
   }
+}
+
+function lingotek_get_tab_id($entity_type) {
+  return 'ltk-' . str_replace(' ', '-', $entity_type);
 }
