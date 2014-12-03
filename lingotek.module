@@ -1897,8 +1897,12 @@ function lingotek_is_config_missing() {
     }
   }
   // special handling of lingotek_enabled_fields, since none could be selected
-  if (variable_get('lingotek_enabled_fields', FALSE) === FALSE) {
+  $enabled_fields = variable_get('lingotek_enabled_fields', FALSE);
+  if (!isset($enabled_fields['node'])) {
     return 'admin/config/lingotek/node-translation-settings';
+  }
+  if (module_exists('comment') && !isset($enabled_fields['comment'])) {
+    return 'admin/config/lingotek/comment-translation-settings';
   }
   if (variable_get('lingotek_translate_config', FALSE) === FALSE) {
     return 'admin/config/lingotek/additional-translation-settings';
