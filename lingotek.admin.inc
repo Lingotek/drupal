@@ -761,7 +761,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
   $workflows = $api->listWorkflows();
   if ($config_profile) {
-    if (is_array($workflows) && count($workflows) > 0) {
+    if (is_array($workflows) && count($workflows) > 0 && $setup_complete) {
       $form['additional_translation']['lingotek_translate_config_options']['workflow_id'] = array(
         '#type' => 'select',
         '#title' => t('Workflow'),
