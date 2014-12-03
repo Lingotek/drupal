@@ -797,7 +797,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       }
     }
 
-    if ($projects && count($projects) > 0) {
+    if ($projects && count($projects) > 0 && $setup_complete) {
       $sorted = asort($projects);
       $form['additional_translation']['project_id'] = array(
         '#type' => 'select',
@@ -824,7 +824,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       }
     }
 
-    if ($personal_vault_count + $community_vault_count > 0) {
+    if ($personal_vault_count + $community_vault_count > 0 && $setup_complete) {
       $form['additional_translation']['vault_id'] = array(
         '#type' => 'select',
         '#title' => t('Default Vault'),

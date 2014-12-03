@@ -1904,7 +1904,7 @@ function lingotek_is_config_missing() {
   if (module_exists('comment') && !isset($enabled_fields['comment'])) {
     return 'admin/config/lingotek/comment-translation-settings';
   }
-  if (variable_get('lingotek_translate_config', FALSE) === FALSE) {
+  if (variable_get('lingotek_translate_config', 'EMPTY') === 'EMPTY') {
     return 'admin/config/lingotek/additional-translation-settings';
   }
 
