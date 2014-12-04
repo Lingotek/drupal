@@ -45,6 +45,7 @@ function lingotek_menu() {
     'file' => 'lingotek.admin.inc',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_admin_form'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['node/%node/lingotek_pm'] = array(
@@ -127,6 +128,7 @@ function lingotek_menu() {
     'page callback' => 'lingotek_dashboard',
     'weight' => 1,
     'type' => MENU_NORMAL_ITEM,
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   ));
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'] = array(
     'title' => 'Dashboard',
@@ -134,7 +136,8 @@ function lingotek_menu() {
     'file' => 'lingotek.dashboard.inc',
     'page callback' => 'lingotek_dashboard',
     'weight' => 1,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/dashboard'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/dashboard'];
   $items[LINGOTEK_MENU_LANG_BASE_URL] = $items[LINGOTEK_MENU_MAIN_BASE_URL]; // Add a link to regional settings
@@ -149,8 +152,8 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek'),
     'description' => 'Community Translation Settings',
     'file' => 'lingotek.admin.inc',
-    'page callback' => 'lingotek_admin_configuration_view', //drupal_get_form
-    //'page arguments' => array('lingotek_admin_form'),
+    'page callback' => 'lingotek_admin_configuration_view',
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/settings'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/settings'];
 
@@ -216,7 +219,8 @@ function lingotek_menu() {
     'description' => 'Bulk grid of content translations',
     'file' => 'lingotek.bulk_grid.inc',
     'page callback' => 'lingotek_manage_callback',
-    'page arguments' => array('lingotek_bulk_grid_form')
+    'page arguments' => array('lingotek_bulk_grid_form'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'];
 
@@ -225,13 +229,14 @@ function lingotek_menu() {
     $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name] = array(
       'title' => $entity_type['label'],
       'description' => 'Bulk grid of content translations',
-      'type' => $machine_name == 'node' ? MENU_LOCAL_TASK : MENU_LOCAL_TASK,
+      'type' => MENU_LOCAL_TASK,
       'weight' => $machine_name == 'node' ? -9 : -8,
       'access arguments' => array('administer lingotek'),
       'description' => 'Bulk grid of content translations',
       'file' => 'lingotek.bulk_grid.inc',
       'page callback' => 'drupal_get_form',
-      'page arguments' => array('lingotek_bulk_grid_form')
+      'page arguments' => array('lingotek_bulk_grid_form'),
+      'options' => array('attributes' => array('class' => array('overlay-exclude'))),
     );
     $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage/' . $machine_name] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name];
   }
@@ -245,7 +250,8 @@ function lingotek_menu() {
     'description' => 'Bulk grid of config translations',
     'file' => 'lingotek.config.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lingotek_bulk_grid_form')
+    'page arguments' => array('lingotek_bulk_grid_form'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize/%'] = array(
@@ -349,7 +355,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   // New Account
@@ -360,7 +367,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_new_account_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   // Current Users
@@ -371,7 +379,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_account_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/community-select'] = array(
@@ -381,7 +390,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_community_select_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/project-vault-select'] = array(
@@ -391,7 +401,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_project_vault_select_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/node-translation-settings'] = array(
@@ -401,7 +412,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_node_translation_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/comment-translation-settings'] = array(
@@ -411,7 +423,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_comment_translation_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/additional-translation-settings'] = array(
@@ -421,7 +434,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_additional_translation_settings_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/content-type-choose-fields-ajax/%'] = array(
@@ -441,7 +455,8 @@ function lingotek_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lingotek_setup_language_switcher_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('administer lingotek')
+    'access arguments' => array('administer lingotek'),
+    'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
   $items['admin/config/lingotek/setup-complete'] = array(
