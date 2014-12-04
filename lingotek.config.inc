@@ -144,11 +144,18 @@ function lingotek_config_add_query_filters($query) {
 
   // Upload Status
   if (isset($filters['upload_status']) && $filters['upload_status'] != 'all') {
+    $query->join('locales_target', 'lt', 'lt.lid = s.lid');
     if ($filters['upload_status'] == 'never') {
       $query->isNull('lingo_upload_status.value');
     }
+    elseif ($filters['upload_status'] == LingotekSync::STATUS_EDITED) {
+      // The edited status won't show in lingotek_config_metadata table so we need to check the i18n_status (1 == edited).
+      $query->condition('lt.i18n_status', '1');
+    }
     else {
       $query->condition('lingo_upload_status.value', $filters['upload_status']);
+      // Do not include items with a source marked as edited in locales_target (1 == edited).
+      $query->condition('lt.i18n_status', '0');
     }
   }
 }
