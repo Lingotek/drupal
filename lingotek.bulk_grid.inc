@@ -783,7 +783,10 @@ function lingotek_grid_update($entity_type) {
     lingotek_config_update_selected($lids);
     return;
   }
-  $nids = LingotekSync::getEntityIdsByStatusAndTarget($entity_type, LingotekSync::STATUS_PENDING);
+  $active_locales = lingotek_get_target_locales();
+  $pending_nids = LingotekSync::getEntityIdsByTargetStatus($entity_type, LingotekSync::STATUS_PENDING, $active_locales);
+  $disabled_nids = LingotekSync::getEntityIdsByProfileStatus($entity_type, LingotekSync::PROFILE_DISABLED);
+  $nids = array_diff($pending_nids, $disabled_nids);
   variable_set('lingotek_pending_last_updated', time());
   if (count($nids) > 0) {
     $_SESSION['lingotek_sync_nodes'] = count($nids);

@@ -528,10 +528,11 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
   $segment = array();
   $offset = 0;
   $offset_interval = 5;
+  $total_count = count($nids);
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
-    if (!empty($segment)) {
-      $operations[] = array('lingotek_get_and_update_target_progress', array($entity_type, $segment));
+    if ($segment_count = count($segment)) {
+      $operations[] = array('lingotek_get_and_update_target_progress', array($entity_type, $segment, $offset, $total_count));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);
