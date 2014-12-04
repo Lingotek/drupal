@@ -606,7 +606,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     $cur_path = current_path();
     if ($cur_path == 'admin/settings/lingotek/settings' ||
         $cur_path == LINGOTEK_MENU_LANG_BASE_URL . '/settings') {
-      $redirect = $cur_path . '#' . lingotek_get_tab_id($entity_type);
+      $redirect = $cur_path;
     }
     else {
       $redirect = lingotek_get_entity_setup_path($entity_type, TRUE);
