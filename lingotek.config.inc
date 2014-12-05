@@ -97,18 +97,29 @@ function lingotek_config_start_query($form_state) {
   // Only show items in textgroups that are selected for translation on Config Settings page.
   $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation() ? : array('no textgroups selected');
   $query->condition('s.textgroup', $translatable_textgroups, 'IN');
-  $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source');
+
+  // Hide taxonomy terms that use translate for i18n_mode.
+  $translate_terms_subquery = db_select('taxonomy_vocabulary', 'tv');
+  $translate_terms_subquery->fields('tv', array('vid'));
+  $translate_terms_subquery->condition('tv.i18n_mode', LINGOTEK_TAXONOMY_TRANSLATE_VALUE);
+
+  // Hide taxonomy terms that have custom fields.
+  $custom_fields_subquery = db_select('taxonomy_vocabulary', 'tv');
+  $custom_fields_subquery->fields('tv', array('vid'));
+  $custom_fields_subquery->join('field_config_instance', 'fci', 'tv.vid = fci.field_id');
+
+  $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source AND term_name.vid NOT IN (' . $translate_terms_subquery . ') AND term_name.vid NOT IN (' . $custom_fields_subquery . ')');
   $query->addField('term_name', 'tid', 'tid_from_name');
 
-  $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source');
+  $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source AND term_description.vid NOT IN (' . $translate_terms_subquery . ') AND term_description.vid NOT IN (' . $custom_fields_subquery . ')');
   $query->addField('term_description', 'tid', 'tid_from_description');
 
-  // Need to join on the TV table twice, first if the item is a title of a term, second if the item is the description of a term.
-  $query->leftJoin('taxonomy_vocabulary', 'tv1', 'term_name.vid = tv1.vid');
-  $query->addField('tv1', 'i18n_mode', 'translate_mode_from_name');
-
-  $query->leftJoin('taxonomy_vocabulary', 'tv2', 'term_description.vid = tv2.vid');
-  $query->addField('tv2', 'i18n_mode', 'translate_mode_from_description');
+  // For all taxonomy terms, only show if it has a name or description.
+  $or = db_or();
+  $or->condition('s.textgroup', 'taxonomy', '<>');
+  $or->isNotNull('term_name.tid');
+  $or->isNotNull('term_description.tid');
+  $query->condition($or);
 
   return $query;
 }
@@ -175,20 +186,6 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $row->lingotek['profile'] = 1;
     $row->language = 'en';
 
-    if (isset($row->translate_mode_from_description)) {
-      $row->translation_mode = $row->translate_mode_from_description;
-    }
-    elseif (isset($row->translate_mode_from_name)) {
-      $row->translation_mode = $row->translate_mode_from_name;
-    }
-    else {
-      $row->translation_mode = '0';
-    }
-
-    if (isset($row->translation_mode) && lingotek_hide_taxonomy_term($row, $entity_type)) {
-      continue;
-    }
-
     $locale_statuses = lingotek_build_locales_statuses($row, FALSE);
     $item_is_current = LingotekConfigSet::isLidCurrent($lid);
     $item_has_translations = array_key_exists($lid, $existing_translations);
@@ -244,30 +241,6 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $table_data[$lid] = $data;
   }
   return $table_data;
-}
-
-function lingotek_term_has_custom_field($row) {
-  if (isset($row->tid)) {
-    $tid = $row->tid;
-  }
-  elseif (isset($row->tid_from_name)) {
-    $tid = $row->tid_from_name;
-  }
-  elseif (isset($row->tid_from_description)) {
-    $tid = $row->tid_from_description;
-  }
-  if (isset($tid)) {
-    $terms = entity_load('taxonomy_term');
-    $term = $terms[$tid];
-    foreach ($term as $field => $item) {
-      $has_custom_field = substr($field, 0, strlen('field_')) == 'field_';
-      $has_replaced_field = substr($field, -strlen('_field')) === '_field';
-      if ($has_custom_field || $has_replaced_field) {
-        return TRUE;
-      }
-    }
-  }
-  return FALSE;
 }
 
 /**

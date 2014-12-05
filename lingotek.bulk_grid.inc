@@ -1325,11 +1325,14 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     $query->addField('tv', 'machine_name', 'type');
     $query->addField('tv', 'i18n_mode', 'translation_mode');
 
-    $query->leftJoin('field_data_name_field', 'nf', 'n.tid = nf.entity_id');
-    $query->addField('nf', 'entity_id', 'replaced');
-    // This or will exclude localized and replaced terms but we might just want to note that they're managed from config
-    // $or = db_or()->isNotNull('nf.entity_id')->condition('tv.i18n_mode', 1, '<>');
-    // $query->condition($or);
+    // Remove taxonomy terms handled by config manage page.
+    $query->leftJoin('field_config_instance', 'fields', 'fields.field_id = tv.vid');
+    $or = db_or();
+    // Has no custom fields
+    $or->isNotNull('fields.field_id');
+    $localize_mode = 1;
+    $or->condition('tv.i18n_mode', $localize_mode, '<>');
+    $query->condition($or);
   }
   elseif ($bundle_col) {
     if ($info['entity keys']['bundle'] != 'type') {
@@ -1602,38 +1605,9 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
       $data['changed'] = $row->changed ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->changed))) : t('Never');
     }
 
-    if ($entity_properties['type'] == 'taxonomy_term' && lingotek_hide_taxonomy_term($row, $entity_properties['type'])) {
-      continue;
-    }
     $table_data[$entity_id] = $data;
   }
   return $table_data;
-}
-
-function lingotek_hide_taxonomy_term($row, $current_interface) {
-  // Terms that use 'Localize' translation mode and don't have custom fields will be translated from the config interface (locales_source).
-  // Those show up in the Config interface and this interface so we need to hide them here and disable them. They will still be enabled in the config table.
-  $modes = array(
-    '0' => 'No',
-    '1' => 'Localize',
-    '2' => 'Fixed',
-    '4' => 'Translate',
-  );
-  $has_custom_field = lingotek_term_has_custom_field($row);
-  $translated_as_config = $modes[$row->translation_mode] === 'Localize' && !$has_custom_field;
-  $translated_as_taxonomy_term = ($has_custom_field && $modes[$row->translation_mode] === 'Localize') || $modes[$row->translation_mode] === 'Translate';
-
-  if ($current_interface == 'taxonomy_term' && $translated_as_config) {
-    // Disable profile for this term so it can't get translated when using the global upload button.
-    $entity_profiles = variable_get('lingotek_entity_profiles', array());
-    $entity_profiles['taxonomy_term'][$row->type] = LingotekSync::PROFILE_DISABLED;
-    variable_set('lingotek_entity_profiles', $entity_profiles);
-    return TRUE;
-  }
-  if ($current_interface == 'config' && $translated_as_taxonomy_term) {
-    return TRUE;
-  }
-  return FALSE;
 }
 
 function lingotek_truncate_grid_text($string, $truncate_length) {
