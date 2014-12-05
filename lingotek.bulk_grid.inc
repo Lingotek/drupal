@@ -1313,7 +1313,7 @@ function lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $lab
 
 function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bundle_col, $info) {
   if ($entity_type == 'comment') {
-    $query->leftJoin('node', 'nn', 'nn.nid = n.nid');
+    $query->join('node', 'nn', 'nn.nid = n.nid');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'type');
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
   }
@@ -1482,6 +1482,14 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
     // Special-case handling of taxonomy_term pseudo-entities
     if ($entity_type == 'taxonomy_term') {
       $query->condition('tv.machine_name', $filters['content_type'], 'IN');
+    }
+    elseif ($entity_type == 'comment') {
+      $or = db_or();
+      foreach ($filters['content_type'] as $type_alias) {
+        $content_type = substr($type_alias, strlen('comment_node_'));
+        $or->condition('nn.type', $content_type);
+      }
+      $query->condition($or);
     }
     else {
       $query->condition('n.' . $info['entity keys']['bundle'], $filters['content_type'], 'IN');
