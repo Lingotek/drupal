@@ -761,23 +761,46 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
   $workflows = $api->listWorkflows();
   if ($config_profile) {
-    if (is_array($workflows) && count($workflows) > 0 && $setup_complete) {
-      $form['additional_translation']['lingotek_translate_config_options']['workflow_id'] = array(
-        '#type' => 'select',
-        '#title' => t('Workflow'),
-        '#description' => t('This workflow will be used for handling these additional translation items.'),
-        '#options' => $workflows,
-        '#default_value' => isset($config_profile['workflow_id']) ? $config_profile['workflow_id'] : '',
-      );
-
+    if (is_array($workflows) && count($workflows) > 1 && $setup_complete) {
       $stored_profile = lingotek_get_profile_settings(LingotekSync::PROFILE_CONFIG);
       $stored_workflow_id = (isset($stored_profile['workflow_id']) ? $stored_profile['workflow_id'] : '');
       $selected_workflow_id = (isset($form_state['values']['workflow_id']) ? $form_state['values']['workflow_id'] : $stored_workflow_id);
+
+      $form['additional_translation']['workflow_id'] = array(
+        '#type' => 'select',
+        '#title' => t('Workflow'),
+        '#description' => t('This workflow will be used for handling these additional translation items.'),
+        '#default_value' => $stored_workflow_id,
+        '#options' => $workflows,
+        '#ajax' => array(
+          'callback' => 'lingotek_config_default_workflow_form_callback',
+          'wrapper' => 'prefill-phases-div',
+          'method' => 'replace',
+          'effect' => 'fade',
+        ),
+        '#prefix' => '<div id="prefill-phases-div">',
+      );
+
+      $form['additional_translation']['prefill_phases_checkbox'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
+        '#default_value' => FALSE,
+        '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
+        '#states' => array(
+          'invisible' => array(':input[name="workflow_id"]' => array('value' => $stored_workflow_id)),
+        )
+      );
 
       $form['additional_translation']['prefill_phase_select'] = array(
         '#title' => t("Desired Prefill Phase"),
         '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
         '#type' => 'select',
+        '#states' => array(
+            'visible' => array(':input[name="workflow_id"]' => array('!value' => $stored_workflow_id),
+                               ':input[name="prefill_phases_checkbox"]' => array('checked' => TRUE)
+          ),
+        ),
+        '#suffix' => '</div>',
       );
       $form['additional_translation']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($selected_workflow_id);
     }
@@ -2007,7 +2030,14 @@ function lingotek_profile_default_workflow_form_callback($form, $form_state) {
     $form['defaults']['workflow_id'],
     $form['defaults']['prefill_phases_checkbox'],
     $form['defaults']['prefill_phase_select'],
+  );
+}
 
+function lingotek_config_default_workflow_form_callback($form, $form_state) {
+  return array(
+    $form['additional_translation']['workflow_id'],
+    $form['additional_translation']['prefill_phases_checkbox'],
+    $form['additional_translation']['prefill_phase_select'],
   );
 }
 
