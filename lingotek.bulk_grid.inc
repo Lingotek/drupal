@@ -332,7 +332,13 @@ function lingotek_grid_action_options($entity_type) {
   }
   else {
     $action_options['edit'] = t('Edit translation settings');
-    $action_options['workflow'] = t('Change workflow');
+
+    $api = LingotekApi::instance();
+    $workflows = $api->listWorkflows();
+    if (is_array($workflows) && count($workflows) > 1) {
+      $action_options['workflow'] = t('Change workflow');
+    }
+
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
   }
 
