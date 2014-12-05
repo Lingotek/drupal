@@ -655,12 +655,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
     return;
   }
 
-  // Only modify the main node form once, not on each form load based on ajax-
-  // triggered events.
-  if (!empty($form_state['triggering_element'])) {
-    return;
-  }
-
   // Load the node and also the source node if different (node-based translation)
   $node = $form_state['node'];
   $nid = !empty($node->nid) ? $node->nid : 0;
