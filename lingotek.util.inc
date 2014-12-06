@@ -1223,6 +1223,19 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
   $handler = entity_translation_get_handler($entity_type, $entity);
   $source_langcode = lingotek_entity_langcode($entity_type, $entity);
 
+  // Lock reading for writing to the entity translation table
+  // since many ET entries may be written concurrently
+  for ($i = 0; $i < 10; $i++) {
+    $acquired = lock_acquire('lingotek_entity_translation');
+    if ($acquired) {
+      break;
+    }
+    sleep($i+1);
+  }
+  if (!$acquired) {
+    LingotekLog::error("Failed to obtain lock to write Entity Translation status.");
+    return array($languages_updated, $updates);
+  }
   $translations = $handler->getTranslations();
   if (empty($translations->original)) {
     $handler->initTranslations();
@@ -1266,6 +1279,7 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
     }
   }
   $handler->saveTranslations();
+  lock_release('lingotek_entity_translation');
   return array($languages_updated, $updates);
 }
 
