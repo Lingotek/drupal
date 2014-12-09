@@ -1254,7 +1254,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   }
 
   // Execute the query
-  $table_data_raw = $query->execute()->fetchAllAssoc($entity_id_key);
+  $table_data_raw = $query->distinct()->execute()->fetchAllAssoc($entity_id_key);
   lingotek_entity_load($table_data_raw, $entity_type);
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
