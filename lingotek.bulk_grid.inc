@@ -1329,7 +1329,7 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     $query->leftJoin('field_config_instance', 'fields', 'fields.bundle = tv.machine_name');
     $or = db_or();
     // Has no custom fields
-    $or->isNotNull('fields.machine_name');
+    $or->isNotNull('fields.bundle');
     $or->condition('tv.i18n_mode', LINGOTEK_TAXONOMY_LOCALIZE_VALUE, '<>');
     $query->condition($or);
   }
