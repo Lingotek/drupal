@@ -1513,7 +1513,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
     return;
   }
 
-  if ((!lingotek_enabled_bundle($entity_type, $bundle) && $entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) || !isset($entity->language) || !Lingotek::isSupportedLanguage($entity->language)) {
+  if ((!lingotek_enabled_bundle($entity_type, $bundle) && $entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) || !isset($entity->language) || (!Lingotek::isSupportedLanguage($entity->language) && !($entity->language == LANGUAGE_NONE && $entity_type == 'taxonomy_term'))) {
     return;
   }
 
