@@ -1403,29 +1403,45 @@ function lingotek_bulk_grid_filter_query($query, $entity_type, $eid, $label_col,
   }
   $filters = $_SESSION['grid_filters'];
 
-  lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col);
+  lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col, $entity_type);
   lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, $entity_type);
   lingotek_bulk_grid_filter_last_uploaded($query, $filters);
   lingotek_bulk_grid_filter_last_downloaded($query, $filters);
 }
 
-function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col) {
+function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col, $entity_type) {
   if (isset($filters['search_type']) && $filters['search_type'] == 'all') {
     $filters['title'] = $filters['body'] = $filters['search'];
   }
 
   if (isset($filters['title'])) {
-    $title_query = db_select('field_data_title_field', 'tf')
-        ->distinct()
-        ->fields('tf', array('entity_id'))
-        ->condition('tf.title_field_value', '%' . $filters['title'] . '%', 'LIKE');
+    if ($entity_type !== 'comment') {
+      $title_query = db_select('field_data_title_field', 'tf')
+          ->distinct()
+          ->fields('tf', array('entity_id'))
+          ->condition('tf.title_field_value', '%' . $filters['title'] . '%', 'LIKE');
+    }
+    else {
+      $title_query = db_select('comment', 'c')
+          ->distinct()
+          ->fields('c', array('cid'))
+          ->condition('c.subject', '%' . $filters['title'] . '%', 'LIKE');
+    }
   }
 
   if (isset($filters['body'])) {
-    $body_query = db_select('field_data_body', 'tb')
-        ->distinct()
-        ->fields('tb', array('entity_id'))
-        ->condition('tb.body_value', '%' . $filters['body'] . '%', 'LIKE');
+    if ($entity_type !== 'comment') {
+      $body_query = db_select('field_data_body', 'tb')
+          ->distinct()
+          ->fields('tb', array('entity_id'))
+          ->condition('tb.body_value', '%' . $filters['body'] . '%', 'LIKE');
+    }
+    else {
+       $body_query = db_select('field_data_comment_body', 'cb')
+          ->distinct()
+          ->fields('cb', array('entity_id'))
+          ->condition('cb.comment_body_value', '%' . $filters['body'] . '%', 'LIKE');
+    }
   }
 
   //  Search
