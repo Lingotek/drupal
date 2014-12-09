@@ -97,7 +97,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   }
 
   $profiles_options = lingotek_get_profiles_by_name(); // these will come translated via the t-function
-  if ($entity_type != 'taxonomy_term') {
+  if (isset($profiles_options[LingotekSync::PROFILE_CONFIG])) {
     unset($profiles_options[LingotekSync::PROFILE_CONFIG]);
   }
 
