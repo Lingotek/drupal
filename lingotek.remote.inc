@@ -35,6 +35,9 @@ function lingotek_get_target_node($node, $drupal_language_code) {
   }
 
   if (isset($tset[$drupal_language_code])) {
+    // TODO: if workbench moderation is enabled for this node,
+    // then create a new revision of it;
+    // otherwise, just load the existing one to be updated.
     $localized_node = node_load($tset[$drupal_language_code]->nid);
   }
   else {
