@@ -1413,34 +1413,33 @@ function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col
     $filters['title'] = $filters['body'] = $filters['search'];
   }
 
-  if (isset($filters['title'])) {
-    if ($entity_type !== 'comment') {
-      $title_query = db_select('field_data_title_field', 'tf')
-          ->distinct()
-          ->fields('tf', array('entity_id'))
-          ->condition('tf.title_field_value', '%' . $filters['title'] . '%', 'LIKE');
-    }
-    else {
-      $title_query = db_select('comment', 'c')
-          ->distinct()
-          ->fields('c', array('cid'))
-          ->condition('c.subject', '%' . $filters['title'] . '%', 'LIKE');
-    }
+  $title_query = $body_query = array(-1);
+
+  if ($entity_type == 'comment') {
+    $title_field_table = 'field_data_subject_field';
+    $title_field_col = 'subject_field_value';
+    $body_field_table = 'field_data_comment_body';
+    $body_field_col = 'comment_body_value';
+  }
+  else {
+    $title_field_table = 'field_data_title_field';
+    $title_field_col = 'title_field_value';
+    $body_field_table = 'field_data_body';
+    $body_field_col = 'body_value';
   }
 
-  if (isset($filters['body'])) {
-    if ($entity_type !== 'comment') {
-      $body_query = db_select('field_data_body', 'tb')
-          ->distinct()
-          ->fields('tb', array('entity_id'))
-          ->condition('tb.body_value', '%' . $filters['body'] . '%', 'LIKE');
-    }
-    else {
-       $body_query = db_select('field_data_comment_body', 'cb')
-          ->distinct()
-          ->fields('cb', array('entity_id'))
-          ->condition('cb.comment_body_value', '%' . $filters['body'] . '%', 'LIKE');
-    }
+  if (isset($filters['title']) && db_table_exists($title_field_table)) {
+    $title_query = db_select($title_field_table, 'tf')
+        ->distinct()
+        ->fields('tf', array('entity_id'))
+        ->condition('tf.' . $title_field_col, '%' . $filters['title'] . '%', 'LIKE');
+  }
+
+  if (isset($filters['body']) && db_table_exists($body_field_table)) {
+    $body_query = db_select($body_field_table, 'tb')
+        ->distinct()
+        ->fields('tb', array('entity_id'))
+        ->condition('tb.' . $body_field_col, '%' . $filters['body'] . '%', 'LIKE');
   }
 
   //  Search
@@ -1448,7 +1447,7 @@ function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col
     $or = db_or();
 
     if (!empty($label_col)) {
-      $or->condition('n.' . $label_col, '%' . $filters['search'] . '%', 'LIKE'); // is this redundant when the  following line is added?
+      $or->condition('n.' . $label_col, '%' . $filters['search'] . '%', 'LIKE');
     }
     $or->condition('' . $eid . '', $title_query, 'IN');
     $or->condition('' . $eid . '', $body_query, 'IN');
@@ -1458,7 +1457,12 @@ function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col
   else {
     //  Title Field
     if (isset($filters['title']) && $filters['title'] != '') {
-      $query->condition('' . $eid . '', $title_query, 'IN');
+      $or = db_or();
+      $or->condition('' . $eid . '', $title_query, 'IN');
+      if (!empty($label_col)) {
+        $or->condition('n.' . $label_col, '%' . $filters['search'] . '%', 'LIKE');
+      }
+      $query->condition($or);
     }
 
     // Body Field
