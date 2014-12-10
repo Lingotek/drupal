@@ -1726,7 +1726,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   $node_based_translation = $entity_type == 'node' && $storage_method == 'node';
   $url_alias_translation = $entity->lingotek['url_alias_translation'];
 
-  if ($entity_type == 'node' && $storage_method == 'node') { //node-based translations
+  if ($node_based_translation) { //node-based translations
     $storage_entity = lingotek_get_target_node($entity, $drupal_language_code);
   }
   else {
