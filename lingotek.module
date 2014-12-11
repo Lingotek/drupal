@@ -2369,6 +2369,9 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       '#title' => t('Restore to a phase in the new workflow'),
       '#default_value' => TRUE,
       '#description' => t('Prefill the new workflow with translations from the previous workflow'),
+      '#states' => array(
+        'invisible' => array(':input[name="lingotek[workflow_id]"]' => array('value' => '')),
+      )
     );
 
     $form['lingotek']['prefill_phase_select'] = array(
@@ -2376,7 +2379,8 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
       '#type' => 'select',
       '#states' => array(
-        'invisible' => array(':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => FALSE)),
+        'visible' => array(':input[name="lingotek[workflow_id]"]' => array('!value' => ''),
+                           ':input[name="lingotek[prefill_phases_checkbox]"]' => array('checked' => TRUE)),
       ),
       '#suffix' => '</div>',
     );
@@ -2411,15 +2415,11 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
  *   a workflow UUID
  */
 function lingotek_get_change_workflow_form_callback($form, $form_state) {
-  if (isset($form_state['values']['lingotek']['prefill_phases_checkbox'])
-      && $form_state['values']['lingotek']['prefill_phases_checkbox']) {
-    return array(
-      $form['lingotek']['prefill_phase_select'],
-      $form['lingotek']['prefill_phases_checkbox'],
-      $form['lingotek']['workflow_id'],
-    );
-  }
-  return $form['lingotek']['workflow_id'];
+  return array(
+    $form['lingotek']['prefill_phase_select'],
+    $form['lingotek']['prefill_phases_checkbox'],
+    $form['lingotek']['workflow_id'],
+  );
 }
 
 /**
