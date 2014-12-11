@@ -1310,6 +1310,27 @@ function lingotek_admin_prepare_menus() {
     drupal_set_message(t('All menu links already set to <i>language neutral</i>.'));
   }
 
+  // make sure all menu links have the "alter" attribute, so that
+  // the i18n_menu module will check for translations
+  $result = db_select('menu_links', 'ml')
+    ->fields('ml', array('mlid'))
+    ->condition('ml.options', '%alter%', 'NOT LIKE')
+    ->execute()->fetchCol();
+  $total_links_modified = 0;
+  if (!empty($result)) {
+    foreach ($result as $mlid) {
+      $mlink = menu_link_load($mlid);
+      $mlink['options']['alter'] = TRUE;
+      menu_link_save($mlink);
+      $total_links_modified++;
+    }
+  }
+  if ($total_links_modified) {
+    drupal_set_message(format_plural($total_links_modified, t('Prepared one menu link for multilingual display.'), t('Prepared @num menu links for multilingual display.', array('@num' => $total_links_modified))));
+  }
+  else {
+    drupal_set_message(t('All menu links ready to display translations.'));
+  }
   return TRUE;
 }
 
