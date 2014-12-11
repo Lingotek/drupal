@@ -764,9 +764,14 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     if (is_array($workflows) && count($workflows) > 1 && $setup_complete) {
       $stored_profile = lingotek_get_profile_settings(LingotekSync::PROFILE_CONFIG);
       $stored_workflow_id = (isset($stored_profile['workflow_id']) ? $stored_profile['workflow_id'] : '');
-      $selected_workflow_id = (isset($form_state['values']['workflow_id']) ? $form_state['values']['workflow_id'] : $stored_workflow_id);
+      $selected_workflow_id = (isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : $stored_workflow_id);
+      $curr_workflow = $api->getWorkflow($stored_workflow_id);
+      if (!empty($curr_workflow)) {
+        // append the current workflow to the top of the workflow list, if it's not already there
+        $workflows = array($stored_workflow_id => $curr_workflow->name) + $workflows;
+      }
 
-      $form['additional_translation']['workflow_id'] = array(
+      $form['additional_translation']['addtl_workflow_id'] = array(
         '#type' => 'select',
         '#title' => t('Workflow'),
         '#description' => t('This workflow will be used for handling these additional translation items.'),
@@ -774,35 +779,35 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
         '#options' => $workflows,
         '#ajax' => array(
           'callback' => 'lingotek_config_default_workflow_form_callback',
-          'wrapper' => 'prefill-phases-div',
+          'wrapper' => 'addtl-prefill-phases-div',
           'method' => 'replace',
           'effect' => 'fade',
         ),
-        '#prefix' => '<div id="prefill-phases-div">',
+        '#prefix' => '<div id="addtl-prefill-phases-div">',
       );
 
-      $form['additional_translation']['prefill_phases_checkbox'] = array(
+      $form['additional_translation']['addtl_prefill_phases_checkbox'] = array(
         '#type' => 'checkbox',
         '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
         '#default_value' => FALSE,
         '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
         '#states' => array(
-          'invisible' => array(':input[name="workflow_id"]' => array('value' => $stored_workflow_id)),
+          'invisible' => array(':input[name="addtl_workflow_id"]' => array('value' => $stored_workflow_id)),
         )
       );
 
-      $form['additional_translation']['prefill_phase_select'] = array(
+      $form['additional_translation']['addtl_prefill_phase_select'] = array(
         '#title' => t("Desired Prefill Phase"),
         '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
         '#type' => 'select',
         '#states' => array(
-            'visible' => array(':input[name="workflow_id"]' => array('!value' => $stored_workflow_id),
-                               ':input[name="prefill_phases_checkbox"]' => array('checked' => TRUE)
+            'visible' => array(':input[name="addtl_workflow_id"]' => array('!value' => $stored_workflow_id),
+                               ':input[name="addtl_prefill_phases_checkbox"]' => array('checked' => TRUE)
           ),
         ),
         '#suffix' => '</div>',
       );
-      $form['additional_translation']['prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($selected_workflow_id);
+      $form['additional_translation']['addtl_prefill_phase_select']['#options'] = lingotek_get_phases_by_workflow_id($selected_workflow_id);
     }
 
     // Projects
@@ -822,7 +827,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
     if ($projects && count($projects) > 0 && $setup_complete) {
       $sorted = asort($projects);
-      $form['additional_translation']['project_id'] = array(
+      $form['additional_translation']['addtl_project_id'] = array(
         '#type' => 'select',
         '#title' => t('Default Project'),
         '#options' => $projects,
@@ -848,7 +853,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     }
 
     if ($personal_vault_count + $community_vault_count > 0 && $setup_complete) {
-      $form['additional_translation']['vault_id'] = array(
+      $form['additional_translation']['addtl_vault_id'] = array(
         '#type' => 'select',
         '#title' => t('Default Vault'),
         '#options' => $vaults,
@@ -986,10 +991,10 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 }
 
 function lingotek_save_config_profile($form_state) {
-  $project_id = isset($form_state['values']['project_id']) ? $form_state['values']['project_id'] : variable_get('lingotek_project', '');
-  $vault_id = isset($form_state['values']['vault_id']) ? $form_state['values']['vault_id'] : variable_get('lingotek_vault', '');
-  $workflow_id = isset($form_state['values']['workflow_id']) ? $form_state['values']['workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
-  $prefill_phase = isset($form_state['values']['prefill_phase_select']) ? $form_state['values']['prefill_phase_select'] : NULL;
+  $project_id = isset($form_state['values']['addtl_project_id']) ? $form_state['values']['addtl_project_id'] : variable_get('lingotek_project', '');
+  $vault_id = isset($form_state['values']['addtl_vault_id']) ? $form_state['values']['addtl_vault_id'] : variable_get('lingotek_vault', '');
+  $workflow_id = isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
+  $prefill_phase = isset($form_state['values']['addtl_prefill_phase_select']) ? $form_state['values']['addtl_prefill_phase_select'] : NULL;
 
   $profile = array(
     'project_id' => $project_id,
@@ -1900,6 +1905,11 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   if ($workflows && count($workflows) > 1) {
     $stored_workflow_id =  (isset($stored_profile['workflow_id']) ? $stored_profile['workflow_id'] : '');
     $selected_workflow_id = (isset($form_state['values']['workflow_id']) ? $form_state['values']['workflow_id'] : $stored_workflow_id);
+    $curr_workflow = $api->getWorkflow($stored_workflow_id);
+    if (!empty($curr_workflow)) {
+      // append the current workflow to the top of the workflow list, if it's not already there
+      $workflows = array($stored_workflow_id => $curr_workflow->name) + $workflows;
+    }
 
     $form['defaults']['workflow_id'] = array(
       '#type' => 'select',
@@ -2056,9 +2066,9 @@ function lingotek_profile_default_workflow_form_callback($form, $form_state) {
 
 function lingotek_config_default_workflow_form_callback($form, $form_state) {
   return array(
-    $form['additional_translation']['workflow_id'],
-    $form['additional_translation']['prefill_phases_checkbox'],
-    $form['additional_translation']['prefill_phase_select'],
+    $form['additional_translation']['addtl_workflow_id'],
+    $form['additional_translation']['addtl_prefill_phases_checkbox'],
+    $form['additional_translation']['addtl_prefill_phase_select'],
   );
 }
 

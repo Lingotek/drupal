@@ -720,6 +720,30 @@ class LingotekApi {
   }
 
   /**
+   * Gets Lingotek Workflow by ID
+   * 
+   * @param $id
+   *   a string containing the workflow ID
+   * @param $reset
+   *   A boolean value to determine whether we need to query the API
+   * 
+   * @return array
+   *   An array of workflow details
+   */
+  public function getWorkflow($id, $reset = FALSE) {
+    $workflow = variable_get('lingotek_workflow_' . $id, array());
+    if (!empty($workflow) && $reset == FALSE) {
+      return $workflow;
+    }
+    $response = $this->request('getWorkflow', array('id' => $id));
+    if (!empty($response->results) && $response->results == 'success') {
+      $workflow = $response->workflow;
+      variable_set('lingotek_workflow_' . $id, $workflow);
+    }
+    return $workflow;
+  }
+
+  /**
    * Gets available Lingotek Translation Memory Vaults.
    * 
    * @param $reset
