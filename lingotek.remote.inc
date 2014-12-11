@@ -35,10 +35,17 @@ function lingotek_get_target_node($node, $drupal_language_code) {
   }
 
   if (isset($tset[$drupal_language_code])) {
-    // TODO: if workbench moderation is enabled for this node,
+    // If revisioning is enabled for this content type,
     // then create a new revision of it;
     // otherwise, just load the existing one to be updated.
-    $localized_node = node_load($tset[$drupal_language_code]->nid);
+    $localized_node = lingotek_node_load_default($tset[$drupal_language_code]->nid);
+    $content_type_options = variable_get('node_options_' . $localized_node->type, array());
+    if (in_array('revision', $content_type_options)) {
+      $localized_node->revision = TRUE;
+      $localized_node->log = "Downloaded translation changes from Lingotek for language code '$drupal_language_code'.";
+      node_save($localized_node);
+      $localized_node = lingotek_node_load_default($tset[$drupal_language_code]->nid);
+    }
   }
   else {
     $localized_node = new stdClass();
