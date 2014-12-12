@@ -102,16 +102,17 @@ function lingotek_config_start_query($form_state) {
   $translate_terms_subquery = db_select('taxonomy_vocabulary', 'tv');
   $translate_terms_subquery->fields('tv', array('vid'));
   $translate_terms_subquery->condition('tv.i18n_mode', LINGOTEK_TAXONOMY_TRANSLATE_VALUE);
+  $translate_ids = $translate_terms_subquery->execute()->fetchCol();
 
   // Hide taxonomy terms that have custom fields.
   $custom_fields_subquery = db_select('taxonomy_vocabulary', 'tv');
   $custom_fields_subquery->fields('tv', array('vid'));
-  $custom_fields_subquery->join('field_config_instance', 'fci', 'tv.vid = fci.field_id');
+  $custom_fields_subquery->join('field_config_instance', 'fci', 'tv.machine_name = fci.bundle');
 
-  $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source AND term_name.vid NOT IN (' . $translate_terms_subquery . ') AND term_name.vid NOT IN (' . $custom_fields_subquery . ')');
+  $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source AND term_name.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_name.vid NOT IN (' . $custom_fields_subquery . ')');
   $query->addField('term_name', 'tid', 'tid_from_name');
 
-  $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source AND term_description.vid NOT IN (' . $translate_terms_subquery . ') AND term_description.vid NOT IN (' . $custom_fields_subquery . ')');
+  $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source AND term_description.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_description.vid NOT IN (' . $custom_fields_subquery . ')');
   $query->addField('term_description', 'tid', 'tid_from_description');
 
   // For all taxonomy terms, only show if it has a name or description.
