@@ -307,7 +307,7 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
         ),
       );
       if (!$setup_complete) {
-        $fields['title_field']['#attributes']['checked'] = 'checked';
+        $fields[$missing_field . '_field']['#attributes']['checked'] = 'checked';
       }
     }
   }
