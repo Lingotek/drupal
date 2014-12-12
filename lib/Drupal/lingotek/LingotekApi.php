@@ -70,8 +70,12 @@ class LingotekApi {
 
     $project_id = $translatable_object->getProjectId();
 
-    $source_lingotek_locale = $translatable_object->getSourceLocale();
-    $source_language = isset($source_lingotek_locale) && !empty($source_lingotek_locale) ? $source_lingotek_locale : Lingotek::convertDrupal2Lingotek(lingotek_get_source_language());
+    $source_language = $translatable_object->getSourceLocale();
+    if (empty($source_language)) {
+      drupal_set_message('Some entities not uploaded because the source language was language neutral.', 'warning', FALSE);
+      LingotekLog::warning('Document @docname not uploaded. Language was language neutral.', array('@docname' => $translatable_object->getDocumentName()));
+      return FALSE;
+    }
 
     if ($project_id) {
       $parameters = array(
@@ -716,6 +720,30 @@ class LingotekApi {
   }
 
   /**
+   * Gets Lingotek Workflow by ID
+   * 
+   * @param $id
+   *   a string containing the workflow ID
+   * @param $reset
+   *   A boolean value to determine whether we need to query the API
+   * 
+   * @return array
+   *   An array of workflow details
+   */
+  public function getWorkflow($id, $reset = FALSE) {
+    $workflow = variable_get('lingotek_workflow_' . $id, array());
+    if (!empty($workflow) && $reset == FALSE) {
+      return $workflow;
+    }
+    $response = $this->request('getWorkflow', array('id' => $id));
+    if (!empty($response->results) && $response->results == 'success') {
+      $workflow = $response->workflow;
+      variable_set('lingotek_workflow_' . $id, $workflow);
+    }
+    return $workflow;
+  }
+
+  /**
    * Gets available Lingotek Translation Memory Vaults.
    * 
    * @param $reset
@@ -823,13 +851,14 @@ class LingotekApi {
       $consumer_key = variable_get('lingotek_oauth_consumer_id', '');
       $consumer_secret = variable_get('lingotek_oauth_consumer_secret', '');
       if (!empty($consumer_key) && !empty($consumer_secret)) {
-        $valid_connection = ($this->request('validateApiKeys')) ? TRUE : FALSE;
-      }
-      else {
-        $valid_connection = FALSE;
+        $valid_connection = $this->request('validateApiKeys');
+        if (!empty($valid_connection->results) && $valid_connection->results != 'fail') {
+          $valid_connection = TRUE;
+          return $valid_connection;
+        }
       }
     }
-
+    $valid_connection = FALSE;
     return $valid_connection;
   }
 

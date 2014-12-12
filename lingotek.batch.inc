@@ -202,7 +202,7 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       while ($record = $result->fetchAssoc()) {
         $operations[] = array('lingotek_entity_download', array($record['entity_id'], 'node', $lingotek_locale));
       }
-      // get all config chunks that have pending translations
+      // get all config sets that have pending translations
       $key = 'target_sync_status_' . $lingotek_locale;
       $query = db_select('lingotek_config_metadata', 'meta')->fields('meta');
       $query->condition('config_key', $key);
@@ -211,13 +211,8 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
         ->condition('value', LingotekSync::STATUS_READY);
       $query->condition($status_or);
       $result = $query->execute();
-      $ran = FALSE;
       while ($record = $result->fetchAssoc()) {
-        $ran = TRUE;
         $operations[] = array('lingotek_sync_download_config_target', array($record['id'], $lingotek_locale, $sync_success_target));
-      }
-      if ($ran) {
-        $operations[] = array('drupal_flush_all_caches', array());
       }
     }
   }
@@ -239,6 +234,9 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
       }
     }
     $doc_ids = array_unique($doc_ids);
+  }
+  if (count($operations)) {
+    $operations[] = array('drupal_flush_all_caches', array());
   }
 
   return $operations;
@@ -528,10 +526,11 @@ function lingotek_update_target_progress_batch_create($entity_type, $nids) {
   $segment = array();
   $offset = 0;
   $offset_interval = 5;
+  $total_count = count($nids);
   do {
     $segment = array_slice($document_ids, $offset, $offset_interval, TRUE);
-    if (!empty($segment)) {
-      $operations[] = array('lingotek_get_and_update_target_progress', array($entity_type, $segment));
+    if ($segment_count = count($segment)) {
+      $operations[] = array('lingotek_get_and_update_target_progress', array($entity_type, $segment, $offset, $total_count));
     }
     $offset += $offset_interval;
   } while (count($segment) >= $offset_interval);

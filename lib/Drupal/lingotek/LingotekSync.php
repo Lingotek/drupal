@@ -673,11 +673,33 @@ class LingotekSync {
     return $set_ids;
   }
 
-  public static function getEntityIdsByStatusAndTarget($entity_type, $status, $target_language = '%') {
+  /*
+   * Get the entities, by ID, by target status
+   * @param $entity_type
+   *   a string of the entity type
+   * @param $status
+   *   a string containing the desired status
+   * @param $locales
+   *   (optional) an array containing the locales to check
+   * 
+   * @return an array of IDs
+   */
+  public static function getEntityIdsByTargetStatus($entity_type, $status, $locales = NULL) {
+    if ($locales === NULL) {
+      $verb = 'LIKE';
+      $target_locales = 'target_sync_status_%';
+    }
+    else {
+      $verb = 'IN';
+      $target_locales = array();
+      foreach ($locales as $l) {
+        $target_locales[] = 'target_sync_status_' . $l;
+      }
+    }
     $query = db_select('lingotek_entity_metadata', 'l')
         ->distinct()
       ->condition('entity_type', $entity_type)
-      ->condition('entity_key', 'target_sync_status_' . $target_language, 'LIKE')
+      ->condition('entity_key', $target_locales, $verb)
       ->condition('value', $status);
     $query->addField('l', 'entity_id', 'nid');
     $result = $query->execute()->fetchCol();

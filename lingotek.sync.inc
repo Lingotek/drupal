@@ -213,7 +213,8 @@ function lingotek_sync_endpoint() {
 *    array of Document IDs that you want to update
 *
 */
-function lingotek_get_and_update_target_progress($entity_type, $document_ids) {
+function lingotek_get_and_update_target_progress($entity_type, $document_ids, $current_nids, $total_nids, &$context) {
+  $context['message'] = t('Checking status of translations (@current of @total complete)', array('@current' => $current_nids, '@total' => $total_nids));
   $api = LingotekApi::Instance();
   if (empty($document_ids)) {
     return;
