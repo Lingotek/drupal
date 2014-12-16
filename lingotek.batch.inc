@@ -287,11 +287,11 @@ function lingotek_sync_upload_node_finished($success, $results, $operations, $co
     $message .= (isset($results['uploaded_nids']) && is_array($results['uploaded_nids'])) ? ' (' . format_plural($count, 'entity id', 'entity ids') . ': ' . implode(", ", $results['uploaded_nids']) . ')' : '';
     $message .= (isset($results['disabled'])) ? ' ' . t("<i>(Note: entities with the Disabled profile must be set to an enabled profile to be uploaded)</i>") : "";
     $status = (isset($results['disabled'])) ? 'warning' : 'status';
-    drupal_set_message($message, $status);
+    drupal_set_message(filter_xss($message), $status);
   }
   else {
     $message = t('Finished with an error.');
-    drupal_set_message($message, 'error');
+    drupal_set_message(filter_xss($message), 'error');
   }
 }
 

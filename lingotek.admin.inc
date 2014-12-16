@@ -56,9 +56,9 @@ function lingotek_admin_account_status_form($form, &$form_state, $show_fieldset 
         array(
           t('OAuth Credentials:') . ' <a id="lingotek-oauth-secret-btn"><i class="fa fa-lock fa-lg'
           . '" alt="' . t('lock/unlock') . '" style="cursor: pointer;"></i></a>',
-          '<input type="text" value="'.variable_get('lingotek_oauth_consumer_id', '') . '" readonly="readonly" style="background: none; width: 80%;"/><span class="description">'.t('Key').'</span>' . '<br/></span><span id="lingotek-oauth-secret" style="display:none;">'.
-          '<input type="text" value="'.variable_get('lingotek_oauth_consumer_secret', '') . '" readonly="readonly" style="background: none; width: 80%;"/>' . '</span>'.'<span id="lingotek-oauth-secret-placeholder">'.
-          '<input type="password" value="'.variable_get('lingotek_oauth_consumer_secret', '') . '" readonly="readonly" style="background: none; width: 80%;"/></span><span class="description">'.t('Secret').'</span>'
+          '<input type="text" value="' . variable_get('lingotek_oauth_consumer_id', '') . '" readonly="readonly" style="background: none; width: 80%;"/><span class="description">' . t('Key') . '</span>' . '<br/></span><span id="lingotek-oauth-secret" style="display:none;">' .
+          '<input type="text" value="' . variable_get('lingotek_oauth_consumer_secret', '') . '" readonly="readonly" style="background: none; width: 80%;"/>' . '</span>' . '<span id="lingotek-oauth-secret-placeholder">' .
+          '<input type="password" value="' . variable_get('lingotek_oauth_consumer_secret', '') . '" readonly="readonly" style="background: none; width: 80%;"/></span><span class="description">' . t('Secret') . '</span>',
         ),
         array(t('Workflow ID:'), variable_get('lingotek_workflow', '')),
         array(t('Integration Method ID:'), variable_get('lingotek_integration_method', '')),
@@ -405,7 +405,7 @@ function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $
       array('data' => drupal_render($fields), 'width' => '65%'),
     );
   }
-  else if ($entity_type == 'taxonomy_term') {
+  elseif ($entity_type == 'taxonomy_term') {
     $row = array(
       array('data' => $bundle['label'], 'width' => '20%'),
       array('data' => drupal_render($profiles)),
