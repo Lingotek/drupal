@@ -902,9 +902,10 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   // form if Lingotek hasn't been set up yet.
   if (!lingotek_is_module_setup(FALSE)) {
     $lingotek_setup_link = l(t('set up the module'), 'admin/settings/lingotek');
+    $setup_description = t("To begin Lingotek Translation, please !set_up_the_module.", array('!set_up_the_module' => $lingotek_setup_link));
     $form['lingotek']['lingotek_setup_note'] = array(
       '#type' => 'item',
-      '#description' => t("To begin Lingotek Translation, please !set_up_the_module.", array('!set_up_the_module' => $lingotek_setup_link)),
+      '#description' => filter_xss($setup_description),
     );
     return $form;
   }
@@ -2562,11 +2563,12 @@ function lingotek_clear_exceptions_form($form, $form_state) {
   $entity_profiles = variable_get('lingotek_entity_profiles');
   $profile_index = $entity_profiles['node'][$content_type];
   $profile = $profile_options[$profile_index];
+  $description = t("This will apply the selected profile (@profile) to all @content_type nodes that have previously been configured independent of the rest of their content type. Note: some settings may remain different such as vault, project, workflow, and translation method (node-based/field-based).", array('@profile' => $profile, '@content_type' => $content_type));
 
   $form['clear_exceptions'] = array(
     '#type' => 'fieldset',
     '#title' => t('Clear Profile Exceptions'),
-    '#description' => t("This will apply the selected profile (" . $profile . ") to all " . $content_type . " nodes that have previously been configured independent of the rest of their content type. Note: some settings may remain different such as vault, project, workflow, and translation method (node-based/field-based)."),
+    '#description' => filter_xss($description),
   );
   $form['clear_exceptions']['submit'] = array(
     '#type' => 'submit',
@@ -2585,7 +2587,7 @@ function lingotek_clear_exceptions_form_submit($form_state, $form) {
   $delete_keys = "'allow_community_translation', 'create_lingotek_document', 'sync_method', 'url_alias_translation', 'profile'";
   $delete_query = db_query("DELETE lem.* FROM {node} AS n JOIN lingotek_entity_metadata AS lem ON n.nid = lem.entity_id WHERE entity_key IN (" . $delete_keys . ") AND type = '" . $content_type . "'");
   $delete_query->execute();
-  drupal_set_message(t('All translation profile exceptions for ' . $content_type . ' have been removed.'));
+  drupal_set_message(t('All translation profile exceptions for nodes of type "@content_type" have been removed.', array('@content_type' => $content_type)));
 }
 
 function lingotek_add_workflow_settings_form($form, $form_state, $node) {

@@ -167,10 +167,12 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $modal_size = $entity_type == 'config' ? 'ctools-modal-lingotek-small' : 'ctools-modal-lingotek-large';
   $modal_classes = array('ctools-use-modal', $modal_size, 'ltk-action');
+  $search_title = l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => $modal_classes))) . ' ' . t('Search') . ': ';
+
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
-    '#title' => l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => $modal_classes))) . ' ' . t('Search') . ': ',
+    '#title' => filter_xss($search_title),
     '#size' => 30,
   );
 
@@ -865,7 +867,7 @@ function lingotek_grid_download_ready($entity_type) {
 }
 
 function lingotek_grid_upload_edited($entity_type) {
-  if($entity_type === 'config') {
+  if ($entity_type === 'config') {
     // Only get the ones that need to be uploaded.
     $lids = LingotekConfigSet::getLidsToUpdate();
     lingotek_config_upload_selected($lids);
@@ -1992,7 +1994,7 @@ function lingotek_entity_delete_form($form, &$form_state, $nids = array(), $coll
     '#type' => 'fieldset',
     '#prefix' => format_plural(count($entity_ids), '', '<div class="messages warning">' . t('This action will apply to @count entities.') . '</div>'),
     '#title' => t('Are you sure you want to delete these entities?'),
-    '#description' => $content_details_string,
+    '#description' => filter_xss($content_details_string),
     '#suffix' => '<i>' . t("Note: this action cannot be undone.") . '</i>',
     '#collapsible' => $collapse_fieldset,
     '#collapsed' => $collapse_fieldset,

@@ -783,7 +783,7 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
         '@lingotek_locale' => $lingotek_locale));
     }
     else {
-      drupal_set_message(t($lingotek_locale . ' could not be added as a language for Lingotek to translate.'), 'error', FALSE);
+      drupal_set_message(t('@lingotek_locale could not be added as a language for Lingotek to translate.', array('@lingotek_locale' => $lingotek_locale)), 'error', FALSE);
       LingotekLog::error("Target language could not be added: @drupal_language_code (@lingotek_locale)", array(
         '@drupal_language_code' => $drupal_language_code,
         '@lingotek_locale' => $lingotek_locale));
@@ -1810,7 +1810,7 @@ function lingotek_utility_router($method, $params = array()) {
     call_user_func($callback);
   }
   else {
-    return drupal_set_message("Utility not callable: " . $callback, 'error');
+    return drupal_set_message(filter_xss(t("Utility not callable: @callback", array('@callback' => $callback))), 'error');
   }
 }
 
