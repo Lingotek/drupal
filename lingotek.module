@@ -897,6 +897,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#title' => $title,
     '#description' => t("The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
   );
+  if (!empty($node->lingotek['document_id'])) {
+    $form['lingotek']['lingotek_note']['#description'] .= t('<p><b>NOTE: This node has already been uploaded to Lingotek. To change the workflow, you must use the <i>Change Workflow</i> action on the Manage tab rather than modifying the Translation Profile here.</b></p>');
+  }
 
   // With the Translation Management tab in place, disable it and return the
   // form if Lingotek hasn't been set up yet.
