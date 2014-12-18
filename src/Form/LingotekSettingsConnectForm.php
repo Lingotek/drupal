@@ -39,10 +39,10 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
       $form['#attached'] = array();
     }
     if (!isset($form['#attached']['js'])) {
-      $form['#attached']['js'] = array();
+      $form['#attached']['library'] = array();
     }
 
-    $form['#attached']['js'][] = drupal_get_path('module', 'lingotek') . '/js/connect.js';
+    $form['#attached']['library'][] = 'lingotek/lingotek.connect';
     $form['intro'] = array(
       '#type' => 'markup',
       '#markup' => $this->t('Get started by clicking the button below to connect your Lingotek account to this Drupal site.'),

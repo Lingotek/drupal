@@ -10,3 +10,8 @@ lingotek.icons:
   css:
     theme:
       css/lingotek.icons.css: {}
+
+lingotek.connect:
+  version: VERSION
+  js:
+    js/connect.js: {}
