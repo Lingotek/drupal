@@ -39,16 +39,14 @@ function lingotek_permission() {
  */
 function lingotek_toolbar() {
   $items = array();
-
   $items['translation'] = array(
     '#type' => 'toolbar_item',
     '#attached' => array(
-      'css' => array(
-        drupal_get_path('module', 'lingotek') . '/css/lingotek.icons.css',
+      'library' => array(
+        'lingotek/lingotek.icons',
       ),
     ),
   );
-
   return $items;
 }
 

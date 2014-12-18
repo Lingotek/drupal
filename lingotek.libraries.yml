@@ -4,3 +4,9 @@ lingotek:
   css:
     theme:
       css/base.css: {}
+
+lingotek.icons:
+  version: VERSION
+  css:
+    theme:
+      css/lingotek.icons.css: {}
