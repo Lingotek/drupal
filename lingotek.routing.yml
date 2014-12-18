@@ -1,7 +1,7 @@
 lingotek.dashboard:
   path: '/admin/lingotek'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardPage'
+    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardPage'
     _title: 'Lingotek Translation Dashboard'
   requirements:
     _permission: 'administer lingotek'
@@ -25,7 +25,7 @@ lingotek.notify:
 lingotek.setup_account:
   path: '/admin/lingotek/setup/account'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekSetupController::accountPage'
+    _controller: '\Drupal\lingotek\Controller\LingotekSetupController::accountPage'
     _title: 'Lingotek Account Info'
   requirements:
     _permission: 'administer lingotek'
@@ -33,7 +33,7 @@ lingotek.setup_account:
 lingotek.setup_community:
   path: '/admin/lingotek/setup/community'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekSetupController::communityPage'
+    _controller: '\Drupal\lingotek\Controller\LingotekSetupController::communityPage'
     _title: 'Choose Community'
   requirements:
     _permission: 'administer lingotek'
@@ -41,7 +41,7 @@ lingotek.setup_community:
 lingotek.setup_defaults:
   path: '/admin/lingotek/setup/defaults'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekSetupController::defaultsPage'
+    _controller: '\Drupal\lingotek\Controller\LingotekSetupController::defaultsPage'
     _title: 'Choose Defaults'
   requirements:
     _permission: 'administer lingotek'
@@ -49,7 +49,7 @@ lingotek.setup_defaults:
 lingotek.settings:
   path: '/admin/lingotek/settings'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekSettingsController::content'
+    _controller: '\Drupal\lingotek\Controller\LingotekSettingsController::content'
     _title: 'Translation Settings'
   requirements:
     _permission: 'administer lingotek'
@@ -57,7 +57,7 @@ lingotek.settings:
 lingotek.manage:
   path: '/admin/lingotek/manage'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekManagementController::content'
+    _controller: '\Drupal\lingotek\Controller\LingotekManagementController::content'
     _title: 'Manage Translations'
   requirements:
     _permission: 'administer lingotek'
@@ -65,7 +65,7 @@ lingotek.manage:
 lingotek.batch:
   path: '/admin/lingotek/batch/{action}/{entity_type}/{entity_id}'
   defaults:
-    _content: '\Drupal\lingotek\Controller\LingotekBatchController::dispatch'
+    _controller: '\Drupal\lingotek\Controller\LingotekBatchController::dispatch'
     _title: 'Upload Source Batch'
   requirements:
     _permission: 'administer lingotek'
