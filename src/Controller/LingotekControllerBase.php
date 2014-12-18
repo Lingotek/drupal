@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class LingotekControllerBase extends ControllerBase {
 
-  use UrlGeneratorTrait;
+  //use UrlGeneratorTrait;
 
   /**
    * A Symfony request instance
