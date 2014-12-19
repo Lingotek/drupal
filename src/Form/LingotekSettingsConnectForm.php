@@ -56,7 +56,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
       '#theme' => 'menu_local_action',
       '#link' => array(
         'title' => t('Connect to Lingotek'),
-        'href' => $lingotek_connect_link,
+        'url' => Url::fromUri($lingotek_connect_link),
         'localized_options' => array(
           'attributes' => array(
             'title' => t('Connect to Lingotek'),
