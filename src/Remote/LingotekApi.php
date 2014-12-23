@@ -51,7 +51,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function addDocument($args) {
     try {
-      $response = $this->lingotekClient->post($this->api_url . '/api/document', $args, TRUE);
+      $response = $this->lingotekClient->post('/api/document', $args, TRUE);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add document: ' . $e->getMessage());
@@ -68,7 +68,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function patchDocument($id, $args) {
     try {
-      $response = $this->lingotekClient->patch($this->api_url . '/api/document', $args, TRUE);
+      $response = $this->lingotekClient->patch('/api/document', $args, TRUE);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
@@ -85,7 +85,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function deleteDocument($id) {
     try {
-      $response = $this->lingotekClient->delete($this->api_url . '/api/document', array('doc_id' => $id));
+      $response = $this->lingotekClient->delete('/api/document', array('doc_id' => $id));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to delete document: ' . $e->getMessage());
@@ -95,7 +95,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getDocument($id) {
     try {
-      $response = $this->lingotekClient->get($this->api_url . '/api/document', array('doc_id' => $id));
+      $response = $this->lingotekClient->get('/api/document', array('doc_id' => $id));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
@@ -110,7 +110,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getDocumentStatus($id) {
     try {
-      $response = $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/status');
+      $response = $this->lingotekClient->get('/api/document/' . $id . '/status');
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get document status: ' . $e->getMessage());
@@ -120,7 +120,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function addTranslation($id, $locale) {
     try {
-      $response = $this->lingotekClient->post($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
+      $response = $this->lingotekClient->post('/api/document/' . $id . '/translation', array('locale_code' => $locale));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
@@ -130,7 +130,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getTranslation($id, $locale) {
     try {
-      $response = $this->lingotekClient->get($this->api_url . '/api/document/' . $id . '/content', array('locale_code' => $locale));
+      $response = $this->lingotekClient->get('/api/document/' . $id . '/content', array('locale_code' => $locale));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
@@ -140,7 +140,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function deleteTranslation($id, $locale) {
     try {
-      $response = $this->lingotekClient->delete($this->api_url . '/api/document/' . $id . '/translation', array('locale_code' => $locale));
+      $response = $this->lingotekClient->delete('/api/document/' . $id . '/translation', array('locale_code' => $locale));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
