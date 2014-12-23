@@ -210,7 +210,6 @@ class Lingotek implements LingotekInterface {
     if (is_string($label)) {
       echo '<h1>' . $label . '</h1>';
     }
-    print_r($data);
     echo '</pre>';
     if ($die || is_bool($label) && $label) {
       die();

@@ -13,6 +13,7 @@ use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Url;
 
 define('COL_LANGUAGE', 0);
 define('COL_TRANSLATION', 1);
@@ -53,7 +54,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     );
 
     $languages = \Drupal::languageManager()->getLanguages();
-    $entity_langcode = $entity->language()->id;
+    $entity_langcode = $entity->language()->getId();
     $additional_links = array();
 
     foreach ($languages as $langcode => $language) {
@@ -158,10 +159,42 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     if (!isset($option[COL_OPERATIONS]['data']['#links'])) {
       $option[COL_OPERATIONS]['data']['#links'] = array();
     }
+    if (strpos($path, '/admin/lingotek/batch/') === 0) {
+       $path = str_replace('/admin/lingotek/batch/', '', $path);
+       list($action, $entity_type, $entity_id) = explode('/', $path);
+       $url = Url::fromRoute('lingotek.batch', array('action' => $action, 'entity_type' => $entity_type, 'entity_id' => $entity_id));
+    }
+    elseif (strpos($path, '/admin/lingotek/entity/check_upload/') === 0) {
+       $doc_id = str_replace('/admin/lingotek/entity/check_upload/', '', $path);
+       $url = Url::fromRoute('lingotek.entity.check_upload', array('doc_id' => $doc_id));
+    }
+    elseif (strpos($path, '/admin/lingotek/entity/add_target/') === 0) {
+       $path = str_replace('/admin/lingotek/entity/add_target/', '', $path);
+       list($doc_id, $locale) = explode('/', $path);
+       $url = Url::fromRoute('lingotek.entity.add_target', array('doc_id' => $doc_id, 'locale' => $locale));
+    }
+    elseif (strpos($path, '/admin/lingotek/entity/check_target/') === 0) {
+       $path = str_replace('/admin/lingotek/entity/check_target/', '', $path);
+       list($doc_id, $locale) = explode('/', $path);
+       $url = Url::fromRoute('lingotek.entity.check_target', array('doc_id' => $doc_id, 'locale' => $locale));
+    }
+    elseif (strpos($path, '/admin/lingotek/entity/download/') === 0) {
+       $path = str_replace('/admin/lingotek/entity/download/', '', $path);
+       list($doc_id, $locale) = explode('/', $path);
+       $url = Url::fromRoute('lingotek.entity.download', array('doc_id' => $doc_id, 'locale' => $locale));
+    }
+    elseif (strpos($path, '/admin/lingotek/workbench/') === 0) {
+       $path = str_replace('/admin/lingotek/workbench/', '', $path);
+       list($doc_id, $locale) = explode('/', $path);
+       $url = Url::fromRoute('lingotek.workbench', array('doc_id' => $doc_id, 'locale' => $locale));
+    }
+    else {
+       die("failed to get known operation in addOperationLink: $path");
+    }
     $option[COL_OPERATIONS]['data']['#links'][strtolower($name)] = array(
       'title' => $name,
       'language' => $language,
-      'href' => $path,
+      'url' => $url,
     );
   }
 

@@ -87,7 +87,7 @@ class LingotekTranslatableEntity {
     });
 
     $data = array();
-    $translation = $this->entity->getTranslation($this->entity->language()->langcode);
+    $translation = $this->entity->getTranslation($this->entity->language()->getId());
     foreach ($translatable_fields as $k => $definition) {
       $field = $translation->get($k);
       //$data[$k]['#label'] = $definition->getLabel();
