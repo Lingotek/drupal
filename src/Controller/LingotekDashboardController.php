@@ -37,7 +37,10 @@ class LingotekDashboardController extends LingotekControllerBase {
   </style>
 EOD;
     $string .= $d8_css_hack;
-    return $string;
+    return array(
+      '#type' => 'markup',
+      '#markup' => $string,
+    );
   }
 
   public function endpoint(Request $request) {

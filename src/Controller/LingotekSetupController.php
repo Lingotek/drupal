@@ -29,7 +29,10 @@ class LingotekSetupController extends LingotekControllerBase {
       drupal_set_message($this->t('Your account settings have been saved.'));
       return $this->getLingotekForm('LingotekSettingsAccountForm');
     }
-    return $this->getLingotekForm('LingotekSettingsConnectForm');
+    return array(
+      '#type' => 'markup',
+      'markup' => $this->getLingotekForm('LingotekSettingsConnectForm'),
+    );
   }
 
   public function communityPage() {
@@ -47,14 +50,20 @@ class LingotekSetupController extends LingotekControllerBase {
       $this->L->set('defaults.community', current(array_keys($communities)));
       return $this->redirect('lingotek.setup_project_vault');
     }
-    return $this->getLingotekForm('LingotekSettingsCommunityForm');
+    return array(
+      '#type' => 'markup',
+      'markup' => $this->getLingotekForm('LingotekSettingsCommunityForm'),
+    );
   }
 
   public function defaultsPage() {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
-    return $this->getLingotekForm('LingotekSettingsDefaultsForm');
+    return array(
+      '#type' => 'markup',
+      'markup' => $this->getLingotekForm('LingotekSettingsDefaultsForm'),
+    );
   }
 
   protected function receivedToken() {
