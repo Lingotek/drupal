@@ -8,7 +8,7 @@ $GLOBALS['_lingotek_client'] = new LingotekSession();
 
 /*
  * This function is only used for node-based translations.
- * 
+ *
  * @param $node
  *  Node in the source language
  * @param $drupal_language_code
@@ -94,10 +94,10 @@ function lingotek_get_target_node($node, $drupal_language_code) {
             $f[$drupal_language_code][$key]['format'] = $value['format'];
         }
       }
-      
+
       $localized_node->$field_name = $f;
     }
-        
+
     node_save($localized_node);
     lingotek_keystore('node', $localized_node->nid, 'upload_status', LingotekSync::STATUS_TARGET);
     // Child node should keep its parent node's profile, for rules integration.
@@ -110,7 +110,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
   return $localized_node;
 }
 
-function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_language_code, $node_based_translation = FALSE, $url_alias_translation = 0) {
+function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_language_code, $node_based_translation = FALSE, $url_alias_translation = 0) {
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
   // Set $node_based if the entity type is a node, inherit otherwise.
@@ -126,7 +126,7 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
   if ($vid === NULL || $entity_type == 'comment') {
     $vid = $id;
   }
-  
+
   $delta = 0;
   $last_tag = NULL;
   foreach ($xml as $tag => $content) {
@@ -292,6 +292,9 @@ function lingotek_process_entity_xml($xml, $entity, $entity_type, $drupal_langua
       }
 
       cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
+      entity_get_controller($entity_type)->resetCache(array($id));
+      // Pull the latest changes from the database
+      $entity = lingotek_entity_load_single($entity_type, $id);
 
       //Set URL alias
       if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
