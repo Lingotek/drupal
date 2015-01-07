@@ -1085,7 +1085,7 @@ function lingotek_entity_save($entity, $entity_type) {
     $query->execute();
 
     // check for a workflow change
-    if (isset($entity->lingotek['workflow_id']) && isset($entity->lingotek['document_id'])) {
+    if (!empty($entity->lingotek['workflow_id']) && !empty($entity->lingotek['document_id'])) {
       $curr_workflow = $entity->lingotek['workflow_id'];
       $document_id = $entity->lingotek['document_id'];
       if (!isset($entity->original->lingotek['workflow_id']) ||
