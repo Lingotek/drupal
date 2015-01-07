@@ -1010,8 +1010,10 @@ function lingotek_save_config_profile($form_state) {
 
   // Change all other workflows retroactively
   $document_ids = LingotekConfigSet::getAllConfigDocIds();
-  $api = LingotekApi::instance();
-  $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+  if (!empty($document_ids)) {
+    $api = LingotekApi::instance();
+    $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+  }
 }
 
 function lingotek_admin_setup_nonbuiltins_batch($operations) {
@@ -2107,7 +2109,9 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
             lingotek_keystore($entity['type'], $entity['id'], 'workflow_id', $workflow_id);
           }
         }
-        $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+        if (!empty($document_ids)) {
+          $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+        }
       }
     }
   }
