@@ -1,0 +1,4 @@
+administer lingotek:
+  title: 'Administer Lingotek Translation Module'
+  description: 'Use all features and tools in the Lingotek Translation Module.'
+  restrict access: TRUE
