@@ -61,7 +61,7 @@ class LingotekHttp implements LingotekHttpInterface {
       $response = $this->httpClient->send($request);
     }
      catch (RequestException $e) {
-      watchdog_exception('lingotek', 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
+      watchdog_exception('lingotek', $e, 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
       drupal_set_message(t('Request to Lingotek service failed: %error', array('%error' => $e->getMessage())), 'warning');
       throw $e;
     }
