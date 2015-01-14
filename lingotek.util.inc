@@ -1032,7 +1032,7 @@ function lingotek_cleanup_notify_entity_translation() {
       $bundle_name = !empty($info['entity keys']['bundle']) ? $info['entity keys']['bundle'] : NULL;
       if ($bundle_name && lingotek_managed_by_entity_translation($entity->$bundle_name)) {
         $addtl_params = array('created' => $r->created, 'changed' => $r->modified);
-        list($languages_updated, $updates) = lingotek_entity_translation_save_status($r->entity_type, $entity, array(Lingotek::convertLingotek2Drupal($locale)), $addtl_params);
+        list($languages_updated, $updates) = lingotek_entity_translation_save_status($r->entity_type, $entity, array(Lingotek::convertLingotek2Drupal($locale, FALSE)), $addtl_params);
         $total_updates += $updates;
       }
     }
