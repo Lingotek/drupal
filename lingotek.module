@@ -1699,7 +1699,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   $document_id = $entity->lingotek['document_id'];
   LingotekLog::trace('lingotek_download_document @doc_id (@target)', array('@doc_id' => $document_id, '@target' => $lingotek_locale));
 
-  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
+  $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
   $params = array(
     'documentId' => $document_id,
     'targetLanguage' => $lingotek_locale,
