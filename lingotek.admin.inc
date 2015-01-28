@@ -703,7 +703,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
   $prep_taxonomy_chbx = array(
     '#id' => 'lingotek_prepare_config_taxonomies',
     '#type' => 'checkbox',
-    '#title' => t('Update all taxonomy vocabularies to use translation mode \'Localize\' in the Multilingual Options. (Note: This will prevent translation of custom fields within taxonomy terms.)'),
+    '#title' => t('Update all taxonomy vocabularies that are not currently enabled for multilingual to use translation mode \'Localize\' in the Multilingual Options. (Note: Translation mode \'Localize\' does not support translation of custom fields within taxonomy terms.)'),
     '#attributes' => array(
       'id' => array('lingotek_prepare_config_taxonomies'),
       'name' => 'lingotek_prepare_config_taxonomies',
@@ -1279,6 +1279,7 @@ function lingotek_admin_prepare_taxonomies() {
   // update all taxonomies to be updated to use translation mode 'Localize'
   $result = db_update('taxonomy_vocabulary')
       ->fields(array('i18n_mode' => LINGOTEK_TAXONOMY_LOCALIZE_VALUE))
+      ->condition('i18n_mode', LINGOTEK_TAXONOMY_MULTILINGUAL_DISABLED_VALUE)
       ->execute();
   if ($result) {
     drupal_set_message(format_plural($result, t('Set 1 taxonomy vocabulary to <i>Localize</i>.'), t('Set @num taxonomy vocabularies to <i>Localize</i>.', array('@num' => (int) $result))));
@@ -2451,7 +2452,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   $cleanup_functions['lingotek_admin_prepare_taxonomies'] = array(
     'title' => t('Prepare taxonomy'),
-    'desc' => t('Update all taxonomy vocabularies to use translation mode <i>Localize</i> in the Multilingual Options, in preparation for handling string-based translations of taxonomy vocabularies and terms.'),
+    'desc' => t('Update all taxonomy vocabularies that are not currently enabled for multilingual to use translation mode <i>Localize</i> in the Multilingual Options. (Note: Translation mode <i>Localize</i> does not support translation of custom fields within taxonomy terms.)'),
   );
 
   $cleanup_functions['lingotek_admin_prepare_menus'] = array(

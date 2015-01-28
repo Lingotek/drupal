@@ -97,13 +97,6 @@ Drupal.behaviors.lingotekAdminForm = {
         $('#lingotek_prepare_config_blocks').removeAttr('checked').attr('disabled',true);
       }
     });
-    $('#edit-config-lingotek-translate-config-taxonomies').change( function () {
-      if ($('#edit-config-lingotek-translate-config-taxonomies').is(':checked')) {
-        $('#lingotek_prepare_config_taxonomies').removeAttr('disabled').attr('checked',true);
-      } else {
-        $('#lingotek_prepare_config_taxonomies').removeAttr('checked').attr('disabled',true);
-      }
-    });
     $('#edit-config-lingotek-translate-config-menus').change( function () {
       if ($('#edit-config-lingotek-translate-config-menus').is(':checked')) {
         $('#lingotek_prepare_config_menus').removeAttr('disabled').attr('checked',true);
