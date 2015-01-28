@@ -131,7 +131,7 @@ function lingotek_config_add_query_filters($query) {
   }
   $filters = $_SESSION['grid_filters'];
   if (isset($filters['search']) && strlen($filters['search'])) {
-    $query->condition('source', '%' . $filters['search'] . '%', 'LIKE');
+    $query->where("LOWER(CONVERT(source USING utf8)) LIKE :source_string", array(':source_string' => '%' . strtolower($filters['search'] . '%')));
   }
 
   if (isset($filters['textgroup'])) {

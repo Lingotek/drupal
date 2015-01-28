@@ -5,6 +5,7 @@ core = "7.x"
 php = "5.3"
 configure = admin/config/lingotek/setup
 
+
 dependencies[] = locale
 dependencies[] = field_ui
 dependencies[] = title
