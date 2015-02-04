@@ -1099,20 +1099,23 @@ function lingotek_admin_add_module_index_job($module, &$context) {
 function lingotek_admin_save_queued_strings() {
   $plural_map = variable_get('lingotek_config_plural_mapping', array());
   global $_potx_strings, $_potx_install;
-
   foreach ($_potx_strings as $k => $v) {
+    // get the context, if any
+    reset($v);
+    $context_location = key($v);
+    $context = !empty($context_location) ? $context_location : NULL;
     // handle format_plural
     if (strpos($k, "\0")) {
       list($singular, $plural) = explode("\0", $k);
-      locale($singular, $context=NULL, $langcode='und');
+      locale($singular, $context, $langcode='und');
       $single_lid = LingotekConfigSet::getLidBySource($singular);
-      locale($plural, $context=NULL, $langcode='und');
+      locale($plural, $context, $langcode='und');
       $plural_lid = LingotekConfigSet::getLidBySource($plural);
       $plural_map[$plural_lid] = array('plid' => $single_lid, 'plural' => 1);
     }
     else {
       // handle regular t-function content
-      locale($k, $context=NULL, $langcode='und');
+      locale($k, $context, $langcode='und');
     }
   }
   // TODO: do something with the _potx_install strings
