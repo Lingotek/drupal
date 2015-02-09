@@ -290,7 +290,7 @@ function lingotek_config_action_submit($form, $form_state) {
         lingotek_config_upload_selected($lids);
       }
       elseif (substr($action, 0, 8) == 'download') { // If downloading all targets
-        lingotek_config_download_selected($lids);
+        lingotek_config_download_selected($action, $lids);
       }
       elseif ($action == 'sync') { // If syncing the progress
         lingotek_config_update_selected($lids); // Run batch operations to get the progress report from Lingotek
@@ -334,7 +334,7 @@ function lingotek_config_upload_selected($lids) {
   batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
 }
 
-function lingotek_config_download_selected($lids) {
+function lingotek_config_download_selected($action, $lids) {
   $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
   if (empty($set_ids)) {
     drupal_set_message(t('No translations to download at this time. Make sure configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
@@ -343,12 +343,28 @@ function lingotek_config_download_selected($lids) {
   $document_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
   $available_targets = Lingotek::getLanguages();
   unset($available_targets['en_US']); // all locales_source is assumed by i18n modules to be English
+
+  list($verb, $target_locale) = explode('_', $action, 2);
+  if ($verb != 'download') {
+    throw LingotekException("Config download verb mismatch: expected 'download', received '$verb'");
+  }
+  if ($target_locale != 'all' && empty($available_targets[$target_locale])) {
+    throw LingotekException("Config download received unknown target: $target_locale");
+  }
   $download_targets = array();
   foreach ($document_ids as $doc_id) {
-    foreach (array_keys($available_targets) as $lang) {
+    if ($target_locale == 'all') {
+      foreach (array_keys($available_targets) as $locale) {
+        $target = new stdClass();
+        $target->document_id = $doc_id;
+        $target->locale = $locale;
+        $download_targets[] = $target;
+      }
+    }
+    else {
       $target = new stdClass();
       $target->document_id = $doc_id;
-      $target->locale = $lang;
+      $target->locale = $target_locale;
       $download_targets[] = $target;
     }
   }
