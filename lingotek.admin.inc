@@ -903,6 +903,7 @@ function lingotek_admin_additional_translation_settings_form_validate($form, &$f
 
 function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=array()) {
   $form_state['values'] = array_merge($form_state['values'], $form_state['values']['config']);
+  unset($form_state['values']['config']);
 
   system_settings_form_submit($form, $form_state);
 
