@@ -967,3 +967,15 @@ function lingotek_update_7604(&$sandbox) {
   variable_set('lingotek_entity_profiles', $entity_profiles);
   return t('Removed Lingotek translation profiles for bundles that not longer exist.');
 }
+
+/**
+ * Remove unnecessary 'config' variable, created as a byproduct of the additional-translation form.
+ */
+function lingotek_update_7605(&$sandbox) {
+  // Make sure this is not another module's variable.
+  $config = variable_get('config', FALSE);
+  if (isset($config['lingotek_translate_config_blocks')) {
+    variable_del('config');
+  }
+  return t("Removed unnecessary 'config' variable from the variables table.");
+}
