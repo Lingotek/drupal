@@ -162,7 +162,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_langu
     }
     else { //this part of the xml is a field
       $drupal_field_name = $tag;
-      $field = field_info_field($drupal_field_name);
       $source_field_data = field_get_items($entity_type, $source_entity, $drupal_field_name);
       $translatable_field = !empty($field['translatable']);
       $field_language = $node_based_translation && !$translatable_field ? LANGUAGE_NONE : $drupal_language_code;
@@ -172,6 +171,9 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_langu
         $drupal_field_name = $subfield_parts[0];
         $target_key = $subfield_parts[1];
       }
+
+      $field = field_info_field($drupal_field_name);
+
       if (isset($field)) {
         $curr_field_data = & $entity->$drupal_field_name;
         $index = 0;
@@ -271,7 +273,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_langu
             $index++;
           }
         }
-
         foreach ($field_names as $field_name) {
           // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
           // UPDATE: This could perhaps be rewritten now that workbench_moderation is supported through the rules module
