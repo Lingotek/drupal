@@ -974,7 +974,7 @@ function lingotek_update_7604(&$sandbox) {
 function lingotek_update_7605(&$sandbox) {
   // Make sure this is not another module's variable.
   $config = variable_get('config', FALSE);
-  if (isset($config['lingotek_translate_config_blocks')) {
+  if (isset($config['lingotek_translate_config_blocks'])) {
     variable_del('config');
   }
   return t("Removed unnecessary 'config' variable from the variables table.");
