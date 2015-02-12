@@ -1411,6 +1411,8 @@ function lingotek_translatable_fields() {
  *
  * @param $segment_text
  *   a string containing the segment to be translated
+ * @param $protect_vars
+ *   TRUE if filter should protect variables using !, @, or %, FALSE otherwise
  *
  * @return string
  *   the original input plus any additional reference tags to be ignored.
@@ -1428,7 +1430,11 @@ function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
   if ($protect_vars) {
     $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
   }
+  // Provide the ability to modify the pattern for searching variables.
+  drupal_alter('lingotek_protect_variables', $patterns, $protect_vars);
+
   $replacement = '<drupalvar>${1}</drupalvar>';
+
   foreach ($patterns as $p) {
     $segment_text = preg_replace($p, $replacement, $segment_text);
   }
