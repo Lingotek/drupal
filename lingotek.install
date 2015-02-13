@@ -979,3 +979,18 @@ function lingotek_update_7605(&$sandbox) {
   }
   return t("Removed unnecessary 'config' variable from the variables table.");
 }
+
+/**
+ * If module was setup previously, add a setting confirming comment translation setup.
+ */
+function lingotek_update_7606(&$sandbox) {
+  // When upgrading from 5.x, if no comments were enabled for translation, then
+  // as long as the module has been setup, just initialize the comment variable
+  // to save the user from having to go through the setup process again.
+  $enabled_fields = variable_get('lingotek_enabled_fields', FALSE);
+  if (isset($enabled_fields['node']) && !isset($enabled_fields['comment'])) {
+    $enabled_fields['comment'] = array();
+    variable_set('lingotek_enabled_fields', $enabled_fields);
+    return t("Added flag confirming setup complete for comment translation (currently disabled).");
+  }
+}
