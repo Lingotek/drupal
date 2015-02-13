@@ -84,7 +84,7 @@ class LingotekLog {
       $data_array[$k] = LingotekLog::format($v);
     }
 
-    watchdog('lingotek', '[@tag] <div style="word-break: break-all; padding-top: 10px; color: #666;"><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /><b>MESSAGE:</b> ' . $msg . ' <br /></div>', $data_array, $severity);
+    watchdog('lingotek', '[@tag] <div style="word-break: break-all; padding-top: 10px; color: #666;">' . $msg . '<br /><b>FUNCTION:</b> %function<br /><b>ARGS:</b> %args<br /><b>FILE:</b> %location<br /></div>', $data_array, $severity);
 
     if (variable_get('lingotek_error_log', FALSE) && $tag == 'error') {
       error_log("FUNCTION: $function ARGS: $args  FILE: $location MESSAGE: $msg DATA: $data_output ");
