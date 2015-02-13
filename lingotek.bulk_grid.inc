@@ -832,7 +832,7 @@ function lingotek_grid_download_ready($entity_type) {
   if ($entity_type === 'config') {
     // Looks clean but actually gets set_ids, convert those to lids, then the next function converts back to set_ids.
     $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
-    lingotek_config_download_selected($lids);
+    lingotek_config_download_selected('download_all', $lids);
     return;
   }
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
