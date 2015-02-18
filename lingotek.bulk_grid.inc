@@ -1717,6 +1717,9 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
     $id = $row->tid;
     $row->language = isset($row->translation_mode) && $row->translation_mode == '1' ? 'en' : $row->language;
   }
+  elseif (!empty($row->id)) {
+    $id = $row->id;
+  }
   $source = '<span class="lingotek-language-source" style="white-space: nowrap;">' . $icon . ' ';
   $source .= ($language_col ? lingotek_get_upload_string($row, $languages) : '');
   $source .= '</span>';
