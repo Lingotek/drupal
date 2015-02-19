@@ -1605,7 +1605,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     $configuration = lingotek_render_configuration($row, $profiles, $disabled_class);
     $source = lingotek_render_source($entity_properties['type'], $row, $icon, $languages, $entity_properties['language_col']);
     $actions = lingotek_render_actions($entity_properties['type'], $entity_id, $disabled_class);
-    $title = $entity_properties['label_col'] ? lingotek_render_title($row, $entity_properties['info'], $GLOBALS['language']) : '';
+    $title = $entity_properties['label_col'] ? lingotek_render_title($row, $entity_properties, $GLOBALS['language']) : '';
 
     // Build the data to be output for this row
     $data = array(
@@ -1686,9 +1686,20 @@ function lingotek_build_locales_statuses($row, $t_prefix = TRUE) {
   return $locales_statuses;
 }
 
-function lingotek_render_title($row, $info, $language) {
+function lingotek_render_title($row, $entity_properties, $language) {
+  $info = $entity_properties['info'];
+  $entity_type = $entity_properties['type'];
   $no_localized_title = (language_default()->language != $language->language) && (!isset($row->localized_title) or $row->localized_title == '');
-  $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';
+
+  // special handling of taxonomy terms for URI generation
+  if ($entity_type == 'taxonomy_term') {
+    $term_obj = entity_load_single($entity_type, $row->tid);
+    $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $term_obj) : '';
+  }
+  else {
+    $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';
+  }
+
   $uri['options']['attributes'] = array('target' => '_blank');
   $title_to_show = (isset($row->localized_title) ? $row->localized_title : $row->title);
   $title = ($no_localized_title ? '<span class="no-localized-title">' : '');
