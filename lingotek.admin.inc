@@ -337,6 +337,7 @@ function lingotek_node_settings_row_oneoffs($bundle_name) {
         'height' => 400,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'closeText' => '',
       'animation' => 'fadeIn',
     ),
       ), 'setting');
@@ -1715,6 +1716,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     drupal_add_js(array(
       'lingotek-style' => array(
         'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+        'closeText' => '',
         'animation' => 'fadeIn',
       ),
     ), 'setting');
@@ -1753,9 +1755,8 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $form['profiles'] = array(
     '#markup' => theme('table', $variables),
   );
-
   $form['add'] = array(
-    '#markup' => t('<p><a href="@url" class="ctools-use-modal"><i class="fa fa-plus" style="padding-right:3px"></i>Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
+    '#markup' => t('<p><a href="@url" class="ctools-use-modal ctools-modal-lingotek-style"><i class="fa fa-plus" style="padding-right:3px"></i>Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
   );
   $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-profiles'));
 
@@ -2153,6 +2154,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
         'height' => 250,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'closeText' => '',
       'animation' => 'fadeIn',
     ),
   ), 'setting');
