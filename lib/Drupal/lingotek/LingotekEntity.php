@@ -277,7 +277,9 @@ class LingotekEntity implements LingotekTranslatableEntity {
     try {
       $title_field = field_get_items($this->entity_type, $this->entity, 'title_field', $this->language);
       $this->title = $title_field[0]['value'];
-      return $this->title;
+      if (!empty($this->title)) {
+        return $this->title;
+      }
     }
     catch (Exception $e) {
         // Must not have values in the title field, so continue.
