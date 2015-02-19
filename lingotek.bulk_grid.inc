@@ -2184,7 +2184,7 @@ function lingotek_get_upload_string($row, $languages) {
     $response = '<span title="' . $span_title . '">' . t($original_language) . (!empty($row->overridden_source_target_icon) ? '&nbsp;&nbsp;&nbsp;' . $row->overridden_source_target_icon : '') . '</span>';
   }
   else {
-    $response = $row->language == LANGUAGE_NONE ? t('Language Neutral') : t($languages[$row->language]->name);
+    $response = (empty($row->language) || $row->language == LANGUAGE_NONE) ? t('Language Neutral') : t($languages[$row->language]->name);
   }
   return $response;
 }
