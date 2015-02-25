@@ -2078,24 +2078,24 @@ function lingotek_entity_disassociate_form($form, $form_state, $entity_ids = arr
     $entity_ids = array($entity_ids);
   }
 
+  $entity_type = $form_state['entity_type'];
+
   $form['disassociate_translations'] = array(
     '#type' => 'fieldset',
     '#prefix' => format_plural(count($entity_ids), '', '<div class="messages warning">' . t('This action will apply to @count entities.') . '</div>'),
     '#title' => t('Disassociate Translations'),
-    '#description' => t("Disassociates the entity translations on Lingotek's servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the entity to restart the translation process."),
-    '#suffix' => '<i>' . t("Note: This action should only be used to change the Lingotek project or TM vault associated with the entities.") . '<i>',
+    '#description' => t("Disassociates the entity translations on Lingotek's servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the entity to restart the translation process. <br/><br/>"),
+    '#suffix' => $note = ($entity_type === 'config') ? '<span style="color:red"><b><i>' . t("Note: Deleting documents on the TMS will affect all strings in the associated config sets.") . '<b><i></span>' : '<i>' . t("Note: This action should only be used to change the Lingotek project or TM vault associated with the entities.") . '<i>',
     '#collapsible' => $collapse_fieldset,
     '#collapsed' => $collapse_fieldset,
   );
 
-  $entity_type = $form_state['entity_type'];
-  if ($entity_type !== 'config') {
-    $form['disassociate_translations']['confirm'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Also remove all document(s) from Lingotek TMS'),
-      '#default_value' => FALSE,
-    );
-  }
+  $form['disassociate_translations']['confirm'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Also remove all document(s) from Lingotek TMS'),
+    '#default_value' => FALSE,
+  );
+
   $submit_function = ($entity_type === 'config') ? 'lingotek_config_disassociate_form_submit' : 'lingotek_entity_disassociate_form_submit';
 
   $form['disassociate_translations']['submit'] = array(
@@ -2202,12 +2202,25 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   elseif (isset($form_state['lids'])) {
     $lids = json_decode($form_state['entity_ids']);
   }
-  /*
+
   $api = LingotekApi::instance();
   $remove_from_tms = $form_state['values']['confirm'];
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
-  */
+
+  if ($remove_from_tms) { //disassociate on TMS
+    $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
+    //Deletes document data from lingotek_config_metadata table
+    $query = db_delete('lingotek_config_metadata')
+      ->condition('id', $set_ids)
+      ->execute();
+
+    if (!$result) {
+      drupal_set_message(t('Failed to remove documents from Lingotek TMS.'), 'warning', FALSE);
+      return;
+    }
+  }
+
   if (!empty($lids)) {
     LingotekConfigSet::disassociateSegments($lids);
   }
