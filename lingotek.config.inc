@@ -194,6 +194,22 @@ function lingotek_config_add_query_filters($query) {
   }
 }
 
+/**
+ * Gets record of all Non-Lingotek translations (translation_agent_id != 3)
+ */
+function lingotek_get_locked_config_translations($lids = NULL) {
+  $query = db_select('locales_target', 'lt')
+    ->fields('lt', array('lid'));
+  $query->addExpression('GROUP_CONCAT(lt.language)', 'language_codes');
+  $query->condition('lt.translation_agent_id', LingotekConfigSet::getLingotekTranslationAgentId(), '!=');
+  if (is_array($lids) && !empty($lids)) {
+    $query->condition('lt.lid', $lids, 'IN');
+  }
+  $query->groupBy('lid');
+
+  return $query->execute()->fetchAllAssoc('lid');
+}
+
 function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
   $lingotek_languages = Lingotek::getLanguages();
 
@@ -202,6 +218,7 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
 
   $languages = language_list();
   $global_profile = lingotek_get_global_profile();
+  $non_lingotek_config_translations = lingotek_get_locked_config_translations($lids);
   $table_data = array();
   foreach ($table_data_raw as $row) {
     $lid = $row->{'lid'};
@@ -242,7 +259,7 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $escaped_source = htmlentities($row->{'source'});
     $source_text = lingotek_truncate_grid_text($escaped_source, 55);
 
-    $translation_icons = lingotek_lang_icons($entity_type, $languages, $lid, $locale_statuses, FALSE, $row->language); // show translation statuses
+    $translation_icons = lingotek_lang_icons($entity_type, $languages, $lid, $locale_statuses, FALSE, $row->language, FALSE, FALSE, $non_lingotek_config_translations); // show translation statuses
     $target_icons_str = implode('', array_values($translation_icons));
     $icon = lingotek_source_uploaded_icon($row);
     $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
