@@ -282,13 +282,15 @@ function lingotek_get_enabled_fields($entity_type, $bundle) {
 }
 
 /**
- * Return the xml representation of the source content for a node.
+ * Return the xml representation of the source content for an entity.
  *
- * @param object $node
- *   A Drupal node.
+ * @param $entity_type
+ *   A string containing a Drupal entity type.
+ * @param object $entity
+ *   A Drupal entity.
  *
  * @return string
- *   The XML representation of the node in Lingotek format.
+ *   The XML representation of the entity in Lingotek format.
  */
 function lingotek_entity_xml_body($entity_type, $entity) {
   $translatable = array();
@@ -333,8 +335,28 @@ function lingotek_entity_xml_body($entity_type, $entity) {
       }
     }
   }
+  $labeled_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+  try {
+    $xml = new LingotekXMLElement($labeled_content);
+
+    $hook_params = array(
+      'entity_type' => $entity_type,
+      'entity' => $entity,
+      'xml' => $xml,
+      'langcode' => $entity->language,
+    );
+
+    // Allow other modules to manipulate the uploaded content.
+    drupal_alter('lingotek_entity_upload', $hook_params);
+
+    // Return to string form, after any modifications.
+    $labeled_content = $xml->asXML();
+  }
+  catch (Exception $e) {
+    LingotekLog::error("Failed to parse or modify XML before uploading. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
+  }
+  return $labeled_content;
 }
 
 function lingotek_xml_fields($entity, $translatable, $language) {
@@ -621,7 +643,6 @@ function lingotek_get_source_language() {
  */
 function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
-  //$types = array_keys($type_info);
 
   $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
@@ -633,6 +654,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $whitelist[] = 'taxonomy_term';
   }
+
   $whitelist = array_flip($whitelist);
   $enabled_types = array_intersect_key($type_info, $whitelist);
 
@@ -655,6 +677,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (isset($enabled_types['fieldable_panels_pane'])) {
     $enabled_types['fieldable_panels_pane']['label'] = 'Fieldable Panels Panes';
   }
+
+  // Allow other modules to add/remove entity types to the list supported.
+  drupal_alter('lingotek_managed_entity_types', $enabled_types, $include_all);
 
   return $enabled_types;
 }
@@ -1236,19 +1261,27 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   $source_langcode = lingotek_entity_langcode($entity_type, $entity);
 
+  if ($vid === NULL) {
+    $vid = $id;
+  }
+  $vid = ($vid !== NULL ? $vid : $id);
+  $uid = !empty($entity->uid) ? $entity->uid : $user->uid;
+  $translate = isset($entity->translate) ? $entity->translate : 0;
+  $changed = !empty($addtl_params['changed']) ? $addtl_params['changed'] : time();
+  $created = !empty($addtl_params['created']) ? $addtl_params['created'] : time();
+
   foreach ($language_codes as $langcode) {
     if ($langcode !== 0) {
       $et_params = array(
         'entity_type' => $entity_type,
         'entity_id' => $id,
+        'revision_id' => $vid,
         'language' => $langcode,
-        'uid' => !empty($entity->uid) ? $entity->uid : $user->uid,
-        'translate' => isset($entity->translate) ? $entity->translate : 0,
-        'changed' => !empty($addtl_params['changed']) ? $addtl_params['changed'] : time(),
+        'uid' => $uid,
+        'translate' => $translate,
+        'changed' => $changed,
       );
-      if (!empty($addtl_params['created'])) {
-        $et_params['created'] = $addtl_params['created'];
-      }
+
       if ($langcode != $source_langcode) {
         $et_params['source'] = $source_langcode;
       }
@@ -1269,10 +1302,48 @@ function lingotek_entity_translation_save_status($entity_type, $entity, $languag
           $et_params['status'] = 1; // published
         }
       }
-      db_merge('entity_translation')
-          ->key(array('entity_type' => $entity_type, 'entity_id' => $id, 'language' => $langcode))
-          ->fields($et_params)
-          ->execute();
+      // If Entity Translation has been upgraded to work with revisions
+      // NOTE: for this, for now, we will not be incrementing the revision ID
+      // of each field of a node every time any translation changes.  So,
+      // if Entity Translation is upgraded to support revisions, then we will
+      // write the extra columns to the entity-translation table; however,
+      // we will not (for now) increment everything in every table whenever
+      // a translation is downloaded.  We will simply overwrite the most
+      // current revision in Drupal, leaving rollback of translation changes
+      // to the Lingotek TMS.
+      // If this changes in the future, we should check for the variable
+      // 'entity_translation_revision_enabled' to know whether the site
+      // administrator wants revisions enabled for ET.
+      try {
+        db_merge('entity_translation')
+            ->key(array('entity_type' => $entity_type, 'entity_id' => $id, 'language' => $langcode))
+            ->insertFields(array('created' => $created))
+            ->fields($et_params)
+            ->execute();
+        db_merge('entity_translation_revision')
+            ->key(array('entity_type' => $entity_type, 'entity_id' => $id, 'revision_id' => $vid, 'language' => $langcode))
+            ->insertFields(array('created' => $created))
+            ->fields($et_params)
+            ->execute();
+        /*
+          // THIS WOULD BE THE CORRECT WAY TO RECORD ET CHANGES, IF IT WORKED.
+          // (currently, it appears to just find the current published revision)
+          $entity = lingotek_entity_load_single($entity_type, $id);
+          $handler = entity_translation_get_handler($entity_type, $entity);
+          $handler->initTranslations();
+          $handler->saveTranslations();
+         *
+         */
+      }
+      catch (PDOException $e) {
+        // Entity Translation must not be upgraded yet.
+        unset($et_params['revision_id']);
+        db_merge('entity_translation')
+            ->key(array('entity_type' => $entity_type, 'entity_id' => $id, 'language' => $langcode))
+            ->insertFields(array('created' => $created))
+            ->fields($et_params)
+            ->execute();
+      }
       $languages_updated[$langcode] = lingotek_language_name($langcode);
       $updates++;
     }
@@ -1365,6 +1436,8 @@ function lingotek_translatable_fields() {
  *
  * @param $segment_text
  *   a string containing the segment to be translated
+ * @param $protect_vars
+ *   TRUE if filter should protect variables using !, @, or %, FALSE otherwise
  *
  * @return string
  *   the original input plus any additional reference tags to be ignored.
@@ -1382,7 +1455,11 @@ function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
   if ($protect_vars) {
     $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
   }
+  // Provide the ability to modify the pattern for searching variables.
+  drupal_alter('lingotek_protect_variables', $patterns, $protect_vars);
+
   $replacement = '<drupalvar>${1}</drupalvar>';
+
   foreach ($patterns as $p) {
     $segment_text = preg_replace($p, $replacement, $segment_text);
   }

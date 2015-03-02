@@ -309,7 +309,7 @@ class LingotekApi {
    *   A Lingotek language/locale code.
    *
    * @return mixed
-   *   On success, a SimpleXMLElement object representing the translated document. FALSE on failure.
+   *   On success, a LingotekXMLElement object representing the translated document. FALSE on failure.
    *
    */
   public function downloadDocument($document_id, $lingotek_locale) {
@@ -350,7 +350,7 @@ class LingotekApi {
 
         unlink($tmpFile);
 
-        $document = new SimpleXMLElement($text);
+        $document = new LingotekXMLElement($text);
       } catch (Exception $e) {
         LingotekLog::error('Unable to parse downloaded document. Error: @error. Text: !xml.', array('!xml' => $text, '@error' => $e->getMessage()));
       }

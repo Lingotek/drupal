@@ -1041,7 +1041,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * Save segment target translations for the given language
    *
    * @param obj
-   *    the SimpleXMLElement object containing the translations to be saved
+   *    the LingotekXMLElement object containing the translations to be saved
    * @param string
    *    the language code under which to save the translations
    */

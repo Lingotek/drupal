@@ -109,6 +109,8 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $entity_type_info['label'] = 'Field Collection';
   }
 
+  drupal_alter('lingotek_entity_profiles_options', $entity_type, $profiles_options);
+
   $entity_profiles = variable_get('lingotek_entity_profiles');
 
   $form['entity_type'] = array(
@@ -337,6 +339,7 @@ function lingotek_node_settings_row_oneoffs($bundle_name) {
         'height' => 400,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'closeText' => '',
       'animation' => 'fadeIn',
     ),
       ), 'setting');
@@ -479,7 +482,6 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
         '#description' => t('Set all <i>language neutral</i> comments (and underlying fields) for enabled comment types to be @language.', array('@language' => language_default('name'))),
         '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
       );
-      //$form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing comments except for the project, workflow, vault, and storage method (e.g. node/field).');
       break;
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
@@ -903,6 +905,7 @@ function lingotek_admin_additional_translation_settings_form_validate($form, &$f
 
 function lingotek_admin_additional_translation_settings_form_submit($form, &$form_state, $additional_operations=array()) {
   $form_state['values'] = array_merge($form_state['values'], $form_state['values']['config']);
+  unset($form_state['values']['config']);
 
   system_settings_form_submit($form, $form_state);
 
@@ -1715,6 +1718,7 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
     drupal_add_js(array(
       'lingotek-style' => array(
         'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+        'closeText' => '',
         'animation' => 'fadeIn',
       ),
     ), 'setting');
@@ -1753,9 +1757,8 @@ function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALS
   $form['profiles'] = array(
     '#markup' => theme('table', $variables),
   );
-
   $form['add'] = array(
-    '#markup' => t('<p><a href="@url" class="ctools-use-modal"><i class="fa fa-plus" style="padding-right:3px"></i>Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
+    '#markup' => t('<p><a href="@url" class="ctools-use-modal ctools-modal-lingotek-style"><i class="fa fa-plus" style="padding-right:3px"></i>Add new profile</a></p>', array('@url' => url(LINGOTEK_MENU_MAIN_BASE_URL . '/settings/profile/add'))),
   );
   $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-profiles'));
 
@@ -2153,6 +2156,7 @@ function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FAL
         'height' => 250,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
+      'closeText' => '',
       'animation' => 'fadeIn',
     ),
   ), 'setting');
@@ -2577,7 +2581,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
 
   $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, t('Account'), array('id' => 'ltk-account'));
 
-  foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
+  foreach (lingotek_managed_entity_types(TRUE) as $machine_name => $entity_type) {
     $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
     $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('id' => lingotek_get_tab_id($machine_name), 'class' => array('ltk-entity')));
   }

@@ -692,6 +692,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // Include the translation-management tab always
   $form = lingotek_get_node_settings_form($form, $form_state, $node);
 
+  // Set the default language on new node creation.
+  if (empty($source_node->nid)) {
+    $form['language']['#default_value'] = lingotek_get_source_language();
+  }
+
   // No more changes to the node form if the node or language aren't enabled for Lingotek translation
   if (!lingotek_enabled_langcode($current_language) || !lingotek_managed_entity('node', $source_node)) {
     return;
@@ -703,11 +708,6 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
 
   $form = array_merge($form, lingotek_get_language_override_form($form, $form_state, $node));
-
-  // Set the default language on new node creation.
-  if (empty($source_node->nid)) {
-    $form['language']['#default_value'] = lingotek_get_source_language();
-  }
 
 // Disable the language field if the node is synced with Lingotek.
   if (!empty($node->nid)) {
@@ -1431,7 +1431,8 @@ function lingotek_entity_load($entities, $entity_type) {
   if (empty($entities)) {
     return;
   }
-  $special_entities = array('field_collection_item', 'message_type', 'taxonomy_term');
+  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term');
+  $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (in_array($entity_type, $special_entities)) {
     foreach ($entities as $e) {
       lingotek_normalize_special_field_language($entity_type, $e);
@@ -1712,7 +1713,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   $text = $_lingotek_client->downloadTriggered("downloadDocument", $params);
 
   try {
-    $xml = new SimpleXMLElement($text);
+    $xml = new LingotekXMLElement($text);
   } catch (Exception $e) {
     LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
 
@@ -2084,7 +2085,8 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  * Implements hook_entity_presave().
  */
 function lingotek_entity_presave($entity, $entity_type) {
-  $special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
+  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
+  $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (!in_array($entity_type, $special_entities)) {
     return;
   }
