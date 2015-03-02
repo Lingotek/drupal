@@ -74,7 +74,7 @@ function lingotek_config_add_existing_translations($lids, $lang_codes) {
   foreach ($result as $key => $value) {
     $lang = Lingotek::convertDrupal2Lingotek($value->language);
     // This check is performed in lang_icons anyway so you might remove it
-    if (array_key_exists($lang, $lang_codes)) {
+    if ($lang && array_key_exists($lang, $lang_codes)) {
       $existing_translations[$value->lid][] = Lingotek::convertDrupal2Lingotek($value->language);
     }
   }
