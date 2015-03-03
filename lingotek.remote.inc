@@ -131,7 +131,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
   foreach ($xml as $tag => $content) {
 
     // Handle multiple instances of the same field (handled in Drupal using 'delta')
-    $delta = ($tag == $last_tag) ? $delta++ : 0;
+    $delta = ($tag == $last_tag) ? ++$delta : 0;
 
     // URL alias translation (currently available for nodes only)
     if ($entity_type == 'node' && $tag == 'url_alias' && $url_alias_translation == 1) {
@@ -163,7 +163,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
 
     // Field-Collection Fields: Pull the underlying entities and recurse.
     if (module_exists('field_collection') && $field_info['type'] == 'field_collection') {
-      lingotek_process_field_collection_xml($entity_type, $entity, $field_name, $delta, $langcode, $node_based_translation);
+      lingotek_process_field_collection_xml($content, $entity_type, $entity, $field_name, $delta, $langcode, $node_based_translation);
       $last_tag = $tag;
       continue;
     }
@@ -293,7 +293,7 @@ function lingotek_save_field_record($fname, $params) {
 /*
  * Process a field-collection field's xml
  */
-function lingotek_process_field_collection_xml($entity_type, &$entity, $field_name, $delta, $langcode, $node_based_translation) {
+function lingotek_process_field_collection_xml($xml, $entity_type, &$entity, $field_name, $delta, $langcode, $node_based_translation) {
   $field_info = field_info_field($field_name);
   $curr_field_data = &$entity->$field_name;
   $default = language_default();
@@ -302,12 +302,12 @@ function lingotek_process_field_collection_xml($entity_type, &$entity, $field_na
     $field_collection_id = $curr_field_data[LANGUAGE_NONE][$delta]['value'];
   }
   elseif (isset($curr_field_data[$default_language][$delta]['value'])) {
-    $field_collection_id = $curr_field_data[$language_default][$delta]['value'];
+    $field_collection_id = $curr_field_data[$default_language][$delta]['value'];
   }
   else {
     if (!$node_based_translation) {
       // The field-collection field must be empty.
-      continue;
+      return;
     }
     // If it does not exist and the profile is node-based, create a new FC.
     $field_collection_item = entity_create('field_collection_item', array('field_name' => $field_info['field_name']));
@@ -318,13 +318,13 @@ function lingotek_process_field_collection_xml($entity_type, &$entity, $field_na
   $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
   if (!$field_collection_item) {
     // The field collection was removed, so disregard any info on it
-    continue;
+    return;
   }
   $field_collection_item->type = $field_info['field_name'];
   $field_collection_item->language = $entity->language;
 
   // RECURSION FOR FIELD COLLECTIONS
-  lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $langcode, $node_based_translation);
+  lingotek_process_entity_xml($xml, $field_collection_item, 'field_collection_item', $langcode, $node_based_translation);
 }
 
 /*
