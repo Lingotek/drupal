@@ -248,7 +248,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       'modalSize' => array(
         'type' => 'fixed',
         'width' => 450,
-        'height' => 400,
+        'height' => 450,
       ),
       'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
       'animation' => 'fadeIn',
