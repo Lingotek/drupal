@@ -1713,7 +1713,7 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   $text = $_lingotek_client->downloadTriggered("downloadDocument", $params);
 
   try {
-    $xml = new SimpleXMLElement($text);
+    $xml = new LingotekXMLElement($text);
   } catch (Exception $e) {
     LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
 

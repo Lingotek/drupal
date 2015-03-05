@@ -333,8 +333,27 @@ function lingotek_entity_xml_body($entity_type, $entity) {
       }
     }
   }
+  $labeled_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+try {
+    $xml = new LingotekXMLElement($labeled_content);
+
+    $hook_params = array(
+      'entity_type' => $entity_type,
+      'entity' => $entity,
+      'xml' => $xml,
+    );
+
+    // Allow other modules to manipulate the uploaded content.
+    drupal_alter('lingotek_entity_upload', $hook_params);
+
+    // Return to string form, after any modifications.
+    $labeled_content = $xml->asXML();
+  }
+  catch (Exception $e) {
+    LingotekLog::error("Failed to parse or modify XML before uploading. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
+  }
+  return $labeled_content;
 }
 
 function lingotek_xml_fields($entity, $translatable, $language) {

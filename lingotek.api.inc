@@ -28,3 +28,27 @@ function hook_lingotek_entity_pre_upload(LingotekTranslatableEntity $translatabl
 function hook_lingotek_protect_variables_alter(array &$patterns, $protect_vars) {
 }
 
+/**
+ * Alter the xml content just before sending to Lingotek for translation.
+ *
+ * @param array $params
+ *  An associative array containing the following:
+ *  - entity_type: a string naming the entity type
+ *  - entity: a reference to the entity object for which content is being sent
+ *  - xml: a LingotekXMLElement object containing the content to be translated.
+ */
+function hook_lingotek_entity_upload_alter(array &$params) {
+}
+
+/**
+ * Alter the xml content just after receiving a translated entity from Lingotek.
+ *
+ * @param array $params
+ *  An associative array containing the following:
+ *  - entity_type: a string naming the entity type
+ *  - entity: a reference to the entity object for which content is received.
+ *  - xml: a LingotekXMLElement object containing the translated content.
+ *  - langcode: the Drupal language code associated with the content.
+ */
+function hook_lingotek_entity_download_alter(array &$params) {
+}

@@ -115,6 +115,16 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
   $language_list = language_list('language');
   $source_entity = $entity;
 
+  $hook_params = array(
+    'entity_type' => $entity_type,
+    'entity' => $entity,
+    'xml' => $xml,
+    'langcode' => $langcode,
+  );
+
+  // First allow other modules to manipulate the downloaded content.
+  drupal_alter('lingotek_entity_download', $hook_params);
+
   // Set $node_based_translation only if the entity type is a node, inherit otherwise.
   // (The entity could be a field collection or other entity type, underneath)
   if ($entity_type == 'node') {
