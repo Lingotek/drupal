@@ -335,13 +335,14 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   }
   $labeled_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 
-try {
+  try {
     $xml = new LingotekXMLElement($labeled_content);
 
     $hook_params = array(
       'entity_type' => $entity_type,
       'entity' => $entity,
       'xml' => $xml,
+      'langcode' => $entity->language,
     );
 
     // Allow other modules to manipulate the uploaded content.
