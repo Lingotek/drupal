@@ -52,3 +52,12 @@ function hook_lingotek_entity_upload_alter(array &$params) {
  */
 function hook_lingotek_entity_download_alter(array &$params) {
 }
+
+/**
+ * Alter the support for entity types within the Lingotek module.
+ *
+ * @param array $enabled_types
+ *  An associative array containing the entities currently Lingotek-enabled.
+ */
+function hook_lingotek_managed_entity_types(array &$enabled_types);
+}

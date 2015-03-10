@@ -641,7 +641,6 @@ function lingotek_get_source_language() {
  */
 function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
-  //$types = array_keys($type_info);
 
   $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
@@ -653,6 +652,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $whitelist[] = 'taxonomy_term';
   }
+
   $whitelist = array_flip($whitelist);
   $enabled_types = array_intersect_key($type_info, $whitelist);
 
@@ -675,6 +675,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (isset($enabled_types['fieldable_panels_pane'])) {
     $enabled_types['fieldable_panels_pane']['label'] = 'Fieldable Panels Panes';
   }
+
+  // Allow other modules to add/remove entity types to the list supported.
+  drupal_alter('lingotek_managed_entity_types', $enabled_types);
 
   return $enabled_types;
 }

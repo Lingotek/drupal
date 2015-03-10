@@ -480,7 +480,6 @@ function lingotek_admin_add_entity_specific_changes(&$form, &$form_state, $entit
         '#description' => t('Set all <i>language neutral</i> comments (and underlying fields) for enabled comment types to be @language.', array('@language' => language_default('name'))),
         '#default_value' => 1, // default to enable (for use in setup) --- js will disable on settings by default
       );
-      //$form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing comments except for the project, workflow, vault, and storage method (e.g. node/field).');
       break;
     case 'field_collection_item':
       // add note about field collections being coupled with their parent entities
