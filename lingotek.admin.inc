@@ -767,6 +767,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       $stored_workflow_id = (isset($stored_profile['workflow_id']) ? $stored_profile['workflow_id'] : '');
       $selected_workflow_id = (isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : $stored_workflow_id);
       $curr_workflow = $api->getWorkflow($stored_workflow_id);
+      $num_config_docs = count(LingotekConfigSet::getAllDocumentIds());
       if (!empty($curr_workflow)) {
         // append the current workflow to the top of the workflow list, if it's not already there
         $workflows = array($stored_workflow_id => $curr_workflow->name) + $workflows;
@@ -789,7 +790,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
       $form['additional_translation']['addtl_prefill_phases_checkbox'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
+        '#title' => t('Change all current config content (@total documents in total) to use the new workflow', array('@total' => $num_config_docs)),
         '#default_value' => FALSE,
         '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
         '#states' => array(
@@ -997,6 +998,7 @@ function lingotek_save_config_profile($form_state) {
   $vault_id = isset($form_state['values']['addtl_vault_id']) ? $form_state['values']['addtl_vault_id'] : variable_get('lingotek_vault', '');
   $workflow_id = isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
   $prefill_phase = isset($form_state['values']['addtl_prefill_phase_select']) ? $form_state['values']['addtl_prefill_phase_select'] : NULL;
+  $config_checkbox = isset($form_state['values']['addtl_prefill_phases_checkbox']) ? $form_state['values']['addtl_prefill_phases_checkbox'] : FALSE;
 
   $profile = array(
     'project_id' => $project_id,
@@ -1010,11 +1012,13 @@ function lingotek_save_config_profile($form_state) {
   $profile_index = LingotekSync::PROFILE_CONFIG;
   lingotek_set_profile_settings($profile_index, $profile);
 
-  // Change all other workflows retroactively
-  $document_ids = LingotekConfigSet::getAllConfigDocIds();
-  if (!empty($document_ids)) {
-    $api = LingotekApi::instance();
-    $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+  if ($config_checkbox == TRUE) {
+    // Change all other workflows retroactively
+    $document_ids = LingotekConfigSet::getAllConfigDocIds();
+    if (!empty($document_ids)) {
+      $api = LingotekApi::instance();
+      $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
+    }
   }
 }
 
