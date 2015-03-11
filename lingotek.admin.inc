@@ -109,6 +109,8 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $entity_type_info['label'] = 'Field Collection';
   }
 
+  drupal_alter('lingotek_entity_profiles_options', $entity_type, $profiles_options);
+
   $entity_profiles = variable_get('lingotek_entity_profiles');
 
   $form['entity_type'] = array(

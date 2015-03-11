@@ -58,6 +58,20 @@ function hook_lingotek_entity_download_alter(array &$params) {
  *
  * @param array $enabled_types
  *  An associative array containing the entities currently Lingotek-enabled.
+ * @param bool $include_all
+ *  Whether all translatable entity types should be shown, or just the ones
+ *  that should appear on the bulk-manage grid.
  */
-function hook_lingotek_managed_entity_types(array &$enabled_types);
+function hook_lingotek_managed_entity_types_alter(array &$enabled_types, $include_all) {
+}
+
+/**
+ * Alter the profile options available for a given entity type.
+ *
+ * @param string $entity_type
+ *  The entity type for which profile options should be modified.
+ * @param array $options
+ *  An associative array containing the options for the given entity type.
+ */
+function hook_lingotek_entity_profiles_options_alter($entity_type, array &$options) {
 }

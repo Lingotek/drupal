@@ -677,7 +677,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   }
 
   // Allow other modules to add/remove entity types to the list supported.
-  drupal_alter('lingotek_managed_entity_types', $enabled_types);
+  drupal_alter('lingotek_managed_entity_types', $enabled_types, $include_all);
 
   return $enabled_types;
 }
