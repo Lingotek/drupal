@@ -1151,7 +1151,11 @@ function lingotek_admin_index_plural_targets(&$context=NULL) {
 
 function lingotek_check_for_l10n_translations($modules) {
   // return the translations available through Drupal translation and a list of the ones still needed
+
+  // location of l10n_update functions for l10n_update v7.x-1.1
   module_load_include('project.inc', 'l10n_update');
+  // location of l10n_update functions for l10n_update v7.x-2.0
+  module_load_include('compare.inc', 'l10n_update');
   module_load_include('check.inc', 'l10n_update');
   $projects = array();
   $available = array();
