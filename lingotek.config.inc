@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * @file
+ * Config grid form elements
+ */
+
 // All the stuff for the new config menu goes in here
 function lingotek_config_filter_inline_submit($form, $form_state) {
   unset($_SESSION['grid_filters']['textgroup']);
