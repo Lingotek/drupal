@@ -166,8 +166,14 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
       $last_tag = $tag;
       continue;
     }
-    // Get source data, and target translatability & language
-    $source_field_data = field_get_items($entity_type, $source_entity, $field_name);
+
+    // Try to get the source field's text format, if available
+    try {
+      $source_field_data = field_get_items($entity_type, $source_entity, $drupal_field_name);
+    } catch (EntityMalformedException $e) {
+      $source_field_data = array();
+    }
+
     $translatable_field = !empty($field_info['translatable']);
     $field_language = $node_based_translation && !$translatable_field ? LANGUAGE_NONE : $langcode;
 
