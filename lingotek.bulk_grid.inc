@@ -1096,6 +1096,12 @@ function lingotek_config_build_filters($form_state) {
   }
 
   $filters = array(
+    'lid' => array(
+      '#type' => 'textfield',
+      '#default_value' => isset($_SESSION['grid_filters']['lid']) ? $_SESSION['grid_filters']['lid'] : '',
+      '#title' => t('Config Entity ID is'),
+      '#size' => 8,
+    ),
     'document_id' => array(
       '#type' => 'textfield',
       '#default_value' => isset($_SESSION['grid_filters']['document_id']) ? $_SESSION['grid_filters']['document_id'] : '',
@@ -1113,7 +1119,7 @@ function lingotek_config_build_filters($form_state) {
         'never' => t('Never uploaded'),
       ),
       '#multiple' => FALSE,
-    )
+    ),
   );
 
   // Include a content-type filter if there are bundles by which to filter.
