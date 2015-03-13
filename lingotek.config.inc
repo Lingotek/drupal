@@ -178,6 +178,12 @@ function lingotek_config_add_query_filters($query) {
     elseif ($filters['textgroup'] == 'field') {
       $query->condition('textgroup', 'field');
     }
+    elseif ($filters['textgroup'] == 'views') {
+      $query->condition('textgroup', 'views');
+    }
+    elseif ($filters['textgroup'] == 'misc') {
+      $query->condition('textgroup', 'misc');
+    }
   }
 
   lingotek_filter_by_document_id($query, $filters);

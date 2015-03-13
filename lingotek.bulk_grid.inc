@@ -371,7 +371,9 @@ function lingotek_config_search_options() {
     'interface' => t('Built-in interface'),
     'field' => t('Field labels'),
     'menu' => t('Menu'),
+    'misc' => t('Miscellaneous'),
     'taxonomy' => t('Taxonomy'),
+    'views' => t('Views'),
   );
 
   return $search_options;
