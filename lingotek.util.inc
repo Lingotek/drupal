@@ -2059,6 +2059,11 @@ function lingotek_entity_extract_ids($entity_type, $entity) {
       $vid = NULL;
       $bundle_name = $entity->type;
     }
+    elseif ($entity_type == 'field_collection_item') {
+      $entity_id = $entity->item_id;
+      $vid = $entity->revision_id;
+      $bundle_name = $entity->field_name;
+    }
     else {
       $entity_id = NULL;
       $vid = NULL;

@@ -170,7 +170,14 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_langu
       }
 
       $field = field_info_field($drupal_field_name);
-      $source_field_data = field_get_items($entity_type, $source_entity, $drupal_field_name);
+
+      // Try to get the source field's text format, if available
+      try {
+        $source_field_data = field_get_items($entity_type, $source_entity, $drupal_field_name);
+      } catch (EntityMalformedException $e) {
+        $source_field_data = array();
+      }
+
       $translatable_field = !empty($field['translatable']);
       $field_language = $node_based_translation && !$translatable_field ? LANGUAGE_NONE : $drupal_language_code;
 
@@ -234,7 +241,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_langu
         }
         else {
           foreach ($content as $text) {
-            // Set all field-collection fields to translatable, if not node-based.
             if ($entity_type == 'field_collection_item' && !$node_based_translation && $field['translatable'] != 1) {
               $field['translatable'] = 1;
               field_update_field($field);
