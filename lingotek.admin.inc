@@ -5,7 +5,6 @@
  * Administrative Settings for the module.
  */
 include_once('lingotek.session.inc');
-module_load_include('batch.inc', 'l10n_update');
 module_load_include('admin.inc', 'i18n_string');
 
 /**
@@ -912,13 +911,6 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   $lingotek_use_translation_from_drupal = isset($form_state['input']['lingotek_use_translation_from_drupal']) ? $form_state['input']['lingotek_use_translation_from_drupal'] : 0;
   variable_set('lingotek_use_translation_from_drupal', $lingotek_use_translation_from_drupal);
 
-  if ($lingotek_use_translation_from_drupal) {
-    variable_set('l10n_update_rebuild_projects', 1);
-  }
-  else {
-    variable_del('l10n_update_rebuild_projects');
-  }
-
   //if any configuration options are set then config translation is enabled
   if (variable_get('lingotek_translate_config_taxonomies', 0) || variable_get('lingotek_translate_config_blocks', 0) ||
       variable_get('lingotek_translate_config_menus', 0) || variable_get('lingotek_translate_config_views', 0) ||
@@ -1036,22 +1028,6 @@ function lingotek_admin_setup_nonbuiltins_batch($operations) {
   }
 }
 
-function lingotek_admin_load_l10n_update_batch($modules) {
-
-    // attempt to pull translations using l10n_update module
-    module_load_include('inc', 'l10n_update', 'l10n_update.batch');
-    $updates = lingotek_check_for_l10n_translations($modules);
-    if ($updates) {
-      $batch = l10n_update_batch_multiple($updates, variable_get('l10n_update_import_mode', LOCALE_IMPORT_KEEP));
-      $batch['title'] = t('Syncing Content and Translations');
-      $batch['init_message'] = t('Checking for community translations from Drupal...');
-      $batch['finished'] = 'lingotek_admin_module_indexing_finished';
-      $batch['error_message'] = t('String-gathering process has encountered an error.');
-      $batch['file'] = drupal_get_path('module', 'lingotek') . '/lingotek.admin.inc';
-      batch_set($batch);
-    }
-}
-
 function lingotek_admin_prepare_builtins($additional_operations=array()) {
 
   // search for all new built-in strings using the potx module, and add
@@ -1146,121 +1122,6 @@ function lingotek_admin_index_plural_targets(&$context=NULL) {
       $plural_map[$p->lid] = array('plid' => $p->plid, 'plural' => $p->plural);
     }
     variable_set('lingotek_config_plural_mapping', $plural_map);
-  }
-}
-
-function lingotek_check_for_l10n_translations($modules) {
-  // return the translations available through Drupal translation and a list of the ones still needed
-
-  // location of l10n_update functions for l10n_update v7.x-1.1
-  module_load_include('project.inc', 'l10n_update');
-  // location of l10n_update functions for l10n_update v7.x-2.0
-  module_load_include('compare.inc', 'l10n_update');
-  module_load_include('check.inc', 'l10n_update');
-  $projects = array();
-  $available = array();
-  $updates = array();
-
-  // Get all current projects, including the recently installed.
-  $current_projects = l10n_update_build_projects(TRUE);
-  // Collect project data of newly installed projects.
-  foreach ($modules as $k => $v) {
-    if (isset($current_projects[$k])) {
-      $projects[$k] = $current_projects[$k];
-    }
-  }
-
-  // If a translation is available and if update is required, lets go.
-  if ($projects && $available = l10n_update_check_projects($projects)) {
-    $history = l10n_update_get_history();
-    if ($updates = l10n_update_build_updates($history, $available)) {
-      module_load_include('batch.inc', 'l10n_update');
-      // Filter out updates in other languages. If no languages, all of them will be updated
-      $updates = _l10n_update_prepare_updates($updates);
-    }
-  }
-  return $updates;
-}
-
-function lingotek_admin_module_indexing_finished($success, $results) {
-  // TODO: consider rewriting more of this function (adapted from l10n_update module)
-  $totals = array();    // Sum of added, updated and deleted translations.
-  $total_skip = 0;      // Sum of skipped translations
-  $messages = array();  // User feedback messages.
-  $project_fail = $project_success = array(); // Project names of succesfull and failed imports.
-  $t = get_t();
-
-  if ($success) {
-    // Summarize results of added, updated, deleted and skiped translations.
-    // Added, updated and deleted are summarized per language to be displayed accordingly.
-    foreach ($results as $result) {
-      // convert to array as needed
-      if (is_a($result, 'stdClass')) {
-        $result = get_object_vars($result);
-      }
-      if (isset($result['fail'])) {
-        // Collect project names of the failed imports.
-        $project_fail[$result['file']->name] = $result['file']->name;
-      }
-      else {
-        $language = $result['language'];
-
-        // Initialize variables to prevent PHP Notices.
-        if (!isset($totals[$language])) {
-          $totals[$language] = array();
-          $totals[$language]['add'] = $totals[$language]['update'] = $totals[$language]['delete'] = 0;
-        }
-
-        // Summarize added, updated, deleted and skiped translations.
-        $totals[$language]['add'] += $result['add'];
-        $totals[$language]['update'] += $result['update'];
-        $totals[$language]['delete'] += $result['delete'];
-        $total_skip += $result['skip'];
-
-        // Collect project names of the succesfull imports.
-        $project_success[$result['file']->name] = $result['file']->name;
-      }
-    }
-
-    // Messages of succesfull translation update results.
-    if ($project_success) {
-      $messages[] = format_plural(count($project_success), 'One project updated: @projects.', '@count projects updated: @projects.', array('@projects' => implode(', ', $project_success)));
-      $languages = language_list();
-      foreach ($totals as $language => $total) {
-        $messages[] = $t('%language translation strings added: !add, updated: !update, deleted: !delete.', array(
-          '%language' => $languages[$language]->name,
-          '!add' => $total['add'],
-          '!update' => $total['update'],
-          '!delete' => $total['delete'],
-        ));
-      }
-      drupal_set_message(filter_xss(implode("<br />\n", $messages)));
-
-      // Warning for disallowed HTML.
-      if ($total_skip) {
-        drupal_set_message(
-          format_plural(
-            $total_skip,
-            'One translation string was skipped because it contains disallowed HTML. See !log_messages for details.',
-            '@count translation strings were skipped because they contain disallowed HTML. See !log_messages for details.',
-            array('!log_messages' => l(t('Recent log messages'), 'admin/reports/dblog'))),
-        'warning');
-      }
-    }
-
-    // Error for failed imports.
-    if ($project_fail) {
-      drupal_set_message(
-        format_plural(
-          count($project_fail),
-          'Translations of one project were not imported: @projects.',
-          'Translations of @count projects were not imported: @projects',
-          array('@projects' => implode(', ', $project_fail))),
-      'error');
-    }
-  }
-  else {
-    drupal_set_message($t('Error gathering built-in strings for translation.'), 'error');
   }
 }
 
