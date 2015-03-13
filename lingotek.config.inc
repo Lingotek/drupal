@@ -204,6 +204,11 @@ function lingotek_config_add_query_filters($query) {
       $query->condition('lt.i18n_status', '0');
     }
   }
+
+  // Entity ID
+  if (isset($filters['lid']) && $filters['lid'] != '') {
+    $query->condition('s.lid', $filters['lid']);
+  }
 }
 
 /**
