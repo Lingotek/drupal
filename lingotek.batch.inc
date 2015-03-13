@@ -161,12 +161,6 @@ function lingotek_get_sync_upload_batch_elements($entity_type, $upload_nids = ar
  * etc.), that need to be uploaded.
  */
 function lingotek_get_sync_upload_config_batch_elements($set_ids = array()) {
-  // pull outstanding imports from localize.drupal.org, if desired
-  if (variable_get('lingotek_use_translation_from_drupal')) {
-    module_load_include('admin.inc', 'lingotek');
-    $modules = lingotek_admin_get_enabled_modules();
-    lingotek_admin_load_l10n_update_batch($modules);  // sets a separate batch for processing module imports from Drupal
-  }
 
   $operations = array();
   if (is_array($set_ids)) {
