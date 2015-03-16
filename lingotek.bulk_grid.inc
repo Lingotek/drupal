@@ -1094,6 +1094,7 @@ function lingotek_config_build_filters($form_state) {
   foreach ($languages as $code => $language) {
     $search_languages[$code] = t($language->name) . ' (' . $language->lingotek_locale . ')';
   }
+  $modules = array_map('ucfirst', module_list(FALSE, FALSE, TRUE));
 
   $filters = array(
     'lid' => array(
@@ -1108,6 +1109,12 @@ function lingotek_config_build_filters($form_state) {
       '#title' => t('Doc ID is'),
       '#size' => 10,
     ),
+    'location' => array(
+      '#type' => 'select',
+      '#default_value' => isset($_SESSION['grid_filters']['location']) ? $_SESSION['grid_filters']['location'] : '',
+      '#title' => t('Module'),
+      '#options' => array('' => '') + $modules,
+      ),
     'upload_status' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['upload_status']) ? $_SESSION['grid_filters']['upload_status'] : 'all',
