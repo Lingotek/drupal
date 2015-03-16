@@ -186,6 +186,11 @@ function lingotek_config_add_query_filters($query) {
     }
   }
 
+  // Module Filter
+  if (isset($filters['location']) && $filters['location'] != '') {
+    $query->condition('s.location', '%' . $filters['location'] . '%', 'LIKE');
+  }
+
   lingotek_filter_by_document_id($query, $filters);
 
   // Upload Status
