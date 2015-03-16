@@ -679,17 +679,6 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     'Description',
   );
 
-  $fr = array(
-    '#id' => 'lingotek_use_translation_from_drupal',
-    '#type' => 'checkbox',
-    '#title' => t('Use Drupal community translations when available from <a href="@link">localize.drupal.org</a>', array('@link' => url('http://localize.drupal.org', array('attributes' => array('target' => '_blank'))))),
-    '#attributes' => array(
-      'id' => array('lingotek_use_translation_from_drupal'),
-      'name' => 'lingotek_use_translation_from_drupal',
-      'class' => array('field'),
-    ),
-    '#default_value' => variable_get('lingotek_use_translation_from_drupal', TRUE) ? 'checked' : FALSE,
-  );
   $prep_blocks_chbx = array(
     '#id' => 'lingotek_prepare_config_blocks',
     '#type' => 'checkbox',
@@ -729,10 +718,6 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#type' => 'hidden',
     '#value' => module_exists('i18nviews'),
   );
-
-  if (variable_get('lingotek_use_translation_from_drupal', 0)) {
-    $fr['#attributes']['checked'] = 'checked';
-  }
 
   $options = array(
     'lingotek_translate_config_blocks' => array(t('Blocks'), t('Include translation for all translatable blocks.') . drupal_render($prep_blocks_chbx)),
@@ -909,9 +894,6 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
 
   system_settings_form_submit($form, $form_state);
 
-  $lingotek_use_translation_from_drupal = isset($form_state['input']['lingotek_use_translation_from_drupal']) ? $form_state['input']['lingotek_use_translation_from_drupal'] : 0;
-  variable_set('lingotek_use_translation_from_drupal', $lingotek_use_translation_from_drupal);
-
   //if any configuration options are set then config translation is enabled
   if (variable_get('lingotek_translate_config_taxonomies', 0) || variable_get('lingotek_translate_config_blocks', 0) ||
       variable_get('lingotek_translate_config_menus', 0) || variable_get('lingotek_translate_config_views', 0) ||
@@ -1066,6 +1048,7 @@ function lingotek_admin_add_module_index_job($module, &$context) {
   $context['message'] = t('Gathering translatable strings in @type: @name', array('@type' => $module->type, '@name' => $module->name));
   $real_uri = $_SERVER['REQUEST_URI']; // save the real URI in order to record module names for the location
   module_load_include('inc', 'potx', 'potx');
+
   // translations *not* available from localize.drupal.org
   $_SERVER['REQUEST_URI'] = 'module:' . $module->name;
   $path = pathinfo($module->filename);

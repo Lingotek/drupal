@@ -51,7 +51,6 @@ Drupal.behaviors.lingotekAdminForm = {
     });
     //when a field checkbox is clicked
     var exemptions = [
-      "lingotek_use_translation_from_drupal",
       "lingotek_prepare_config_blocks",
       "lingotek_prepare_config_taxonomies",
       "lingotek_prepare_config_menus"
@@ -84,8 +83,6 @@ Drupal.behaviors.lingotekAdminForm = {
     $('.select-all').change( function () {
       if ($(this).children().first().is(':checked')) {
         $('.field.form-checkbox').removeAttr('disabled').attr('checked',true);
-      } else {
-        $('.field.form-checkbox:not(#lingotek_use_translation_from_drupal)').attr('disabled',true);
       }
     });
 
@@ -206,10 +203,6 @@ Drupal.behaviors.lingotekAdminForm = {
             if(name.indexOf("translate_config") != -1){
                 name = name.substring(name.lastIndexOf('_') + 1, name.length - 1);
                 $list.push(name);
-            }
-            else if (name === 'lingotek_use_translation_from_drupal') {
-                extra_text = "+";
-                $list[$list.length-1] += extra_text;
             }
           }
         });
