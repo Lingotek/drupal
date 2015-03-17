@@ -282,13 +282,15 @@ function lingotek_get_enabled_fields($entity_type, $bundle) {
 }
 
 /**
- * Return the xml representation of the source content for a node.
+ * Return the xml representation of the source content for an entity.
  *
- * @param object $node
- *   A Drupal node.
+ * @param $entity_type
+ *   A string containing a Drupal entity type.
+ * @param object $entity
+ *   A Drupal entity.
  *
  * @return string
- *   The XML representation of the node in Lingotek format.
+ *   The XML representation of the entity in Lingotek format.
  */
 function lingotek_entity_xml_body($entity_type, $entity) {
   $translatable = array();
