@@ -1407,28 +1407,23 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
   if ($entity_type == 'node') {
     $entity = lingotek_node_load_default($entity_id);
   }
-  elseif ($entity_type == 'config') {
-    $set_id = LingotekConfigSet::getSetId($entity_id);
-    $doc_id = LingotekConfigSet::getDocId($set_id);
-    $entity->lingotek['document_id'] = $doc_id;
-    $entity->language = 'placeholder for the config language';
-  }
   else {
     $entities = entity_load($entity_type, array($entity_id));
-    if ($entities && isset($entities[$entity_id])) {
-      $entity = $entities[$entity_id];
+    if (empty($entities[$entity_id])) {
+      return;
     }
+    $entity = $entities[$entity_id];
+
     // Handle field collections, both beta7 and beta8
     if ($entity_type == 'field_collection_item') {
-      try {
+      if (method_exists($entity, 'langcode')) {
         $entity->language = $entity->langcode();
       }
-      catch (Exception $e) {
+      else {
         $entity->language = 'und';
       }
     }
   }
-
   return $entity;
 }
 
