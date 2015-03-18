@@ -1409,9 +1409,11 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
   }
   else {
     $entities = entity_load($entity_type, array($entity_id));
-    if ($entities && isset($entities[$entity_id])) {
-      $entity = $entities[$entity_id];
+    if (empty($entities[$entity_id])) {
+      return;
     }
+    $entity = $entities[$entity_id];
+
     // Handle field collections, both beta7 and beta8
     if ($entity_type == 'field_collection_item') {
       if (method_exists($entity, 'langcode')) {
@@ -1422,7 +1424,6 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
       }
     }
   }
-
   return $entity;
 }
 

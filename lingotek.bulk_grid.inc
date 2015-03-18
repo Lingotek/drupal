@@ -1710,7 +1710,7 @@ function lingotek_render_title($row, $entity_properties, $language) {
 
   // special handling of taxonomy terms for URI generation
   if ($entity_type == 'taxonomy_term') {
-    $term_obj = entity_load_single($entity_type, $row->tid);
+    $term_obj = lingotek_entity_load_single($entity_type, $row->tid);
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $term_obj) : '';
   }
   else {
