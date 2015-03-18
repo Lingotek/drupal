@@ -2581,7 +2581,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
 
   $output['lingotek'][] = lingotek_wrap_in_fieldset($account_summary, t('Account'), array('id' => 'ltk-account'));
 
-  foreach (lingotek_managed_entity_types($include_all = TRUE) as $machine_name => $entity_type) {
+  foreach (lingotek_managed_entity_types(TRUE) as $machine_name => $entity_type) {
     $entity_settings = drupal_get_form('lingotek_admin_entity_bundle_profiles_form', $machine_name, $show_fieldset);
     $output['lingotek'][] = lingotek_wrap_in_fieldset($entity_settings, t('Translate @type', array('@type' => $entity_type['label'])), array('id' => lingotek_get_tab_id($machine_name), 'class' => array('ltk-entity')));
   }
