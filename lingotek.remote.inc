@@ -232,6 +232,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
       }
 
       lingotek_assign_field_format($insert_array, $source_field_data, $curr_field_data, $field_info['field_name']);
+      $index++;
     }
 
     // Save to both field_data tables and field_revision tables
@@ -271,7 +272,6 @@ function lingotek_assign_field_format(&$params, $source_field_data, $curr_field_
     $format_db_field_name = $format_column_name;
     $params[$format_db_field_name] = $field_format;
   }
-  $index++;
 }
 
 /*
