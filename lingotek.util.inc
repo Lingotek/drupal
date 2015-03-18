@@ -1979,7 +1979,7 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
  */
 function lingotek_is_node_translation($node = NULL) {
   // The case of creating a new node-based translation.
-  if (isset($_GET['translation']) && isset($_GET['target']) && (entity_load_single('node', (int) $_GET['translation']))) {
+  if (isset($_GET['translation']) && isset($_GET['target']) && (lingotek_entity_load_single('node', (int) $_GET['translation']))) {
     return $_GET['translation'];
   }
   // locate a translation source node ID, if available
