@@ -169,7 +169,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
 
     // Try to get the source field's text format, if available
     try {
-      $source_field_data = field_get_items($entity_type, $source_entity, $drupal_field_name);
+      $source_field_data = field_get_items($entity_type, $source_entity, $field_name);
     } catch (EntityMalformedException $e) {
       $source_field_data = array();
     }
@@ -231,7 +231,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
         LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
       }
 
-      lingotek_assign_field_format($insert_array, $source_field_data, $curr_field_data, $field_info['field_name']);
+      lingotek_assign_field_format($insert_array, $source_field_data, $curr_field_data, $field_info['field_name'], $entity->language);
       $index++;
     }
 
@@ -240,7 +240,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     foreach ($field_table_names as $fname) {
       lingotek_save_field_record($fname, $insert_array);
     }
-//YOU LEFT OFF HERE, TRYING TO TEST FIELD COLLECTIONS
 
     // After every field insert, reset the caches and reload the entity
     // TODO: Do we really need to do this every time we save a field, or
@@ -260,13 +259,13 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
 /*
  * Set the field format for the array to be inserted/updated
  */
-function lingotek_assign_field_format(&$params, $source_field_data, $curr_field_data, $format_column_name) {
+function lingotek_assign_field_format(&$params, $source_field_data, $curr_field_data, $format_column_name, $entity_langcode) {
   $field_format = NULL;
   if (!empty($source_field_data[0]['format'])) {
     $field_format = $source_field_data[0]['format'];
   }
-  elseif (!empty($curr_field_data[$entity->language][0]['format'])) {
-    $field_format = $curr_field_data[$entity->language][0]['format'];
+  elseif (!empty($curr_field_data[$entity_langcode][0]['format'])) {
+    $field_format = $curr_field_data[$entity_langcode][0]['format'];
   }
   if (!empty($field_format)) {
     $format_db_field_name = $format_column_name;
