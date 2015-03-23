@@ -310,3 +310,49 @@ a.ltk-action:hover {
   background-color: #CCCCCC
 }
 
+a.tooltips {
+  position: relative;
+  display: inline;
+  text-decoration: none;
+  color: inherit;
+}
+
+a:hover.tooltips {
+  text-decoration: none;
+}
+
+a.tooltips span {
+  position: absolute;
+  right: -75px;
+  color: #FFFFFF;
+  background: #333;
+  line-height: 18px;
+  text-align: center;
+  visibility: hidden;
+  border-radius: 6px;
+  text-decoration: none;
+  padding: 5px;
+  font-size: 13px;
+}
+
+a.tooltips span:after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -8px;
+  width: 0; height: 0;
+  border-bottom: 8px solid #333;
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+  text-decoration: none;
+}
+
+a:hover.tooltips span {
+  visibility: visible;
+  top: 30px;
+  left: 50%;
+  margin-left: -90px;
+  z-index: 999;
+  text-decoration: none;
+}
