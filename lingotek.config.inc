@@ -290,7 +290,7 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
 
     $data = array(
       'lid' => $lid ? : t('??'),
-      'source' => $source_text,
+      'source' => '<a class="tooltips">' . $source_text . '<span>' . $escaped_source . '</span></a>',
       'source_uploaded' => $source_uploaded,
       'location' => $row->{'location'},
       'context' => $row->{'context'},
