@@ -680,7 +680,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $ln = LingotekEntity::load($node, 'node');
 
   $node_language = $ln->language;
-  if (lingotek_uses_node_translation($source_node) && $node_language != 'und') {
+  if (lingotek_uses_node_translation($source_node) && $node_language != LANGUAGE_NONE) {
     // a node-based edit, so use the node's language'
     $current_language = $node_language;
   }
@@ -693,7 +693,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form = lingotek_get_node_settings_form($form, $form_state, $node);
 
   // Set the default language on new node creation.
-  if (empty($source_node->nid)) {
+  if (empty($source_node->nid) && $form['language']['#default_value'] == LANGUAGE_NONE) {
     $form['language']['#default_value'] = lingotek_get_source_language();
   }
 
@@ -1420,7 +1420,7 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
         $entity->language = $entity->langcode();
       }
       else {
-        $entity->language = 'und';
+        $entity->language = LANGUAGE_NONE;
       }
     }
   }
@@ -2716,8 +2716,8 @@ function lingotek_add_menu_link_form($form, $form_state, $node) {
       '#type' => 'select',
       '#title' => 'Menu translation through Lingotek',
       '#description' => t('Select whether to allow this link to be translated into all enabled languages.'),
-      '#default_value' => isset($form_state['node']->menu['language']) ? $form_state['node']->menu['language'] : 'und',
-      '#options' => array('und' => 'Allow link to be translated', 'en' => 'Show link only in English'),
+      '#default_value' => isset($form_state['node']->menu['language']) ? $form_state['node']->menu['language'] : LANGUAGE_NONE,
+      '#options' => array(LANGUAGE_NONE => 'Allow link to be translated', 'en' => 'Show link only in English'),
       '#prefix' => '<div id="edit-menu-english">',
       '#suffix' => '</div>',
     );
