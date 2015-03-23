@@ -1072,15 +1072,15 @@ function lingotek_admin_save_queued_strings() {
     // handle format_plural
     if (strpos($k, "\0")) {
       list($singular, $plural) = explode("\0", $k);
-      locale($singular, $context, $langcode='und');
+      locale($singular, $context, LANGUAGE_NONE);
       $single_lid = LingotekConfigSet::getLidBySource($singular);
-      locale($plural, $context, $langcode='und');
+      locale($plural, $context, LANGUAGE_NONE);
       $plural_lid = LingotekConfigSet::getLidBySource($plural);
       $plural_map[$plural_lid] = array('plid' => $single_lid, 'plural' => 1);
     }
     else {
       // handle regular t-function content
-      locale($k, $context, $langcode='und');
+      locale($k, $context, LANGUAGE_NONE);
     }
   }
   // TODO: do something with the _potx_install strings
