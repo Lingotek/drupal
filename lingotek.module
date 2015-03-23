@@ -693,7 +693,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   $form = lingotek_get_node_settings_form($form, $form_state, $node);
 
   // Set the default language on new node creation.
-  if (empty($source_node->nid)) {
+  if (empty($source_node->nid) && $form['language']['#default_value'] == LANGUAGE_NONE) {
     $form['language']['#default_value'] = lingotek_get_source_language();
   }
 
