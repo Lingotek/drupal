@@ -2738,3 +2738,64 @@ function lingotek_field_attach_delete_bundle($entity_type, $bundle, $instances) 
     variable_set('lingotek_entity_profiles', $entity_profiles);
   }
 }
+
+/**
+ * Implements hook_lingotek_entity_upload_alter().
+ */
+function lingotek_lingotek_entity_upload_alter(&$params) {
+  $entity = $params['entity'];
+  $entity_type = $params['entity_type'];
+  $xml = $params['xml'];
+  $langcode = $params['langcode'];
+
+  // Pull metatags for translation
+  if (module_exists('metatag') && variable_get('lingotek_translate_metatags') && metatag_entity_supports_metatags($entity_type) && !empty($entity->metatags[$langcode])) {
+    lingotek_attach_xml($xml, 'metatags', $entity->metatags[$langcode]);
+  }
+}
+
+/**
+ * Implements hook_lingotek_entity_download_alter().
+ */
+function lingotek_lingotek_entity_download_alter(&$params) {
+  $entity = $params['entity'];
+  $entity_type = $params['entity_type'];
+  $xml = $params['xml'];
+  $langcode = $params['langcode'];
+
+  // Handle metatag translations
+  if (module_exists('metatag') && variable_get('lingotek_translate_metatags') && metatag_entity_supports_metatags($entity_type) && !empty($xml->metatags)) {
+    $metatags = array($langcode => array());
+    foreach ($xml->metatags as $tag => $content) {
+      foreach ($content as $k => $v) {
+        foreach ($v as $value => $element) {
+          foreach ($element as $text) {
+            $metatags[$langcode][$k] = array();
+            $metatags[$langcode][$k]['value'] = lingotek_unfilter_placeholders(decode_entities($text));
+          }
+        }
+      }
+      // Remove the self-reference to the metatags tag.
+      unset($content[0]);
+    }
+    list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+    metatag_metatags_save($entity_type, $id, $vid, $metatags, $langcode);
+  }
+}
+
+function lingotek_attach_xml($xml, $name, $value) {
+  if (is_object($value) || is_array($value)) {
+    $sub_xml = $xml->addChild($name);
+    foreach ($value as $k => $v) {
+      lingotek_attach_xml($sub_xml, $k, $v);
+    }
+  }
+  else {
+    $sub_xml = $xml->addChild($name);
+    if ($value) {
+      $element = $sub_xml->addChild('element');
+      //TODO: encode $value to prevent xml corruption.
+      $element->addCData(lingotek_filter_placeholders($value));
+    }
+  }
+}
