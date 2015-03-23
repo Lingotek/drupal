@@ -1846,7 +1846,7 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
     LingotekSync::STATUS_PENDING => $default_link,
     LingotekSync::STATUS_READY => $default_link,
     LingotekSync::STATUS_CURRENT => $default_link,
-    LingotekSync::STATUS_EDITED => $manual_link,
+    LingotekSync::STATUS_EDITED => $default_link,
     LingotekSync::STATUS_UNTRACKED => $untracked_link,
     LingotekSync::STATUS_TARGET_LOCALIZE => $untracked_link,
     LingotekSync::STATUS_TARGET_EDITED => $untracked_link,
