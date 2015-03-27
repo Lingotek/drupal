@@ -65,11 +65,11 @@ input.lingotek-content-settings-table.form-checkbox {
   clear: both;
 }
 
-.form-item.form-item-actions-select {
+.form-item.form-item-select-actions {
   padding: 0px;
 }
 
-.form-item-actions-select label, .form-item-search label {
+.form-item-select-actions label, .form-item-search label {
   display: inline;
 }
 
