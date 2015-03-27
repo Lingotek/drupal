@@ -209,7 +209,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
 
   // Build actions selector
-  $form['actions_select'] = array(
+  $form['select_actions'] = array(
     '#type' => 'select',
     '#options' => $action_options,
     '#title' => '<i class="fa fa-asterisk ltk-muted"></i>' . ' ' . t('Actions') . ': ',
@@ -218,10 +218,10 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $actions_submit_function = $entity_type == 'config' ? array('lingotek_config_action_submit') : array('lingotek_grid_action_submit');
 
   // Actions submit button
-  $form['actions_submit'] = array(
+  $form['submit_actions'] = array(
     '#type' => 'submit',
     '#value' => t('Submit Action'),
-    '#name' => 'actions_submit',
+    '#name' => 'submit_actions',
     '#submit' => $actions_submit_function,
   );
 
@@ -588,15 +588,15 @@ function lingotek_grid_action_submit($form, $form_state) {
   $entity_ids = array();
   $entity_type = isset($form_state['entity_type']) ? $form_state['entity_type'] : (isset($form_state['values']['entity_type']) ? $form_state['values']['entity_type'] : NULL);
 
-  if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'actions_submit') { // If submitting an action
+  if (isset($form_state['clicked_button']) && $form_state['clicked_button']['#name'] == 'submit_actions') { // If submitting an action
     foreach ($form_state['values']['the_grid'] as $value) {
       if ($value != 0) {
         $entity_ids[] = $value;
       }
     }
 
-    if (isset($form_state['values']['actions_select'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
-      $action = $form_state['values']['actions_select']; // Get the action
+    if (isset($form_state['values']['select_actions'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
+      $action = $form_state['values']['select_actions']; // Get the action
       if (count($entity_ids) <= 0) { // Select a node
         drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
