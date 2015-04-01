@@ -268,7 +268,7 @@ function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $en
 
       // add the 'inherit' option after writing the main profile box
       $profiles_options[LingotekSync::PROFILE_INHERIT] = '(use default profile for ' . $bundle_name . ')';
-  
+
       foreach ($languages as $language) {
         $profiles['profile_overrides'][$bundle_name . '_' . $language->lingotek_locale] = array(
           '#title' => 'Content created in ' . $language->name,
@@ -772,9 +772,9 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
   $profiles = variable_get('lingotek_profiles');
   $workflows = $api->listWorkflows();
+  $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
 
   if (is_array($workflows) && count($workflows) > 1 && $setup_complete) {
-    $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
     $stored_workflow_id = $config_profile->getWorkflow();
     $selected_workflow_id = (isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : $stored_workflow_id);
     $curr_workflow = $api->getWorkflow($stored_workflow_id);
@@ -1940,7 +1940,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
         '#collapsed' => TRUE,
         '#id' => 'language_override__' . $language->lingotek_locale,
       );
-  
+
       if ($stored_profile->isTargetLocaleDisabled($language->lingotek_locale)) {
         $default_language_override_value = LingotekSync::PROFILE_DISABLED;
       }
@@ -1950,14 +1950,14 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       else {
         $default_language_override_value = LingotekSync::PROFILE_INHERIT;
       }
-  
+
       $form['defaults']['language_override'][$language->lingotek_locale]['settings_' . $language->lingotek_locale] = array(
         '#type' => 'select',
         '#options' => $settings_options,
         '#description' => t('The default Translation Memory Vault where translations are saved.'),
         '#default_value' => $default_language_override_value,
       );
-  
+
       $auto_download = $stored_profile->isAutoDownload($language->lingotek_locale);
       $form['defaults']['language_override'][$language->lingotek_locale]['auto_download_' . $language->lingotek_locale] = array(
         '#type' => 'checkbox',
@@ -1969,7 +1969,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
           ),
         ),
       );
-  
+
       if (!empty($workflows) && count($workflows) > 1) {
         $curr_workflow = $stored_profile->getWorkflow($language->lingotek_locale);
         $form['defaults']['language_override'][$language->lingotek_locale]['workflow_id_' . $language->lingotek_locale] = array(
