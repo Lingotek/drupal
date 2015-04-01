@@ -71,7 +71,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
     $localized_node->promote = $node->promote;
     $localized_node->sticky = $node->sticky;
     $localized_node->status = 1; // default to published if revisions are not enabled.
-    $localized_node->create_lingotek_document = FALSE;
+    $localized_node->auto_upload = FALSE;
 
     // Grandfather field settings/values from source node to target.
     $source_fields = field_info_instances('node', $node->type);
@@ -370,54 +370,7 @@ function lingotek_save_url_alias($content, $node, $drupal_langcode) {
   }
 }
 
-/*
- * Save a segment
- *
- * Helper method so that if a node has the tnid deferred until later, it will
- * get it from the database instead.
- *
- * @param $source_text
- *  Source text
- * @param $target_text
- *  Target text that should be saved in the segment
- * @param $target_language
- *  Target language as used by lingotek (locale_country)
- * @param $doc_id
- *  Document Id
- * @return
- *  boolean, TRUE if the api call was successful
- */
-
-function lingotek_save_segment($source_text, $target_text, $target_language, $doc_id) {
-  $param = array
-    (
-    "sourceText" => $source_text,
-    "targetText" => $target_text,
-    "targetLanguage" => $target_language,
-    "documentId" => $doc_id,
-    "overwrite" => 0,
-  );
-  $save_segment = LingotekApi::instance()->request("saveSegment", $param);
-  return ($save_segment->results == "success");
-}
-
 #API ADDERS
-
-/*
- * Apply the phase template to the Lingotek document
- *
- * This saves the chosen workflow to the Lingotek platform.
- *
- * @param $translation_target_id
- *  Translation Target Id (Id for the target language stored with the document associated with a node)
- * @param $phase_template_id
- *  Workflow Id to be added
- */
-
-function lingotek_add_phase_template($translation_target_id, $phase_template_id) {
-  $params = array('translationTargetId' => $translation_target_id, 'phaseTemplateId' => $phase_template_id);
-  LingotekApi::instance()->request("applyPhaseTemplate", $params);
-}
 
 /*
  * Create a project and return it's id.
@@ -481,44 +434,6 @@ function lingotek_get_url_alias_translations() {
   $methods[1] = t("Translate the URL alias");
   $methods[2] = t("Use the translated page title");
   return $methods;
-}
-
-/*
- * Get the Lingotek user's cms key for the community they are currently logged in with
- */
-
-function lingotek_get_cms_key() {
-  global $_lingotek_client;
-
-  $output = LingotekApi::instance()->request("getCMSKey");
-  if ($output->results == "success") {
-    variable_del('lingotek_password');
-    return $output->cms;
-  }
-  else {
-    return "";
-  }
-}
-
-/*
- * Get the Lingotek user's current communities
- */
-
-function lingotek_get_communities() {
-  $options = array();
-
-  if (!$_lingotek_client->canLogIn()) {
-    return $options;
-  }
-
-  $list_communities = LingotekApi::instance()->request("listCommunities", array());
-  if ($list_communities->results == "success") {
-    foreach ($list_communities->communities as $community) {
-      $options[$community->id] = $community->name;
-    }
-  }
-
-  return $options;
 }
 
 /**
@@ -598,37 +513,6 @@ function lingotek_get_phase_name($phase_id) {
   }
 
   return $phase_name;
-}
-
-/*
- * Get available synchronization methods for keeping nodes up-to-date
- */
-
-function lingotek_get_sync_methods() {
-  $methods = array();
-  $methods[0] = t("Never"); // Manual
-  $methods[1] = t("Always"); // Automatic
-  $methods[100] = t("100%");
-  return $methods;
-}
-
-/*
- * Get the translation target
- *
- * This fetches an target language object for a specific document.
- *
- * @param $translation_target_id
- *  Id for the target language object
- * @return
- *  Object representing a target language for a specific document in the lingotek platform
- */
-
-function lingotek_get_translation_target($translation_target_id) {
-  $params = array('translationTargetId' => $translation_target_id);
-  $output = LingotekApi::instance()->request("getTranslationTarget", $params);
-  if ($output->results == "success") {
-    return $output;
-  }
 }
 
 /**
@@ -739,21 +623,3 @@ function lingotek_get_workbench_url_by_phases($document_id, $phases, $label = FA
   return $l;
 }
 
-/*
- * Get the xliff information of the node
- *
- * This fetches an xliff representation of the source document.
- *
- * @param $doc_id
- *  Document id that associates the node to the Lingotek platform
- * @return
- *  xml text of the xliff
- */
-
-function lingotek_get_xliff($doc_id) {
-  global $_lingotek_client;
-
-  $xliff_text = "";
-  $params = array('documentId' => $doc_id);
-  return $_lingotek_client->downloadTriggered("downloadDocumentAsXliff", $params);
-}

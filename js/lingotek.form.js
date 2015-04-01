@@ -87,7 +87,6 @@ lingotek.forms = lingotek.forms || {};
             var sourceLanguageSet = language != 'und'; 
             var autoUpload = $('#edit-lingotek-create-lingotek-document').is(":checked");
             var autoDownload = $('#edit-lingotek-sync-method').is(":checked");
-            var custom = $('#edit-lingotek-profile').val() == 'CUSTOM';
             
             // Source language set or not
             if (sourceLanguageSet) {
@@ -107,17 +106,7 @@ lingotek.forms = lingotek.forms || {};
                 $('.form-item-lingotek-profile').hide();
             }
             
-            if($('#edit-lingotek-profile').val() != 'CUSTOM') {
-              $('#edit-lingotek-content').hide();
-              $('#edit-lingotek-advanced').hide();
-            }
-
-            if(custom) {
-              summaryMessages.push( autoUpload ? Drupal.t("auto-upload") : Drupal.t("manual upload"));
-              summaryMessages.push( autoDownload ? Drupal.t("auto-download") : Drupal.t("manual download"));
-            } else {
-              summaryMessages.push($('#edit-lingotek-profile option:selected').text());
-            }
+            summaryMessages.push($('#edit-lingotek-profile option:selected').text());
 
             if($('#edit-lingotek-allow-source-overwriting').is(":visible")) {
                 if($('#edit-lingotek-allow-source-overwriting').is(":checked")) {

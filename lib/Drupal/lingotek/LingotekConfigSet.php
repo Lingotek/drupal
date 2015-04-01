@@ -535,63 +535,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   /**
-   * Event handler for updates to the config set's data.
-   */
-  public function contentUpdated() {
-
-    $metadata = $this->metadata();
-    if (empty($metadata['document_id'])) {
-      $this->createLingotekDocument();
-    }
-    else {
-      $update_result = $this->updateLingotekDocument();
-    }
-
-    // Synchronize the local content with the translations from Lingotek.
-    // We instruct the users to configure config set translation with a
-    // single-phase machine translation-only Workflow, so the updated content
-    // should be available right after our create/update document calls from above.
-    // If it isn't, Lingotek will call us back via LINGOTEK_NOTIFICATIONS_URL
-    // when machine translation for the item has finished.
-    if (!self::$content_update_in_progress) {
-      // Only update the local content if the Document is 100% complete
-      // according to Lingotek.
-
-      $document_id = $this->getMetadataValue('document_id');
-      if ($document_id) {
-        $document = $this->api->getDocument($document_id);
-        if (!empty($document->percentComplete) && $document->percentComplete == 100) {
-          $this->updateLocalContent();
-        }
-      }
-      else {
-        LingotekLog::error('Unable to retrieve Lingotek Document ID for config set @id', array('@id' => $this->sid));
-      }
-    }
-  }
-
-  /**
-   * Creates a Lingotek Document for this config set.
-   *
-   * @return bool
-   *   TRUE if the document create operation was successful, FALSE on error.
-   */
-  protected function createLingotekDocument() {
-    return ($this->api->addContentDocumentWithTargets($this)) ? TRUE : FALSE;
-  }
-
-  /**
-   * Updates the existing Lingotek Documemnt for this config set.
-   *
-   * @return bool
-   *   TRUE if the document create operation was successful, FALSE on error.
-   */
-  protected function updateLingotekDocument() {
-    $result = $this->api->updateContentDocument($this);
-    return ($result) ? TRUE : FALSE;
-  }
-
-  /**
    * Gets the local Lingotek metadata for this config set.
    *
    * @return array
@@ -672,8 +615,13 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   /**
    * Assign the set's target status(es) in the config metadata table
    */
-  public function setTargetsStatus($status, $lingotek_locale = 'all') {
-    if ($lingotek_locale != 'all') {
+  public function setTargetsStatus($status, $lingotek_locale = NULL) {
+    if (is_array($lingotek_locale)) {
+      foreach ($lingotek_locale as $ll) {
+        $this->setMetadataValue('target_sync_status_' . $ll, $status);
+      }
+    }
+    elseif ($lingotek_locale !== NULL) {
       $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
     }
     else { // set status for all available targets

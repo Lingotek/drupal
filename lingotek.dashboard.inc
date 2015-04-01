@@ -144,7 +144,8 @@ function lingotek_dashboard_command_ajax() {
       $parameters = $_POST;
       if (strlen($lingotek_locale) > 1) {
         // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
-        $add = lingotek_add_target_language($lingotek_locale);
+        $include_all_docs_in_project = variable_get('lingotek_enable_language_specific_profiles', FALSE) ? FALSE : TRUE;
+        $add = lingotek_add_target_language($lingotek_locale, $include_all_docs_in_project);
         $response = lingotek_get_language_details($lingotek_locale);
         $response['tms_added'] = $add;
       }

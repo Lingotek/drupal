@@ -814,6 +814,11 @@ function lingotek_grid_download_selected($entity_type, $entity_ids, $target_loca
   $operations = array();
   $entities = entity_load($entity_type, $entity_ids);
   foreach ($entities as $entity) {
+    if (variable_get('lingotek_enable_language_specific_profiles')) {
+      // Filter out the target languages that should not be included for this entity.
+      $profile = LingotekProfile::loadByEntity($entity_type, $entity);
+      $target_locales = array_keys($profile->filterTargetLocales($target_locales));
+    }
     foreach ($target_locales as $locale) {
       // Skip language neutral taxonomy terms because their source is really English.
       if ($entity_type == 'taxonomy_term' && $entity->language == LANGUAGE_NONE && $locale == 'en_US') {
@@ -1020,12 +1025,11 @@ function lingotek_grid_build_filters($form_state) {
   asort($source_languages);
 
   $profiles = array();
-  $profiles[LingotekSync::PROFILE_CUSTOM] = t('Custom');
   $profiles[LingotekSync::PROFILE_DISABLED] = t('Disabled');
 
   $profile_defaults = lingotek_get_profiles();
   foreach ($profile_defaults as $key => $p) {
-    $profiles[$key] = $p['name'];
+    $profiles[$key] = $p->getName();
   }
   unset($profiles['CONFIG']);
   asort($profiles);
@@ -1538,7 +1542,8 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
   }
 
   if (isset($filters['profile']) && !in_array('all', $filters['profile'])) {
-    $profiled_entities = lingotek_get_entities_by_profile_and_entity_type($filters['profile'], $entity_type);
+    $profile_obj = LingotekProfile::loadById($filters['profile']);
+    $profiled_entities = $profile_obj->getEntities($entity_type);
     $profiled_entity_ids = array(-1);
     foreach ($profiled_entities as $p) {
       $profiled_entity_ids[] = $p['id'];
@@ -1611,7 +1616,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     $disabled = $row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED;
     $disabled_class = $disabled ? ' ltk-disabled-icon' : '';
     $allow_source_overwriting = !empty($row->lingotek['allow_source_overwriting']);
-    $allow_target_localization = !empty($profiles[$row->lingotek['profile']]['allow_target_localization']);
+    $allow_target_localization = !empty($row->lingotek['allow_target_localization']);
 
     $translation_icons = lingotek_lang_icons($entity_properties['type'], $languages, $entity_id, $locales_statuses, $disabled, $row->language, $allow_source_overwriting, $allow_target_localization); // show translation statuses
     if (!empty($translation_icons['source'])) {
@@ -1634,7 +1639,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
       'document_id' => $row->document_id ? : t('N/A'),
       'content_type' => isset($entity_properties['info']['bundles'][$row->type]['label']) ? $entity_properties['info']['bundles'][$row->type]['label'] : $row->type,
       'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
-      'workflow' => ($row->lingotek['workflow_id'] ? (isset($workflows[$row->lingotek['workflow_id']]) ? check_plain($workflows[$row->lingotek['workflow_id']]) : $row->lingotek['workflow_id']) : ''),
+      'workflow' => (!empty($row->lingotek['workflow_id']) ? (isset($workflows[$row->lingotek['workflow_id']]) ? check_plain($workflows[$row->lingotek['workflow_id']]) : $row->lingotek['workflow_id']) : ''),
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
       'description' => isset($row->description) ? $row->description : '',
     );
@@ -1762,26 +1767,23 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
 function lingotek_render_configuration($row, $profiles, $disabled_class) {
   $configuration = '';
 
-  if ($row->lingotek['create_lingotek_document']) {
+  if (!empty($row->lingotek['auto_upload'])) {
     $configuration .= '<i class="fa fa-arrow-up' . $disabled_class . '" title="' . t('Automatic Upload') . '"></i> ';
   }
-  if ($row->lingotek['sync_method']) {
+  if (!empty($row->lingotek['auto_download'])) {
     $configuration .= '<i class="fa fa-arrow-down' . $disabled_class . '" title="' . t('Automatic Download') . '"></i> ';
   }
-  if ($row->lingotek['allow_community_translation']) {
+  if (!empty($row->lingotek['allow_community_translation'])) {
     $configuration .= '<i class="fa fa-globe' . $disabled_class . '" title="' . t('Crowdsourcing Enabled') . '"></i> ';
   }
 
-  if ($row->lingotek['profile'] == LingotekSync::PROFILE_CUSTOM) {
-    $configuration = t('Custom') . ' <span class="node-configuration">' . $configuration . '</span>';
-  }
-  elseif ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+  if ($row->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
     $configuration = t('Disabled');
   }
   else {
     $profile_key = $row->lingotek['profile'];
     if (array_key_exists($profile_key, $profiles)) {
-      $configuration = t($profiles[$profile_key]['name']);
+      $configuration = t($profiles[$profile_key]->getName());
     }
     else {
       $configuration = t('Unknown');// profile id does not exist in profiles (this state should be unobtainable)

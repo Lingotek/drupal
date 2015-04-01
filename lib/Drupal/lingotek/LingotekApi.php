@@ -64,6 +64,8 @@ class LingotekApi {
    *
    * @param object $translatable_object
    *   A Drupal node object or lingotek ConfigChunk object
+   * @param mixed $with_targets
+   *   An optional array of locales to include for translation, or TRUE for all enabled languages.
    */
   public function addContentDocument(LingotekTranslatableEntity $translatable_object, $with_targets = FALSE) {
     $success = FALSE;
@@ -93,10 +95,29 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $translatable_object);
 
       if ($with_targets) {
-        $parameters['targetAsJSON'] = Lingotek::getLanguagesWithoutSourceAsJSON($source_language);
-
-        $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
-        $result = $this->request('addContentDocumentWithTargetsAsync', $parameters);
+        if (is_array($with_targets)) {
+          // Assumes language-specific profiles are enabled, so handle adding
+          // target locales with custom workflows separately.
+          $default_targets = array();
+          foreach ($with_targets as $l => $v) {
+            if (!is_array($v)) {
+              $default_targets[] = $l;
+            }
+          }
+          if (!empty($default_targets)) {
+            $parameters['targetAsJSON'] = json_encode($default_targets);
+            $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
+            $result = $this->request('addContentDocumentWithTargetsAsync', $parameters);
+          }
+          else {
+            $result = $this->request('addContentDocumentAsync', $parameters);
+          }
+        }
+        else {
+          $parameters['targetAsJSON'] = Lingotek::getLanguagesWithoutSourceAsJSON($source_language);
+          $parameters['applyWorkflow'] = 'true'; // API expects a 'true' string
+          $result = $this->request('addContentDocumentWithTargetsAsync', $parameters);
+        }
       }
       else {
         $result = $this->request('addContentDocumentAsync', $parameters);
@@ -113,7 +134,7 @@ class LingotekApi {
           $translatable_object->setDocumentId($result->id);
           $translatable_object->setProjectId($project_id);
           $translatable_object->setStatus(LingotekSync::STATUS_CURRENT);
-          $translatable_object->setTargetsStatus(LingotekSync::STATUS_PENDING);
+          $translatable_object->setTargetsStatus(LingotekSync::STATUS_PENDING, $with_targets);
 
           // WTD: there is a race condition here where a user could modify a locales-
           // source entry between the time the dirty segments are pulled and the time
@@ -122,7 +143,15 @@ class LingotekApi {
           LingotekConfigSet::setSegmentStatusToCurrentById($translatable_object->getId());
         }
         else {
-          // node assumed (based on two functions below...
+          // Add targets with custom workflows after the fact, if language-specific profiles are detected
+          if (is_array($with_targets)) {
+            foreach ($with_targets as $target_locale => $target_attribs) {
+              if (!empty($result->id) && !empty($target_attribs['workflow_id'])) {
+                $tl_result = $this->addTranslationTarget($result->id, NULL, $target_locale, $target_attribs['workflow_id']);
+              }
+            }
+          }
+
           $entity_type = $translatable_object->getEntityType();
           lingotek_keystore($entity_type, $translatable_object->getId(), 'document_id', $result->id);
           lingotek_keystore($entity_type, $translatable_object->getId(), 'last_uploaded', time());
