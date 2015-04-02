@@ -56,7 +56,10 @@ lingotek.forms = lingotek.forms || {};
       var profiles_by_langcode = JSON.parse($('#lingotek-bundle-profiles').val());
       // set the #edit-lingotek-profile select box
       var langcode = $("#edit-language").val();
-      if (langcode in profiles_by_langcode) {
+      if ($('#lingotek-language-specific-profiles').val() == '0') {
+        $('#edit-lingotek-profile').val(profiles_by_langcode['DEFAULT']);
+      }
+      else if (langcode in profiles_by_langcode) {
         $('#edit-lingotek-profile').val(profiles_by_langcode[langcode]);
       }
       else {

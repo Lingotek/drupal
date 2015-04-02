@@ -921,11 +921,19 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   $entity_profiles = variable_get('lingotek_entity_profiles', array());
   $node_profiles = $entity_profiles['node'];
   $bundle_profiles_by_langcode = lingotek_filter_profiles_by_bundle_and_langcode($form['type']['#value'], $node_profiles);
+
   $form['lingotek']['bundle_profiles'] = array(
     '#type' => 'hidden',
     '#value' => json_encode($bundle_profiles_by_langcode),
     '#attributes' => array(
       'id' => 'lingotek-bundle-profiles',
+    ),
+  );
+  $form['lingotek']['language_specific_profiles'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('lingotek_enable_language_specific_profiles'),
+    '#attributes' => array(
+      'id' => 'lingotek-language-specific-profiles',
     ),
   );
 
