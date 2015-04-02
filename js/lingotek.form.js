@@ -18,6 +18,7 @@ lingotek.forms = lingotek.forms || {};
         $('#edit-lingotek-profile').change(updateVerticalTabSummary);
         $('#edit-lingotek-profile').change(checkForEnablement);
         $('#edit-lingotek-allow-source-overwriting').change(updateVerticalTabSummary);
+        updateProfileSelectorDefault();
         updateVerticalTabSummary();
         checkForEnablement();
         toggleMenuSelector();
