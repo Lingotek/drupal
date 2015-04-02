@@ -9,6 +9,7 @@ lingotek.forms = lingotek.forms || {};
     
     // Page setup for node add/edit forms.
     lingotek.forms.init = function() {
+        $("#edit-language").change(updateProfileSelectorDefault);
         $("#edit-language").change(updateVerticalTabSummary);
         $("#edit-language").change(toggleMenuSelector);
         $('#ltk-enable-from-et').bind('click',lingotek.forms.enableLtkFunc);
@@ -47,6 +48,20 @@ lingotek.forms = lingotek.forms || {};
             $('#edit-menu-non-english').hide();
           }
         }
+    }
+
+    var updateProfileSelectorDefault = function() {
+      // get the language map for the current bundle
+      var profiles_by_langcode = JSON.parse($('#lingotek-bundle-profiles').val());
+      // set the #edit-lingotek-profile select box
+      var langcode = $("#edit-language").val();
+      if (langcode in profiles_by_langcode) {
+        $('#edit-lingotek-profile').val(profiles_by_langcode[langcode]);
+      }
+      else {
+        // The language must not be enabled for Lingotek at all.
+        $('#edit-lingotek-profile').val('DISABLED');
+      }
     }
 
     var checkForEnablement = function() {

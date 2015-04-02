@@ -918,6 +918,17 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     '#default_value' =>  !empty($node->lingotek['profile']) ? $node->lingotek['profile'] : $bundle_profile->getId(),
   );
 
+  $entity_profiles = variable_get('lingotek_entity_profiles', array());
+  $node_profiles = $entity_profiles['node'];
+  $bundle_profiles_by_langcode = lingotek_filter_profiles_by_bundle_and_langcode($form['type']['#value'], $node_profiles);
+  $form['lingotek']['bundle_profiles'] = array(
+    '#type' => 'hidden',
+    '#value' => json_encode($bundle_profiles_by_langcode),
+    '#attributes' => array(
+      'id' => 'lingotek-bundle-profiles',
+    ),
+  );
+
   // Warning note when enabling nodes with existing Lingotek translations
   $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';
   if (isset($nids) && lingotek_previously_managed_translations($entity_type, $nids)) {
@@ -2556,4 +2567,35 @@ function lingotek_attach_xml($xml, $name, $value) {
       $element->addCData(lingotek_filter_placeholders($value));
     }
   }
+}
+
+function lingotek_filter_profiles_by_bundle_and_langcode($bundle, $profiles) {
+
+  $profile_langcode_map = array();
+
+  // Separate the bundle from the locale and get the corresponding langcodes.
+  foreach ($profiles as $k => $v) {
+    if (strpos($k, '__')) {
+      list($profile_bundle, $locale) = explode('__', $k);
+      $langcode = Lingotek::convertLingotek2Drupal($locale);
+    }
+    else {
+      $profile_bundle = $k;
+      $langcode = 'DEFAULT';
+    }
+
+    // Prune the profile settings that aren't related to this bundle.
+    if ($bundle == $profile_bundle) {
+      $profile_langcode_map[$langcode] = $v;
+    }
+  }
+
+  // Convert the "inherit" ones to the default for this bundle.
+  foreach ($profile_langcode_map as $k => $v) {
+    if ($v == LingotekSync::PROFILE_INHERIT) {
+      $profile_langcode_map[$k] = $profile_langcode_map['DEFAULT'];
+    }
+  }
+
+  return $profile_langcode_map;
 }
