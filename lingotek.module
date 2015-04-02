@@ -931,7 +931,7 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   );
   $form['lingotek']['language_specific_profiles'] = array(
     '#type' => 'hidden',
-    '#value' => variable_get('lingotek_enable_language_specific_profiles'),
+    '#value' => variable_get('lingotek_enable_language_specific_profiles', '0'),
     '#attributes' => array(
       'id' => 'lingotek-language-specific-profiles',
     ),
