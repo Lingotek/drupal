@@ -460,12 +460,12 @@ function lingotek_support_footer() {
 /**
  * Menu access callback.
  *
- * Only display Lingotek tab for node types, which have translation enabled
+ * Only display Lingotek tab for node types that have translation enabled
  * and where the current node is not language neutral (which should span
  * all languages).
  */
 function lingotek_access($node, $permission) {
-  if (Lingotek::isSupportedLanguage($node->language) && node_access('update', $node) && $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
+  if (Lingotek::isSupportedLanguage($node->language) && node_access('update', $node) && isset($node->lingotek['profile']) && $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
     return user_access($permission);
   }
   return FALSE;
