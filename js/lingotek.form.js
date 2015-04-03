@@ -52,19 +52,21 @@ lingotek.forms = lingotek.forms || {};
     }
 
     var updateProfileSelectorDefault = function() {
-      // get the language map for the current bundle
-      var profiles_by_langcode = JSON.parse($('#lingotek-bundle-profiles').val());
-      // set the #edit-lingotek-profile select box
-      var langcode = $("#edit-language").val();
-      if ($('#lingotek-language-specific-profiles').val() == '0') {
-        $('#edit-lingotek-profile').val(profiles_by_langcode['DEFAULT']);
-      }
-      else if (langcode in profiles_by_langcode) {
-        $('#edit-lingotek-profile').val(profiles_by_langcode[langcode]);
-      }
-      else {
-        // The language must not be enabled for Lingotek at all.
-        $('#edit-lingotek-profile').val('DISABLED');
+      if ($('#lingotek-bundle-profiles').length > 0) {
+        // get the language map for the current bundle
+        var profiles_by_langcode = JSON.parse($('#lingotek-bundle-profiles').val());
+        // set the #edit-lingotek-profile select box
+        var langcode = $("#edit-language").val();
+        if ($('#lingotek-language-specific-profiles').val() == '0') {
+          $('#edit-lingotek-profile').val(profiles_by_langcode['DEFAULT']);
+        }
+        else if (langcode in profiles_by_langcode) {
+          $('#edit-lingotek-profile').val(profiles_by_langcode[langcode]);
+        }
+        else {
+          // The language must not be enabled for Lingotek at all.
+          $('#edit-lingotek-profile').val('DISABLED');
+        }
       }
     }
 
