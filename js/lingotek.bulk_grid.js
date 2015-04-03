@@ -22,7 +22,6 @@ function lingotek_perform_action(nid, action) {
         }
       }
     });
-    console.log(entity_ids);
     if(entity_ids.length > 0) {
       $('#edit-select-actions').val('select');
       ob = Drupal.ajax[url];

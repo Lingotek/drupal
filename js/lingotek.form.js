@@ -82,8 +82,6 @@ lingotek.forms = lingotek.forms || {};
     var updateVerticalTabSummary = function() {
         var isPushedToLingotek = !isNaN(parseInt($('#edit-lingotek-document-id').val()));
         var isEntityTranslationNode = $('#ltk-entity-translation-node').val();
-        //console.log('pushedToLingotek: '+isPushedToLingotek);
-        //console.log('entityTranslationNode: '+isEntityTranslationNode);
         var summaryMessages = [];
                 
         if(!lingotek.forms.enableLtkFromET && isEntityTranslationNode && !isPushedToLingotek) {

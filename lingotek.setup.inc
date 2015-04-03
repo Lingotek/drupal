@@ -445,9 +445,7 @@ function lingotek_project_vault_select_form() {
       '#title' => t('Project'),
       '#default_value' => $project_already_set ? 0 : 1,
       '#options' => $project_options,
-      //'#description' => t('The Lingotek Project that you would like to use for this site.'),
       '#required' => TRUE,
-      //'#attributes' => array('onclick' => "(function(){ console.log($); alert('hi'); })();"),
     );
     
     $form['project_new'] = array(
