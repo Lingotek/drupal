@@ -152,12 +152,11 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   foreach ($bundles as $bundle_name => $bundle) {
     $original_fields = field_info_instances($entity_type, $bundle_name);
     $fields = lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate);
-    $oneoffs = ($entity_type == 'node') ? lingotek_node_settings_row_oneoffs($bundle_name) : NULL;
     $translation_mode = ($entity_type == 'taxonomy_term') ? lingotek_get_translation_mode($bundle_name) : NULL;
     $config_handled = $entity_type == 'taxonomy_term' && empty($original_fields) && $translation_mode['#markup'] !== 'Translate';
     $translation_handling = $config_handled ? array('#markup' => 'Config') : array('#markup' => 'Bundle');
     $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $config_handled);
-    $entity_specifics = array('oneoffs' => $oneoffs, 'translation_mode' => $translation_mode, 'translation_handling' => $translation_handling);
+    $entity_specifics = array('translation_mode' => $translation_mode, 'translation_handling' => $translation_handling);
 
     if ($config_handled) {
       $fields = array(
@@ -179,7 +178,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
 
   if ($entity_type == 'node') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Exceptions'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
   }
   elseif ($entity_type == 'taxonomy_term') {
     $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
@@ -366,60 +365,6 @@ function lingotek_title_compare($a, $b) {
   return strcasecmp($a['#title'], $b['#title']);
 }
 
-function lingotek_node_settings_row_oneoffs($bundle_name) {
-  $exception_num = lingotek_oneoff_count($bundle_name);
-
-  $options = array(
-    'attributes' => array('class' => array('ctools-use-modal ctools-modal-lingotek-small lingotek-center'), 'title' => 'Remove all profile exceptions for this content type'),
-  );
-
-  drupal_add_js(array(
-    'lingotek-small' => array(
-      'modalSize' => array(
-        'type' => 'fixed',
-        'width' => 450,
-        'height' => 400,
-      ),
-      'closeImage' => theme('image', array('path' => drupal_get_path('module', 'lingotek') . '/images/close.png', 'alt' => t('Close window'), 'title' => t('Close window'))),
-      'closeText' => '',
-      'animation' => 'fadeIn',
-    ),
-      ), 'setting');
-
-  $title = $exception_num > 0 ? l($exception_num, LINGOTEK_MENU_MAIN_BASE_URL . '/clearexceptions/' . $bundle_name, $options) : $exception_num;
-
-  $oneoffs = array(
-    '#type' => 'item',
-    '#markup' => $title,
-  );
-
-  return $oneoffs;
-}
-
-function lingotek_oneoff_count($bundle_name) {
-  $target_ids = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem', array('entity_id'))
-      ->condition('entity_key', 'upload_status')
-      ->condition('entity_type', 'node')
-      ->condition('value', 'TARGET')
-      ->execute()
-      ->fetchCol();
-  $query = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem')
-      ->condition('lem.entity_key', 'profile')
-      ->condition('lem.entity_type', 'node');
-  if (!empty($target_ids)) {
-    $query->condition('lem.entity_id', $target_ids, 'NOT IN');
-  }
-
-  $query->join('node', 'n', 'lem.entity_id = n.nid AND n.type = \'' . $bundle_name . '\'');
-
-  $exception_num = $query->execute()
-      ->rowCount();
-
-  return $exception_num;
-}
-
 function lingotek_get_translation_mode($bundle) {
   $query = db_select('taxonomy_vocabulary', 't')
       ->fields('t', array('i18n_mode'))
@@ -442,15 +387,8 @@ function lingotek_get_translation_mode($bundle) {
 }
 
 function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics) {
-  if ($entity_type == 'node') {
-    $row = array(
-      array('data' => $bundle['collapsible_label'], 'width' => '20%'),
-      array('data' => drupal_render($profiles)),
-      array('data' => drupal_render($entity_specifics['oneoffs']), 'style' => 'text-align:center'),
-      array('data' => drupal_render($fields), 'width' => '65%'),
-    );
-  }
-  elseif ($entity_type == 'taxonomy_term') {
+
+  if ($entity_type == 'taxonomy_term') {
     $row = array(
       array('data' => $bundle['collapsible_label'], 'width' => '20%'),
       array('data' => drupal_render($profiles)),

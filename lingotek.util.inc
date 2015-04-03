@@ -236,14 +236,6 @@ function watchdog_format_object($object) {
   return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
 }
 
-function lingotek_oneoff_translate($node) {
-  // TODO: Run checks on this if necessary
-  // (It appears this is currently unnecessary, as all nodes
-  // that make it to this point are already requested for
-  // translation.)
-  return TRUE;
-}
-
 function lingotek_get_translatable_field_types() {
   // What types of fields DO we translate?
   $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary', 'field_collection_embed');
@@ -298,7 +290,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   $translate = variable_get('lingotek_enabled_fields', array());
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
-  if (empty($fields_desired) && lingotek_oneoff_translate($entity)) {
+  if (empty($fields_desired)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($entity_type, $bundle);
   }
 
