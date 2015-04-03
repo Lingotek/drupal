@@ -909,33 +909,39 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     return $form;
   }
 
-  $bundle_profile = LingotekProfile::loadByBundle($entity_type, $form['#bundle']);
 
   $form['lingotek']['profile'] = array(
     '#type' => 'select',
     '#title' => t('Translation Profile'),
     '#options' => lingotek_get_profile_options(),
-    '#default_value' =>  !empty($node->lingotek['profile']) ? $node->lingotek['profile'] : $bundle_profile->getId(),
   );
 
-  $entity_profiles = variable_get('lingotek_entity_profiles', array());
-  $node_profiles = $entity_profiles['node'];
-  $bundle_profiles_by_langcode = lingotek_filter_profiles_by_bundle_and_langcode($form['type']['#value'], $node_profiles);
+  if (!$bulk_grid) {
 
-  $form['lingotek']['bundle_profiles'] = array(
-    '#type' => 'hidden',
-    '#value' => json_encode($bundle_profiles_by_langcode),
-    '#attributes' => array(
-      'id' => 'lingotek-bundle-profiles',
-    ),
-  );
-  $form['lingotek']['language_specific_profiles'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('lingotek_enable_language_specific_profiles', '0'),
-    '#attributes' => array(
-      'id' => 'lingotek-language-specific-profiles',
-    ),
-  );
+    // Set the initial profile default.
+    $bundle_profile = LingotekProfile::loadByBundle($entity_type, $form['#bundle']);
+    $form['lingotek']['profile']['#default_value'] = !empty($node->lingotek['profile']) ? $node->lingotek['profile'] : $bundle_profile->getId();
+
+    // Do some js handling of profile changes
+    $entity_profiles = variable_get('lingotek_entity_profiles', array());
+    $node_profiles = $entity_profiles['node'];
+    $bundle_profiles_by_langcode = lingotek_filter_profiles_by_bundle_and_langcode($form['type']['#value'], $node_profiles);
+
+    $form['lingotek']['bundle_profiles'] = array(
+      '#type' => 'hidden',
+      '#value' => json_encode($bundle_profiles_by_langcode),
+      '#attributes' => array(
+        'id' => 'lingotek-bundle-profiles',
+      ),
+    );
+    $form['lingotek']['language_specific_profiles'] = array(
+      '#type' => 'hidden',
+      '#value' => variable_get('lingotek_enable_language_specific_profiles', '0'),
+      '#attributes' => array(
+        'id' => 'lingotek-language-specific-profiles',
+      ),
+    );
+  }
 
   // Warning note when enabling nodes with existing Lingotek translations
   $overwrite_markup = '<div id="edit-lingotek-overwrite-warning"></div>';

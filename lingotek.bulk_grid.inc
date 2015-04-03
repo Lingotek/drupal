@@ -1542,10 +1542,14 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
   }
 
   if (isset($filters['profile']) && !in_array('all', $filters['profile'])) {
-    $profile_obj = LingotekProfile::loadById($filters['profile']);
-    $profiled_entities = $profile_obj->getEntities($entity_type);
     $profiled_entity_ids = array(-1);
-    foreach ($profiled_entities as $p) {
+
+    foreach ($filters['profile'] as $p) {
+      $profile_obj = LingotekProfile::loadById($p);
+      $entities = $profile_obj->getEntities($entity_type);
+      $profiled_entity_ids = array_merge($profiled_entity_ids, array_keys($entities));
+    }
+    foreach ($profiled_entity_ids as $p) {
       $profiled_entity_ids[] = $p['id'];
     }
     $query->condition('n.' . $info['entity keys']['id'], $profiled_entity_ids, 'IN');
