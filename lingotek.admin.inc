@@ -1389,11 +1389,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     );
   }
 
+  $lang_specific_profiles_enabled = variable_get('lingotek_enable_language_specific_profiles', 0);
   $form[$fkey]['lingotek_enable_language_specific_profiles'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable language-specific profiles'),
-    '#default_value' => (variable_get('lingotek_enable_language_specific_profiles') ? 1 : 0),
-    '#description' => t('If checked, languages enabled for Lingotek translation will not automatically be queued for all content.  Instead, languages enabled for Lingotek will be added to the available languages for profiles but will be disabled by default on profiles that have existing content.'),
+    '#default_value' => $lang_specific_profiles_enabled ? 1 : 0,
+    '#description' => t('If checked, languages enabled for Lingotek translation will not automatically be queued for all content.  Instead, languages enabled for Lingotek will be added to the available languages for profiles but will be disabled by default on profiles that have existing content. (Note: this cannot be unchecked if language-specific settings are in use.)'),
+    '#disabled' => $lang_specific_profiles_enabled && lingotek_using_language_specific_profiles() ? TRUE : FALSE,
   );
 
   $form[$fkey]['lingotek_account_plan_type'] = array(
@@ -2624,4 +2626,28 @@ function lingotek_get_language_specific_labels($entity_type, $bundle, $languages
     );
   }
   return $label;
+}
+
+function lingotek_using_language_specific_profiles() {
+
+  // If any of the source languages are using a non-default profile, return true.
+  $entity_types = variable_get('lingotek_entity_profiles');
+  foreach ($entity_types as $type) {
+    foreach ($type as $bundle => $profile_id) {
+      if (strpos('__', $bundle) && $profile_id != LingotekSync::PROFILE_INHERIT) {
+        return TRUE;
+      }
+    }
+  }
+
+  // If any of the profiles have custom or disabled targets, return true.
+  $profiles = variable_get('lingotek_profiles');
+  foreach ($profiles as $profile) {
+    if (!empty($profile['target_language_overrides'])) {
+      return TRUE;
+    }
+  }
+
+  // No sign of language-specific settings
+  return FALSE;
 }
