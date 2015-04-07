@@ -661,7 +661,7 @@ function lingotek_add_target_locales($entity_params, $locales, LingotekProfile $
   }
   $api = LingotekApi::instance();
   foreach ($locales as $l) {
-    $workflow_id = $profile->getWorkflow($locale);
+    $workflow_id = $profile->getWorkflow($l);
     $result = $api->addTranslationTarget($document_id, NULL, $l, $workflow_id);
     if ($result) {
       LingotekSync::setTargetStatus($entity_type, $entity_id, $l, LingotekSync::STATUS_PENDING);
