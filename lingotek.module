@@ -996,7 +996,7 @@ function lingotek_entity_save($entity, $entity_type) {
 
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
-  $has_not_been_uploaded = !isset($entity->lingotek['document_id']) || empty($entity->lingotek['document_id']);
+  $has_not_been_uploaded = empty($entity->lingotek['document_id']);
 
   $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
 
@@ -1023,7 +1023,7 @@ function lingotek_entity_save($entity, $entity_type) {
       // if this is a source node and target localization is enabled, set all targets to TARGET_LOCALIZE
       // TODO:
 
-      if ($entity->lingotek['upload_status'] != LingotekSync::STATUS_TARGET) {
+      if (empty($entity->lingotek['upload_status']) || $entity->lingotek['upload_status'] != LingotekSync::STATUS_TARGET) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
       }
     }
@@ -1317,10 +1317,6 @@ function lingotek_entity_load($entities, $entity_type) {
     }
   }
 
-  $global_profile = lingotek_get_global_profile();
-  $node_profile_defaults = lingotek_load_profile_defaults($entity_type); // return assoc array by node type
-  $profiles_list = lingotek_get_profiles(FALSE);
-
   $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
       ->condition('l.entity_id', array_keys($entities), 'IN')
@@ -1338,12 +1334,12 @@ function lingotek_entity_load($entities, $entity_type) {
     // Pull profile values for the entity
     $entity_profile = LingotekProfile::loadByEntity($entity_type, $entity);
     $entity->lingotek = $entity_profile->getAttributes();
-    //$entity->lingotek['profile'] = $entity_profile->getId();
+    $entity->lingotek['profile'] = $entity_profile->getId();
 
-    // Overlay node-specific values (like doc ID, etc.) onto the entity
+    // Overlay node-specific values (like doc ID, status, etc.) onto the entity
     list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
     if (!empty($values[$id])) {
-      $entity->lingotek = array_merge($entity_profile->getAttributes(), $values[$id]);
+      $entity->lingotek = array_merge($entity->lingotek, $values[$id]);
     }
   }
 }
