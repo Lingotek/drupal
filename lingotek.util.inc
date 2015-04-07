@@ -2028,3 +2028,18 @@ function lingotek_entity_locale($entity_type, $entity) {
   $langcode = lingotek_entity_langcode($entity_type, $entity);
   return Lingotek::convertDrupal2Lingotek($langcode);
 }
+
+function lingotek_get_current_locales($entity_type, $entity_id) {
+  $query = db_select('lingotek_entity_metadata', 'lem')
+    ->fields('lem', array('entity_key'))
+    ->condition('lem.entity_type', $entity_type)
+    ->condition('lem.entity_id', $entity_id)
+    ->condition('lem.entity_key', 'target_sync_status_%', 'LIKE');
+  $result = $query->execute()->fetchCol();
+
+  $locales = array();
+  foreach ($result as $target_str) {
+    $locales[] = str_replace('target_sync_status_', '', $target_str);
+  }
+  return $locales;
+}

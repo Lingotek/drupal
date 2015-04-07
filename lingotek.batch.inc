@@ -579,3 +579,125 @@ function lingotek_config_update_selected($lids) {
 function lingotek_config_progress_update_finished() {
   drupal_set_message(t('Finished updating statuses. The statuses for all previously selected configuration items are now up to date.'));
 }
+
+function lingotek_batch_update_entity_languages_by_profile($profile_id) {
+
+  // don't make any changes if the new profile is the Disabled profile.
+  if ($profile_id == LingotekSync::PROFILE_DISABLED) {
+    return;
+  }
+
+  $profile = LingotekProfile::loadById($profile_id);
+
+  // get the target languages for the given profile
+  $available_locales = lingotek_get_target_locales();
+  $target_locales_hash = $profile->filterTargetLocales($available_locales);
+  $target_locales = array_keys($target_locales_hash);
+
+  // get the current entities assigned to the given profile
+  $entities = $profile->getEntities();
+
+  $operations = array();
+
+  // for each entity with a document ID:
+  foreach ($entities as $e) {
+    if (!empty($e['document_id'])) {
+      // compare the target languages set with the profile's target languages
+      $entity_locales = lingotek_get_current_locales($e['type'], $e['id']);
+
+      // for each target language in the profile that is not set, add it
+      $locales_to_add = array_diff($target_locales, $entity_locales);
+      $operations[] = array('lingotek_add_target_locales', array($e, $locales_to_add, $profile));
+
+      // for each target language set that is not in the profile anymore, remove it
+      $locales_to_remove = array_diff($entity_locales, $target_locales);
+      $operations[] = array('lingotek_remove_target_locales', array($e, $locales_to_remove));
+    }
+  }
+  // run the batch operation, return the result
+  if (!empty($operations)) {
+    $batch = array(
+      'title' => t('Updating target locales for entities in profile @profile_name', array('@profile_name' => $profile->getName())),
+      'operations' => $operations,
+      'finished' => 'lingotek_batch_update_entity_languages_by_profile_finished',
+      'file' => 'lingotek.batch.inc'
+    );
+    batch_set($batch);
+    batch_process('admin/settings/lingotek/settings');
+  }
+}
+
+function lingotek_batch_update_entity_languages_by_profile_finished($success, $results, $operations) {
+  if ($success) {
+    $added = !empty($results['added']) ? $results['added'] : 0;
+    $removed = !empty($results['removed']) ? $results['removed'] : 0;
+    $added_msg = format_plural($added, 'One target locale added.', '@count target locales added.');
+    $removed_msg = format_plural($removed, 'One target locale removed.', '@count target locales removed.');
+    drupal_set_message(t('Profile update complete'));
+    drupal_set_message($added_msg);
+    drupal_set_message($removed_msg);
+  }
+  else {
+    $message = t('Finished with an error.');
+    drupal_set_message($message);
+  }
+}
+
+/*
+ * Add a set of target locales for an entity on the TMS and in Drupal
+ */
+function lingotek_add_target_locales($entity_params, $locales, LingotekProfile $profile, &$context) {
+
+  $document_id = $entity_params['document_id'];
+  $entity_type = $entity_params['type'];
+  $entity_id = $entity_params['id'];
+
+  if (empty($context['results'])) {
+    $context['results'] = array();
+  }
+  if (empty($context['results']['added'])) {
+    // initialize the counter of removed targets.
+    $context['results']['added'] = 0;
+  }
+  $api = LingotekApi::instance();
+  foreach ($locales as $l) {
+    $workflow_id = $profile->getWorkflow($locale);
+    $result = $api->addTranslationTarget($document_id, NULL, $l, $workflow_id);
+    if ($result) {
+      LingotekSync::setTargetStatus($entity_type, $entity_id, $l, LingotekSync::STATUS_PENDING);
+      $context['results']['added']++;
+    }
+    else {
+      // TODO: log a failure message
+    }
+  }
+}
+
+/*
+ * Remove a set of target locale for an entity on the TMS and in Drupal
+ */
+function lingotek_remove_target_locales($entity_params, $locales, &$context) {
+
+  $document_id = $entity_params['document_id'];
+  $entity_type = $entity_params['type'];
+  $entity_id = $entity_params['id'];
+
+  if (empty($context['results'])) {
+    $context['results'] = array();
+  }
+  if (empty($context['results']['removed'])) {
+    // initialize the counter of removed targets.
+    $context['results']['removed'] = 0;
+  }
+  $api = LingotekApi::instance();
+  foreach ($locales as $l) {
+    $result = $api->removeTranslationTarget($document_id, NULL, $l);
+    if ($result) {
+      LingotekSync::deleteTargetStatus($entity_type, $entity_id, $l);
+      $context['results']['removed']++;
+    }
+    else {
+      // TODO: log a failure message
+    }
+  }
+}

@@ -126,6 +126,11 @@ class LingotekSync {
     }
   }
 
+  public static function deleteTargetStatus($entity_type, $entity_id, $lingotek_locale) {
+    $key = 'target_sync_status_' . $lingotek_locale;
+    return lingotek_keystore_delete($entity_type, $entity_id, $key);
+  }
+
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes
   public static function deleteTargetEntriesForAllEntities($lingotek_locale) {
     $keys = array(

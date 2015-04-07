@@ -258,9 +258,9 @@ class LingotekApi {
    * Removes a target language to an existing Lingotek Document or Project.
    *
    * @param int $lingotek_document_id
-   *   The document to which the new translation target should be added.  Or null if the target will be added to the project.
+   *   The document from which the translation target should be removed.  Or null if the target will be removed from the project.
    * @param int $lingotek_project_id
-   *   The project to which the new translation target should be added.  Or null if the target will be added to a document instead.
+   *   The project from which the translation target should be removed.  Or null if the target will be removed from a document instead.
    * @param string $lingotek_locale
    *   The two letter code representing the language which should be added as a translation target.
    * @param string $workflow_id
@@ -270,10 +270,9 @@ class LingotekApi {
    * @return bool
    *  TRUE on success, or FALSE on error.
    */
-  public function removeTranslationTarget($lingotek_document_id, $lingotek_project_id, $lingotek_locale, $workflow_id = '') {
+  public function removeTranslationTarget($lingotek_document_id, $lingotek_project_id, $lingotek_locale) {
 
     $parameters = array(
-      'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
       'targetLanguage' => $lingotek_locale
     );
 
@@ -282,10 +281,6 @@ class LingotekApi {
     }
     elseif (isset($lingotek_project_id) && !isset($lingotek_document_id)) {
       $parameters['projectId'] = $lingotek_project_id;
-    }
-
-    if ($workflow_id) {
-      $parameters['workflowId'] = $workflow_id;
     }
 
     if ($old_translation_target = $this->request('removeTranslationTarget', $parameters)) {

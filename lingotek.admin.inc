@@ -1519,6 +1519,13 @@ function lingotek_admin_connection_form_submit($form, &$form_state) {
 }
 
 function lingotek_admin_profiles_form($form, &$form_state, $show_fieldset = FALSE) {
+
+  $flag_profile_changed = variable_get('lingotek_profile_changed', FALSE);
+  if ($flag_profile_changed !== FALSE) {
+    variable_delete('lingotek_profile_changed');
+    lingotek_batch_update_entity_languages_by_profile($flag_profile_changed);
+  }
+
   $profiles = lingotek_get_profiles_by_name(); // these will already be translated using the t-function
 
   $form['header'] = array(
@@ -1873,13 +1880,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       LingotekSync::PROFILE_DISABLED => 'Disabled',
     );
     foreach ($languages as $language) {
-      $form['defaults']['language_override'][$language->lingotek_locale] = array(
-        '#title' => $language->name,
-        '#type' => 'fieldset',
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#id' => 'language_override__' . $language->lingotek_locale,
-      );
 
       if ($stored_profile->isTargetLocaleDisabled($language->lingotek_locale)) {
         $default_language_override_value = LingotekSync::PROFILE_DISABLED;
@@ -1890,6 +1890,14 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       else {
         $default_language_override_value = LingotekSync::PROFILE_INHERIT;
       }
+
+      $form['defaults']['language_override'][$language->lingotek_locale] = array(
+        '#title' => $language->name . ' (' . $default_language_override_value . ')',
+        '#type' => 'fieldset',
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#id' => 'language_override__' . $language->lingotek_locale,
+      );
 
       $form['defaults']['language_override'][$language->lingotek_locale]['settings_' . $language->lingotek_locale] = array(
         '#type' => 'select',
@@ -1992,6 +2000,8 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
           $profile_obj->setAttribute('disabled', TRUE, $l);
         }
         elseif ($override_settings === LingotekSync::PROFILE_CUSTOM) {
+          // reset for new settings
+          $profile_obj->deleteTargetLocaleOverrides($l);
           // set auto-download
           $auto_download = !empty($form_state['values']['auto_download_' . $l]) ? $form_state['values']['auto_download_' . $l] : FALSE;
           $profile_obj->setAutoDownload($auto_download, $l);
@@ -2035,6 +2045,7 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
         $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
       }
     }
+    variable_set('lingotek_profile_changed', $profile_obj->getId());
   }
   elseif ($form_state['values']['op'] == 'Delete') {
     $profile_obj->delete();
