@@ -388,9 +388,11 @@ function lingotek_get_translation_mode($bundle) {
 
 function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics) {
 
+  $label = variable_get('lingotek_enable_language_specific_profiles') ? $bundle['collapsible_label'] : $bundle['label'];
+
   if ($entity_type == 'taxonomy_term') {
     $row = array(
-      array('data' => $bundle['collapsible_label'], 'width' => '20%'),
+      array('data' => $label, 'width' => '20%'),
       array('data' => drupal_render($profiles)),
       array('data' => drupal_render($entity_specifics['translation_mode']), 'width' => '15%'),
       array('data' => drupal_render($entity_specifics['translation_handling'])),
@@ -399,7 +401,7 @@ function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $
   }
   else {
     $row = array(
-      array('data' => $bundle['collapsible_label'], 'width' => '20%'),
+      array('data' => $label, 'width' => '20%'),
       array('data' => drupal_render($profiles)),
       array('data' => drupal_render($fields), 'width' => '65%'),
     );
