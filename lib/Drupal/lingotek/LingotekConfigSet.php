@@ -530,7 +530,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     if (isset($set_id)) {
       $set = self::loadById($set_id);
     }
-    
+
     return $set;
   }
 
@@ -621,7 +621,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         $this->setMetadataValue('target_sync_status_' . $ll, $status);
       }
     }
-    elseif ($lingotek_locale !== NULL) {
+    elseif (is_string($lingotek_locale) && !empty($lingotek_locale)) {
       $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
     }
     else { // set status for all available targets
@@ -716,10 +716,10 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
           ->execute();
     }
   }
-  
+
   /**
    * Deletes a Lingotek metadata value for this item
-   * 
+   *
    * @param string $key
    *  The key for a name/value pair
    */
@@ -1045,7 +1045,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function getEntityType() {
     return self::DRUPAL_ENTITY_TYPE;
   }
-  
+
   /**
    * Magic get for access to set and set properties.
    */
@@ -1119,7 +1119,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     }
     return $textgroups;
   }
-  
+
   public static function getLidBySource($source_string) {
     return db_select('locales_source', 's')
             ->fields('s', array('lid'))
@@ -1148,7 +1148,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function getUrl() {
     return '';
   }
-  
+
   public function getNote() {
     return '';
   }
