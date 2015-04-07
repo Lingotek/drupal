@@ -1872,7 +1872,7 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
   $query->entityCondition('entity_type', $entity_type)
       ->entityCondition('entity_id', $entity_ids, 'IN');
   $entities = $query->execute();
-  $entity_ids = array_keys($entities[$entity_type]);
+  $entity_ids = !empty($entities[$entity_type]) ? array_keys($entities[$entity_type]) : array();
 
   $enabled_entities = lingotek_get_enabled_entities_by_type($entity_type);
   $entity_ids = array_diff($entity_ids, array_keys($enabled_entities));
