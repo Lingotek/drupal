@@ -98,7 +98,7 @@ class LingotekProfile {
 
   public static function loadByBundle($entity_type, $bundle, $source_locale = NULL) {
     $entity_profiles = variable_get('lingotek_entity_profiles', array());
-    if (!empty($source_locale) && !empty($entity_profiles[$entity_type][$bundle . '__' . $source_locale])) {
+    if (!empty($source_locale) && isset($entity_profiles[$entity_type][$bundle . '__' . $source_locale])) {
       try {
         $profile = new LingotekProfile($entity_profiles[$entity_type][$bundle . '__' . $source_locale]);
         if ($profile->getName() == LingotekSync::PROFILE_INHERIT) {
@@ -110,7 +110,7 @@ class LingotekProfile {
         // TODO: a debug statement perhaps saying there are no customizations for the given source locale?
       }
     }
-    if (!empty($entity_profiles[$entity_type][$bundle])) {
+    if (isset($entity_profiles[$entity_type][$bundle])) {
       return new LingotekProfile($entity_profiles[$entity_type][$bundle]);
     }
     return self::loadById(LingotekSync::PROFILE_DISABLED);
