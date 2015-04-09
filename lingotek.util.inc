@@ -301,21 +301,11 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     }
   }
 
-  $content = lingotek_xml_fields($entity, $translatable, $entity->language);
-
-  /* deprecated with config translation
-    //Menus related to the page:
-    // Do we still want this? Config translation translates these items
-    $menu = menu_link_get_preferred('node/' . $entity->nid);
-    $txt = $menu['link_title'];
-    if ($txt != "") {
-    $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
-    } */
+  $content_obj = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
 
   if ($entity_type == 'node') {
     //URL Alias related to the page:
-    $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
-    if ($url_alias_translation == 1) {
+    if (!empty($entity->lingotek['url_alias_translation'])) {
       $conditions = array('source' => 'node/' . $entity->nid);
       if ($entity->language != LANGUAGE_NONE) {
         $conditions['language'] = $entity->language;
@@ -323,15 +313,13 @@ function lingotek_entity_xml_body($entity_type, $entity) {
       $path = path_load($conditions);
       if ($path !== FALSE) {
         $url = $path['alias'];
-        $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+        $url_alias_obj = $content_obj->addChild('url_alias');
+        $url_alias_obj->addCData($url);
       }
     }
   }
-  $labeled_content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
 
   try {
-    $xml = new LingotekXMLElement($labeled_content);
-
     $hook_params = array(
       'entity_type' => $entity_type,
       'entity' => $entity,
@@ -343,7 +331,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     drupal_alter('lingotek_entity_upload', $hook_params);
 
     // Return to string form, after any modifications.
-    $labeled_content = $xml->asXML();
+    $labeled_content = $content_obj->asXML();
   }
   catch (Exception $e) {
     LingotekLog::error("Failed to parse or modify XML before uploading. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
@@ -351,8 +339,10 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   return $labeled_content;
 }
 
-function lingotek_xml_fields($entity, $translatable, $language) {
-  $content = '';
+function lingotek_xml_fields($entity_type, $entity, $translatable, $language) {
+  $content_obj = new LingotekXMLElement('<?xml version="1.0" encoding="UTF-8"?' . '><contents />');
+  $translatable_field_types = lingotek_get_translatable_field_types();
+  $enabled_fields = variable_get('lingotek_enabled_fields');
 
   foreach ($translatable as $field) {
     $content_container = & $entity->$field;
@@ -389,46 +379,41 @@ function lingotek_xml_fields($entity, $translatable, $language) {
         if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
           $element_name = $field;
           if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
-            $current_field = '<' . $element_name . '>';
-            $enabled_fields = variable_get('lingotek_enabled_fields');
             $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
             $sub_fields = field_info_instances('field_collection_item', $field);
-            $translatable_field_types = lingotek_get_translatable_field_types();
             $translatable_sub_fields = array();
             foreach ($sub_fields as $sub_field => $f) {
               if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field])) {
                 $translatable_sub_fields[] = $sub_field;
               }
             }
-            $current_field .= lingotek_xml_fields($sub_entity, $translatable_sub_fields, $field_language);
-            $current_field .= '</' . $element_name . '>';
-            $content .= $current_field;
+            $subcontent_obj = lingotek_xml_fields('field_collection_item', $sub_entity, $translatable_sub_fields, $field_language);
+            $content_obj->addChildXML($subcontent_obj, $element_name);
             continue;
           }
           if (!is_array($element_suffix) && !empty($element_suffix)) {
             $element_name .= '__' . $element_suffix;
           }
-          $current_field = '<' . $element_name . '>';
+          $field_obj = $content_obj->addChild($element_name);
           if (is_array($element_suffix)) {
             foreach ($element_suffix as $t_key => $t_val) {
               if (isset($delta[$t_key])) {
                 $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
-                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
+                $element = $field_obj->addChild('element');
+                $element->addCData($delta[$t_key]);
               }
             }
           }
           else {
             $delta[$target_key] = lingotek_filter_placeholders($delta[$target_key]);
-            $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
+            $element = $field_obj->addChild('element');
+            $element->addCData($delta[$target_key]);
           }
-          $current_field .= '</' . $element_name . '>';
-          $content .= $current_field;
         }
       }
     }
   }
-
-  return $content;
+  return $content_obj;
 }
 
 /**
