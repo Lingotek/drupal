@@ -302,7 +302,6 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   }
 
   $content_obj = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
-  dpm($content_obj->asXML());
   if ($entity_type == 'node') {
     //URL Alias related to the page:
     if (!empty($entity->lingotek['url_alias_translation'])) {
