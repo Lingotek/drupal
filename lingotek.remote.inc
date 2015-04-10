@@ -263,13 +263,14 @@ function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $
 }
 
 /*
- * Save a PathAuto alias (for nodes only)
+ * Save a PathAuto alias
  */
-function lingotek_save_pathauto_alias($node, $langcode) {
+function lingotek_save_pathauto_alias($entity_type, $entity, $langcode) {
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   module_load_include('inc', 'pathauto');
-  $uri = entity_uri('node', $node);
-  $node_unchanged = entity_load_unchanged('node', $node->nid);
-  pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $node_unchanged), $node->type, $langcode);
+  $uri = entity_uri($entity_type, $entity);
+  $entity_unchanged = entity_load_unchanged($entity_type, $id);
+  pathauto_create_alias($entity_type, 'update', $uri['path'], array($entity_type => clone $entity_unchanged), $bundle, $langcode);
 }
 
 /*
