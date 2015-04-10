@@ -302,7 +302,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   }
 
   $content_obj = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
-
+  dpm($content_obj->asXML());
   if ($entity_type == 'node') {
     //URL Alias related to the page:
     if (!empty($entity->lingotek['url_alias_translation'])) {
@@ -323,93 +323,71 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     $hook_params = array(
       'entity_type' => $entity_type,
       'entity' => $entity,
-      'xml' => $xml,
+      'xml' => $content_obj,
       'langcode' => $entity->language,
     );
 
     // Allow other modules to manipulate the uploaded content.
     drupal_alter('lingotek_entity_upload', $hook_params);
-
-    // Return to string form, after any modifications.
-    $labeled_content = $content_obj->asXML();
   }
   catch (Exception $e) {
     LingotekLog::error("Failed to parse or modify XML before uploading. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
   }
-  return $labeled_content;
+  return $content_obj->asXML();
 }
 
-function lingotek_xml_fields($entity_type, $entity, $translatable, $language) {
+function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $language) {
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   $content_obj = new LingotekXMLElement('<?xml version="1.0" encoding="UTF-8"?' . '><contents />');
   $translatable_field_types = lingotek_get_translatable_field_types();
   $enabled_fields = variable_get('lingotek_enabled_fields');
+  $all_field_info = field_info_fields();
 
-  foreach ($translatable as $field) {
-    $content_container = & $entity->$field;
-
-    $field_language = is_array($content_container) && array_key_exists($language, $content_container) ? $language : LANGUAGE_NONE;
+  foreach ($translatable_fields as $field_name) {
+    $field_columns = $all_field_info[$field_name]['columns'];
+    $field_content = & $entity->$field_name;
+    $field_language = is_array($field_content) && array_key_exists($language, $field_content) ? $language : LANGUAGE_NONE;
 
     // Deal with not being initialized right, such as pre-existing titles.
-    if (!isset($content_container[$field_language])) {
+    if (!isset($field_content[$field_language])) {
       continue;
     }
 
-    // We may split compound Drupal fields into several Lingotek fields.
-    $target_keys = array(
-      'value' => '', // Most text fields
-      'summary' => 'summary', // "Long text with summary" fields have this sub-field value as well.
-    );
-    if (module_exists('link')) {
-      $target_keys['link'] = array(
-        'title' => '',
-        'url' => '',
-      );
-    }
-
     // Create fields from all target keys.
-    foreach ($target_keys as $target_key => $element_suffix) {
-      $array_key = NULL;
-      if (is_array($element_suffix)) {
-        foreach ($element_suffix as $tarkey => $val) {
-          $array_key = $tarkey;
+    foreach ($field_content[$field_language] as $delta) {
+
+      foreach ($field_columns as $column_name => $column_attributes) {
+
+        if (empty($delta[$column_name])) {
           continue;
         }
-      }
-      foreach ($content_container[$field_language] as $delta) {
-        if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
-          $element_name = $field;
-          if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
-            $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
-            $sub_fields = field_info_instances('field_collection_item', $field);
-            $translatable_sub_fields = array();
-            foreach ($sub_fields as $sub_field => $f) {
-              if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field])) {
-                $translatable_sub_fields[] = $sub_field;
-              }
-            }
-            $subcontent_obj = lingotek_xml_fields('field_collection_item', $sub_entity, $translatable_sub_fields, $field_language);
-            $content_obj->addChildXML($subcontent_obj, $element_name);
-            continue;
-          }
-          if (!is_array($element_suffix) && !empty($element_suffix)) {
-            $element_name .= '__' . $element_suffix;
-          }
-          $field_obj = $content_obj->addChild($element_name);
-          if (is_array($element_suffix)) {
-            foreach ($element_suffix as $t_key => $t_val) {
-              if (isset($delta[$t_key])) {
-                $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
-                $element = $field_obj->addChild('element');
-                $element->addCData($delta[$t_key]);
-              }
-            }
-          }
-          else {
-            $delta[$target_key] = lingotek_filter_placeholders($delta[$target_key]);
-            $element = $field_obj->addChild('element');
-            $element->addCData($delta[$target_key]);
-          }
+
+        if (lingotek_exclude_field_column($entity_type, $bundle, $field_name, $column_name)) {
+          continue;
         }
+
+        // Handle nested field-collection entities
+        // TODO: make a better way of detecting if this is a field-collection column!
+        if ($column_name == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
+          $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
+          $sub_fields = field_info_instances('field_collection_item', $field_name);
+          $translatable_sub_fields = array();
+          foreach ($sub_fields as $sub_field => $f) {
+            if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field_name]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field_name])) {
+              $translatable_sub_fields[] = $sub_field;
+            }
+          }
+          $subcontent_obj = lingotek_xml_fields('field_collection_item', $sub_entity, $translatable_sub_fields, $field_language);
+          $content_obj->addChildXML($subcontent_obj, $field_name);
+          continue;
+        }
+
+        $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
+        // Handle element suffixes (all columns should be suffixed now)
+        $element_name = $field_name . '__' . $column_name;
+        $field_obj = $content_obj->addChild($element_name);
+        $element = $field_obj->addChild('element');
+        $element->addCData($delta_column_content);
       }
     }
   }
@@ -2027,4 +2005,34 @@ function lingotek_get_current_locales($entity_type, $entity_id) {
     $locales[] = str_replace('target_sync_status_', '', $target_str);
   }
   return $locales;
+}
+
+function lingotek_exclude_field_column($entity_type, $bundle, $field_name, $column_name) {
+
+  // This variable may be overridden to exclude perhaps all field columns
+  // called 'url' or 'params' or etc.
+  $field_columns_to_exclude_by_default = variable_get('lingotek_field_columns_to_exclude_by_default', array('format', 'attributes'));
+
+  // FORMAT FOR VARIABLE 'lingotek_field_columns_to_exclude_by_entity_type':
+  // array(
+  //   '[entity_type]' => array(
+  //     '[bundle]' => array(
+  //       '[field_name]' => array(
+  //         '[column_name1]' => TRUE,
+  //         '[column_name2]' => TRUE,
+  //       ),
+  //     ),
+  //   ),
+  // );
+  $field_columns_to_exclude_by_entity_type = variable_get('lingotek_field_columns_to_exclude_by_entity_type', array());
+
+  // If a field array is not empty for a given entity type, then look to it
+  // for what field columns to exclude for a given entity type and bundle.
+  // This way fields excluded by default may be included for specific bundles.
+  if (!empty($field_columns_to_exclude_by_entity_type[$entity_type][$bundle][$field_name])) {
+    return !empty($field_columns_to_exclude_by_entity_type[$entity_type][$bundle][$field_name][$column_name]);
+  }
+  else {
+    return in_array($column_name, $field_columns_to_exclude_by_default);
+  }
 }

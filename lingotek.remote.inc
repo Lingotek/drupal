@@ -135,35 +135,41 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
   }
 
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+  $fields_arrays = array();
   $delta = 0;
-  $last_tag = NULL;
+  $last_field_name = NULL;
 
+  // The $tag is of format '[field_name]__[column_name]'
   foreach ($xml as $tag => $content) {
-
-    // Handle multiple instances of the same field (handled in Drupal using 'delta')
-    $delta = ($tag == $last_tag) ? ++$delta : 0;
 
     // URL alias translation (currently available for nodes only)
     if ($entity_type == 'node' && $tag == 'url_alias' && $url_alias_translation == 1) {
       lingotek_save_url_alias($content, $entity, $langcode);
-      $last_tag = $tag;
+      $last_field_name = $tag;
       continue;
     }
 
     // Handle compound fields (multiple subfields, like 'summary' and 'body')
+    // Note: Currently all field columns should have the format
+    //       '[fieldname]__[columnname]', but value is kept as a default for
+    //       compatibility with documents uploaded using the old schema.
+    //       Backward compatibility will not extend to link fields, however.
     $field_name = $tag;
-    $target_key = array('value');
+    $column_name = 'value';
     $subfield_parts = explode('__', $tag);
     if (count($subfield_parts) == 2) {
       $field_name = $subfield_parts[0];
-      $target_key = array($subfield_parts[1]);
+      $column_name = $subfield_parts[1];
     }
+
+    // Handle multiple instances of the same field (handled in Drupal using 'delta')
+    $delta = ($field_name == $last_field_name) ? ++$delta : 0;
 
     // Get field info or skip if not found
     $field_info = field_info_field($field_name);
     if (empty($field_info)) {
       LingotekLog::warning('Field info downloaded from Lingotek, but field not found: @field_name', array('@field_name' => $field_name));
-      $last_tag = $tag;
+      $last_field_name = $field_name;
       continue;
     }
 
@@ -180,7 +186,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     // Field-Collection Fields: Pull the underlying entities and recurse.
     if (module_exists('field_collection') && $field_info['type'] == 'field_collection') {
       lingotek_process_field_collection_xml($content, $entity_type, $entity, $field_name, $delta, $langcode, $node_based_translation);
-      $last_tag = $tag;
+      $last_field_name = $field_name;
       continue;
     }
 
@@ -192,51 +198,38 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     }
 
     // Handle (normal?) fields from here down.
-
-    $is_link = FALSE;
-    if (module_exists('link') && $field_info['type'] == 'link_field') {
-      $is_link = TRUE;
-      $target_key = array( 'title', 'url');
-    }
-
-    $insert_array = array(
-      'entity_type' => $entity_type,
-      'bundle' => $bundle,
-      'entity_id' => $id,
-      'revision_id' => $vid === NULL || $entity_type == 'comment' ? $id : $vid,
-      'language' => $field_language,
-      'delta' => $delta,
-      'deleted' => '0',
-    );
-
-    $curr_field_data = & $entity->$field_name;
-
-    $index = 0;
-    foreach ($content as $text) {
-      $without_title = (count($content) == 1);
-
-      if (module_exists('link') && $field_info['type'] == 'link_field' && $without_title) {
-        $array_key = 'url';
-      }
-      else {
-        $array_key = $target_key[$index];
-      }
-
-      $db_field_name = $field_info['field_name'] . '_' . $array_key;
-      $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
-
-      if ($db_field_name == 'title_field_value' && strlen($insert_array[$db_field_name]) > 254) {
-        $insert_array[$db_field_name] = substr($insert_array[$db_field_name], 0, 254);
-        $langcode = $insert_array['language'];
-        LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
-      }
-
+    if (empty($fields_arrays[$field_name . '::' . $delta])) {
+      $insert_array = array(
+        'entity_type' => $entity_type,
+        'bundle' => $bundle,
+        'entity_id' => $id,
+        'revision_id' => $vid === NULL || $entity_type == 'comment' ? $id : $vid,
+        'language' => $field_language,
+        'delta' => $delta,
+        'deleted' => '0',
+      );
+      $curr_field_data = & $entity->$field_name;
       lingotek_assign_field_format($insert_array, $source_field_data, $curr_field_data, $field_info['field_name'], $entity->language);
-      $index++;
+      $fields_arrays[$field_name . '::' . $delta] = $insert_array;
     }
 
+    $db_field_name = $field_info['field_name'] . '_' . $column_name;
+    $fields_arrays[$field_name . '::' . $delta][$db_field_name] = lingotek_unfilter_placeholders(decode_entities($content));
+
+    // Truncate too-long title fields
+    if ($db_field_name == 'title_field_value' && strlen($insert_array[$db_field_name]) > 254) {
+      $fields_arrays[$field_name . '::' . $delta][$db_field_name] = substr($insert_array[$db_field_name], 0, 254);
+      $langcode = $insert_array['language'];
+      LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
+    }
+    $last_field_name = $field_name;
+  }
+
+  // Save the aggregated field info
+  foreach ($fields_arrays as $entity_field_delta => $insert_array) {
+    list($field_name, $delta) = explode('::', $entity_field_delta);
     // Save to both field_data tables and field_revision tables
-    $field_table_names = array('field_revision_' . $field_info['field_name'], 'field_data_' . $field_info['field_name']);
+    $field_table_names = array('field_revision_' . $field_name, 'field_data_' . $field_name);
     foreach ($field_table_names as $fname) {
       lingotek_save_field_record($fname, $insert_array);
     }
@@ -249,10 +242,9 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     $entity = lingotek_entity_load_single($entity_type, $id);
 
     //Set URL alias
-    if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
+    if ($field_name == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
       lingotek_save_pathauto_alias($entity_type, $entity, $langcode);
     }
-    $last_tag = $tag;
   }
 }
 
