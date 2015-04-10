@@ -353,6 +353,9 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
       continue;
     }
 
+    // Initialize the field
+    $field_obj = $content_obj->addChild($field_name);
+
     // Create fields from all target keys.
     foreach ($field_content[$field_language] as $delta) {
 
@@ -378,15 +381,14 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
             }
           }
           $subcontent_obj = lingotek_xml_fields('field_collection_item', $sub_entity, $translatable_sub_fields, $field_language);
-          $content_obj->addChildXML($subcontent_obj, $field_name);
+          $field_obj->addXML($subcontent_obj);
           continue;
         }
 
         $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
         // Handle element suffixes (all columns should be suffixed now)
-        $element_name = $field_name . '__' . $column_name;
-        $field_obj = $content_obj->addChild($element_name);
-        $element = $field_obj->addChild('element');
+        $column_obj = $field_obj->addChild($column_name);
+        $element = $column_obj->addChild('element');
         $element->addCData($delta_column_content);
       }
     }
@@ -2011,7 +2013,7 @@ function lingotek_exclude_field_column($entity_type, $bundle, $field_name, $colu
 
   // This variable may be overridden to exclude perhaps all field columns
   // called 'url' or 'params' or etc.
-  $field_columns_to_exclude_by_default = variable_get('lingotek_field_columns_to_exclude_by_default', array('format', 'attributes'));
+  $field_columns_to_exclude_by_default = variable_get('lingotek_field_columns_to_exclude_by_default', array('format', 'attributes', 'revision_id'));
 
   // FORMAT FOR VARIABLE 'lingotek_field_columns_to_exclude_by_entity_type':
   // array(

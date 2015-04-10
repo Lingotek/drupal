@@ -139,27 +139,13 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
   $delta = 0;
   $last_field_name = NULL;
 
-  // The $tag is of format '[field_name]__[column_name]'
-  foreach ($xml as $tag => $content) {
+  foreach ($xml as $field_name => $content) {
 
     // URL alias translation (currently available for nodes only)
-    if ($entity_type == 'node' && $tag == 'url_alias' && $url_alias_translation == 1) {
+    if ($entity_type == 'node' && $field_name == 'url_alias' && $url_alias_translation == 1) {
       lingotek_save_url_alias($content, $entity, $langcode);
-      $last_field_name = $tag;
+      $last_field_name = $field_name;
       continue;
-    }
-
-    // Handle compound fields (multiple subfields, like 'summary' and 'body')
-    // Note: Currently all field columns should have the format
-    //       '[fieldname]__[columnname]', but value is kept as a default for
-    //       compatibility with documents uploaded using the old schema.
-    //       Backward compatibility will not extend to link fields, however.
-    $field_name = $tag;
-    $column_name = 'value';
-    $subfield_parts = explode('__', $tag);
-    if (count($subfield_parts) == 2) {
-      $field_name = $subfield_parts[0];
-      $column_name = $subfield_parts[1];
     }
 
     // Handle multiple instances of the same field (handled in Drupal using 'delta')
@@ -171,13 +157,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
       LingotekLog::warning('Field info downloaded from Lingotek, but field not found: @field_name', array('@field_name' => $field_name));
       $last_field_name = $field_name;
       continue;
-    }
-
-    // Try to get the source field's text format, if available
-    try {
-      $source_field_data = field_get_items($entity_type, $source_entity, $field_name);
-    } catch (EntityMalformedException $e) {
-      $source_field_data = array();
     }
 
     $translatable_field = !empty($field_info['translatable']);
@@ -197,37 +176,38 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
       field_update_field($field_info);
     }
 
-    // Handle (normal?) fields from here down.
-    if (empty($fields_arrays[$field_name . '::' . $delta])) {
-      $insert_array = array(
-        'entity_type' => $entity_type,
-        'bundle' => $bundle,
-        'entity_id' => $id,
-        'revision_id' => $vid === NULL || $entity_type == 'comment' ? $id : $vid,
-        'language' => $field_language,
-        'delta' => $delta,
-        'deleted' => '0',
-      );
-      $curr_field_data = & $entity->$field_name;
-      lingotek_assign_field_format($insert_array, $source_field_data, $curr_field_data, $field_info['field_name'], $entity->language);
-      $fields_arrays[$field_name . '::' . $delta] = $insert_array;
+    // Handle individual fields from here down.
+    $insert_array = array(
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+      'entity_id' => $id,
+      'revision_id' => $vid === NULL || $entity_type == 'comment' ? $id : $vid,
+      'language' => $field_language,
+      'delta' => $delta,
+      'deleted' => '0',
+    );
+
+    foreach ($content as $column_name => $text) {
+      $db_column_name = $field_info['field_name'] . '_' . $column_name;
+      $insert_array[$db_column_name] = lingotek_unfilter_placeholders(decode_entities((string) $text->element));
+
+      // Truncate too-long title fields
+      if ($db_column_name == 'title_field_value' && strlen($insert_array[$db_column_name]) > 254) {
+        $insert_array[$db_column_name] = substr($insert_array[$db_column_name], 0, 254);
+        $langcode = $insert_array['language'];
+        LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
+      }
     }
 
-    $db_field_name = $field_info['field_name'] . '_' . $column_name;
-    $fields_arrays[$field_name . '::' . $delta][$db_field_name] = lingotek_unfilter_placeholders(decode_entities($content));
-
-    // Truncate too-long title fields
-    if ($db_field_name == 'title_field_value' && strlen($insert_array[$db_field_name]) > 254) {
-      $fields_arrays[$field_name . '::' . $delta][$db_field_name] = substr($insert_array[$db_field_name], 0, 254);
-      $langcode = $insert_array['language'];
-      LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
+    // Try to carry over untranslated columns.
+    try {
+      $source_field_data = field_get_items($entity_type, $source_entity, $field_name);
+    } catch (EntityMalformedException $e) {
+      $source_field_data = array();
     }
-    $last_field_name = $field_name;
-  }
+    $curr_field_data = & $entity->$field_name;
+    lingotek_add_untranslated_source_fields($insert_array, $source_field_data, $curr_field_data, $field_info, $entity->language);
 
-  // Save the aggregated field info
-  foreach ($fields_arrays as $entity_field_delta => $insert_array) {
-    list($field_name, $delta) = explode('::', $entity_field_delta);
     // Save to both field_data tables and field_revision tables
     $field_table_names = array('field_revision_' . $field_name, 'field_data_' . $field_name);
     foreach ($field_table_names as $fname) {
@@ -245,23 +225,34 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     if ($field_name == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
       lingotek_save_pathauto_alias($entity_type, $entity, $langcode);
     }
+    $last_field_name = $field_name;
   }
 }
 
 /*
- * Set the field format for the array to be inserted/updated
+ * Carry over the columns that weren't translated from the source field
  */
-function lingotek_assign_field_format(&$params, $source_field_data, $curr_field_data, $format_column_name, $entity_langcode) {
-  $field_format = NULL;
-  if (!empty($source_field_data[0]['format'])) {
-    $field_format = $source_field_data[0]['format'];
+function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $curr_field_data, $field_info, $entity_langcode) {
+
+  if (empty($field_info['columns']) || empty($field_info['field_name'])) {
+    return;
   }
-  elseif (!empty($curr_field_data[$entity_langcode][0]['format'])) {
-    $field_format = $curr_field_data[$entity_langcode][0]['format'];
-  }
-  if (!empty($field_format)) {
-    $format_db_field_name = $format_column_name;
-    $params[$format_db_field_name] = $field_format;
+
+  foreach (array_keys($field_info['columns']) as $column_name) {
+    $db_column_name = $field_info['field_name'] . '_' . $column_name;
+    // if it's set in the translated stuff, then don't carry over.
+    if (isset($params[$db_column_name])) {
+      continue;
+    }
+    if (!empty($source_field_data[0][$column_name])) {
+      $field_column = $source_field_data[0][$column_name];
+    }
+    elseif (!empty($curr_field_data[$entity_langcode][0][$column_name])) {
+      $field_column = $curr_field_data[$entity_langcode][0][$column_name];
+    }
+    if (!empty($field_column)) {
+      $params[$db_column_name] = $field_column;
+    }
   }
 }
 

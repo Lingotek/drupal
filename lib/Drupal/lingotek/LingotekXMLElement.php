@@ -27,8 +27,20 @@ class LingotekXMLElement extends SimpleXMLElement {
     $this_child = $this->addChild($element_name);
     $to_dom = dom_import_simplexml($this_child);
     $from_dom = dom_import_simplexml($child);
-    foreach ($from_dom->childNodes as $child_node) {
-      $to_dom->appendChild($to_dom->ownerDocument->importNode($child_node, TRUE));
+    foreach ($from_dom->childNodes as $child_element) {
+      $to_dom->appendChild($to_dom->ownerDocument->importNode($child_element, TRUE));
+    }
+  }
+
+  /**
+   * Add a SimpleXMLElement object to this object
+   * @param SimpleXMLElement $xml
+   */
+  public function addXML(SimpleXMLElement $xml) {
+    $to_dom = dom_import_simplexml($this);
+    $from_dom = dom_import_simplexml($xml);
+    foreach ($from_dom->childNodes as $child_element) {
+      $to_dom->appendChild($to_dom->ownerDocument->importNode($child_element, TRUE));
     }
   }
 }
