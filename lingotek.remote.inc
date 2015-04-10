@@ -244,13 +244,19 @@ function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $
     if (isset($params[$db_column_name])) {
       continue;
     }
-    if (!empty($source_field_data[0][$column_name])) {
+
+    $field_column = NULL;
+    if (isset($source_field_data[0][$column_name])) {
       $field_column = $source_field_data[0][$column_name];
     }
-    elseif (!empty($curr_field_data[$entity_langcode][0][$column_name])) {
+    elseif (isset($curr_field_data[$entity_langcode][0][$column_name])) {
       $field_column = $curr_field_data[$entity_langcode][0][$column_name];
     }
-    if (!empty($field_column)) {
+    if ($field_column !== NULL) {
+      // Arrays, such as those in attributes fields, should be serialized first.
+      if (is_array($field_column)) {
+        $field_column = serialize($field_column);
+      }
       $params[$db_column_name] = $field_column;
     }
   }
