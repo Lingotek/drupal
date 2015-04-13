@@ -288,11 +288,12 @@ function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $en
 }
 
 function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate) {
+  $field_types = field_info_fields();
   $fields = array();
   foreach (field_info_instances($entity_type, $bundle_name) as $field) {
     $field_label = $field['label'];
     $field_machine_name = $field['field_name'];
-    $field_type = $field['widget']['type'];
+    $field_type = $field_types[$field['field_name']]['type'];
     if (array_search($field_type, $translatable_field_types)) {
       $fields[$field_machine_name] = array(
         '#type' => 'checkbox',
@@ -2058,6 +2059,87 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
 }
 
 /**
+ * Field Types and Settings Form
+ */
+function lingotek_admin_field_settings_form($form, &$form_state) {
+  $field_types = field_info_field_types();
+  $fields = field_info_fields();
+  $enabled_types = lingotek_get_translatable_field_types();
+  $all_column_names = lingotek_get_all_column_names($fields);
+  $enabled_column_names = lingotek_get_translatable_field_columns();
+
+  $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => 'ltk-fields'));
+  $form['field_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Field Types and Settings'),
+    'actions' => array(
+      '#type' => 'actions',
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => t('Save')
+      )
+    ),
+    '#submit' => array('lingotek_admin_field_settings_form_submit')
+  );
+
+  //$current_theme = variable_get('theme_default', 'none'); //global $theme_key;
+
+  // FIELD TYPES
+  $form['field_settings']['field_types'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Field Types'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  foreach ($field_types as $type_name => $type_info) {
+    $form['field_settings']['field_types']['fld__' . $type_name] = array(
+      '#type' => 'checkbox',
+      '#title' => $type_info['label'],
+      '#default_value' => in_array($type_name, $enabled_types),
+    );
+  }
+
+  // FIELD COLUMN DEFAULTS
+  $form['field_settings']['field_column_defaults'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Field Column Defaults'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  foreach ($all_column_names as $column_name => $fields) {
+    $form['field_settings']['field_column_defaults']['col__' . $column_name] = array(
+      '#type' => 'checkbox',
+      '#title' => $column_name . ' (' . implode(', ', $fields) . ')',
+      '#default_value' => in_array($column_name, $enabled_column_names),
+    );
+  }
+
+  return $form;
+}
+
+function lingotek_admin_field_settings_form_submit($form, &$form_state) {
+
+  // Set the translatable field types and column defaults.
+  $fields = array();
+  $columns = array();
+
+  foreach ($form_state['values'] as $type_name => $val) {
+    if ($val !== 1) {
+      continue;
+    }
+    list($type, $name) = explode('__', $type_name, 2);
+    if ($type == 'fld') {
+      $fields[] = $name;
+    }
+    elseif ($type == 'col') {
+      $columns[] = $name;
+    }
+  }
+  variable_set('lingotek_translatable_field_types', $fields);
+  variable_set('lingotek_translatable_column_defaults', $columns);
+}
+
+/**
  * Utilities Form
  */
 function lingotek_admin_utilities_form($form, &$form_state, $show_fieldset = FALSE) {
@@ -2512,6 +2594,7 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_additional_translation_settings_form', $show_fieldset), t('Translate Configuration'), array('id' => 'ltk-config'));
   $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_profiles_form', $show_fieldset), t('Translation Profiles'), array('id' => 'ltk-profiles'));
   if ($show_advanced) {
+    $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_field_settings_form', $show_fieldset), t('Advanced Field Settings'), array('id' => 'ltk-fields'));
     $output['lingotek'][] = lingotek_wrap_in_fieldset(drupal_get_form('lingotek_admin_advanced_parsing_form', TRUE), t('Advanced Content Parsing'), array('id' => 'ltk-advanced-content-parsing'));
   }
 
@@ -2663,4 +2746,21 @@ function lingotek_using_language_specific_profiles() {
 
   // No sign of language-specific settings
   return FALSE;
+}
+
+function lingotek_get_all_column_names($fields) {
+  // return a list of all column names along with the fields that use them.
+  $column_names = array();
+  foreach ($fields as $field_name => $field) {
+    if (empty($field['columns'])) {
+      continue;
+    }
+    foreach (array_keys($field['columns']) as $col) {
+      if (!isset($column_names[$col])) {
+        $column_names[$col] = array();
+      }
+      $column_names[$col][] = $field_name;
+    }
+  }
+  return $column_names;
 }

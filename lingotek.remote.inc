@@ -206,7 +206,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
       $source_field_data = array();
     }
     $curr_field_data = & $entity->$field_name;
-    lingotek_add_untranslated_source_fields($insert_array, $source_field_data, $curr_field_data, $field_info, $entity->language);
+    lingotek_add_untranslated_source_fields($insert_array, $source_field_data, $curr_field_data, $field_info, $entity->language, $delta);
 
     // Save to both field_data tables and field_revision tables
     $field_table_names = array('field_revision_' . $field_name, 'field_data_' . $field_name);
@@ -232,7 +232,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
 /*
  * Carry over the columns that weren't translated from the source field
  */
-function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $curr_field_data, $field_info, $entity_langcode) {
+function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $curr_field_data, $field_info, $entity_langcode, $delta) {
 
   if (empty($field_info['columns']) || empty($field_info['field_name'])) {
     return;
@@ -246,11 +246,11 @@ function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $
     }
 
     $field_column = NULL;
-    if (isset($source_field_data[0][$column_name])) {
-      $field_column = $source_field_data[0][$column_name];
+    if (isset($source_field_data[$delta][$column_name])) {
+      $field_column = $source_field_data[$delta][$column_name];
     }
-    elseif (isset($curr_field_data[$entity_langcode][0][$column_name])) {
-      $field_column = $curr_field_data[$entity_langcode][0][$column_name];
+    elseif (isset($curr_field_data[$entity_langcode][$delta][$column_name])) {
+      $field_column = $curr_field_data[$entity_langcode][$delta][$column_name];
     }
     if ($field_column !== NULL) {
       // Arrays, such as those in attributes fields, should be serialized first.

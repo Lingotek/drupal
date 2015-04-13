@@ -238,7 +238,7 @@ function watchdog_format_object($object) {
 
 function lingotek_get_translatable_field_types() {
   // What types of fields DO we translate?
-  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary', 'field_collection_embed');
+  $included_fields = array('text', 'text_long', 'text_with_summary', 'field_collection');
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
@@ -252,10 +252,11 @@ function lingotek_get_translatable_field_types() {
 
 function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
   $all_fields = field_info_instances($entity_type, $type);
+  $all_field_types = field_info_fields();
   $translatable_field_types = lingotek_get_translatable_field_types();
   $desired_fields = array();
   foreach ($all_fields as $field_name => $field_info) {
-    if (in_array($field_info['widget']['type'], $translatable_field_types)) {
+    if (in_array($all_field_types[$field_info['field_name']]['type'], $translatable_field_types)) {
       $desired_fields[$field_name] = $field_name;
     }
   }
@@ -352,11 +353,12 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
       continue;
     }
 
-    // Initialize the field
-    $field_obj = $content_obj->addChild($field_name);
 
     // Create fields from all target keys.
     foreach ($field_content[$field_language] as $delta) {
+
+      // Initialize a tag the field for each delta of the field in source language.
+      $field_obj = $content_obj->addChild($field_name);
 
       foreach ($field_columns as $column_name => $column_attributes) {
 
@@ -364,7 +366,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
           continue;
         }
 
-        if (lingotek_exclude_field_column($entity_type, $bundle, $field_name, $column_name)) {
+        if (!lingotek_translatable_field_column($entity_type, $bundle, $field_name, $column_name)) {
           continue;
         }
 
@@ -374,8 +376,15 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
           $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
           $sub_fields = field_info_instances('field_collection_item', $field_name);
           $translatable_sub_fields = array();
+
           foreach ($sub_fields as $sub_field => $f) {
-            if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field_name]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field_name])) {
+
+            $field_type_is_translatable = in_array($all_field_info[$f['field_name']]['type'], $translatable_field_types);
+            $field_collection_is_enabled_for_translation = isset($enabled_fields['field_collection_item'][$field_name]);
+            $sub_field_is_enabled_for_translation = in_array($sub_field, $enabled_fields['field_collection_item'][$field_name]);
+            $sub_field_is_enabled_field_collection = isset($enabled_fields['field_collection_item'][$sub_field]);
+
+            if ($field_type_is_translatable && $field_collection_is_enabled_for_translation && ($sub_field_is_enabled_for_translation || $sub_field_is_enabled_field_collection)) {
               $translatable_sub_fields[] = $sub_field;
             }
           }
@@ -2008,13 +2017,13 @@ function lingotek_get_current_locales($entity_type, $entity_id) {
   return $locales;
 }
 
-function lingotek_exclude_field_column($entity_type, $bundle, $field_name, $column_name) {
+function lingotek_translatable_field_column($entity_type, $bundle, $field_name, $column_name) {
 
-  // This variable may be overridden to exclude perhaps all field columns
+  // This variable may be overridden to include perhaps field columns
   // called 'url' or 'params' or etc.
-  $field_columns_to_exclude_by_default = variable_get('lingotek_field_columns_to_exclude_by_default', array('format', 'attributes', 'revision_id'));
+  $translatable_field_columns = lingotek_get_translatable_field_columns();
 
-  // FORMAT FOR VARIABLE 'lingotek_field_columns_to_exclude_by_entity_type':
+  // FORMAT FOR VARIABLE 'lingotek_translatable_field_columns_by_entity_type':
   // array(
   //   '[entity_type]' => array(
   //     '[bundle]' => array(
@@ -2025,15 +2034,25 @@ function lingotek_exclude_field_column($entity_type, $bundle, $field_name, $colu
   //     ),
   //   ),
   // );
-  $field_columns_to_exclude_by_entity_type = variable_get('lingotek_field_columns_to_exclude_by_entity_type', array());
+  $translatable_field_columns_by_entity_type = variable_get('lingotek_translatable_field_columns_by_entity_type', array());
 
   // If a field array is not empty for a given entity type, then look to it
-  // for what field columns to exclude for a given entity type and bundle.
-  // This way fields excluded by default may be included for specific bundles.
-  if (!empty($field_columns_to_exclude_by_entity_type[$entity_type][$bundle][$field_name])) {
-    return !empty($field_columns_to_exclude_by_entity_type[$entity_type][$bundle][$field_name][$column_name]);
+  // for what field columns to include for a given entity type and bundle.
+  // This way fields included by default may be excluded for specific bundles
+  // and vice versa.
+  if (!empty($translatable_field_columns_by_entity_type[$entity_type][$bundle][$field_name])) {
+    return !empty($translatable_field_columns_by_entity_type[$entity_type][$bundle][$field_name][$column_name]);
   }
   else {
-    return in_array($column_name, $field_columns_to_exclude_by_default);
+    return in_array($column_name, $translatable_field_columns);
   }
 }
+
+function lingotek_get_translatable_field_columns() {
+  // What columns DO we translate?
+  $default_translatable_columns = array('value', 'summary', 'alt', 'title');
+
+  // Allow override of translatable columns using the variables table.
+  return variable_get('lingotek_translatable_column_defaults', $default_translatable_columns);
+}
+
