@@ -143,7 +143,7 @@ Drupal.behaviors.lingotekAdminForm = {
         $(context).find('select').each(function( index ) {
           var $this = $(this);
           var name = $this.attr('name');
-          if(name && name.substring(0, 7) == 'profile') {
+          if(name && name.substring(0, 7) == 'profile' && name.indexOf('__') < 0) {
             if($this.val() != 'DISABLED') {
               $list.push($this.val());
             }
