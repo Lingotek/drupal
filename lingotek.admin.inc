@@ -304,11 +304,6 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
           'class' => array('field'),
         ),
         '#id' => 'edit-form-item-' . $bundle_name . '-seperator-' . $field_machine_name,
-        '#states' => array(
-          'invisible' => array(
-            ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
-          ),
-        ),
       );
 
       $is_enabled = !empty($translate[$bundle_name]) && array_search($field_machine_name, $translate[$bundle_name]) !== FALSE;
@@ -502,9 +497,12 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
         $content_type = $parts[0];
         $content_field = $parts[1];
 
+        // Save the enabled fields, even if disabled, as one-offs could be
+        // enabled and will need to know which fields to translate.
+        $enabled_fields[$entity_type][$content_type][] = $content_field;
+
         //check to make sure that the content type is enabled
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
-          $enabled_fields[$entity_type][$content_type][] = $content_field;
 
           // Set this content type to be translation-enabled only if currently disabled.
           $currently_enabled_content_type = variable_get('language_content_type_' . $content_type, '0');
