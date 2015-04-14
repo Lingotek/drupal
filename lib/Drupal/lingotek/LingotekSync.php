@@ -23,6 +23,7 @@ class LingotekSync {
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
+  const PROFILE_ENABLED = 'ENABLED';
   const PROFILE_CONFIG = 'CONFIG';
   const PROFILE_AUTOMATIC = 0;
   const PROFILE_MANUAL = 1;

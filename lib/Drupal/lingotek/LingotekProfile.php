@@ -35,7 +35,7 @@ class LingotekProfile {
       self::$global_profile = lingotek_get_global_profile();
     }
 
-    if ($profile_id === LingotekSync::PROFILE_DISABLED) {
+    if ($profile_id === LingotekSync::PROFILE_DISABLED || $profile_id === LingotekSync::PROFILE_ENABLED) {
       $this->setName($profile_id);
       return $this;
     }
@@ -315,7 +315,7 @@ class LingotekProfile {
   }
 
   public function save() {
-    if ($this->getId() != LingotekSync::PROFILE_DISABLED) {
+    if ($this->getId() != LingotekSync::PROFILE_DISABLED && $this->getId() != LingotekSync::PROFILE_ENABLED) {
       variable_set('lingotek_profiles', self::$profiles);
     }
   }
@@ -505,10 +505,10 @@ class LingotekProfile {
         'profile' => LingotekSync::PROFILE_DISABLED,
       );
     }
-    if ($this->getId() == 'ENABLED') {
+    if ($this->getId() == LingotekSync::PROFILE_ENABLED) {
       return array(
-        'name' => 'ENABLED',
-        'profile' => 'ENABLED',
+        'name' => LingotekSync::PROFILE_ENABLED,
+        'profile' => LingotekSync::PROFILE_ENABLED,
       );
     }
     if (empty(self::$profiles[$this->getId()])) {
