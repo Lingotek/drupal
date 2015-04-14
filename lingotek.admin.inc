@@ -294,7 +294,7 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
     $field_label = $field['label'];
     $field_machine_name = $field['field_name'];
     $field_type = $field_types[$field['field_name']]['type'];
-    if (array_search($field_type, $translatable_field_types)) {
+    if (in_array($field_type, $translatable_field_types)) {
       $fields[$field_machine_name] = array(
         '#type' => 'checkbox',
         '#title' => check_plain($field_label),
