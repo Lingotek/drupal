@@ -52,6 +52,10 @@ lingotek.forms = lingotek.forms || {};
     }
 
     var updateProfileSelectorDefault = function() {
+      // if the node already exists, then it must have a profile already: don't change it!
+      if ($('#lingotek-preserve-profile').val()) {
+        return;
+      }
       if ($('#lingotek-bundle-profiles').length > 0) {
         // get the language map for the current bundle
         var profiles_by_langcode = JSON.parse($('#lingotek-bundle-profiles').val());
