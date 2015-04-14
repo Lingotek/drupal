@@ -261,7 +261,7 @@ function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $en
           'invisible' => array(':input[name="' . $entity_type . '_language"]' => array('visible' => FALSE)),
         ),
         '#attributes' => array(
-          'style' => 'border: none; padding: 0 0 0 0;',
+          'style' => 'border: none; padding: 0 0 0 0; background-color: inherit;',
         )
       );
 
@@ -2081,8 +2081,6 @@ function lingotek_admin_field_settings_form($form, &$form_state) {
     ),
     '#submit' => array('lingotek_admin_field_settings_form_submit')
   );
-
-  //$current_theme = variable_get('theme_default', 'none'); //global $theme_key;
 
   // FIELD TYPES
   $form['field_settings']['field_types'] = array(
