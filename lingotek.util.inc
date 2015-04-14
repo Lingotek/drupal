@@ -381,8 +381,8 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
 
             $field_type_is_translatable = in_array($all_field_info[$f['field_name']]['type'], $translatable_field_types);
             $field_collection_is_enabled_for_translation = isset($enabled_fields['field_collection_item'][$field_name]);
-            $sub_field_is_enabled_for_translation = in_array($sub_field, $enabled_fields['field_collection_item'][$field_name]);
-            $sub_field_is_enabled_field_collection = isset($enabled_fields['field_collection_item'][$sub_field]);
+            $sub_field_is_enabled_for_translation = $field_collection_is_enabled_for_translation && in_array($sub_field, $enabled_fields['field_collection_item'][$field_name]);
+            $sub_field_is_enabled_field_collection = $field_collection_is_enabled_for_translation && isset($enabled_fields['field_collection_item'][$sub_field]);
 
             if ($field_type_is_translatable && $field_collection_is_enabled_for_translation && ($sub_field_is_enabled_for_translation || $sub_field_is_enabled_field_collection)) {
               $translatable_sub_fields[] = $sub_field;
