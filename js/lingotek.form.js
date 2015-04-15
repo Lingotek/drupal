@@ -53,7 +53,7 @@ lingotek.forms = lingotek.forms || {};
 
     var updateProfileSelectorDefault = function() {
       // if the node already exists, then it must have a profile already: don't change it!
-      if ($('#lingotek-preserve-profile').val()) {
+      if ($('#lingotek-preserve-profile').val() == "1") {
         return;
       }
       if ($('#lingotek-bundle-profiles').length > 0) {

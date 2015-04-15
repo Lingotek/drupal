@@ -1203,7 +1203,7 @@ function lingotek_node_view($node, $view_mode) {
 
   $lingotek_has_doc_id = !empty($source_node->lingotek['document_id']);
   $community_translation_allowed = !empty($source_node->lingotek['allow_community_translation']);
-  if ($community_translation_allowed && $lingotek_has_doc_id && lingotek_supported_type($source_node->type) && Lingotek::isSupportedLanguage($node->language)) {
+  if ($community_translation_allowed && $lingotek_has_doc_id && !empty($source_node->lingotek['profile']) && $source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
 
     if ($language->language != $source_node->language) {
       $link = lingotek_get_workbench_url($source_node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
@@ -1220,7 +1220,7 @@ function lingotek_node_view($node, $view_mode) {
 
   $can_translate = user_access('translation') && ($source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED);
   $uploaded_to_lingotek = !empty($source_node->lingotek['document_id']);
-  $is_target = $node->lingotek['upload_status'] == 'TARGET';
+  $is_target = !empty($node->lingotek['upload_status']) && $node->lingotek['upload_status'] == 'TARGET';
 
   if ($can_translate && $uploaded_to_lingotek || $is_target) {
     global $language;
@@ -1393,7 +1393,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
 
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
-  if (!lingotek_enabled_bundle($entity_type, $bundle) || !isset($entity->language) || (!Lingotek::isSupportedLanguage($entity->language) && !($entity->language == LANGUAGE_NONE && $entity_type == 'taxonomy_term'))) {
+  if (!isset($entity->language) || (!Lingotek::isSupportedLanguage($entity->language) && !($entity->language == LANGUAGE_NONE && $entity_type == 'taxonomy_term'))) {
     return;
   }
 

@@ -478,11 +478,6 @@ function lingotek_access_dev_tools($node, $permission) {
   return $user_access;
 }
 
-function lingotek_enabled_bundle($entity_type, $bundle) {
-  $setting = variable_get('lingotek_entity_profiles');
-  return isset($setting[$entity_type][$bundle]) && $setting[$entity_type][$bundle] != LingotekSync::PROFILE_DISABLED;
-}
-
 /**
  * Returns an array of disabled bundles for a given entity_type
  *
@@ -504,17 +499,6 @@ function lingotek_get_bundles_by_profile($entity_type, $profile) {
     }
   }
   return $profiled_bundles;
-}
-
-/**
- * Returns whether the given node type has support for translations.
- *
- * @return
- *   Boolean value.
- */
-function lingotek_supported_type($type) {
-  $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) != '0';
-  return ($lingotek_supported_explicitly && lingotek_enabled_bundle('node', $type));
 }
 
 function lingotek_supported_node($node) {
@@ -1902,35 +1886,12 @@ function lingotek_uses_node_translation($node = NULL) {
   return FALSE;
 }
 
-
 function lingotek_managed_entity($entity_type, $entity) {
-  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
-
-  // If there is no $bundle property, then nothing to manage for now.
-  if (!$bundle) {
+  $profile = LingotekProfile::loadByEntity($entity_type, $entity);
+  if ($profile->getId() == LingotekSync::PROFILE_DISABLED) {
     return FALSE;
   }
-  // If this is being newly created, see if the content type is enabled
-  if (!$id) {
-    return lingotek_enabled_bundle($entity_type, $bundle);
-  }
-  // Check the entity itself for overrides.
-  $query = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem', array('value'))
-      ->condition('lem.entity_type', $entity_type)
-      ->condition('lem.entity_id', $id)
-      ->condition('lem.entity_key', 'profile');
-  $result = $query->execute()->fetchField();
-  if ($result !== FALSE) {
-    if ($result === LingotekSync::PROFILE_DISABLED) {
-      return FALSE;
-    }
-    else {
-      return TRUE;
-    }
-  }
-  // No overrides, so check the entity's bundle.
-  return lingotek_enabled_bundle($entity_type, $bundle);
+  return TRUE;
 }
 
 function lingotek_entity_extract_ids($entity_type, $entity) {
