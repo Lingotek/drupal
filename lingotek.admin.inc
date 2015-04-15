@@ -384,7 +384,9 @@ function lingotek_get_translation_mode($bundle) {
 
 function lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics) {
 
-  $label = variable_get('lingotek_enable_language_specific_profiles') ? $bundle['collapsible_label'] : $bundle['label'];
+  // REMOVED TEMPORARILY UNTIL REFACTOR OF LANGUAGE-SPECIFIC PROFILE UI IMPROVEMENTS.
+  //$label = variable_get('lingotek_enable_language_specific_profiles') ? $bundle['collapsible_label'] : $bundle['label'];
+  $label = '<b>' . $bundle['label'] . '</b>';
 
   if ($entity_type == 'taxonomy_term') {
     $row = array(
