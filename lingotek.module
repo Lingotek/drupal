@@ -683,8 +683,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // Include the translation-management tab always
   $form = lingotek_get_node_settings_form($form, $form_state, $node);
 
-  // Set the default language on new node creation.
-  if (empty($source_node->nid) && $form['language']['#default_value'] == LANGUAGE_NONE) {
+  // Set the default language on new node creation if language is a parameter
+  // and if the language parameter is language-neutral.
+  if (empty($source_node->nid) && !empty($form['language']['#default_value']) && $form['language']['#default_value'] == LANGUAGE_NONE) {
     $form['language']['#default_value'] = lingotek_get_source_language();
   }
 
