@@ -714,7 +714,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // selected the Lingotek preference to allow local editing of translations.
   $is_entity_translation_target = !empty($form_state['entity_translation']['form_langcode']) && $form_state['entity_translation']['form_langcode'] != $source_node->language;
 
-  if (!empty($source_node->nid) && lingotek_managed_entity('node', $node) && (lingotek_is_node_translation($node) || $is_entity_translation_target)) {
+  if (!empty($source_node->nid) && lingotek_managed_entity('node', $node) && (lingotek_is_node_translation($node) || $is_entity_translation_target) && !variable_get('lingotek_allow_local_edits', FALSE)) {
     $lingotek_fields = variable_get('lingotek_enabled_fields');
     $enabled_fields = !empty($lingotek_fields['node'][$node->type]) ? $lingotek_fields['node'][$node->type] : NULL;
     if (!$enabled_fields) {
