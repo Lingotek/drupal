@@ -70,7 +70,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
     $localized_node->comment = $node->comment;
     $localized_node->promote = $node->promote;
     $localized_node->sticky = $node->sticky;
-    $localized_node->status = 1; // default to published if revisions are not enabled.
+    $localized_node->status = $node->status;
     $localized_node->auto_upload = FALSE;
 
     // Grandfather field settings/values from source node to target.
