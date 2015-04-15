@@ -1004,9 +1004,9 @@ function lingotek_entity_save($entity, $entity_type) {
 
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
 
-  $has_not_been_uploaded = empty($entity->lingotek['document_id']);
+  $has_been_uploaded = !empty($entity->lingotek['document_id']);
 
-  $remove = lingotek_get_profile_fields($has_not_been_uploaded, TRUE);
+  $remove = lingotek_get_profile_fields(!$has_been_uploaded, TRUE);
 
   db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $entity_type)
@@ -1018,10 +1018,13 @@ function lingotek_entity_save($entity, $entity_type) {
   // type changes in the future to something else.
   lingotek_keystore($entity_type, $id, 'profile', $entity->lingotek['profile']);
 
-  // If the hash changed, handle target statuses
+  // If the hash changed, handle upload status and target statuses
   $entity_changed = lingotek_entity_changed($entity_type, $entity, $id);
   if ($entity_changed) {
     if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+      if ($has_been_uploaded) {
+        LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
+      }
       LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_UNTRACKED);
     }
     else {

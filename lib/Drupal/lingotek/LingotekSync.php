@@ -81,8 +81,8 @@ class LingotekSync {
         ->execute();
   }
 
-  public static function setNodeStatus($node_id, $status) {
-    return lingotek_keystore('node', $node_id, 'upload_status', $status);
+  public static function setUploadStatus($entity_type, $entity_id, $status) {
+    return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);
   }
 
   public static function getSyncProjects() {
