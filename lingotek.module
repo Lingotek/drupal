@@ -1408,7 +1408,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
     return; //entity has no changes.
   }
 
-  lingotek_keystore($entity_type, $id, 'upload_status', LingotekSync::STATUS_EDITED);
+  LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
 
   if ($entity->lingotek['auto_upload']) {
     lingotek_entity_upload($entity, $entity_type, $context);
@@ -1490,7 +1490,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if ($empty_context) {
     if ($success) {
       drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $ln->getTitle())));
-      lingotek_keystore($entity_type, $id, 'upload_status', LingotekSync::STATUS_CURRENT);
+      LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_CURRENT);
     }
     else {
       drupal_set_message(t('Unable to send <em>@node_title</em> to Lingotek.', array('@node_title' => $ln->getTitle())), 'error');
@@ -1503,7 +1503,7 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
         $context['results']['uploaded_nids'] = array();
       }
       $context['results']['uploaded_nids'][] = $id;
-      lingotek_keystore($entity_type, $id, 'upload_status', LingotekSync::STATUS_CURRENT);
+      LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_CURRENT);
     }
     else {
       $context['results']['upload_fails'] = isset($context['results']['upload_fails']) && is_numeric($context['results']['upload_fails']) ? $context['results']['upload_fails'] + 1 : 1;

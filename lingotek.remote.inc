@@ -99,7 +99,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
     }
 
     node_save($localized_node);
-    lingotek_keystore('node', $localized_node->nid, 'upload_status', LingotekSync::STATUS_TARGET);
+    LingotekSync::setUploadStatus('node', $localized_node->nid, LingotekSync::STATUS_TARGET);
     // Child node should keep its parent node's profile, for rules integration.
     $parent_profile = lingotek_keystore('node', $node->nid, 'profile');
     if ($parent_profile !== FALSE) {
