@@ -701,7 +701,7 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
   $form = array_merge($form, lingotek_get_language_override_form($form, $form_state, $node));
 
-// Disable the language field if the node is synced with Lingotek.
+  // Disable the language field if the node is synced with Lingotek.
   if (!empty($node->nid)) {
     $document_id = lingotek_keystore('node', $node->nid, 'document_id');
     if (isset($document_id) && $document_id != 0) {
@@ -712,7 +712,9 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
   // Disable all Lingotek-managed fields if the node already exists and the
   // current language isn't the source language and the administrator has not
   // selected the Lingotek preference to allow local editing of translations.
-  if (!empty($source_node->nid) && $current_language != $source_node->language && !variable_get('lingotek_allow_local_edits', FALSE)) {
+  $is_entity_translation_target = !empty($form_state['entity_translation']['form_langcode']) && $form_state['entity_translation']['form_langcode'] != $source_node->language;
+
+  if (!empty($source_node->nid) && lingotek_managed_entity('node', $node) && (lingotek_is_node_translation($node) || $is_entity_translation_target)) {
     $lingotek_fields = variable_get('lingotek_enabled_fields');
     $enabled_fields = !empty($lingotek_fields['node'][$node->type]) ? $lingotek_fields['node'][$node->type] : NULL;
     if (!$enabled_fields) {
