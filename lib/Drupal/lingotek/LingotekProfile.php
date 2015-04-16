@@ -186,6 +186,15 @@ class LingotekProfile {
     }
   }
 
+  public function getDocumentIds() {
+    $metadata_table = $this->getId() === LingotekSync::PROFILE_CONFIG ? 'lingotek_config_metadata' : 'lingotek_entity_metadata';
+    $metadata_key_col = $this->getId() === LingotekSync::PROFILE_CONFIG ? 'config_key' : 'entity_key';
+    $query = db_select($metadata_table, 't')
+      ->fields('t', array('value'))
+      ->condition('t.' . $metadata_key_col, 'document_id');
+    return $query->execute()->fetchcol();
+  }
+
   public function getBundles() {
     $entities = entity_get_info();
     $lentities = variable_get('lingotek_entity_profiles');

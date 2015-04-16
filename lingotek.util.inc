@@ -783,6 +783,16 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
           $profile->disableTargetLocale($lingotek_locale);
         }
       }
+      // If there are any documents related to config translation,
+      // automatically add the target language to all of them
+      $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
+      $doc_ids = $config_profile->getDocumentIds();
+      if ($doc_ids) {
+        $api = LingotekApi::instance();
+        foreach ($doc_ids as $doc_id) {
+          $api->addTranslationTarget($doc_id, NULL, $lingotek_locale);
+        }
+      }
     }
 
     db_update('languages')
