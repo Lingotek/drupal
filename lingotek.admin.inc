@@ -1905,7 +1905,6 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       $form['defaults']['language_override'][$language->lingotek_locale]['settings_' . $language->lingotek_locale] = array(
         '#type' => 'select',
         '#options' => $settings_options,
-        '#description' => t('The default Translation Memory Vault where translations are saved.'),
         '#default_value' => $default_language_override_value,
       );
 
