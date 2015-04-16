@@ -315,7 +315,7 @@ class LingotekProfile {
   }
 
   public function save() {
-    if ($this->getId() != LingotekSync::PROFILE_DISABLED && $this->getId() != LingotekSync::PROFILE_ENABLED) {
+    if ($this->getId() !== LingotekSync::PROFILE_DISABLED && $this->getId() !== LingotekSync::PROFILE_ENABLED) {
       variable_set('lingotek_profiles', self::$profiles);
     }
   }
