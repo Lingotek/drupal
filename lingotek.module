@@ -1544,11 +1544,12 @@ function lingotek_entity_download_triggered($entity, $entity_type, $lingotek_loc
     $entity = lingotek_entity_load_single($entity_type, $entity);
   }
 
-  if (!$entity->lingotek['auto_download']) {
-    return FALSE;
+  $profile = LingotekProfile::loadByEntity($entity_type, $entity);
+  if ($profile->isAutoDownload($lingotek_locale)) {
+    return lingotek_entity_download($entity, $entity_type, $lingotek_locale, $context);
   }
+  return FALSE;
 
-  return lingotek_entity_download($entity, $entity_type, $lingotek_locale, $context);
 }
 
 /*
