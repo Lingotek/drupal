@@ -233,7 +233,6 @@ class LingotekApi {
     global $_lingotek_client, $_lingotek_locale;
 
     $parameters = array(
-      'applyWorkflow' => 'true', // Ensure that as translation targets are added, the associated project's Workflow template is applied.
       'targetLanguage' => $lingotek_locale
     );
 
@@ -246,6 +245,10 @@ class LingotekApi {
 
     if ($workflow_id) {
       $parameters['workflowId'] = $workflow_id;
+    }
+    else {
+      // The associated project's Workflow template should be applied.
+      $parameters['applyWorkflow'] = 'true';
     }
 
     if ($new_translation_target = $this->request('addTranslationTarget', $parameters)) {
