@@ -711,6 +711,28 @@ function lingotek_delete_target_language($lingotek_locale) {
     $project_id = variable_get('lingotek_project', '');
     $api = LingotekApi::instance();
     $result = $api->removeTranslationTarget(NULL, $project_id, $lingotek_locale);
+
+    // Remove from profiles and entity-profiles mappings
+    $profiles = variable_get('lingotek_profiles', array());
+    foreach ($profiles as &$profile_attribs) {
+      if (isset($profile_attribs['target_language_overrides'][$lingotek_locale])) {
+        unset($profile_attribs['target_language_overrides'][$lingotek_locale]);
+      }
+    }
+    variable_set('lingotek_profiles', $profiles);
+
+    $entity_profiles = variable_get('lingotek_entity_profiles', array());
+    foreach ($entity_profiles as &$bundles) {
+      foreach (array_keys($bundles) as $bundle_handle) {
+        if (strpos($bundle_handle, '__')) {
+          list($bundle_name, $locale) = explode('__', $bundle_handle);
+          if ($locale == $lingotek_locale) {
+            unset($bundles[$bundle_handle]);
+          }
+        }
+      }
+    }
+    variable_set('lingotek_entity_profiles', $entity_profiles);
   }
 
   return $result;
