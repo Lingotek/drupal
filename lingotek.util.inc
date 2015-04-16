@@ -776,10 +776,10 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
     }
     else {
       // Don't add the language globally to all documents in the project.
-      // Instead, disable this language in all profiles that have content already.
+      // Instead, disable this language in all profiles except config.
       $profiles = lingotek_get_profiles();
       foreach ($profiles as $profile) {
-        if ($profile->getEntities()) {
+        if ($profile->getId() !== Lingotek_Sync::PROFILE_CONFIG) {
           $profile->disableTargetLocale($lingotek_locale);
         }
       }
