@@ -1878,7 +1878,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     $languages = lingotek_get_target_locales(FALSE);
     $form['defaults']['language_overrides'] = array();
     $settings_options = array(
-      LingotekSync::PROFILE_INHERIT => 'Use default settings',
+      LingotekSync::PROFILE_INHERIT => 'Inherit default settings',
       LingotekSync::PROFILE_CUSTOM => 'Use custom settings',
       LingotekSync::PROFILE_DISABLED => 'Disabled',
     );

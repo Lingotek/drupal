@@ -2551,7 +2551,7 @@ function lingotek_filter_profiles_by_bundle_and_langcode($bundle, $profiles) {
 
   // Convert the "inherit" ones to the default for this bundle.
   foreach ($profile_langcode_map as $k => $v) {
-    if ($v == LingotekSync::PROFILE_INHERIT) {
+    if ($v === LingotekSync::PROFILE_INHERIT) {
       $profile_langcode_map[$k] = $profile_langcode_map['DEFAULT'];
     }
   }
