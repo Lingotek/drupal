@@ -660,15 +660,17 @@ function lingotek_add_target_locales($entity_params, $locales, LingotekProfile $
     $context['results']['added'] = 0;
   }
   $api = LingotekApi::instance();
+  $document = $api->getDocument($document_id);
   foreach ($locales as $l) {
+    // Don't add the target if it's the same as the source.
+    if ($document->sourceLanguage == $l) {
+      continue;
+    }
     $workflow_id = $profile->getWorkflow($l);
     $result = $api->addTranslationTarget($document_id, NULL, $l, $workflow_id);
     if ($result) {
       LingotekSync::setTargetStatus($entity_type, $entity_id, $l, LingotekSync::STATUS_PENDING);
       $context['results']['added']++;
-    }
-    else {
-      // TODO: log a failure message
     }
   }
 }
