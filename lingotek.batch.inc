@@ -7,7 +7,7 @@
 
 /**
  * Field Language Data Cleanup Utility
- * 
+ *
  * Creates a batch to cleanup nodes with data in an 'und' language field.
  *
  * @param bool $autoset_batch
@@ -172,8 +172,8 @@ function lingotek_get_sync_upload_config_batch_elements($set_ids = array()) {
 }
 /**
  * Sync - Download Batch Elements:  Creates the batch elements for nodes/documents that need to be downloaded.
- * 
- * @param download_targets 
+ *
+ * @param download_targets
  *        list of objects (document_id, lingotek_locale)  //json_decode([ {"document_id": "191", "locale": "fr_FR" }, ... ]);
  */
 function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sync_success_target = LingotekSync::STATUS_CURRENT) {
@@ -438,8 +438,8 @@ function lingotek_field_language_data_cleanup_batch_worker($entity_type, $entity
 
 /**
  * Ensures correct language-specific field data for the specified item.
- * 
- * Logic: Look at each translatable_field (Any field marked for lingotek 
+ *
+ * Logic: Look at each translatable_field (Any field marked for lingotek
  * translation management) for the given node.  If the field has data in the
  * language 'und' area, and is empty in the language area that this node is,
  * copy the data over.  So if this node is marked as English, but there is no
@@ -690,14 +690,23 @@ function lingotek_remove_target_locales($entity_params, $locales, &$context) {
     $context['results']['removed'] = 0;
   }
   $api = LingotekApi::instance();
-  foreach ($locales as $l) {
-    $result = $api->removeTranslationTarget($document_id, NULL, $l);
-    if ($result) {
-      LingotekSync::deleteTargetStatus($entity_type, $entity_id, $l);
-      $context['results']['removed']++;
-    }
-    else {
-      // TODO: log a failure message
+  $document = $api->getDocument($document_id);
+  if ($document) {
+    $doc_translation_targets = !empty($document->translationTargets) ? $document->translationTargets : array();
+    $doc_current_locales = array_map(function($target) {
+      return $target->language;
+    }, $doc_translation_targets);
+    foreach ($locales as $l) {
+      if (in_array($l, $doc_current_locales)) {
+        $result = $api->removeTranslationTarget($document_id, NULL, $l);
+      }
+      else {
+        $result = TRUE; // get rid of orphaned target locales of the document.
+      }
+      if ($result) {
+        LingotekSync::deleteTargetStatus($entity_type, $entity_id, $l);
+        $context['results']['removed']++;
+      }
     }
   }
 }

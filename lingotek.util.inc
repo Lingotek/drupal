@@ -707,10 +707,16 @@ function lingotek_delete_target_language($lingotek_locale) {
       '@lingotek_locale' => $lingotek_locale)
     );
 
-    // Remove the Target Language from the Lingotek Project.
-    $project_id = variable_get('lingotek_project', '');
-    $api = LingotekApi::instance();
-    $result = $api->removeTranslationTarget(NULL, $project_id, $lingotek_locale);
+    // Remove the Target Language from the entire Lingotek Project
+    // if language-specific profiles aren't in use.  (If language-
+    // specific profiles are in use, then we assume a more sophisticated
+    // user that may want old translations preserved on the TMS even if
+    // the Lingotek module is no longer managing that language.)
+    if (!variable_get('lingotek_enable_language_specific_profiles')) {
+      $project_id = variable_get('lingotek_project', '');
+      $api = LingotekApi::instance();
+      $result = $api->removeTranslationTarget(NULL, $project_id, $lingotek_locale);
+    }
 
     // Remove from profiles and entity-profiles mappings
     $profiles = variable_get('lingotek_profiles', array());
