@@ -1908,17 +1908,22 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
         '#default_value' => $default_language_override_value,
       );
 
+      $is_automatic_or_manual_profile = in_array($stored_profile->getId(), array(LingotekSync::PROFILE_AUTOMATIC, LingotekSync::PROFILE_MANUAL));
       $auto_download = $stored_profile->isAutoDownload($language->lingotek_locale);
       $form['defaults']['language_override'][$language->lingotek_locale]['auto_download_' . $language->lingotek_locale] = array(
         '#type' => 'checkbox',
         '#title' => $download_translations_title,
         '#default_value' => $auto_download,
+        '#disabled' => $is_automatic_or_manual_profile,
         '#states' => array(
           'invisible' => array(
             ':input[name="settings_' . $language->lingotek_locale . '"]' => array('!value' => LingotekSync::PROFILE_CUSTOM),
           ),
         ),
       );
+      if ($is_automatic_or_manual_profile) {
+        $form['defaults']['language_override'][$language->lingotek_locale]['auto_download_' . $language->lingotek_locale]['#description'] = t('(disabled because this profile is @profile_name)', array('@profile_name' => $stored_profile->getName()));
+      }
 
       if (!empty($workflows) && count($workflows) > 1) {
         $curr_workflow = $stored_profile->getWorkflow($language->lingotek_locale);
