@@ -24,31 +24,6 @@ Drupal.behaviors.lingotekAdminForm = {
       }
     });
 
-    //when a content type checkbox is clicked
-    $('.form-select', context).change( function() {
-      isEnabled = $(this).val() != 'DISABLED';
-      var totalChecked = $(this).parents('tr').find('.form-checkbox:checked').length;
-
-      $(this).parents('tr').find('.form-checkbox').each( function() {
-        if(isEnabled && totalChecked === 0) {
-          $(this).attr('checked', isEnabled);
-        } else if (!isEnabled) {
-          $(this).removeAttr('checked');
-        }
-      })
-    });
-    
-    // default all fields to be checked when profile is not disabled (and no fields are currently checked)
-    $('.lingotek-content-settings-table').find('tr').each(function() {
-      var val = $(this).find('.form-select').val();
-      var count = 0;
-      if (val != 'DISABLED') {
-        count = $(this).find('.form-checkbox:checked').size();
-        if (count == 0) {
-          $(this).find('.form-checkbox').attr('checked', true);
-        }
-      }
-    });
     //when a field checkbox is clicked
     var exemptions = [
       "lingotek_prepare_config_blocks",
@@ -143,7 +118,7 @@ Drupal.behaviors.lingotekAdminForm = {
         $(context).find('select').each(function( index ) {
           var $this = $(this);
           var name = $this.attr('name');
-          if(name && name.substring(0, 7) == 'profile') {
+          if(name && name.substring(0, 7) == 'profile' && name.indexOf('__') < 0) {
             if($this.val() != 'DISABLED') {
               $list.push($this.val());
             }
@@ -161,7 +136,7 @@ Drupal.behaviors.lingotekAdminForm = {
       $('.ltk-entity').each(function(index) {
 
         var $entity_utility_options = $(this).find('.js-utility-options');
-        var $entity_profile_selects = $(this).find('select');
+        var $entity_profile_selects = $(this).find('select').filter(function() { return !this.id.match(/__/); });
 
         function turn_on() {
           $entity_utility_options.find('input[type="checkbox"]').attr('checked', true);
@@ -234,7 +209,6 @@ Drupal.behaviors.lingotekAdminForm = {
 
 function lingotek_set_all(sel, val) {
   fieldset = jQuery(sel);
-  console.log(jQuery(sel));
   jQuery(sel).find('.form-select').each( function() {
     jQuery(this).val(val);
     jQuery(this).trigger('change');

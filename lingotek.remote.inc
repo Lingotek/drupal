@@ -70,8 +70,8 @@ function lingotek_get_target_node($node, $drupal_language_code) {
     $localized_node->comment = $node->comment;
     $localized_node->promote = $node->promote;
     $localized_node->sticky = $node->sticky;
-    $localized_node->status = 1; // default to published if revisions are not enabled.
-    $localized_node->create_lingotek_document = FALSE;
+    $localized_node->status = $node->status;
+    $localized_node->auto_upload = FALSE;
 
     // Grandfather field settings/values from source node to target.
     $source_fields = field_info_instances('node', $node->type);
@@ -99,7 +99,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
     }
 
     node_save($localized_node);
-    lingotek_keystore('node', $localized_node->nid, 'upload_status', LingotekSync::STATUS_TARGET);
+    LingotekSync::setUploadStatus('node', $localized_node->nid, LingotekSync::STATUS_TARGET);
     // Child node should keep its parent node's profile, for rules integration.
     $parent_profile = lingotek_keystore('node', $node->nid, 'profile');
     if ($parent_profile !== FALSE) {
@@ -110,259 +110,257 @@ function lingotek_get_target_node($node, $drupal_language_code) {
   return $localized_node;
 }
 
-function lingotek_process_entity_xml($xml, &$entity, $entity_type, $drupal_language_code, $node_based_translation = FALSE, $url_alias_translation = 0) {
-  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $node_based_translation = FALSE, $url_alias_translation = 0) {
 
-  // Set $node_based if the entity type is a node, inherit otherwise.
+  $language_list = language_list('language');
+  $source_entity = $entity;
+
+  $hook_params = array(
+    'entity_type' => $entity_type,
+    'entity' => $entity,
+    'xml' => $xml,
+    'langcode' => $langcode,
+  );
+
+  // First allow other modules to manipulate the downloaded content.
+  drupal_alter('lingotek_entity_download', $hook_params);
+
+  // Set $node_based_translation only if the entity type is a node, inherit otherwise.
+  // (The entity could be a field collection or other entity type, underneath)
   if ($entity_type == 'node') {
     $node_based_translation = lingotek_uses_node_translation($entity) ? TRUE : FALSE;
-  }
-  // Must check for entity type and node-based translation, as the entity type
-  // could be a field collection nested within a node-based node.
-  $source_entity = $entity_type == 'node' && $node_based_translation ? lingotek_get_source_node($entity) : $entity;
-
-  // Add revision_id to be the same as the entity_id if it was not found or if
-  // it is a comment.
-  if ($vid === NULL || $entity_type == 'comment') {
-    $vid = $id;
+    if ($node_based_translation) {
+      $source_entity = lingotek_get_source_node($entity);
+    }
   }
 
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+  $fields_arrays = array();
   $delta = 0;
-  $last_tag = NULL;
-  foreach ($xml as $tag => $content) {
-    if ($tag == $last_tag) {
-      $delta++;
+  $last_field_name = NULL;
+
+  foreach ($xml as $field_name => $content) {
+
+    // URL alias translation (currently available for nodes only)
+    if ($entity_type == 'node' && $field_name == 'url_alias' && $url_alias_translation == 1) {
+      lingotek_save_url_alias($content, $entity, $langcode);
+      $last_field_name = $field_name;
+      continue;
     }
-    else {
-      $delta = 0;
+
+    // Handle multiple instances of the same field (handled in Drupal using 'delta')
+    $delta = ($field_name == $last_field_name) ? ++$delta : 0;
+
+    // Get field info or skip if not found
+    $field_info = field_info_field($field_name);
+    if (empty($field_info)) {
+      LingotekLog::warning('Field info downloaded from Lingotek, but field not found: @field_name', array('@field_name' => $field_name));
+      $last_field_name = $field_name;
+      continue;
     }
-    if ($tag == 'url_alias' && $url_alias_translation == 1) {
-      $target = check_plain($content);
 
-      //URL Alias related to the page:
-      $conditions = array('source' => 'node/' . $id);
-      if ($entity->language != LANGUAGE_NONE) {
-        $conditions['language'] = $entity->language;
-      }
-      $path = path_load($conditions);
-      if ($path !== FALSE) {
-        $conditions['language'] = $drupal_language_code;
-        if ($path['alias'] != $target || $entity->language != $drupal_language_code) {
-          $original = path_load($conditions);
-          $conditions['alias'] = $target;
-          if ($original === FALSE) {
-            path_save($conditions);
-          }
-          else {
-            path_delete($original);
-            path_save($conditions);
-          }
-        }
-      }
+    $translatable_field = !empty($field_info['translatable']);
+    $field_language = $node_based_translation && !$translatable_field ? LANGUAGE_NONE : $langcode;
+
+    // Field-Collection Fields: Pull the underlying entities and recurse.
+    if (module_exists('field_collection') && $field_info['type'] == 'field_collection') {
+      lingotek_process_field_collection_xml($content, $entity_type, $entity, $field_name, $delta, $langcode, $node_based_translation);
+      $last_field_name = $field_name;
+      continue;
     }
-    else { //this part of the xml is a field
-      $drupal_field_name = $tag;
-      $target_key = 'value';
-      $subfield_parts = explode('__', $tag);
-      if (count($subfield_parts) == 2) {
-        $drupal_field_name = $subfield_parts[0];
-        $target_key = $subfield_parts[1];
-      }
 
-      $field = field_info_field($drupal_field_name);
+    // Field-Collection Entities: Set all field-collection fields to translatable,
+    // if the parent node is not using node-based translation.
+    if ($entity_type == 'field_collection_item' && !$node_based_translation && $field_info['translatable'] != 1) {
+      $field_info['translatable'] = 1;
+      field_update_field($field_info);
+    }
 
-      // Try to get the source field's text format, if available
-      try {
-        $source_field_data = field_get_items($entity_type, $source_entity, $drupal_field_name);
-      } catch (EntityMalformedException $e) {
-        $source_field_data = array();
-      }
+    // Handle individual fields from here down.
+    $insert_array = array(
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+      'entity_id' => $id,
+      'revision_id' => $vid === NULL || $entity_type == 'comment' ? $id : $vid,
+      'language' => $field_language,
+      'delta' => $delta,
+      'deleted' => '0',
+    );
 
-      $translatable_field = !empty($field['translatable']);
-      $field_language = $node_based_translation && !$translatable_field ? LANGUAGE_NONE : $drupal_language_code;
+    foreach ($content as $column_name => $text) {
+      $db_column_name = $field_info['field_name'] . '_' . $column_name;
+      $insert_array[$db_column_name] = lingotek_unfilter_placeholders(decode_entities((string) $text->element));
 
-      if (isset($field)) {
-        $curr_field_data = & $entity->$drupal_field_name;
-        $index = 0;
-        if (module_exists('link') && $field['type'] == 'link_field') {
-          $target_key = array(
-            'title',
-            'url',
-          );
-        }
-        if (!is_array($target_key)) {
-          $target_key = array($target_key);
-        }
-        $insert_array = array(
-          'entity_type' => $entity_type,
-          'bundle' => $bundle,
-          'entity_id' => $id,
-          'revision_id' => $vid,
-          'language' => $field_language,
-          'delta' => $delta,
-          'deleted' => '0',
-        );
-        $field_names = array('field_revision_' . $field['field_name'], 'field_data_' . $field['field_name']);
-
-        if (module_exists('field_collection') && $field['type'] == 'field_collection') {
-          $default = language_default();
-          $default_language = $default->language;
-          if (isset($curr_field_data[LANGUAGE_NONE][$delta]['value'])) {
-            $field_collection_id = $curr_field_data[LANGUAGE_NONE][$delta]['value'];
-          }
-          elseif (isset($curr_field_data[$default_language][$delta]['value'])) {
-            $field_collection_id = $curr_field_data[$language_default][$delta]['value'];
-          }
-          else {
-            if (!$node_based_translation) {
-              // The field-collection field must be empty.
-              continue;
-            }
-            // If it does not exist and the profile is node-based, create a new FC.
-            $field_collection_item = entity_create('field_collection_item', array('field_name' => $field['field_name']));
-            $field_collection_item->setHostEntity($entity_type, $entity);
-            $field_collection_item->save();
-            $field_collection_id = $field_collection_item->item_id;
-          }
-          $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
-          if (!$field_collection_item) {
-            // The field collection was removed, so disregard any info on it
-            continue;
-          }
-          $field_collection_item->type = $field['field_name'];
-          $field_collection_item->language = $entity->language;
-          $field_collection_item->nid = $field_collection_item->item_id;
-          $field_collection_item->vid = $field_collection_item->revision_id;
-
-          // RECURSION FOR FIELD COLLECTIONS
-          lingotek_process_entity_xml($content, $field_collection_item, 'field_collection_item', $drupal_language_code, $node_based_translation);
-          $last_tag = $tag;
-          continue;
-        }
-        else {
-          foreach ($content as $text) {
-            if ($entity_type == 'field_collection_item' && !$node_based_translation && $field['translatable'] != 1) {
-              $field['translatable'] = 1;
-              field_update_field($field);
-            }
-
-            $is_link = in_array('url', $target_key);
-            $without_title = (count($content) == 1);
-
-            if ($is_link && $without_title) {
-              $array_key = $target_key[1];
-            }
-            else {
-              $array_key = $target_key[$index];
-            }
-            $db_field_name = $field['field_name'] . '_' . $array_key;
-            $insert_array[$db_field_name] = lingotek_unfilter_placeholders(decode_entities($text));
-            if ($db_field_name == 'title_field_value' && strlen($insert_array[$db_field_name]) > 254) {
-              $insert_array[$db_field_name] = substr($insert_array[$db_field_name], 0, 254);
-              $language_list = language_list('language');
-              $langcode = $insert_array['language'];
-              LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
-            }
-
-            // Assign the field format.
-            $field_format = NULL;
-            if (!empty($source_field_data[0]['format'])) {
-              $field_format = $source_field_data[0]['format'];
-            }
-            elseif (!empty($curr_field_data[$entity->language][0]['format'])) {
-              $field_format = $curr_field_data[$entity->language][0]['format'];
-            }
-            if (!empty($field_format)) {
-              $format_db_field_name = $field['field_name'] . '_format';
-              $insert_array[$format_db_field_name] = $field_format;
-            }
-            $index++;
-          }
-        }
-        foreach ($field_names as $field_name) {
-          // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
-          // UPDATE: This could perhaps be rewritten now that workbench_moderation is supported through the rules module
-          try {
-            drupal_write_record($field_name, $insert_array);
-          } catch (PDOException $e) {
-            $primary_keys = array(
-              'entity_type',
-              'entity_id',
-              'revision_id',
-              'deleted',
-              'delta',
-              'language',
-            );
-            drupal_write_record($field_name, $insert_array, $primary_keys);
-          }
-        }
-      }
-
-      cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
-      entity_get_controller($entity_type)->resetCache(array($id));
-      // Pull the latest changes from the database
-      $entity = lingotek_entity_load_single($entity_type, $id);
-
-      //Set URL alias
-      if ($tag == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
-        module_load_include('inc', 'pathauto');
-        $uri = entity_uri('node', $entity);
-        $entity_unchanged = entity_load_unchanged('node', $id);
-        pathauto_create_alias('node', 'update', $uri['path'], array('node' => clone $entity_unchanged), $entity->type, $drupal_language_code);
+      // Truncate too-long title fields
+      if ($db_column_name == 'title_field_value' && strlen($insert_array[$db_column_name]) > 254) {
+        $insert_array[$db_column_name] = substr($insert_array[$db_column_name], 0, 254);
+        $langcode = $insert_array['language'];
+        LingotekLog::info('The @lang (@langcode) title was truncated, since the translation exceeded the maximum of 255 characters.', array('@lang' => $language_list[$langcode]->name, '@langcode' => Lingotek::convertDrupal2Lingotek($langcode)));
       }
     }
-    $last_tag = $tag;
+
+    // Try to carry over untranslated columns.
+    try {
+      $source_field_data = field_get_items($entity_type, $source_entity, $field_name);
+    } catch (EntityMalformedException $e) {
+      $source_field_data = array();
+    }
+    $curr_field_data = & $entity->$field_name;
+    lingotek_add_untranslated_source_fields($insert_array, $source_field_data, $curr_field_data, $field_info, $entity->language, $delta);
+
+    // Save to both field_data tables and field_revision tables
+    $field_table_names = array('field_revision_' . $field_name, 'field_data_' . $field_name);
+    foreach ($field_table_names as $fname) {
+      lingotek_save_field_record($fname, $insert_array);
+    }
+
+    // After every field insert, reset the caches and reload the entity
+    // TODO: Do we really need to do this every time we save a field, or
+    // can we just do this once at the end?
+    cache_clear_all('field:' . $entity_type . ':' . $id, 'cache_field');
+    entity_get_controller($entity_type)->resetCache(array($id));
+    $entity = lingotek_entity_load_single($entity_type, $id);
+
+    //Set URL alias
+    if ($field_name == 'title_field' && $url_alias_translation == 2 && module_exists('pathauto') && $entity->language != LANGUAGE_NONE) {
+      lingotek_save_pathauto_alias($entity_type, $entity, $langcode);
+    }
+    $last_field_name = $field_name;
   }
 }
 
 /*
- * Save a segment
- *
- * Helper method so that if a node has the tnid deferred until later, it will
- * get it from the database instead.
- *
- * @param $source_text
- *  Source text
- * @param $target_text
- *  Target text that should be saved in the segment
- * @param $target_language
- *  Target language as used by lingotek (locale_country)
- * @param $doc_id
- *  Document Id
- * @return
- *  boolean, TRUE if the api call was successful
+ * Carry over the columns that weren't translated from the source field
  */
+function lingotek_add_untranslated_source_fields(&$params, $source_field_data, $curr_field_data, $field_info, $entity_langcode, $delta) {
 
-function lingotek_save_segment($source_text, $target_text, $target_language, $doc_id) {
-  $param = array
-    (
-    "sourceText" => $source_text,
-    "targetText" => $target_text,
-    "targetLanguage" => $target_language,
-    "documentId" => $doc_id,
-    "overwrite" => 0,
-  );
-  $save_segment = LingotekApi::instance()->request("saveSegment", $param);
-  return ($save_segment->results == "success");
+  if (empty($field_info['columns']) || empty($field_info['field_name'])) {
+    return;
+  }
+
+  foreach (array_keys($field_info['columns']) as $column_name) {
+    $db_column_name = $field_info['field_name'] . '_' . $column_name;
+    // if it's set in the translated stuff, then don't carry over.
+    if (isset($params[$db_column_name])) {
+      continue;
+    }
+
+    $field_column = NULL;
+    if (isset($source_field_data[$delta][$column_name])) {
+      $field_column = $source_field_data[$delta][$column_name];
+    }
+    elseif (isset($curr_field_data[$entity_langcode][$delta][$column_name])) {
+      $field_column = $curr_field_data[$entity_langcode][$delta][$column_name];
+    }
+    if ($field_column !== NULL) {
+      // Arrays, such as those in attributes fields, should be serialized first.
+      if (is_array($field_column)) {
+        $field_column = serialize($field_column);
+      }
+      $params[$db_column_name] = $field_column;
+    }
+  }
+}
+
+/*
+ * Save a PathAuto alias
+ */
+function lingotek_save_pathauto_alias($entity_type, $entity, $langcode) {
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+  module_load_include('inc', 'pathauto');
+  $uri = entity_uri($entity_type, $entity);
+  $entity_unchanged = entity_load_unchanged($entity_type, $id);
+  pathauto_create_alias($entity_type, 'update', $uri['path'], array($entity_type => clone $entity_unchanged), $bundle, $langcode);
+}
+
+/*
+ * Save a field, either insert or update
+ */
+function lingotek_save_field_record($fname, $params) {
+  // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
+  // UPDATE: This could perhaps be rewritten now that workbench_moderation is supported through the rules module
+  try {
+    drupal_write_record($fname, $params);
+  } catch (PDOException $e) {
+    $primary_keys = array(
+      'entity_type',
+      'entity_id',
+      'revision_id',
+      'deleted',
+      'delta',
+      'language',
+    );
+    drupal_write_record($fname, $params, $primary_keys);
+  }
+}
+
+
+/*
+ * Process a field-collection field's xml
+ */
+function lingotek_process_field_collection_xml($xml, $entity_type, &$entity, $field_name, $delta, $langcode, $node_based_translation) {
+  $field_info = field_info_field($field_name);
+  $curr_field_data = &$entity->$field_name;
+  $default = language_default();
+  $default_language = $default->language;
+  if (isset($curr_field_data[LANGUAGE_NONE][$delta]['value'])) {
+    $field_collection_id = $curr_field_data[LANGUAGE_NONE][$delta]['value'];
+  }
+  elseif (isset($curr_field_data[$default_language][$delta]['value'])) {
+    $field_collection_id = $curr_field_data[$default_language][$delta]['value'];
+  }
+  else {
+    if (!$node_based_translation) {
+      // The field-collection field must be empty.
+      return;
+    }
+    // If it does not exist and the profile is node-based, create a new FC.
+    $field_collection_item = entity_create('field_collection_item', array('field_name' => $field_info['field_name']));
+    $field_collection_item->setHostEntity($entity_type, $entity);
+    $field_collection_item->save();
+    $field_collection_id = $field_collection_item->item_id;
+  }
+  $field_collection_item = lingotek_entity_load_single('field_collection_item', $field_collection_id);
+  if (!$field_collection_item) {
+    // The field collection was removed, so disregard any info on it
+    return;
+  }
+  $field_collection_item->type = $field_info['field_name'];
+  $field_collection_item->language = $entity->language;
+
+  // RECURSION FOR FIELD COLLECTIONS
+  lingotek_process_entity_xml($xml, $field_collection_item, 'field_collection_item', $langcode, $node_based_translation);
+}
+
+/*
+ * Save a URL Alias (nodes only)
+ */
+function lingotek_save_url_alias($content, $node, $drupal_langcode) {
+  $target = check_plain($content);
+
+  //URL Alias related to the page:
+  $conditions = array('source' => 'node/' . $node->nid);
+  if ($node->language != LANGUAGE_NONE) {
+    $conditions['language'] = $node->language;
+  }
+  $path = path_load($conditions);
+  if ($path !== FALSE) {
+    $conditions['language'] = $drupal_langcode;
+    if ($path['alias'] != $target || $node->language != $drupal_langcode) {
+      $original = path_load($conditions);
+      $conditions['alias'] = $target;
+      if ($original === FALSE) {
+        path_save($conditions);
+      }
+      else {
+        path_delete($original);
+        path_save($conditions);
+      }
+    }
+  }
 }
 
 #API ADDERS
-
-/*
- * Apply the phase template to the Lingotek document
- *
- * This saves the chosen workflow to the Lingotek platform.
- *
- * @param $translation_target_id
- *  Translation Target Id (Id for the target language stored with the document associated with a node)
- * @param $phase_template_id
- *  Workflow Id to be added
- */
-
-function lingotek_add_phase_template($translation_target_id, $phase_template_id) {
-  $params = array('translationTargetId' => $translation_target_id, 'phaseTemplateId' => $phase_template_id);
-  LingotekApi::instance()->request("applyPhaseTemplate", $params);
-}
 
 /*
  * Create a project and return it's id.
@@ -426,44 +424,6 @@ function lingotek_get_url_alias_translations() {
   $methods[1] = t("Translate the URL alias");
   $methods[2] = t("Use the translated page title");
   return $methods;
-}
-
-/*
- * Get the Lingotek user's cms key for the community they are currently logged in with
- */
-
-function lingotek_get_cms_key() {
-  global $_lingotek_client;
-
-  $output = LingotekApi::instance()->request("getCMSKey");
-  if ($output->results == "success") {
-    variable_del('lingotek_password');
-    return $output->cms;
-  }
-  else {
-    return "";
-  }
-}
-
-/*
- * Get the Lingotek user's current communities
- */
-
-function lingotek_get_communities() {
-  $options = array();
-
-  if (!$_lingotek_client->canLogIn()) {
-    return $options;
-  }
-
-  $list_communities = LingotekApi::instance()->request("listCommunities", array());
-  if ($list_communities->results == "success") {
-    foreach ($list_communities->communities as $community) {
-      $options[$community->id] = $community->name;
-    }
-  }
-
-  return $options;
 }
 
 /**
@@ -543,37 +503,6 @@ function lingotek_get_phase_name($phase_id) {
   }
 
   return $phase_name;
-}
-
-/*
- * Get available synchronization methods for keeping nodes up-to-date
- */
-
-function lingotek_get_sync_methods() {
-  $methods = array();
-  $methods[0] = t("Never"); // Manual
-  $methods[1] = t("Always"); // Automatic
-  $methods[100] = t("100%");
-  return $methods;
-}
-
-/*
- * Get the translation target
- *
- * This fetches an target language object for a specific document.
- *
- * @param $translation_target_id
- *  Id for the target language object
- * @return
- *  Object representing a target language for a specific document in the lingotek platform
- */
-
-function lingotek_get_translation_target($translation_target_id) {
-  $params = array('translationTargetId' => $translation_target_id);
-  $output = LingotekApi::instance()->request("getTranslationTarget", $params);
-  if ($output->results == "success") {
-    return $output;
-  }
 }
 
 /**
@@ -684,21 +613,3 @@ function lingotek_get_workbench_url_by_phases($document_id, $phases, $label = FA
   return $l;
 }
 
-/*
- * Get the xliff information of the node
- *
- * This fetches an xliff representation of the source document.
- *
- * @param $doc_id
- *  Document id that associates the node to the Lingotek platform
- * @return
- *  xml text of the xliff
- */
-
-function lingotek_get_xliff($doc_id) {
-  global $_lingotek_client;
-
-  $xliff_text = "";
-  $params = array('documentId' => $doc_id);
-  return $_lingotek_client->downloadTriggered("downloadDocumentAsXliff", $params);
-}

@@ -23,9 +23,11 @@ class LingotekSync {
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
+  const PROFILE_ENABLED = 'ENABLED';
   const PROFILE_CONFIG = 'CONFIG';
   const PROFILE_AUTOMATIC = 0;
   const PROFILE_MANUAL = 1;
+  const PROFILE_INHERIT = 'INHERIT';
 
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
@@ -79,8 +81,8 @@ class LingotekSync {
         ->execute();
   }
 
-  public static function setNodeStatus($node_id, $status) {
-    return lingotek_keystore('node', $node_id, 'upload_status', $status);
+  public static function setUploadStatus($entity_type, $entity_id, $status) {
+    return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);
   }
 
   public static function getSyncProjects() {
@@ -123,6 +125,11 @@ class LingotekSync {
     foreach ($entities as $e) {
       self::setTargetStatus($e->entity_type, $e->entity_id, $lingotek_locale, self::STATUS_PENDING);
     }
+  }
+
+  public static function deleteTargetStatus($entity_type, $entity_id, $lingotek_locale) {
+    $key = 'target_sync_status_' . $lingotek_locale;
+    return lingotek_keystore_delete($entity_type, $entity_id, $key);
   }
 
   // Remove the node sync target language entries from the lingotek table lingotek_delete_target_sync_status_for_all_nodes
@@ -295,7 +302,8 @@ class LingotekSync {
       }
 
       // exclude disabled entities (including those that have disabled bundles)
-      $disabled_entities = lingotek_get_entities_by_profile_and_entity_type(LingotekSync::PROFILE_DISABLED, $entity_type);
+      $disabled_profile = LingotekProfile::loadById(LingotekSync::PROFILE_DISABLED);
+      $disabled_entities = $disabled_profile->getEntities($entity_type);
       if (count($disabled_entities)) {
         $disabled_entity_ids = array();
         array_walk($disabled_entities, function($a) use (&$disabled_entity_ids) {
@@ -371,7 +379,8 @@ class LingotekSync {
       }
 
       // exclude disabled nodes (including those that have disabled bundles)
-      $disabled_entities = lingotek_get_entities_by_profile_and_entity_type(LingotekSync::PROFILE_DISABLED, $entity_base_table);
+      $disabled_profile = LingotekProfile::loadById(LingotekSync::PROFILE_DISABLED);
+      $disabled_entities = $disabled_profile->getEntities($entity_base_table);
       if (!empty($disabled_entities)) {
         $disabled_entity_ids = array();
         array_walk($disabled_entities, function($a) use (&$disabled_entity_ids) {

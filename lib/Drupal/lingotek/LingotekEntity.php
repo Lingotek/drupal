@@ -392,8 +392,16 @@ class LingotekEntity implements LingotekTranslatableEntity {
     return $this;
   }
 
-  public function setTargetsStatus($status, $lingotek_locale = 'all') {
-    if ($lingotek_locale != 'all') {
+  /**
+   * Assign the entity's target status(es) in the config metadata table
+   */
+  public function setTargetsStatus($status, $lingotek_locale = NULL) {
+    if (is_array($lingotek_locale)) {
+      foreach ($lingotek_locale as $ll) {
+        $this->setMetadataValue('target_sync_status_' . $ll, $status);
+      }
+    }
+    elseif (is_string($lingotek_locale) && !empty($lingotek_locale)) {
       $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
     }
     else { // set status for all available targets

@@ -342,7 +342,7 @@ function lingotek_pm($node) {
       );
     }
 
-    if ($node->lingotek['document_id']) {
+    if (!empty($node->lingotek['document_id'])) {
 
       $document = LingotekDocument::load($node->lingotek['document_id']);
       $progress = $document->getProgress();

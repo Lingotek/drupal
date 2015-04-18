@@ -238,11 +238,11 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
         list($entity_id, $entity_type) = LingotekSync::getEntityIdFromDocId($doc_id, $entity_type);
         switch ($error->status) {
           case 'IN_QUEUE':
-            lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_PENDING);
+            LingotekSync::setUploadStatus($entity_type, $entity_id, LingotekSync::STATUS_PENDING);
             break;
           case 'NOT_FOUND':
           default:
-            lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_FAILED);
+            LingotekSync::setUploadStatus($entity_type, $entity_id, LingotekSync::STATUS_FAILED);
             lingotek_keystore($entity_type, $entity_id, 'last_sync_error', substr($error, 0, 255));
             LingotekLog::error('Received unexpected error status (@status) from Lingotek for @entity_type #@id: <pre>@error</pre>', array('@status' => $error->status, '@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
         }
@@ -278,7 +278,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
       // update source status when necessary
       $entity_source_status = lingotek_keystore($entity_type, $entity_id, 'upload_status');
       if ($entity_source_status == LingotekSync::STATUS_FAILED || $entity_source_status == LingotekSync::STATUS_PENDING) {
-        lingotek_keystore($entity_type, $entity_id, 'upload_status', LingotekSync::STATUS_CURRENT);
+        LingotekSync::setUploadStatus($entity_type, $entity_id, LingotekSync::STATUS_CURRENT);
       }
     }
 
@@ -328,8 +328,8 @@ function lingotek_update_config_progress($document_ids) {
   if (!is_array($document_ids)) {
     $document_ids = array($document_ids);
   }
-  $config_profile = lingotek_get_profile_settings(LingotekSync::PROFILE_CONFIG);
-  $project_id = array_key_exists('project_id', $config_profile) ? $config_profile['project_id'] : variable_get('lingotek_project', '');
+  $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
+  $project_id = $config_profile->getProjectId();
 
   $progress_report = $api->getProgressReport($project_id, $document_ids);
 

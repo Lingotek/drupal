@@ -5,8 +5,8 @@
 function lingotek_perform_action(nid, action) {
   jQuery('#edit-grid-container .form-checkbox').removeAttr('checked');
   jQuery('#edit-the-grid-' + nid).attr('checked', 'checked');
-  jQuery('#edit-actions-select').val(action);
-  jQuery('#edit-actions-select').trigger('change');
+  jQuery('#edit-select-actions').val(action);
+  jQuery('#edit-select-actions').trigger('change');
 }
 
 (function ($) {
@@ -22,9 +22,8 @@ function lingotek_perform_action(nid, action) {
         }
       }
     });
-    console.log(entity_ids);
     if(entity_ids.length > 0) {
-      $('#edit-actions-select').val('select');
+      $('#edit-select-actions').val('select');
       ob = Drupal.ajax[url];
       ob.element_settings.url = ob.options.url = ob.url = url + '/' + entity_ids.join(',');
       $self.trigger('click');
@@ -69,8 +68,8 @@ function lingotek_perform_action(nid, action) {
         }
       });
 
-      $('input#edit-actions-submit.form-submit').hide();
-      $('#edit-actions-select').change(function() {
+      $('input#edit-submit-actions.form-submit').hide();
+      $('#edit-select-actions').change(function() {
         val = $(this).val();
 
         if(val == 'reset' || val == 'delete') {
@@ -80,7 +79,7 @@ function lingotek_perform_action(nid, action) {
         } else if(val == 'workflow') {
           lingotek_trigger_modal($('#change-workflow-link'));
         } else  {
-          $('input#edit-actions-submit.form-submit').trigger('click');
+          $('input#edit-submit-actions.form-submit').trigger('click');
         }
       });
 

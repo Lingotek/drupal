@@ -236,17 +236,9 @@ function watchdog_format_object($object) {
   return '<pre>' . htmlspecialchars(var_export($object, TRUE)) . '</pre>';
 }
 
-function lingotek_oneoff_translate($node) {
-  // TODO: Run checks on this if necessary
-  // (It appears this is currently unnecessary, as all nodes
-  // that make it to this point are already requested for
-  // translation.)
-  return TRUE;
-}
-
 function lingotek_get_translatable_field_types() {
   // What types of fields DO we translate?
-  $included_fields = array('text', 'text_long', 'text_textfield', 'text_textarea', 'text_textarea_with_summary', 'field_collection_embed');
+  $included_fields = array('text', 'text_long', 'text_with_summary', 'field_collection');
   if (module_exists('link')) {
     $included_fields[] = 'link_field';
   }
@@ -260,10 +252,11 @@ function lingotek_get_translatable_field_types() {
 
 function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
   $all_fields = field_info_instances($entity_type, $type);
+  $all_field_types = field_info_fields();
   $translatable_field_types = lingotek_get_translatable_field_types();
   $desired_fields = array();
   foreach ($all_fields as $field_name => $field_info) {
-    if (in_array($field_info['widget']['type'], $translatable_field_types)) {
+    if (in_array($all_field_types[$field_info['field_name']]['type'], $translatable_field_types)) {
       $desired_fields[$field_name] = $field_name;
     }
   }
@@ -282,13 +275,15 @@ function lingotek_get_enabled_fields($entity_type, $bundle) {
 }
 
 /**
- * Return the xml representation of the source content for a node.
+ * Return the xml representation of the source content for an entity.
  *
- * @param object $node
- *   A Drupal node.
+ * @param $entity_type
+ *   A string containing a Drupal entity type.
+ * @param object $entity
+ *   A Drupal entity.
  *
  * @return string
- *   The XML representation of the node in Lingotek format.
+ *   The XML representation of the entity in Lingotek format.
  */
 function lingotek_entity_xml_body($entity_type, $entity) {
   $translatable = array();
@@ -296,7 +291,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
   $translate = variable_get('lingotek_enabled_fields', array());
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
   $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
-  if (empty($fields_desired) && lingotek_oneoff_translate($entity)) {
+  if (empty($fields_desired)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($entity_type, $bundle);
   }
 
@@ -307,21 +302,10 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     }
   }
 
-  $content = lingotek_xml_fields($entity, $translatable, $entity->language);
-
-  /* deprecated with config translation
-    //Menus related to the page:
-    // Do we still want this? Config translation translates these items
-    $menu = menu_link_get_preferred('node/' . $entity->nid);
-    $txt = $menu['link_title'];
-    if ($txt != "") {
-    $content = $content . "<menu_title><![CDATA[$txt]]></menu_title>\n";
-    } */
-
+  $content_obj = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
   if ($entity_type == 'node') {
     //URL Alias related to the page:
-    $url_alias_translation = isset($entity->lingotek['url_alias_translation']) ? $entity->lingotek['url_alias_translation'] : 0;
-    if ($url_alias_translation == 1) {
+    if (!empty($entity->lingotek['url_alias_translation'])) {
       $conditions = array('source' => 'node/' . $entity->nid);
       if ($entity->language != LANGUAGE_NONE) {
         $conditions['language'] = $entity->language;
@@ -329,92 +313,95 @@ function lingotek_entity_xml_body($entity_type, $entity) {
       $path = path_load($conditions);
       if ($path !== FALSE) {
         $url = $path['alias'];
-        $content = $content . "<url_alias><![CDATA[$url]]></url_alias>\n";
+        $url_alias_obj = $content_obj->addChild('url_alias');
+        $url_alias_obj->addCData($url);
       }
     }
   }
 
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><contents>$content</contents>";
+  try {
+    $hook_params = array(
+      'entity_type' => $entity_type,
+      'entity' => $entity,
+      'xml' => $content_obj,
+      'langcode' => $entity->language,
+    );
+
+    // Allow other modules to manipulate the uploaded content.
+    drupal_alter('lingotek_entity_upload', $hook_params);
+  }
+  catch (Exception $e) {
+    LingotekLog::error("Failed to parse or modify XML before uploading. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
+  }
+  return $content_obj->asXML();
 }
 
-function lingotek_xml_fields($entity, $translatable, $language) {
-  $content = '';
+function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $language) {
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+  $content_obj = new LingotekXMLElement('<?xml version="1.0" encoding="UTF-8"?' . '><contents />');
+  $translatable_field_types = lingotek_get_translatable_field_types();
+  $enabled_fields = variable_get('lingotek_enabled_fields');
+  $all_field_info = field_info_fields();
 
-  foreach ($translatable as $field) {
-    $content_container = & $entity->$field;
-
-    $field_language = is_array($content_container) && array_key_exists($language, $content_container) ? $language : LANGUAGE_NONE;
+  foreach ($translatable_fields as $field_name) {
+    $field_columns = $all_field_info[$field_name]['columns'];
+    $field_content = & $entity->$field_name;
+    $field_language = is_array($field_content) && array_key_exists($language, $field_content) ? $language : LANGUAGE_NONE;
 
     // Deal with not being initialized right, such as pre-existing titles.
-    if (!isset($content_container[$field_language])) {
+    if (!isset($field_content[$field_language])) {
       continue;
     }
 
-    // We may split compound Drupal fields into several Lingotek fields.
-    $target_keys = array(
-      'value' => '', // Most text fields
-      'summary' => 'summary', // "Long text with summary" fields have this sub-field value as well.
-    );
-    if (module_exists('link')) {
-      $target_keys['link'] = array(
-        'title' => '',
-        'url' => '',
-      );
-    }
 
     // Create fields from all target keys.
-    foreach ($target_keys as $target_key => $element_suffix) {
-      $array_key = NULL;
-      if (is_array($element_suffix)) {
-        foreach ($element_suffix as $tarkey => $val) {
-          $array_key = $tarkey;
+    foreach ($field_content[$field_language] as $delta) {
+
+      // Initialize a tag the field for each delta of the field in source language.
+      $field_obj = $content_obj->addChild($field_name);
+
+      foreach ($field_columns as $column_name => $column_attributes) {
+
+        if (empty($delta[$column_name])) {
           continue;
         }
-      }
-      foreach ($content_container[$field_language] as $delta) {
-        if (!empty($delta[$target_key]) || (isset($array_key) && !empty($delta[$array_key]))) {
-          $element_name = $field;
-          if ($target_key == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
-            $current_field = '<' . $element_name . '>';
-            $enabled_fields = variable_get('lingotek_enabled_fields');
-            $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
-            $sub_fields = field_info_instances('field_collection_item', $field);
-            $translatable_field_types = lingotek_get_translatable_field_types();
-            $translatable_sub_fields = array();
-            foreach ($sub_fields as $sub_field => $f) {
-              if (in_array($f['widget']['type'], $translatable_field_types) && isset($enabled_fields['field_collection_item'][$field]) && in_array($sub_field, $enabled_fields['field_collection_item'][$field])) {
-                $translatable_sub_fields[] = $sub_field;
-              }
-            }
-            $current_field .= lingotek_xml_fields($sub_entity, $translatable_sub_fields, $field_language);
-            $current_field .= '</' . $element_name . '>';
-            $content .= $current_field;
-            continue;
-          }
-          if (!is_array($element_suffix) && !empty($element_suffix)) {
-            $element_name .= '__' . $element_suffix;
-          }
-          $current_field = '<' . $element_name . '>';
-          if (is_array($element_suffix)) {
-            foreach ($element_suffix as $t_key => $t_val) {
-              if (isset($delta[$t_key])) {
-                $delta[$t_key] = lingotek_filter_placeholders($delta[$t_key]);
-                $current_field .= '<element><![CDATA[' . $delta[$t_key] . ']]></element>' . "\n";
-              }
-            }
-          }
-          else {
-            $delta[$target_key] = lingotek_filter_placeholders($delta[$target_key]);
-            $current_field .= '<element><![CDATA[' . $delta[$target_key] . ']]></element>' . "\n";
-          }
-          $current_field .= '</' . $element_name . '>';
-          $content .= $current_field;
+
+        if (!lingotek_translatable_field_column($entity_type, $bundle, $field_name, $column_name)) {
+          continue;
         }
+
+        // Handle nested field-collection entities
+        // TODO: make a better way of detecting if this is a field-collection column!
+        if ($column_name == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
+          $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
+          $sub_fields = field_info_instances('field_collection_item', $field_name);
+          $translatable_sub_fields = array();
+
+          foreach ($sub_fields as $sub_field => $f) {
+
+            $field_type_is_translatable = in_array($all_field_info[$f['field_name']]['type'], $translatable_field_types);
+            $field_collection_is_enabled_for_translation = isset($enabled_fields['field_collection_item'][$field_name]);
+            $sub_field_is_enabled_for_translation = $field_collection_is_enabled_for_translation && in_array($sub_field, $enabled_fields['field_collection_item'][$field_name]);
+            $sub_field_is_enabled_field_collection = $field_collection_is_enabled_for_translation && isset($enabled_fields['field_collection_item'][$sub_field]);
+
+            if ($field_type_is_translatable && $field_collection_is_enabled_for_translation && ($sub_field_is_enabled_for_translation || $sub_field_is_enabled_field_collection)) {
+              $translatable_sub_fields[] = $sub_field;
+            }
+          }
+          $subcontent_obj = lingotek_xml_fields('field_collection_item', $sub_entity, $translatable_sub_fields, $field_language);
+          $field_obj->addXML($subcontent_obj);
+          continue;
+        }
+
+        $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
+        // Handle element suffixes (all columns should be suffixed now)
+        $column_obj = $field_obj->addChild($column_name);
+        $element = $column_obj->addChild('element');
+        $element->addCData($delta_column_content);
       }
     }
   }
-
-  return $content;
+  return $content_obj;
 }
 
 /**
@@ -438,12 +425,12 @@ function lingotek_support_footer() {
 /**
  * Menu access callback.
  *
- * Only display Lingotek tab for node types, which have translation enabled
+ * Only display Lingotek tab for node types that have translation enabled
  * and where the current node is not language neutral (which should span
  * all languages).
  */
 function lingotek_access($node, $permission) {
-  if (Lingotek::isSupportedLanguage($node->language) && node_access('update', $node) && $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
+  if (Lingotek::isSupportedLanguage($node->language) && node_access('update', $node) && isset($node->lingotek['profile']) && $node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
     return user_access($permission);
   }
   return FALSE;
@@ -491,11 +478,6 @@ function lingotek_access_dev_tools($node, $permission) {
   return $user_access;
 }
 
-function lingotek_enabled_bundle($entity_type, $bundle) {
-  $setting = variable_get('lingotek_entity_profiles');
-  return isset($setting[$entity_type][$bundle]) && $setting[$entity_type][$bundle] != LingotekSync::PROFILE_DISABLED;
-}
-
 /**
  * Returns an array of disabled bundles for a given entity_type
  *
@@ -517,17 +499,6 @@ function lingotek_get_bundles_by_profile($entity_type, $profile) {
     }
   }
   return $profiled_bundles;
-}
-
-/**
- * Returns whether the given node type has support for translations.
- *
- * @return
- *   Boolean value.
- */
-function lingotek_supported_type($type) {
-  $lingotek_supported_explicitly = variable_get('language_content_type_' . $type, NULL) != '0';
-  return ($lingotek_supported_explicitly && lingotek_enabled_bundle('node', $type));
 }
 
 function lingotek_supported_node($node) {
@@ -621,7 +592,6 @@ function lingotek_get_source_language() {
  */
 function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
-  //$types = array_keys($type_info);
 
   $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
@@ -633,6 +603,7 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $whitelist[] = 'taxonomy_term';
   }
+
   $whitelist = array_flip($whitelist);
   $enabled_types = array_intersect_key($type_info, $whitelist);
 
@@ -655,6 +626,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (isset($enabled_types['fieldable_panels_pane'])) {
     $enabled_types['fieldable_panels_pane']['label'] = 'Fieldable Panels Panes';
   }
+
+  // Allow other modules to add/remove entity types to the list supported.
+  drupal_alter('lingotek_managed_entity_types', $enabled_types, $include_all);
 
   return $enabled_types;
 }
@@ -733,10 +707,38 @@ function lingotek_delete_target_language($lingotek_locale) {
       '@lingotek_locale' => $lingotek_locale)
     );
 
-    // Remove the Target Language from the Lingotek Project.
-    $project_id = variable_get('lingotek_project', '');
-    $api = LingotekApi::instance();
-    $result = $api->removeTranslationTarget(NULL, $project_id, $lingotek_locale);
+    // Remove the Target Language from the entire Lingotek Project
+    // if language-specific profiles aren't in use.  (If language-
+    // specific profiles are in use, then we assume a more sophisticated
+    // user that may want old translations preserved on the TMS even if
+    // the Lingotek module is no longer managing that language.)
+    if (!variable_get('lingotek_enable_language_specific_profiles')) {
+      $project_id = variable_get('lingotek_project', '');
+      $api = LingotekApi::instance();
+      $result = $api->removeTranslationTarget(NULL, $project_id, $lingotek_locale);
+    }
+
+    // Remove from profiles and entity-profiles mappings
+    $profiles = variable_get('lingotek_profiles', array());
+    foreach ($profiles as &$profile_attribs) {
+      if (isset($profile_attribs['target_language_overrides'][$lingotek_locale])) {
+        unset($profile_attribs['target_language_overrides'][$lingotek_locale]);
+      }
+    }
+    variable_set('lingotek_profiles', $profiles);
+
+    $entity_profiles = variable_get('lingotek_entity_profiles', array());
+    foreach ($entity_profiles as &$bundles) {
+      foreach (array_keys($bundles) as $bundle_handle) {
+        if (strpos($bundle_handle, '__')) {
+          list($bundle_name, $locale) = explode('__', $bundle_handle);
+          if ($locale == $lingotek_locale) {
+            unset($bundles[$bundle_handle]);
+          }
+        }
+      }
+    }
+    variable_set('lingotek_entity_profiles', $entity_profiles);
   }
 
   return $result;
@@ -756,41 +758,63 @@ function lingotek_set_target_language($drupal_language_code, $lingotek_enable = 
   $one_success = FALSE;  //tracks if any result has been true
   $lingotek_locale = is_null($lingotek_locale) ? Lingotek::convertDrupal2Lingotek($drupal_language_code, FALSE) : $lingotek_locale;
 
-  if (is_string($drupal_language_code) && strlen($drupal_language_code) && $lingotek_enable && $lingotek_locale && $api_add) {
-    $api = LingotekApi::instance();
-    $projects = LingotekSync::getSyncProjects();
-    foreach ($projects as $project_id) {
-      $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
-      if ($result) {
-        LingotekSync::insertTargetEntriesForAllEntities($lingotek_locale);
-        LingotekSync::insertTargetEntriesForAllSets($lingotek_locale);
+  if (is_string($drupal_language_code) && strlen($drupal_language_code) && $lingotek_enable && $lingotek_locale) {
+    if ($api_add) {
+      // Add the language globally to all documents in the project
+      $api = LingotekApi::instance();
+      $projects = LingotekSync::getSyncProjects();
+      foreach ($projects as $project_id) {
+        $result = $api->addTranslationTarget(NULL, $project_id, $lingotek_locale);
+        if ($result) {
+          LingotekSync::insertTargetEntriesForAllEntities($lingotek_locale);
+          LingotekSync::insertTargetEntriesForAllSets($lingotek_locale);
+        }
+        $one_success = $one_success || $result;
       }
-      $one_success = $one_success || $result;
-    }
+      if (!$one_success) {
+        drupal_set_message(t('@lingotek_locale could not be added as a language for Lingotek to translate.', array('@lingotek_locale' => $lingotek_locale)), 'error', FALSE);
+        LingotekLog::error("Target language could not be added: @drupal_language_code (@lingotek_locale)", array(
+          '@drupal_language_code' => $drupal_language_code,
+          '@lingotek_locale' => $lingotek_locale));
 
-    if ($one_success == TRUE) {
-      db_update('languages')
-          ->fields(array(
-            'enabled' => 1,
-            'lingotek_enabled' => $lingotek_enable ? 1 : 0,
-            'lingotek_locale' => $lingotek_locale
-          ))
-          ->condition('language', $drupal_language_code)
-          ->execute();
-      drupal_static_reset('language_list');
-      LingotekLog::info("Target language added: @drupal_language_code (@lingotek_locale)", array(
-        '@drupal_language_code' => $drupal_language_code,
-        '@lingotek_locale' => $lingotek_locale));
+        return FALSE;
+      }
     }
     else {
-      drupal_set_message(t('@lingotek_locale could not be added as a language for Lingotek to translate.', array('@lingotek_locale' => $lingotek_locale)), 'error', FALSE);
-      LingotekLog::error("Target language could not be added: @drupal_language_code (@lingotek_locale)", array(
-        '@drupal_language_code' => $drupal_language_code,
-        '@lingotek_locale' => $lingotek_locale));
+      // Don't add the language globally to all documents in the project.
+      // Instead, disable this language in all profiles except config.
+      $profiles = lingotek_get_profiles();
+      foreach ($profiles as $profile) {
+        if ($profile->getId() !== LingotekSync::PROFILE_CONFIG) {
+          $profile->disableTargetLocale($lingotek_locale);
+        }
+      }
+      // If there are any documents related to config translation,
+      // automatically add the target language to all of them
+      $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
+      $doc_ids = $config_profile->getDocumentIds();
+      if ($doc_ids) {
+        $api = LingotekApi::instance();
+        foreach ($doc_ids as $doc_id) {
+          $api->addTranslationTarget($doc_id, NULL, $lingotek_locale);
+        }
+      }
     }
-  }
 
-  return $result;
+    db_update('languages')
+        ->fields(array(
+          'enabled' => 1,
+          'lingotek_enabled' => $lingotek_enable ? 1 : 0,
+          'lingotek_locale' => $lingotek_locale
+        ))
+        ->condition('language', $drupal_language_code)
+        ->execute();
+    drupal_static_reset('language_list');
+    LingotekLog::info("Target language added: @drupal_language_code (@lingotek_locale)", array(
+      '@drupal_language_code' => $drupal_language_code,
+      '@lingotek_locale' => $lingotek_locale));
+  }
+  return TRUE;
 }
 
 function lingotek_lookup_language_by_locale($lingotek_locale) {
@@ -1075,7 +1099,7 @@ function lingotek_set_priority() {
  * Gets the default profile info, mapped by entity type
  */
 function lingotek_load_profile_defaults($entity_type) {
-  $profile_defaults = lingotek_get_profiles();
+  $profile_defaults = lingotek_get_profiles(FALSE);
   $entity_profile_defaults = variable_get('lingotek_entity_profiles', array());
   $profile_map = array();
   if (array_key_exists($entity_type, $entity_profile_defaults)) {
@@ -1516,22 +1540,8 @@ function lingotek_get_bundles_by_profile_id($profile_id) {
     }
     return $bundles;
   }
-  $entities = entity_get_info();
-  $lentities = variable_get('lingotek_entity_profiles');
-  foreach ($entities as $entity_name => $entity) {
-    if (!isset($lentities[$entity_name])) {
-      unset($entities[$entity_name]);
-    }
-    foreach ($entity['bundles'] as $bundle_name => $bundle) {
-      if (isset($lentities[$entity_name][$bundle_name]) && $lentities[$entity_name][$bundle_name] === (string)$profile_id) {
-        if (!isset($bundles[$entity_name])) {
-          $bundles[$entity_name] = array();
-        }
-        $bundles[$entity_name][$bundle_name] = TRUE;
-      }
-    }
-  }
-  return $bundles;
+  $profile = LingotekProfile::loadById($profile_id);
+  return $profile->getBundles();
 }
 
 /*
@@ -1554,116 +1564,8 @@ function lingotek_get_document_id_tree() {
 }
 
 function lingotek_get_all_entities_by_profile($profile_id) {
-  // gather all bundles for searching, as some entities may be one-offs
-  // even though Lingotek is not enabled for the entire bundle.
-  $all_profiles = lingotek_get_profiles();
-  $all_profiles[LingotekSync::PROFILE_CUSTOM] = TRUE;
-  $all_profiles[LingotekSync::PROFILE_DISABLED] = TRUE;
-  $all_bundles = lingotek_get_bundles_by_profile_id(array_keys($all_profiles));
-  $all_entities = array();
-  // aggregate all entity-type-specific results into a single numbered array
-  foreach (array_keys($all_bundles) as $entity_type) {
-    $entities = lingotek_get_entities_by_profile_and_entity_type($profile_id, $entity_type);
-    foreach ($entities as $e) {
-      $all_entities[] = $e;
-    }
-  }
-  return $all_entities;
-}
-
-/*
- * Get all entities that are enabled for lingotek translation, by profile and entity_type
- *
- * Return an array of entity-specific arrays containing document_id, type, and id
- */
-function lingotek_get_entities_by_profile_and_entity_type($profile_id, $entity_type) {
-  // get all bundles that belong to the given profile
-  $all_bundles = lingotek_get_bundles_by_profile_id($profile_id); // this function accepts an id or an array of ids
-  $bundles = array();
-  $entities = array();
-
-  if (isset($all_bundles[$entity_type])) {
-    $bundles = array($entity_type => $all_bundles[$entity_type]);
-  }
-
-  // get all entities that belond to those bundles
-  foreach ($bundles as $entity_type => $entity_bundles) {
-    if ($entity_type == 'comment') {
-      $ref_tables = array();
-      foreach (array_keys($entity_bundles) as $key) {
-        $tmp_array = explode('_', $key);
-        $key = implode('_', array_slice($tmp_array, 2));
-        $ref_tables[] = $key;
-      }
-      $query = db_select('' . $entity_type . '', 'e')
-          ->fields('e', array('cid'));
-      $query->join('node', 'n', "n.nid = e.nid AND n.type IN ('" . implode("','", $ref_tables) . "')");
-      $results = $query->execute()->fetchCol();
-      foreach ($results as $id) {
-        $entities[] = array('id' => $id, 'type' => $entity_type);
-      }
-    }
-    else {
-      $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type', $entity_type)
-          ->entityCondition('bundle', array_keys($entity_bundles), 'IN');
-      $result = $query->execute();
-      unset($query);
-      if (isset($result[$entity_type])) {
-        foreach ($result[$entity_type] as $id => $entity_data) {
-          $entities[] = array('id' => $id, 'type' => $entity_type);
-        }
-      }
-    }
-    // END OPTIMIZED WAY
-  }
-
-  // subtract all entities specifically *not* set to the given profile
-  $query = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem', array('entity_id', 'entity_type'))
-      ->condition('lem.entity_key', 'profile')
-      ->condition('lem.value', $profile_id, is_array($profile_id) ? 'NOT IN' : '!=')
-      ->condition('lem.entity_type', $entity_type);
-  $result = $query->execute();
-  $subtract_entity_ids = $result->fetchAll();
-
-  $doc_ids = lingotek_get_document_id_tree();
-  $subtractions = array();
-  foreach ($subtract_entity_ids as $sei) {
-    if (!isset($subtractions[$sei->entity_type])) {
-      $subtractions[$sei->entity_type] = array();
-    }
-    $subtractions[$sei->entity_type][$sei->entity_id] = TRUE;
-  }
-  $filtered_entities = array();
-  foreach ($entities as $e) {
-    if (!isset($subtractions[$e['type']][$e['id']])) {
-      if (isset($doc_ids[$e['type']][$e['id']])) {
-        $e['document_id'] = $doc_ids[$e['type']][$e['id']];
-      }
-      $filtered_entities[$e['id']] = $e;
-    }
-  }
-
-  // add all entities specifically set to the given profile
-  $query = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem', array('entity_id', 'entity_type'))
-      ->condition('lem.entity_key', 'profile')
-      ->condition('lem.value', $profile_id,  is_array($profile_id) ? 'IN' : '=');
-  if ($entity_type != 'all') {
-    $query->condition('lem.entity_type', $entity_type);
-  }
-  $result = $query->execute();
-  $add_entity_ids = $result->fetchAll();
-  foreach ($add_entity_ids as $aei) {
-    $addition = array('id' => $aei->entity_id, 'type' => $aei->entity_type);
-    if (isset($doc_ids[$aei->entity_type][$aei->entity_id])) {
-      $addition['document_id'] = $doc_ids[$aei->entity_type][$aei->entity_id];
-    }
-    $filtered_entities[$aei->entity_id] = $addition;
-  }
-
-  return $filtered_entities;
+  $profile = LingotekProfile::loadById($profile_id);
+  return $profile->getEntities();
 }
 
 /**
@@ -1933,9 +1835,14 @@ function lingotek_set_batch_function($func_name) {
  *   an array of arrays containing entity type and entity ID
  */
 function lingotek_get_enabled_entities_by_type($entity_type) {
-  $profiles = lingotek_get_profiles();
+  $profiles = lingotek_get_profiles(FALSE);
   $profile_ids = array_keys($profiles);
-  return lingotek_get_entities_by_profile_and_entity_type($profile_ids, $entity_type);
+  $entities = array();
+  foreach ($profile_ids as $id) {
+    $profile = LingotekProfile::loadById($id);
+    $entities = array_merge($entities, $profile->getEntities($entity_type));
+  }
+  return $entities;
 }
 
 function lingotek_previously_managed_translations($entity_type, $entity_ids = NULL) {
@@ -1960,7 +1867,7 @@ function lingotek_previously_managed_translations($entity_type, $entity_ids = NU
   $query->entityCondition('entity_type', $entity_type)
       ->entityCondition('entity_id', $entity_ids, 'IN');
   $entities = $query->execute();
-  $entity_ids = array_keys($entities[$entity_type]);
+  $entity_ids = !empty($entities[$entity_type]) ? array_keys($entities[$entity_type]) : array();
 
   $enabled_entities = lingotek_get_enabled_entities_by_type($entity_type);
   $entity_ids = array_diff($entity_ids, array_keys($enabled_entities));
@@ -2008,8 +1915,8 @@ function lingotek_uses_node_translation($node = NULL) {
     return FALSE;
   }
 
-  $profile_info = lingotek_get_profile_settings($node->lingotek['profile']);
-  if ($profile_info['lingotek_nodes_translation_method'] == 'node') {
+  $profile = LingotekProfile::loadById($node->lingotek['profile']);
+  if ($profile->isNodeBased()) {
     return TRUE;
   }
 
@@ -2017,35 +1924,12 @@ function lingotek_uses_node_translation($node = NULL) {
   return FALSE;
 }
 
-
 function lingotek_managed_entity($entity_type, $entity) {
-  list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
-
-  // If there is no $bundle property, then nothing to manage for now.
-  if (!$bundle) {
+  $profile = LingotekProfile::loadByEntity($entity_type, $entity);
+  if ($profile->getId() == LingotekSync::PROFILE_DISABLED) {
     return FALSE;
   }
-  // If this is being newly created, see if the content type is enabled
-  if (!$id) {
-    return lingotek_enabled_bundle($entity_type, $bundle);
-  }
-  // Check the entity itself for overrides.
-  $query = db_select('lingotek_entity_metadata', 'lem')
-      ->fields('lem', array('value'))
-      ->condition('lem.entity_type', $entity_type)
-      ->condition('lem.entity_id', $id)
-      ->condition('lem.entity_key', 'profile');
-  $result = $query->execute()->fetchField();
-  if ($result !== FALSE) {
-    if ($result === LingotekSync::PROFILE_DISABLED) {
-      return FALSE;
-    }
-    else {
-      return TRUE;
-    }
-  }
-  // No overrides, so check the entity's bundle.
-  return lingotek_enabled_bundle($entity_type, $bundle);
+  return TRUE;
 }
 
 function lingotek_entity_extract_ids($entity_type, $entity) {
@@ -2111,3 +1995,63 @@ function lingotek_notify_if_no_languages_added() {
     drupal_set_message(t('No languages are enabled yet for Lingotek Translation.  Please add one or more languages (located under "Your site Languages" on the Dashboard tab).'), 'warning');
   }
 }
+
+function lingotek_entity_locale($entity_type, $entity) {
+  $langcode = lingotek_entity_langcode($entity_type, $entity);
+  return Lingotek::convertDrupal2Lingotek($langcode);
+}
+
+function lingotek_get_current_locales($entity_type, $entity_id) {
+  $query = db_select('lingotek_entity_metadata', 'lem')
+    ->fields('lem', array('entity_key'))
+    ->condition('lem.entity_type', $entity_type)
+    ->condition('lem.entity_id', $entity_id)
+    ->condition('lem.entity_key', 'target_sync_status_%', 'LIKE');
+  $result = $query->execute()->fetchCol();
+
+  $locales = array();
+  foreach ($result as $target_str) {
+    $locales[] = str_replace('target_sync_status_', '', $target_str);
+  }
+  return $locales;
+}
+
+function lingotek_translatable_field_column($entity_type, $bundle, $field_name, $column_name) {
+
+  // This variable may be overridden to include perhaps field columns
+  // called 'url' or 'params' or etc.
+  $translatable_field_columns = lingotek_get_translatable_field_columns();
+
+  // FORMAT FOR VARIABLE 'lingotek_translatable_field_columns_by_entity_type':
+  // array(
+  //   '[entity_type]' => array(
+  //     '[bundle]' => array(
+  //       '[field_name]' => array(
+  //         '[column_name1]' => TRUE,
+  //         '[column_name2]' => TRUE,
+  //       ),
+  //     ),
+  //   ),
+  // );
+  $translatable_field_columns_by_entity_type = variable_get('lingotek_translatable_field_columns_by_entity_type', array());
+
+  // If a field array is not empty for a given entity type, then look to it
+  // for what field columns to include for a given entity type and bundle.
+  // This way fields included by default may be excluded for specific bundles
+  // and vice versa.
+  if (!empty($translatable_field_columns_by_entity_type[$entity_type][$bundle][$field_name])) {
+    return !empty($translatable_field_columns_by_entity_type[$entity_type][$bundle][$field_name][$column_name]);
+  }
+  else {
+    return in_array($column_name, $translatable_field_columns);
+  }
+}
+
+function lingotek_get_translatable_field_columns() {
+  // What columns DO we translate?
+  $default_translatable_columns = array('value', 'summary', 'alt', 'title');
+
+  // Allow override of translatable columns using the variables table.
+  return variable_get('lingotek_translatable_column_defaults', $default_translatable_columns);
+}
+

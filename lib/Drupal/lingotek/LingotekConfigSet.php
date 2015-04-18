@@ -530,65 +530,8 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     if (isset($set_id)) {
       $set = self::loadById($set_id);
     }
-    
+
     return $set;
-  }
-
-  /**
-   * Event handler for updates to the config set's data.
-   */
-  public function contentUpdated() {
-
-    $metadata = $this->metadata();
-    if (empty($metadata['document_id'])) {
-      $this->createLingotekDocument();
-    }
-    else {
-      $update_result = $this->updateLingotekDocument();
-    }
-
-    // Synchronize the local content with the translations from Lingotek.
-    // We instruct the users to configure config set translation with a
-    // single-phase machine translation-only Workflow, so the updated content
-    // should be available right after our create/update document calls from above.
-    // If it isn't, Lingotek will call us back via LINGOTEK_NOTIFICATIONS_URL
-    // when machine translation for the item has finished.
-    if (!self::$content_update_in_progress) {
-      // Only update the local content if the Document is 100% complete
-      // according to Lingotek.
-
-      $document_id = $this->getMetadataValue('document_id');
-      if ($document_id) {
-        $document = $this->api->getDocument($document_id);
-        if (!empty($document->percentComplete) && $document->percentComplete == 100) {
-          $this->updateLocalContent();
-        }
-      }
-      else {
-        LingotekLog::error('Unable to retrieve Lingotek Document ID for config set @id', array('@id' => $this->sid));
-      }
-    }
-  }
-
-  /**
-   * Creates a Lingotek Document for this config set.
-   *
-   * @return bool
-   *   TRUE if the document create operation was successful, FALSE on error.
-   */
-  protected function createLingotekDocument() {
-    return ($this->api->addContentDocumentWithTargets($this)) ? TRUE : FALSE;
-  }
-
-  /**
-   * Updates the existing Lingotek Documemnt for this config set.
-   *
-   * @return bool
-   *   TRUE if the document create operation was successful, FALSE on error.
-   */
-  protected function updateLingotekDocument() {
-    $result = $this->api->updateContentDocument($this);
-    return ($result) ? TRUE : FALSE;
   }
 
   /**
@@ -672,8 +615,13 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   /**
    * Assign the set's target status(es) in the config metadata table
    */
-  public function setTargetsStatus($status, $lingotek_locale = 'all') {
-    if ($lingotek_locale != 'all') {
+  public function setTargetsStatus($status, $lingotek_locale = NULL) {
+    if (is_array($lingotek_locale)) {
+      foreach ($lingotek_locale as $ll) {
+        $this->setMetadataValue('target_sync_status_' . $ll, $status);
+      }
+    }
+    elseif (is_string($lingotek_locale) && !empty($lingotek_locale)) {
       $this->setMetadataValue('target_sync_status_' . $lingotek_locale, $status);
     }
     else { // set status for all available targets
@@ -768,10 +716,10 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
           ->execute();
     }
   }
-  
+
   /**
    * Deletes a Lingotek metadata value for this item
-   * 
+   *
    * @param string $key
    *  The key for a name/value pair
    */
@@ -1041,7 +989,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * Save segment target translations for the given language
    *
    * @param obj
-   *    the SimpleXMLElement object containing the translations to be saved
+   *    the LingotekXMLElement object containing the translations to be saved
    * @param string
    *    the language code under which to save the translations
    */
@@ -1097,7 +1045,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function getEntityType() {
     return self::DRUPAL_ENTITY_TYPE;
   }
-  
+
   /**
    * Magic get for access to set and set properties.
    */
@@ -1171,7 +1119,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     }
     return $textgroups;
   }
-  
+
   public static function getLidBySource($source_string) {
     return db_select('locales_source', 's')
             ->fields('s', array('lid'))
@@ -1200,7 +1148,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   public function getUrl() {
     return '';
   }
-  
+
   public function getNote() {
     return '';
   }
