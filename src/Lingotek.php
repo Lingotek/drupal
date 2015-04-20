@@ -40,7 +40,7 @@ class Lingotek implements LingotekInterface {
 
   public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config) {
     $this->api = $api;
-    $this->config = $config->get('lingotek.settings');
+    $this->config = $config->getEditable('lingotek.settings');
   }
 
   public static function create(ContainerInterface $container) {
