@@ -315,8 +315,6 @@ function lingotek_pm($node) {
     ),
   );
 
-  $sync_status = $node->lingotek['upload_status'];
-
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
