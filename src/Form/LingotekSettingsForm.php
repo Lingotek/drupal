@@ -48,7 +48,7 @@ class LingotekSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->configFactory->get('lingotek.settings');
+    $config = $this->configFactory->getEditable('lingotek.settings');
     $case = $config->get('case');
     $form['lingotek_case'] = array(
       '#type' => 'radios',
@@ -68,7 +68,7 @@ class LingotekSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->configFactory->get('lingotek.settings')->save();
+    $this->configFactory->getEditable('lingotek.settings')->save();
 
     parent::submitForm($form, $form_state);
   }

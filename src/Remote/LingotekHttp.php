@@ -29,7 +29,7 @@ class LingotekHttp implements LingotekHttpInterface {
 
   public function __construct(ClientInterface $httpClient, ConfigFactory $config) {
     $this->httpClient = $httpClient;
-    $this->config     = $config->get('lingotek.settings');
+    $this->config     = $config->getEditable('lingotek.settings');
     $this->setDefaultHeaders();
   }
 

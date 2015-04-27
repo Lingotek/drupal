@@ -23,7 +23,9 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
     // Use instead of ContentTranslationController.
     foreach ($collection as $route) {
       if ($route->getDefault('_controller') == '\Drupal\content_translation\Controller\ContentTranslationController::overview') {
+        dpm($route->getDefault('_controller'), 'old');
         $route->setDefault('_controller', '\Drupal\lingotek\Controller\LingotekContentTranslationController::overview');
+        dpm($route->getDefault('_controller'), 'new');
       }
     }
   }

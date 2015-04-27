@@ -110,10 +110,10 @@ EOD;
 
     // If we get a parameter, only return that language. Otherwise return all languages.
     foreach ($available_languages as $l) {
-      $lingotek_locale = LingotekLocale::convertDrupal2Lingotek($l->id);
+      $lingotek_locale = LingotekLocale::convertDrupal2Lingotek($l->getId());
       if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $lingotek_locale)
         continue;
-      $language_report = $this->getLanguageReport($l->id);
+      $language_report = $this->getLanguageReport($l->getId());
       if ($lingotek_locale_requested == $lingotek_locale) {
         $response = $language_report;
       } else {

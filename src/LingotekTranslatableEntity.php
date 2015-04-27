@@ -75,7 +75,7 @@ class LingotekTranslatableEntity {
   }
 
   public function getSourceLocale() {
-    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language()->id);
+    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language()->getId());
     return $this->locale;
   }
 
