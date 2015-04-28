@@ -1840,7 +1840,7 @@ function lingotek_get_enabled_entities_by_type($entity_type) {
   $entities = array();
   foreach ($profile_ids as $id) {
     $profile = LingotekProfile::loadById($id);
-    $entities = array_merge($entities, $profile->getEntities($entity_type));
+    $entities += $profile->getEntities($entity_type);
   }
   return $entities;
 }
