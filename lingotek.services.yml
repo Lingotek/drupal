@@ -9,7 +9,7 @@ services:
     class: Drupal\lingotek\Remote\LingotekApi
     arguments: ['@lingotek.http_client']
   lingotek.content_translation_subscriber:
-    class: Drupal\lingotek\Routing\LingotekRouteSubscriber
+    class: Drupal\lingotek\Routing\LingotekContentRouteSubscriber
     arguments: ['@content_translation.manager']
     tags:
       - { name: event_subscriber }
