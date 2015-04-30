@@ -1,20 +1,20 @@
 lingotek.dashboard:
   route_name: 'lingotek.dashboard'
   title: 'Translation'
-  description: 'Lingotek translation dashboard'
+  description: 'Lingotek menu item'
   parent: 'system.admin'
   weight: 4
 
 lingotek.settings:
   route_name: 'lingotek.settings'
   title: 'Settings'
-  description: 'Lingotek translation settings'
+  description: 'Lingotek menu item'
   parent: 'lingotek.dashboard'
   weight: 12
 
 lingotek.manage:
   route_name: 'lingotek.manage'
   title: 'Manage'
-  description: 'Lingotek translation management'
+  description: 'Lingotek menu item'
   parent: 'lingotek.dashboard'
   weight: 11
