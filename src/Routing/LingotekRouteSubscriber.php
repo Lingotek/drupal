@@ -36,7 +36,7 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
   public static function getSubscribedEvents() {
     $events = parent::getSubscribedEvents();
     //  ContentTranslationRouteSubscriber is -100.
-    $events[RoutingEvents::ALTER] = array('onAlterRoutes', -220);
+    $events[RoutingEvents::ALTER] = array('onAlterRoutes', -211);
     return $events;
   }
 

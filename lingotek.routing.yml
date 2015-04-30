@@ -125,3 +125,4 @@ lingotek.workbench:
     _title: 'Use Lingotek Workbench'
   requirements:
     _permission: 'administer lingotek'
+

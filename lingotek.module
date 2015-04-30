@@ -93,3 +93,4 @@ function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $
 function lingotek_contextual_links_view_alter(&$element, $items) {
   // TODO
 }
+
