@@ -17,8 +17,15 @@ use Drupal\Core\Url;
 
 define('COL_LANGUAGE', 0);
 define('COL_TRANSLATION', 1);
-define('COL_STATUS', 2);
-define('COL_OPERATIONS', 3);
+
+if (count(\Drupal::languageManager()->getLanguages()) > 2) {
+  define('COL_STATUS', 3);
+  define('COL_OPERATIONS', 4);
+}
+else {
+  define('COL_STATUS', 3);
+  define('COL_OPERATIONS', 4);
+}
 
 class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
