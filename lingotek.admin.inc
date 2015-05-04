@@ -2554,7 +2554,6 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $account = LingotekAccount::instance();
 
   $api = LingotekApi::instance();
-  $site = variable_get('site_name', 'Drupal Site');
   $show_advanced = $account->showAdvanced();
 
   //$form_short_id values:  config, logging, utilities, language_switcher
