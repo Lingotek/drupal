@@ -149,6 +149,13 @@ function lingotek_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'current' => array(
+        'description' => 'Tells whether the translation for the individual config item is dirty and needs to be updated or not.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'primary key' => array(
       'lid',
