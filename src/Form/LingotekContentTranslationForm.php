@@ -15,18 +15,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 
-define('COL_LANGUAGE', 0);
-define('COL_TRANSLATION', 1);
-
-if (count(\Drupal::languageManager()->getLanguages()) > 2) {
-  define('COL_STATUS', 3);
-  define('COL_OPERATIONS', 4);
-}
-else {
-  define('COL_STATUS', 3);
-  define('COL_OPERATIONS', 4);
-}
-
 class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
   /**
@@ -78,12 +66,12 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         // Check-Progress button if the source upload status is PENDING.
         if ($source_status === Lingotek::STATUS_PENDING && !empty($doc_id)) {
           $path = '/admin/lingotek/entity/check_upload/' . $doc_id;
-          $this->addOperationLink($option, 'Check Upload Status', $path, $language);
+          $this->addOperationLink($entity, $option, 'Check Upload Status', $path, $language);
         }
         // Upload button if the status is EDITED or non-existent.
         elseif ($source_status === Lingotek::STATUS_EDITED || $source_status === NULL) {
           $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
-          $this->addOperationLink($option, 'Upload', $path, $language);
+          $this->addOperationLink($entity, $option, 'Upload', $path, $language);
         }
       }
       else {
@@ -94,22 +82,22 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         // Add-Targets button if languages haven't been added.
         if ($source_status === Lingotek::STATUS_CURRENT && !empty($doc_id) && !isset($target_status)) {
           $path = '/admin/lingotek/entity/add_target/' . $doc_id . '/' . $locale;
-          $this->addOperationLink($option, 'Request translation', $path, $language);
+          $this->addOperationLink($entity, $option, 'Request translation', $path, $language);
         }
         // Check-Progress button if the source upload status is PENDING.
         elseif ($target_status === Lingotek::STATUS_PENDING) {
           $this->removeOperationLink($option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/check_target/' . $doc_id . '/' . $locale;
-          $this->addOperationLink($option, 'Check translation status', $path, $language);
+          $this->addOperationLink($entity, $option, 'Check translation status', $path, $language);
           $status_check_needed = TRUE;
         }
         // Download button if translations are READY or CURRENT.
         elseif ($target_status !== NULL) {
           $this->removeOperationLink($option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/download/' . $doc_id . '/' . $locale;
-          $this->addOperationLink($option, 'Download completed translation', $path, $language);
+          $this->addOperationLink($entity, $option, 'Download completed translation', $path, $language);
           $path = '/admin/lingotek/workbench/' . $doc_id . '/' . $locale;
-          $this->addOperationLink($option, 'Edit', $path, $language);
+          $this->addOperationLink($entity, $option, 'Edit', $path, $language);
           $targets_ready = TRUE;
         }
       }
@@ -158,13 +146,27 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
   }
 
+  protected function getOperationColumnId(ContentEntityInterface $entity, array $option) {
+    // For now, just return the known column id for operations
+    if (count($option) == 5) {
+      // Source-language column present.
+      return 4;
+    }
+    else {
+      // Source-language column absent.
+      return 3;
+    }
+  }
+
   /*
    * Add an operation to the list of available operations for each language.
    */
 
-  protected function addOperationLink(array &$option, $name, $path, LanguageInterface $language) {
-    if (!isset($option[COL_OPERATIONS]['data']['#links'])) {
-      $option[COL_OPERATIONS]['data']['#links'] = array();
+  protected function addOperationLink(ContentEntityInterface $entity, array &$option, $name, $path, LanguageInterface $language) {
+    $operation_col = $this->getOperationColumnId($entity, $option);
+
+    if (!isset($option[$operation_col]['data']['#links'])) {
+      $option[$operation_col]['data']['#links'] = array();
     }
     if (strpos($path, '/admin/lingotek/batch/') === 0) {
        $path = str_replace('/admin/lingotek/batch/', '', $path);
@@ -198,7 +200,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     else {
        die("failed to get known operation in addOperationLink: $path");
     }
-    $option[COL_OPERATIONS]['data']['#links'][strtolower($name)] = array(
+    $option[$operation_col]['data']['#links'][strtolower($name)] = array(
       'title' => $name,
       'language' => $language,
       'url' => $url,
@@ -206,7 +208,9 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   }
 
   protected function removeOperationLink(array &$option, $name) {
-    unset($option[COL_OPERATIONS]['data']['#links'][strtolower($name)]);
+    $operation_col = $this->getOperationColumnId($entity, $option);
+
+    unset($option[$operation_col]['data']['#links'][strtolower($name)]);
   }
 
 }

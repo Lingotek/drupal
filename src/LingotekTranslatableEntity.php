@@ -43,6 +43,8 @@ class LingotekTranslatableEntity {
   public function __construct(ContentEntityInterface $entity, LingotekInterface $lingotek) {
     $this->entity = $entity;
     $this->L = $lingotek;
+    $this->translatable_field_types = array('text_with_summary', 'text');
+    $this->entity_manager = \Drupal::entityManager();
   }
 
   public static function load(ContainerInterface $container, $entity) {
@@ -80,30 +82,25 @@ class LingotekTranslatableEntity {
   }
 
   public function getSourceData() {
-    // Logic adapted from TMGMT contrib module for pulling
-    // translatable field info from content entities.
-    $translatable_fields = array_filter($this->entity->getFieldDefinitions(), function ($definition) {
-      return $definition->isTranslatable();
-    });
+    // Logic adapted from Content Translation core module and TMGMT contrib
+    // module for pulling translatable field info from content entities.
+    $entity_type = $this->entity->getEntityType();
+    $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entity_manager->getFieldStorageDefinitions($entity_type->id()) : array();
+    $translatable_fields = array();
+    foreach ($this->entity->getFields(FALSE) as $field_name => $definition) {
+      if (!empty($storage_definitions[$field_name]) && $storage_definitions[$field_name]->isTranslatable() && $field_name != $entity_type->getKey('langcode') && $field_name != $entity_type->getKey('default_langcode')) {
+        $translatable_fields[$field_name] = $definition;
+      }
+    }
 
     $data = array();
     $translation = $this->entity->getTranslation($this->entity->language()->getId());
     foreach ($translatable_fields as $k => $definition) {
       $field = $translation->get($k);
-      //$data[$k]['#label'] = $definition->getLabel();
       foreach ($field as $fkey => $fval) {
-        //$data[$k][$fkey]['#label'] = t('Delta #@delta', array('@delta' => $fkey));
-        /* @var FieldItemInterface $field_item */
         foreach ($fval->getProperties() as $pkey => $pval) {
-          // Ignore computed values.
-          $property_def = $pval->getDataDefinition();
-          if (($property_def->isComputed())) {
-            continue;
-          }
-          // Ignore non-string properties and those with limited allowed values
-          if ($pval instanceof AllowedValuesInterface || !($pval instanceof StringInterface)) {
-            $data[$k][$fkey][$pkey] = $pval->getValue();
-          }
+          // TODO: add a check for the fields that should be sent up for translation.
+          $data[$k][$fkey][$pkey] = $pval->getValue();
         }
       }
     }

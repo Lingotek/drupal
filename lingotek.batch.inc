@@ -33,7 +33,7 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
 
 function lingotek_operation_content_upload_finished($success, $results, $operations) {
   $count = !empty($results['uploads']) ? $results['uploads'] : 0;
-  $num_documents = format_plural($count, '1 document', '@count documents', array('@count' => $count));
+  $num_documents = \Drupal::translation()->formatPlural($count, '1 document', '@count documents', array('@count' => $count));
   drupal_set_message(t('Uploaded @num_documents to Lingotek.', array('@num_documents' => $num_documents)));
 }
 
@@ -60,6 +60,6 @@ function lingotek_operation_content_download($entity_type, $entity_id, $locale, 
 
 function lingotek_operation_content_download_finished($success, $results, $operations) {
   $count = !empty($results['downloads']) ? $results['downloads'] : 0;
-  $num_translations = format_plural($count, '1 translation', '@count translations', array('@count' => $count));
+  $num_translations = \Drupal::translation()->formatPlural($count, '1 translation', '@count translations', array('@count' => $count));
   drupal_set_message(t('Downloaded @num_translations from Lingotek.', array('@num_translations' => $num_translations)));
 }
