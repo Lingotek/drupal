@@ -927,25 +927,6 @@ function lingotek_setup_link($path = 'admin/config/lingotek/new-account', $text 
   );
 }
 
-/**
- * Future Page - Form Submit
- */
-function lingotek_setup_node_updates_form_submit($form, $form_state) {
-
-  $transition_node_titles = $form_state['values']['transition_node_titles'];
-  $update_node_language = $form_state['values']['update_node_language'];
-
-  if ($transition_node_titles == 1) {
-    // Do the Node Titles
-  }
-
-  if ($update_node_language == 1) {
-    // Update The Node Languages
-  }
-
-  //drupal_goto( 'admin/config/lingotek/setup-complete' );
-}
-
 /*
  * Get the Lingotek user's current Communities.  Use the V3 API.
  */
