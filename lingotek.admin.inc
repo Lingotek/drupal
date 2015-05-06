@@ -919,7 +919,7 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   $final_destination = 'admin/settings/lingotek/settings';
   if (  isset($_SESSION['lingotek_setup_path'])
         && is_array($_SESSION['lingotek_setup_path'])
-        && end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
+        && end($_SESSION['lingotek_setup_path']) == LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings') {
     // Remove the setup path so future checks will not think setup just completed.
     unset($_SESSION['lingotek_setup_path']);
     $final_destination = 'admin/settings/lingotek';

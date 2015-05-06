@@ -3,7 +3,7 @@ description = "Extends Drupal's multilingual features by integrating with the Li
 package = Multilingual
 core = "7.x"
 php = "5.3"
-configure = admin/config/lingotek/setup
+configure = admin/config/regional/lingotek/setup
 
 dependencies[] = locale
 dependencies[] = field_ui

@@ -1490,16 +1490,16 @@ function lingotek_unfilter_placeholders($segment_text) {
  *   whether to redirect to the next setup destination or just return the current one
  */
 function lingotek_get_entity_setup_path($entity_type, $next=FALSE) {
-  $node_next = 'admin/config/lingotek/comment-translation-settings';
+  $node_next = LINGOTEK_MENU_LANG_BASE_URL . '/comment-translation-settings';
   if (!module_exists('comment')) {
-    $node_next = 'admin/config/lingotek/additional-translation-settings';
+    $node_next = LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings';
   }
   $entities = array(
-    'node' => array('current' => 'admin/config/lingotek/node-translation-settings',
+    'node' => array('current' => LINGOTEK_MENU_LANG_BASE_URL . '/node-translation-settings',
       'next' => $node_next),
-    'comment' => array('current' => 'admin/config/lingotek/comment-translation-settings',
-      'next' => 'admin/config/lingotek/additional-translation-settings'),
-    'config' => array('current' => 'admin/config/lingotek/additional-translation-settings',
+    'comment' => array('current' => LINGOTEK_MENU_LANG_BASE_URL . '/comment-translation-settings',
+      'next' => LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings'),
+    'config' => array('current' => LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings',
       'next' => 'admin/settings/lingotek'),
   );
   if (isset($entities[$entity_type])) {

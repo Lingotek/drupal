@@ -348,7 +348,7 @@ function lingotek_menu() {
 
   // Easy Install Screens ----------------------------------------
   // Setup Path Router
-  $items['admin/config/lingotek/setup'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/setup'] = array(
     'title' => 'Lingotek Setup Path Router',
     'description' => 'Figures out the necessary setup path.',
     'file' => 'lingotek.setup.inc',
@@ -360,7 +360,7 @@ function lingotek_menu() {
   );
 
   // New Account
-  $items['admin/config/lingotek/new-account'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/new-account'] = array(
     'title' => 'Create a Lingotek Account',
     'description' => 'Setup a new Lingotek account.',
     'file' => 'lingotek.setup.inc',
@@ -372,7 +372,7 @@ function lingotek_menu() {
   );
 
   // Current Users
-  $items['admin/config/lingotek/account-settings'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/account-settings'] = array(
     'title' => 'Lingotek Account Login',
     'description' => 'Manage your Lingotek account settings.',
     'file' => 'lingotek.setup.inc',
@@ -383,7 +383,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/community-select'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/community-select'] = array(
     'title' => 'Choose Your Community',
     'description' => 'Select a community to use with this site.',
     'file' => 'lingotek.setup.inc',
@@ -394,7 +394,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/project-vault-select'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/project-vault-select'] = array(
     'title' => 'Choose Your Project, Workflow, and TM Vault',
     'description' => 'Select project, workflow, and translation memory vault to use.',
     'file' => 'lingotek.setup.inc',
@@ -405,7 +405,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/node-translation-settings'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/node-translation-settings'] = array(
     'title' => 'Enable Content Types',
     'description' => 'Select the nodes and fields you want translated.',
     'file' => 'lingotek.setup.inc',
@@ -416,7 +416,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/comment-translation-settings'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/comment-translation-settings'] = array(
     'title' => 'Enable Comment Translation',
     'description' => 'Select any node types you want the comments translated.',
     'file' => 'lingotek.setup.inc',
@@ -427,7 +427,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/additional-translation-settings'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings'] = array(
     'title' => 'Enable Additional Translation',
     'description' => 'Select any additional types you want translated.',
     'file' => 'lingotek.setup.inc',
@@ -438,7 +438,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/content-type-choose-fields-ajax/%'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/content-type-choose-fields-ajax/%'] = array(
     'title' => 'Content Types Ajax',
     'description' => 'Ajax functionality for content options.',
     'file' => 'lingotek.setup.inc',
@@ -448,7 +448,7 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
-  $items['admin/config/lingotek/setup-language-switcher'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/setup-language-switcher'] = array(
     'title' => 'Enable Language Switcher',
     'description' => 'Enable the default language switcher',
     'file' => 'lingotek.setup.inc',
@@ -459,7 +459,7 @@ function lingotek_menu() {
     'options' => array('attributes' => array('class' => array('overlay-exclude'))),
   );
 
-  $items['admin/config/lingotek/setup-complete'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/setup-complete'] = array(
     'title' => 'Setup Complete',
     'description' => 'The Lingotek Translation module has been configured and is now ready to use.',
     'file' => 'lingotek.setup.inc',
@@ -469,7 +469,7 @@ function lingotek_menu() {
     'access arguments' => array('administer lingotek')
   );
 
-  $items['admin/config/lingotek/node-updates'] = array(
+  $items[LINGOTEK_MENU_LANG_BASE_URL . '/node-updates'] = array(
     'title' => 'Lingotek Node Updates',
     'description' => 'Updates your nodes to support multiple languages.',
     'file' => 'lingotek.setup.inc',
@@ -1789,13 +1789,13 @@ function lingotek_is_config_missing() {
     $val = variable_get($required_variable, NULL);
     if (empty($val)) {
       if ($required_variable == 'lingotek_login_id') {
-        return 'admin/config/lingotek/new-account';
+        return LINGOTEK_MENU_LANG_BASE_URL . '/new-account';
       }
       elseif ($required_variable == 'lingotek_community_identifier') {
-        return 'admin/config/lingotek/community-select';
+        return LINGOTEK_MENU_LANG_BASE_URL . '/community-select';
       }
       elseif ($required_variable == 'lingotek_project' || $required_variable == 'lingotek_workflow' || $required_variable == 'lingotek_vault') {
-        return 'admin/config/lingotek/project-vault-select';
+        return LINGOTEK_MENU_LANG_BASE_URL . '/project-vault-select';
       }
       elseif ($required_variable == 'lingotek_oauth_consumer_id' || $required_variable == 'lingotek_oauth_consumer_secret') {
         return TRUE;
@@ -1805,13 +1805,13 @@ function lingotek_is_config_missing() {
   // special handling of lingotek_enabled_fields, since none could be selected
   $enabled_fields = variable_get('lingotek_enabled_fields', FALSE);
   if (!isset($enabled_fields['node'])) {
-    return 'admin/config/lingotek/node-translation-settings';
+    return LINGOTEK_MENU_LANG_BASE_URL . '/node-translation-settings';
   }
   if (module_exists('comment') && !isset($enabled_fields['comment'])) {
-    return 'admin/config/lingotek/comment-translation-settings';
+    return LINGOTEK_MENU_LANG_BASE_URL . '/comment-translation-settings';
   }
   if (variable_get('lingotek_translate_config', 'EMPTY') === 'EMPTY') {
-    return 'admin/config/lingotek/additional-translation-settings';
+    return LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings';
   }
 
   return FALSE; // all required configuration variables are set

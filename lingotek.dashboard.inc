@@ -35,7 +35,7 @@ function lingotek_dashboard() {
       );
     }
     else { // Show the standard misconfiguration message.
-      drupal_set_message(t('The Lingotek Translation module is not fully configured. To complete setup, run the') . ' ' . l(t('Lingotek Configuration Wizard'), 'admin/config/lingotek/setup'), 'warning');
+      drupal_set_message(t('The Lingotek Translation module is not fully configured. To complete setup, run the') . ' ' . l(t('Lingotek Configuration Wizard'), LINGOTEK_MENU_LANG_BASE_URL . '/setup'), 'warning');
     }
     $output[] = lingotek_support_footer();
     return $output;
