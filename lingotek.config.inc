@@ -50,6 +50,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   $query1->union($query2, 'UNION');
   $query1->union($query3, 'UNION');
 
+dpq($query1);
   if ($count_only) {
     $result = $query1->execute();
     return $result->rowCount();
@@ -110,7 +111,17 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
   $query->fields('s', array('source', 'location', 'context', 'lid', 'textgroup'));
   // Only show items in textgroups that are selected for translation on Config Settings page.
   $translatable_textgroups = LingotekConfigSet::getTextgroupsForTranslation() ? : array('no textgroups selected');
-  $query->condition('s.textgroup', $translatable_textgroups, 'IN');
+
+  if (in_array('misc', $translatable_textgroups)) {
+    $all_textgroup_categories = array('blocks', 'default', 'menu', 'taxonomy', 'views', 'field');
+    $qor = db_or();
+    $qor->condition('s.textgroup', $translatable_textgroups, 'IN');
+    $qor->condition('s.textgroup', $all_textgroup_categories, 'NOT IN');
+    $query->condition($qor);
+  }
+  else {
+    $query->condition('s.textgroup', $translatable_textgroups, 'IN');
+  }
 
   // Hide taxonomy terms that use translate for i18n_mode.
   $translate_terms_subquery = db_select('taxonomy_vocabulary', 'tv');
@@ -182,7 +193,7 @@ function lingotek_config_add_query_filters($query) {
       $query->condition('textgroup', 'views');
     }
     elseif ($filters['textgroup'] == 'misc') {
-      $query->condition('textgroup', 'misc');
+      $query->condition('textgroup', array('default', 'menu', 'taxonomy', 'blocks', 'field', 'views'), 'NOT IN');
     }
   }
 
