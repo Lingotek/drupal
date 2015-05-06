@@ -50,7 +50,6 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   $query1->union($query2, 'UNION');
   $query1->union($query3, 'UNION');
 
-dpq($query1);
   if ($count_only) {
     $result = $query1->execute();
     return $result->rowCount();
