@@ -14,7 +14,7 @@ class LingotekWorkbenchController extends LingotekControllerBase {
 
   protected function workbenchPageRedirect($doc_id, $locale) {
     // Get a current-user email to use as the workbench's acting login id.
-    global $user;
+    $user = \Drupal::currentUser();
     $acting_login_id = $user->getEmail();
 
     // Get account settings to build workbench link.
