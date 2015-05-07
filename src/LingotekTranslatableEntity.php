@@ -126,7 +126,9 @@ class LingotekTranslatableEntity {
     foreach ($data as $name => $field_data) {
       foreach ($field_data as $delta => $delta_data) {
         foreach ($delta_data as $property => $property_data) {
-          $translation->get($name)->offsetGet($delta)->set($property, $property_data);
+          if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
+            $translation->get($name)->offsetGet($delta)->set($property, $property_data);
+          }
         }
       }
     }
