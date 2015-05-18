@@ -14,21 +14,21 @@ function lingotek_perform_action(nid, action) {
     var $self = $(self);
     url = $self.attr('href');
     var entity_ids = [];
-    $('#edit-grid-container .form-checkbox').each(function () {
-      if ($(this).attr('checked')) {
+    $('#edit-grid-container .form-checkbox').each(function() {
+      if($(this).attr('checked')) {
         val = $(this).val();
-        if (val != 'on') {
+        if(val != 'on') {
           entity_ids.push(val);
         }
       }
     });
-    if (entity_ids.length > 0) {
+    if(entity_ids.length > 0) {
       $('#edit-select-actions').val('select');
       ob = Drupal.ajax[url];
       ob.element_settings.url = ob.options.url = ob.url = url + '/' + entity_ids.join(',');
       $self.trigger('click');
       $self.attr('href', url);
-      $('.modal-header .close').click(function () {
+      $('.modal-header .close').click( function() {
         location.reload();
       });
     } else {
@@ -41,7 +41,7 @@ function lingotek_perform_action(nid, action) {
 
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
-      $('.form-checkbox').change(function () {
+      $('.form-checkbox').change(function() {
         var cells_of_selected_row = $(this).parents("tr").children();
 
         var selected_set_name = cells_of_selected_row.children('.set_name').text();
@@ -69,46 +69,47 @@ function lingotek_perform_action(nid, action) {
       });
 
       $('input#edit-submit-actions.form-submit').hide();
-      $('#edit-select-actions').change(function () {
+      $('#edit-select-actions').change(function() {
         val = $(this).val();
 
-        if (val == 'reset' || val == 'delete') {
-          lingotek_trigger_modal($('#' + val + '-link'));
-        } else if (val == 'edit') {
+        if(val == 'reset' || val == 'delete') {
+          lingotek_trigger_modal($('#'+val+'-link'));
+        } else if(val == 'edit') {
           lingotek_trigger_modal($('#edit-settings-link'));
-        } else if (val == 'workflow') {
+        } else if(val == 'workflow') {
           lingotek_trigger_modal($('#change-workflow-link'));
-        } else {
+        } else  {
           $('input#edit-submit-actions.form-submit').trigger('click');
         }
       });
 
-      $('#edit-limit-select').change(function () {
+      $('#edit-limit-select').change(function() {
         $('#edit-search-submit.form-submit').trigger('click');
       });
-    }
-  };
-  //the whole concept behind this function is kinda hacky, I'm pulling the data
-  //straight from the html, I considered pulling from the database and filtering in the PHP,
-  //but there's no guarantee the results would match the view's filters
+  }
+};
+ //the whole concept behind this function is kinda hacky, I'm pulling the data
+    //straight from the html instead of getting data from the backend, I considered
+    //pulling from the database and filtering in the PHP, but there's no guarantee
+    //the results would match the frontend's filters
   function scrapeAllFilteredPages(element_id, original_URL, href, entity_ids) {
     //cancel the default link href, otherwise it tries to follow the link before
     //the ajax calls finish
     $(element_id).removeAttr('href');
     //gets the displayed data from the current page
-    if (entity_ids === undefined) {
+    if(entity_ids === undefined){
       entity_ids = getIDArray(true);
     }
     //start at the first page
     var noNext = false;
     var checkFirstPage = $('.pager-first a');
-    if (checkFirstPage.text().indexOf('first') > -1 && href === undefined) {
+    if(checkFirstPage.text().indexOf('first') > -1 && href === undefined){
       href = checkFirstPage.attr('href');
     }
     //on the first call, if we're on the first page, grab the href to the next
     //page, if there is no next page, fire off the filtered data
-    if (href === undefined) {
-      if ($('.pager-next a').attr('href') !== undefined) {
+    if(href === undefined){
+      if($('.pager-next a').attr('href') !== undefined) {
         href = $('.pager-next a').attr('href');
       }
       else {
@@ -117,69 +118,65 @@ function lingotek_perform_action(nid, action) {
     }
     //recursive ajax call for each table page
     $.ajax({
-      url: href,
-      dataType: 'text',
-      success: function (data) {
-        var begin = data.indexOf("<table");
-        var end = data.indexOf("</table>") + "</table>".length;
-        var tableData = data.substring(begin, end);
-        var el = $('<div></div>');
-        el.html(tableData);
-        $('input', el).each(function () {
-          entity_ids.push($(this).val());
+           url:href,
+           dataType: 'text',
+           success: function(data) {
+              var begin = data.indexOf("<table");
+              var end = data.indexOf("</table>") + "</table>".length;
+              var tableData = data.substring(begin, end);
+              var el = $('<div></div>');
+              el.html(tableData);
+              $('input', el).each(function(){
+                  entity_ids.push($(this).val());
+              });  
+              
+              var next_el = $('<div></div>');
+              next_el.html(data);
+              var next_href = $('.pager-next a', next_el).attr('href');
+              if(next_href === null || next_href === undefined){
+                  noNext = true;
+              }
+              else {
+                scrapeAllFilteredPages(element_id, original_URL, next_href, entity_ids);
+              }
+           },
+           complete: function(){
+               if(noNext === true){
+                 clickFilteredURL(entity_ids, original_URL, element_id);
+               }
+           }
+           
         });
-
-        var next_el = $('<div></div>');
-        next_el.html(data);
-        var next_href = $('.pager-next a', next_el).attr('href');
-        if (next_href === null || next_href === undefined) {
-          noNext = true;
-        }
-        else {
-          scrapeAllFilteredPages(element_id, original_URL, next_href, entity_ids);
-        }
-      },
-      complete: function () {
-        if (noNext === true) {
-          clickFilteredURL(entity_ids, original_URL, element_id);
-        }
-      }
-
-    });
   }
-
-  function clickFilteredURL(entity_ids, original_URL) {
+  
+  function clickFilteredURL(entity_ids, original_URL){
     //the entity_type is passed as a URL param
     //the entities to upload/download are sent in a POST body to deal with URL 
     //length restraints
     var new_URL = original_URL.valueOf();
     new_URL += entity_ids.length !== 0 ? "/" + entity_ids.join(",") : "";
-    var form = $('<form>', {
-      'action': original_URL + "?render=overlay",
-      'method': "post"
-    }).append($('<input>', {
-      'name': 'comma_separated_ids',
-      'value': entity_ids.join(","),
-      'type': 'hidden'
-    }));
-    form.append();
-    form.submit();
-    form.remove();
+      var form = $('<form>', {
+        'action': original_URL + "?render=overlay",
+        'method': "post"
+      }).append($('<input>', {
+        'name': 'comma_separated_ids',
+        'value': entity_ids.join(","),
+        'type' : 'hidden'
+      }));
+      form.append();
+      form.submit();
+      form.remove();
   }
-
+  
   function addClickToDownloadReady() {
     original_download_ready_URL = $('#download-ready').attr('href');
-    $('#download-ready').click(function () {
-      modifyActionButtonURL('#download-ready', original_download_ready_URL);
-    });
+    $('#download-ready').click(function(){modifyActionButtonURL('#download-ready', original_download_ready_URL);});
   }
   function addClickToUploadButton() {
     original_upload_edited_URL = $('#upload-edited').attr('href');
-    $('#upload-edited').click(function () {
-      modifyActionButtonURL('#upload-edited', original_upload_edited_URL);
-    });
+    $('#upload-edited').click(function(){modifyActionButtonURL('#upload-edited', original_upload_edited_URL);});
   }
-  function refreshStatuses() {
+  function refreshStatuses(){
     $('#refresh')[0].click();
   }
   //changes the href associated with the download/upload buttons after they are clicked
@@ -191,7 +188,7 @@ function lingotek_perform_action(nid, action) {
     var filterValue = $('#clear-filters').text();
     console.log(filterValue);
     var filterOn = filterValue !== "";
-    if (filterOn === true && entity_ids.length === 0) {
+    if(filterOn === true && entity_ids.length === 0) {
       scrapeAllFilteredPages(element_id, original_URL);
     }
     else {
@@ -206,17 +203,17 @@ function lingotek_perform_action(nid, action) {
   function getIDArray(visible_check) {
     var entity_ids = [];
     var visible = visible_check === true;
-    $('#edit-grid-container .form-checkbox').each(function () {
-      var val = $(this).val();
-      if ($(this).attr('checked') || visible) {
-        if (val !== 'on') {//'on' represents the 'select all' checkbox
-          entity_ids.push(val);
+    $('#edit-grid-container .form-checkbox').each(function() {
+        var val = $(this).val();
+        if($(this).attr('checked') || visible) {
+          if(val !== 'on') {//'on' represents the 'select all' checkbox
+            entity_ids.push(val);
+          }
         }
-      }
     });
     return entity_ids;
   }
-  $(document).ready(function () {
+  $(document).ready(function(){
     addClickToDownloadReady();
     addClickToUploadButton();
   });
