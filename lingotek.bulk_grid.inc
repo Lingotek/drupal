@@ -117,7 +117,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $results_first = (($page - 1) * $limit_select) + 1;
   $results_last = $results_first + count($table_data) - 1;
-
+  $form['lingotek_legend'] = array(
+    '#markup' => l('<i class="fa fa-question-circle fa-2x ltk-legend"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/legend', array('html' => TRUE, 'attributes' => array('title' => t('Legend - icon descriptions'), 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-large','lingotek-action'), 'id' => array('legend')))),
+  );
   $form['customize'] = array(
     '#markup' => l('<i class="fa fa-list-alt fa-2x" ></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/customize/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Customize Table'), 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-large', 'lingotek-action')))),
   );
@@ -204,7 +206,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   if ($filter_set) {
     $form['filter_message'] = array(
-      '#markup' => '<span style="white-space:nowrap;">' . l('<i class="fa fa-times" style="margin: 0 5px;"></i>' . t('Clear Filters') . '</span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/clear/filters/' . $entity_type, array('html' => TRUE)) . '</span>',
+      '#markup' => '<span style="white-space:nowrap;">' . l('<i class="fa fa-times" style="margin: 0 5px;"></i>' . t('Clear Filters') . '</span>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/clear/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('id' => array('clear-filters')))) . '</span>',
     );
   }
 
@@ -506,6 +508,93 @@ function lingotek_grid_customize($entity_type) {
     'entity_type' => $entity_type,
   );
   $output = ctools_modal_form_wrapper('lingotek_grid_customize_form', $form_state);
+
+  if (!empty($form_state['executed'])) {
+
+    $f = array();
+    form_execute_handlers('submit', $f, $form_state);
+    $commands = array();
+    $commands[] = ctools_modal_command_dismiss();
+    $commands[] = ctools_ajax_command_reload();
+    print ajax_render($commands);
+    exit;
+  }
+
+  print ajax_render($output);
+}
+
+function lingotek_grid_legend_form($form, $form_state) {
+
+  $form['lingotek_upload'] = array(
+    '#markup' => '<div><i class="fa fa-cloud-upload fa-2x ltk-upload legend-icon"></i> '
+    . '<p class="legend-big-icon" style="margin-left:0;">Upload edited documents to Lingotek for translation.</p>'
+    . '</div>'
+  );
+  $form['refresh'] = array(
+    '#markup' => '<div><i class="fa fa-refresh fa-2x ltk-refresh legend-icon"></i>'
+    . '<p class="legend-big-icon">Refresh the status of the Translations column</p>'
+    . '</div>'
+  );
+  $form['lingotek_update'] = array(
+    '#markup' => '<div><i class="fa fa-cloud-download fa-2x ltk-download legend-icon"></i>'
+    . '<p class="legend-big-icon">Download translated documents from Lingotek</p>'
+    . '</div>'
+  );
+  $form['lingotek_customize'] = array(
+    '#markup' => '<div><i class="fa fa-list-alt fa-2x legend-icon"></i>'
+    . '<p class="legend-big-icon">Choose which columns on the table to show or hide</p>'
+    . '</div>'
+  );
+  $form['lingotek_edit'] = array(
+    '#markup' => '<div><div><i class="fa fa-edit fa-2x legend-icon" style="color: #0074BD"></i>'
+    . '<p class="legend-big-icon">Edit the content associated with this row</p>'
+    . '</div>'
+  );
+  $form['lingotek_translations'] = array(
+    '#markup' => '<div><div><i class="fa fa-tasks fa-2x legend-icon" style="color: #0074BD"></i>'
+    . '<p class="legend-big-icon">View current translation progress for this content</p>'
+    . '</div>'
+  );
+  $form['lingotek_settings'] = array(
+    '#markup' => '<div><div><i class="fa fa-gear fa-2x legend-icon" style="color: #0074BD"></i>'
+    . '<p class="legend-big-icon">Adjust Lingotek module settings</p>'
+    . '</div>'
+  );
+  $form['lingotek_current'] = array(
+    '#markup' => '<div><a class="language-icon target-current">lang</a>'
+    . '<span>This content is current, no translations are pending or ready for download</span>'
+    . '</div>'
+  );
+  $form['lingotek_ready'] = array(
+    '#markup' => '<div><a class="language-icon target-ready">lang</a>'
+    . '<span>This content has been translated and is ready to be downloaded</span>'
+    . '</div>'
+  );
+  $form['lingotek_pending'] = array(
+    '#markup' => '<div><a class="language-icon target-pending">lang</a>'
+    . '<span>This content has been uploaded to Lingotek and is awaiting translation</span>'
+    . '</div>'
+  );
+  $form['lingotek_edited'] = array(
+    '#markup' => '<div><a class="language-icon target-edited">lang</a>'
+    . '<span>This content has been edited and is ready to be uploaded to Lingotek</span>'
+    . '</div>'
+  );
+  
+  
+
+  return $form;
+}
+
+function lingotek_grid_legend() {
+  ctools_include('node.pages', 'node', '');
+  ctools_include('modal');
+  ctools_include('ajax');
+
+  $form_state = array(
+    'ajax' => TRUE,
+  );
+  $output = ctools_modal_form_wrapper('lingotek_grid_legend_form', $form_state);
 
   if (!empty($form_state['executed'])) {
 

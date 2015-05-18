@@ -65,11 +65,11 @@ input.lingotek-content-settings-table.form-checkbox {
   clear: both;
 }
 
-.form-item.form-item-select-actions {
+.form-item.form-item-actions-select {
   padding: 0px;
 }
 
-.form-item-select-actions label, .form-item-search label {
+.form-item-actions-select label, .form-item-search label {
   display: inline;
 }
 
@@ -130,12 +130,6 @@ a.language-icon {
   border: 1px solid #fff;
 }
 
-.language-icon.target-non-lingotek {
-  background-color: inherit;
-  border: 1px solid #ccc;
-  color: #aaa !important;
-}
-
 .language-icon.target-pending {
   background-color: #CE2029;
   border: 1px solid #CE2029;
@@ -152,24 +146,14 @@ a.language-icon {
 }
 
 .language-icon.target-edited {
-  background-color: #585858;
-  border: 1px solid #585858;
-}
-
-.language-icon.target-untracked {
-  background-color: #999;
-  border: 1px solid #999;
-}
-
-.language-icon.target-target_localize {
   background-color:#999;
   border: 1px solid #999;
 }
 
-.language-icon.target-target_edited {
-  color: #000 !important;
+.language-icon.target-untracked {
+  color: #aaa !important;
   background-color:inherit;
-  border: 1px #000 solid;
+  border: 1px #ccc solid;
 }
 
 .language-icon.target-pending.target-disabled {
@@ -207,6 +191,12 @@ a.language-icon {
 }
 .ltk-download:hover {
     color: green;
+}
+.ltk-legend {
+    color: #5693D1;
+}
+.ltk-legend:hover {
+    color: #3479c0;
 }
 
 .ltk-refresh {
@@ -310,49 +300,15 @@ a.ltk-action:hover {
   background-color: #CCCCCC
 }
 
-a.tooltips {
+p.legend-big-icon {
+  display: inline-block;
   position: relative;
-  display: inline;
-  text-decoration: none;
-  color: inherit;
+  top: 80%;
+  transform: translateY(-20%);
+  margin:0;
+  margin-left: 5px;
 }
 
-a:hover.tooltips {
-  text-decoration: none;
-}
-
-a.tooltips span {
-  position: absolute;
-  right: -75px;
-  color: #FFFFFF;
-  background: #333;
-  line-height: 18px;
-  text-align: center;
-  visibility: hidden;
-  border-radius: 6px;
-  text-decoration: none;
-  padding: 5px;
-  font-size: 13px;
-}
-
-a.tooltips span:after {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  margin-left: -8px;
-  width: 0; height: 0;
-  border-bottom: 8px solid #333;
-  border-right: 8px solid transparent;
-  border-left: 8px solid transparent;
-  text-decoration: none;
-}
-
-a:hover.tooltips span {
-  visibility: visible;
-  top: 30px;
-  left: 50%;
-  margin-left: -90px;
-  z-index: 999;
-  text-decoration: none;
+i.legend-icon {
+  min-width:35px;
 }
