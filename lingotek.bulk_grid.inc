@@ -1188,6 +1188,16 @@ function lingotek_grid_build_filters($form_state) {
         LingotekSync::STATUS_CURRENT => t('In Sync'),
       ),
       '#multiple' => FALSE,
+    ),
+    'not_uploaded' => array(
+      '#type' => 'select',
+      '#default_value' => isset($_SESSION['grid_filters']['not_uploaded']) ? $_SESSION['grid_filters']['not_uploaded'] : 'off',
+      '#title' => t('Filter all not yet uploaded'),
+      '#options' => array(
+        'off' => t('Off'),
+        "on" => t('On'),
+      ),
+      '#multiple' => FALSE,
     )
   );
 
@@ -1332,7 +1342,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;
-
+  
   $entity_properties = array_flip($info['schema_fields_sql']['base table']);
 
   $label_col  = isset($info['entity keys']['label']) && $info['entity keys']['label'] ? $info['entity keys']['label'] : NULL;
@@ -1400,7 +1410,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
   $table_data = lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties, $entity_id_key);
-
+  
   return $table_data;
 }
 
@@ -1512,6 +1522,10 @@ function lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid) {
 
   // Entity Upload Status
   $query->leftJoin('lingotek_entity_metadata', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'upload_status\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\'');
+  $query->addField('lingo_upload_status', 'value', 'upload_status');
+  
+  // Relevant entity ids
+  $query->leftJoin('lingotek_entity_metadata', 'lingo_entity_id', 'lingo_entity_id.entity_type =\'' . $entity_type . '\' AND lingo_entity_id.entity_id = ' . $eid);
   $query->addField('lingo_upload_status', 'value', 'upload_status');
 
   // Profile Settings
@@ -1629,6 +1643,22 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
     if (isset($filters[$value]) && !is_array($filters[$value])) {
       $filters[$value] = array($filters[$value]);
     }
+  }
+  //Yet to be uploaded
+  if (isset($filters['not_uploaded']) && $filters['not_uploaded'] === 'on') {
+//    $info = entity_get_info($entity_type);
+//    $base_table = $info['base table'];
+    $notUploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
+    
+    $notUploadedQuery->distinct();
+    $notUploadedQuery->fields('lingo_em',array('entity_id'));
+    $notUploadedQuery->condition('entity_key', 'upload_status');
+    $results = $notUploadedQuery->execute();
+    $uploaded_ids = array();
+    foreach($results as $result){
+      $uploaded_ids[] = $result->entity_id;
+    }
+    $query->condition('lingo_entity_id.entity_id', $uploaded_ids, 'NOT IN');
   }
   // Source Language
   if (isset($filters['source_language']) && $filters['source_language'] != 'all') {
