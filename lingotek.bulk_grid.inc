@@ -1195,9 +1195,10 @@ function lingotek_grid_build_filters($form_state) {
         'all' => t('All'),
         LingotekSync::STATUS_EDITED => t('Out of Sync'),
         LingotekSync::STATUS_CURRENT => t('In Sync'),
+        'never' => t('Never Uploaded'),
       ),
       '#multiple' => FALSE,
-    )
+    ),
   );
 
   // Include a content-type filter if there are bundles by which to filter.
@@ -1341,7 +1342,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;
-
+  
   $entity_properties = array_flip($info['schema_fields_sql']['base table']);
 
   $label_col  = isset($info['entity keys']['label']) && $info['entity keys']['label'] ? $info['entity keys']['label'] : NULL;
@@ -1656,6 +1657,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $filters[$value] = array($filters[$value]);
     }
   }
+  
   // Source Language
   if (isset($filters['source_language']) && $filters['source_language'] != 'all') {
     $query->condition('n.' . $info['entity keys']['language'], $filters['source_language']);
@@ -1663,7 +1665,23 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 
   // Upload Status
   if (isset($filters['upload_status']) && !in_array('all', $filters['upload_status'])) {
-    $query->condition('lingo_upload_status.value', $filters['upload_status'], 'IN');
+    //never uploaded case
+    if(in_array("never", $filters['upload_status'])){
+      $notUploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
+      $notUploadedQuery->distinct();
+      $notUploadedQuery->fields('lingo_em',array('entity_id'));
+      $notUploadedQuery->condition('entity_key', 'upload_status');
+      $results = $notUploadedQuery->execute();
+      $uploaded_ids = array();
+      foreach($results as $result){
+        $uploaded_ids[] = $result->entity_id;
+      }
+      $query->condition('lingo_entity_id.entity_id', $uploaded_ids, 'NOT IN');
+    }
+    //other cases
+    else {
+      $query->condition('lingo_upload_status.value', $filters['upload_status'], 'IN');
+    }
   }
 
   //  Content Type
