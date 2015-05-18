@@ -927,6 +927,7 @@ function lingotek_grid_download_selected($entity_type, $entity_ids, $target_loca
 }
 
 function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null) {
+  file_put_contents("sethLog.txt", $comma_separated_ids . PHP_EOL, FILE_APPEND);
   if ($entity_type === 'config') {
     // Looks clean but actually gets set_ids, convert those to lids, then the next function converts back to set_ids.
     $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
