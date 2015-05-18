@@ -189,6 +189,7 @@ function lingotek_perform_action(nid, action) {
     var new_URL = original_URL.valueOf();//clones the original
     var entity_ids = getIDArray();
     var filterValue = $('#clear-filters').text();
+    console.log(filterValue);
     var filterOn = filterValue !== "";
     if (filterOn === true && entity_ids.length === 0) {
       scrapeAllFilteredPages(element_id, original_URL);
