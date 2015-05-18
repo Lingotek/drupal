@@ -92,63 +92,45 @@ function lingotek_perform_action(nid, action) {
     //straight from the html instead of getting data from the backend, I considered
     //pulling from the database and filtering in the PHP, but there's no guarantee
     //the results would match the frontend's filters
-  function scrapeAllFilteredPages(element_id, original_URL, href, entity_ids) {
+  function scrapeAllFilteredPages(element_id, original_URL) {
+    var entity_ids = getIDArray(true);//gets the displayed data
+    var requestCount = 0;
     //cancel the default link href, otherwise it tries to follow the link before
     //the ajax calls finish
     $(element_id).removeAttr('href');
-    //gets the displayed data from the current page
-    if(entity_ids === undefined){
-      entity_ids = getIDArray(true);
-    }
-    //start at the first page
-    var noNext = false;
-    var checkFirstPage = $('.pager-first a');
-    if(checkFirstPage.text().indexOf('first') > -1 && href === undefined){
-      href = checkFirstPage.attr('href');
-    }
-    //on the first call, if we're on the first page, grab the href to the next
-    //page, if there is no next page, fire off the filtered data
-    if(href === undefined){
-      if($('.pager-next a').attr('href') !== undefined) {
-        href = $('.pager-next a').attr('href');
-      }
-      else {
+    //get the data for every page option on the table
+    $('.pager li.pager-item a').each(function(){
+     var href = $(this).attr('href');
+      $.ajax({
+          url: href,
+          dataType: 'text',
+          success: function(data) {
+            //here we're grabbing the inputs inside the table
+            var begin = data.indexOf("<table");
+            var end = data.indexOf("</table>") + "</table>".length;
+            var tableData = data.substring(begin, end);
+            var el = $('<div></div>');
+            el.html(tableData);
+            $('input', el).each(function(){
+                entity_ids.push($(this).val());
+            });    
+          },
+          complete: function(){
+              requestCount++;
+              //after the last page is processed, execute the new URL with a POST
+              //request
+              if(requestCount === $('.pager li.pager-item a').length){
+                clickFilteredURL(entity_ids, original_URL, element_id);
+              }
+          }
+      });       
+    });
+    //covers the case of only one page of results
+    if($('.pager li.pager-item a').length === 0 && entity_ids.length > 0){
         clickFilteredURL(entity_ids, original_URL, element_id);
-      }
     }
-    //recursive ajax call for each table page
-    $.ajax({
-           url:href,
-           dataType: 'text',
-           success: function(data) {
-              var begin = data.indexOf("<table");
-              var end = data.indexOf("</table>") + "</table>".length;
-              var tableData = data.substring(begin, end);
-              var el = $('<div></div>');
-              el.html(tableData);
-              $('input', el).each(function(){
-                  entity_ids.push($(this).val());
-              });  
-              
-              var next_el = $('<div></div>');
-              next_el.html(data);
-              var next_href = $('.pager-next a', next_el).attr('href');
-              if(next_href === null || next_href === undefined){
-                  noNext = true;
-              }
-              else {
-                scrapeAllFilteredPages(element_id, original_URL, next_href, entity_ids);
-              }
-           },
-           complete: function(){
-               if(noNext === true){
-                 clickFilteredURL(entity_ids, original_URL, element_id);
-               }
-           }
-           
-        });
+    
   }
-  
   function clickFilteredURL(entity_ids, original_URL){
     //the entity_type is passed as a URL param
     //the entities to upload/download are sent in a POST body to deal with URL 
