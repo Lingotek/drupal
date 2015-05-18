@@ -1186,14 +1186,13 @@ function lingotek_grid_build_filters($form_state) {
         'all' => t('All'),
         LingotekSync::STATUS_EDITED => t('Out of Sync'),
         LingotekSync::STATUS_CURRENT => t('In Sync'),
-        'never' => t('Never Uploaded'),
       ),
       '#multiple' => FALSE,
     ),
     'not_uploaded' => array(
       '#type' => 'select',
       '#default_value' => isset($_SESSION['grid_filters']['not_uploaded']) ? $_SESSION['grid_filters']['not_uploaded'] : 'off',
-      '#title' => t('Filter never uploaded'),
+      '#title' => t('Filter all not yet uploaded'),
       '#options' => array(
         'off' => t('Off'),
         "on" => t('On'),
@@ -1627,23 +1626,7 @@ function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col
     }
   }
 }
-function logAnything($data){
-  foreach($data as $key => $dataPiece){
-    if(is_array($dataPiece)){
-      file_put_contents("sethLog.txt", "[$key] BEGIN ARRAY" . PHP_EOL,FILE_APPEND);    
-      logAnything($dataPiece);
-      file_put_contents("sethLog.txt", "END ARRAY" . PHP_EOL,FILE_APPEND);    
-    }
-    elseif(is_object($dataPiece)){
-      file_put_contents("sethLog.txt", "{$key} BEGIN OBJECT" . PHP_EOL,FILE_APPEND);    
-      logAnything($dataPiece);
-      file_put_contents("sethLog.txt", "END OBJECT" . PHP_EOL,FILE_APPEND);    
-    }
-    else{
-      file_put_contents("sethLog.txt", "[$key] $dataPiece" . PHP_EOL,FILE_APPEND);    
-    }
-  }
-}
+
 function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, $entity_type) {
   //  Entity ID
   if (isset($filters['nid']) && $filters['nid'] != '') {
@@ -1661,7 +1644,22 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $filters[$value] = array($filters[$value]);
     }
   }
-  
+  //Yet to be uploaded
+  if (isset($filters['not_uploaded']) && $filters['not_uploaded'] === 'on') {
+//    $info = entity_get_info($entity_type);
+//    $base_table = $info['base table'];
+    $notUploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
+    
+    $notUploadedQuery->distinct();
+    $notUploadedQuery->fields('lingo_em',array('entity_id'));
+    $notUploadedQuery->condition('entity_key', 'upload_status');
+    $results = $notUploadedQuery->execute();
+    $uploaded_ids = array();
+    foreach($results as $result){
+      $uploaded_ids[] = $result->entity_id;
+    }
+    $query->condition('lingo_entity_id.entity_id', $uploaded_ids, 'NOT IN');
+  }
   // Source Language
   if (isset($filters['source_language']) && $filters['source_language'] != 'all') {
     $query->condition('n.' . $info['entity keys']['language'], $filters['source_language']);
@@ -1669,23 +1667,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 
   // Upload Status
   if (isset($filters['upload_status']) && !in_array('all', $filters['upload_status'])) {
-    //never uploaded case
-    if(in_array("never", $filters['upload_status'])){
-      $notUploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
-      $notUploadedQuery->distinct();
-      $notUploadedQuery->fields('lingo_em',array('entity_id'));
-      $notUploadedQuery->condition('entity_key', 'upload_status');
-      $results = $notUploadedQuery->execute();
-      $uploaded_ids = array();
-      foreach($results as $result){
-        $uploaded_ids[] = $result->entity_id;
-      }
-      $query->condition('lingo_entity_id.entity_id', $uploaded_ids, 'NOT IN');
-    }
-    //other cases
-    else {
-      $query->condition('lingo_upload_status.value', $filters['upload_status'], 'IN');
-    }
+    $query->condition('lingo_upload_status.value', $filters['upload_status'], 'IN');
   }
 
   //  Content Type
