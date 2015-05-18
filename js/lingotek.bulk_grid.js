@@ -14,21 +14,21 @@ function lingotek_perform_action(nid, action) {
     var $self = $(self);
     url = $self.attr('href');
     var entity_ids = [];
-    $('#edit-grid-container .form-checkbox').each(function() {
-      if($(this).attr('checked')) {
+    $('#edit-grid-container .form-checkbox').each(function () {
+      if ($(this).attr('checked')) {
         val = $(this).val();
-        if(val != 'on') {
+        if (val != 'on') {
           entity_ids.push(val);
         }
       }
     });
-    if(entity_ids.length > 0) {
+    if (entity_ids.length > 0) {
       $('#edit-select-actions').val('select');
       ob = Drupal.ajax[url];
       ob.element_settings.url = ob.options.url = ob.url = url + '/' + entity_ids.join(',');
       $self.trigger('click');
       $self.attr('href', url);
-      $('.modal-header .close').click( function() {
+      $('.modal-header .close').click(function () {
         location.reload();
       });
     } else {
@@ -41,7 +41,7 @@ function lingotek_perform_action(nid, action) {
 
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
-      $('.form-checkbox').change(function() {
+      $('.form-checkbox').change(function () {
         var cells_of_selected_row = $(this).parents("tr").children();
 
         var selected_set_name = cells_of_selected_row.children('.set_name').text();
@@ -69,24 +69,70 @@ function lingotek_perform_action(nid, action) {
       });
 
       $('input#edit-submit-actions.form-submit').hide();
-      $('#edit-select-actions').change(function() {
+      $('#edit-select-actions').change(function () {
         val = $(this).val();
 
-        if(val == 'reset' || val == 'delete') {
-          lingotek_trigger_modal($('#'+val+'-link'));
-        } else if(val == 'edit') {
+        if (val == 'reset' || val == 'delete') {
+          lingotek_trigger_modal($('#' + val + '-link'));
+        } else if (val == 'edit') {
           lingotek_trigger_modal($('#edit-settings-link'));
-        } else if(val == 'workflow') {
+        } else if (val == 'workflow') {
           lingotek_trigger_modal($('#change-workflow-link'));
-        } else  {
+        } else {
           $('input#edit-submit-actions.form-submit').trigger('click');
         }
       });
 
-      $('#edit-limit-select').change(function() {
+      $('#edit-limit-select').change(function () {
         $('#edit-search-submit.form-submit').trigger('click');
       });
-  }
-};
+    }
+  };
 
+  function addClickToDownloadReady() {
+    original_download_ready_URL = $('#download-ready').attr('href');
+    $('#download-ready').click(function () {
+      modifyActionButtonURL('#download-ready', original_download_ready_URL);
+    });
+  }
+  function addClickToUploadButton() {
+    original_upload_edited_URL = $('#upload-edited').attr('href');
+    $('#upload-edited').click(function () {
+      modifyActionButtonURL('#upload-edited', original_upload_edited_URL);
+    });
+  }
+  //changes the href associated with the download/upload buttons after they are clicked
+  //but before the links are actually followed. Also checks to see if the results are 
+  //filtered.
+  function modifyActionButtonURL(element_id, original_URL) {
+    var new_URL = original_URL.valueOf();//clones the original
+    var entity_ids = getIDArray();
+      var id_string = entity_ids.join(",");
+      new_URL += entity_ids.length !== 0 ? "/" + entity_ids.join(",") : "";
+      new_URL = entity_ids.length === 0 ? original_URL : new_URL;
+      $(element_id).attr('href', new_URL);
+  }
+  //looks at every currently displayed row and pushes the entity_id of each
+  //row with a checked checkbox into the return variable
+  function getIDArray(visible_check) {
+    var entity_ids = [];
+    var visible = visible_check === true;
+    $('#edit-grid-container .form-checkbox').each(function () {
+      var val = $(this).val();
+      if ($(this).attr('checked') || visible) {
+        if (val !== 'on') {//'on' represents the 'select all' checkbox
+          entity_ids.push(val);
+        }
+      }
+    });
+    return entity_ids;
+  }
+  function changeManageTabURL(){
+    $('.active a').attr('href', $('#refresh').attr('href'));
+  }
+  $(document).ready(function () {
+    addClickToDownloadReady();
+    addClickToUploadButton();
+    changeManageTabURL();
+  });
 })(jQuery);
