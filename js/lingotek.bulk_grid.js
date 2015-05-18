@@ -88,84 +88,6 @@ function lingotek_perform_action(nid, action) {
       });
     }
   };
-  //the whole concept behind this function is kinda hacky, I'm pulling the data
-  //straight from the html, I considered pulling from the database and filtering in the PHP,
-  //but there's no guarantee the results would match the view's filters
-  function scrapeAllFilteredPages(element_id, original_URL, href, entity_ids) {
-    //cancel the default link href, otherwise it tries to follow the link before
-    //the ajax calls finish
-    $(element_id).removeAttr('href');
-    //gets the displayed data from the current page
-    if (entity_ids === undefined) {
-      entity_ids = getIDArray(true);
-    }
-    //start at the first page
-    var noNext = false;
-    var checkFirstPage = $('.pager-first a');
-    if (checkFirstPage.text().indexOf('first') > -1 && href === undefined) {
-      href = checkFirstPage.attr('href');
-    }
-    //on the first call, if we're on the first page, grab the href to the next
-    //page, if there is no next page, fire off the filtered data
-    if (href === undefined) {
-      if ($('.pager-next a').attr('href') !== undefined) {
-        href = $('.pager-next a').attr('href');
-      }
-      else {
-        clickFilteredURL(entity_ids, original_URL, element_id);
-      }
-    }
-    //recursive ajax call for each table page
-    $.ajax({
-      url: href,
-      dataType: 'text',
-      success: function (data) {
-        var begin = data.indexOf("<table");
-        var end = data.indexOf("</table>") + "</table>".length;
-        var tableData = data.substring(begin, end);
-        var el = $('<div></div>');
-        el.html(tableData);
-        $('input', el).each(function () {
-          entity_ids.push($(this).val());
-        });
-
-        var next_el = $('<div></div>');
-        next_el.html(data);
-        var next_href = $('.pager-next a', next_el).attr('href');
-        if (next_href === null || next_href === undefined) {
-          noNext = true;
-        }
-        else {
-          scrapeAllFilteredPages(element_id, original_URL, next_href, entity_ids);
-        }
-      },
-      complete: function () {
-        if (noNext === true) {
-          clickFilteredURL(entity_ids, original_URL, element_id);
-        }
-      }
-
-    });
-  }
-
-  function clickFilteredURL(entity_ids, original_URL) {
-    //the entity_type is passed as a URL param
-    //the entities to upload/download are sent in a POST body to deal with URL 
-    //length restraints
-    var new_URL = original_URL.valueOf();
-    new_URL += entity_ids.length !== 0 ? "/" + entity_ids.join(",") : "";
-    var form = $('<form>', {
-      'action': original_URL + "?render=overlay",
-      'method': "post"
-    }).append($('<input>', {
-      'name': 'comma_separated_ids',
-      'value': entity_ids.join(","),
-      'type': 'hidden'
-    }));
-    form.append();
-    form.submit();
-    form.remove();
-  }
 
   function addClickToDownloadReady() {
     original_download_ready_URL = $('#download-ready').attr('href');
@@ -179,26 +101,16 @@ function lingotek_perform_action(nid, action) {
       modifyActionButtonURL('#upload-edited', original_upload_edited_URL);
     });
   }
-  function refreshStatuses() {
-    $('#refresh')[0].click();
-  }
   //changes the href associated with the download/upload buttons after they are clicked
   //but before the links are actually followed. Also checks to see if the results are 
   //filtered.
   function modifyActionButtonURL(element_id, original_URL) {
     var new_URL = original_URL.valueOf();//clones the original
     var entity_ids = getIDArray();
-    var filterValue = $('#clear-filters').text();
-    var filterOn = filterValue !== "";
-    if (filterOn === true && entity_ids.length === 0) {
-      scrapeAllFilteredPages(element_id, original_URL);
-    }
-    else {
       var id_string = entity_ids.join(",");
       new_URL += entity_ids.length !== 0 ? "/" + entity_ids.join(",") : "";
       new_URL = entity_ids.length === 0 ? original_URL : new_URL;
       $(element_id).attr('href', new_URL);
-    }
   }
   //looks at every currently displayed row and pushes the entity_id of each
   //row with a checked checkbox into the return variable
@@ -215,8 +127,12 @@ function lingotek_perform_action(nid, action) {
     });
     return entity_ids;
   }
+  function changeManageTabURL(){
+    $('.active a').attr('href', $('#refresh').attr('href'));
+  }
   $(document).ready(function () {
     addClickToDownloadReady();
     addClickToUploadButton();
+    changeManageTabURL();
   });
 })(jQuery);

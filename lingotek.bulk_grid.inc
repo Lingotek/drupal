@@ -934,17 +934,19 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
     return;
   }
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
-  if($comma_separated_ids === null){
-    $comma_separated_ids = array_key_exists("comma_separated_ids", $_POST) 
-      ? $_POST['comma_separated_ids'] : null; 
-  }
-  if (!empty($targets)) {
 
-    $entity_ids = array();
+  
+  
+  if (!empty($targets)) {
+    
+    $entity_ids = $comma_separated_ids === null && isset($_SESSION['grid_filters']) 
+    ? $_SESSION['grid_filters']['filtered_ids'] : null;
+    
     if($comma_separated_ids !== null) {		
       $entity_ids = explode(",", $comma_separated_ids);		
     }
-    else {
+    elseif($entity_ids === null) {
+      $entity_ids = array();
       foreach ($targets as $target) {
         $entity_ids[] = $target['id'];
       }
@@ -981,16 +983,23 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     lingotek_config_upload_selected($lids);
     return;
   }
-  if($comma_separated_ids === null){
-    $comma_separated_ids = array_key_exists('comma_separated_ids', $_POST) 
-      ? $_POST['comma_separated_ids'] : null;
-  }
   
   $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
   
   if($comma_separated_ids !== null){
     $selected_ids = explode(",", $comma_separated_ids);
     $entity_ids = array_uintersect($selected_ids, $entity_ids, "integerCompare");
+  }
+  //filtering on all the ids of the current filter set
+  elseif(isset($_SESSION['grid_filters'])) {
+    $filtered_ids = $_SESSION['grid_filters']['filtered_ids'];
+    $matching_ids = array();
+    foreach($entity_ids as $entity_id){
+      if(array_key_exists($entity_id, $filtered_ids)){
+        $matching_ids[] = $entity_id;
+      }
+    }
+    $entity_ids = $matching_ids;
   }
 
   if (!empty($entity_ids)) {
@@ -1190,16 +1199,6 @@ function lingotek_grid_build_filters($form_state) {
       ),
       '#multiple' => FALSE,
     ),
-    'not_uploaded' => array(
-      '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['not_uploaded']) ? $_SESSION['grid_filters']['not_uploaded'] : 'off',
-      '#title' => t('Filter never uploaded'),
-      '#options' => array(
-        'off' => t('Off'),
-        "on" => t('On'),
-      ),
-      '#multiple' => FALSE,
-    )
   );
 
   // Include a content-type filter if there are bundles by which to filter.
@@ -1396,6 +1395,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   }
   $form_state['values']['grid_header'] = lingotek_bulk_grid_refine_source_header($header, $columns);
   $query = lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, $limit, $bundle_col, $info, $entity_properties, $eid);
+  //picked an arbitrarily large number to ensure all results are gotten
   // Initialize Query and extend paginator and tablesort if necessary
   lingotek_bulk_grid_filter_query($query, $entity_type, $eid, $label_col, $info);
 
@@ -1407,6 +1407,18 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
   // Execute the query
   $table_data_raw = $query->distinct()->execute()->fetchAllAssoc($entity_id_key);
+  //save filtered id's to session for group download/upload
+  if (isset($_SESSION['grid_filters'])) {
+    $no_limit_query = lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, 500000, $bundle_col, $info, $entity_properties, $eid);
+    lingotek_bulk_grid_filter_query($no_limit_query, $entity_type, $eid, $label_col, $info);
+    $no_limit_query_raw = $no_limit_query->distinct()->execute()->fetchAllAssoc($entity_id_key);
+    $all_filtered_entity_ids = array();
+    foreach($no_limit_query_raw as $key => $value){
+      $all_filtered_entity_ids[$key] = $key;
+    }
+    $_SESSION['grid_filters']['filtered_ids'] = $all_filtered_entity_ids;
+  }
+  
   lingotek_entity_load($table_data_raw, $entity_type);
 
   // Parse returned objects and make them arrays keyed by the Node ID for clean use in The Grid.
@@ -1627,23 +1639,7 @@ function lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col
     }
   }
 }
-function logAnything($data){
-  foreach($data as $key => $dataPiece){
-    if(is_array($dataPiece)){
-      file_put_contents("sethLog.txt", "[$key] BEGIN ARRAY" . PHP_EOL,FILE_APPEND);    
-      logAnything($dataPiece);
-      file_put_contents("sethLog.txt", "END ARRAY" . PHP_EOL,FILE_APPEND);    
-    }
-    elseif(is_object($dataPiece)){
-      file_put_contents("sethLog.txt", "{$key} BEGIN OBJECT" . PHP_EOL,FILE_APPEND);    
-      logAnything($dataPiece);
-      file_put_contents("sethLog.txt", "END OBJECT" . PHP_EOL,FILE_APPEND);    
-    }
-    else{
-      file_put_contents("sethLog.txt", "[$key] $dataPiece" . PHP_EOL,FILE_APPEND);    
-    }
-  }
-}
+
 function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, $entity_type) {
   //  Entity ID
   if (isset($filters['nid']) && $filters['nid'] != '') {
