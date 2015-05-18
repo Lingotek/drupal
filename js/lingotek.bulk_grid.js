@@ -41,6 +41,8 @@ function lingotek_perform_action(nid, action) {
 
   Drupal.behaviors.lingotekBulkGrid = {
     attach: function (context) {
+      addClickToDownloadReady();
+      addClickToUploadButton();
       $('.form-checkbox').change(function() {
         var cells_of_selected_row = $(this).parents("tr").children();
 
@@ -158,9 +160,6 @@ function lingotek_perform_action(nid, action) {
     original_upload_edited_URL = $('#upload-edited').attr('href');
     $('#upload-edited').click(function(){modifyActionButtonURL('#upload-edited', original_upload_edited_URL);});
   }
-  function refreshStatuses(){
-    $('#refresh')[0].click();
-  }
   //changes the href associated with the download/upload buttons after they are clicked
   //but before the links are actually followed. Also checks to see if the results are 
   //filtered.
@@ -195,8 +194,4 @@ function lingotek_perform_action(nid, action) {
     });
     return entity_ids;
   }
-  $(document).ready(function(){
-    addClickToDownloadReady();
-    addClickToUploadButton();
-  });
 })(jQuery);
