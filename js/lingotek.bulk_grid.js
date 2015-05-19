@@ -128,7 +128,11 @@ function lingotek_perform_action(nid, action) {
     return entity_ids;
   }
   function changeManageTabURL(){
-    $('.active a').attr('href', $('#refresh').attr('href'));
+    $('.active a').each(function (){
+      if($(this).text() === 'Manage(active tab)'){
+        $(this).attr('href', $('#refresh').attr('href'));
+      }
+    });
   }
   $(document).ready(function () {
     addClickToDownloadReady();
