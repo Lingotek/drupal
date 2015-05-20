@@ -222,13 +222,15 @@ a.language-icon {
 }
 
 .notify-filtered-action {
-  float:right;
   font-size: 70%;
+  padding-left:30px;
+  position:absolute;
 }
 
 .notify-checked-action {
-  float:right;
   font-size: 70%;
+  padding-left:30px;
+  position:absolute;
 }
 
 .no-localized-title, .no-localized-title a {

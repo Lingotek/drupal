@@ -143,10 +143,12 @@ function lingotek_perform_action(nid, action) {
     });
   }
   function clarifyButtonsForFilter(){
-    var text = $('#clear-filters').text();
     $('.notify-checked-action').hide();
+   
     $('#upload-edited').attr('title', 'Upload all pending source content');
     $('#download-ready').attr('title', 'Download complete translations');
+    
+    var text = $('#clear-filters').text();
     if(text === undefined || text === "") {
       $('.notify-filtered-action').hide();
     }
