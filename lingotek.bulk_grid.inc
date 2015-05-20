@@ -1078,7 +1078,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
   
   if($comma_separated_ids !== null){
     $selected_ids = explode(",", $comma_separated_ids);
-    $entity_ids = array_uintersect($selected_ids, $entity_ids, "integerCompare");
+    $entity_ids = array_intersect($selected_ids, $entity_ids);
   }
   //filtering on all the ids of the current filter set
   elseif(isset($_SESSION['grid_filters'])) {
@@ -1111,16 +1111,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
   }
 }
-//comparison function for array_uintersect
-function integerCompare($v1, $v2) {
-  if ($v1 === $v2) {
-      return 0;
-  }
-  if ($v1 > $v2) {
-    return 1;
-  }
-  return -1;
-}
+
 /**
  * Gets the columns that will be shown from the session variable
  *
