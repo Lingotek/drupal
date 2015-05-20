@@ -218,9 +218,9 @@ function lingotek_config_add_query_filters($query) {
 
   // Upload Status
   if (isset($filters['upload_status']) && $filters['upload_status'] != 'all') {
-    $query->join('locales_target', 'lt', 'lt.lid = s.lid');
+    $query->leftJoin('locales_target', 'lt', 'lt.lid = s.lid');
     if ($filters['upload_status'] == 'never') {
-      $query->isNull('lingo_upload_status.value');
+      $query->isNull('lt.lid');
     }
     elseif ($filters['upload_status'] == LingotekSync::STATUS_EDITED) {
       // The edited status won't show in lingotek_config_metadata table so we need to check the i18n_status (1 == edited).
