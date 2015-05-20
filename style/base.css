@@ -221,6 +221,16 @@ a.language-icon {
   color: green;
 }
 
+.notify-filtered-action {
+  float:right;
+  font-size: 70%;
+}
+
+.notify-checked-action {
+  float:right;
+  font-size: 70%;
+}
+
 .no-localized-title, .no-localized-title a {
   color: #444;
   /*font-style: italic;*/

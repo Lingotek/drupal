@@ -101,6 +101,14 @@ function lingotek_perform_action(nid, action) {
       modifyActionButtonURL('#upload-edited', original_upload_edited_URL);
     });
   }
+  this.check_box_count = 0;
+  function addClickToCheckboxes(){
+    $('#edit-grid-container .form-checkbox').each(function () {
+      $(this).change(function (event) {
+        clarifyButtonsForCheckboxes(event);
+      });
+    });
+  }
   //changes the href associated with the download/upload buttons after they are clicked
   //but before the links are actually followed. Also checks to see if the results are 
   //filtered.
@@ -134,9 +142,50 @@ function lingotek_perform_action(nid, action) {
       }
     });
   }
+  function clarifyButtonsForFilter(){
+    var text = $('#clear-filters').text();
+    $('.notify-checked-action').hide();
+    $('#upload-edited').attr('title', 'Upload all pending source content');
+    $('#download-ready').attr('title', 'Download complete translations');
+    if(text === undefined || text === "") {
+      $('.notify-filtered-action').hide();
+    }
+    else {
+      $('.notify-filtered-action').show();
+      $('#upload-edited').attr('title', 'Upload filtered results');
+      $('#download-ready').attr('title', 'Download filtered results');
+    }
+  }
+  function clarifyButtonsForCheckboxes(event){
+    var box_checked = $(event.target).attr('checked');
+    if($(event.target).val() === 'on' && box_checked) {
+      this.check_box_count = $('#edit-grid-container .form-checkbox').length - 2; //accounts for the select all box
+    }
+    else if($(event.target).val() === 'on' && !box_checked) {
+      this.check_box_count = 0;
+    }
+    else if(box_checked === true){
+      this.check_box_count++;
+    }
+    else {
+      this.check_box_count--;
+    }
+    if (this.check_box_count > 0) {
+        $('.notify-filtered-action').hide();
+        $('.notify-checked-action').show();
+        $('#upload-edited').attr('title', 'Upload selected results');
+        $('#download-ready').attr('title', 'Download selected results');
+        return false;
+    }
+    else {
+      clarifyButtonsForFilter();
+    }
+  }
   $(document).ready(function () {
     addClickToDownloadReady();
     addClickToUploadButton();
+    addClickToCheckboxes();
     changeManageTabURL();
+    clarifyButtonsForFilter();
   });
 })(jQuery);
