@@ -1014,11 +1014,63 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
   }
 }
 
+function find_never_uploaded_lids($control_list = null){
+  if($control_list !== null && !empty($control_list)){
+      $query = db_select('locales_source','ls');
+      $query->leftJoin('locales_target','lt','ls.lid = lt.lid');
+      $query->isNull("lt.lid");
+      $query->fields('ls',array('lid'));
+      $query->condition('ls.lid',$control_list, 'IN');
+      $never_uploaded_lids = $query->execute();
+      return $never_uploaded_lids;
+  }
+  return array();
+}
+
+function config_upload_edited($comma_separated_ids) {
+    //if a filter is set, grab all filtered lids
+    if(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
+      
+      if($comma_separated_ids !== null){
+        $comma_lids = explode(",", $comma_separated_ids);
+        $selected_lids = array();
+        foreach($comma_lids as $lid){
+          $selected_lids[$lid] = $lid;
+        }
+      }
+      else {
+        $selected_lids = $_SESSION['grid_filters']['filtered_config_lids'];
+      }
+      
+      $all_edited_lids = LingotekConfigSet::getLidsToUpdate();
+      //get all the lids that have never been uploaded
+      $never_uploaded_lids = find_never_uploaded_lids($selected_lids);
+      
+      //compare to all the lids that have never been uploaded
+      $matching_ids = array();
+      
+      foreach($never_uploaded_lids as $lid_object){
+        $matching_ids[] = $lid_object->lid;
+      }
+      
+      //compare all the edited lids to the filter so we only upload the changed ones
+      foreach($all_edited_lids as $edited_lid){
+        if(array_key_exists($edited_lid, $selected_lids)){
+          $matching_ids[] = $edited_lid;
+        }
+      }
+      $lids = $matching_ids;
+    }
+    else {
+      // Only get the ones that need to be uploaded.
+      $lids = LingotekConfigSet::getLidsToUpdate();
+    }
+    lingotek_config_upload_selected($lids);
+}
+
 function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) {
   if ($entity_type === 'config') {
-    // Only get the ones that need to be uploaded.
-    $lids = LingotekConfigSet::getLidsToUpdate();
-    lingotek_config_upload_selected($lids);
+    config_upload_edited($comma_separated_ids);
     return;
   }
   
