@@ -64,9 +64,22 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       ->orderByHeader($form_state['values']['grid_header'])
       ->execute()
       ->fetchAllAssoc('lid');
-
+  
   $table_data = lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type);
-
+  if(isset($_SESSION['grid_filters'])){
+    $all_filtered_results = $query
+      ->extend('PagerDefault')
+      ->extend('TableSort')
+      ->limit(500000)
+      ->orderByHeader($form_state['values']['grid_header'])
+      ->execute()
+      ->fetchAllAssoc('lid');
+    $all_filtered_lids = array();
+    foreach($all_filtered_results as $key => $filtered_result){
+      $all_filtered_lids[$key] = $key;
+    }
+    $_SESSION['grid_filters']['filtered_config_lids'] = $all_filtered_lids;
+  }
   return $table_data;
 }
 
@@ -332,7 +345,10 @@ function lingotek_config_action_submit($form, $form_state) {
 
     if (isset($form_state['values']['select_actions'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
       $action = $form_state['values']['select_actions']; // Get the action
-      if (count($lids) <= 0) { // Select a node
+      if($action === 'force_download'){
+        config_download_ready(true);
+      }
+      elseif (count($lids) <= 0) { // Select a node
         drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
       elseif ($action == 'upload') { // If uploading

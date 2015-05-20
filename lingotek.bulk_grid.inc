@@ -127,7 +127,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $message = t('Check status of in-progress translations (Last checked @time)', array('@time' => $last_updated ? lingotek_human_readable_timestamp($last_updated) . ' ' . t('ago') : t('Never')));
 
   $form['lingotek_update'] = array(
-    '#markup' => l('<i class="fa fa-cloud-download fa-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action'), 'id' => array('download-ready')))),
+    '#markup' => l('<i class="fa fa-filter fa-1x notify-filtered-action"></i>'
+        . '<i class="fa fa-check-square-o fa-1x notify-checked-action"></i>'
+        . '<i class="fa fa-cloud-download fa-2x ltk-download"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Download complete translations'), 'class' => array('lingotek-action'), 'id' => array('download-ready')))),
   );
 
   $form['refresh'] = array(
@@ -135,7 +137,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
   );
 
   $form['lingotek_upload'] = array(
-    '#markup' => l('<i class="fa fa-cloud-upload fa-2x ltk-upload"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/upload-edited/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Upload all pending source content'), 'class' => array('lingotek-action'), 'id' => array('upload-edited')))),
+    '#markup' => l('<i class="fa fa-filter fa-1x notify-filtered-action"></i>'
+        . '<i class="fa fa-check-square-o fa-1x notify-checked-action"></i>'
+        . '<i class="fa fa-cloud-upload fa-2x ltk-upload"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/upload-edited/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Upload all pending source content'), 'class' => array('lingotek-action'), 'id' => array('upload-edited')))),
   );
 
   $form['edit_settings'] = array(
@@ -335,6 +339,8 @@ function lingotek_grid_action_options($entity_type) {
 
   if ($entity_type == 'config') {
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
+    $action_options[t('Download')]['force_download'] = t('Force Download All Translations');
+    
   }
   else {
     $action_options['edit'] = t('Edit translation settings');
@@ -926,17 +932,49 @@ function lingotek_grid_download_selected($entity_type, $entity_ids, $target_loca
   batch_process($redirect);
 }
 
+function config_download_ready($force_download, $comma_separated_ids = null){
+  if($force_download != null){
+    $ready_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
+    $current_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_CURRENT);
+    $lids = array_merge($ready_lids, $current_lids);
+  }
+  elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
+    if($comma_separated_ids !== null){
+      $comma_lids = explode(",", $comma_separated_ids);
+      $selected_lids = array();
+      foreach($comma_lids as $comma_lid){
+        $selected_lids[$comma_lid] = $comma_lid;
+      }
+    }
+    else {
+      $selected_ids = $_SESSION['grid_filters']['filtered_config_lids'];
+    }
+      $all_edited_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
+      //compare all the edited lids to the filter so we only upload the changed ones
+      $matching_ids = array();
+      foreach($all_edited_lids as $edited_lid){
+        if(array_key_exists($edited_lid, $selected_ids)){
+          $matching_ids[] = $edited_lid;
+        }
+      }
+      $lids = $matching_ids;
+  }
+  else {
+      // Only get the ones that need to be uploaded.
+      // Looks clean but actually gets set_ids, convert those to lids, then the next function converts back to set_ids.
+      $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
+  }
+  lingotek_config_download_selected('download_all', $lids);
+}
+
 function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null) {
   if ($entity_type === 'config') {
-    // Looks clean but actually gets set_ids, convert those to lids, then the next function converts back to set_ids.
-    $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
-    lingotek_config_download_selected('download_all', $lids);
+    config_download_ready(null, $comma_separated_ids);
     return;
   }
+  
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
 
-  
-  
   if (!empty($targets)) {
     
     $entity_ids = $comma_separated_ids === null && isset($_SESSION['grid_filters']) 
