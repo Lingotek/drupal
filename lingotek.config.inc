@@ -368,13 +368,12 @@ function lingotek_config_action_submit($form, $form_state) {
 }
 
 function lingotek_config_upload_selected($lids) {
-  $set_ids = array();
+  $unique_set_ids = array();
   // You need to iterate through this (with multiple db queries) because this function will also assign the item to a new set and create a new set if necessary. With one query to get all set_ids, it might not do that.
   foreach ($lids as $lid) {
     $set_id = LingotekConfigSet::getSetId($lid);
-    $set_ids[] = $set_id;
+    $unique_set_ids[$set_id] = $set_id;
   }
-  $unique_set_ids = array_unique($set_ids);
 
   $edited_lids = !empty($unique_set_ids) ? LingotekConfigSet::getEditedLidsInSets($unique_set_ids) : array();
   $not_current_lids = array_merge($lids, $edited_lids);
@@ -390,7 +389,6 @@ function lingotek_config_upload_selected($lids) {
     'title' => t('Uploading Content To Lingotek'),
     'finished' => 'lingotek_sync_upload_config_finished'
   );
-
   $operations = lingotek_get_sync_upload_config_batch_elements($unique_set_ids);
   $batch['operations'] = $operations;
   $redirect = 'admin/settings/lingotek/manage/config';

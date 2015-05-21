@@ -1021,7 +1021,7 @@ function find_never_uploaded_lids($control_list = null){
       $query->isNull("lt.lid");
       $query->fields('ls',array('lid'));
       $query->condition('ls.lid',$control_list, 'IN');
-      $never_uploaded_lids = $query->execute();
+      $never_uploaded_lids = $query->execute()->fetchCol();
       return $never_uploaded_lids;
   }
   return array();
@@ -1046,11 +1046,9 @@ function config_upload_edited($comma_separated_ids) {
       //get all the lids that have never been uploaded
       $never_uploaded_lids = find_never_uploaded_lids($selected_lids);
       
-      //compare to all the lids that have never been uploaded
       $matching_ids = array();
-      
-      foreach($never_uploaded_lids as $lid_object){
-        $matching_ids[] = $lid_object->lid;
+      foreach($never_uploaded_lids as $lid){
+        $matching_ids[] = $lid;
       }
       
       //compare all the edited lids to the filter so we only upload the changed ones
