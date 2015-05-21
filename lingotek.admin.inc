@@ -134,6 +134,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     '#submit' => array('lingotek_admin_entity_bundle_profiles_form_submit'),
   );
   $changeAllSelect = 'Set all to: <select id="change-all-profiles" onchange="lingotek_set_all(\''.$selector.'\', this)">';
+  $changeAllSelect .= '<option selected disabled hidden>Select Option...</option>';
   foreach($profiles_options as $key => $profile_option){
     $changeAllSelect .= '<option value="' . $key . '">' . $profile_option 
         . '</option>';
