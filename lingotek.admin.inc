@@ -120,13 +120,8 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   $selector = '.lingotek-content-settings-table.' . $entity_type;
-  $enable_all =  l(t('(set all to automatic)'), '#', array('attributes' => array('onclick' => "lingotek_set_all('" . $selector . "', '0'); return false;")));
-  $enable_all_manual =  l(t('(set all to manual)'), '#', array('attributes' => array('onclick' => "lingotek_set_all('" . $selector . "', '1'); return false;")));
-  $disable_all =  l(t('(disable all)'), '#', array('attributes' => array('onclick' => "lingotek_set_all('" . $selector . "', 'DISABLED'); return false;")));
-
   $title_str = ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?'));
-  $links_str = t('') . ' ' . $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all;
-
+  
   $form['translation_' . $entity_type] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => check_plain($title_str),
@@ -138,10 +133,15 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     ),
     '#submit' => array('lingotek_admin_entity_bundle_profiles_form_submit'),
   );
-
+  $changeAllSelect = 'Set all to: <select id="change-all-profiles" onchange="lingotek_set_all(\''.$selector.'\', this)">';
+  foreach($profiles_options as $key => $profile_option){
+    $changeAllSelect .= '<option value="' . $key . '">' . $profile_option 
+        . '</option>';
+  }
+  $changeAllSelect .= '<select>';
   $form['translation_' . $entity_type][] = array(
     '#type' => 'item',
-    '#description' => $links_str,
+    '#markup' => $changeAllSelect
   );
 
   $translatable_field_types = lingotek_get_translatable_field_types();

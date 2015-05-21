@@ -207,10 +207,10 @@ Drupal.behaviors.lingotekAdminForm = {
 
 })(jQuery);
 
-function lingotek_set_all(sel, val) {
+function lingotek_set_all(sel, target) {
   fieldset = jQuery(sel);
   jQuery(sel).find('.form-select').each( function() {
-    jQuery(this).val(val);
+    jQuery(this).val(target.value);
     jQuery(this).trigger('change');
   });
 }
