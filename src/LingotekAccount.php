@@ -10,6 +10,8 @@
  *
  * The Account class works off a locally cached copy of the account information, so it doesnt have to query the billing server very often.
  */
+namespace Drupal\lingotek;
+
 class LingotekAccount {
 
   const NOT_FOUND = 'not_found';
