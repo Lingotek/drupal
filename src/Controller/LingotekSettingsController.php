@@ -49,7 +49,7 @@ class LingotekSettingsController extends LingotekControllerBase {
       // All of the following are different iterations of tables I've tried to get working
       //$this->getLingotekForm('LingotekSettingsTabTestForm'),
       // NegForm and PUlldownForm are patterned after \Drupal\Language\Form\NegotiationConfigureForm
-      $this->getLingotekForm('LingotekSettingsTabTestPulldownForm'),
+      //$this->getLingotekForm('LingotekSettingsTabTestPulldownForm'),
       //$this->getLingotekForm('LingotekSettingsTabTestNegForm'),
       // MyTableForm is a table from scratch using the Form API
       //$this->getLingotekForm('LingotekSettingsTabTestMyTableForm'),
@@ -59,6 +59,8 @@ class LingotekSettingsController extends LingotekControllerBase {
       //$this->getLingotekForm('LingotekSettingsTabForm'), 
       // AdditionalForm is a form where I tried to get the vertical tabs to work.
       //$this->getLingotekForm('LingotekSettingsTabAdditionalForm'),
+      // Showing the hierarchy of tables
+      $this->getLingotekForm('LingotekSettingsTabTestNewTableForm'),
     );
 
     return $settings_tab;

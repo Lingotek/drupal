@@ -47,16 +47,11 @@ class LingotekSettingsTabTestMyTableForm extends LingotekConfigFormBase {
       }
     }
 
-    $form['nodes'] = array(
-      '#type' => 'details',
-      '#title' => t('My Test Table'),
-      '#group' => 'settings',
-    );
 
     $header = array(
-      'content_type' => t('Content Type'), 
-      'translation_profile' => t('Translation Profile'), 
-      'fields' => t('Fields'),
+      t('Content Type'), 
+      t('Translation Profile'), 
+      t('Fields'),
     );
 
     $options = array();
@@ -65,21 +60,24 @@ class LingotekSettingsTabTestMyTableForm extends LingotekConfigFormBase {
     foreach ($content_entities as $entity) {
       $key = array_search ($entity, $content_entities);
       $options[$key] = array(
-        'content_type' => $key, 
-        'translation_profile' => array('#type' => 'checkbox'),
-        'fields' => 'yo, fields',
+        $key, 
+        array('#type' => 'checkbox'),
+        'yo, fields',
       );
     }
 
-    $form['nodes']['mytable'] = array(
+    $table = array(
       '#type' => 'table',
+      '#tree' => TRUE,
       '#header' => $header,
-      '#options' => $options,
-      //'#empty' => t('No Entries'),
+      '#rows' => $options,
+      '#empty' => t('No Entries'),
     );
 
-    $form['nodes']['actions'] = array('#type' => 'actions');
-    $form['nodes']['actions']['submit'] = array(
+    $form['table'] = $table;
+
+    $form['actions'] = array('#type' => 'actions');
+    $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Save'),
     );

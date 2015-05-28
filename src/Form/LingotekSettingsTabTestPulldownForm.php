@@ -110,9 +110,7 @@ public function __construct(ConfigFactoryInterface $config_factory, Configurable
     $info = $form['#language_types_info'][$type];
 
     $table_form = array(
-      '#title' => $this->t('@type language detection', array('@type' => $info['name'])),
       '#tree' => TRUE,
-      '#description' => $info['description'],
       '#language_negotiation_info' => array(),
       '#show_operations' => FALSE,
       'weight' => array('#tree' => TRUE),
