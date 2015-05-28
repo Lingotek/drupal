@@ -96,9 +96,11 @@ Drupal.behaviors.lingotekAdminForm = {
       } else {
         $('#lingotek_prepare_config_menus').attr('disabled',true);
       }
-
       if ($('.form-item-config-lingotek-translate-config-views').parent().siblings().last().children().last().val() != 1) {
         $('#edit-config-lingotek-translate-config-views').attr('disabled',true);
+      }
+      if ($('.form-item-config-lingotek-translate-config-fields').parent().siblings().last().children().last().val() != 1) {
+       $('#edit-config-lingotek-translate-config-fields').attr('disabled',true);
       }
     });
 
