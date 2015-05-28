@@ -320,7 +320,7 @@ function lingotek_perform_action(nid, action) {
             }
           }
         });
-      }, 10000);
+      }, 30000);
   }
   
   $(document).ready(function () {
