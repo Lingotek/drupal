@@ -167,21 +167,26 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   if ($entity_type == 'node') {
     $form['node/add'] = array(
-      '#markup' => l('<i class="fa fa-plus" style="margin-left: 15px; padding-right: 4px;"></i>' . t('Add content') . '<div style="margin: 15px 0;"></div>', 'node/add', array('html' => TRUE, 'attributes' => array('title' => t('Add content'))))
+      '#markup' => '<div style="">' 
+      . l('<i class="fa fa-plus" style="padding-right: 4px;"></i>' 
+          . t('Add content') 
+          . '<div style="margin: 15px 0;"></div>', 'node/add', 
+            array('html' => TRUE, 'attributes' => array('title' => t('Add content')))) 
+      . '</div>'
     );
   }
 
   $modal_size = $entity_type == 'config' ? 'ctools-modal-lingotek-small' : 'ctools-modal-lingotek-large';
   $modal_classes = array('ctools-use-modal', $modal_size, 'ltk-action');
-  $search_title = l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => $modal_classes))) . ' ' . t('Search') . ': ';
+  $search_title = l('<i class="fa fa-search"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/filters/' . $entity_type, array('html' => TRUE, 'attributes' => array('title' => t('Advanced Search'), 'class' => $modal_classes)));
 
   $form['search'] = array(
     '#type' => 'textfield',
     '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
     '#title' => filter_xss($search_title),
     '#size' => 30,
+    '#attributes' => array('placeholder' => t('Search'))
   );
-
   $search_options = $entity_type == 'config' ? lingotek_config_search_options() : lingotek_grid_search_options();
 
   $grid_term = isset($_SESSION['grid_filters']['search_type']) ? $_SESSION['grid_filters']['search_type'] : 'all';
@@ -200,7 +205,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $form['search_submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Go'),
+    '#value' => decode_entities('&#xf002;'),
+    '#attributes' => array('title' => 'Search'),
     '#submit' => $search_submit,
   );
 
@@ -218,7 +224,6 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['select_actions'] = array(
     '#type' => 'select',
     '#options' => $action_options,
-    '#title' => '<i class="fa fa-asterisk ltk-muted"></i>' . ' ' . t('Actions') . ': ',
   );
 
   $actions_submit_function = $entity_type == 'config' ? array('lingotek_config_action_submit') : array('lingotek_grid_action_submit');
@@ -330,7 +335,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
 function lingotek_grid_action_options($entity_type) {
   $delete_text = $entity_type == 'config' ? t('Delete selected translations') : t('Delete selected content');
   $action_options = array(
-    'select' => t('Select an action'),
+    'select' => t('Actions...'),
     'upload' => t('Upload source for translation'),
     'sync' => t('Check progress of translations'),
     'reset' => t('Disassociate translations'),
@@ -531,63 +536,69 @@ function lingotek_grid_customize($entity_type) {
 
 function lingotek_grid_legend_form($form, $form_state) {
 
-  $form['lingotek_upload'] = array(
-    '#markup' => '<div><i class="fa fa-cloud-upload fa-2x ltk-upload legend-icon"></i> '
-    . '<p class="legend-big-icon" style="margin-left:0;">Upload edited documents to Lingotek for translation.</p>'
-    . '</div>'
+  $form['lingotek_legend_header'] = array(
+    '#markup' => '<h2 style="margin-top:0;">Icon descriptions</h2> '
   );
-  $form['refresh'] = array(
-    '#markup' => '<div><i class="fa fa-refresh fa-2x ltk-refresh legend-icon"></i>'
-    . '<p class="legend-big-icon">Refresh the status of the Translations column</p>'
-    . '</div>'
+  $legend_table = "<table class='legend-table'>"
+      . "<tr>"
+        . '<td><div><i class="fa fa-cloud-upload fa-2x ltk-upload"></i></div></td>'
+        . '<td>Upload edited documents to Lingotek for translation.</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><i class="fa fa-refresh fa-2x ltk-refresh"></i></div></td>'
+        . '<td>Refresh the status of the Translations column</td>'
+      . "</tr>"
+
+      . "<tr>"
+        . '<td><div><i class="fa fa-cloud-download fa-2x ltk-download"></i></div></td>'
+        . '<td>Download translated documents from Lingotek</td>'
+      . "</tr>"
+
+      . "<tr>"
+        . '<td><div><i class="fa fa-list-alt fa-2x"></i></div></td>'
+        . '<td>Choose which columns on the table to show or hide</td>'
+      . "</tr>"
+
+      . "<tr>"
+        . '<td><div><i class="fa fa-edit fa-2x" style="color: #0074BD"></i></div></td>'
+        . '<td>Edit the content associated with this row</td>'
+      . "</tr>"
+
+      . "<tr>"      
+        . '<td><div><i class="fa fa-tasks fa-2x" style="color: #0074BD"></div></td>'
+        . '<td>View current translation progress for this content</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><i class="fa fa-gear fa-2x" style="color: #0074BD"></i></div></td>'
+        . '<td>Adjust Lingotek module settings</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><a class="language-icon target-current">lang</a></div></td>'
+        . '<td>This content is current, no translations are pending or ready for download</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><a class="language-icon target-ready">lang</a></div></td>'
+        . '<td>This content has been translated and is ready to be downloaded</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><a class="language-icon target-pending">lang</a></div></td>'
+        . '<td>This content has been uploaded to Lingotek and is awaiting translation</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><a class="language-icon target-edited">lang</a></div></td>'
+        . '<td>This content has been edited and is ready to be uploaded to Lingotek</td>'
+      . "</tr>"
+      
+      . "</table>";
+  $form['lingotek_legend_table'] = array(
+    '#markup' => $legend_table
   );
-  $form['lingotek_update'] = array(
-    '#markup' => '<div><i class="fa fa-cloud-download fa-2x ltk-download legend-icon"></i>'
-    . '<p class="legend-big-icon">Download translated documents from Lingotek</p>'
-    . '</div>'
-  );
-  $form['lingotek_customize'] = array(
-    '#markup' => '<div><i class="fa fa-list-alt fa-2x legend-icon"></i>'
-    . '<p class="legend-big-icon">Choose which columns on the table to show or hide</p>'
-    . '</div>'
-  );
-  $form['lingotek_edit'] = array(
-    '#markup' => '<div><div><i class="fa fa-edit fa-2x legend-icon" style="color: #0074BD"></i>'
-    . '<p class="legend-big-icon">Edit the content associated with this row</p>'
-    . '</div>'
-  );
-  $form['lingotek_translations'] = array(
-    '#markup' => '<div><div><i class="fa fa-tasks fa-2x legend-icon" style="color: #0074BD"></i>'
-    . '<p class="legend-big-icon">View current translation progress for this content</p>'
-    . '</div>'
-  );
-  $form['lingotek_settings'] = array(
-    '#markup' => '<div><div><i class="fa fa-gear fa-2x legend-icon" style="color: #0074BD"></i>'
-    . '<p class="legend-big-icon">Adjust Lingotek module settings</p>'
-    . '</div>'
-  );
-  $form['lingotek_current'] = array(
-    '#markup' => '<div><a class="language-icon target-current">lang</a>'
-    . '<span>This content is current, no translations are pending or ready for download</span>'
-    . '</div>'
-  );
-  $form['lingotek_ready'] = array(
-    '#markup' => '<div><a class="language-icon target-ready">lang</a>'
-    . '<span>This content has been translated and is ready to be downloaded</span>'
-    . '</div>'
-  );
-  $form['lingotek_pending'] = array(
-    '#markup' => '<div><a class="language-icon target-pending">lang</a>'
-    . '<span>This content has been uploaded to Lingotek and is awaiting translation</span>'
-    . '</div>'
-  );
-  $form['lingotek_edited'] = array(
-    '#markup' => '<div><a class="language-icon target-edited">lang</a>'
-    . '<span>This content has been edited and is ready to be uploaded to Lingotek</span>'
-    . '</div>'
-  );
-  
-  
 
   return $form;
 }

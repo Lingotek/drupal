@@ -243,7 +243,7 @@ a:hover.tooltips span {
     color: green;
 }
 .ltk-legend {
-    color: #5693D1;
+    color: #ddd;
 }
 .ltk-legend:hover {
     color: #3479c0;
@@ -362,15 +362,27 @@ a.ltk-action:hover {
   background-color: #CCCCCC
 }
 
-p.legend-big-icon {
-  display: inline-block;
-  position: relative;
-  top: 80%;
-  transform: translateY(-20%);
+.legend-table td{
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    height: 26px;
+    
+}
+.legend-table div{
+    text-align: center;
+    margin:auto;
+}
+#edit-search-submit {
+  border-radius: 0;
+  border-top: 1px solid #d2d2d2;
+  font-family: 'FontAwesome';
+  padding-top: 3px;
+  padding-bottom: 4px
+}
+#edit-search {
   margin:0;
-  margin-left: 5px;
+  padding-top:3px;
+  padding-bottom:3px;
 }
 
-i.legend-icon {
-  min-width:35px;
-}
