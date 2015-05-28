@@ -880,7 +880,11 @@ function lingotek_config_build_column_checkboxes($form_state) {
   return lingotek_grid_process_elements($column_elements, $prefix, $suffix); // adds prefixes and suffixes to the elements
 }
 
-function lingotek_grid_update($entity_type) {
+function lingotek_grid_update($entity_type, $comma_separated_ids = null) {
+   if($comma_separated_ids !== null){
+    lingotek_grid_query_status($entity_type, $comma_separated_ids);
+    return;
+  }
   if ($entity_type == 'config') {
     $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_PENDING);
     if (empty($lids)) {
@@ -890,6 +894,7 @@ function lingotek_grid_update($entity_type) {
     lingotek_config_update_selected($lids);
     return;
   }
+ 
   $active_locales = lingotek_get_target_locales();
   $pending_nids = LingotekSync::getEntityIdsByTargetStatus($entity_type, LingotekSync::STATUS_PENDING, $active_locales);
   $disabled_nids = LingotekSync::getEntityIdsByProfileStatus($entity_type, LingotekSync::PROFILE_DISABLED);
@@ -903,6 +908,49 @@ function lingotek_grid_update($entity_type) {
     drupal_set_message(t('There are no in-progress translations to check.'));
     drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
   }
+}
+
+function lingotek_grid_query_status($entity_type, $comma_separated_ids){
+  if($entity_type === 'config'){
+    $lids = explode(',', $comma_separated_ids);
+    $table_rows = lingotek_config_get_status($lids);
+    $key_column = 'config_key';
+    $id_column = 'lid';
+    $status_array = array();
+    foreach($table_rows['metadata'] as $table_row){
+      $language_code = substr($table_row->$key_column,count($table_row->$key_column) - 6);
+      $status_array[$table_row->$id_column][$language_code]['status'] = $table_row->value;
+      $first_language_code = substr($language_code, 0, 2);
+      $other_dialect_code = str_replace('_', '-', strtolower($language_code));      
+      $dirty_status_array = $table_rows['dirty_status'];
+      if(array_key_exists($table_row->$id_column, $dirty_status_array)){
+        if(array_key_exists($first_language_code, $dirty_status_array[$table_row->$id_column])
+          || array_key_exists($other_dialect_code, $dirty_status_array[$table_row->$id_column])){
+          $status_array[$table_row->$id_column][$language_code]['status'] = 'EDITED';
+        }
+      }
+    }
+    $status_array['entity_type'] = $entity_type;
+    echo json_encode($status_array);
+    return;
+  }
+  
+  $table = 'lingotek_entity_metadata';
+  $id_column = 'entity_id';
+  $key_column = 'entity_key';
+  $displayed_ids = explode(",", $comma_separated_ids);
+  $query = db_select($table, 'lm');
+  $query->fields('lm',array($id_column, $key_column, 'value'));
+  $query->condition($key_column, '%target_sync_status%', 'LIKE');
+  $query->condition($id_column, $displayed_ids, 'IN');
+  $results = $query->execute();
+  $translation_status = array();
+  foreach($results as $result){
+    $language_code = substr($result->$key_column,count($result->$key_column) - 6);
+    $translation_status[$result->$id_column][$language_code] = array('status' => $result->value);
+  }
+  $translation_status['entity_type'] = $entity_type;
+  echo json_encode($translation_status);
 }
 
 function lingotek_grid_download_selected($entity_type, $entity_ids, $target_locales) {
@@ -939,24 +987,26 @@ function config_download_ready($force_download, $comma_separated_ids = null){
     $lids = array_merge($ready_lids, $current_lids);
   }
   elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
+    $selected_lids = array();
     if($comma_separated_ids !== null){
       $comma_lids = explode(",", $comma_separated_ids);
-      $selected_lids = array();
+      
       foreach($comma_lids as $comma_lid){
         $selected_lids[$comma_lid] = $comma_lid;
       }
     }
     else {
-      $selected_ids = $_SESSION['grid_filters']['filtered_config_lids'];
+      $selected_lids = $_SESSION['grid_filters']['filtered_config_lids'];
     }
-      $all_edited_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
       //compare all the edited lids to the filter so we only upload the changed ones
       $matching_ids = array();
+      $all_edited_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
       foreach($all_edited_lids as $edited_lid){
-        if(array_key_exists($edited_lid, $selected_ids)){
+        if(array_key_exists($edited_lid, $selected_lids)){
           $matching_ids[] = $edited_lid;
         }
       }
+      
       $lids = $matching_ids;
   }
   else {

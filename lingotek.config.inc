@@ -82,7 +82,30 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
   }
   return $table_data;
 }
-
+function lingotek_config_get_status($lids){
+  $metadata_query = db_select('lingotek_config_map', 'lcmap');
+  $metadata_query->join('lingotek_config_metadata', 'lcmeta', 'lcmeta.id = lcmap.set_id');
+  $metadata_query->condition('lcmeta.config_key','%target_sync_status%', 'LIKE');
+  $metadata_query->condition('lcmap.lid', $lids, 'IN');
+  $metadata_query->addField('lcmap', 'lid');
+  $metadata_query->addField('lcmeta', 'config_key');
+  $metadata_query->addField('lcmeta', 'value');
+  $metadata_results = $metadata_query->execute();
+  
+  $locales_target_query = db_select('locales_target', 'lt');
+  $locales_target_query->condition('lt.i18n_status','1');
+  $locales_target_query->condition('lt.lid', $lids, 'IN');
+  $locales_target_query->addField('lt', 'lid');
+  $locales_target_query->addField('lt', 'i18n_status');
+  $locales_target_query->addField('lt', 'language');
+  $lt_results = $locales_target_query->execute();
+  $lt_array = array();
+  foreach($lt_results as $lt_result){
+    $lt_array[$lt_result->lid][$lt_result->language] = $lt_result;
+  }
+  
+  return array('metadata' => $metadata_results, 'dirty_status' => $lt_array);
+}
 function lingotek_config_add_existing_translations($lids, $lang_codes) {
   $query = db_select('locales_target', 'lt')
       ->fields('lt', array('lid', 'language'));
