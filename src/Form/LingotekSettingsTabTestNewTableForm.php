@@ -28,6 +28,11 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildForm($form, $form_state);
+    $entityDefs = \Drupal::entityManager()->getDefinitions();
+    $bundles = \Drupal::entityManager()->getAllBundleInfo();
+    $fieldDefs = \Drupal::entityManager()->getFieldMap();
+    $query = \Drupal::entityQuery('node');
     $profiles = $this->L->get('profile');
     $pullDownProfiles = array();
     foreach($profiles as $profile){
@@ -51,12 +56,12 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
     foreach ($entities as $entity) {
       $row = array();
       $name = array('#markup' => $entity);
-      $row[] = $name;
+      $row['entity'] = $name;
       $select = array(
         '#type' => 'select',
         '#options' => $pullDownProfiles,
       );
-      $row[] = $select;
+      $row['profile'] = $select;
       $checkboxRow = array();
       
       foreach ($fields as $field) {
@@ -64,22 +69,28 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
           '#type' => 'checkbox',
           '#title' => $field,
         );
-        $checkboxRow[] = $checkbox;
+        $checkboxRow[$field] = $checkbox;
       }
-      $row[] = $checkboxRow;
+      $row['fields'] = $checkboxRow;
       $table[$entity] = $row;
     }
 
+    dpm($table);
+
     $form['table'] = $table;
 
-     return $form;
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    dpm('Logging!');
+    dpm('New Form Submit!');
+
+    $formValues = $form_state->getValues();
+    $tableValues = $formValues['table'];
+    dpm($tableValues);
   }
 
 }

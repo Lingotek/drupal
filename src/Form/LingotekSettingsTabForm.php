@@ -15,7 +15,7 @@ use Drupal\lingotek\Form\LingotekConfigFormBase;
 /**
  * Configure Lingotek
  */
-class LingotekSettingsTabForm extends LingotekConfigFormBase {
+abstract class LingotekSettingsTabForm extends LingotekConfigFormBase {
 
   /**
    * {@inheritdoc}
@@ -28,32 +28,15 @@ class LingotekSettingsTabForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    
-    $form['settings'] = array(
-      '#type' => 'vertical_tabs',
-    );
-
-    $form['settings']['account'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabAccountForm');
-    $form['settings']['nodes'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabNodesForm');
-    $form['settings']['comments'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabCommentsForm');
-    $form['settings']['config'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabConfigurationForm');
-    $form['settings']['profiles'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabProfilesForm');
-    $form['settings']['prefs'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabPreferencesForm');
-    $form['settings']['log'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabLoggingForm');
-    $form['settings']['util'] = \Drupal::formBuilder()->getForm('Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm');
 
      return $form;
-   }
+  }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    dpm('Dude!');
-  }
-
-  public function test(array &$form, FormStateInterface $form_state) {
-    dpm('Comments aggro');
+    dpm('Tab!');
   }
 
 }
