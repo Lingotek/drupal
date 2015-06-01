@@ -95,14 +95,14 @@ function lingotek_perform_action(nid, action) {
       modifyActionButtonURL('#download-ready', original_download_ready_URL);
     });
   }
-  
+ 
   function addClickToUploadButton() {
     original_upload_edited_URL = $('#upload-edited').attr('href');
     $('#upload-edited').click(function () {
       modifyActionButtonURL('#upload-edited', original_upload_edited_URL);
     });
   }
-  
+ 
   this.check_box_count = 0;
   function addClickToCheckboxes() {
     $('#edit-grid-container .form-checkbox').each(function () {
@@ -111,7 +111,7 @@ function lingotek_perform_action(nid, action) {
       });
     });
   }
-  
+ 
   //changes the href associated with the download/upload buttons after they are clicked
   //but before the links are actually followed. Also checks to see if the results are 
   //filtered.
@@ -123,7 +123,7 @@ function lingotek_perform_action(nid, action) {
     new_URL = entity_ids.length === 0 ? original_URL : new_URL;
     $(element_id).attr('href', new_URL);
   }
-  
+ 
   //looks at every currently displayed row and pushes the entity_id of each
   //row with a checked checkbox into the return variable
   function getIDArray(visible_check) {
@@ -145,7 +145,7 @@ function lingotek_perform_action(nid, action) {
     $('#upload-edited').attr('title', 'Upload all pending source content');
     $('#download-ready').attr('title', 'Download complete translations');
     var text = $('#clear-filters').text();
-    
+ 
     if (text === undefined || text === "") {
       $('.notify-filtered-action').hide();
     }
@@ -155,11 +155,12 @@ function lingotek_perform_action(nid, action) {
       $('#download-ready').attr('title', 'Download filtered results');
     }
   }
-  
+
   function clarifyButtonsForCheckboxes(event) {
     var box_checked = $(event.target).attr('checked');
+    //accounts for the select all box
     if ($(event.target).val() === 'on' && box_checked) {
-      this.check_box_count = $('#edit-grid-container .form-checkbox').length - 2; //accounts for the select all box
+      this.check_box_count = $('#edit-grid-container .form-checkbox').length - 2; 
     }
     else if ($(event.target).val() === 'on' && !box_checked) {
       this.check_box_count = 0;
@@ -181,13 +182,15 @@ function lingotek_perform_action(nid, action) {
       clarifyButtonsForFilter();
     }
   }
-  
-  //guarantees that search and actions fields will match in width. Looks nicer
+
+  //guarantees that search and actions fields will match in width. Looks nicer,
+  //can't do this simply with css, because the actions dropdown's width may change
+  //based on its content
   function alignFields() {
     var commonWidth = $('#edit-select-actions').width();
     $('#edit-search').width(commonWidth);
   }
-  
+
   //update_empty_cells allows cells with no translations statuses to display them
   //when they are available
   function update_empty_cells(data, parent, entity_id) {
@@ -198,10 +201,8 @@ function lingotek_perform_action(nid, action) {
         //on page load
         lang_code = lang_code.toLowerCase();
         lang_code = lang_code.replace('_','-');
-        
-        var href = 'http://localhost/drupal/lingotek/workbench/'+data.entity_type+'/'+entity_id+'/'+key;
+        var href = 'http://localhost/drupal/lingotek/workbench/' + data.entity_type + '/' + entity_id + '/' + key;
         var link_text = key.substring(0,2);
-        
         //accounts for multiple dialects, current format is to shorten the first language
         //and give the full language for all subsequent dialects of that language
         if(used_keys.hasOwnProperty(link_text)){
@@ -210,7 +211,7 @@ function lingotek_perform_action(nid, action) {
         else {
           used_keys[link_text] = link_text;
         }
-        
+        //Create the appropriate title
         var title;
         switch(data[entity_id][key].status) {
           case "READY":
@@ -226,13 +227,13 @@ function lingotek_perform_action(nid, action) {
             title = 'In progress';
             break;
         }
-        
+        //create the link
         var status_link = $('<a></a>').attr('href', href)
                 .attr('target','_blank')
                 .attr('title',title)
                 .addClass('language-icon target-' + data[entity_id][key].status.toLowerCase())
                 .text(link_text);
-        
+
         $('.emptyTD',parent).append(status_link);
       }
       //remove the identifying class
@@ -241,25 +242,40 @@ function lingotek_perform_action(nid, action) {
       $('.fa-square-o', parent).removeClass().addClass('fa fa-check-square');
       $('.fa-minus-square', parent).removeClass().addClass('fa fa-check-square').removeAttr('style');
   }
-  
+
   function updateRowStatus(data, row, entity_id) {
+    //if the row does not yet have status indicators
     if($('.emptyTD',row).length > 0){
       update_empty_cells(data, row, entity_id);
       return;
     }
-    if($(row).find('.fa-minus-square').length > 0){//content is disabled and should not be updated...
+    //content is disabled and should not be updated
+    if($(row).find('.fa-minus-square').length > 0){
       return;
     }
+    if(data[entity_id].hasOwnProperty('last_modified')){
+      $('td',row).each(function(){
+        if($(this).text().indexOf('ago') > -1) {
+          $(this).text(data[entity_id]['last_modified']);
+        }
+      });
+    }
+    //iterate through each indicator and replace it with updated status
     $(row).find('a.language-icon').each(function () {
       var icon_href = $(this).attr('href');
-      //retrieves the language code from the href
+      //retrieve the language code from the href
       var language_code = icon_href.substring(icon_href.length - 5);
       var title = $(this).attr('title');
       var cutoff = title.indexOf('-');
       title = title.substring(0, cutoff + 1);
-      
+
       switch (data[entity_id][language_code].status) {
         case "READY":
+          //take out the empty checkbox in Source Uploaded and replace with 
+          //checked, using this here solves a problem where uploading from 
+          //out side the manager sometimes jumps to READY
+          $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
+          $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-ready');
           $(this).attr('title', title + ' Ready to download');
           break;
@@ -268,6 +284,8 @@ function lingotek_perform_action(nid, action) {
           $(this).attr('title', title + ' Current');
           break;
         case "EDITED":
+          //remove check box in Source Uploaded and replace with upload link and 
+          //empty checkbox
           if($('.target-edited',row).length === 0){
             $('.lingotek-language-source', row)
                     .addClass('ltk-upload-button')
@@ -281,8 +299,9 @@ function lingotek_perform_action(nid, action) {
           $(this).attr('title', title + ' Not current');
           break;
         case "PENDING":
+          //take out the empty checkbox and replace with checked, using this here solves
           $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
-          $('.ltk-upload-button', row).removeAttr('onclick').removeClass();
+          $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-pending');
           $(this).attr('title', title + ' In progress');
           break;
@@ -290,8 +309,9 @@ function lingotek_perform_action(nid, action) {
     });
     
   }
-  
+ 
   function updateStatusIndicators(data) {
+    //the checkboxes always have the row's entity id
     $('#edit-grid-container .form-checkbox').each(function () {
       var entity_id = $(this).val();
       if (data.hasOwnProperty(entity_id)) {
@@ -300,19 +320,23 @@ function lingotek_perform_action(nid, action) {
       }
     });
   }
-  
+ 
   function pollTranslationStatus(){
+    //makes it easy to find empty cells, the only empty ones will be in the status
+    //column if the row hasn't been uploaded yet.
     $('td:empty').addClass('emptyTD');
     var ids_to_poll = '';
+    //get all the entity_ids currently displayed
     $('#edit-grid-container .form-checkbox').each(function () {
       var entity_id = $(this).val();
       if(entity_id !== 'on') {
         ids_to_poll += $(this).val() + ',';
       }
     });
+    //start the poller on 30 sec interval (30000)
     setInterval(function () {
       $.ajax({
-          url: $('#refresh').attr('href') + '/' + ids_to_poll.substr(0,ids_to_poll.length-1),
+          url: $('#async-update').attr('href') + '/' + ids_to_poll.substr(0,ids_to_poll.length-1),
           dataType: 'json',
           success: function (data) {
             if (data !== null) {
@@ -322,10 +346,23 @@ function lingotek_perform_action(nid, action) {
         });
       }, 30000);
   }
-  
+  function pollAutomaticDownloads(){
+    //config section does not have profiles, so automatic downloads should not 
+    //happen
+    if($('#entity-type').val() === 'config'){
+      return;
+    }
+    setInterval(function () {
+      $.ajax({
+          url: $('#auto-download').attr('href'),
+          dataType: 'json',
+        });
+      }, 30000);
+  }
   $(document).ready(function () {
     alignFields();
     pollTranslationStatus();
+    pollAutomaticDownloads();
     addClickToDownloadReady();
     addClickToUploadButton();
     addClickToCheckboxes();

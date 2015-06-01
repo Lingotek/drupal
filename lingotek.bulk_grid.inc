@@ -67,8 +67,17 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['entity_type'] = array(
     '#type' => 'hidden',
     '#value' => $entity_type,
+    '#attributes' => array('id' => 'entity-type')
   );
-
+  $form['async_update'] = array(
+    '#markup' => l('', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/async-update/' . $entity_type, 
+        array('html' => TRUE, 'attributes' => array('id' => 'async-update', 'type' => 'hidden')))
+  );
+  $form['auto_download'] = array(
+    '#markup' => l('', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/auto-download/' . $entity_type, 
+        array('html' => TRUE, 'attributes' => array('id' => 'auto-download', 'type' => 'hidden')))
+  );
+  
   $page = pager_find_page() + 1; // Get current page from url
   $limit_select = (isset($_SESSION['limit_select']) ? (int)$_SESSION['limit_select'] : 0);
 
@@ -235,7 +244,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#name' => 'submit_actions',
     '#submit' => $actions_submit_function,
   );
-
+  
   // div container for the table and pager
   $form['grid_container'] = array(
     '#type' => 'container',
@@ -892,10 +901,6 @@ function lingotek_config_build_column_checkboxes($form_state) {
 }
 
 function lingotek_grid_update($entity_type, $comma_separated_ids = null) {
-   if($comma_separated_ids !== null){
-    lingotek_grid_query_status($entity_type, $comma_separated_ids);
-    return;
-  }
   if ($entity_type == 'config') {
     $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_PENDING);
     if (empty($lids)) {
@@ -922,9 +927,9 @@ function lingotek_grid_update($entity_type, $comma_separated_ids = null) {
 }
 
 function lingotek_grid_query_status($entity_type, $comma_separated_ids){
+  $ids = explode(',', $comma_separated_ids);
   if($entity_type === 'config'){
-    $lids = explode(',', $comma_separated_ids);
-    $table_rows = lingotek_config_get_status($lids);
+    $table_rows = lingotek_config_get_status($ids);
     $key_column = 'config_key';
     $id_column = 'lid';
     $status_array = array();
@@ -946,24 +951,52 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
     return;
   }
   
-  $table = 'lingotek_entity_metadata';
-  $id_column = 'entity_id';
-  $key_column = 'entity_key';
-  $displayed_ids = explode(",", $comma_separated_ids);
-  $query = db_select($table, 'lm');
-  $query->fields('lm',array($id_column, $key_column, 'value'));
-  $query->condition($key_column, '%target_sync_status%', 'LIKE');
-  $query->condition($id_column, $displayed_ids, 'IN');
+  $query = db_select('lingotek_entity_metadata', 'lm');
+  $query->join('lingotek_entity_metadata', 'lm2', 'lm.entity_id = lm2.entity_id');
+  $query->fields('lm',array('entity_id', 'entity_key', 'value'));
+  $query->addField('lm2', 'value', 'timestamp');
+  $query->condition('lm.entity_key', 'target_sync_status%', 'LIKE');
+  $query->condition('lm.entity_id', $ids, 'IN');
+  $query->condition('lm.entity_type', $entity_type);
+  $query->condition('lm2.entity_key', 'last_uploaded');
   $results = $query->execute();
   $translation_status = array();
   foreach($results as $result){
-    $language_code = substr($result->$key_column,count($result->$key_column) - 6);
-    $translation_status[$result->$id_column][$language_code] = array('status' => $result->value);
+    $entity_id = $result->entity_id;
+    $language_code = substr($result->entity_key,count($result->entity_key) - 6);
+    $translation_status[$entity_id][$language_code]['status'] = $result->value;
+    $translation_status[$entity_id]['last_modified'] = lingotek_human_readable_timestamp($result->timestamp) . ' ago';
   }
   $translation_status['entity_type'] = $entity_type;
   echo json_encode($translation_status);
 }
 
+function lingotek_grid_automatic_download($entity_type){
+  $query = db_select('lingotek_entity_metadata', 'lem');
+  $query->addField('lem', 'entity_id');
+  $query->addField('lem', 'entity_key');
+  $query->condition('lem.value', 'READY');
+  $query->condition('lem.entity_type', $entity_type);
+  $results = $query->execute();
+  $ids_to_check = array();
+  $translation_status = array();
+  foreach($results as $result){
+    $entity_id = $result->entity_id;
+    $ids_to_check[] = $entity_id;
+    $language_code = substr($result->entity_key,count($result->entity_key) - 6);
+    $translation_status[$entity_id][$language_code] = $language_code;
+  }
+  $entities = entity_load($entity_type, $ids_to_check);
+  
+  foreach ($entities as $entity) {
+    if($entity->lingotek['auto_download'] === 1){
+      $id = $entity_type === 'node' ? $entity->nid : $entity->cid;
+      foreach($translation_status[$id] as $lang_code){
+        lingotek_entity_download($entity,$entity_type,$lang_code);
+      }
+    }
+  }
+}
 function lingotek_grid_download_selected($entity_type, $entity_ids, $target_locales) {
   $operations = array();
   $entities = entity_load($entity_type, $entity_ids);

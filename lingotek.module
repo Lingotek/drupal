@@ -294,6 +294,22 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/async-update/%'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_grid_query_status',
+    'page arguments' => array(5),
+    'type' => MENU_CALLBACK,
+  );
+  
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/auto-download/%'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_grid_automatic_download',
+    'page arguments' => array(5),
+    'type' => MENU_CALLBACK,
+  );
+
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/download-ready/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
