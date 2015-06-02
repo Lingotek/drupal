@@ -173,10 +173,15 @@ class LingotekProfile {
     else {
       $entity_counts = array();
       $entities = $this->getEntities();
+      // used to remove the target nodes from the count in node based profiles
+      $target_nodes = LingotekSync::getNodeIdsByStatus('TARGET', TRUE);
       // count up the entities by type
       foreach ($entities as $e) {
         if (isset($entity_counts[$e['type']])) {
           $entity_counts[$e['type']]++;
+          if (array_intersect($target_nodes, $e)) {
+            $entity_counts[$e['type']]--;
+          }
         }
         else {
           $entity_counts[$e['type']] = 1;
