@@ -677,7 +677,9 @@ function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale)
  */
 function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
-  $url = drupal_get_normal_path($entity_type . '/' . $entity_id); //assumes url detection
+  $entity = entity_load_single($entity_type, $entity_id);
+  $path = entity_uri($entity_type, $entity);
+  $url = $path['path'];
   $url_language_detection_enabled = TRUE; //TO-DO: detect when it is not enabled, currently it is assumed
 
   if ($drupal_language_code) {

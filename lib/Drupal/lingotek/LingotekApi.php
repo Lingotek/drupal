@@ -665,7 +665,7 @@ class LingotekApi {
     $links = &drupal_static(__FUNCTION__);
 
     global $user;
-    $externalId = isset($user->name) ? $user->name : ''; // send a blank string for anonymous users (community translation)
+    $externalId = isset($user->mail) ? $user->mail : ''; // send a blank string for anonymous users (community translation)
     self::checkUserWorkbenchLinkPermissions($externalId);
 
     $static_id = $document_id . '-' . $phase_id;
