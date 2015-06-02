@@ -35,6 +35,16 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
     $query = \Drupal::entityQuery('node');
     $profiles = $this->L->get('profile');
     $pullDownProfiles = array();
+
+    $contentTypes = array();
+
+    // Only use node types the user has access to.
+    foreach (\Drupal::entityManager()->getStorage('node_type')->loadMultiple() as $type) {
+      if (\Drupal::entityManager()->getAccessControlHandler('node')->createAccess($type->id())) {
+        $contentTypes[$type->id()] = $type;
+      }
+    }
+    
     foreach($profiles as $profile){
       $pullDownProfiles[] = $profile['name'];
     }
@@ -49,7 +59,7 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
     );
     $table = array(
       '#type' => 'table',
-      '#header' => $header,
+      //'#header' => $header,
       '#empty' => t('No Entries'),
     );
 
@@ -75,9 +85,21 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
       $table[$entity] = $row;
     }
 
-    dpm($table);
+    $form['wrap'] = array(
+      '#type' => 'details',
+      '#title' => 'Behold the form!',
+    );
 
-    $form['table'] = $table;
+    $form['wrap']['table'] = $table;
+    
+    //Wrap the button in details
+    unset($form['actions']);
+    $form['wrap']['actions']['#type'] = 'actions';
+    $form['wrap']['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Save configuration'),
+      '#button_type' => 'primary',
+    );
 
     return $form;
   }
