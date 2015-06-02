@@ -1026,39 +1026,19 @@ function lingotek_grid_download_selected($entity_type, $entity_ids, $target_loca
 
 function config_download_ready($force_download, $comma_separated_ids = null){
   if($force_download != null){
-    $ready_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
-    $current_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_CURRENT);
-    $lids = array_merge($ready_lids, $current_lids);
+    $ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
+    $current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_CURRENT);
+    $set_ids = array_merge($ready_lids, $current_lids);
   }
   elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
-    $selected_lids = array();
-    if($comma_separated_ids !== null){
-      $comma_lids = explode(",", $comma_separated_ids);
-      
-      foreach($comma_lids as $comma_lid){
-        $selected_lids[$comma_lid] = $comma_lid;
-      }
-    }
-    else {
-      $selected_lids = $_SESSION['grid_filters']['filtered_config_lids'];
-    }
-      //compare all the edited lids to the filter so we only upload the changed ones
-      $matching_ids = array();
-      $all_edited_lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
-      foreach($all_edited_lids as $edited_lid){
-        if(array_key_exists($edited_lid, $selected_lids)){
-          $matching_ids[] = $edited_lid;
-        }
-      }
-      
-      $lids = $matching_ids;
+    $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
+        : $_SESSION['grid_filters']['filtered_config_lids'];
+    $set_ids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY, $selected_lids);
   }
   else {
-      // Only get the ones that need to be uploaded.
-      // Looks clean but actually gets set_ids, convert those to lids, then the next function converts back to set_ids.
-      $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_READY);
+    $set_ids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
   }
-  lingotek_config_download_selected('download_all', $lids);
+  lingotek_config_download_selected('download_all', $set_ids, true);
 }
 
 function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null) {
@@ -1066,29 +1046,22 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
     config_download_ready(null, $comma_separated_ids);
     return;
   }
-  
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
-
   if (!empty($targets)) {
-    
-    $entity_ids = $comma_separated_ids === null && isset($_SESSION['grid_filters']) 
-    ? $_SESSION['grid_filters']['filtered_ids'] : null;
-    
-    if($comma_separated_ids !== null) {		
-      $entity_ids = explode(",", $comma_separated_ids);		
+    if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){ 
+      $entity_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
+          : $_SESSION['grid_filters']['filtered_ids'];
     }
-    elseif($entity_ids === null) {
+    else {
       $entity_ids = array();
       foreach ($targets as $target) {
         $entity_ids[] = $target['id'];
       }
     }
-    
     $entities = entity_load($entity_type, $entity_ids);
-
     $operations = array();
     foreach ($targets as $target) {
-      if (array_key_exists($target['id'], $entities) &&
+      if (isset($entities[$target['id']]) &&
           $entities[$target['id']]->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) { // exclude nodes with PROFILE_DISABLED
         $operations[] = array('lingotek_entity_download', array($target['id'], $entity_type, $target['locale']));
       }
@@ -1108,50 +1081,15 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
   }
 }
 
-function find_never_uploaded_lids($control_list = null){
-  if($control_list !== null && !empty($control_list)){
-      $query = db_select('locales_source','ls');
-      $query->leftJoin('locales_target','lt','ls.lid = lt.lid');
-      $query->isNull("lt.lid");
-      $query->fields('ls',array('lid'));
-      $query->condition('ls.lid',$control_list, 'IN');
-      $never_uploaded_lids = $query->execute()->fetchCol();
-      return $never_uploaded_lids;
-  }
-  return array();
-}
-
 function config_upload_edited($comma_separated_ids) {
-    //if a filter is set, grab all filtered lids
     if(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
-      
-      if($comma_separated_ids !== null){
-        $comma_lids = explode(",", $comma_separated_ids);
-        $selected_lids = array();
-        foreach($comma_lids as $lid){
-          $selected_lids[$lid] = $lid;
-        }
-      }
-      else {
-        $selected_lids = $_SESSION['grid_filters']['filtered_config_lids'];
-      }
-      
-      $all_edited_lids = LingotekConfigSet::getLidsToUpdate();
+      $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
+          : $_SESSION['grid_filters']['filtered_config_lids'];
+      //check which lids within the filter or selection actually need to be uploaded
+      $all_edited_lids = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
       //get all the lids that have never been uploaded
-      $never_uploaded_lids = find_never_uploaded_lids($selected_lids);
-      
-      $matching_ids = array();
-      foreach($never_uploaded_lids as $lid){
-        $matching_ids[] = $lid;
-      }
-      
-      //compare all the edited lids to the filter so we only upload the changed ones
-      foreach($all_edited_lids as $edited_lid){
-        if(array_key_exists($edited_lid, $selected_lids)){
-          $matching_ids[] = $edited_lid;
-        }
-      }
-      $lids = $matching_ids;
+      $never_uploaded_lids = LingotekConfigSet::findNeverUploadedLids($selected_lids);
+      $lids = array_merge($all_edited_lids, $never_uploaded_lids);
     }
     else {
       // Only get the ones that need to be uploaded.
@@ -1167,7 +1105,6 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
   }
   
   $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
-  
   if($comma_separated_ids !== null){
     $selected_ids = explode(",", $comma_separated_ids);
     $entity_ids = array_intersect($selected_ids, $entity_ids);
@@ -1176,6 +1113,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
   elseif(isset($_SESSION['grid_filters'])) {
     $filtered_ids = $_SESSION['grid_filters']['filtered_ids'];
     $matching_ids = array();
+    //check which ids from the filter set are ready for upload
     foreach($entity_ids as $entity_id){
       if(array_key_exists($entity_id, $filtered_ids)){
         $matching_ids[] = $entity_id;

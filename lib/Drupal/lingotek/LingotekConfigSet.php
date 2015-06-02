@@ -481,6 +481,21 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $lids = self::getLidsFromSets($set_ids);
     return $lids;
   }
+  
+  public static function getSetIdsByStatus($status, $lids = null) {
+    $query = db_select('lingotek_config_metadata', 'l');
+    if($lids !== null) {
+      $query->join('lingotek_config_map', 'lc', 'l.id = lc.set_id');
+      $query->condition('lc.lid', $lids, 'IN');
+    }
+    $query->fields('l', array('id'));
+    $query->condition('l.config_key', 'target_sync_status_%', 'LIKE');
+    $query->condition('l.value', $status);
+    $query->distinct();
+    $result = $query->execute();
+    $set_ids = $result->fetchCol();
+    return $set_ids;
+  }
 
   /**
    * Return any metadata for the given set ID, if it exists
@@ -917,11 +932,27 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $or->condition('lcm.current', $current);
     $or->condition('lt.i18n_status', 1);
     $query->condition($or);
-
-    $lids = $query->execute()->fetchCol();
-    return array_unique($lids);
+    $query->distinct();
+    return $query->execute()->fetchCol();
   }
-
+  /**
+   * Check a given list for lids that have never been uploaded
+   * @param type $control_list
+   *  The list of lids to search through
+   * @return type
+   */
+  public static function findNeverUploadedLids($control_list = null){
+    if($control_list !== null && !empty($control_list)){
+        $query = db_select('locales_source','ls');
+        $query->leftJoin('locales_target','lt','ls.lid = lt.lid');
+        $query->isNull("lt.lid");
+        $query->fields('ls',array('lid'));
+        $query->condition('ls.lid',$control_list, 'IN');
+        $never_uploaded_lids = $query->execute()->fetchCol();
+        return $never_uploaded_lids;
+    }
+    return array();
+  }
   /**
    * Delete all target segments for a given set
    *

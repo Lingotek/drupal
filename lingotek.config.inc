@@ -420,8 +420,8 @@ function lingotek_config_upload_selected($lids) {
   batch_process($redirect); // Run batch operations to upload all of the selected nodes to Lingotek
 }
 
-function lingotek_config_download_selected($action, $lids) {
-  $set_ids = array_unique(LingotekSync::getSetIdsFromLids($lids));
+function lingotek_config_download_selected($action, $ids, $set_ids_passed = false) {
+  $set_ids = $set_ids_passed ? $ids : array_unique(LingotekSync::getSetIdsFromLids($ids));
   if (empty($set_ids)) {
     drupal_set_message(t('No translations to download at this time. Make sure configuration items have been uploaded to Lingotek before trying to get translations for them.'), 'status', FALSE);
     drupal_goto('admin/settings/lingotek/manage/config');
