@@ -268,7 +268,7 @@ function lingotek_perform_action(nid, action) {
       var title = $(this).attr('title');
       var cutoff = title.indexOf('-');
       title = title.substring(0, cutoff + 1);
-
+      
       switch (data[entity_id][language_code].status) {
         case "READY":
           //take out the empty checkbox in Source Uploaded and replace with 
@@ -315,8 +315,11 @@ function lingotek_perform_action(nid, action) {
     $('#edit-grid-container .form-checkbox').each(function () {
       var entity_id = $(this).val();
       if (data.hasOwnProperty(entity_id)) {
-        var parent = $(this).closest('tr');      
-        updateRowStatus(data,parent,entity_id);
+        var parent = $(this).closest('tr');
+        //this creates the random fill in effect, not sure if its a keeper
+        var i = Math.floor((Math.random() * 7) + 1);
+        setTimeout(updateRowStatus,300 * i,data,parent,entity_id);
+//        updateRowStatus(data,parent,entity_id);
       }
     });
   }
@@ -355,11 +358,20 @@ function lingotek_perform_action(nid, action) {
     setInterval(function () {
       $.ajax({
           url: $('#auto-download').attr('href'),
-          dataType: 'json',
+          dataType: 'json'
         });
       }, 30000);
   }
+  function configShowMoreOptions(){
+    $('#more-options').toggleClass('fa-chevron-right');
+    $('#force-down').toggle();
+  }
+  function setupConfigMoreOptions() {
+    $('#force-down').hide();
+    $('#more-options').click(configShowMoreOptions);
+  }
   $(document).ready(function () {
+    setupConfigMoreOptions();
     alignFields();
     pollTranslationStatus();
     pollAutomaticDownloads();

@@ -368,10 +368,7 @@ function lingotek_config_action_submit($form, $form_state) {
 
     if (isset($form_state['values']['select_actions'])) { // If an action was selected (which it would be, I don't know if this could ever NOT occur with normal use)
       $action = $form_state['values']['select_actions']; // Get the action
-      if($action === 'force_download'){
-        config_download_ready(true);
-      }
-      elseif (count($lids) <= 0) { // Select a node
+      if (count($lids) <= 0) { // Select a node
         drupal_set_message(t('You must select at least one node to @action.', array('@action' => $action)), 'warning'); // Or pay the price
       }
       elseif ($action == 'upload') { // If uploading

@@ -126,6 +126,14 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $results_first = (($page - 1) * $limit_select) + 1;
   $results_last = $results_first + count($table_data) - 1;
+  if($entity_type === 'config') {
+    $form['lingotek_options'] = array(
+      '#markup' => '<i title="More options" class="fa fa-chevron-left fa-2x lingotek-action ltk-options" id="more-options"></i>'
+    );
+    $form['lingotek_force_down_all'] = array(
+    '#markup' => l('<i class="fa fa-sort-amount-asc fa-2x"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/force-down-all/true', array('html' => TRUE, 'attributes' => array('title' => t('Download all regardless of status'), 'class' => array('lingotek-action ltk-force-down'), 'id' => array('force-down')))),
+  );
+  }
   $form['lingotek_legend'] = array(
     '#markup' => l('<i class="fa fa-question-circle fa-2x ltk-legend"></i>', LINGOTEK_MENU_MAIN_BASE_URL . '/manage/legend', array('html' => TRUE, 'attributes' => array('title' => t('Legend - icon descriptions'), 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-large','lingotek-action'), 'id' => array('legend')))),
   );
@@ -353,7 +361,6 @@ function lingotek_grid_action_options($entity_type) {
 
   if ($entity_type == 'config') {
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
-    $action_options[t('Download')]['force_download'] = t('Force Download All Translations');
     
   }
   else {
@@ -1028,7 +1035,8 @@ function config_download_ready($force_download, $comma_separated_ids = null){
   if($force_download != null){
     $ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
     $current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_CURRENT);
-    $set_ids = array_merge($ready_lids, $current_lids);
+    $edited_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_EDITED);
+    $set_ids = array_merge($ready_lids, $current_lids,$edited_lids);
   }
   elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
     $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)

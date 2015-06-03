@@ -228,7 +228,16 @@ a:hover.tooltips span {
     color: green;
     font-size: 150%;
 }
-
+.ltk-options {
+  padding-top: 5px;
+  cursor: pointer;
+  margin-left: 15px;
+}
+.ltk-force-down {
+  position:relative;
+  padding-top: 3px;
+  font-size: 100%;
+}
 .ltk-upload {
     color: #444;
 }
