@@ -650,7 +650,7 @@ class LingotekSync {
     return $nids;
   }
 
-  public static function getEntityIdsToUpload($entity_type) {
+  public static function getEntityIdsToUpload($entity_type, $entity_ids = null) {
     $info = entity_get_info($entity_type);
     $id_key = $info['entity keys']['id'];
     $query = db_select($info['base table'], 'base');
@@ -669,7 +669,9 @@ class LingotekSync {
     $or->condition('upload.value', LingotekSync::STATUS_EDITED);
     $or->isNull('upload.value');
     $query->condition($or);
-
+    if($entity_ids !== null){
+      $query->condition('upload.entity_id', $entity_ids, 'IN');
+    }
     $result = $query->execute()->fetchCol();
     return $result;
   }

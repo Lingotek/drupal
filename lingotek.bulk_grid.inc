@@ -1111,23 +1111,13 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     config_upload_edited($comma_separated_ids);
     return;
   }
-  
-  $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
-  if($comma_separated_ids !== null){
-    $selected_ids = explode(",", $comma_separated_ids);
-    $entity_ids = array_intersect($selected_ids, $entity_ids);
+  if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
+    $selected_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
+      : $_SESSION['grid_filters']['filtered_ids'];
+    $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type, $selected_ids);
   }
-  //filtering on all the ids of the current filter set
-  elseif(isset($_SESSION['grid_filters'])) {
-    $filtered_ids = $_SESSION['grid_filters']['filtered_ids'];
-    $matching_ids = array();
-    //check which ids from the filter set are ready for upload
-    foreach($entity_ids as $entity_id){
-      if(array_key_exists($entity_id, $filtered_ids)){
-        $matching_ids[] = $entity_id;
-      }
-    }
-    $entity_ids = $matching_ids;
+  else {
+    $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
   }
 
   if (!empty($entity_ids)) {
