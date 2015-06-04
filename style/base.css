@@ -374,13 +374,15 @@ a.ltk-action:hover {
 .legend-table td{
     padding-top: 0;
     padding-bottom: 0;
-    padding-left: 0;
+    padding-left: 5px;
     height: 26px;
     
 }
 .legend-table div{
     text-align: center;
     margin:auto;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 #edit-search-submit {
   border-radius: 0;
@@ -398,5 +400,11 @@ a.ltk-action:hover {
   margin:0;
   padding-top:3px;
   padding-bottom:3px;
+}
+#more-options{ 
+    transition:.3s;
+}
+.more-options-flip {
+    transform: rotateY(180deg);
 }
 

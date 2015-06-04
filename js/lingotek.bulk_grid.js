@@ -363,7 +363,7 @@ function lingotek_perform_action(nid, action) {
       }, 30000);
   }
   function configShowMoreOptions(){
-    $('#more-options').toggleClass('fa-chevron-right');
+    $('#more-options').toggleClass('more-options-flip');
     $('#force-down').toggle();
   }
   function setupConfigMoreOptions() {

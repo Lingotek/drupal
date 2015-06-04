@@ -563,17 +563,22 @@ function lingotek_grid_legend_form($form, $form_state) {
       
       . "<tr>"
         . '<td><div><i class="fa fa-refresh fa-2x ltk-refresh"></i></div></td>'
-        . '<td>Refresh the status of the Translations column</td>'
+        . '<td>Checks the progress of In Progress content. When ready, red icons (In Progress) will become green (Ready to Download).</td>'
       . "</tr>"
 
       . "<tr>"
         . '<td><div><i class="fa fa-cloud-download fa-2x ltk-download"></i></div></td>'
-        . '<td>Download translated documents from Lingotek</td>'
+        . '<td>Download translated documents from Lingotek that are listed as "Ready to Download" (green icons)</td>'
       . "</tr>"
 
       . "<tr>"
         . '<td><div><i class="fa fa-list-alt fa-2x"></i></div></td>'
         . '<td>Choose which columns on the table to show or hide</td>'
+      . "</tr>"
+      
+      . "<tr>"
+        . '<td><div><i class="fa fa-sort-amount-asc fa-2x" style="font-size: 150%;"></i></div></td>'
+        . '<td>(Config page only) Download all content regardless of its current status</td>'
       . "</tr>"
 
       . "<tr>"
@@ -907,7 +912,7 @@ function lingotek_config_build_column_checkboxes($form_state) {
   return lingotek_grid_process_elements($column_elements, $prefix, $suffix); // adds prefixes and suffixes to the elements
 }
 
-function lingotek_grid_update($entity_type, $comma_separated_ids = null) {
+function lingotek_grid_update($entity_type) {
   if ($entity_type == 'config') {
     $lids = LingotekConfigSet::getLidsByStatus(LingotekSync::STATUS_PENDING);
     if (empty($lids)) {
@@ -946,9 +951,9 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
       $first_language_code = substr($language_code, 0, 2);
       $other_dialect_code = str_replace('_', '-', strtolower($language_code));      
       $dirty_status_array = $table_rows['dirty_status'];
-      if(array_key_exists($table_row->$id_column, $dirty_status_array)){
-        if(array_key_exists($first_language_code, $dirty_status_array[$table_row->$id_column])
-          || array_key_exists($other_dialect_code, $dirty_status_array[$table_row->$id_column])){
+      if(isset($dirty_status_array[$table_row->$id_column])){
+        if(isset($dirty_status_array[$table_row->$id_column][$first_language_code])
+          || isset($dirty_status_array[$table_row->$id_column][$other_dialect_code])){
           $status_array[$table_row->$id_column][$language_code]['status'] = 'EDITED';
         }
       }
@@ -959,13 +964,12 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
   }
   
   $query = db_select('lingotek_entity_metadata', 'lm');
-  $query->join('lingotek_entity_metadata', 'lm2', 'lm.entity_id = lm2.entity_id');
+  $query->join('node', 'n', 'n.nid = lm.entity_id');
+  $query->addField('n', 'changed', 'timestamp');
   $query->fields('lm',array('entity_id', 'entity_key', 'value'));
-  $query->addField('lm2', 'value', 'timestamp');
   $query->condition('lm.entity_key', 'target_sync_status%', 'LIKE');
   $query->condition('lm.entity_id', $ids, 'IN');
   $query->condition('lm.entity_type', $entity_type);
-  $query->condition('lm2.entity_key', 'last_uploaded');
   $results = $query->execute();
   $translation_status = array();
   foreach($results as $result){
@@ -1093,7 +1097,7 @@ function config_upload_edited($comma_separated_ids) {
     if(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
       $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
           : $_SESSION['grid_filters']['filtered_config_lids'];
-      //check which lids within the filter or selection actually need to be uploaded
+      //check which lids within the selected ids need to be uploaded
       $all_edited_lids = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
       //get all the lids that have never been uploaded
       $never_uploaded_lids = LingotekConfigSet::findNeverUploadedLids($selected_lids);
