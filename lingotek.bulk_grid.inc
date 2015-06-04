@@ -12,7 +12,9 @@ function lingotek_manage_callback() {
 
 function lingotek_bulk_grid_form($form, $form_state) {
   $entity_type = arg(4);
-  $entity_type = empty($entity_type)? 'node': $entity_type;
+  if(empty($entity_type)){
+    $entity_type = 'node';
+  }
 
   global $language;
 
@@ -964,8 +966,10 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
   }
   
   $query = db_select('lingotek_entity_metadata', 'lm');
-  $query->join('node', 'n', 'n.nid = lm.entity_id');
-  $query->addField('n', 'changed', 'timestamp');
+  if($entity_type === 'node'){
+    $query->join('node', 'n', 'n.nid = lm.entity_id');
+    $query->addField('n', 'changed', 'timestamp');
+  }
   $query->fields('lm',array('entity_id', 'entity_key', 'value'));
   $query->condition('lm.entity_key', 'target_sync_status%', 'LIKE');
   $query->condition('lm.entity_id', $ids, 'IN');
@@ -976,7 +980,9 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
     $entity_id = $result->entity_id;
     $language_code = substr($result->entity_key,count($result->entity_key) - 6);
     $translation_status[$entity_id][$language_code]['status'] = $result->value;
-    $translation_status[$entity_id]['last_modified'] = lingotek_human_readable_timestamp($result->timestamp) . ' ago';
+    if($entity_type === 'node'){
+      $translation_status[$entity_id]['last_modified'] = lingotek_human_readable_timestamp($result->timestamp) . ' ago';
+    }
   }
   $translation_status['entity_type'] = $entity_type;
   echo json_encode($translation_status);
