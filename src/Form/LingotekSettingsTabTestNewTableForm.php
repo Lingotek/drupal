@@ -29,7 +29,7 @@ class LingotekSettingsTabTestNewTableForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
-    $entityDefs = \Drupal::entityManager()->getDefinitions();
+    $entityTypes = \Drupal::entityManager()->getDefinitions();
     $bundles = \Drupal::entityManager()->getAllBundleInfo();
     $fieldDefs = \Drupal::entityManager()->getFieldMap();
     $query = \Drupal::entityQuery('node');

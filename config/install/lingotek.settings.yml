@@ -8,7 +8,8 @@ preference:
   advanced_taxonomy_terms: true
   always_show_translate_tabs: false
 account:
-  host: 'https://cms.lingotek.com'
+  sandbox_host: 'https://cms.lingotek.com'
+  host: 'https://myaccount.lingotek.com'
   authorize_path: 'auth/authorize.html'
   default_client_id: 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
   plan_type: 'basic'
@@ -23,6 +24,10 @@ translate:
   interface: null
 field:
 profile:
+  - id: 0
+    name: 'disabled'
+    auto_upload: false
+    auto_download: false
   - id: 1
     name: 'automatic'
     auto_upload: true

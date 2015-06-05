@@ -70,7 +70,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       array('#markup' => $this->t('Lingotek TMS Server:')), array('#markup' => $this->t('https://myaccount.lingotek.com')),
     );
     $gmcRow = array(
-      array('#markup' => $this->t('Lingotek GMC Server:')), array('#markup' => $this->t('https://gmc.lingotek.com')),
+      array('#markup' => $this->t('Lingotek GMC Server:')), array('#markup' => $this->t($this->L->get('account.host'))),
     );
     
     $accountTable = array(

@@ -34,9 +34,9 @@ class Lingotek implements LingotekInterface {
   const STATUS_UNTRACKED = 'UNTRACKED';
   const PROGRESS_COMPLETE = 100;
   // Translation Profile.
-  const PROFILE_DISABLED = 'DISABLED';
-  const PROFILE_AUTOMATIC = 'AUTO';
-  const PROFILE_MANUAL = 'MANUAL';
+  const PROFILE_DISABLED = 0;
+  const PROFILE_AUTOMATIC = 1;
+  const PROFILE_MANUAL = 2;
 
   public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config) {
     $this->api = $api;
