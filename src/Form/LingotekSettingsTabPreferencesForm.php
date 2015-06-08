@@ -78,13 +78,11 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
     $this->L->set('preference.advanced_parsing', $form_values['advanced_parsing']);
-    dpm($this->L->get());
   }
 
   protected function retrieveCheckboxValues(){
     // Poll user choices and assign them to the checkboxes
     $choices = $this->L->get('preference');
-    dpm($choices);
     if ($choices) {
       if ($choices['advanced_parsing'] == 1) {
         $this->advanced_parsing_value = 1;
