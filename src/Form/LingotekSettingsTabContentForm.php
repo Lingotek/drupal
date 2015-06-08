@@ -69,12 +69,17 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       $row['profiles'] = $this->retrieveProfiles($entity_type_id->id());
       $row['fields'] = $this->retrieveFields($entity_type_id->id());
       $table[$entity_type_id->id()] = $row;
-    }  
+    }
 
-    $form['table'] = $table;
+    $form['content'] = array(
+      '#type' => 'details',
+      '#title' => 'Translate Content Types'
+    );  
 
-    $form['actions']['#type'] = 'actions';
-    $form['actions']['submit'] = array(
+    $form['content']['table'] = $table;
+
+    $form['content']['actions']['#type'] = 'actions';
+    $form['content']['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#button_type' => 'primary',
