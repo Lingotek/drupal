@@ -214,7 +214,7 @@ $(document).ready(function(){
   $('.description').css('position','static');
   $('.description').css('display','block');
   $('.description').css('padding-left','0');
-  $('.form-type-checkbox').find('.description').css('padding-left','1.5em');
+  $('.form-type-checkbox').find('.description').css('margin-left','1.5em');
 });
 
 })(jQuery);
