@@ -11,6 +11,8 @@ function lingotek_manage_callback() {
 }
 
 function lingotek_bulk_grid_form($form, $form_state) {
+  //Necessary for the case of themes overriding the base.css file
+  drupal_add_css(drupal_get_path('module', 'lingotek') . '/style/lingotek-base-shim.css');
   $entity_type = arg(4);
   if(empty($entity_type)){
     $entity_type = 'node';

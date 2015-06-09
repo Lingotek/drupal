@@ -207,6 +207,16 @@ Drupal.behaviors.lingotekAdminForm = {
   }
 };
 
+$(document).ready(function(){
+  $('.description').css('width','auto');
+  $('.description').css('border','0px');
+  $('.description').css('background','transparent');
+  $('.description').css('position','static');
+  $('.description').css('display','block');
+  $('.description').css('padding-left','0');
+  $('.form-type-checkbox').find('.description').css('padding-left','1.5em');
+});
+
 })(jQuery);
 
 function lingotek_set_all(sel, target) {

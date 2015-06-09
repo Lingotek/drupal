@@ -72,7 +72,7 @@ function lingotek_setup_new_account_form() {
     '#type' => 'submit',
     '#value' => t('Next') // Create Account
   );
-  $form['lingotek_back_button'] = lingotek_setup_link(LINGOTEK_MENU_LANG_BASE_URL . '/account-settings', t('Enterprise Customers - Connect Here'));
+  $form['lingotek_back_button'] = lingotek_setup_link_on_right(LINGOTEK_MENU_LANG_BASE_URL . '/account-settings', t('Enterprise Customers - Connect Here'));
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -273,7 +273,7 @@ function lingotek_setup_account_settings_form() {
     '#type' => 'submit',
     '#value' => t('Next'), // Login
   );
-  $form['lingotek_back_button'] = lingotek_setup_link(LINGOTEK_MENU_LANG_BASE_URL . '/new-account', t('No subscription? Go back and register for free.'));
+  $form['lingotek_back_button'] = lingotek_setup_link_on_right(LINGOTEK_MENU_LANG_BASE_URL . '/new-account', t('No subscription? Go back and register for free.'));
   $form['lingotek_support_footer'] = lingotek_support_footer();
 
   return $form;
@@ -615,6 +615,7 @@ function lingotek_project_vault_select_form_submit($form, $form_state) {
 }
 
 function lingotek_setup_language_switcher_form($form, $form_state) {
+  drupal_add_js(drupal_get_path('module', 'lingotek') . '/js/lingotek.admin.js');
   $current_theme = variable_get('theme_default', 'none'); //global $theme_key;
 
   $query = db_select('block', 'b');
@@ -924,6 +925,12 @@ function lingotek_setup_node_updates_form($form, $form_state) {
 function lingotek_setup_link($path, $text = 'Previous Step') {
   return array(
     '#markup' => '<span style="margin-right: 15px;">' . l($text, $path) . '</span>'
+  );
+}
+//this covers the case of the link being on the right of a non-default theme button
+function lingotek_setup_link_on_right($path, $text = 'Previous Step') {
+  return array(
+    '#markup' => '<span style="margin-left:5px; margin-right: 15px;">' . l($text, $path) . '</span>'
   );
 }
 
