@@ -374,7 +374,7 @@ function lingotek_perform_action(nid, action) {
     setupConfigMoreOptions();
     alignFields();
     pollTranslationStatus();
-    pollAutomaticDownloads();
+//    pollAutomaticDownloads();
     addClickToDownloadReady();
     addClickToUploadButton();
     addClickToCheckboxes();
