@@ -18,8 +18,8 @@ use Drupal\lingotek\Form\LingotekConfigFormBase;
 class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   protected $profile_options;
   protected $profiles;
-  protected $user_profiles;
-  protected $content_types;
+  protected $bundles;
+  protected $translatable_bundles;
 
   /**
    * {@inheritdoc}
@@ -33,24 +33,18 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->profiles = $this->L->get('profile');
-    $this->content_types = array();
 
     // Get the default profiles
-    $this->profile_options = array();
-    foreach ($this->profiles as $profile) {
-      $this->profile_options[$profile['id']] = ucwords($profile['name']);
-    }
-    $this->profile_options['3'] = $this->t('Disabled');
+    $this->retrieveProfileOptions();
 
-    // Only use node types the user has access to.
-    foreach (\Drupal::entityManager()->getStorage('node_type')->loadMultiple() as $type) {
-      if (\Drupal::entityManager()->getAccessControlHandler('node')->createAccess($type->id())) {
-        $this->content_types[$type->id()] = $type;
-      }
-    }
-
+    // Retrieve bundles
+    $this->retrieveBundles();
+    
+    // Retrieve translatable bundles
+    $this->retrieveTranslatableBundles();
+    
     $header = array(
-      $this->t('Content Types'),
+      $this->t('Content Type'),
       $this->t('Translation Profile'),
       $this->t('Fields'),
     );
@@ -61,14 +55,16 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       '#empty' => $this->t('No Entries'),
     );
     
-    foreach ($this->content_types as $entity_type_id) {
-      $row = array();
-      $row['content_type'] = array(
-        '#markup' => $this->t('@name', array('@name' => $entity_type_id->label())),
-      );
-      $row['profiles'] = $this->retrieveProfiles($entity_type_id->id());
-      $row['fields'] = $this->retrieveFields($entity_type_id->id());
-      $table[$entity_type_id->id()] = $row;
+    foreach ($this->translatable_bundles as $entity_id => $bundles) {
+      foreach ($bundles as $bundle_id => $bundle) {
+        $row = array();
+        $row['content_type'] = array(
+          '#markup' => $this->t($bundle['label']),
+        );
+        $row['profiles'] = $this->retrieveProfiles($bundle_id);
+        $row['fields'] = $this->retrieveFields($entity_id, $bundle_id);
+        $table[$bundle_id] = $row;
+      }
     }
 
     $form['content'] = array(
@@ -95,21 +91,56 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $form_values = $form_state->getValues();
     $table = $form_values['table'];
     
-    // For every content type, save the profile in the L object
-    foreach($this->content_types as $content_type) {
-      $this->L->set('translate.entity' . '.' . $content_type->id(), $table[$content_type->id()]['profiles']);
+    // For every content type, save the profile and fields in the Lingotek object
+    foreach($table as $bundle_id => $bundle) {
+      $this->L->set('translate.entity.' . $bundle_id, $table[$bundle_id]['profiles']);
+      foreach($bundle['fields'] as $field_id => $field_choice) {
+        $this->L->set('field.' . $bundle_id . '.' . $field_id, $table[$bundle_id]['fields'][$field_id]);
+      }  
     }
   }
 
-  protected function retrieveProfiles($entity_type_id) {
+  protected function retrieveProfileOptions() {
+    $this->profile_options = array();
+
+    foreach ($this->profiles as $profile) {
+      $this->profile_options[$profile['id']] = ucwords($profile['name']);
+    }
+  }
+
+  protected function retrieveBundles() {
+    $entities = \Drupal::entityManager()->getDefinitions();
+    $this->bundles = array();
+
+    foreach ($entities as $entity) {
+      if ($entity instanceof \Drupal\Core\Entity\ContentEntityType) {
+        $bundle = \Drupal::entityManager()->getBundleInfo($entity->id());
+        $this->bundles[$entity->id()] = $bundle;
+      }
+    }
+  }
+
+  protected function retrieveTranslatableBundles() {
+    $this->translatable_bundles = array();
+
+    foreach ($this->bundles as $bundle_group_id => $bundle_group) {
+      foreach ($bundle_group as $bundle_id => $bundle) {
+        if ($bundle['translatable']) {
+          $this->translatable_bundles[$bundle_group_id][$bundle_id] = $bundle;
+        }
+      }
+    }
+  }
+
+  protected function retrieveProfiles($bundle_id) {
     $option_num;
 
     // Find which profile the user previously selected
-    if ($this->L->get('translate.entity.' . $entity_type_id)) {
-      $option_num = $this->L->get('translate.entity.' . $entity_type_id);
+    if ($this->L->get('translate.entity.' . $bundle_id)) {
+      $option_num = $this->L->get('translate.entity.' . $bundle_id);
     }
     else {
-      $option_num = 1;
+      $option_num = $this->L->PROFILE_AUTOMATIC;
     }
     
     $select = array(
@@ -121,14 +152,31 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     return $select;
   }
 
-  protected function retrieveFields($entity_type_id) {
-    // $entityTypes = \Drupal::entityManager()->getDefinitions();
-      
-    // foreach ($entityTypes as $type) {
-    //   $field = \Drupal::entityManager()->getFieldDefinitions('node', 'page');
-    //   $name = $field->getName();
-    // }
-    // $field_storage = $entity_type_id->getFieldStorageDefinition();
+  protected function retrieveFields($entity_id, $bundle_id) {
+    $fields = \Drupal::entityManager()->getFieldDefinitions($entity_id, $bundle_id);
+    $field_checkboxes = array ();
+    $checkbox_choice;
+    
+    // Find which fields the user previously selected
+    foreach($fields as $field_id => $field) {
+      if ($field->isTranslatable()) {
+        if ($this->L->get('field.' . $bundle_id . '.' . $field_id)) {
+          $checkbox_choice = $this->L->get('field.' . $bundle_id . '.' . $field_id);
+        }
+        else {
+          $checkbox_choice = 0;
+        }
+
+        $field_checkbox = array(
+          '#type' => 'checkbox',
+          '#title' => $this->t($field->getLabel()),
+          '#default_value' => $checkbox_choice,
+        );
+        $field_checkboxes[$field_id] = $field_checkbox;
+      }
+    }
+
+    return $field_checkboxes;
   }
 
 }

@@ -34,7 +34,7 @@ class Lingotek implements LingotekInterface {
   const STATUS_UNTRACKED = 'UNTRACKED';
   const PROGRESS_COMPLETE = 100;
   // Translation Profile.
-  const PROFILE_DISABLED = 0;
+  const PROFILE_DISABLED = 3;
   const PROFILE_AUTOMATIC = 1;
   const PROFILE_MANUAL = 2;
 

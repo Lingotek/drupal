@@ -16,7 +16,10 @@ use Drupal\lingotek\Form\LingotekConfigFormBase;
  * Configure Lingotek
  */
 class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
-
+  protected $profile_options;
+  protected $profiles;
+  protected $bundles;
+  protected $translatable_bundles;
   /**
    * {@inheritdoc}
    */
@@ -29,15 +32,10 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     
-    $form['config'] = array(
-      '#type' => 'details',
-      '#title' => t('Translate Configuration Types'),
-      '#description' => t('Translation of page configuration'),
-      '#group' => 'settings',
-    );
-    $form['config']['save'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Save'),
+    $table = array(
+      '#type' => 'table',
+      '#header' => $header,
+      '#empty' => $this->t('No Entries'),
     );
 
      return $form;

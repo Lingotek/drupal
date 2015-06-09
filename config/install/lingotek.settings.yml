@@ -24,15 +24,15 @@ translate:
   interface: null
 field:
 profile:
-  - id: 0
-    name: 'disabled'
-    auto_upload: false
-    auto_download: false
   - id: 1
     name: 'automatic'
     auto_upload: true
     auto_download: true
   - id: 2
     name: 'manual'
+    auto_upload: false
+    auto_download: false
+  - id: 3
+    name: 'disabled'
     auto_upload: false
     auto_download: false
