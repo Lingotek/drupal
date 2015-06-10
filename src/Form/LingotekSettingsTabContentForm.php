@@ -11,6 +11,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Configure Lingotek
@@ -34,7 +35,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->profiles = $this->L->get('profile');
 
-    // Get the default profiles
+    // Get the profiles
     $this->retrieveProfileOptions();
 
     // Retrieve bundles
@@ -140,7 +141,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       $option_num = $this->L->get('translate.entity.' . $bundle_id);
     }
     else {
-      $option_num = $this->L->PROFILE_AUTOMATIC;
+      $option_num = Lingotek::PROFILE_AUTOMATIC;
     }
     
     $select = array(

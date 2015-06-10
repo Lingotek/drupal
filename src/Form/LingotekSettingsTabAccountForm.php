@@ -67,10 +67,10 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       array('#markup' => $this->t('Vault ID:')), array('#markup' => $this->t($this->L->get('default.vault'))),
     );
     $tmsRow = array(
-      array('#markup' => $this->t('Lingotek TMS Server:')), array('#markup' => $this->t('https://myaccount.lingotek.com')),
+      array('#markup' => $this->t('Lingotek TMS Server:')), array('#markup' => $this->t($this->L->get('account.host'))),
     );
     $gmcRow = array(
-      array('#markup' => $this->t('Lingotek GMC Server:')), array('#markup' => $this->t($this->L->get('account.host'))),
+      array('#markup' => $this->t('Lingotek GMC Server:')), array('#markup' => $this->t('https://gmc.lingotek.com')),
     );
     
     $accountTable = array(
