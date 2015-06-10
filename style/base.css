@@ -411,4 +411,6 @@ a.ltk-action:hover {
   padding:0;
   margin:0;
 }
-
+#lingotek-admin-additional-translation-settings-form label{
+ white-space: pre-wrap;
+}
