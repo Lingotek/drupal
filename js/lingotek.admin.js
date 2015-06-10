@@ -61,6 +61,9 @@ Drupal.behaviors.lingotekAdminForm = {
       }
       else {
         $('.field.form-checkbox').attr('checked',false);
+        $('#lingotek_prepare_config_blocks').attr('disabled',true);
+        $('#lingotek_prepare_config_menus').attr('disabled',true);
+        $('#lingotek_prepare_config_taxonomies').attr('disabled',true);
       }
     });
 
