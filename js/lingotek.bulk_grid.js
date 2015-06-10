@@ -187,8 +187,14 @@ function lingotek_perform_action(nid, action) {
   //can't do this simply with css, because the actions dropdown's width may change
   //based on its content
   function alignFields() {
-    var commonWidth = $('#edit-select-actions').width();
-    $('#edit-search').width(commonWidth);
+    var common_width = $('#edit-select-actions').width();
+    var padding_top = $('#edit-select-actions').css('padding-top');
+    var padding_bottom = $('#edit-select-actions').css('padding-bottom');
+    var height = $('#edit-select-actions').height();
+    $('#edit-search').width(common_width);
+    $('#edit-search').css('paddingBottom', padding_bottom);
+    $('#edit-search').css('paddingTop', padding_top);
+    $('#edit-search').css('min-height', height);
   }
 
   //update_empty_cells allows cells with no translations statuses to display them

@@ -407,4 +407,7 @@ a.ltk-action:hover {
 .more-options-flip {
     transform: rotateY(180deg);
 }
-
+.form-item-search label {
+  padding:0;
+  margin:0;
+}
