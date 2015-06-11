@@ -54,6 +54,15 @@ lingotek.settings:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.settings_profile:
+  path: '/admin/lingotek/settings/profile'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekSettingsController::profileForm'
+    theme: null
+    _title: 'Add or Edit a Profile'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.manage:
   path: '/admin/lingotek/manage'
   defaults:
@@ -125,4 +134,6 @@ lingotek.workbench:
     _title: 'Use Lingotek Workbench'
   requirements:
     _permission: 'administer lingotek'
+
+
 

@@ -7,8 +7,11 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\String;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\lingotek\Lingotek;
@@ -32,9 +35,6 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->profiles = $this->L->get('profile');
 
-    // Get the profiles
-    $this->retrieveProfileOptions();
-
     $header = array(
       $this->t('Profile Name'),
       $this->t('Usage'),
@@ -46,7 +46,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
       '#header' => $header,
       '#empty' => $this->t('No Entries'),
     );
-    
+      
     foreach ($this->profiles as $profile) {
       $row = array();
       $row['profile_name'] = array(
@@ -71,23 +71,70 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     $form['config_parent']['add_profile'] = array(
       '#markup' => \Drupal::l(t('Add New Profile'), new Url('lingotek.dashboard')),
     );
-  
+
+    $form['foo'] = array(
+      '#type' => 'submit',
+      '#value' => t('Modalize!'),
+      '#ajax' => array(
+        'class' => 'use-ajax',
+        'data-accepts' => 'application/vnd.drupal-modal',
+        'callback' => array($this, 'foo'),
+      ),
+    );
+
+    $form['category-Devel'] = array(
+      '#type' => 'details',
+      '#title' => 'Test Modal',
+      '#open' => TRUE,
+      'content' => array(
+        '#theme' => 'links',
+        '#links' => array(),
+      ),
+    );
+
+    $form['category-Devel']['content']['#links']['plugin'] = array(
+      'title' => 'devel',
+      'url' => Url::fromRoute('lingotek.settings_profile', ['plugin_id' => 'devel']),
+      'attributes' => array(
+        'class' => array('use-ajax'),
+        'data-accepts' => 'application/vnd.drupal-modal',
+        'data-dialog-options' => Json::encode(array(
+          'width' => 700,
+        )),
+      ),
+    );
+
     return $form;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    dpm('Profiles!');
+  // public function submitForm(array &$form, FormStateInterface $form_state) {
+  //   dpm('Profiles!');
+  // }
+
+  public function foo(array &$form, array &$form_state) {
+    dpm('In foo method!');
+    $content = array(
+      'content' => array(
+        '#markup' => 'My Return',
+      ),
+    );
+    $response = new AjaxResponse();
+    $html = drupal_render($content);
+    $response->addCommand(new OpenModalDialogCommand('Hi', $html));
+    return $response;
   }
 
-  protected function retrieveProfileOptions() {
-    $this->profile_names = array();
+  protected function buildProfileForm($profile) {
+    $usage_count = $this->retrieveUsage($profile);
+    $details = array(
+      '#type' => 'details',
+      '#title' => $this->t(ucfirst($profile['name']) . ' (Used by ' . $usage_count . ' content types)'),
+    );
 
-    foreach ($this->profiles as $profile) {
-      $this->profile_names[$profile['id']] = ucwords($profile['name']);
-    }
+    return $details;
   }
 
   protected function retrieveUsage($profile) {

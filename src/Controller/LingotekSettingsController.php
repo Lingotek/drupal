@@ -66,4 +66,16 @@ class LingotekSettingsController extends LingotekControllerBase {
     return $settings_tab;
   }
 
+  public function profileForm() {
+    if ($redirect = $this->checkSetup()) {
+      return $redirect;
+    }
+
+    $profiles_modal = array(
+      $this->getLingotekForm('LingotekSettingsTabProfilesEditForm'),
+    );
+
+    return $profiles_modal;
+  }
+
 }
