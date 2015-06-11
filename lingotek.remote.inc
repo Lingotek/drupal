@@ -303,6 +303,7 @@ function lingotek_process_field_collection_xml($xml, $entity_type, &$entity, $fi
   $curr_field_data = &$entity->$field_name;
   $default = language_default();
   $default_language = $default->language;
+
   if (isset($curr_field_data[LANGUAGE_NONE][$delta]['value'])) {
     $field_collection_id = $curr_field_data[LANGUAGE_NONE][$delta]['value'];
   }
@@ -316,6 +317,18 @@ function lingotek_process_field_collection_xml($xml, $entity_type, &$entity, $fi
     }
     // If it does not exist and the profile is node-based, create a new FC.
     $field_collection_item = entity_create('field_collection_item', array('field_name' => $field_info['field_name']));
+
+    // Grandfather fields (anything that's an array) from the source field collection
+    $original_entity = lingotek_entity_load_single($entity_type, $entity->tnid);
+    $original_field_collection = lingotek_entity_load_single('field_collection_item', $original_entity->{$field_name}[LANGUAGE_NONE][$delta]['value']);
+    if (!empty($original_field_collection)) {
+      foreach ($original_field_collection as $k => $v) {
+        if (is_array($v)) {
+          $field_collection_item->$k = $v;
+        }
+      }
+    }
+
     $field_collection_item->setHostEntity($entity_type, $entity);
     $field_collection_item->save();
     $field_collection_id = $field_collection_item->item_id;
