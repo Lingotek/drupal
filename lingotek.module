@@ -261,7 +261,7 @@ function lingotek_menu() {
     'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
-  
+
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/legend'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
@@ -301,7 +301,7 @@ function lingotek_menu() {
     'page arguments' => array(5),
     'type' => MENU_CALLBACK,
   );
-  
+
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/auto-download/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
@@ -2008,6 +2008,21 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  * Implements hook_entity_presave().
  */
 function lingotek_entity_presave($entity, $entity_type) {
+
+  // Save the custom URL, if any
+  $url_info = entity_uri($entity_type, $entity);
+  $url_alias = !empty($url_info['path']) ? drupal_get_path_alias($url_info['path']) : NULL;
+  if ($url_alias) {
+    if (empty($entity->path)) {
+      $entity->path = array();
+    }
+    $entity->path['source'] = $url_info['path'];
+    $entity->path['alias'] = $url_alias;
+    $entity->path['language'] = $entity->language;
+    $entity->path['pathauto'] = FALSE;
+  }
+
+  // handle special entities
   $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (!in_array($entity_type, $special_entities)) {

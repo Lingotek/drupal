@@ -379,12 +379,15 @@ function lingotek_source_language_cleanup_batch_worker($entity_type, $entity_id,
 
   $loaded_entity = lingotek_entity_load_single($entity_type, $entity_id);
   $info = entity_get_info($entity_type);
+
   // Default to string 'language' if no language-related entity key is found.
   $language_field = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
+
   if (isset($loaded_entity->$language_field) && $loaded_entity->$language_field != $source_language) {
     $loaded_entity->$language_field = $source_language;
-    $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
+    $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Prevent upload. Set 1 : Force upload.
     entity_save($entity_type, $loaded_entity);
+
     if (!isset($context['results']['entity_cleanup'])) {
       $context['results']['entity_cleanup'] = 0;
     }
