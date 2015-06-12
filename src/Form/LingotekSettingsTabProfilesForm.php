@@ -22,6 +22,7 @@ use Drupal\lingotek\Lingotek;
 class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
   protected $profiles;
   protected $profile_names;
+  protected $profile_index;
   /**
    * {@inheritdoc}
    */
@@ -34,6 +35,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->profiles = $this->L->get('profile');
+    $this->profile_index = 0;
 
     $header = array(
       $this->t('Profile Name'),
@@ -56,8 +58,10 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
       $row['usage'] = array(
         '#markup' => $this->t($count . ' content types'),
       );
-      $row['profile_actions'] = $this->retrieveActions($profile);
+      $row['profile_actions'] = $this->retrieveActions($profile, $count);
       $table[$profile['name']] = $row;
+
+      $this->profile_index++;
     }
 
     $form['config_parent'] = array(
@@ -67,74 +71,9 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     );
 
     $form['config_parent']['table'] = $table;
-
-    $form['config_parent']['add_profile'] = array(
-      '#markup' => \Drupal::l(t('Add New Profile'), new Url('lingotek.dashboard')),
-    );
-
-    $form['foo'] = array(
-      '#type' => 'submit',
-      '#value' => t('Modalize!'),
-      '#ajax' => array(
-        'class' => 'use-ajax',
-        'data-accepts' => 'application/vnd.drupal-modal',
-        'callback' => array($this, 'foo'),
-      ),
-    );
-
-    $form['category-Devel'] = array(
-      '#type' => 'details',
-      '#title' => 'Test Modal',
-      '#open' => TRUE,
-      'content' => array(
-        '#theme' => 'links',
-        '#links' => array(),
-      ),
-    );
-
-    $form['category-Devel']['content']['#links']['plugin'] = array(
-      'title' => 'devel',
-      'url' => Url::fromRoute('lingotek.settings_profile', ['plugin_id' => 'devel']),
-      'attributes' => array(
-        'class' => array('use-ajax'),
-        'data-accepts' => 'application/vnd.drupal-modal',
-        'data-dialog-options' => Json::encode(array(
-          'width' => 700,
-        )),
-      ),
-    );
+    $form['config_parent']['add_profile'] = $this->retrieveAddProfileLink();
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  // public function submitForm(array &$form, FormStateInterface $form_state) {
-  //   dpm('Profiles!');
-  // }
-
-  public function foo(array &$form, array &$form_state) {
-    dpm('In foo method!');
-    $content = array(
-      'content' => array(
-        '#markup' => 'My Return',
-      ),
-    );
-    $response = new AjaxResponse();
-    $html = drupal_render($content);
-    $response->addCommand(new OpenModalDialogCommand('Hi', $html));
-    return $response;
-  }
-
-  protected function buildProfileForm($profile) {
-    $usage_count = $this->retrieveUsage($profile);
-    $details = array(
-      '#type' => 'details',
-      '#title' => $this->t(ucfirst($profile['name']) . ' (Used by ' . $usage_count . ' content types)'),
-    );
-
-    return $details;
   }
 
   protected function retrieveUsage($profile) {
@@ -151,18 +90,69 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     return $count;
   }
 
-  protected function retrieveActions($profile) {
+  protected function retrieveActions($profile, $count) {
     $edit_link;
 
     if ($profile['id'] == Lingotek::PROFILE_DISABLED) {
-      $edit_link = '';
+      $edit_link = array(
+        '#markup' => $this->t('Not Editable'),
+      );
     }
     else {
       $edit_link = array(
-        '#markup' => \Drupal::l(t('Edit'), new Url('lingotek.dashboard')),
+        '#type' => 'link',
+        '#ajax' => array(
+          'class' => 'use-ajax',
+        ),
+        'content' => array(
+          '#theme' => 'links',
+        ),
+      );
+
+      $edit_link['content']['#links']['profile_form'] = array(
+        'title' => 'Edit',
+        'url' => Url::fromRoute('lingotek.settings_profile', [
+          'profile_choice' => $profile, 
+          'profile_index' => $this->profile_index,
+          'profile_usage' => $count
+        ]),
+        'attributes' => array(
+          'class' => 'use-ajax',
+          'data-accepts' => 'application/vnd.drupal-modal',
+          'data-dialog-options' => Json::encode(array(
+            'width' => 900,
+            'height' => 700,
+          )),
+        ),
       );
     }
 
+    return $edit_link;
+  }
+
+  protected function retrieveAddProfileLink() {
+    $edit_link = array(
+      '#type' => 'link',
+      '#ajax' => array(
+        'class' => 'use-ajax',
+      ),
+      'content' => array(
+        '#theme' => 'links',
+      ),
+    );
+
+    $edit_link['content']['#links']['profile_form'] = array(
+      'title' => 'Add New Profile',
+      'url' => Url::fromRoute('lingotek.settings_profile'),
+      'attributes' => array(
+        'class' => 'use-ajax',
+        'data-accepts' => 'application/vnd.drupal-modal',
+        'data-dialog-options' => Json::encode(array(
+          'width' => 900,
+          'height' => 700,
+        )),
+      ),
+    );
     return $edit_link;
   }
 
