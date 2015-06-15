@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsUtilitiesForm.
+ * Contains \Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm.
  */
 
 namespace Drupal\lingotek\Form;
@@ -47,18 +47,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
       '#submit' => array('::refreshResources'),
     );
 
-    // Update Notification Callback URL row
-    $notification_row = array();
-    $notification_row['notification_description'] = array(
-      '#markup' => '<H5>' . $this->t('Update Notification Callback URL') . '</H5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>',
-    );
-    $notification_row['actions']['notification_button'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Update URL'),
-      '#button_type' => 'primary',
-      '#submit' => array('::updateNotificationUrl'),
-    );
-
     // Disassociate All Translations row
     $disassociate_row = array();
     $disassociate_row['disassociate_description'] = array(
@@ -72,7 +60,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     );
 
     $table['api_refresh'] = $api_refresh_row;
-    $table['notification'] = $notification_row;
     $table['disassociate'] = $disassociate_row;
     $form['utilities'] = array(
       '#type' => 'details',
@@ -90,6 +77,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   public function refreshResources() {
     $resources = $this->L->getResources(TRUE);
     $this->L->set('account.resources', $resources);
+    drupal_set_message($this->t('Project, workflow, and vault information have been refreshed.'));
   }
 
   public function updateNotificationUrl() {
@@ -98,6 +86,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
   public function disassociateAllTranslations() {
     LingotekSync::disassociateAllEntities();
+    drupal_set_message($this->t('All translations have been disassociated.'));
   }
 
 }

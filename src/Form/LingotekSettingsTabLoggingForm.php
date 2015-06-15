@@ -36,9 +36,11 @@ class LingotekSettingsTabLoggingForm extends LingotekConfigFormBase {
       '#open' => FALSE,
       '#group' => 'settings',
     );
-    $form['log']['save'] = array(
+    $form['log']['actions']['#type'] = 'actions';
+    $form['log']['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Save'),
+      '#button_type' => 'primary',
     );
 
      return $form;

@@ -99,6 +99,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         $this->L->set('field.' . $bundle_id . '.' . $field_id, $table[$bundle_id]['fields'][$field_id]);
       }  
     }
+    parent::submitForm($form, $form_state);
   }
 
   protected function retrieveProfileOptions() {
