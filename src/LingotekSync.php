@@ -8,6 +8,8 @@
 /**
  * A utility class for Lingotek Syncing.
  */
+namespace Drupal\lingotek;
+
 class LingotekSync {
 
   const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
