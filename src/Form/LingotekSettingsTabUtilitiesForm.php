@@ -28,26 +28,48 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    
+
+    $table = array(
+      '#type' => 'table',
+      '#empty' => $this->t('No Entries'),
+    );
+
+    $api_refresh_row = array();
+    $api_refresh_row['refresh_description'] = array(
+      '#markup' => '<H5>' . $this->t('Refresh Project, Workflow, and Vault Information') . '</H5>' . '<p>' . $this->t('This module locally caches the available projects, workflows, and vaults. Use this utility whenever you need to pull down names for any newly created projects, workflows, or vaults from the Lingotek Translation Management System.') . '</p>',
+    );
+
+    $api_refresh_row['refresh_button'] = array(
+      '#type' => 'submit',
+      '#value' => 'Refresh',
+      '#button_type' => 'primary'
+    );
+
+    $table['api_refresh'] = $api_refresh_row;
     $form['utilities'] = array(
       '#type' => 'details',
       '#title' => t('Utilities'),
-      '#description' => t('These utilities are designed to help you prepare and maintain your multilingual content.'),
-      '#group' => 'settings',
-    );
-    $form['utilities']['save'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Save Changes'),
     );
 
-     return $form;
+    $form['utilities']['utilities_title'] = array(
+      '#markup' => '<H4>' . $this->t('Lingotek Utilities' . '</H4>'),
+    );
+
+    $form['utilities']['table'] = $table;
+
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    dpm('Utilities!');
+    $this->refreshResources();
+  }
+
+  protected function refreshResources() {
+    $resources = $this->L->getResources(TRUE);
+    $this->L->set('account.resources', $resources);
   }
 
 }

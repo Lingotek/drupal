@@ -60,7 +60,7 @@ class LingotekSettingsController extends LingotekControllerBase {
       // AdditionalForm is a form where I tried to get the vertical tabs to work.
       //$this->getLingotekForm('LingotekSettingsTabAdditionalForm'),
       // Showing the hierarchy of tables
-      $this->getLingotekForm('LingotekSettingsTabTestNewTableForm'),
+      //$this->getLingotekForm('LingotekSettingsTabTestNewTableForm'),
     );
 
     return $settings_tab;

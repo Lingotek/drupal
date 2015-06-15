@@ -67,7 +67,6 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     $form['config_parent'] = array(
       '#type' => 'details',
       '#title' => $this->t('Translation Profiles'),
-      '#collapsible' => FALSE,
     );
 
     $form['config_parent']['table'] = $table;
