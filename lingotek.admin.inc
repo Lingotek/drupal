@@ -176,16 +176,16 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $rows[$bundle_name] = lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics);
   }
 
-  $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+  $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Fields'));
 
   if ($entity_type == 'node') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Fields'));
   }
   elseif ($entity_type == 'taxonomy_term') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
   }
   elseif ($entity_type == 'field_collection_item') {
-    $header = array(t('Collection Name'), t('Status *'), t('Fields'));
+    $header = array(t('Collection Name'), t('Status&nbsp;*'), t('Fields'));
   }
 
   $variables = array(
