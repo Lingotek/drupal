@@ -91,14 +91,20 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
     $table = $form_values['table'];
+    $profiles = array();
+    $fields = array();
     
     // For every content type, save the profile and fields in the Lingotek object
     foreach($table as $bundle_id => $bundle) {
-      $this->L->set('translate.entity.' . $bundle_id, $table[$bundle_id]['profiles']);
       foreach($bundle['fields'] as $field_id => $field_choice) {
-        $this->L->set('field.' . $bundle_id . '.' . $field_id, $table[$bundle_id]['fields'][$field_id]);
-      }  
+        if ($field_choice == 1) {
+          $profiles[$bundle_id]['field'][$field_id] = $table[$bundle_id]['fields'][$field_id];
+        }
+      }
+      $profiles[$bundle_id]['profile'] = $table[$bundle_id]['profiles'];  
     }
+  
+    $this->L->set('translate.entity', $profiles);
     parent::submitForm($form, $form_state);
   }
 
@@ -138,8 +144,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $option_num;
 
     // Find which profile the user previously selected
-    if ($this->L->get('translate.entity.' . $bundle_id)) {
-      $option_num = $this->L->get('translate.entity.' . $bundle_id);
+    if ($this->L->get('translate.entity.' . $bundle_id . '.profile')) {
+      $option_num = $this->L->get('translate.entity.' . $bundle_id . '.profile');
     }
     else {
       $option_num = Lingotek::PROFILE_AUTOMATIC;
@@ -162,8 +168,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     // Find which fields the user previously selected
     foreach($fields as $field_id => $field) {
       if ($field->isTranslatable()) {
-        if ($this->L->get('field.' . $bundle_id . '.' . $field_id)) {
-          $checkbox_choice = $this->L->get('field.' . $bundle_id . '.' . $field_id);
+        if ($this->L->get('translate.entity.' . $bundle_id . '.field.' . $field_id)) {
+          $checkbox_choice = $this->L->get('translate.entity.' . $bundle_id . '.field.' . $field_id);
         }
         else {
           $checkbox_choice = 0;
