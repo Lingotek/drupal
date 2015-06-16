@@ -21,6 +21,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   protected $profiles;
   protected $bundles;
   protected $translatable_bundles;
+  protected $theme;
 
   /**
    * {@inheritdoc}
@@ -34,6 +35,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->profiles = $this->L->get('profile');
+    $this->theme = \Drupal::theme()->getActiveTheme()->getName();
 
     // Get the profiles
     $this->retrieveProfileOptions();
@@ -43,46 +45,59 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     
     // Retrieve translatable bundles
     $this->retrieveTranslatableBundles();
-    
-    $header = array(
-      $this->t('Content Type'),
-      $this->t('Translation Profile'),
-      $this->t('Fields'),
-    );
 
-    $table = array(
-      '#type' => 'table',
-      '#header' => $header,
-      '#empty' => $this->t('No Entries'),
+    $form['parent_details'] = array(
+      '#type' => 'details',
+      '#title' => 'Translate Content Types'
     );
     
+    $form['parent_details']['list']['#type'] = 'container';
+    $form['parent_details']['list']['#attributes']['class'][] = 'entity-meta';
+    
+    // I. Loop through all entities and creat a details container for each
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
+      $entity_key = 'entity-' . $entity_id;
+      $form['parent_details']['list'][$entity_key] = array(
+        '#type' => 'details',
+        '#title' => $entity_id,
+        'content' => array(),
+      );
+
+      $header = array(
+        $this->t('Content Type'),
+        $this->t('Translation Profile'),
+        $this->t('Fields'),
+      );
+
+      $table = array(
+        '#type' => 'table',
+        '#header' => $header,
+        '#empty' => $this->t('No Entries'),
+      );
+
+      // II. Loop through bundles per entity and make a table
       foreach ($bundles as $bundle_id => $bundle) {
         $row = array();
         $row['content_type'] = array(
           '#markup' => $this->t($bundle['label']),
         );
-        $row['profiles'] = $this->retrieveProfiles($bundle_id);
+        $row['profiles'] = $this->retrieveProfiles($entity_id, $bundle_id);
         $row['fields'] = $this->retrieveFields($entity_id, $bundle_id);
         $table[$bundle_id] = $row;
       }
+
+      // III. Add table to respective details 
+      $form['parent_details']['list'][$entity_key]['content'][$entity_id] = $table;
     }
 
-    $form['content'] = array(
-      '#type' => 'details',
-      '#title' => 'Translate Content Types'
-    );  
-
-    $form['content']['table'] = $table;
-
-    $form['content']['actions']['#type'] = 'actions';
-    $form['content']['actions']['submit'] = array(
+    $form['parent_details']['actions']['#type'] = 'actions';
+    $form['parent_details']['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#button_type' => 'primary',
     );
 
-     return $form;
+    return $form;
   }
 
   /**
@@ -90,21 +105,20 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
-    $table = $form_values['table'];
-    $profiles = array();
-    $fields = array();
+    $data = array();
     
     // For every content type, save the profile and fields in the Lingotek object
-    foreach($table as $bundle_id => $bundle) {
-      foreach($bundle['fields'] as $field_id => $field_choice) {
-        if ($field_choice == 1) {
-          $profiles[$bundle_id]['field'][$field_id] = $table[$bundle_id]['fields'][$field_id];
+    foreach($form_values as $entity => $bundles) {
+      foreach($bundles as $bundle_id => $bundle) {
+        foreach($bundle['fields'] as $field_id => $field_choice) {
+          if ($field_choice == 1) {
+            $data[$entity][$bundle_id]['field'][$field_id] = $bundles[$bundle_id]['fields'][$field_id];
+          }
         }
+        $data[$entity][$bundle_id]['profile'] = $bundles[$bundle_id]['profiles'];  
       }
-      $profiles[$bundle_id]['profile'] = $table[$bundle_id]['profiles'];  
     }
-  
-    $this->L->set('translate.entity', $profiles);
+    $this->L->set('translate.entity', $data);
     parent::submitForm($form, $form_state);
   }
 
@@ -140,12 +154,12 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     }
   }
 
-  protected function retrieveProfiles($bundle_id) {
+  protected function retrieveProfiles($entity_id, $bundle_id) {
     $option_num;
 
     // Find which profile the user previously selected
-    if ($this->L->get('translate.entity.' . $bundle_id . '.profile')) {
-      $option_num = $this->L->get('translate.entity.' . $bundle_id . '.profile');
+    if ($this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile')) {
+      $option_num = $this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile');
     }
     else {
       $option_num = Lingotek::PROFILE_AUTOMATIC;
@@ -168,8 +182,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     // Find which fields the user previously selected
     foreach($fields as $field_id => $field) {
       if ($field->isTranslatable()) {
-        if ($this->L->get('translate.entity.' . $bundle_id . '.field.' . $field_id)) {
-          $checkbox_choice = $this->L->get('translate.entity.' . $bundle_id . '.field.' . $field_id);
+        if ($this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id)) {
+          $checkbox_choice = $this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id);
         }
         else {
           $checkbox_choice = 0;

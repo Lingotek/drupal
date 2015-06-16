@@ -77,17 +77,19 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
 
   protected function retrieveUsage($profile) {
     $count = 0;
-    $content_types = $this->L->get('translate.entity');
+    $entity_types = $this->L->get('translate.entity');
     
     // Count how many content types are using this $profile
-    foreach($content_types as $type_id) {
-      $profile_choice = $type_id['profile'];
-      
-      if ($profile_choice == $profile['id']) {
-        $count++;
+    foreach($entity_types as $entity_id => $bundles) {
+      foreach($bundles as $bundle) {
+        $profile_choice = $bundle['profile'];
+
+        if ($profile_choice == $profile['id']) {
+          $count++;
+        }
       }
     }
-  
+    
     return $count;
   }
 

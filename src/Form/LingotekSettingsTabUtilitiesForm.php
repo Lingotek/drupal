@@ -80,10 +80,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     drupal_set_message($this->t('Project, workflow, and vault information have been refreshed.'));
   }
 
-  public function updateNotificationUrl() {
-    dpm('Update the URL!');
-  }
-
   public function disassociateAllTranslations() {
     LingotekSync::disassociateAllEntities();
     drupal_set_message($this->t('All translations have been disassociated.'));
