@@ -19,6 +19,12 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected $advanced_taxonomy_terms_value = 0;
   protected $show_translate_tabs_value = 0;
   protected $advanced_parsing_value = 0;
+  protected $lang_switcher_value = 0;
+  protected $lang_switcher;
+  protected $lang_switcher_region;
+  protected $lang_regions;
+  protected $lang_region_selected;
+  protected $default_region;
 
   /**
    * {@inheritdoc}
@@ -31,43 +37,61 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
+    $this->retrieveLanguageSwitcher();
     $this->retrieveCheckboxValues();
     
-    $form['preferences'] = array(
+    $form['prefs'] = array(
       '#type' => 'details',
       '#title' => t('Preferences'),
     );
 
-    $form['preferences']['advanced_taxonomy_terms'] = array(
+    $form['prefs']['lang_switcher'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Enable advanced handling of taxonomy terms'),
-      '#description' => $this->t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
+      '#title' => 'Enable the default language switcher',
+      '#default_value' => $this->lang_switcher_value,
+    );
+
+    $form['prefs']['lang_switcher_select'] = array(
+      '#type' => 'select',
+      '#description' => t('The region where the switcher will be displayed. <p> <p> Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to URL or Session. Go to ') . \Drupal::l(t('Language detection and selection'), Url::fromRoute('language.negotiation')) . t(' to change this.'),
+      '#options' => $this->lang_regions,
+      '#default_value' => $this->lang_region_selected == 'none' ? $this->default_region : $this->lang_region_selected,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="lang_switcher"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['prefs']['advanced_taxonomy_terms'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable advanced handling of taxonomy terms'),
+      '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
       '#default_value' => $this->advanced_taxonomy_terms_value,
     );
 
-    $form['preferences']['always_show_translate_tabs'] = array(
+    $form['prefs']['always_show_translate_tabs'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Always show non-Lingotek translate tabs'),
-      '#description' => $this->t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
+      '#title' => t('Always show non-Lingotek translate tabs'),
+      '#description' => t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
       '#default_value' => $this->show_translate_tabs_value,
     );
 
-    $form['preferences']['advanced_parsing'] = array(
+    $form['prefs']['advanced_parsing'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Enable advanced features'),
-      '#description' => $this->t('Some features may not be available without an Enterprise license for the Lingotek TMS. Call 801.331.7777 for details.'),
+      '#title' => t('Enable advanced features'),
+      '#description' => t('Some features may not be available without an Enterprise license for the Lingotek TMS. Call 801.331.7777 for details.'),
       '#default_value' => $this->advanced_parsing_value,
     );
     
-    $form['preferences']['actions']['#type'] = 'actions';
-    $form['preferences']['actions']['submit'] = array(
+    $form['prefs']['actions']['#type'] = 'actions';
+    $form['prefs']['actions']['submit'] = array(
       '#type' => 'submit',
-      '#value' => $this->t('Save'),
+      '#value' => t('Save'),
       '#button_type' => 'primary',
     );
 
-     return $form;
+    return $form;
   }
 
   /**
@@ -75,6 +99,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
+  
+    $this->saveLanguageSwitcherSettings($form_values);
     $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
     $this->L->set('preference.advanced_parsing', $form_values['advanced_parsing']);
@@ -82,8 +108,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveCheckboxValues(){
-    // Poll user choices and assign them to the checkboxes
     $choices = $this->L->get('preference');
+    // Choices from Lingotek object
     if ($choices) {
       if ($choices['advanced_parsing'] == 1) {
         $this->advanced_parsing_value = 1;
@@ -95,6 +121,28 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         $this->show_translate_tabs_value = 1;
       }
     }
+
+    // Choices from non-Lingotek objects
+    $this->lang_switcher_value = $this->lang_switcher->status(); 
+  }
+
+  protected function retrieveLanguageSwitcher() {
+    $theme = 'bartik';
+    $this->lang_regions = system_region_list($theme, REGIONS_VISIBLE);
+    $lang_switcher = \Drupal::entityManager()->getStorage('block')->loadMultiple(array('languageswitcher'));
+    $this->lang_switcher = $lang_switcher['languageswitcher'];
+    $this->lang_region_selected = $this->lang_switcher->getRegion();
+  }
+
+  protected function saveLanguageSwitcherSettings($form_values) {
+    $this->lang_switcher->setRegion($form_values['lang_switcher_select']);
+    if ($form_values['lang_switcher']) {
+      $this->lang_switcher->enable();
+    }
+    else {
+      $this->lang_switcher->disable();
+    }
+    $this->lang_switcher->save();
   }
 
 }
