@@ -2379,6 +2379,13 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
     '#default_value' => variable_get('lingotek_trace_log', 0),
   );
 
+  $form['logging']['i18n_string_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('i18n String Logging'),
+    '#description' => t('This appends string context information to each string for debugging purposes. (This should not be enabled on a production web site!)'),
+    '#default_value' => variable_get('i18n_string_debug', 0),
+  );
+
   $form['logging']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
