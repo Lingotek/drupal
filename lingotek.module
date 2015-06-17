@@ -1135,6 +1135,8 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
     if (!$document_ids) {
       return;
     }
+    // TODO: this should really be a batch that runs after the modal screen closes.
+    drupal_set_time_limit(0);
     $api = LingotekApi::instance();
     $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
 
