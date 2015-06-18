@@ -557,67 +557,67 @@ function lingotek_grid_customize($entity_type) {
 function lingotek_grid_legend_form($form, $form_state) {
 
   $form['lingotek_legend_header'] = array(
-    '#markup' => '<h2 style="margin-top:0;">Icon descriptions</h2> '
+    '#markup' => '<h2 style="margin-top:0;">' . t('Icon descriptions') . '</h2> '
   );
   $legend_table = "<table class='legend-table'>"
       . "<tr>"
         . '<td><div><i class="fa fa-cloud-upload fa-2x ltk-upload"></i></div></td>'
-        . '<td>Upload edited documents to Lingotek for translation.</td>'
+        . '<td>'. t('Upload edited documents to Lingotek for translation.') .'</td>'
       . "</tr>"
       
       . "<tr>"
         . '<td><div><i class="fa fa-refresh fa-2x ltk-refresh"></i></div></td>'
-        . '<td>Checks the progress of In Progress content. When ready, red icons (In Progress) will become green (Ready to Download).</td>'
+        . '<td>' . t('Checks the progress of In Progress content. When ready, red icons (In Progress) will become green (Ready to Download).') . '</td>'
       . "</tr>"
 
       . "<tr>"
         . '<td><div><i class="fa fa-cloud-download fa-2x ltk-download"></i></div></td>'
-        . '<td>Download translated documents from Lingotek that are listed as "Ready to Download" (green icons)</td>'
+        . '<td>' . t('Download translated documents from Lingotek that are listed as "Ready to Download" (green icons)') . '</td>'
       . "</tr>"
 
       . "<tr>"
         . '<td><div><i class="fa fa-list-alt fa-2x"></i></div></td>'
-        . '<td>Choose which columns on the table to show or hide</td>'
+        . '<td>' . t('Choose which columns on the table to show or hide</td>')
       . "</tr>"
       
       . "<tr>"
         . '<td><div><i class="fa fa-sort-amount-asc fa-2x" style="font-size: 150%;"></i></div></td>'
-        . '<td>(Config page only) Download all content regardless of its current status</td>'
+        . '<td>' . t('(Config page only) Download all content regardless of its current status') . '</td>'
       . "</tr>"
 
       . "<tr>"
         . '<td><div><i class="fa fa-edit fa-2x" style="color: #0074BD"></i></div></td>'
-        . '<td>Edit the content associated with this row</td>'
+        . '<td>' . t('Edit the content associated with this row') . '</td>'
       . "</tr>"
 
       . "<tr>"      
         . '<td><div><i class="fa fa-tasks fa-2x" style="color: #0074BD"></div></td>'
-        . '<td>View current translation progress for this content</td>'
+        . '<td>' . t('View current translation progress for this content') . '</td>'
       . "</tr>"
       
       . "<tr>"
         . '<td><div><i class="fa fa-gear fa-2x" style="color: #0074BD"></i></div></td>'
-        . '<td>Adjust Lingotek module settings</td>'
+        . '<td>' . t('Adjust Lingotek module settings') . '</td>'
       . "</tr>"
       
       . "<tr>"
         . '<td><div><a class="language-icon target-current">lang</a></div></td>'
-        . '<td>This content is current, no translations are pending or ready for download</td>'
+        . '<td>' . t('This content is current, no translations are pending or ready for download') . '</td>'
       . "</tr>"
       
       . "<tr>"
         . '<td><div><a class="language-icon target-ready">lang</a></div></td>'
-        . '<td>This content has been translated and is ready to be downloaded</td>'
+        . '<td>' . t('This content has been translated and is ready to be downloaded') . '</td>'
       . "</tr>"
       
       . "<tr>"
         . '<td><div><a class="language-icon target-pending">lang</a></div></td>'
-        . '<td>This content has been uploaded to Lingotek and is awaiting translation</td>'
+        . '<td>' . t('This content has been uploaded to Lingotek and is awaiting translation') . '</td>'
       . "</tr>"
       
       . "<tr>"
         . '<td><div><a class="language-icon target-edited">lang</a></div></td>'
-        . '<td>This content has been edited and is ready to be uploaded to Lingotek</td>'
+        . '<td>' . t('This content has been edited and is ready to be uploaded to Lingotek') . '</td>'
       . "</tr>"
       
       . "</table>";
