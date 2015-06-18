@@ -20,11 +20,12 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected $show_translate_tabs_value = 0;
   protected $advanced_parsing_value = 0;
   protected $lang_switcher_value = 0;
+  protected $top_level_value = 0;
   protected $lang_switcher;
   protected $lang_switcher_region;
   protected $lang_regions;
   protected $lang_region_selected;
-  protected $default_region;
+  protected $default_region = 'sidebar_first';
 
   /**
    * {@inheritdoc}
@@ -39,6 +40,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->retrieveLanguageSwitcher();
     $this->retrieveCheckboxValues();
+    $this->retrieveAdminMenu();
     
     $form['prefs'] = array(
       '#type' => 'details',
@@ -53,7 +55,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
 
     $form['prefs']['lang_switcher_select'] = array(
       '#type' => 'select',
-      '#description' => t('The region where the switcher will be displayed. <p> <p> Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to URL or Session. Go to ') . \Drupal::l(t('Language detection and selection'), Url::fromRoute('language.negotiation')) . t(' to change this.'),
+      '#description' => t('The region where the switcher will be displayed. <p> <p> Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>. Go to ') . \Drupal::l(t('Language detection and selection'), Url::fromRoute('language.negotiation')) . t(' to change this.'),
       '#options' => $this->lang_regions,
       '#default_value' => $this->lang_region_selected == 'none' ? $this->default_region : $this->lang_region_selected,
       '#states' => array(
@@ -68,6 +70,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#title' => t('Enable advanced handling of taxonomy terms'),
       '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
       '#default_value' => $this->advanced_taxonomy_terms_value,
+    );
+
+    $form['prefs']['hide_top_level'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide top-level menu item'),
+      '#description' => t('When hidden, the module can still be accessed under <i>Configuration > Regional and language</i>. <p> Note: It will take a few seconds to save if this setting is changed.'),
+      '#default_value' => $this->top_level_value,
     );
 
     $form['prefs']['always_show_translate_tabs'] = array(
@@ -100,6 +109,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
   
+    $this->saveAdminMenu($form_values);
     $this->saveLanguageSwitcherSettings($form_values);
     $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
@@ -109,6 +119,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
 
   protected function retrieveCheckboxValues(){
     $choices = $this->L->get('preference');
+    
     // Choices from Lingotek object
     if ($choices) {
       if ($choices['advanced_parsing'] == 1) {
@@ -127,10 +138,10 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveLanguageSwitcher() {
-    $theme = 'bartik';
-    $this->lang_regions = system_region_list($theme, REGIONS_VISIBLE);
-    $lang_switcher = \Drupal::entityManager()->getStorage('block')->loadMultiple(array('languageswitcher'));
-    $this->lang_switcher = $lang_switcher['languageswitcher'];
+    $config = $this->config('system.theme');
+    $theme_default = $config->get('default');
+    $this->lang_regions = system_region_list($theme_default, REGIONS_VISIBLE);
+    $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load('languageswitcher');
     $this->lang_region_selected = $this->lang_switcher->getRegion();
   }
 
@@ -143,6 +154,47 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       $this->lang_switcher->disable();
     }
     $this->lang_switcher->save();
+  }
+
+  protected function retrieveAdminMenu() {
+    $menu_tree = \Drupal::menuTree();
+    $menu_link_manager = $menu_tree->menuLinkManager;
+    $admin_menu = $menu_link_manager->getDefinition('lingotek.dashboard');
+
+    // Will be opposite from enabled value since we're hiding the menu item
+    if($admin_menu['enabled']) {
+      $this->top_level_value = 0;
+    }
+    else {
+      $this->top_level_value = 1;
+    }
+  }
+
+  protected function saveAdminMenu($form_values) {
+    $updated_values;
+    $menu_tree = \Drupal::menuTree();
+    $menu_link_manager = $menu_tree->menuLinkManager;
+
+    // Only run if there's been a change to avoid clearing the cache if we don't have to
+    if ($this->top_level_value != $form_values['hide_top_level']) {
+      if ($form_values['hide_top_level']) {
+        $updated_values = array(
+          'enabled' => 0,
+        );
+      }
+      else {
+        $updated_values = array(
+          'enabled' => 1,
+        );
+      }
+
+      $menu_link_manager->updateDefinition('lingotek.dashboard', $updated_values);
+    
+      if ($updated_values['enabled']) {
+        $menu_link_manager->resetLink('lingotek.dashboard');
+      }
+    drupal_flush_all_caches();
+    }
   }
 
 }

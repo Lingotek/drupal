@@ -58,7 +58,6 @@ lingotek.settings_profile:
   path: '/admin/lingotek/settings/profile'
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekSettingsController::profileForm'
-    theme: null
     _title: 'Add or Edit a Profile'
   requirements:
     _permission: 'administer lingotek'
