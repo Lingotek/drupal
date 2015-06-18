@@ -18,3 +18,10 @@ lingotek.manage:
   description: 'Lingotek menu item'
   parent: 'lingotek.dashboard'
   weight: 11
+
+lingotek.config.dashboard:
+  route_name: 'lingotek.dashboard'
+  title: 'Lingotek Translation'
+  description: 'Translate and keep your site translated using Lingotek.'
+  parent: 'system.admin_config_regional'
+  weight: 5
