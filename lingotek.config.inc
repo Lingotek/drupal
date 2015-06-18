@@ -64,14 +64,12 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       ->orderByHeader($form_state['values']['grid_header'])
       ->execute()
       ->fetchAllAssoc('lid');
-  
+
   $table_data = lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type);
   if(isset($_SESSION['grid_filters'])){
     $all_filtered_results = $query
       ->extend('PagerDefault')
-      ->extend('TableSort')
       ->limit(500000)
-      ->orderByHeader($form_state['values']['grid_header'])
       ->execute()
       ->fetchAllAssoc('lid');
     $all_filtered_lids = array();
