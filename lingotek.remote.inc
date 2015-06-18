@@ -114,6 +114,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
 
   $language_list = language_list('language');
   $source_entity = $entity;
+  $show_download_warning = FALSE;
 
   $hook_params = array(
     'entity_type' => $entity_type,
@@ -154,8 +155,9 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     // Get field info or skip if not found
     $field_info = field_info_field($field_name);
     if (empty($field_info)) {
-      LingotekLog::warning('Field info downloaded from Lingotek, but field not found: @field_name', array('@field_name' => $field_name));
+      LingotekLog::warning('Invalid field downloaded from Lingotek: @field_name.  The field may no longer exist; or if you have upgraded the Lingotek module since you last uploaded the document, the document format may have changed.  You should re-upload @entity_type #@entity_id', array('@field_name' => $field_name, '@entity_type' => $entity_type, '@entity_id' => $id));
       $last_field_name = $field_name;
+      $show_download_warning = TRUE;
       continue;
     }
 
@@ -226,6 +228,9 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
       lingotek_save_pathauto_alias($entity_type, $entity, $langcode);
     }
     $last_field_name = $field_name;
+  }
+  if ($show_download_warning) {
+    drupal_set_message(t('Outdated or invalid field format detected when downloading translations for @entity_type #@entity_id. Please re-upload the document to the TMS.', array('@entity_type' => $entity_type, '@entity_id' => $id)), 'error');
   }
 }
 

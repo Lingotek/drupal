@@ -176,16 +176,16 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $rows[$bundle_name] = lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics);
   }
 
-  $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+  $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Fields'));
 
   if ($entity_type == 'node') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Fields'));
   }
   elseif ($entity_type == 'taxonomy_term') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
   }
   elseif ($entity_type == 'field_collection_item') {
-    $header = array(t('Collection Name'), t('Status *'), t('Fields'));
+    $header = array(t('Collection Name'), t('Status&nbsp;*'), t('Fields'));
   }
 
   $variables = array(
@@ -2377,6 +2377,13 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
     '#title' => t('Trace Logging'),
     '#description' => t('This logs trace debug messages to watchdog and the web server\'s error logs. (This logging is extremely verbose.)'),
     '#default_value' => variable_get('lingotek_trace_log', 0),
+  );
+
+  $form['logging']['i18n_string_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('i18n String Logging'),
+    '#description' => t('This appends string context information to each string for debugging purposes. (This should not be enabled on a production web site!)'),
+    '#default_value' => variable_get('i18n_string_debug', 0),
   );
 
   $form['logging']['lingotek_flush_cache'] = array(

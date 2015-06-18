@@ -1135,6 +1135,8 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
     if (!$document_ids) {
       return;
     }
+    // TODO: this should really be a batch that runs after the modal screen closes.
+    drupal_set_time_limit(0);
     $api = LingotekApi::instance();
     $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
 
@@ -2009,19 +2011,21 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  */
 function lingotek_entity_presave($entity, $entity_type) {
 
-  // Save the custom URL, if any
-  $url_info = entity_uri($entity_type, $entity);
-  $url_alias = !empty($url_info['path']) ? drupal_get_path_alias($url_info['path']) : NULL;
-  if ($url_alias) {
-    if (empty($entity->path)) {
-      $entity->path = array();
+  // Save the custom URL during prepare-entities batch if any.
+  // This is a workaround until Drupal issue #936222 is resolved.
+  if (lingotek_is_batch_save_operation()) {
+    $url_info = entity_uri($entity_type, $entity);
+    $url_alias = !empty($url_info['path']) ? drupal_get_path_alias($url_info['path']) : NULL;
+    if ($url_alias) {
+      if (empty($entity->path)) {
+        $entity->path = array();
+      }
+      $entity->path['source'] = $url_info['path'];
+      $entity->path['alias'] = $url_alias;
+      $entity->path['language'] = $entity->language;
+      $entity->path['pathauto'] = FALSE;
     }
-    $entity->path['source'] = $url_info['path'];
-    $entity->path['alias'] = $url_alias;
-    $entity->path['language'] = $entity->language;
-    $entity->path['pathauto'] = FALSE;
   }
-
   // handle special entities
   $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
@@ -2029,6 +2033,25 @@ function lingotek_entity_presave($entity, $entity_type) {
     return;
   }
   lingotek_normalize_special_field_language($entity_type, $entity, FALSE);
+}
+
+/*
+ * Check if the operation is happening because of one of several functions.
+ *
+ * This is a workaround to preserve custom url_alias settings during node_save.
+ */
+function lingotek_is_batch_save_operation() {
+  $save_functions = array(
+  'lingotek_source_language_cleanup_batch_worker',
+  'lingotek_field_language_data_cleanup_batch_worker',
+  );
+  $trace = debug_backtrace();
+  foreach ($trace as $tinfo) {
+    if (!empty($tinfo['function']) && in_array($tinfo['function'], $save_functions)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 /**
