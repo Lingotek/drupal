@@ -214,6 +214,15 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     $field_table_names = array('field_revision_' . $field_name, 'field_data_' . $field_name);
     foreach ($field_table_names as $fname) {
       lingotek_save_field_record($fname, $insert_array);
+      // Node-based translations within a field-based translation system by default
+      // should also have the language-neutral fields saved for normalization if
+      // underneath a field collection. This prevents source-language content
+      // from blocking out translated content from being shown.
+      if ($node_based_translation && $entity_type == 'field_collection_item' && $field_language != LANGUAGE_NONE) {
+        $insert_array['language'] = LANGUAGE_NONE;
+        lingotek_save_field_record($fname, $insert_array);
+        $insert_array['language'] = $field_language;
+      }
     }
 
     // After every field insert, reset the caches and reload the entity
