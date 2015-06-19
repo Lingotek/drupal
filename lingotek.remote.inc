@@ -190,6 +190,10 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     );
 
     foreach ($content as $column_name => $text) {
+      if ($column_name == 'element' && !$text->count()) {
+        LingotekLog::warning('Invalid column info for field: @field_name.  If you have upgraded the Lingotek module since you last uploaded the document, the document format may have changed.  You should re-upload @entity_type #@entity_id', array('@field_name' => $field_name, '@entity_type' => $entity_type, '@entity_id' => $id));
+        $show_download_warning = TRUE;
+      }
       $db_column_name = $field_info['field_name'] . '_' . $column_name;
       $insert_array[$db_column_name] = lingotek_unfilter_placeholders(decode_entities((string) $text->element));
 
@@ -239,7 +243,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     $last_field_name = $field_name;
   }
   if ($show_download_warning) {
-    drupal_set_message(t('Outdated or invalid field format detected when downloading translations for @entity_type #@entity_id. Please re-upload the document to the TMS.', array('@entity_type' => $entity_type, '@entity_id' => $id)), 'error');
+    drupal_set_message(t('Outdated or invalid format detected when downloading translations for @entity_type #@entity_id. Please re-upload the document to the TMS.', array('@entity_type' => $entity_type, '@entity_id' => $id)), 'warning');
   }
 }
 
