@@ -169,7 +169,7 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
 
   if ($union_part_desc == 'taxonomy name') {
     $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source AND term_name.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_name.vid NOT IN (' . $custom_fields_subquery . ')');
-    $query->addField('term_name', 'tid', 'tid_from_name');
+    $query->addExpression('term_name.tid', 'tid_from_name');//DO NOT do addField here, it puts the column name in the wrong place and messes with the union
   }
   else {
     $query->addExpression('NULL', 'tid_from_name');
@@ -177,7 +177,7 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
 
   if ($union_part_desc == 'taxonomy desc') {
     $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source AND term_description.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_description.vid NOT IN (' . $custom_fields_subquery . ')');
-    $query->addField('term_description', 'tid', 'tid_from_description');
+    $query->addExpression('term_description.tid', 'tid_from_description');//DO NOT do addField here, it puts the column name in the wrong place and messes with the union
   }
   else {
     $query->addExpression('NULL', 'tid_from_description');
