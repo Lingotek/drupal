@@ -1532,10 +1532,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   if (isset($_SESSION['grid_filters'])) {
     $no_limit_query = lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, 500000, $bundle_col, $info, $entity_properties, $eid);
     lingotek_bulk_grid_filter_query($no_limit_query, $entity_type, $eid, $label_col, $info);
-    $no_limit_query_raw = $no_limit_query->distinct()->execute()->fetchAllAssoc($entity_id_key);
+    $no_limit_query_raw = $no_limit_query->distinct()->execute();
     $all_filtered_entity_ids = array();
-    foreach($no_limit_query_raw as $key => $value){
-      $all_filtered_entity_ids[$key] = $key;
+    foreach($no_limit_query_raw as $value){
+      $all_filtered_entity_ids[$value->$entity_id_key] = $value->$entity_id_key;
     }
     $_SESSION['grid_filters']['filtered_ids'] = $all_filtered_entity_ids;
   }

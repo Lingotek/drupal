@@ -70,11 +70,10 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     $all_filtered_results = $query
       ->extend('PagerDefault')
       ->limit(500000)
-      ->execute()
-      ->fetchAllAssoc('lid');
+      ->execute();
     $all_filtered_lids = array();
-    foreach($all_filtered_results as $key => $filtered_result){
-      $all_filtered_lids[$key] = $key;
+    foreach($all_filtered_results as $filtered_result){
+      $all_filtered_lids[$filtered_result->lid] = $filtered_result->lid;
     }
     $_SESSION['grid_filters']['filtered_config_lids'] = $all_filtered_lids;
   }
