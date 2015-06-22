@@ -23,6 +23,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected $lang_switcher_value = 0;
   protected $top_level_value = 0;
   protected $show_language_labels = 0;
+  protected $allow_local_editing = 0;
+  protected $language_specific_profiles = 0;
   protected $lang_switcher;
   protected $lang_switcher_region;
   protected $lang_regions;
@@ -95,6 +97,27 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $this->show_translate_tabs_value,
     );
 
+    $form['prefs']['allow_local_editing'] = array(
+      '#prefix' => '<div style="margin-left: 20px;">',
+      '#suffix' => '</div>',
+      '#type' => 'checkbox',
+      '#title' => t('Allow local editing of Lingotek translations'),
+      '#description' => t('If checked, local editing of translations managed by Lingotek will be allowed. (Note: any changes made may be overwritten if the translation is downloaded from Lingotek again.)'),
+      '#default_value' => $this->allow_local_editing,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="always_show_translate_tabs"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['prefs']['language_specific_profiles'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable language-specific profiles'),
+      '#description' => t('If checked, languages enabled for Lingotek translation will not automatically be queued for all content. Instead, languages enabled for Lingotek will be added to the available languages for profiles but will be disabled by default on profiles that have existing content. (Note: this cannot be unchecked if language-specific settings are in use.)'),
+      '#default_value' => $this->language_specific_profiles,
+    );
+
     $form['prefs']['advanced_parsing'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable advanced features'),
@@ -121,8 +144,9 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->saveAdminMenu($form_values);
     $this->saveLanguageSwitcherSettings($form_values);
     $this->saveShowLanguageFields($form_values);
+    $this->saveAlwaysShowTranslateTabs($form_values);
+    $this->L->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
     $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
-    $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
     $this->L->set('preference.advanced_parsing', $form_values['advanced_parsing']);
     parent::submitForm($form, $form_state);
   }
@@ -143,6 +167,12 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       }
       if ($choices['show_language_labels'] == 1) {
         $this->show_language_labels = 1;
+      }
+      if ($choices['allow_local_editing'] == 1) {
+        $this->allow_local_editing = 1;
+      }
+      if ($choices['language_specific_profiles'] == 1) {
+        $this->language_specific_profiles = 1;
       }
     }
 
@@ -207,6 +237,16 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         $menu_link_manager->resetLink('lingotek.dashboard');
       }
     drupal_flush_all_caches();
+    }
+  }
+
+  protected function saveAlwaysShowTranslateTabs($form_values) {
+    $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
+    if ($form_values['always_show_translate_tabs']) {
+      $this->L->set('preference.allow_local_editing', $form_values['allow_local_editing']);
+    }
+    else {
+      $this->L->set('preference.allow_local_editing', 0);
     }
   }
 

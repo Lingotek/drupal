@@ -54,7 +54,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $form['parent_details']['list']['#type'] = 'container';
     $form['parent_details']['list']['#attributes']['class'][] = 'entity-meta';
     
-    // I. Loop through all entities and creat a details container for each
+    // I. Loop through all entities and create a details container for each
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
       $entity_key = 'entity-' . $entity_id;
       $form['parent_details']['list'][$entity_key] = array(
@@ -89,6 +89,10 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       // III. Add table to respective details 
       $form['parent_details']['list'][$entity_key]['content'][$entity_id] = $table;
     }
+
+    $form['parent_details']['note'] = array(
+      '#markup' => t('Note: changing the profile will update all settings for existing nodes except for the project, workflow, vault, and storage method (e.g. node/field)'),
+    );
 
     $form['parent_details']['actions']['#type'] = 'actions';
     $form['parent_details']['actions']['submit'] = array(
