@@ -202,6 +202,9 @@ function lingotek_perform_action(nid, action) {
   function update_empty_cells(data, parent, entity_id) {
     var used_keys = {};
       for(var key in data[entity_id]){
+        if(!data[entity_id][key].hasOwnProperty('status')){
+          continue;
+        }
         var lang_code = key.valueOf();
         //this keeps the displayed language code consistent with what is retrieved
         //on page load
@@ -240,7 +243,13 @@ function lingotek_perform_action(nid, action) {
                 .addClass('language-icon target-' + data[entity_id][key].status.toLowerCase())
                 .text(link_text);
 
-        $('.emptyTD',parent).append(status_link);
+        $('.emptyTD', parent).each(function(){
+          var index = $('td',parent).index($(this));
+          var translation_header = $('th').eq(index);
+          if($('a',translation_header).text().toLowerCase() === 'translations'){
+            $(this).append(status_link);
+          }
+        });
       }
       //remove the identifying class
       $('.emptyTD',parent).removeClass();
