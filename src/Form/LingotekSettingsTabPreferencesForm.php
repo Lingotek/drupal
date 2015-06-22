@@ -9,6 +9,7 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Component\Utility\String;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 
@@ -21,12 +22,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected $advanced_parsing_value = 0;
   protected $lang_switcher_value = 0;
   protected $top_level_value = 0;
+  protected $show_language_labels = 0;
   protected $lang_switcher;
   protected $lang_switcher_region;
   protected $lang_regions;
   protected $lang_region_selected;
   protected $default_region = 'sidebar_first';
-
+  
   /**
    * {@inheritdoc}
    */
@@ -79,6 +81,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $this->top_level_value,
     );
 
+    $form['prefs']['show_language_labels'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show language label on node pages'),
+      '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
+      '#default_value' => $this->show_language_labels,
+    );
+
     $form['prefs']['always_show_translate_tabs'] = array(
       '#type' => 'checkbox',
       '#title' => t('Always show non-Lingotek translate tabs'),
@@ -89,7 +98,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $form['prefs']['advanced_parsing'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable advanced features'),
-      '#description' => t('Some features may not be available without an Enterprise license for the Lingotek TMS. Call 801.331.7777 for details.'),
+      '#description' => t('Some features may not be available without an ' . \Drupal::l(t('Enterprise License'), Url::fromUri('http://www.lingotek.com')) . ' for the Lingotek TMS. Call 801.331.7777 for details.'),
       '#default_value' => $this->advanced_parsing_value,
     );
     
@@ -111,6 +120,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   
     $this->saveAdminMenu($form_values);
     $this->saveLanguageSwitcherSettings($form_values);
+    $this->saveShowLanguageFields($form_values);
     $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
     $this->L->set('preference.advanced_parsing', $form_values['advanced_parsing']);
@@ -130,6 +140,9 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       }
       if ($choices['always_show_translate_tabs'] == 1) {
         $this->show_translate_tabs_value = 1;
+      }
+      if ($choices['show_language_labels'] == 1) {
+        $this->show_language_labels = 1;
       }
     }
 
@@ -194,6 +207,38 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         $menu_link_manager->resetLink('lingotek.dashboard');
       }
     drupal_flush_all_caches();
+    }
+  }
+
+  protected function saveShowLanguageFields($form_values) {
+    $this->L->set('preference.show_language_labels', $form_values['show_language_labels']);
+    
+    // Only save if there's a change to the show_language_labels choice
+    if ($this->show_language_labels != $form_values['show_language_labels']) {
+      $bundles = \Drupal::entityManager()->getBundleInfo('node');
+    
+      foreach($bundles as $bundle_id => $bundle) {
+        if ($bundle['translatable']) {
+          $field_definitions = \Drupal::entityManager()->getFieldDefinitions('node', $bundle_id);
+          $langcode = $field_definitions['langcode'];
+          $display = entity_get_display('node', $bundle_id, 'default');
+              
+          if($form_values['show_language_labels']) {
+            $component_values = array(
+              'type' => 'language',
+              'weight' => 0,
+              'settings' => array(),
+              'third_party_settings' => array(),
+              'label' => 'above', // Can be above, inline, hidden, or visually_hidden (These are hard coded in core) 
+            );
+            $display->setComponent('langcode', $component_values);
+          }
+          else{
+            $display->removeComponent('langcode');
+          }
+          $display->save();
+        }
+      }
     }
   }
 
