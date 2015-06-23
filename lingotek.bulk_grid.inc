@@ -1893,11 +1893,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
   $workflows = $api->listWorkflows();
 
   $table_data = array();
-  $node_based_translations = [];
   foreach ($table_data_raw as $row) {
-    if($row->language !== $language->language){
-      $node_based_translations[] = $row->$entity_id_key;
-    }
     $entity_id = $row->{$entity_id_key};
 
     $row->title = lingotek_truncate_grid_text($row->title, 55);
@@ -1942,21 +1938,6 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     }
 
     $table_data[$entity_id] = $data;
-  }
-  if(!empty($node_based_translations)){
-    $query = db_select('node', 'n');
-    $query->addField('n', 'title');
-    $query->addField('n', 'tnid');
-    $query->addField('n', 'nid');
-    $query->condition('n.tnid', $node_based_translations, 'IN');
-    $query->condition('n.language', $language->language);
-    $results = $query->execute();
-    foreach($results as $result) {
-       if(isset($table_data[$result->tnid])){
-         $table_data[$result->tnid]['title'] = l(t($result->title), $entity_properties['type'] . "/$result->nid");
-       }
-    }
-      
   }
   return $table_data;
 }
