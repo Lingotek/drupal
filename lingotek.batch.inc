@@ -493,21 +493,25 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
   if ($success) {
+    $did_something = FALSE;
     $def_lang = language_default('name');
     if (isset($results['entity_cleanup'])) {
       $num_nodes = (int) $results['entity_cleanup'];
       drupal_set_message(format_plural($num_nodes, t('Converted @count entities from language neutral to @language', array('@count' => $num_nodes, '@language' => $def_lang)), t('Converted @count entities from language neutral to @language', array('@count' => $num_nodes, '@language' => $def_lang))));
+      $did_something = TRUE;
     }
     if (isset($results['url_alias_cleanup'])) {
       $searched = (int) $results['url_alias_cleanup']['searched'];
       $added = (int) $results['url_alias_cleanup']['added'];
       drupal_set_message(format_plural($searched, t('Searched @search_count entity for url aliases, added @add_count in @language.', array('@search_count' => $searched, '@add_count' => $added, '@language' => $def_lang)), t('Searched @search_count entities for url aliases, added @add_count in @language.', array('@search_count' => $searched, '@add_count' => $added, '@language' => $def_lang))));
+      $did_something = TRUE;
     }
     if (isset($results['field_cleanup'])) {
       $num_nodes = (int) $results['field_cleanup'];
       drupal_set_message(format_plural($num_nodes, t('Added language-specific fields for @count entity with language-neutral fields.', array('@count' => $num_nodes)), t('Added language-specific fields for @count entities with language-neutral fields.', array('@count' => $num_nodes))));
+      $did_something = TRUE;
     }
-    else {
+    if (!$did_something) {
       drupal_set_message(t('No requested entities currently require any preparation.'), 'status', FALSE);
     }
   }

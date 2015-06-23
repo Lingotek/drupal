@@ -1638,8 +1638,12 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
 
   try {
     $xml = new LingotekXMLElement($text);
+    if (!lingotek_current_xml_format($xml)) {
+      drupal_set_message(t('Outdated or invalid format detected when downloading translations for @entity_type #@entity_id. Please re-upload the document to the TMS.', array('@entity_type' => $entity_type, '@entity_id' => $id)), 'error', FALSE);
+      throw new LingotekException(t('Outdated or invalid format detected when downloading translations for @entity_type #@entity_id. Please re-upload the document to the TMS.', array('@entity_type' => $entity_type, '@entity_id' => $id)));
+    }
   } catch (Exception $e) {
-    LingotekLog::error("downloadDocument FAILED. Error: @error. Text: !xml.", array('!xml' => $text, '@error' => $e->getMessage()));
+    LingotekLog::error("downloadDocument FAILED for @entity_type #@entity_id. Error: @error.", array('@entity_type' => $entity_type, '@entity_id' => $id, '@error' => $e->getMessage()));
 
     if ($context) {
       $context['results']['download_fails'] = isset($context['results']['download_fails']) && is_numeric($context['results']['download_fails']) ? $context['results']['download_fails'] + 1 : 1;

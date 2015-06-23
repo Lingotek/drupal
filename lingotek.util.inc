@@ -2055,3 +2055,16 @@ function lingotek_get_translatable_field_columns() {
   return variable_get('lingotek_translatable_column_defaults', $default_translatable_columns);
 }
 
+/*
+ * Determine if the passed XML object is the current format (as of v7.x-7.00)
+ */
+function lingotek_current_xml_format($xml) {
+  foreach ($xml as $field_name => $content) {
+    foreach ($content as $column_name => $text) {
+      if ($column_name == 'element' && !$text->count()) {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
