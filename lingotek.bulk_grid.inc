@@ -1051,7 +1051,9 @@ function config_download_ready($force_download, $comma_separated_ids = null, $en
     $set_ids = array_merge($ready_lids, $current_lids,$edited_lids);
   }
   elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
-    empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "download");
+    if(isset($_SESSION['grid_filters'])){    
+      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "download");
+    }
     $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
         : $_SESSION['grid_filters']['filtered_config_lids'];
     $set_ids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY, $selected_lids);
@@ -1070,7 +1072,9 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
   if (!empty($targets)) {
     if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
-      empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "download");
+      if(isset($_SESSION['grid_filters'])){
+        empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "download");
+      }
       $entity_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
           : $_SESSION['grid_filters']['filtered_ids'];
     }
@@ -1105,7 +1109,9 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
 
 function config_upload_edited($comma_separated_ids, $entity_type) {
     if(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
-      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "upload");
+      if(isset($_SESSION['grid_filters'])){
+        empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "upload");
+      }
       $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
           : $_SESSION['grid_filters']['filtered_config_lids'];
       //check which lids within the selected ids need to be uploaded
@@ -1127,7 +1133,9 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     return;
   }
   if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
-    empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "upload");
+    if(isset($_SESSION['grid_filters'])){
+      empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "upload");
+    }
     $selected_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
       : $_SESSION['grid_filters']['filtered_ids'];
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type, $selected_ids);
