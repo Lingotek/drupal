@@ -1359,16 +1359,6 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
   return l($text, $url, array('attributes' => array('class' => array('lingotek-translation-link'), 'target' => '_blank', 'title' => $tooltip), 'html' => TRUE));
 }
 
-function lingotek_list_entities_with_language($entity_type, $bundle, $language) {
-  $ids = array();
-  $fields = field_info_instances($entity_type, $bundle);
-  foreach ($fields as $name => $field_info) {
-    $ids = $ids + lingotek_list_entities_with_field_in_language_by_bundle($entity_type, $bundle, $name, $language);
-  }
-
-  return $ids;
-}
-
 function lingotek_list_nodes_translated_in_language($language, $bundle = NULL) {
   $query = db_select('node')
       ->fields('node', array('tnid'));
