@@ -167,7 +167,7 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
   $custom_fields_subquery->join('field_config_instance', 'fci', 'tv.machine_name = fci.bundle');
 
   if ($union_part_desc == 'taxonomy name') {
-    $query->leftJoin('taxonomy_term_data', 'term_name', 'term_name.name = s.source AND term_name.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_name.vid NOT IN (' . $custom_fields_subquery . ')');
+    $query->leftJoin('taxonomy_term_data', 'term_name', 'SUBSTRING_INDEX(SUBSTRING_INDEX(s.context , \':\', 2 ),\':\',-1) = term_name.tid AND term_name.name = s.source AND term_name.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_name.vid NOT IN (' . $custom_fields_subquery . ')');
     $query->addExpression('term_name.tid', 'tid_from_name');//DO NOT do addField here, it puts the column name in the wrong place and messes with the union
   }
   else {
@@ -175,7 +175,7 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
   }
 
   if ($union_part_desc == 'taxonomy desc') {
-    $query->leftJoin('taxonomy_term_data', 'term_description', 'term_description.description = s.source AND term_description.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_description.vid NOT IN (' . $custom_fields_subquery . ')');
+    $query->leftJoin('taxonomy_term_data', 'term_description', 'SUBSTRING_INDEX(SUBSTRING_INDEX(s.context , \':\', 2 ),\':\',-1) = term_description.tid AND term_description.description = s.source AND term_description.vid NOT IN (' . implode(',', array_merge(array(-1), $translate_ids)) . ') AND term_description.vid NOT IN (' . $custom_fields_subquery . ')');
     $query->addExpression('term_description.tid', 'tid_from_description');//DO NOT do addField here, it puts the column name in the wrong place and messes with the union
   }
   else {
