@@ -1360,10 +1360,14 @@ function lingotek_workbench_icon($entity_type, $id, $lingotek_locale, $tooltip =
 }
 
 function lingotek_list_nodes_translated_in_language($language, $bundle = NULL) {
+  $disabled_bundles = lingotek_get_disabled_bundles('node');
   $query = db_select('node')
       ->fields('node', array('tnid'));
   if (!is_null($bundle)) {
     $query->condition('node.type', $bundle);
+  }
+  if (!empty($disabled_bundles)) {
+    $query->condition('type', $disabled_bundles, 'NOT IN');
   }
   $query->condition('node.tnid', 0, '<>')
       ->condition('language', $language)
