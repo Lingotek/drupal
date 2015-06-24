@@ -1068,7 +1068,7 @@ function lingotek_entity_save($entity, $entity_type) {
       // if this is a source node and target localization is enabled, set all targets to TARGET_LOCALIZE
       // TODO:
 
-      if (empty($entity->lingotek['upload_status']) || $entity->lingotek['upload_status'] != LingotekSync::STATUS_TARGET) {
+      if (empty($entity->lingotek['upload_status']) || (!in_array($entity->lingotek['upload_status'], array(LingotekSync::STATUS_TARGET, LingotekSync::STATUS_DELETED)))) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
       }
     }
@@ -1432,7 +1432,7 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
     return;
   }
 
-  if (isset($entity->lingotek['upload_status']) && ($entity->lingotek['upload_status'] == LingotekSync::STATUS_TARGET)) {
+  if (isset($entity->lingotek['upload_status']) && (in_array($entity->lingotek['upload_status'], array(LingotekSync::STATUS_TARGET, LingotekSync::STATUS_DELETED)))) {
     return;
   }
 
@@ -2167,6 +2167,10 @@ function lingotek_entity_delete($entity, $type) {
       ->condition('entity_type', $type)
     ->condition('entity_id', $id)
     ->execute();
+
+  // Set a flag for the deleted entity so it's not re-uploaded if it
+  // has nested entities within fields, such as field collections.
+  LingotekSync::setUploadStatus($type, $id, LingotekSync::STATUS_DELETED);
 }
 
 function lingotek_get_profile_fields($include_readonly = TRUE, $include_changeable = TRUE) {

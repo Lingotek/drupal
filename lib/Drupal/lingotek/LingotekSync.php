@@ -20,6 +20,7 @@ class LingotekSync {
   const STATUS_TARGET_LOCALIZE = 'TARGET_LOCALIZE'; // A localization must be made of the source before uploading to Lingotek
   const STATUS_TARGET_EDITED = 'TARGET_EDITED'; // A localized version is ready for uploading to Lingotek
   const STATUS_NON_LINGOTEK = 'NON_LINGOTEK'; // Translations exist but the translation_agent_id != 3 (Not owned by Lingotek)
+  const STATUS_DELETED = 'DELETED'; // Entity was translated but was afterward deleted
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
