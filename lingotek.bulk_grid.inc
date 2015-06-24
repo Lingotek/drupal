@@ -1119,6 +1119,7 @@ function config_upload_edited($comma_separated_ids, $entity_type) {
       //get all the lids that have never been uploaded
       $never_uploaded_lids = LingotekConfigSet::findNeverUploadedLids($selected_lids);
       $lids = array_merge($all_edited_lids, $never_uploaded_lids);
+      empty_array_check($lids, $entity_type, "There are no entities ready for upload for this filter");
     }
     else {
       // Only get the ones that need to be uploaded.
@@ -1139,9 +1140,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     $selected_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
       : $_SESSION['grid_filters']['filtered_ids'];
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type, $selected_ids);
-    empty_array_check($entity_ids, $entity_type, "There are no entities ready for upload for this selection. "
-        . "If trying to upload entities that have been disassociated from Lingotek, "
-        . "please select the desired entities and use the Upload option in the Actions dropdown or click the link in the Source Uploaded column.");
+    empty_array_check($entity_ids, $entity_type, "There are no entities ready for upload for this selection.");
   }
   else {
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
@@ -1815,18 +1814,18 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $notUploadedQuery->distinct();
       $notUploadedQuery->fields('lingo_em',array('entity_id'));
       $notUploadedQuery->condition('entity_key', 'last_uploaded');
-      $results = $notUploadedQuery->execute()->fetchCol();
       
-      $query->condition('lingo_entity_id.entity_id', $results, 'NOT IN');
+      
+      $query->condition('lingo_entity_id.entity_id', $notUploadedQuery, 'NOT IN');
     }
     else if(in_array("disassoc", $filters['upload_status'])){
-      $notUploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
-      $notUploadedQuery->distinct();
-      $notUploadedQuery->fields('lingo_em',array('entity_id'));
-      $notUploadedQuery->condition('entity_key', 'last_uploaded');
-      $results = $notUploadedQuery->execute()->fetchCol();
+      $disassocQuery = db_select('lingotek_entity_metadata','lingo_em');
+      $disassocQuery->distinct();
+      $disassocQuery->fields('lingo_em',array('entity_id'));
+      $disassocQuery->condition('entity_key', 'last_uploaded');
+      
 
-      $query->condition('lingo_entity_id.entity_id', $results, 'IN');
+      $query->condition('lingo_entity_id.entity_id', $disassocQuery, 'IN');
       $query->condition('lingo_entity_id.value', 'UNTRACKED');
     }
     //other cases

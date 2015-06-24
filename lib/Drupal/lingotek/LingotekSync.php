@@ -656,7 +656,16 @@ class LingotekSync {
     $query = db_select($info['base table'], 'base');
     $query->addField('base', $id_key);
     $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'upload_status\'');
-
+    
+    $query2 = db_select('lingotek_entity_metadata', 'lem');
+    $query2->distinct();
+    $query2->addField('lem', 'entity_id');
+    $query2->condition('entity_key', 'profile');
+    $query2->condition('entity_type', $entity_type);
+    $query2->condition('value', 'DISABLED');
+    
+    $query->condition('upload.entity_id', $query2, 'NOT IN');
+    
     if ($entity_type == 'node') {
       // Exclude any target nodes created using node-based translation.
       $tnid_query = db_or();
