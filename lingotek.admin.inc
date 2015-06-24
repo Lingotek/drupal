@@ -2389,7 +2389,7 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
   $form['logging']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
-    '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
+    '#description' => t('Skips caching to ensure the module is always using current information. Performance may be slower while caching is disabled, but testing may be easier. This will only affect those with Developer permissions.'),
     '#default_value' => variable_get('lingotek_flush_cache', 0),
   );
 
