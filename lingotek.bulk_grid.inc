@@ -1334,6 +1334,7 @@ function lingotek_grid_build_filters($form_state) {
         LingotekSync::STATUS_EDITED => t('Out of Sync'),
         LingotekSync::STATUS_CURRENT => t('In Sync'),
         'never' => t('Never Uploaded'),
+        'disassoc' => t('Disassociated'),
       ),
       '#multiple' => FALSE,
     ),
@@ -1814,6 +1815,9 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $results = $notUploadedQuery->execute()->fetchCol();
       
       $query->condition('lingo_entity_id.entity_id', $results, 'NOT IN');
+    }
+    else if(in_array("disassoc", $filters['upload_status'])){
+      $query->condition('lingo_entity_id.value', 'UNTRACKED');
     }
     //other cases
     else {
