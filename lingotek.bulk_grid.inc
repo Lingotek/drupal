@@ -1810,13 +1810,10 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $notUploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
       $notUploadedQuery->distinct();
       $notUploadedQuery->fields('lingo_em',array('entity_id'));
-      $notUploadedQuery->condition('entity_key', 'upload_status');
-      $results = $notUploadedQuery->execute();
-      $uploaded_ids = array();
-      foreach($results as $result){
-        $uploaded_ids[] = $result->entity_id;
-      }
-      $query->condition('lingo_entity_id.entity_id', $uploaded_ids, 'NOT IN');
+      $notUploadedQuery->condition('entity_key', 'target_sync_status%', 'LIKE');
+      $results = $notUploadedQuery->execute()->fetchCol();
+      
+      $query->condition('lingo_entity_id.entity_id', $results, 'NOT IN');
     }
     //other cases
     else {
