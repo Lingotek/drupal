@@ -2161,9 +2161,11 @@ function lingotek_entity_delete($entity, $type) {
     $api = LingotekApi::instance();
     $api->removeDocument($entity->lingotek['document_id'], FALSE);
   }
+
+  list($id, $vid, $bundle) = lingotek_entity_extract_ids($type, $entity);
   db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $type)
-    ->condition('entity_id', lingotek_entity_extract_ids($type, $entity))
+    ->condition('entity_id', $id)
     ->execute();
 }
 
