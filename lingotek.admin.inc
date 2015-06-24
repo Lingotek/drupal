@@ -329,17 +329,17 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
   }
 
   if (!empty($missing_fields)) {
-    foreach ($missing_fields as $missing_field) {
+    foreach ($missing_fields as $key => $missing_field) {
       $message = t(ucfirst($missing_field) . ' (Note: field will be created.)');
       $fields[$missing_field . '_field'] = array(
         '#type' => 'checkbox',
         '#title' => check_plain($message),
         '#attributes' => array(
-          'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
+          'id' => array('edit-form-item-' . $bundle_name . '-separator-title' . '-' . $key),
           'name' => 'title_swap_' . $bundle_name . '_' . $missing_field,
           'class' => array('field'),
         ),
-        '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
+        '#id' => 'edit-form-item-' . $bundle_name . '-separator-title' . '-' . $key,
         '#states' => array(
           'invisible' => array(
             ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
