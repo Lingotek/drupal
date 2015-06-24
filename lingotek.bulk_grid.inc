@@ -1052,7 +1052,7 @@ function config_download_ready($force_download, $comma_separated_ids = null, $en
   }
   elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
     if(isset($_SESSION['grid_filters'])){    
-      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "download");
+      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "There are no translations ready for download.");
     }
     $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
         : $_SESSION['grid_filters']['filtered_config_lids'];
@@ -1073,7 +1073,7 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
   if (!empty($targets)) {
     if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
       if(isset($_SESSION['grid_filters'])){
-        empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "download");
+        empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "There are no translations ready for download.");
       }
       $entity_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
           : $_SESSION['grid_filters']['filtered_ids'];
@@ -1110,7 +1110,7 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
 function config_upload_edited($comma_separated_ids, $entity_type) {
     if(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
       if(isset($_SESSION['grid_filters'])){
-        empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "upload");
+        empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "There are no entities ready for upload");
       }
       $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
           : $_SESSION['grid_filters']['filtered_config_lids'];
@@ -1134,7 +1134,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
   }
   if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
     if(isset($_SESSION['grid_filters'])){
-      empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "upload");
+      empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "There are no entities ready for upload");
     }
     $selected_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
       : $_SESSION['grid_filters']['filtered_ids'];
@@ -1159,13 +1159,13 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     batch_process($redirect);
   }
   else {
-    drupal_set_message(t('There are no translations ready for upload.'));
+    drupal_set_message(t('There are no entities ready for upload.'));
     drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
   }
 }
-function empty_array_check($array, $entity_type, $action){
+function empty_array_check($array, $entity_type, $message){
   if(empty($array)){
-    drupal_set_message(t("There are no translations ready for $action."));
+    drupal_set_message(t($message));
     drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
   }
 }
