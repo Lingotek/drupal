@@ -9,6 +9,7 @@
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Implements hook_permission().
@@ -84,7 +85,69 @@ function lingotek_entity_delete(EntityInterface $entity) {
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  // TODO: add profile info and etc. to the node form.
+  $container = \Drupal::getContainer();
+  $L = $container->get('lingotek');
+  $default_profile;
+  $options = array();
+  //$all = $container->get();
+
+  // Retrieve enity's own profile
+  if ($form_id === 'node_article_edit_form') {
+    
+  }
+  else if ($form_id === 'node_page_edit_form') {
+    
+  }
+
+  // Retrieve profile for node type if the enity's profile isn't set
+  if ($form_id === 'node_article_form') {
+    $profile = $L->get('translate.entity.node.article.profile');
+    if ($profile) {
+      $default_profile = $profile;
+    }
+    else {
+      $default_profile = Lingotek::PROFILE_AUTOMATIC;
+    }
+  }
+  elseif ($form_id === 'node_page_form') {
+    $profile = $L->get('translate.entity.node.page.profile');
+    if ($profile) {
+      $default_profile = $profile;
+    }
+    else {
+      $default_profile = Lingotek::PROFILE_AUTOMATIC;
+    }
+  }
+
+  $profiles = $L->get('profile');
+
+  foreach ($profiles as $profile) {
+    $options[$profile['id']] = ucwords($profile['name']);
+  }
+  
+  $form['translation_management'] = array(
+    '#type' => 'details',
+    '#title' => t('Translation Management'),
+    '#description' => t('The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek\'s translation tools and services without ever having to leave the comfort of your Drupal environment.'),
+    '#group' => 'advanced',
+  );
+
+  $form['translation_management']['translation_profile'] = array(
+    '#type' => 'select',
+    '#title' => t('Translation Profile'),
+    '#options' => $options,
+    '#default_value' => $default_profile,
+  );
+
+  foreach (array_keys($form['actions']) as $action) {
+    if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+      $form['actions'][$action]['#submit'][] = 'lingotek_form_node_form_submit';
+    }
+  }
+}
+
+function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) {
+  $node = $form_state->getFormObject()->getEntity();
 }
 
 /**

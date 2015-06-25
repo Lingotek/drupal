@@ -5,6 +5,8 @@
  * LingotekLog
  */
 
+namespace Drupal\lingotek;
+
 /**
  * Wrapper logging class for watchdog
  */
@@ -39,9 +41,6 @@ class LingotekLog {
   }
 
   public static function error($msg, $data, $tag = 'error') {
-    if (!variable_get('lingotek_error_log', TRUE)) {
-      return;
-    }
     self::log($msg, $data, $depth = 1, WATCHDOG_ERROR, $tag);
   }
 

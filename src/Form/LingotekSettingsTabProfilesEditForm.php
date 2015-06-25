@@ -46,7 +46,7 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
     $form['defaults']['name'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Profile Name'),
-      '#default_value' => $this->t(ucfirst($this->profile['name'])),
+      '#default_value' => $this->t(ucwords(str)($this->profile['name'])),
       '#disabled' => $this->profile_name_disabled, 
     );
 

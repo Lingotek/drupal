@@ -52,7 +52,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     foreach ($this->profiles as $profile) {
       $row = array();
       $row['profile_name'] = array(
-        '#markup' => $this->t(ucfirst($profile['name'])),
+        '#markup' => $this->t(ucwords($profile['name'])),
       );
       $count = $this->retrieveUsage($profile);
       $row['usage'] = array(
