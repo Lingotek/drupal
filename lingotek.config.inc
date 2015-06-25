@@ -7,13 +7,14 @@
 
 // All the stuff for the new config menu goes in here
 function lingotek_config_filter_inline_submit($form, $form_state) {
-  unset($_SESSION['grid_filters']['textgroup']);
-  $_SESSION['grid_filters']['textgroup'] = $form_state['values']['search_type'];
+  $entity_type = $_SESSION['grid_entity_type'];
+  unset($_SESSION['grid_filters'][$entity_type]['textgroup']);
+  $_SESSION['grid_filters'][$entity_type]['textgroup'] = $form_state['values']['search_type'];
   if (!empty($form_state['values']['search'])) {
-    $_SESSION['grid_filters']['search'] = $form_state['values']['search'];
+    $_SESSION['grid_filters'][$entity_type]['search'] = $form_state['values']['search'];
   }
   else {
-    unset($_SESSION['grid_filters']['search']);
+    unset($_SESSION['grid_filters'][$entity_type]['search']);
   }
 
   if (isset($form_state['values']['limit_select'])) {
@@ -66,7 +67,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       ->fetchAllAssoc('lid');
 
   $table_data = lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type);
-  if(isset($_SESSION['grid_filters'])){
+  if(isset($_SESSION['grid_filters'][$entity_type])){
     $all_filtered_results = $query
       ->extend('PagerDefault')
       ->limit(500000)
@@ -75,7 +76,7 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
     foreach($all_filtered_results as $filtered_result){
       $all_filtered_lids[$filtered_result->lid] = $filtered_result->lid;
     }
-    $_SESSION['grid_filters']['filtered_config_lids'] = $all_filtered_lids;
+    $_SESSION['grid_filters'][$entity_type]['filtered_config_lids'] = $all_filtered_lids;
   }
   return $table_data;
 }
@@ -197,10 +198,11 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
 }
 
 function lingotek_config_add_query_filters($query) {
-  if (!isset($_SESSION['grid_filters'])) {
+  $entity_type = $_SESSION['grid_entity_type'];
+  if (!isset($_SESSION['grid_filters'][$entity_type])) {
     return;
   }
-  $filters = $_SESSION['grid_filters'];
+  $filters = $_SESSION['grid_filters'][$entity_type];
   if (isset($filters['search']) && strlen($filters['search'])) {
     $query->where("LOWER(CONVERT(source USING utf8)) LIKE :source_string", array(':source_string' => '%' . strtolower($filters['search'] . '%')));
   }

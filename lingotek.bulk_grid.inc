@@ -20,11 +20,10 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   global $language;
 
-  if (isset($_SESSION['grid_entity_type']) && $_SESSION['grid_entity_type'] != $entity_type) {
+  if (!isset($_SESSION['grid_entity_type'])) {
     $_SESSION['grid_entity_type'] = $entity_type;
-    lingotek_grid_clear_filters();
   }
-  elseif (!isset($_SESSION['grid_entity_type'])) {
+  elseif ($_SESSION['grid_entity_type'] != $entity_type) {
     $_SESSION['grid_entity_type'] = $entity_type;
   }
 
@@ -103,8 +102,8 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $filter_set = FALSE;
 
-  if (isset($_SESSION['grid_filters'])) {
-    foreach ($_SESSION['grid_filters'] as $key => $value) {
+  if (isset($_SESSION['grid_filters'][$entity_type])) {
+    foreach ($_SESSION['grid_filters'][$entity_type] as $key => $value) {
       if (is_array($value)) {
         $keys = array_keys($value);
         if (count($keys) == 1) {
@@ -203,15 +202,15 @@ function lingotek_bulk_grid_form($form, $form_state) {
 
   $form['search'] = array(
     '#type' => 'textfield',
-    '#default_value' => isset($_SESSION['grid_filters']['search']) ? $_SESSION['grid_filters']['search'] : '',
+    '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['search']) ? $_SESSION['grid_filters'][$entity_type]['search'] : '',
     '#title' => filter_xss($search_title),
     '#size' => 30,
     '#attributes' => array('placeholder' => t('Search'))
   );
   $search_options = $entity_type == 'config' ? lingotek_config_search_options() : lingotek_grid_search_options();
 
-  $grid_term = isset($_SESSION['grid_filters']['search_type']) ? $_SESSION['grid_filters']['search_type'] : 'all';
-  $config_term = isset($_SESSION['grid_filters']['textgroup']) ? $_SESSION['grid_filters']['textgroup'] : 'all';
+  $grid_term = isset($_SESSION['grid_filters'][$entity_type]['search_type']) ? $_SESSION['grid_filters'][$entity_type]['search_type'] : 'all';
+  $config_term = isset($_SESSION['grid_filters'][$entity_type]['textgroup']) ? $_SESSION['grid_filters'][$entity_type]['textgroup'] : 'all';
   $search_term = $entity_type == 'config' ? $config_term : $grid_term;
 
   $form['search_type'] = array(
@@ -437,7 +436,7 @@ function lingotek_filters_popup_form($form = array(), $form_state = array()) {
     '#submit' => array('lingotek_grid_clear_filters'),
   );
 
-  $form_state['values']['filters'] = lingotek_grid_get_filters(TRUE);
+  $form_state['values']['filters'] = lingotek_grid_get_filters($form_state['entity_type'], TRUE);
 
   $form['filter_fieldset']['filters'] += $form_state['entity_type'] == 'config' ? lingotek_config_build_filters($form_state) : lingotek_grid_build_filters($form_state);
 
@@ -653,21 +652,21 @@ function lingotek_grid_legend() {
 }
 
 function lingotek_grid_filter_inline_submit($form, $form_state) {
-  $_SESSION['grid_filters']['search_type'] = $form_state['values']['search_type'];
+  $_SESSION['grid_filters'][$entity_type]['search_type'] = $form_state['values']['search_type'];
   if (!empty($form_state['values']['search'])) {
-    $_SESSION['grid_filters']['search'] = $form_state['values']['search'];
+    $_SESSION['grid_filters'][$entity_type]['search'] = $form_state['values']['search'];
   }
   else {
-    unset($_SESSION['grid_filters']['search']);
-    unset($_SESSION['grid_filters']['search_type']);
+    unset($_SESSION['grid_filters'][$entity_type]['search']);
+    unset($_SESSION['grid_filters'][$entity_type]['search_type']);
   }
-  unset($_SESSION['grid_filters']['body']);
-  unset($_SESSION['grid_filters']['title']);
+  unset($_SESSION['grid_filters'][$entity_type]['body']);
+  unset($_SESSION['grid_filters'][$entity_type]['title']);
   if ($form_state['values']['search_type'] == 'title') {
-    $_SESSION['grid_filters']['title'] = $form_state['values']['search'];
+    $_SESSION['grid_filters'][$entity_type]['title'] = $form_state['values']['search'];
   }
   elseif ($form_state['values']['search_type'] == 'body') {
-    $_SESSION['grid_filters']['body'] = $form_state['values']['search'];
+    $_SESSION['grid_filters'][$entity_type]['body'] = $form_state['values']['search'];
   }
 
   if (isset($form_state['values']['limit_select'])) {
@@ -704,7 +703,13 @@ function lingotek_grid_filter_submit($form, $form_state) {
         $_SESSION[$key] = $value;
       }
       else {
-        $_SESSION[$nest][str_replace('__filter', '', $key)] = $value;
+        if (!isset($_SESSION[$nest])) {
+          $_SESSION[$nest] = array();
+        }
+        if (!isset($_SESSION[$nest][$form_state['entity_type']])) {
+          $_SESSION[$nest][$form_state['entity_type']] = array();
+        }
+        $_SESSION[$nest][$form_state['entity_type']][str_replace('__filter', '', $key)] = $value;
       }
     }
   }
@@ -1043,19 +1048,22 @@ function lingotek_grid_download_selected($entity_type, $entity_ids, $target_loca
   batch_process($redirect);
 }
 
-function config_download_ready($force_download, $comma_separated_ids = null, $entity_type = null){
-  if($force_download != null){
+function config_download_ready($force_download, $comma_separated_ids = NULL, $entity_type = NULL){
+  if ($entity_type === NULL) {
+    $entity_type = 'node';
+  }
+  if($force_download != NULL){
     $ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
     $current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_CURRENT);
     $edited_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_EDITED);
     $set_ids = array_merge($ready_lids, $current_lids,$edited_lids);
   }
-  elseif(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
-    if(isset($_SESSION['grid_filters'])){    
-      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "There are no translations ready for download for this filter.");
+  elseif(isset($_SESSION['grid_filters'][$entity_type]) || $comma_separated_ids !== NULL){
+    if(isset($_SESSION['grid_filters'][$entity_type])){    
+      empty_array_check($_SESSION['grid_filters'][$entity_type]['filtered_config_lids'], $entity_type, "There are no translations ready for download for this filter.");
     }
-    $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
-        : $_SESSION['grid_filters']['filtered_config_lids'];
+    $selected_lids = $comma_separated_ids !== NULL ? explode(",", $comma_separated_ids)
+        : $_SESSION['grid_filters'][$entity_type]['filtered_config_lids'];
     $set_ids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY, $selected_lids);
   }
   else {
@@ -1064,19 +1072,19 @@ function config_download_ready($force_download, $comma_separated_ids = null, $en
   lingotek_config_download_selected('download_all', $set_ids, true);
 }
 
-function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null) {
+function lingotek_grid_download_ready($entity_type, $comma_separated_ids = NULL) {
   if ($entity_type === 'config') {
-    config_download_ready(null, $comma_separated_ids, $entity_type);
+    config_download_ready(NULL, $comma_separated_ids, $entity_type);
     return;
   }
   $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
   if (!empty($targets)) {
-    if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
-      if(isset($_SESSION['grid_filters'])){
-        empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "There are no translations ready for download for this filter.");
+    if($comma_separated_ids !== NULL || isset($_SESSION['grid_filters'][$entity_type])){
+      if(isset($_SESSION['grid_filters'][$entity_type])){
+        empty_array_check($_SESSION['grid_filters'][$entity_type]['filtered_ids'], $entity_type, "There are no translations ready for download for this filter.");
       }
-      $entity_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
-          : $_SESSION['grid_filters']['filtered_ids'];
+      $entity_ids = $comma_separated_ids !== NULL ? explode(",", $comma_separated_ids) 
+          : $_SESSION['grid_filters'][$entity_type]['filtered_ids'];
     }
     else {
       $entity_ids = array();
@@ -1108,12 +1116,12 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
 }
 
 function config_upload_edited($comma_separated_ids, $entity_type) {
-    if($comma_separated_ids !== null){
+    if($comma_separated_ids !== NULL){
       $lids = explode(",", $comma_separated_ids);
     }
-    else if(isset($_SESSION['grid_filters'])){
-      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "There are no entities ready for upload for this filter");
-      $selected_lids = $_SESSION['grid_filters']['filtered_config_lids'];
+    elseif(isset($_SESSION['grid_filters'][$entity_type])){
+      empty_array_check($_SESSION['grid_filters'][$entity_type]['filtered_config_lids'], $entity_type, "There are no entities ready for upload for this filter");
+      $selected_lids = $_SESSION['grid_filters'][$entity_type]['filtered_config_lids'];
       //check lid selection for dirty statuses
       $all_edited_lids = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
       $never_uploaded_lids = LingotekConfigSet::findNeverUploadedLids($selected_lids);
@@ -1127,17 +1135,17 @@ function config_upload_edited($comma_separated_ids, $entity_type) {
     lingotek_config_upload_selected($lids);
 }
 
-function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) {
+function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = NULL) {
   if ($entity_type === 'config') {
     config_upload_edited($comma_separated_ids, $entity_type);
     return;
   }
-  if($comma_separated_ids !== null ){
+  if($comma_separated_ids !== NULL) {
     $entity_ids = explode(",", $comma_separated_ids);
   }
-  else if(isset($_SESSION['grid_filters'])){
-    empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "There are no entities ready for upload for this filter");
-    $selected_ids = $_SESSION['grid_filters']['filtered_ids'];
+  elseif(isset($_SESSION['grid_filters'][$entity_type])){
+    empty_array_check($_SESSION['grid_filters'][$entity_type]['filtered_ids'], $entity_type, "There are no entities ready for upload for this filter");
+    $selected_ids = $_SESSION['grid_filters'][$entity_type]['filtered_ids'];
     //check lid selection for dirty statuses    
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type, $selected_ids);
     empty_array_check($entity_ids, $entity_type, "There are no entities ready for upload for this selection.");
@@ -1302,35 +1310,37 @@ function lingotek_grid_build_filters($form_state) {
   unset($profiles['CONFIG']);
   asort($profiles);
 
+  $entity_type = $form_state['entity_type'];
+
   $filters = array(
     'nid' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters']['nid']) ? $_SESSION['grid_filters']['nid'] : '',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['nid']) ? $_SESSION['grid_filters'][$entity_type]['nid'] : '',
       '#title' => t('Entity ID is'),
       '#size' => 8,
     ),
     'document_id' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters']['document_id']) ? $_SESSION['grid_filters']['document_id'] : '',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['document_id']) ? $_SESSION['grid_filters'][$entity_type]['document_id'] : '',
       '#title' => t('Doc ID is'),
       '#size' => 10,
     ),
     'source_language' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['source_language']) ? $_SESSION['grid_filters']['source_language'] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['source_language']) ? $_SESSION['grid_filters'][$entity_type]['source_language'] : 'all',
       '#title' => t('Source Language'),
       '#options' => array('all' => t('All Languages')) + $source_languages,
     ),
     'profile' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['profile']) ? $_SESSION['grid_filters']['profile'] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['profile']) ? $_SESSION['grid_filters'][$entity_type]['profile'] : 'all',
       '#title' => t('Translation Profile'),
       '#options' => array('all' => 'All') + $profiles,
       '#multiple' => TRUE
     ),
     'upload_status' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['upload_status']) ? $_SESSION['grid_filters']['upload_status'] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['upload_status']) ? $_SESSION['grid_filters'][$entity_type]['upload_status'] : 'all',
       '#title' => t('Upload Status'),
       '#options' => array(
         'all' => t('All'),
@@ -1352,7 +1362,7 @@ function lingotek_grid_build_filters($form_state) {
     asort($grid_bundles);
     $filters['content_type'] = array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['content_type']) ? $_SESSION['grid_filters'][$entity_type]['content_type'] : 'all',
       '#title' => t('Content Type(s)'),
       '#options' => array('all' => t('All')) + $grid_bundles,
       '#multiple' => TRUE
@@ -1373,25 +1383,25 @@ function lingotek_config_build_filters($form_state) {
   $filters = array(
     'lid' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters']['lid']) ? $_SESSION['grid_filters']['lid'] : '',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['lid']) ? $_SESSION['grid_filters'][$entity_type]['lid'] : '',
       '#title' => t('Config Entity ID is'),
       '#size' => 8,
     ),
     'document_id' => array(
       '#type' => 'textfield',
-      '#default_value' => isset($_SESSION['grid_filters']['document_id']) ? $_SESSION['grid_filters']['document_id'] : '',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['document_id']) ? $_SESSION['grid_filters'][$entity_type]['document_id'] : '',
       '#title' => t('Doc ID is'),
       '#size' => 10,
     ),
     'location' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['location']) ? $_SESSION['grid_filters']['location'] : '',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['location']) ? $_SESSION['grid_filters'][$entity_type]['location'] : '',
       '#title' => t('Module'),
       '#options' => array('' => '') + $modules,
       ),
     'upload_status' => array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['upload_status']) ? $_SESSION['grid_filters']['upload_status'] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['upload_status']) ? $_SESSION['grid_filters'][$entity_type]['upload_status'] : 'all',
       '#title' => t('Upload Status'),
       '#options' => array(
         'all' => t('All'),
@@ -1411,7 +1421,7 @@ function lingotek_config_build_filters($form_state) {
     }, $entity_info['bundles']);
     $filters['content_type'] = array(
       '#type' => 'select',
-      '#default_value' => isset($_SESSION['grid_filters']['content_type']) ? $_SESSION['grid_filters']['content_type'] : 'all',
+      '#default_value' => isset($_SESSION['grid_filters'][$entity_type]['content_type']) ? $_SESSION['grid_filters'][$entity_type]['content_type'] : 'all',
       '#title' => t('Content Type(s)'),
       '#options' => array('all' => t('All')) + $grid_bundles,
       '#multiple' => TRUE
@@ -1431,10 +1441,10 @@ function lingotek_config_build_filters($form_state) {
  *    Associative array keyed by filter name with prefix and suffix removed
  *    Keys point to the values to be filtered on
  */
-function lingotek_grid_get_filters($source = TRUE) {
+function lingotek_grid_get_filters($entity_type, $source = TRUE) {
   $filters = array();
-  if (isset($_SESSION['grid_filters'])) {
-    foreach ($_SESSION['grid_filters'] as $key => $value) {
+  if (isset($_SESSION['grid_filters'][$entity_type])) {
+    foreach ($_SESSION['grid_filters'][$entity_type] as $key => $value) {
       $new_key = str_replace($source ? 'source_' : 'target_', '', $key, $replaced);
       if ($replaced > 0) {
         $filters[str_replace('__filter', '', $new_key)] = $value;
@@ -1448,15 +1458,21 @@ function lingotek_grid_get_filters($source = TRUE) {
  * Completely clears out any filters from the session variable
  * Filters will automatically revert to their defaults
  */
-function lingotek_grid_clear_filters() {
-  if (isset($_SESSION['grid_filters'])) {
-    unset($_SESSION['grid_filters']);
+function lingotek_grid_clear_filters($entity_type = NULL) {
+  if ($entity_type === NULL) {
+    if (empty($_SESSION['grid_entity_type'])) {
+      throw new LingotekException('Attempted to clear filters on an empty entity type!');
+    }
+    $entity_type = $_SESSION['grid_entity_type'];
+  }
+  if (isset($_SESSION['grid_filters'][$entity_type])) {
+    unset($_SESSION['grid_filters'][$entity_type]);
     session_write_close();
   }
 }
 
 function lingotek_grid_clear_filters_page($entity_type) {
-  lingotek_grid_clear_filters();
+  lingotek_grid_clear_filters($entity_type);
   drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
 }
 
@@ -1550,7 +1566,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   // Execute the query
   $table_data_raw = $query->distinct()->execute()->fetchAllAssoc($entity_id_key);
   //save filtered id's to session for group download/upload
-  if (isset($_SESSION['grid_filters'])) {
+  if (isset($_SESSION['grid_filters'][$entity_type])) {
     $no_limit_query = lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, 500000, $bundle_col, $info, $entity_properties, $eid);
     lingotek_bulk_grid_filter_query($no_limit_query, $entity_type, $eid, $label_col, $info);
     $no_limit_query_raw = $no_limit_query->distinct()->execute();
@@ -1558,7 +1574,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     foreach($no_limit_query_raw as $value){
       $all_filtered_entity_ids[$value->$entity_id_key] = $value->$entity_id_key;
     }
-    $_SESSION['grid_filters']['filtered_ids'] = $all_filtered_entity_ids;
+    $_SESSION['grid_filters'][$entity_type]['filtered_ids'] = $all_filtered_entity_ids;
   }
   
   lingotek_entity_load($table_data_raw, $entity_type);
@@ -1709,10 +1725,10 @@ function lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid) {
 }
 
 function lingotek_bulk_grid_filter_query($query, $entity_type, $eid, $label_col, $info) {
-  if (!isset($_SESSION['grid_filters'])) {
+  if (!isset($_SESSION['grid_filters'][$entity_type])) {
     return;
   }
-  $filters = $_SESSION['grid_filters'];
+  $filters = $_SESSION['grid_filters'][$entity_type];
 
   lingotek_bulk_grid_filter_search_box($query, $filters, $eid, $label_col, $entity_type);
   lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, $entity_type);
