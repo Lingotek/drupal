@@ -362,7 +362,7 @@ function lingotek_perform_action(nid, action) {
             }
           }
         });
-      }, 30000);
+      }, 10000);
   }
   function pollAutomaticDownloads(){
     //config section does not have profiles, so automatic downloads should not 
