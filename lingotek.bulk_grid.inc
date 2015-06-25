@@ -1108,21 +1108,20 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = null)
 }
 
 function config_upload_edited($comma_separated_ids, $entity_type) {
-    if(isset($_SESSION['grid_filters']) || $comma_separated_ids !== null){
-      if(isset($_SESSION['grid_filters'])){
-        empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "There are no entities ready for upload for this filter");
-      }
-      $selected_lids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids) 
-          : $_SESSION['grid_filters']['filtered_config_lids'];
-      //check which lids within the selected ids need to be uploaded
+    if($comma_separated_ids !== null){
+      $lids = explode(",", $comma_separated_ids);
+    }
+    else if(isset($_SESSION['grid_filters'])){
+      empty_array_check($_SESSION['grid_filters']['filtered_config_lids'], $entity_type, "There are no entities ready for upload for this filter");
+      $selected_lids = $_SESSION['grid_filters']['filtered_config_lids'];
+      //check lid selection for dirty statuses
       $all_edited_lids = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
-      //get all the lids that have never been uploaded
       $never_uploaded_lids = LingotekConfigSet::findNeverUploadedLids($selected_lids);
       $lids = array_merge($all_edited_lids, $never_uploaded_lids);
       empty_array_check($lids, $entity_type, "There are no entities ready for upload for this filter");
     }
     else {
-      // Only get the ones that need to be uploaded.
+      // Get all lids that are ready to upload
       $lids = LingotekConfigSet::getLidsToUpdate();
     }
     lingotek_config_upload_selected($lids);
@@ -1133,16 +1132,18 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = null) 
     config_upload_edited($comma_separated_ids, $entity_type);
     return;
   }
-  if($comma_separated_ids !== null || isset($_SESSION['grid_filters'])){
-    if(isset($_SESSION['grid_filters'])){
-      empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "There are no entities ready for upload for this filter");
-    }
-    $selected_ids = $comma_separated_ids !== null ? explode(",", $comma_separated_ids)
-      : $_SESSION['grid_filters']['filtered_ids'];
+  if($comma_separated_ids !== null ){
+    $entity_ids = explode(",", $comma_separated_ids);
+  }
+  else if(isset($_SESSION['grid_filters'])){
+    empty_array_check($_SESSION['grid_filters']['filtered_ids'], $entity_type, "There are no entities ready for upload for this filter");
+    $selected_ids = $_SESSION['grid_filters']['filtered_ids'];
+    //check lid selection for dirty statuses    
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type, $selected_ids);
     empty_array_check($entity_ids, $entity_type, "There are no entities ready for upload for this selection.");
   }
   else {
+    // Get all lids that are ready to upload
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type);
   }
 
