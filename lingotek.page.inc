@@ -330,10 +330,16 @@ function lingotek_pm($node) {
     );
     return $output;
   }
-
+  if(!isset($node->lingotek['upload_status'])){
+    $content_push_form = drupal_get_form('lingotek_push_form', $node);
+    $output['content_push'] = array(
+      '#markup' => drupal_render($content_push_form),
+    );
+    return $output;
+  }
   if (lingotek_supported_node($node) && Lingotek::isSupportedLanguage($node->language)) {
 
-    if (($node->lingotek['upload_status'] == LingotekSync::STATUS_EDITED)) {
+    if ($node->lingotek['upload_status'] == LingotekSync::STATUS_EDITED) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);
       $output['content_push'] = array(
         '#markup' => drupal_render($content_push_form),
