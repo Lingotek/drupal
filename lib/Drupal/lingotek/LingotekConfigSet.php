@@ -192,6 +192,32 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     }
     return $existing_sid;
   }
+  public static function bulkGetSetId($lid_map){
+    $set_ids = [];
+    foreach($lid_map as $textgroup => $lids){
+      $open_set_id = self::getOpenSet($textgroup);
+      if ($open_set_id === FALSE) {
+        $open_set_id = self::createSet($textgroup);
+      }
+      $insert = db_insert('lingotek_config_map');
+      $insert->fields(['lid','set_id']);
+      foreach($lids as $lid){
+        $query = db_select('lingotek_config_map', 'lcm');
+        $query->addField('lcm', 'set_id');
+        $query->condition('lid', $lid);
+        $result = $query->execute()->fetchCol();
+        if(empty($result)){
+          $insert->values(['lid'=>$lid,'set_id'=>$open_set_id]);
+          $set_ids[$open_set_id] = $open_set_id;
+        }
+        else {
+          $set_ids[$result[0]] = $result[0];
+        }
+      }
+      $insert->execute();
+    }
+    return $set_ids;
+  }
 
   protected static function assignSetId($lid) {
     // get the $lid's textgroup
@@ -925,6 +951,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $query->condition('lcm.lid', $lids, 'IN');
     }
     $query->join('locales_source', 'ls', "lcm.lid = ls.lid");
+    $query->addField('ls', 'textgroup');
     $query->condition('ls.textgroup', $textgroups, 'IN');
 
     $query->join('locales_target', 'lt', "lcm.lid = lt.lid");
@@ -932,8 +959,13 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $or->condition('lcm.current', $current);
     $or->condition('lt.i18n_status', 1);
     $query->condition($or);
-    $query->distinct();
-    return $query->execute()->fetchCol();
+    
+    $results = $query->execute();
+    $lids = [];
+    foreach($results as $result){
+      $lids[$result->textgroup][$result->lid] = $result->lid; 
+    }
+    return $lids;
   }
   /**
    * Check a given list for lids that have never been uploaded
@@ -941,15 +973,20 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    *  The list of lids to search through
    * @return type
    */
-  public static function findNeverUploadedLids($control_list = null){
-    if($control_list !== null && !empty($control_list)){
+  public static function findNeverUploadedLids($control_list = NULL){
+    if($control_list !== NULL && !empty($control_list)){
         $query = db_select('locales_source','ls');
         $query->leftJoin('locales_target','lt','ls.lid = lt.lid');
         $query->isNull("lt.lid");
-        $query->fields('ls',array('lid'));
+        $query->addField('ls', 'lid');
+        $query->addField('ls',"textgroup");
         $query->condition('ls.lid',$control_list, 'IN');
-        $never_uploaded_lids = $query->execute()->fetchCol();
-        return $never_uploaded_lids;
+        $never_uploaded_lids = $query->execute();
+        $textgroup_lid = [];
+        foreach($never_uploaded_lids as $lid){
+          $textgroup_lid[$lid->textgroup][$lid->lid] = $lid->lid; 
+        }
+        return $textgroup_lid;
     }
     return array();
   }

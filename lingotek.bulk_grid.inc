@@ -1124,21 +1124,32 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = NULL)
 function config_upload_edited($comma_separated_ids, $entity_type) {
     if($comma_separated_ids !== NULL){
       $lids = explode(",", $comma_separated_ids);
+      lingotek_config_upload_selected($lids);
     }
     elseif(isset($_SESSION['grid_filters'][$entity_type])){
       empty_array_check($_SESSION['grid_filters'][$entity_type]['filtered_config_lids'], $entity_type, "There are no entities ready for upload for this filter");
       $selected_lids = $_SESSION['grid_filters'][$entity_type]['filtered_config_lids'];
       //check lid selection for dirty statuses
-      $all_edited_lids = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
-      $never_uploaded_lids = LingotekConfigSet::findNeverUploadedLids($selected_lids);
-      $lids = array_merge($all_edited_lids, $never_uploaded_lids);
-      empty_array_check($lids, $entity_type, "There are no entities ready for upload for this filter");
+      $edited_lid_map = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
+      $never_lid_map = LingotekConfigSet::findNeverUploadedLids($selected_lids);
+      $lid_map = [];
+      if(!empty($edited_lid_map) && !empty($never_lid_map)){
+        foreach($edited_lid_map as $key => $textgroup){
+          if(isset($never_lid_map[$key])){
+            $lid_map[$key] = array_merge($never_lid_map[$key], $textgroup);
+          }
+        }
+      }
+      else {
+        $lid_map = empty($edited_lid_map) ? $never_lid_map
+            : $edited_lid_map;
+      }
     }
     else {
       // Get all lids that are ready to upload
-      $lids = LingotekConfigSet::getLidsToUpdate();
+      $lid_map = LingotekConfigSet::getLidsToUpdate();
     }
-    lingotek_config_upload_selected($lids);
+    lingotek_config_upload_selected($lid_map);
 }
 
 function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = NULL) {

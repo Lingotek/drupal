@@ -386,23 +386,35 @@ function lingotek_config_action_submit($form, $form_state) {
   }
 }
 
-function lingotek_config_upload_selected($lids) {
-  $unique_set_ids = array();
-  // You need to iterate through this (with multiple db queries) because this function will also assign the item to a new set and create a new set if necessary. With one query to get all set_ids, it might not do that.
-  foreach ($lids as $lid) {
-    $set_id = LingotekConfigSet::getSetId($lid);
-    $unique_set_ids[$set_id] = $set_id;
+function lingotek_config_upload_selected($lid_map = []) {
+  //allows for passing in an array of lids, not as efficient as passing a textgroup-lid map
+  //in some cases
+  if(is_array($lid_map) && isset($lid_map[0]) && !is_array($lid_map[0])){
+    $lids = $lid_map;
+    $query = db_select('locales_source', 'ls');
+    $query->addField('ls', 'textgroup');
+    $query->addField('ls', 'lid');
+    $query->condition('lid', $lids, 'IN');
+    $results = $query->execute();
+    foreach($results as $result){
+      $lid_map = [];
+      $lid_map[$result->textgroup][$result->lid] = $result->lid;
+    }
   }
+  $unique_set_ids = LingotekConfigSet::bulkGetSetId($lid_map);
+  $not_current_lids = !empty($unique_set_ids) ? LingotekConfigSet::getEditedLidsInSets($unique_set_ids) : array();
 
-  $edited_lids = !empty($unique_set_ids) ? LingotekConfigSet::getEditedLidsInSets($unique_set_ids) : array();
-  $not_current_lids = array_merge($lids, $edited_lids);
-
-  if (empty($not_current_lids)) {
+  if (empty($not_current_lids) && empty($lid_map)) {
     drupal_set_message(t('No config items have been edited and need to be uploaded at this time. To translate a config item for the first time, check the corresponding box and upload.'), 'status', FALSE);
     drupal_goto('admin/settings/lingotek/manage/config');
   }
 
-  LingotekConfigSet::markLidsNotCurrent($not_current_lids);
+  foreach($lid_map as $textgroup) {
+    LingotekConfigSet::markLidsNotCurrent($textgroup);
+  }
+  if(!empty($not_current_lids)) {
+    LingotekConfigSet::markLidsNotCurrent($not_current_lids);
+  }
 
   $batch = array(
     'title' => t('Uploading Content To Lingotek'),
