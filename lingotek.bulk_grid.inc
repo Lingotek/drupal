@@ -31,14 +31,17 @@ function lingotek_bulk_grid_form($form, $form_state) {
    * Here we store or retrieve the GET parameters so that the state of the table is maintained when leaving and coming back
    * Also makes it so the state is not lost when performing bulk actions
    */
-  if (count($_GET) == 1 && isset($_SESSION['grid_custom_parameters']) && !empty($_SESSION['grid_custom_parameters'])) {
-    $_SESSION['grid_custom_parameters']['preventloop'] = TRUE;
-    drupal_goto('admin/settings/lingotek/manage/' . $entity_type, array('query' => $_SESSION['grid_custom_parameters']));
+  if (count($_GET) == 1 && isset($_SESSION['grid_custom_parameters'][$entity_type]) && !empty($_SESSION['grid_custom_parameters'][$entity_type])) {
+    $_SESSION['grid_custom_parameters'][$entity_type]['preventloop'] = TRUE;
+    drupal_goto('admin/settings/lingotek/manage/' . $entity_type, array('query' => $_SESSION['grid_custom_parameters'][$entity_type]));
   }
   else {
-    $_SESSION['grid_custom_parameters'] = $_GET;
-    if ($_SESSION['grid_custom_parameters']['q']) {
-      unset($_SESSION['grid_custom_parameters']['q']);
+    if (!isset($_SESSION['grid_custom_parameters'])) {
+      $_SESSION['grid_custom_parameters'] = array();
+    }
+    $_SESSION['grid_custom_parameters'][$entity_type] = $_GET;
+    if ($_SESSION['grid_custom_parameters'][$entity_type]['q']) {
+      unset($_SESSION['grid_custom_parameters'][$entity_type]['q']);
     }
   }
 
@@ -94,7 +97,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   if ((int)($page - 1) * $limit_select > $total_entity_rows) {
     // reset the page to be the last set of results
     $page = 1;
-    $_SESSION['grid_custom_parameters']['page'] = 0;
+    $_SESSION['grid_custom_parameters'][$entity_type]['page'] = 0;
     if (isset($_GET['page'])) {
       $_GET['page'] = 0; // used by PagerDefault class to get page number
     }
