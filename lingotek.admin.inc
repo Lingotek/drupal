@@ -200,7 +200,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   if ($setup_complete) {
-    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => strtolower($entity_type_info['label'])));
+    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the default profile will affect only future content.  Existing content will keep current profile settings.  (To switch the profile for existing content, use the \'Edit translation settings\' action on the Manage tab.)', array('@entity_type' => strtolower($entity_type_info['label'])));
     $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => lingotek_get_tab_id($entity_type)));
   }
 
