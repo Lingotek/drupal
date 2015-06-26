@@ -374,6 +374,10 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
         // TODO: make a better way of detecting if this is a field-collection column!
         if ($column_name == 'value' && isset($delta['revision_id']) && module_exists('field_collection')) {
           $sub_entity = lingotek_entity_load_single('field_collection_item', $delta['value']);
+          // if the field collection is disabled for Lingotek translation, skip it.
+          if ($sub_entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+            continue;
+          }
           $sub_fields = field_info_instances('field_collection_item', $field_name);
           $translatable_sub_fields = array();
 
