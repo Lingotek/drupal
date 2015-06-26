@@ -692,11 +692,11 @@ function lingotek_grid_filter_submit($form, $form_state) {
     $nest = NULL;
     if (strpos($key, '__filter')) {
       $add_key_to_session = TRUE;
-      $nest = 'grid_filters'; //stored in $_SESSION['grid_filters'][$key]
+      $nest = 'grid_filters'; //stored in $_SESSION['grid_filters'][$entity_type][$key]
     }
     elseif (strpos($key, '__custom')) {
       $add_key_to_session = TRUE;
-      $nest = $form_state['entity_type'] . '_custom'; //stored in $_SESSION['grid_custom'][$key]
+      $nest = 'grid_custom'; //stored in $_SESSION['grid_custom'][$entity_type][$key]
     }
     // if we want this key, add it to the session
     if ($add_key_to_session) {
@@ -779,82 +779,83 @@ function lingotek_grid_build_column_checkboxes($form_state) {
   $suffix = '__custom'; // Suffix specified because the filter submit function differentiates based on this tag and puts the keys into the session variable as such
   $entity_type = $form_state['entity_type'];
   $columns = lingotek_grid_define_columns($entity_type); // Allowed columns and defaults for source and target grids are defined here
+  $e_grid_custom = isset($_SESSION['grid_custom'][$entity_type]) ? $_SESSION['grid_custom'][$entity_type] : array();
   $column_elements = array(
     'nid' => array(
       '#type' => 'checkbox',
       '#title' => t('ID'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix] : in_array('nid', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'nid' . $suffix]) ? $e_grid_custom[$prefix . 'nid' . $suffix] : in_array('nid', $columns['defaults']),
     ),
     'content_type' => array(
       '#type' => 'checkbox',
       '#title' => t('Content Type'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'content_type' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'content_type' . $suffix] : in_array('content_type', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'content_type' . $suffix]) ? $e_grid_custom[$prefix . 'content_type' . $suffix] : in_array('content_type', $columns['defaults']),
     ),
     'title' => array(
       '#type' => 'checkbox',
       '#title' => t('Title'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'title' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'title' . $suffix] : in_array('title', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'title' . $suffix]) ? $e_grid_custom[$prefix . 'title' . $suffix] : in_array('title', $columns['defaults']),
     ),
     'description' => array(
       '#type' => 'checkbox',
       '#disabled' => 'true',
       '#title' => t('Description'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'nid' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'description' . $suffix] : in_array('description', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'nid' . $suffix]) ? $e_grid_custom[$prefix . 'description' . $suffix] : in_array('description', $columns['defaults']),
     ),
     'language' => array(
       '#type' => 'checkbox',
       '#title' => t('Source Uploaded'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'language' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'language' . $suffix] : in_array('language', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'language' . $suffix]) ? $e_grid_custom[$prefix . 'language' . $suffix] : in_array('language', $columns['defaults']),
     ),
     'translations' => array(
       '#type' => 'checkbox',
       '#title' => t('Translations'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'translations' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'translations' . $suffix] : in_array('translations', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'translations' . $suffix]) ? $e_grid_custom[$prefix . 'translations' . $suffix] : in_array('translations', $columns['defaults']),
     ),
     'configuration' => array(
       '#type' => 'checkbox',
       '#title' => t('Profile'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'configuration' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'configuration' . $suffix] : in_array('configuration', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'configuration' . $suffix]) ? $e_grid_custom[$prefix . 'configuration' . $suffix] : in_array('configuration', $columns['defaults']),
     ),
     'document_id' => array(
       '#type' => 'checkbox',
       '#title' => t('Doc ID'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'document_id' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'document_id' . $suffix] : in_array('document_id', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'document_id' . $suffix]) ? $e_grid_custom[$prefix . 'document_id' . $suffix] : in_array('document_id', $columns['defaults']),
     ),
     'workflow' => array(
       '#type' => 'checkbox',
       '#title' => t('Workflow'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'workflow' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'workflow' . $suffix] : in_array('workflow', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'workflow' . $suffix]) ? $e_grid_custom[$prefix . 'workflow' . $suffix] : in_array('workflow', $columns['defaults']),
     ),
     'changed' => array(
       '#type' => 'checkbox',
       '#title' => t('Last Modified'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'changed' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'changed' . $suffix] : in_array('changed', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'changed' . $suffix]) ? $e_grid_custom[$prefix . 'changed' . $suffix] : in_array('changed', $columns['defaults']),
     ),
     'last_uploaded' => array(
       '#type' => 'checkbox',
       '#title' => t('Last Uploaded'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'last_uploaded' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'last_uploaded' . $suffix] : in_array('last_uploaded', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'last_uploaded' . $suffix]) ? $e_grid_custom[$prefix . 'last_uploaded' . $suffix] : in_array('last_uploaded', $columns['defaults']),
     ),
     'locale_progress_percent' => array(
       '#type' => 'checkbox',
       '#title' => t('Target Progress Percentage'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'locale_progress_percent' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'locale_progress_percent' . $suffix] : in_array('locale_progress_percent', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'locale_progress_percent' . $suffix]) ? $e_grid_custom[$prefix . 'locale_progress_percent' . $suffix] : in_array('locale_progress_percent', $columns['defaults']),
     ),
     'progress_updated' => array(
       '#type' => 'checkbox',
       '#title' => t('Progress Last Updated'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'progress_updated' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'progress_updated' . $suffix] : in_array('progress_updated', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'progress_updated' . $suffix]) ? $e_grid_custom[$prefix . 'progress_updated' . $suffix] : in_array('progress_updated', $columns['defaults']),
     ),
     'last_downloaded' => array(
       '#type' => 'checkbox',
       '#title' => t('Time Last Downloaded'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'last_downloaded' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'last_downloaded' . $suffix] : in_array('last_downloaded', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'last_downloaded' . $suffix]) ? $e_grid_custom[$prefix . 'last_downloaded' . $suffix] : in_array('last_downloaded', $columns['defaults']),
     ),
     'actions' => array(
       '#type' => 'checkbox',
       '#title' => t('Actions'),
-      '#default_value' => isset($_SESSION[$entity_type . '_custom'][$prefix . 'actions' . $suffix]) ? $_SESSION[$entity_type . '_custom'][$prefix . 'actions' . $suffix] : in_array('actions', $columns['defaults']),
+      '#default_value' => isset($e_grid_custom[$prefix . 'actions' . $suffix]) ? $e_grid_custom[$prefix . 'actions' . $suffix] : in_array('actions', $columns['defaults']),
     ),
   );
   if ($form_state['entity_type'] == 'taxonomy_term') {
@@ -870,51 +871,52 @@ function lingotek_config_build_column_checkboxes($form_state) {
   $prefix = '';
   $suffix = '__custom'; // Suffix specified because the filter submit function differentiates based on this tag and puts the keys into the session variable as such
   $columns = lingotek_config_define_columns(); // Allowed columns and defaults for source and target grids are defined here
+  $c_grid_custom = isset($_SESSION['grid_custom']['config']) ? $_SESSION['grid_custom']['config'] : array();
   $column_elements = array(
     'lid' => array(
       '#type' => 'checkbox',
       '#title' => t('ID'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'lid' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'lid' . $suffix] : in_array('lid', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'lid' . $suffix]) ? $c_grid_custom[$prefix . 'lid' . $suffix] : in_array('lid', $columns['defaults']),
     ),
     'set_name' => array(
       '#type' => 'checkbox',
       '#title' => t('Config Set Name'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'set_name' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'set_name' . $suffix] : in_array('set_name', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'set_name' . $suffix]) ? $c_grid_custom[$prefix . 'set_name' . $suffix] : in_array('set_name', $columns['defaults']),
     ),
     'source' => array(
       '#type' => 'checkbox',
       '#title' => t('Source'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'source' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'source' . $suffix] : in_array('source', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'source' . $suffix]) ? $c_grid_custom[$prefix . 'source' . $suffix] : in_array('source', $columns['defaults']),
     ),
     'source_uploaded' => array(
       '#type' => 'checkbox',
       '#title' => t('Source Uploaded'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'source_uploaded' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'source_uploaded' . $suffix] : in_array('source_uploaded', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'source_uploaded' . $suffix]) ? $c_grid_custom[$prefix . 'source_uploaded' . $suffix] : in_array('source_uploaded', $columns['defaults']),
     ),
     'translations' => array(
       '#type' => 'checkbox',
       '#title' => t('Translations'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'translations' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'translations' . $suffix] : in_array('translations', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'translations' . $suffix]) ? $c_grid_custom[$prefix . 'translations' . $suffix] : in_array('translations', $columns['defaults']),
     ),
     'location' => array(
       '#type' => 'checkbox',
       '#title' => t('Location'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'location' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'location' . $suffix] : in_array('location', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'location' . $suffix]) ? $c_grid_custom[$prefix . 'location' . $suffix] : in_array('location', $columns['defaults']),
     ),
     'context' => array(
       '#type' => 'checkbox',
       '#title' => t('Context'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'context' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'context' . $suffix] : in_array('context', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'context' . $suffix]) ? $c_grid_custom[$prefix . 'context' . $suffix] : in_array('context', $columns['defaults']),
     ),
     'doc_id' => array(
       '#type' => 'checkbox',
       '#title' => t('Document ID'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'doc_id' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'doc_id' . $suffix] : in_array('doc_id', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'doc_id' . $suffix]) ? $c_grid_custom[$prefix . 'doc_id' . $suffix] : in_array('doc_id', $columns['defaults']),
     ),
     'textgroup' => array(
       '#type' => 'checkbox',
       '#title' => t('Textgroup'),
-      '#default_value' => isset($_SESSION['config_custom'][$prefix . 'textgroup' . $suffix]) ? $_SESSION['config_custom'][$prefix . 'textgroup' . $suffix] : in_array('textgroup', $columns['defaults']),
+      '#default_value' => isset($c_grid_custom[$prefix . 'textgroup' . $suffix]) ? $c_grid_custom[$prefix . 'textgroup' . $suffix] : in_array('textgroup', $columns['defaults']),
     ),
   );
   $column_elements = array_intersect_key($column_elements, $columns['columns']); // Reduces the output columns to the defaults specified in 'lingotek_grid_define_columns'
@@ -1193,12 +1195,11 @@ function empty_array_check($array, $entity_type, $message){
  */
 function lingotek_grid_get_columns($grid_name = 'grid') {
   $filters = array();
-
-  if (!isset($_SESSION[$grid_name . '_custom'])) { // If the columns do not exist yet in the session variable we get an error, so reset them here.
+  if (!isset($_SESSION['grid_custom'][$grid_name])) { // If the columns do not exist yet in the session variable we get an error, so reset them here.
     lingotek_grid_reset_columns();
   }
 
-  foreach ($_SESSION[$grid_name . '_custom'] as $key => $value) {
+  foreach ($_SESSION['grid_custom'][$grid_name] as $key => $value) {
     $columns[str_replace('__custom', '', $key)] = $value;
   }
 
@@ -1210,12 +1211,12 @@ function lingotek_grid_get_columns($grid_name = 'grid') {
  */
 function lingotek_grid_reset_columns() {
   $grid_name = $_SESSION['grid_entity_type'];
-  if (isset($_SESSION[$grid_name . '_custom'])) {
-    unset($_SESSION[$grid_name . '_custom']);
+  if (isset($_SESSION['grid_custom'][$grid_name])) {
+    unset($_SESSION['grid_custom'][$grid_name]);
   }
   $source_columns = $grid_name == 'config' ? lingotek_config_define_columns() : lingotek_grid_define_columns($grid_name);
   foreach ($source_columns['columns'] as $column) {
-    $_SESSION[$grid_name . '_custom'][$column . '__custom'] = in_array($column, $source_columns['defaults']);
+    $_SESSION['grid_custom'][$grid_name][$column . '__custom'] = in_array($column, $source_columns['defaults']);
   }
 }
 
