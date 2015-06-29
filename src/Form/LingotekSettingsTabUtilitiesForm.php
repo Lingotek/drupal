@@ -31,7 +31,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
+    
     $form['utilities'] = array(
       '#type' => 'details',
       '#title' => $this->t('Utilities'),

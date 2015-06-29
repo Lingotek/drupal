@@ -23,7 +23,7 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
   protected $auto_upload_disabled;
   protected $auto_download_disabled;
   protected $profile_name_disabled;
-  protected $profile_index;
+  protected $profile_index; 
   protected $profile_usage;
 
   /**

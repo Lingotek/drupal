@@ -21,7 +21,6 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   protected $profiles;
   protected $bundles;
   protected $translatable_bundles;
-  protected $theme;
 
   /**
    * {@inheritdoc}
@@ -35,7 +34,6 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->profiles = $this->L->get('profile');
-    $this->theme = \Drupal::theme()->getActiveTheme()->getName();
 
     // Get the profiles
     $this->retrieveProfileOptions();
@@ -53,6 +51,13 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     
     $form['parent_details']['list']['#type'] = 'container';
     $form['parent_details']['list']['#attributes']['class'][] = 'entity-meta';
+
+    // If user specifies no translatable entities, post this message
+    if (empty($this->translatable_bundles)) {
+      $form['parent_details']['empty_message'] = array(
+        '#markup' => t('There are no translatable content types specified'),
+      );
+    }
     
     // I. Loop through all entities and create a details container for each
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
@@ -90,16 +95,18 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       $form['parent_details']['list'][$entity_key]['content'][$entity_id] = $table;
     }
 
-    $form['parent_details']['note'] = array(
-      '#markup' => t('Note: changing the profile will update all settings for existing nodes except for the project, workflow, vault, and storage method (e.g. node/field)'),
-    );
+    if (!empty($this->translatable_bundles)) {
+      $form['parent_details']['note'] = array(
+        '#markup' => t('Note: changing the profile will update all settings for existing nodes except for the project, workflow, vault, and storage method (e.g. node/field)'),
+      );
 
-    $form['parent_details']['actions']['#type'] = 'actions';
-    $form['parent_details']['actions']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Save'),
-      '#button_type' => 'primary',
-    );
+      $form['parent_details']['actions']['#type'] = 'actions';
+      $form['parent_details']['actions']['submit'] = array(
+        '#type' => 'submit',
+        '#value' => $this->t('Save'),
+        '#button_type' => 'primary',
+      );
+    }
 
     return $form;
   }
