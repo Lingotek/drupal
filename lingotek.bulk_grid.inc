@@ -1165,7 +1165,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = NULL) 
     $selected_ids = $_SESSION['grid_filters'][$entity_type]['filtered_ids'];
     //check lid selection for dirty statuses
     $entity_ids = LingotekSync::getEntityIdsToUpload($entity_type, $selected_ids);
-    empty_array_check($entity_ids, $entity_type, "There are no entities ready for upload for this selection.");
+    empty_array_check($entity_ids, $entity_type, "There are no entities ready for upload for this selection. Note: To upload disassociated content, select it using the checkboxes first.");
   }
   else {
     // Get all lids that are ready to upload
@@ -1954,7 +1954,12 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
   $workflows = $api->listWorkflows();
 
   $table_data = array();
+  $node_based_translations = [];
   foreach ($table_data_raw as $row) {
+    if($row->language !== $language->language){
+      $node_based_translations[] = $row->$entity_id_key;
+    }
+
     $entity_id = $row->{$entity_id_key};
 
     $row->title = lingotek_truncate_grid_text($row->title, 55);
@@ -1997,8 +2002,24 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     if (isset($entity_properties['changed'])) {
       $data['changed'] = $row->changed ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->changed))) : t('Never');
     }
-
     $table_data[$entity_id] = $data;
+  }
+  $entity_type = $entity_properties['type'];
+  if(!empty($node_based_translations)){
+    if($entity_type === 'node') {
+      $query = db_select('node', 'n');
+      $query->addField('n', 'title');
+      $query->addField('n', 'tnid');
+      $query->addField('n', 'nid');
+      $query->condition('n.tnid', $node_based_translations, 'IN');
+      $query->condition('n.language', $language->language);
+      $results = $query->execute();
+      foreach($results as $result) {
+         if(isset($table_data[$result->tnid])){
+           $table_data[$result->tnid]['title'] = l(t($result->title), $entity_properties['type'] . "/$result->nid");
+         }
+      }
+    }
   }
   return $table_data;
 }
