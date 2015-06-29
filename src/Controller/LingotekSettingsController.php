@@ -42,12 +42,12 @@ class LingotekSettingsController extends LingotekControllerBase {
       $this->getLingotekForm('LingotekSettingsTabContentForm'),
       $this->getLingotekForm('LingotekSettingsTabConfigurationForm'),
       $this->getLingotekForm('LingotekSettingsTabProfilesForm'),
-      $this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
+      //$this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
       $this->getLingotekForm('LingotekSettingsTabLoggingForm'),
       $this->getLingotekForm('LingotekSettingsTabUtilitiesForm'),
       
       // All of the following are different iterations of tables I've tried to get working
-      $this->getLingotekForm('LingotekSettingsTabTestForm'),
+      //$this->getLingotekForm('LingotekSettingsTabTestForm'),
       // NegForm and PUlldownForm are patterned after \Drupal\Language\Form\NegotiationConfigureForm
       //$this->getLingotekForm('LingotekSettingsTabTestPulldownForm'),
       //$this->getLingotekForm('LingotekSettingsTabTestNegForm'),

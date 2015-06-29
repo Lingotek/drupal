@@ -54,11 +54,11 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
       $row['profile_name'] = array(
         '#markup' => $this->t(ucwords($profile['name'])),
       );
-      $count = $this->retrieveUsage($profile);
+      $usage = $this->retrieveUsage($profile);
       $row['usage'] = array(
-        '#markup' => $this->t($count . ' content types'),
+        '#markup' => $this->t($usage . ' content types'),
       );
-      $row['profile_actions'] = $this->retrieveActions($profile, $count);
+      $row['profile_actions'] = $this->retrieveActions($profile, $usage);
       $table[$profile['name']] = $row;
 
       $this->profile_index++;
@@ -70,13 +70,13 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     );
 
     $form['config_parent']['table'] = $table;
-    $form['config_parent']['add_profile'] = $this->retrieveAddProfileLink();
+    $form['config_parent']['add_profile'] = $this->retrieveActions();
 
     return $form;
   }
 
   protected function retrieveUsage($profile) {
-    $count = 0;
+    $usage = 0;
     $entity_types = $this->L->get('translate.entity');
     
     // Count how many content types are using this $profile
@@ -85,17 +85,34 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
         $profile_choice = $bundle['profile'];
 
         if ($profile_choice == $profile['id']) {
-          $count++;
+          $usage++;
         }
       }
     }
     
-    return $count;
+    return $usage;
   }
 
-  protected function retrieveActions($profile, $count) {
+  protected function retrieveActions($profile = NULL, $usage = NULL) {
     $edit_link;
+    $url;
+    $title;
 
+    // Assign $url and $title depending on if it's a new profile or not
+    if ($profile) {
+      $title = t('Edit');
+      $url = Url::fromRoute('lingotek.settings_profile', [
+        'profile_choice' => $profile, 
+        'profile_index' => $this->profile_index,
+        'profile_usage' => $usage
+      ]);
+    }
+    else {
+      $title = t('Add New Profile');
+      $url = Url::fromRoute('lingotek.settings_profile');
+    }
+
+    // If it's a disabled profile, no link is provided
     if ($profile['id'] == Lingotek::PROFILE_DISABLED) {
       $edit_link = array(
         '#markup' => $this->t('Not Editable'),
@@ -105,7 +122,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
       $edit_link = array(
         '#type' => 'link',
         '#ajax' => array(
-          'class' => 'use-ajax',
+          'class' => array('use-ajax'),
         ),
         'content' => array(
           '#theme' => 'links',
@@ -113,15 +130,11 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
       );
 
       $edit_link['content']['#links']['profile_form'] = array(
-        'title' => 'Edit',
-        'url' => Url::fromRoute('lingotek.settings_profile', [
-          'profile_choice' => $profile, 
-          'profile_index' => $this->profile_index,
-          'profile_usage' => $count
-        ]),
+        'title' => $title,
+        'url' => $url,
         'attributes' => array(
-          'class' => 'use-ajax',
-          'data-accepts' => 'application/vnd.drupal-modal',
+          'class' => array('use-ajax'),
+          'data-dialog-type' => 'modal',
           'data-dialog-options' => Json::encode(array(
             'width' => 900,
             'height' => 700,
@@ -130,32 +143,6 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
       );
     }
 
-    return $edit_link;
-  }
-
-  protected function retrieveAddProfileLink() {
-    $edit_link = array(
-      '#type' => 'link',
-      '#ajax' => array(
-        'class' => 'use-ajax',
-      ),
-      'content' => array(
-        '#theme' => 'links',
-      ),
-    );
-
-    $edit_link['content']['#links']['profile_form'] = array(
-      'title' => 'Add New Profile',
-      'url' => Url::fromRoute('lingotek.settings_profile'),
-      'attributes' => array(
-        'class' => 'use-ajax',
-        'data-accepts' => 'application/vnd.drupal-modal',
-        'data-dialog-options' => Json::encode(array(
-          'width' => 900,
-          'height' => 700,
-        )),
-      ),
-    );
     return $edit_link;
   }
 
