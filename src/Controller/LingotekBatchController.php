@@ -7,6 +7,7 @@ use Drupal\lingotek\Controller\LingotekControllerBase;
 class LingotekBatchController extends LingotekControllerBase {
 
   public function dispatch($action, $entity_type, $entity_id) {
+    dpm('Go');
     switch ($action) {
       case 'uploadSingle':
         return $this->uploadSingle($entity_type, $entity_id);

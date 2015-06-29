@@ -10,6 +10,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekTranslatableEntity;
 
 /**
  * Implements hook_permission().
@@ -89,7 +90,6 @@ function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $
   $L = $container->get('lingotek');
   $default_profile;
   $options = array();
-  //$all = $container->get();
 
   // Retrieve enity's own profile
   if ($form_id === 'node_article_edit_form') {
@@ -125,14 +125,14 @@ function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $
     $options[$profile['id']] = ucwords($profile['name']);
   }
   
-  $form['translation_management'] = array(
+  $form['lingotek_translation_management'] = array(
     '#type' => 'details',
     '#title' => t('Translation Management'),
     '#description' => t('The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek\'s translation tools and services without ever having to leave the comfort of your Drupal environment.'),
     '#group' => 'advanced',
   );
 
-  $form['translation_management']['translation_profile'] = array(
+  $form['lingotek_translation_management']['lingotek_translation_profile'] = array(
     '#type' => 'select',
     '#title' => t('Translation Profile'),
     '#options' => $options,
@@ -147,7 +147,16 @@ function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $
 }
 
 function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) {
-  $node = $form_state->getFormObject()->getEntity();
+  $form_values = $form_state->getValues();
+  $container = \Drupal::getContainer();
+  $L = $container->get('lingotek');
+  $entity = $form_state->getFormObject()->getEntity();
+  $entity_type = $entity->getEntityTypeId();
+  $lte = \Drupal\lingotek\LingotekTranslatableEntity::load(\Drupal::getContainer(), $entity);
+  $doc_id = $lte->getDocId();
+  $source_status = $lte->getSourceStatus();
+  dpm($doc_id);
+  dpm($source_status);
 }
 
 /**
