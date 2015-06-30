@@ -225,18 +225,10 @@ class LingotekTranslatableEntity {
         ))
         ->execute();
     } else {
-
-      // Set created value to changed if it's a profile
-      if ($key === 'profile') {
-        $createdTimeStamp = $this->entity->getChangedTime();
-      }
-      else {
-        $createdTimeStamp = $this->entity->getCreatedTime();
-      }
       db_update('lingotek_entity_metadata')
         ->fields(array(
           'value' => $value,
-          'created' => $createdTimeStamp,
+          'created' => $this->entity->getCreatedTime(),
           'modified' => $this->entity->getChangedTime(),
         ))
         ->condition('entity_id', $this->entity->id())
@@ -246,6 +238,18 @@ class LingotekTranslatableEntity {
     
     }
     return $this;
+  }
+
+  public function deleteMetadata() {
+    $metadata = $this->getMetadata();
+    
+    foreach($metadata as $key => $value) {
+      db_delete('lingotek_entity_metadata')
+        ->condition('entity_id', $this->entity->id())
+        ->condition('entity_type', $this->entity->getEntityTypeId())
+        ->condition('entity_key', $key, 'LIKE')
+        ->execute();
+    }
   }
 
   public function checkSourceStatus() {

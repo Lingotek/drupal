@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekTranslatableEntity;
+use Drupal\node\Form;
 
 /**
  * Implements hook_permission().
@@ -80,6 +81,9 @@ function lingotek_entity_delete(EntityInterface $entity) {
   if (!($entity instanceof ContentEntityInterface)) {
     return;
   }
+  $container = \Drupal::getContainer();
+  $lte = LingotekTranslatableEntity::load($container, $entity);
+  $lte->deleteMetadata();
 }
 
 /**
@@ -136,11 +140,11 @@ function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $
 function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) {
   $form_values = $form_state->getValues();
   $container = \Drupal::getContainer();
-  $L = $container->get('lingotek');
   $entity = $form_state->getFormObject()->getEntity();
   $lte = LingotekTranslatableEntity::load($container, $entity);
   $lte->setProfile($form_values['lingotek_translation_profile']);
   $lte->setSourceStatus(Lingotek::STATUS_EDITED);
+  drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
 }
 
 /**
