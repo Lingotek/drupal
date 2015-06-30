@@ -645,8 +645,7 @@ function lingotek_batch_update_entity_languages_by_profile_finished($success, $r
     drupal_set_message($removed_msg);
   }
   else {
-    $message = t('Finished with an error.');
-    drupal_set_message($message);
+    drupal_set_message(t('Finished with an error.'));
   }
 }
 
