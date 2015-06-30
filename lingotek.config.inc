@@ -396,8 +396,8 @@ function lingotek_config_upload_selected($lid_map = []) {
     $query->addField('ls', 'lid');
     $query->condition('lid', $lids, 'IN');
     $results = $query->execute();
+    $lid_map = [];
     foreach($results as $result){
-      $lid_map = [];
       $lid_map[$result->textgroup][$result->lid] = $result->lid;
     }
   }
