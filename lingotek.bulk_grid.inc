@@ -2569,7 +2569,22 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'original_language');
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'source_language_%', 'LIKE');
   foreach ($entity_ids as $entity_id) {
-    LingotekSync::setAllTargetStatus($entity_type, $entity_id, LingotekSync::STATUS_UNTRACKED);
+    // find which translations exist on Drupal for the entity
+    $existing_translations = lingotek_get_languages($entity_type, $entity_id);
+    // find which targets have a status within Lingotek
+    $target_locales = LingotekSync::getAllTargetStatusForEntity($entity_type, $entity_id);
+    // for each existing translation, set the target status to untracked
+    foreach ($existing_translations as $language) {
+      $locale = Lingotek::convertDrupal2Lingotek($language);
+      if (isset($target_locales[$locale])) {
+        LingotekSync::setTargetStatus($entity_type, $entity_id, $locale, LingotekSync::STATUS_UNTRACKED);
+        unset($target_locales[$locale]);
+      }
+    }
+    // for each non-existent translation, remove the target status
+    foreach (array_keys($target_locales) as $locale) {
+      LingotekSync::deleteTargetStatus($entity_type, $entity_id, $locale);
+    }
   }
 
   drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity.', 'Translations disassociated for @count entities.'));

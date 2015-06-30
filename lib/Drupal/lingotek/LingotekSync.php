@@ -43,6 +43,30 @@ class LingotekSync {
     return FALSE;
   }
 
+  public static function getAllTargetStatusForEntity($entity_type, $entity_id, $lingotek_locale = NULL) {
+    $dbkey = 'target_sync_status_';
+    $query = db_select('lingotek_entity_metadata', 'l')
+      ->fields('l', array('entity_key', 'value'))
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_id', $entity_id);
+    if ($lingotek_locale !== NULL) {
+      $query->condition('entity_key', $dbkey . $lingotek_locale);
+    }
+    else {
+      $query->condition('entity_key', $dbkey . '%', 'LIKE');
+    }
+    $result = $query->execute()->fetchAll();
+    $targets = array();
+    foreach ($result as $r_obj) {
+      // get the locale of each result
+      $locale = substr($r_obj->entity_key, strlen($dbkey));
+      // assign the status for that locale
+      $targets[$locale] = $r_obj->value;
+    }
+    return $targets;
+
+  }
+
   public static function getTargetStatusOptions() {
     return array(
       'STATUS_CURRENT' => self::STATUS_CURRENT,

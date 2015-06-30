@@ -2066,3 +2066,30 @@ function lingotek_current_xml_format($xml) {
   }
   return TRUE;
 }
+
+/*
+ * Find the languages for a given entity in Drupal (searches node-based and field-based translations)
+ */
+function lingotek_get_languages($entity_type, $entity_id) {
+  $entity = lingotek_entity_load_single($entity_type, $entity_id);
+  $existing_translations = array();
+  $drupal_langcodes = language_list();
+  // check for node-based translations
+  if ($entity_type == 'node') {
+    $target_nodes = translation_node_get_translations($entity_id);
+    foreach ($target_nodes as $langcode => $node_info) {
+      $existing_translations[$langcode] = TRUE;
+    }
+  }
+  // check for field-based translations
+  foreach ($entity as $k => $v) {
+    if (is_array($v) && !empty($v)) {
+      foreach (array_keys($v) as $langcode) {
+        if (!empty($drupal_langcodes[$langcode])) {
+          $existing_translations[$langcode] = TRUE;
+        }
+      }
+    }
+  }
+  return array_keys($existing_translations);
+}
