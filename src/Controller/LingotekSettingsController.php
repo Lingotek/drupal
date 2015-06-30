@@ -42,7 +42,7 @@ class LingotekSettingsController extends LingotekControllerBase {
       $this->getLingotekForm('LingotekSettingsTabContentForm'),
       $this->getLingotekForm('LingotekSettingsTabConfigurationForm'),
       $this->getLingotekForm('LingotekSettingsTabProfilesForm'),
-      //$this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
+      $this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
       $this->getLingotekForm('LingotekSettingsTabLoggingForm'),
       $this->getLingotekForm('LingotekSettingsTabUtilitiesForm'),
       

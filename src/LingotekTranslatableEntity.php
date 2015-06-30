@@ -137,11 +137,11 @@ class LingotekTranslatableEntity {
   }
 
   public function getProfile() {
-    throw new Exception('getProfile not implemented.');
+    return $this->getMetadata('profile');
   }
 
-  public function setProfile() {
-    throw new Exception('setProfile not implemented.');
+  public function setProfile($profile) {
+    return $this->setMetadata('profile', $profile);
   }
 
   public function getSourceStatus() {
@@ -215,22 +215,35 @@ class LingotekTranslatableEntity {
     $metadata = $this->getMetadata();
     if (!isset($metadata[$key])) {
       db_insert('lingotek_entity_metadata')
-              ->fields(array(
-                  'entity_id' => $this->entity->id(),
-                  'entity_type' => $this->entity->getEntityTypeId(),
-                  'entity_key' => $key,
-                  'value' => $value,
-              ))
-              ->execute();
+        ->fields(array(
+          'entity_id' => $this->entity->id(),
+          'entity_type' => $this->entity->getEntityTypeId(),
+          'entity_key' => $key,
+          'value' => $value,
+          'created' => $this->entity->getCreatedTime(),
+          'modified' => $this->entity->getChangedTime(),
+        ))
+        ->execute();
     } else {
+
+      // Set created value to changed if it's a profile
+      if ($key === 'profile') {
+        $createdTimeStamp = $this->entity->getChangedTime();
+      }
+      else {
+        $createdTimeStamp = $this->entity->getCreatedTime();
+      }
       db_update('lingotek_entity_metadata')
-              ->fields(array(
-                  'value' => $value
-              ))
-              ->condition('entity_id', $this->entity->id())
-              ->condition('entity_type', $this->entity->getEntityTypeId())
-              ->condition('entity_key', $key)
-              ->execute();
+        ->fields(array(
+          'value' => $value,
+          'created' => $createdTimeStamp,
+          'modified' => $this->entity->getChangedTime(),
+        ))
+        ->condition('entity_id', $this->entity->id())
+        ->condition('entity_type', $this->entity->getEntityTypeId())
+        ->condition('entity_key', $key)
+        ->execute();
+    
     }
     return $this;
   }
