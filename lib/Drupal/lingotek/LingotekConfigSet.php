@@ -199,21 +199,30 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       if ($open_set_id === FALSE) {
         $open_set_id = self::createSet($textgroup);
       }
+
       $query = db_select('lingotek_config_map', 'lcm');
       $query->addField('lcm', 'set_id');
       $query->addField('lcm', 'lid');
       $query->condition('lid', $lids, "IN");
       $result = $query->execute()->fetchAllAssoc('lid');
+
       $insert = db_insert('lingotek_config_map');
       $insert->fields(['lid','set_id']);
+
+      $count = 0;
       foreach($lids as $lid){
+        if($count === LINGOTEK_CONFIG_SET_SIZE){
+          $open_set_id = self::createSet($textgroup);
+          $count = 0;
+        }
         if(!isset($result[$lid])){
           $insert->values(['lid'=>$lid,'set_id'=>$open_set_id]);
           $set_ids[$open_set_id] = $open_set_id;
         }
         else {
-          $set_ids[$result[0]] = $result[0];
+          $set_ids[$result[$lid]->set_id] = $result[$lid]->set_id;
         }
+        $count++;
       }
       $insert->execute();
     }
