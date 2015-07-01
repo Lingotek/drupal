@@ -104,9 +104,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
   }
 
   $filter_set = FALSE;
-
   if (isset($_SESSION['grid_filters'][$entity_type])) {
     foreach ($_SESSION['grid_filters'][$entity_type] as $key => $value) {
+      if($key === 'filtered_ids' || $key === 'filtered_config_lids') {//these keys are filter metadata
+        continue;
+      }
       if (is_array($value)) {
         $keys = array_keys($value);
         if (count($keys) == 1) {
