@@ -768,8 +768,11 @@ function lingotek_form_node_form_alter(&$form, $form_state, $form_id) {
 
     $message .= '<br>' . t('To make changes to this translation you can go to the !url.', array('!url' => $link));
 
-
-    drupal_set_message($message, 'warning', FALSE);
+    // Make sure the message is written only on initial form load, not on
+    // submission (since form-alter functions may be called multiple times).
+    if (empty($form_state['input'])) {
+      drupal_set_message($message, 'warning', FALSE);
+    }
   }
 }
 
