@@ -154,7 +154,7 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     // Get field info or skip if not found
     $field_info = field_info_field($field_name);
     if (empty($field_info)) {
-      LingotekLog::warning('Field info downloaded from Lingotek, but field not found: @field_name', array('@field_name' => $field_name));
+      LingotekLog::warning('Invalid field downloaded from Lingotek: @field_name.  The field may no longer exist; or if you have upgraded the Lingotek module since you last uploaded the document, the document format may have changed.  You should re-upload @entity_type #@entity_id', array('@field_name' => $field_name, '@entity_type' => $entity_type, '@entity_id' => $id));
       $last_field_name = $field_name;
       continue;
     }
@@ -212,6 +212,15 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     $field_table_names = array('field_revision_' . $field_name, 'field_data_' . $field_name);
     foreach ($field_table_names as $fname) {
       lingotek_save_field_record($fname, $insert_array);
+      // Node-based translations within a field-based translation system by default
+      // should also have the language-neutral fields saved for normalization if
+      // underneath a field collection. This prevents source-language content
+      // from blocking out translated content from being shown.
+      if ($node_based_translation && $entity_type == 'field_collection_item' && $field_language != LANGUAGE_NONE) {
+        $insert_array['language'] = LANGUAGE_NONE;
+        lingotek_save_field_record($fname, $insert_array);
+        $insert_array['language'] = $field_language;
+      }
     }
 
     // After every field insert, reset the caches and reload the entity
@@ -303,6 +312,7 @@ function lingotek_process_field_collection_xml($xml, $entity_type, &$entity, $fi
   $curr_field_data = &$entity->$field_name;
   $default = language_default();
   $default_language = $default->language;
+
   if (isset($curr_field_data[LANGUAGE_NONE][$delta]['value'])) {
     $field_collection_id = $curr_field_data[LANGUAGE_NONE][$delta]['value'];
   }
@@ -316,6 +326,18 @@ function lingotek_process_field_collection_xml($xml, $entity_type, &$entity, $fi
     }
     // If it does not exist and the profile is node-based, create a new FC.
     $field_collection_item = entity_create('field_collection_item', array('field_name' => $field_info['field_name']));
+
+    // Grandfather fields (anything that's an array) from the source field collection
+    $original_entity = lingotek_entity_load_single($entity_type, $entity->tnid);
+    $original_field_collection = lingotek_entity_load_single('field_collection_item', $original_entity->{$field_name}[LANGUAGE_NONE][$delta]['value']);
+    if (!empty($original_field_collection)) {
+      foreach ($original_field_collection as $k => $v) {
+        if (is_array($v)) {
+          $field_collection_item->$k = $v;
+        }
+      }
+    }
+
     $field_collection_item->setHostEntity($entity_type, $entity);
     $field_collection_item->save();
     $field_collection_id = $field_collection_item->item_id;

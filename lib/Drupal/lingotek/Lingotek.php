@@ -234,8 +234,8 @@ class Lingotek {
 
     // standard conversion
     if (!$enabled_check) {
-      // If the code contains a dash then, keep it specific 
-      $exceptions = self::$language_mapping_d2l_exceptions;
+      // If the code contains a dash then, keep it specific
+      $exceptions = variable_get('lingotek_mapping_d2l_exceptions', self::$language_mapping_d2l_exceptions);
       if (array_key_exists($drupal_language_code, $exceptions)) {
         $lingotek_locale = $exceptions[$drupal_language_code];
       }
@@ -281,7 +281,7 @@ class Lingotek {
     $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale)); // standard conversion
     $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
     if (!$enabled_check) {
-      $exceptions = self::$language_mapping_l2d_exceptions;
+      $exceptions = variable_get('lingotek_mapping_l2d_exceptions', self::$language_mapping_l2d_exceptions);
       if (array_key_exists($lingotek_locale, $exceptions)) {
         return $exceptions[$lingotek_locale];
       }

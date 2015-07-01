@@ -379,12 +379,15 @@ function lingotek_source_language_cleanup_batch_worker($entity_type, $entity_id,
 
   $loaded_entity = lingotek_entity_load_single($entity_type, $entity_id);
   $info = entity_get_info($entity_type);
+
   // Default to string 'language' if no language-related entity key is found.
   $language_field = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
+
   if (isset($loaded_entity->$language_field) && $loaded_entity->$language_field != $source_language) {
     $loaded_entity->$language_field = $source_language;
-    $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Ensure that uploading does not occur. Set 1 : Force uploading to occur
+    $loaded_entity->lingotek_upload_override = FALSE; // Set 0 : Prevent upload. Set 1 : Force upload.
     entity_save($entity_type, $loaded_entity);
+
     if (!isset($context['results']['entity_cleanup'])) {
       $context['results']['entity_cleanup'] = 0;
     }
@@ -490,21 +493,25 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
  */
 function lingotek_field_language_data_cleanup_batch_finished($success, $results, $operations) {
   if ($success) {
+    $did_something = FALSE;
     $def_lang = language_default('name');
     if (isset($results['entity_cleanup'])) {
       $num_nodes = (int) $results['entity_cleanup'];
       drupal_set_message(format_plural($num_nodes, t('Converted @count entities from language neutral to @language', array('@count' => $num_nodes, '@language' => $def_lang)), t('Converted @count entities from language neutral to @language', array('@count' => $num_nodes, '@language' => $def_lang))));
+      $did_something = TRUE;
     }
     if (isset($results['url_alias_cleanup'])) {
       $searched = (int) $results['url_alias_cleanup']['searched'];
       $added = (int) $results['url_alias_cleanup']['added'];
       drupal_set_message(format_plural($searched, t('Searched @search_count entity for url aliases, added @add_count in @language.', array('@search_count' => $searched, '@add_count' => $added, '@language' => $def_lang)), t('Searched @search_count entities for url aliases, added @add_count in @language.', array('@search_count' => $searched, '@add_count' => $added, '@language' => $def_lang))));
+      $did_something = TRUE;
     }
     if (isset($results['field_cleanup'])) {
       $num_nodes = (int) $results['field_cleanup'];
       drupal_set_message(format_plural($num_nodes, t('Added language-specific fields for @count entity with language-neutral fields.', array('@count' => $num_nodes)), t('Added language-specific fields for @count entities with language-neutral fields.', array('@count' => $num_nodes))));
+      $did_something = TRUE;
     }
-    else {
+    if (!$did_something) {
       drupal_set_message(t('No requested entities currently require any preparation.'), 'status', FALSE);
     }
   }
@@ -638,8 +645,9 @@ function lingotek_batch_update_entity_languages_by_profile_finished($success, $r
     drupal_set_message($removed_msg);
   }
   else {
+    drupal_set_message(t('Finished with an error.'));
     $message = t('Finished with an error.');
-    drupal_set_message($message);
+    drupal_set_message($message);//xss checks not necessary here. Text only comes from php
   }
 }
 

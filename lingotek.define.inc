@@ -51,7 +51,7 @@ lingotek_define('LINGOTEK_DEV', variable_get('lingotek_dev', FALSE));
  * Defines the path URLs
  */
 define('LINGOTEK_MENU_LANG_BASE_URL', 'admin/config/regional/lingotek');
-define('LINGOTEK_MENU_MAIN_BASE_URL', 'admin/settings/lingotek'); //admin/config/lingotek
+define('LINGOTEK_MENU_MAIN_BASE_URL', 'admin/settings/lingotek');
 define('LINGOTEK_NOTIFY_URL', 'lingotek/notify'); // notification callback URL
 
 /**

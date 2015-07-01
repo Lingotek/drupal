@@ -120,13 +120,8 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   $selector = '.lingotek-content-settings-table.' . $entity_type;
-  $enable_all =  l(t('(set all to automatic)'), '#', array('attributes' => array('onclick' => "lingotek_set_all('" . $selector . "', '0'); return false;")));
-  $enable_all_manual =  l(t('(set all to manual)'), '#', array('attributes' => array('onclick' => "lingotek_set_all('" . $selector . "', '1'); return false;")));
-  $disable_all =  l(t('(disable all)'), '#', array('attributes' => array('onclick' => "lingotek_set_all('" . $selector . "', 'DISABLED'); return false;")));
-
   $title_str = ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?'));
-  $links_str = t('') . ' ' . $enable_all . ' ' . $enable_all_manual . ' ' . $disable_all;
-
+  
   $form['translation_' . $entity_type] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => check_plain($title_str),
@@ -138,10 +133,16 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     ),
     '#submit' => array('lingotek_admin_entity_bundle_profiles_form_submit'),
   );
-
+  $changeAllSelect = 'Set all to: <select id="change-all-profiles" onchange="lingotek_set_all(\''.$selector.'\', this)">';
+  $changeAllSelect .= '<option selected disabled hidden>Select Option...</option>';
+  foreach($profiles_options as $key => $profile_option){
+    $changeAllSelect .= '<option value="' . $key . '">' . $profile_option 
+        . '</option>';
+  }
+  $changeAllSelect .= '<select>';
   $form['translation_' . $entity_type][] = array(
     '#type' => 'item',
-    '#description' => $links_str,
+    '#markup' => $changeAllSelect
   );
 
   $translatable_field_types = lingotek_get_translatable_field_types();
@@ -175,16 +176,16 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $rows[$bundle_name] = lingotek_node_settings_row($entity_type, $bundle, $profiles, $fields, $entity_specifics);
   }
 
-  $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+  $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Fields'));
 
   if ($entity_type == 'node') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Fields'));
   }
   elseif ($entity_type == 'taxonomy_term') {
-    $header = array(t('Content Type'), t('Translation Profile *'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
+    $header = array(t('Content Type'), t('Translation Profile&nbsp;*'), t('Translation Mode'), t('Translation Handling'), t('Fields'));
   }
   elseif ($entity_type == 'field_collection_item') {
-    $header = array(t('Collection Name'), t('Status *'), t('Fields'));
+    $header = array(t('Collection Name'), t('Status&nbsp;*'), t('Fields'));
   }
 
   $variables = array(
@@ -199,7 +200,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
   );
 
   if ($setup_complete) {
-    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the profile will update all settings for existing @entity_types except for the project, workflow, vault, and storage method (e.g. node/field)', array('@entity_type' => strtolower($entity_type_info['label'])));
+    $form['translation_' . $entity_type]['types']['#suffix'] = t('Note: changing the default profile will affect only future content.  Existing content will keep current profile settings.  (To switch the profile for existing content, use the \'Edit translation settings\' action on the Manage tab.)', array('@entity_type' => strtolower($entity_type_info['label'])));
     $form['#action'] = url('admin/settings/lingotek/settings', array('fragment' => lingotek_get_tab_id($entity_type)));
   }
 
@@ -328,17 +329,17 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
   }
 
   if (!empty($missing_fields)) {
-    foreach ($missing_fields as $missing_field) {
+    foreach ($missing_fields as $key => $missing_field) {
       $message = t(ucfirst($missing_field) . ' (Note: field will be created.)');
       $fields[$missing_field . '_field'] = array(
         '#type' => 'checkbox',
         '#title' => check_plain($message),
         '#attributes' => array(
-          'id' => array('edit-form-item-' . $bundle_name . '-seperator-title'),
+          'id' => array('edit-form-item-' . $bundle_name . '-separator-title' . '-' . $key),
           'name' => 'title_swap_' . $bundle_name . '_' . $missing_field,
           'class' => array('field'),
         ),
-        '#id' => 'edit-form-item-' . $bundle_name . '-seperator-title',
+        '#id' => 'edit-form-item-' . $bundle_name . '-separator-title' . '-' . $key,
         '#states' => array(
           'invisible' => array(
             ':input[name="profile_' . $bundle_name . '"]' => array('value' => 'DISABLED'),
@@ -687,13 +688,19 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#type' => 'hidden',
     '#value' => module_exists('i18nviews'),
   );
+  
+  $hidden_i18n_field_value = array(
+    '#id' => 'lingotek_i18n_field_enabled',
+    '#type' => 'hidden',
+    '#value' => module_exists('i18n_field'),
+  );
 
   $options = array(
     'lingotek_translate_config_blocks' => array(t('Blocks'), t('Include translation for all translatable blocks.') . drupal_render($prep_blocks_chbx)),
     'lingotek_translate_config_taxonomies' => array(t('Taxonomy'), t('Include translation for all translatable taxonomy vocabularies and terms.') . drupal_render($prep_taxonomy_chbx)),
     'lingotek_translate_config_menus' => array(t('Menus'), t('Include translation for all menus set to \'Translate and Localize\'.') . drupal_render($prep_menus_chbx)),
     'lingotek_translate_config_views' => array(t('Views'), t('Include translation of all translatable strings within views.  This will not generally include translation of all results generated by each view, which is usually configurable by selecting localizable fields within the view itself.  (Note: You must have the <a href="https://drupal.org/project/i18nviews" target="_blank">i18nviews</a> module enabled in order to use this.)') . drupal_render($hidden_i18nviews_value)),
-    'lingotek_translate_config_fields' => array(t('Field Labels'), t('Include translation of all translatable field labels.  (Note: You must have the <a href="https://drupal.org/project/i18n" target="_blank">i18n_field</a> sub-module enabled in order to use this.)')),
+    'lingotek_translate_config_fields' => array(t('Field Labels'), t('Include translation of all translatable field labels.  (Note: You must have the <a href="https://drupal.org/project/i18n" target="_blank">i18n_field</a> sub-module enabled in order to use this.)') . drupal_render($hidden_i18n_field_value)),
     'lingotek_translate_config_builtins' => array(t('Built-in Interface'), t('Include translation of built-in strings.  (Note: Indexing all of these may take several minutes or longer.)') . drupal_render($fr)),
     'lingotek_translate_config_misc' => array(t('Miscellaneous Strings'), t('Include translation of any other miscellaneous strings found by the Internationalization (i18n) module.')),
   );
@@ -919,7 +926,7 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
   $final_destination = 'admin/settings/lingotek/settings';
   if (  isset($_SESSION['lingotek_setup_path'])
         && is_array($_SESSION['lingotek_setup_path'])
-        && end($_SESSION['lingotek_setup_path']) == 'admin/config/lingotek/additional-translation-settings') {
+        && end($_SESSION['lingotek_setup_path']) == LINGOTEK_MENU_LANG_BASE_URL . '/additional-translation-settings') {
     // Remove the setup path so future checks will not think setup just completed.
     unset($_SESSION['lingotek_setup_path']);
     $final_destination = 'admin/settings/lingotek';
@@ -1695,9 +1702,9 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   // Download
   $form['defaults']['auto_download'] = array(
     '#type' => 'checkbox',
-    '#title' => $download_translations_title,
+    '#title' => $download_translations_title, //xss checks not necessary here. Text only comes from php
     '#default_value' => $form_state['values']['auto_download'],
-    '#description' => $download_translations_desc,
+    '#description' => $download_translations_desc, //xss checks not necessary here. Text only comes from php and relies on <br> tag
     '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
@@ -1894,7 +1901,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       }
 
       $form['defaults']['language_override'][$language->lingotek_locale] = array(
-        '#title' => $language->name . ' (' . $default_language_override_value . ')',
+        '#title' => $language->name . ' (' . $default_language_override_value . ')',//xss checks not necessary here. Text only comes from php
         '#type' => 'fieldset',
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
@@ -1911,7 +1918,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       $auto_download = $stored_profile->isAutoDownload($language->lingotek_locale);
       $form['defaults']['language_override'][$language->lingotek_locale]['auto_download_' . $language->lingotek_locale] = array(
         '#type' => 'checkbox',
-        '#title' => $download_translations_title,
+        '#title' => $download_translations_title, //xss checks not necessary here. Text only comes from php
         '#default_value' => $auto_download,
         '#disabled' => $is_automatic_or_manual_profile,
         '#states' => array(
@@ -2095,7 +2102,7 @@ function lingotek_admin_field_settings_form($form, &$form_state) {
   foreach ($field_types as $type_name => $type_info) {
     $form['field_settings']['field_types']['fld__' . $type_name] = array(
       '#type' => 'checkbox',
-      '#title' => $type_info['label'],
+      '#title' => $type_info['label'], //xss checks not necessary here. Text only comes from php
       '#default_value' => in_array($type_name, $enabled_types),
     );
   }
@@ -2110,7 +2117,7 @@ function lingotek_admin_field_settings_form($form, &$form_state) {
   foreach ($all_column_names as $column_name => $fields) {
     $form['field_settings']['field_column_defaults']['col__' . $column_name] = array(
       '#type' => 'checkbox',
-      '#title' => $column_name . ' (' . implode(', ', $fields) . ')',
+      '#title' => $column_name . ' (' . implode(', ', $fields) . ')',//xss checks not necessary here. Text only comes from php
       '#default_value' => in_array($column_name, $enabled_column_names),
     );
   }
@@ -2371,10 +2378,17 @@ function lingotek_admin_logging_form($form, &$form_state, $show_fieldset = FALSE
     '#default_value' => variable_get('lingotek_trace_log', 0),
   );
 
+  $form['logging']['i18n_string_debug'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('i18n String Logging'),
+    '#description' => t('This appends string context information to each string for debugging purposes. (This should not be enabled on a production web site!)'),
+    '#default_value' => variable_get('i18n_string_debug', 0),
+  );
+
   $form['logging']['lingotek_flush_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never cache'),
-    '#description' => t('Skips caching so you can test easier.  This avoids frequent polling of fresh data from Lingotek.  Only those with Developer permissions will have caching disabled.'),
+    '#description' => t('Skips caching to ensure the module is always using current information. Performance may be slower while caching is disabled, but testing may be easier. This will only affect those with Developer permissions.'),
     '#default_value' => variable_get('lingotek_flush_cache', 0),
   );
 
@@ -2553,7 +2567,6 @@ function lingotek_admin_configuration_view($form_short_id = NULL, $show_fieldset
   $account = LingotekAccount::instance();
 
   $api = LingotekApi::instance();
-  $site = variable_get('site_name', 'Drupal Site');
   $show_advanced = $account->showAdvanced();
 
   //$form_short_id values:  config, logging, utilities, language_switcher

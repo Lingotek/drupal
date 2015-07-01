@@ -84,7 +84,7 @@ class LingotekFunctionalTest extends DrupalWebTestCase {
       'lingotek_pid' => self::LINGOTEK_PASSWORD,
     );
 
-    $this->drupalPost('admin/config/lingotek/account-settings', $form_values, t('Next'));
+    $this->drupalPost(LINGOTEK_MENU_LANG_BASE_URL . '/account-settings', $form_values, t('Next'));
     $this->drupalLogout();
   }
 }

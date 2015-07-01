@@ -40,12 +40,12 @@ Drupal.behaviors.lingotekAdminForm = {
       if($(this).attr('checked')) {
         row.find('td:first-child .form-checkbox').each( function() {
           $(this).attr('checked', true);
-        })
+        });
       } else {
         count = 0;
         row.find('.field.form-checkbox').each( function() {
           count += $(this).attr('checked') ? 1 : 0;
-        })
+        });
         if(count == 0) {
           row.find('td:first-child .form-checkbox').attr('checked',false);
           row.find('.form-select').val('DISABLED');
@@ -58,6 +58,12 @@ Drupal.behaviors.lingotekAdminForm = {
     $('.select-all').change( function () {
       if ($(this).children().first().is(':checked')) {
         $('.field.form-checkbox').removeAttr('disabled').attr('checked',true);
+      }
+      else {
+        $('.field.form-checkbox').attr('checked',false);
+        $('#lingotek_prepare_config_blocks').attr('disabled',true);
+        $('#lingotek_prepare_config_menus').attr('disabled',true);
+        $('#lingotek_prepare_config_taxonomies').attr('disabled',true);
       }
     });
 
@@ -74,6 +80,13 @@ Drupal.behaviors.lingotekAdminForm = {
         $('#lingotek_prepare_config_menus').removeAttr('disabled').attr('checked',true);
       } else {
         $('#lingotek_prepare_config_menus').removeAttr('checked').attr('disabled',true);
+      }
+    });
+    $('#edit-config-lingotek-translate-config-taxonomies').change( function () {
+      if ($('#edit-config-lingotek-translate-config-taxonomies').is(':checked')) {
+        $('#lingotek_prepare_config_taxonomies').removeAttr('disabled').attr('checked',true);
+      } else {
+        $('#lingotek_prepare_config_taxonomies').removeAttr('checked').attr('disabled',true);
       }
     });
 
@@ -96,9 +109,11 @@ Drupal.behaviors.lingotekAdminForm = {
       } else {
         $('#lingotek_prepare_config_menus').attr('disabled',true);
       }
-
       if ($('.form-item-config-lingotek-translate-config-views').parent().siblings().last().children().last().val() != 1) {
         $('#edit-config-lingotek-translate-config-views').attr('disabled',true);
+      }
+      if ($('.form-item-config-lingotek-translate-config-fields').parent().siblings().last().children().last().val() != 1) {
+       $('#edit-config-lingotek-translate-config-fields').attr('disabled',true);
       }
     });
 
@@ -205,12 +220,22 @@ Drupal.behaviors.lingotekAdminForm = {
   }
 };
 
+$(document).ready(function(){
+  $('.description').css('width','auto');
+  $('.description').css('border','0px');
+  $('.description').css('background','transparent');
+  $('.description').css('position','static');
+  $('.description').css('display','block');
+  $('.description').css('padding-left','0');
+  $('.form-type-checkbox').find('.description').css('margin-left','1.5em');
+});
+
 })(jQuery);
 
-function lingotek_set_all(sel, val) {
+function lingotek_set_all(sel, target) {
   fieldset = jQuery(sel);
   jQuery(sel).find('.form-select').each( function() {
-    jQuery(this).val(val);
+    jQuery(this).val(target.value);
     jQuery(this).trigger('change');
   });
 }

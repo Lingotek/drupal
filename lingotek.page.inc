@@ -315,8 +315,6 @@ function lingotek_pm($node) {
     ),
   );
 
-  $sync_status = $node->lingotek['upload_status'];
-
   // node translation support
   if ($node->tnid != 0 && $node->tnid != $node->nid) {
     $output[] = array(
@@ -332,10 +330,16 @@ function lingotek_pm($node) {
     );
     return $output;
   }
-
+  if(!isset($node->lingotek['upload_status'])){
+    $content_push_form = drupal_get_form('lingotek_push_form', $node);
+    $output['content_push'] = array(
+      '#markup' => drupal_render($content_push_form),
+    );
+    return $output;
+  }
   if (lingotek_supported_node($node) && Lingotek::isSupportedLanguage($node->language)) {
 
-    if (($node->lingotek['upload_status'] == LingotekSync::STATUS_EDITED)) {
+    if ($node->lingotek['upload_status'] == LingotekSync::STATUS_EDITED) {
       $content_push_form = drupal_get_form('lingotek_push_form', $node);
       $output['content_push'] = array(
         '#markup' => drupal_render($content_push_form),
@@ -374,7 +378,7 @@ function lingotek_pm($node) {
         $status = $document->getImportStatus();
 
         $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="fa fa-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
-        drupal_set_message(t('Content Import Status:') . ' ' . $message, 'status');
+        drupal_set_message(t('Content Import Status:') . ' ' . $message, 'status');//xss checks not necessary here. Text relies on html, and content is all generated in php
 
         $output['import_status'] = array(
           '#type' => 'fieldset',
@@ -679,7 +683,9 @@ function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale)
  */
 function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
-  $url = drupal_get_normal_path($entity_type . '/' . $entity_id); //assumes url detection
+  $entity = entity_load_single($entity_type, $entity_id);
+  $path = entity_uri($entity_type, $entity);
+  $url = $path['path'];
   $url_language_detection_enabled = TRUE; //TO-DO: detect when it is not enabled, currently it is assumed
 
   if ($drupal_language_code) {

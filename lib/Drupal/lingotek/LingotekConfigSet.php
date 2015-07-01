@@ -192,6 +192,42 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     }
     return $existing_sid;
   }
+  public static function bulkGetSetId($lid_map){
+    $set_ids = [];
+    foreach($lid_map as $textgroup => $lids){
+      $open_set_id = self::getOpenSet($textgroup);
+      if ($open_set_id === FALSE) {
+        $open_set_id = self::createSet($textgroup);
+      }
+
+      $query = db_select('lingotek_config_map', 'lcm');
+      $query->addField('lcm', 'set_id');
+      $query->addField('lcm', 'lid');
+      $query->condition('lid', $lids, "IN");
+      $result = $query->execute()->fetchAllAssoc('lid');
+
+      $insert = db_insert('lingotek_config_map');
+      $insert->fields(['lid','set_id']);
+
+      $count = 0;
+      foreach($lids as $lid){
+        if($count === LINGOTEK_CONFIG_SET_SIZE){
+          $open_set_id = self::createSet($textgroup);
+          $count = 0;
+        }
+        if(!isset($result[$lid])){
+          $insert->values(['lid'=>$lid,'set_id'=>$open_set_id]);
+          $set_ids[$open_set_id] = $open_set_id;
+        }
+        else {
+          $set_ids[$result[$lid]->set_id] = $result[$lid]->set_id;
+        }
+        $count++;
+      }
+      $insert->execute();
+    }
+    return $set_ids;
+  }
 
   protected static function assignSetId($lid) {
     // get the $lid's textgroup
@@ -437,7 +473,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         $response[$r['lid']] = $r['source'];
       }
       else {
-        LingotekLog::warning("Config item @id was not sent to Lingotek for translation because it exceeds the max length of 4096 characters.", array('@id' => $r['lid']));
+        LingotekLog::warning("Config item @id was not sent to Lingotek for translation because it exceeds the max length of @max_length characters.", array('@id' => $r['lid'], '@max_length' => $max_length));
         // Remove it from the set in the config_map table so it doesn't get marked as uploaded or translated.
         self::disassociateSegments($r['lid']);
       }
@@ -480,6 +516,21 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
 
     $lids = self::getLidsFromSets($set_ids);
     return $lids;
+  }
+  
+  public static function getSetIdsByStatus($status, $lids = null) {
+    $query = db_select('lingotek_config_metadata', 'l');
+    if($lids !== null) {
+      $query->join('lingotek_config_map', 'lc', 'l.id = lc.set_id');
+      $query->condition('lc.lid', $lids, 'IN');
+    }
+    $query->fields('l', array('id'));
+    $query->condition('l.config_key', 'target_sync_status_%', 'LIKE');
+    $query->condition('l.value', $status);
+    $query->distinct();
+    $result = $query->execute();
+    $set_ids = $result->fetchCol();
+    return $set_ids;
   }
 
   /**
@@ -910,6 +961,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $query->condition('lcm.lid', $lids, 'IN');
     }
     $query->join('locales_source', 'ls', "lcm.lid = ls.lid");
+    $query->addField('ls', 'textgroup');
     $query->condition('ls.textgroup', $textgroups, 'IN');
 
     $query->join('locales_target', 'lt', "lcm.lid = lt.lid");
@@ -917,11 +969,37 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $or->condition('lcm.current', $current);
     $or->condition('lt.i18n_status', 1);
     $query->condition($or);
-
-    $lids = $query->execute()->fetchCol();
-    return array_unique($lids);
+    
+    $results = $query->execute();
+    $lids = [];
+    foreach($results as $result){
+      $lids[$result->textgroup][$result->lid] = $result->lid; 
+    }
+    return $lids;
   }
-
+  /**
+   * Check a given list for lids that have never been uploaded
+   * @param type $control_list
+   *  The list of lids to search through
+   * @return type
+   */
+  public static function findNeverUploadedLids($control_list = NULL){
+    if($control_list !== NULL && !empty($control_list)){
+        $query = db_select('locales_source','ls');
+        $query->leftJoin('locales_target','lt','ls.lid = lt.lid');
+        $query->isNull("lt.lid");
+        $query->addField('ls', 'lid');
+        $query->addField('ls',"textgroup");
+        $query->condition('ls.lid',$control_list, 'IN');
+        $never_uploaded_lids = $query->execute();
+        $textgroup_lid = [];
+        foreach($never_uploaded_lids as $lid){
+          $textgroup_lid[$lid->textgroup][$lid->lid] = $lid->lid; 
+        }
+        return $textgroup_lid;
+    }
+    return array();
+  }
   /**
    * Delete all target segments for a given set
    *

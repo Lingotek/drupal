@@ -1060,3 +1060,11 @@ function lingotek_update_7608(&$sandbox) {
     return t('Converted all nodes previously assigned to custom profiles to be disabled, and removed related rows that are no longer used.');
   }
 }
+
+/**
+ * Rebuild registry to see LingotekProfile class after upgrade to 7.00
+ */
+function lingotek_update_7700(&$sandbox) {
+  registry_rebuild();
+  return t('Rebuilt registry to include LingotekProfile class for module v7.x-7.00+');
+}

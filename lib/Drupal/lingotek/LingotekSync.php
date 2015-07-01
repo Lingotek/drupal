@@ -20,6 +20,7 @@ class LingotekSync {
   const STATUS_TARGET_LOCALIZE = 'TARGET_LOCALIZE'; // A localization must be made of the source before uploading to Lingotek
   const STATUS_TARGET_EDITED = 'TARGET_EDITED'; // A localized version is ready for uploading to Lingotek
   const STATUS_NON_LINGOTEK = 'NON_LINGOTEK'; // Translations exist but the translation_agent_id != 3 (Not owned by Lingotek)
+  const STATUS_DELETED = 'DELETED'; // Entity was translated but was afterward deleted
 
   const PROFILE_CUSTOM = 'CUSTOM';
   const PROFILE_DISABLED = 'DISABLED';
@@ -41,7 +42,29 @@ class LingotekSync {
     LingotekLog::error('Did not find any local info for Lingotek Doc ID "@id"', array('@id' => $doc_id));
     return FALSE;
   }
-
+  public static function getAllTargetStatusForEntity($entity_type, $entity_id, $lingotek_locale = NULL) {
+    $dbkey = 'target_sync_status_';
+    $query = db_select('lingotek_entity_metadata', 'l')
+      ->fields('l', array('entity_key', 'value'))
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_id', $entity_id);
+    if ($lingotek_locale !== NULL) {
+      $query->condition('entity_key', $dbkey . $lingotek_locale);
+    }
+    else {
+      $query->condition('entity_key', $dbkey . '%', 'LIKE');
+    }
+    $result = $query->execute()->fetchAll();
+    $targets = array();
+    foreach ($result as $r_obj) {
+      // get the locale of each result
+      $locale = substr($r_obj->entity_key, strlen($dbkey));
+      // assign the status for that locale
+      $targets[$locale] = $r_obj->value;
+    }
+    return $targets;
+  }
+  
   public static function getTargetStatusOptions() {
     return array(
       'STATUS_CURRENT' => self::STATUS_CURRENT,
@@ -116,10 +139,29 @@ class LingotekSync {
   }
 
   public static function insertTargetEntriesForAllEntities($lingotek_locale) {
+    //this prevents a target from being added to the same source
+    $locale = strtolower(str_replace("_", "-", $lingotek_locale));
+    $node_source_check = db_select('node', 'n');
+    $node_source_check->addField('n', 'nid');
+    $or = db_or()->condition('n.tnid','0')->where('n.tnid = n.nid');
+    $node_source_check->condition($or);
+    $node_source_check->condition('n.language', $locale);
+
+    $comment_source_check = db_select('comment', 'c');
+    $comment_source_check->addField('c', 'cid');
+    $comment_source_check->condition('c.language', $locale);
+
+    $taxonomy_source_check = db_select('taxonomy_term_data', 't');
+    $taxonomy_source_check->addField('t', 'tid');
+    $taxonomy_source_check->condition('t.language', $locale);
+
     // insert/update a target language for all entities
     $query = db_select('lingotek_entity_metadata', 'meta')
         ->fields('meta', array('entity_id', 'entity_type'))
-        ->condition('meta.entity_key', 'document_id');
+        ->condition('meta.entity_key', 'document_id')
+        ->condition('entity_id', $node_source_check, "NOT IN")
+        ->condition('entity_id', $comment_source_check, "NOT IN")
+        ->condition('entity_id', $taxonomy_source_check, "NOT IN");
     $entities = $query->execute()->fetchAll();
 
     foreach ($entities as $e) {
@@ -650,13 +692,22 @@ class LingotekSync {
     return $nids;
   }
 
-  public static function getEntityIdsToUpload($entity_type) {
+  public static function getEntityIdsToUpload($entity_type, $entity_ids = null) {
     $info = entity_get_info($entity_type);
     $id_key = $info['entity keys']['id'];
     $query = db_select($info['base table'], 'base');
     $query->addField('base', $id_key);
     $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'upload_status\'');
-
+    
+    $query2 = db_select('lingotek_entity_metadata', 'lem');
+    $query2->distinct();
+    $query2->addField('lem', 'entity_id');
+    $query2->condition('entity_key', 'profile');
+    $query2->condition('entity_type', $entity_type);
+    $query2->condition('value', 'DISABLED');
+    
+    $query->condition('upload.entity_id', $query2, 'NOT IN');
+    
     if ($entity_type == 'node') {
       // Exclude any target nodes created using node-based translation.
       $tnid_query = db_or();
@@ -669,7 +720,9 @@ class LingotekSync {
     $or->condition('upload.value', LingotekSync::STATUS_EDITED);
     $or->isNull('upload.value');
     $query->condition($or);
-
+    if($entity_ids !== null){
+      $query->condition('upload.entity_id', $entity_ids, 'IN');
+    }
     $result = $query->execute()->fetchCol();
     return $result;
   }
