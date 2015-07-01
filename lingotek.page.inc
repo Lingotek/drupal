@@ -378,7 +378,7 @@ function lingotek_pm($node) {
         $status = $document->getImportStatus();
 
         $message = ' <i>' . check_plain($status) . '</i> ' . l('<i class="fa fa-refresh"></i> ' . t('Refresh'), '', array('html' => TRUE, 'attributes' => array('class' => 'ltk-icon', 'title' => t('Refresh'), 'onclick' => array('location.reload();return false;'))));
-        drupal_set_message(t('Content Import Status:') . ' ' . $message, 'status');
+        drupal_set_message(t('Content Import Status:') . ' ' . $message, 'status');//xss checks not necessary here. Text relies on html, and content is all generated in php
 
         $output['import_status'] = array(
           '#type' => 'fieldset',

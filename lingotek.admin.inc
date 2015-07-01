@@ -1703,9 +1703,9 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   // Download
   $form['defaults']['auto_download'] = array(
     '#type' => 'checkbox',
-    '#title' => $download_translations_title,
+    '#title' => $download_translations_title, //xss checks not necessary here. Text only comes from php
     '#default_value' => $form_state['values']['auto_download'],
-    '#description' => $download_translations_desc,
+    '#description' => $download_translations_desc, //xss checks not necessary here. Text only comes from php and relies on <br> tag
     '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
   );
 
@@ -1902,7 +1902,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       }
 
       $form['defaults']['language_override'][$language->lingotek_locale] = array(
-        '#title' => $language->name . ' (' . $default_language_override_value . ')',
+        '#title' => $language->name . ' (' . $default_language_override_value . ')',//xss checks not necessary here. Text only comes from php
         '#type' => 'fieldset',
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
@@ -1919,7 +1919,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       $auto_download = $stored_profile->isAutoDownload($language->lingotek_locale);
       $form['defaults']['language_override'][$language->lingotek_locale]['auto_download_' . $language->lingotek_locale] = array(
         '#type' => 'checkbox',
-        '#title' => $download_translations_title,
+        '#title' => $download_translations_title, //xss checks not necessary here. Text only comes from php
         '#default_value' => $auto_download,
         '#disabled' => $is_automatic_or_manual_profile,
         '#states' => array(
@@ -2103,7 +2103,7 @@ function lingotek_admin_field_settings_form($form, &$form_state) {
   foreach ($field_types as $type_name => $type_info) {
     $form['field_settings']['field_types']['fld__' . $type_name] = array(
       '#type' => 'checkbox',
-      '#title' => $type_info['label'],
+      '#title' => $type_info['label'], //xss checks not necessary here. Text only comes from php
       '#default_value' => in_array($type_name, $enabled_types),
     );
   }
@@ -2118,7 +2118,7 @@ function lingotek_admin_field_settings_form($form, &$form_state) {
   foreach ($all_column_names as $column_name => $fields) {
     $form['field_settings']['field_column_defaults']['col__' . $column_name] = array(
       '#type' => 'checkbox',
-      '#title' => $column_name . ' (' . implode(', ', $fields) . ')',
+      '#title' => $column_name . ' (' . implode(', ', $fields) . ')',//xss checks not necessary here. Text only comes from php
       '#default_value' => in_array($column_name, $enabled_column_names),
     );
   }

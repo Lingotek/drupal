@@ -646,6 +646,8 @@ function lingotek_batch_update_entity_languages_by_profile_finished($success, $r
   }
   else {
     drupal_set_message(t('Finished with an error.'));
+    $message = t('Finished with an error.');
+    drupal_set_message($message);//xss checks not necessary here. Text only comes from php
   }
 }
 

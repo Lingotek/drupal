@@ -2543,8 +2543,7 @@ function lingotek_check_for_updates() {
   );
   foreach ($mandatory_updates as $update) {
     if (!variable_get($update, FALSE)) {
-      $update_link = '<a href="' . $base_url . '/update.php">' . t('database updates') . '</a>';
-      drupal_set_message(t('Some !database_updates are required for the Lingotek Translation module.', array('!database_updates' => $update_link)), 'warning');
+      drupal_set_message(t('Some ' . l('database updates', $base_url . '/update.php') . ' are required for the Lingotek Translation module.'));
     }
   }
 }

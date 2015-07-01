@@ -1193,7 +1193,7 @@ function lingotek_grid_upload_edited($entity_type, $comma_separated_ids = NULL) 
 }
 function empty_array_check($array, $entity_type, $message){
   if(empty($array)){
-    drupal_set_message(t($message));
+    drupal_set_message(t(check_plain($message)));
     drupal_goto('admin/settings/lingotek/manage/' . $entity_type);
   }
 }
