@@ -183,9 +183,9 @@ class LingotekTranslatableEntity {
     $metadata = array();
 
     $query = db_select('lingotek_entity_metadata', 'meta')
-            ->fields('meta')
-            ->condition('entity_id', $this->entity->id())
-            ->condition('entity_type', $this->entity->getEntityTypeId());
+      ->fields('meta')
+      ->condition('entity_id', $this->entity->id())
+      ->condition('entity_type', $this->entity->getEntityTypeId());
     if ($key) {
       $query->condition('entity_key', $key);
     }
@@ -292,6 +292,10 @@ class LingotekTranslatableEntity {
       return $doc_id;
     }
     return FALSE;
+  }
+
+  public function delete() {
+    return $this->L->deleteDocument($this->getDocId());  
   }
 
   public function update($doc_id) {

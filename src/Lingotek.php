@@ -27,6 +27,9 @@ class Lingotek implements LingotekInterface {
 
   // Translation Status.
   const STATUS_EDITED = 'EDITED';
+  const STATUS_IMPORTING = 'IMPORTING';
+  const STATUS_NONE = 'NONE';
+  const STATUS_REQUEST = 'REQUEST';
   const STATUS_PENDING = 'PENDING';
   const STATUS_CURRENT = 'CURRENT';
   const STATUS_READY = 'READY';
@@ -121,6 +124,10 @@ class Lingotek implements LingotekInterface {
 
     // TODO: Response code should be 202 on success
     return $response;
+  }
+
+  public function deleteDocument($doc_id) {
+    $response = $this->api->deleteDocument($doc_id);
   }
 
   public function documentImported($doc_id) {
