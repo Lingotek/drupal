@@ -10,6 +10,9 @@ namespace Drupal\lingotek\Form;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
+use Drupal\Component\Serialization\Json;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekLog;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
@@ -128,7 +131,9 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $disassociate_row['disassociate_description'] = array(
       '#markup' => '<H5>' . $this->t('Disassociate All Translations (use with caution)') . '</H5>' . '<p>' . $this->t('Should only be used to change the Lingotek project or TM vault associated with the node’s translation. Option to disassociate node translations on Lingotek’s servers from the copies downloaded to Drupal. Additional translation using Lingotek will require re-uploading the node’s content to restart the translation process.') . '</p>',
     );
-    $disassociate_row['actions']['disassociate_button'] = array(
+    
+    $disassociate_row['actions']['#type'] = 'actions';
+    $disassociate_row['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Disassociate'),
       '#button_type' => 'primary',
@@ -155,6 +160,11 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   public function disassociateAllTranslations() {
     LingotekSync::disassociateAllEntities();
     LingotekSync::disassociateAllSets();
+
+    //Delete the TMS translations if the delete_tms_translations preference is checked.
+    if($this->L->get('preference.delete_tms_translations')) {
+      //TODO: call api deletes on all the enities
+    }
     drupal_set_message($this->t('All translations have been disassociated.'));
   }
 

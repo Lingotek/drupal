@@ -77,6 +77,9 @@ function lingotek_entity_update(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function lingotek_entity_delete(EntityInterface $entity) {
+  $container = \Drupal::getContainer();
+  $L = $container->get('lingotek');
+
   // Only act on content entities.
   if (!($entity instanceof ContentEntityInterface)) {
     return;
@@ -84,6 +87,9 @@ function lingotek_entity_delete(EntityInterface $entity) {
   $container = \Drupal::getContainer();
   $lte = LingotekTranslatableEntity::load($container, $entity);
   // check if the preference to delete tms translations is checked
+
+  $response = $lte->delete();
+  
   // This is crashing deep in the api code
   //$response = $lte->delete();
 
@@ -94,6 +100,7 @@ function lingotek_entity_delete(EntityInterface $entity) {
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  //TODO: see if there's a entity_form_alter()
   $container = \Drupal::getContainer();
   $L = $container->get('lingotek');
   $profiles = $L->get('profile');

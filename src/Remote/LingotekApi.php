@@ -160,7 +160,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getProjects($community_id) {
     try {
-      $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id));
+      $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id, 'limit' => 100));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get projects: ' . $e->getMessage());

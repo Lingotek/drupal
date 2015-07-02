@@ -146,4 +146,18 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     return $edit_link;
   }
 
+  //TODO: Here's a cleaner way for modal links
+  // $disassociate_row['disassociate_button'] = array(
+  //     '#type' => 'link',
+  //     '#title' => t('Disassociate'),
+  //     '#url' => Url::fromRoute('lingotek.settings_profile'),
+  //     '#attributes' => array(
+  //       'class' => array('use-ajax'),
+  //       'data-dialog-type' => 'modal',
+  //       'data-dialog-options' => Json::encode(array(
+  //         'width' => 600,
+  //         'height' => 400,
+  //       )),
+  //     ),
+  //   );
 }
