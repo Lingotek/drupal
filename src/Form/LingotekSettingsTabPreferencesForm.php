@@ -111,11 +111,11 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $this->L->get('preference.language_specific_profiles'),
     );
 
-    $form['prefs']['delete_tms_translations'] = array(
+    $form['prefs']['delete_tms_documents_upon_disassociation'] = array(
       '#type' => 'checkbox',
       '#title' => t('Delete documents from Lingotek TMS when disassociating'),
       '#description' => t('Your documents will remain in your Drupal site but will be deleted from the Lingotek TMS if this option is checked.'),
-      '#default_value' => $this->L->get('preference.delete_tms_translations'),
+      '#default_value' => $this->L->get('preference.delete_tms_documents_upon_disassociation'),
     );
 
     $form['prefs']['advanced_parsing'] = array(
@@ -148,7 +148,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->L->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
     $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->L->set('preference.advanced_parsing', $form_values['advanced_parsing']);
-    $this->L->set('preference.delete_tms_translations', $form_values['delete_tms_translations']);
+    $this->L->set('preference.delete_tms_documents_upon_disassociation', $form_values['delete_tms_documents_upon_disassociation']);
     parent::submitForm($form, $form_state);
   }
 

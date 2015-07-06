@@ -83,8 +83,10 @@ function lingotek_entity_delete(EntityInterface $entity) {
   }
   $container = \Drupal::getContainer();
   $lte = LingotekTranslatableEntity::load($container, $entity);
-  // Delete the TMS document
-  $response = $lte->delete();
+  // Delete the TMS document if it hasn't been disassociated
+  if ($lte->getDocId()) {
+    $response = $lte->delete(); 
+  }
   // Delete the local metadata  
   $lte->deleteMetadata();
 }
