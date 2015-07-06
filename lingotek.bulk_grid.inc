@@ -1134,7 +1134,7 @@ function config_upload_edited($comma_separated_ids, $entity_type) {
       //check lid selection for dirty statuses
       $edited_lid_map = LingotekConfigSet::getLidsToUpdate(0, $selected_lids);
       $never_lid_map = LingotekConfigSet::findNeverUploadedLids($selected_lids);
-      $lid_map = [];
+      $lid_map = array();
       if(!empty($edited_lid_map) && !empty($never_lid_map)){
         foreach($edited_lid_map as $key => $textgroup){
           if(isset($never_lid_map[$key])){
@@ -1956,7 +1956,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
   $workflows = $api->listWorkflows();
 
   $table_data = array();
-  $node_based_translations = [];
+  $node_based_translations = array();
   foreach ($table_data_raw as $row) {
     if($row->language !== $language->language){
       $node_based_translations[] = $row->$entity_id_key;
