@@ -46,13 +46,16 @@ class LingotekHttp implements LingotekHttpInterface {
    * @since 0.1
    */
   public function request($path, $args = array(), $method = 'GET', $use_multipart = FALSE) {
-    $url     = $this->config->get('account.host') . $path;
+    $url = $this->config->get('account.sandbox_host') . $path;
     $request = $this->httpClient->createRequest($method, $url);
     $request->setHeaders($this->headers);
     if ($method == 'POST') {
       $postBody = $request->getBody();
       $postBody->forceMultipartUpload($use_multipart);
       $postBody->replaceFields($args);
+      if (!empty($args)) {
+        $request->setQuery($args);
+      }
     }
     elseif (!empty($args)) {
       $request->setQuery($args);
@@ -91,7 +94,7 @@ class LingotekHttp implements LingotekHttpInterface {
    * send a DELETE request
    */
   public function delete($path, $args = array()) {
-    return $this->request($path, $args, 'DELETE');
+    return $this->request($path, $args, 'POST');
   }
 
   /*

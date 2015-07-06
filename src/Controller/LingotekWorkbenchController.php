@@ -28,7 +28,7 @@ class LingotekWorkbenchController extends LingotekControllerBase {
       $account['access_token'],
       $account['login_id'],
       $acting_login_id,
-      $account['host']
+      $account['sandbox_host']
     );
     return new RedirectResponse(Url::fromUri($link)->toString() );
   }

@@ -85,7 +85,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function deleteDocument($id) {
     try {
-      $response = $this->lingotekClient->delete('/api/document', array('doc_id' => $id));
+      $response = $this->lingotekClient->delete('/api/document' . '/' . $id, array('_method' => 'DELETE'));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to delete document: ' . $e->getMessage());

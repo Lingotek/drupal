@@ -77,22 +77,15 @@ function lingotek_entity_update(EntityInterface $entity) {
  * Implements hook_entity_delete().
  */
 function lingotek_entity_delete(EntityInterface $entity) {
-  $container = \Drupal::getContainer();
-  $L = $container->get('lingotek');
-
   // Only act on content entities.
   if (!($entity instanceof ContentEntityInterface)) {
     return;
   }
   $container = \Drupal::getContainer();
   $lte = LingotekTranslatableEntity::load($container, $entity);
-  // check if the preference to delete tms translations is checked
-
+  // Delete the TMS document
   $response = $lte->delete();
-  
-  // This is crashing deep in the api code
-  //$response = $lte->delete();
-
+  // Delete the local metadata  
   $lte->deleteMetadata();
 }
 

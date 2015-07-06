@@ -28,7 +28,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     // build the redirecting link for authentication to Lingotek
-    $host = $this->L->get('account.host');
+    $host = $this->L->get('account.sandbox_host');
     $auth_path = $this->L->get('account.authorize_path');
     $id = $this->L->get('account.default_client_id');
     $return_uri = new Url('lingotek.setup_account', array('success' => 'true'), array('absolute' => TRUE));
