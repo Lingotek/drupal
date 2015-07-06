@@ -193,7 +193,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     return $existing_sid;
   }
   public static function bulkGetSetId($lid_map){
-    $set_ids = [];
+    $set_ids = array();
     foreach($lid_map as $textgroup => $lids){
       $open_set_id = self::getOpenSet($textgroup);
       if ($open_set_id === FALSE) {
@@ -207,7 +207,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
       $result = $query->execute()->fetchAllAssoc('lid');
 
       $insert = db_insert('lingotek_config_map');
-      $insert->fields(['lid','set_id']);
+      $insert->fields(array('lid','set_id'));
 
       $count = 0;
       foreach($lids as $lid){
@@ -216,7 +216,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
           $count = 0;
         }
         if(!isset($result[$lid])){
-          $insert->values(['lid'=>$lid,'set_id'=>$open_set_id]);
+          $insert->values(array('lid'=>$lid,'set_id'=>$open_set_id));
           $set_ids[$open_set_id] = $open_set_id;
         }
         else {
@@ -971,7 +971,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $query->condition($or);
     
     $results = $query->execute();
-    $lids = [];
+    $lids = array();
     foreach($results as $result){
       $lids[$result->textgroup][$result->lid] = $result->lid; 
     }
@@ -992,7 +992,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         $query->addField('ls',"textgroup");
         $query->condition('ls.lid',$control_list, 'IN');
         $never_uploaded_lids = $query->execute();
-        $textgroup_lid = [];
+        $textgroup_lid = array();
         foreach($never_uploaded_lids as $lid){
           $textgroup_lid[$lid->textgroup][$lid->lid] = $lid->lid; 
         }

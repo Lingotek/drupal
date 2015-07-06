@@ -386,7 +386,7 @@ function lingotek_config_action_submit($form, $form_state) {
   }
 }
 
-function lingotek_config_upload_selected($lid_map = []) {
+function lingotek_config_upload_selected($lid_map) {
   //allows for passing in an array of lids, not as efficient as passing a textgroup-lid map
   //in some cases
   if(is_array($lid_map) && isset($lid_map[0]) && !is_array($lid_map[0])){
@@ -396,7 +396,7 @@ function lingotek_config_upload_selected($lid_map = []) {
     $query->addField('ls', 'lid');
     $query->condition('lid', $lids, 'IN');
     $results = $query->execute();
-    $lid_map = [];
+    $lid_map = array();
     foreach($results as $result){
       $lid_map[$result->textgroup][$result->lid] = $result->lid;
     }
