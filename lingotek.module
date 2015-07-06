@@ -150,8 +150,24 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
   $entity = $form_state->getFormObject()->getEntity();
   $lte = LingotekTranslatableEntity::load($container, $entity);
   $lte->setProfile($form_values['lingotek_translation_profile']);
-  $doc_id = $lte->upload();
-  drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
+  $profiles = $L->get('profile');
+  $lte_profile_id = $lte->getProfile();
+  $lte_auto_upload;
+
+  foreach ($profiles as $profile_id => $profile) {
+    if ($profile['id'] == $lte_profile_id) {
+      $lte_auto_upload = $profile['auto_upload'];
+      break;
+    }
+  }
+
+  if ($lte_auto_upload) {
+    $doc_id = $lte->upload();
+    drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
+  }
+  else {
+    $lte->setSourceStatus(Lingotek::STATUS_EDITED);
+  }
 }
 
 /**
