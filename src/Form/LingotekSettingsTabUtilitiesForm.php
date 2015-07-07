@@ -11,8 +11,6 @@ use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekLog;
 use Drupal\lingotek\Form\LingotekConfigFormBase;

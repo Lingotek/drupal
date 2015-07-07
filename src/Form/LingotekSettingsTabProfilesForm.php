@@ -7,14 +7,16 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\OpenModalDialogCommand;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\String;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekLocale;
+use Drupal\lingotek\LingotekLog;
+use Drupal\lingotek\LingotekSync;
+use Drupal\lingotek\LingotekTranslatableEntity;
 
 /**
  * Configure Lingotek
@@ -121,18 +123,12 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     else {
       $edit_link = array(
         '#type' => 'link',
+        '#title' => $title,
+        '#url' => $url,
         '#ajax' => array(
           'class' => array('use-ajax'),
         ),
-        'content' => array(
-          '#theme' => 'links',
-        ),
-      );
-
-      $edit_link['content']['#links']['profile_form'] = array(
-        'title' => $title,
-        'url' => $url,
-        'attributes' => array(
+        '#attributes' => array(
           'class' => array('use-ajax'),
           'data-dialog-type' => 'modal',
           'data-dialog-options' => Json::encode(array(
@@ -146,18 +142,4 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     return $edit_link;
   }
 
-  //TODO: Here's a cleaner way for modal links
-  // $disassociate_row['disassociate_button'] = array(
-  //     '#type' => 'link',
-  //     '#title' => t('Disassociate'),
-  //     '#url' => Url::fromRoute('lingotek.settings_profile'),
-  //     '#attributes' => array(
-  //       'class' => array('use-ajax'),
-  //       'data-dialog-type' => 'modal',
-  //       'data-dialog-options' => Json::encode(array(
-  //         'width' => 600,
-  //         'height' => 400,
-  //       )),
-  //     ),
-  //   );
 }
