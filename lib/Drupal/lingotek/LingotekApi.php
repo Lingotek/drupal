@@ -88,7 +88,7 @@ class LingotekApi {
       );
       $parameters['documentName'] = $translatable_object->getDocumentName();
       $parameters['documentDesc'] = $translatable_object->getDescription();
-      $parameters['content'] = $translatable_object->documentLingotekXML();
+      $parameters['content'] = $this->check_url_alias_translation($translatable_object, $translatable_object->documentLingotekXML());
       $parameters['url'] = $translatable_object->getUrl();
       $parameters['workflowId'] = $translatable_object->getWorkflowId();
 
@@ -165,6 +165,27 @@ class LingotekApi {
   }
 
   /**
+   * Checks if this content needs to have it's url translated, strips it out if it doesn't. 
+   * Best place for this function as the function that puts the url alias into the content
+   * is used in other places.
+   * @param type $translatable_object
+   * @param string $content
+   * @return string
+   */
+  private function check_url_alias_translation($translatable_object, $content) {
+    if($translatable_object->lingotek['url_alias_translation'] != 1){
+      $openTagPosition = strpos($content, '<url_alias>');
+      if($openTagPosition !== FALSE){
+        $closeTagPosition = strpos($content, '</url_alias>') + strlen('</url_alias>');
+        $firstChunk = substr($content, 0, $openTagPosition);
+        $lastChunk = substr($content, $closeTagPosition);
+        $content = $firstChunk . $lastChunk; 
+      }
+    }
+    return $content;
+  }
+
+  /**
    * Updates the content of an existing Lingotek document with the current object contents.
    *
    * @param stdClass $translatable_object
@@ -178,7 +199,7 @@ class LingotekApi {
     $parameters['documentId'] = $translatable_object->getMetadataValue('document_id');
     $parameters['documentName'] = $translatable_object->getDocumentName();
     $parameters['documentDesc'] = $translatable_object->getDescription();
-    $parameters['content'] = $translatable_object->documentLingotekXML();
+    $parameters['content'] = $this->check_url_alias_translation($translatable_object, $translatable_object->documentLingotekXML());
     $parameters['url'] = $translatable_object->getUrl();
     $parameters['format'] = $this->xmlFormat();
 
