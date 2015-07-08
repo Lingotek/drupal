@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekTranslatableEntity;
+use Drupal\lingotek\LingotekLocale;
 use Drupal\node\Form;
 
 /**
@@ -152,8 +153,10 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
   $lte->setProfile($form_values['lingotek_translation_profile']);
   $profiles = $L->get('profile');
   $lte_profile_id = $lte->getProfile();
-  $lte_auto_upload;
-
+  $lte_status = $lte->getSourceStatus();
+  $entity_has_changed = $lte->isEntityChanged();
+ 
+  // Find if the entity has auto-upload enabled
   foreach ($profiles as $profile_id => $profile) {
     if ($profile['id'] == $lte_profile_id) {
       $lte_auto_upload = $profile['auto_upload'];
@@ -162,12 +165,59 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
   }
 
   if ($lte_auto_upload) {
+    lingotek_upload_source($lte, $lte_status, $entity_has_changed, $entity);
+    lingotek_upload_targets($lte, $entity);
+    lingotek_download_translations($lte, $entity);
+  }
+  else{
+    $lte->setSourceStatus(Lingotek::STATUS_EDITED);
+  }
+}
+
+function lingotek_upload_source($lte, $lte_status, $entity_has_changed, $entity) {
+  // New entity with auto-upload
+  if ($lte_status == NULL) {
     $doc_id = $lte->upload();
     drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
   }
-  else {
-    $lte->setSourceStatus(Lingotek::STATUS_EDITED);
+  // Updated entity with auto-upload
+  elseif ($entity_has_changed) {
+    $doc_id = $lte->upload();
+    drupal_set_message(t('<em>@node_title</em> updated and sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
   }
+}
+
+function lingotek_upload_targets($lte, $entity) {
+  $target_languages = \Drupal::languageManager()->getLanguages();
+  $entity_langcode = $entity->language()->getId();
+
+  // TODO: I'll have to do some blocking code here, so it doesn't try to upload targets before the source is done uploading
+  usleep(10000000);
+  if ($lte->checkSourceStatus()) {
+    foreach($target_languages as $langcode => $language) {
+      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+      if ($langcode != $entity_langcode) {
+        $response = $lte->addTarget($locale);
+      }
+    }
+  }
+}
+
+function lingotek_download_translations($lte, $entity) {
+  $target_languages = \Drupal::languageManager()->getLanguages();
+  $entity_langcode = $entity->language()->getId();
+
+  usleep(20000000);
+  foreach($target_languages as $langcode => $language) {
+    if ($langcode != $entity_langcode) {
+      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+      if ($lte->checkTargetStatus($locale) == Lingotek::STATUS_READY) {
+        $lte->download($locale);
+      }
+    }
+  }
+
+  drupal_set_message(t('<em>@node_title</em> downloaded from Lingotek successfully.', array('@node_title' => $entity->getTitle())));
 }
 
 /**

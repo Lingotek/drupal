@@ -96,10 +96,6 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveActions($profile = NULL, $usage = NULL) {
-    $edit_link;
-    $url;
-    $title;
-
     // Assign $url and $title depending on if it's a new profile or not
     if ($profile) {
       $title = t('Edit');
@@ -132,7 +128,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
           'class' => array('use-ajax'),
           'data-dialog-type' => 'modal',
           'data-dialog-options' => Json::encode(array(
-            'width' => 900,
+            'width' => 861,
             'height' => 700,
           )),
         ),

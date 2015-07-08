@@ -136,6 +136,20 @@ class LingotekTranslatableEntity {
     return $this;
   }
 
+  public function isEntityChanged() {
+    $source_data = json_encode($this->getSourceData());
+    $hash = md5($source_data);
+    $old_hash = $this->getHash();
+
+    if (!$old_hash || strcmp($hash, $old_hash)){
+      $this->setHash($hash);
+      
+      return true;
+    }
+
+    return false;
+  }
+
   public function getProfile() {
     return $this->getMetadata('profile');
   }
@@ -167,6 +181,14 @@ class LingotekTranslatableEntity {
   public function setDocId($id) {
     return $this->setMetadata('document_id', $id);
   }
+  public function getHash() {
+    return $this->getMetadata('hash');
+  }
+
+  public function setHash($hash) {
+    return $this->setMetadata('hash', $hash);
+  }
+
 
   /**
    * Gets a Lingotek metadata value for the given key.
