@@ -51,7 +51,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function addDocument($args) {
     try {
-      $response = $this->lingotekClient->post('/api/document', $args, TRUE);
+      $response = $this->lingotekClient->post('/api/document', $args, NULL, TRUE);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add document: ' . $e->getMessage());
@@ -68,16 +68,13 @@ class LingotekApi implements LingotekApiInterface {
 
   public function patchDocument($id, $args) {
     try {
-      $response = $this->lingotekClient->patch('/api/document', $args, TRUE);
+      $response = $this->lingotekClient->patch('/api/document' . '/' . $id, $args, array('_method' => 'PATCH'),TRUE);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
     }
     if ($response->getStatusCode() == '202') {
-      $data = $response->json();
-      if (!empty($data['properties']['id'])) {
-        return $data['properties']['id'];
-      }
+      return TRUE;
     }
     // TODO: log warning
     return FALSE;

@@ -45,7 +45,7 @@ class LingotekHttp implements LingotekHttpInterface {
    *
    * @since 0.1
    */
-  public function request($path, $args = array(), $method = 'GET', $use_multipart = FALSE) {
+  public function request($path, $args = array(), $params = array(), $method = 'GET', $use_multipart = FALSE) {
     $url = $this->config->get('account.sandbox_host') . $path;
     $request = $this->httpClient->createRequest($method, $url);
     $request->setHeaders($this->headers);
@@ -53,12 +53,9 @@ class LingotekHttp implements LingotekHttpInterface {
       $postBody = $request->getBody();
       $postBody->forceMultipartUpload($use_multipart);
       $postBody->replaceFields($args);
-      if (!empty($args)) {
-        $request->setQuery($args);
-      }
     }
-    elseif (!empty($args)) {
-      $request->setQuery($args);
+    if (!empty($params)) {
+      $request->setQuery($params);
     }
     try {
       $response = $this->httpClient->send($request);
@@ -81,9 +78,9 @@ class LingotekHttp implements LingotekHttpInterface {
   /*
    * send a POST request
    */
-  public function post($path, $args = array(), $use_multipart = FALSE) {
+  public function post($path, $args = array(), $params = array(), $use_multipart = FALSE) {
     try {
-      $response = $this->request($path, $args, 'POST', $use_multipart);
+      $response = $this->request($path, $args, $params, 'POST', $use_multipart);
     } catch (Exception $e) {
       throw $e;
     }
@@ -93,15 +90,15 @@ class LingotekHttp implements LingotekHttpInterface {
   /*
    * send a DELETE request
    */
-  public function delete($path, $args = array()) {
-    return $this->request($path, $args, 'POST');
+  public function delete($path, $params = array()) {
+    return $this->request($path, NULL, $params, 'POST');
   }
 
   /*
    * send a PATCH request
    */
-  public function patch($path, $args = array()) {
-    return $this->request($path, $args, 'PATCH');
+  public function patch($path, $args = array(), $params = array(), $use_multipart = FALSE) {
+    return $this->request($path, $args, $params,'POST', $use_multipart);
   }
 
   public function getCurrentToken() {

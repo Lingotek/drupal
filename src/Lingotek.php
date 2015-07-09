@@ -126,8 +126,20 @@ class Lingotek implements LingotekInterface {
     return $response;
   }
 
+  public function updateDocument($doc_id, $content) {
+    $args = array('content' => $content);
+    $response = $this->api->patchDocument($doc_id, $args);
+    
+    return $response;
+  }
+
   public function deleteDocument($doc_id) {
     $response = $this->api->deleteDocument($doc_id);
+
+    if ($response->getStatusCode() == '204') {
+      return TRUE;
+    }
+    return FALSE;
   }
 
   public function documentImported($doc_id) {

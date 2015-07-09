@@ -317,11 +317,19 @@ class LingotekTranslatableEntity {
   }
 
   public function delete() {
-    return $this->L->deleteDocument($this->getDocId());  
+    if($this->L->deleteDocument($this->getDocId())) {
+      return TRUE;
+    }  
+    return FALSE;
   }
 
-  public function update($doc_id) {
-    //TO-DO: PATCH /document
+  public function update() {
+    $source_data = json_encode($this->getSourceData());
+    if ($this->L->updateDocument($this->getDocId(), $source_data)){
+      $this->setSourceStatus(Lingotek::STATUS_PENDING);
+      return TRUE;
+    }
+    return FALSE;
   }
 
   public function download($locale) {
