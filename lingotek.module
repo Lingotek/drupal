@@ -1260,7 +1260,7 @@ function lingotek_node_view($node, $view_mode) {
   $uploaded_to_lingotek = !empty($source_node->lingotek['document_id']);
   $is_target = !empty($node->lingotek['upload_status']) && $node->lingotek['upload_status'] == 'TARGET';
 
-  if ($can_translate && $uploaded_to_lingotek || $is_target) {
+  if ($can_translate && ($uploaded_to_lingotek || $is_target)) {
     global $language;
     $node->content['lingotek_link']['#markup'] = lingotek_workbench_icon('node', $source_node->nid, Lingotek::convertDrupal2Lingotek($language->language));
   }
