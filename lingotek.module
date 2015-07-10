@@ -157,6 +157,7 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
   $entity_has_changed = $lte->isEntityChanged();
  
   // Find if the entity has auto-upload enabled
+  // TODO: Use the LingotekProfile class to find auto-download property
   foreach ($profiles as $profile_id => $profile) {
     if ($profile['id'] == $lte_profile_id) {
       $lte_auto_upload = $profile['auto_upload'];

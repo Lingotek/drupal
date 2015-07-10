@@ -71,8 +71,8 @@ class LingotekHttp implements LingotekHttpInterface {
   /*
    * send a GET request
    */
-  public function get($path, $args = array()) {
-    return $this->request($path, $args, 'GET');
+  public function get($path, $args = array(), $params = array(), $use_multipart = FALSE) {
+    return $this->request($path, $args, $params, 'GET', $use_multipart);
   }
 
   /*

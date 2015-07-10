@@ -125,6 +125,18 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
       '#submit' => array('::refreshResources'),
     );
 
+    // Update Callback URL row
+    $update_callback_url_row = array();
+    $update_callback_url_row['update_description'] = array(
+      '#markup' => '<H5>' . $this->t('Refresh Project, Workflow, and Vault Information') . '</H5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>',
+    );
+    $update_callback_url_row['actions']['update_url'] = array(
+      '#type' => 'submit',
+      '#value' => t('Update URL'),
+      '#button_type' => 'primary',
+      '#submit' => array('::updateCallbackUrl'),
+    );
+
     // Disassociate All Translations row
     $disassociate_row = array();
     $disassociate_row['disassociate_description'] = array(
@@ -140,6 +152,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     );
 
     $lingotek_table['api_refresh'] = $api_refresh_row;
+    $lingotek_table['update_url'] = $update_callback_url_row;
     $lingotek_table['disassociate'] = $disassociate_row;
     
     $form['utilities']['utilities_title'] = array(
@@ -169,6 +182,10 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     LingotekSync::disassociateAllEntities();
     LingotekSync::disassociateAllSets();
     drupal_set_message($this->t('All translations have been disassociated.'));
+  }
+
+  public function updateCallbackUrl() {
+    
   }
 
   public function runSelectedUtilities(array &$form, FormStateInterface $form_state) {

@@ -29,15 +29,11 @@ class LingotekNotificationController extends LingotekControllerBase {
 
       case 'project': // all translations for all documents have been completed for the project
       //ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&progress=100&type=project
-      //break;
-      default: //ignore
-        $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
-        $messages[] = "Not implemented.";
         break;
-
+      
       case 'document':
 
-      break;
+        break;
 
       case 'document_uploaded': // a document has uploaded and imported successfully for document_id
         $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
@@ -65,15 +61,20 @@ class LingotekNotificationController extends LingotekControllerBase {
 
       case 'phase':
 
-      break;
+        break;
+
+      default: //ignore
+        $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
+        $messages[] = "Not implemented.";
+        break;
     }
 
     $response = array(
-        'service' => 'notify',
-        'method' => $request_method,
-        'params' => $params,
-        'result' => $result,
-        'messages' => $messages
+      'service' => 'notify',
+      'method' => $request_method,
+      'params' => $params,
+      'result' => $result,
+      'messages' => $messages
     );
 
     return JsonResponse::create($response, $http_status_code);
