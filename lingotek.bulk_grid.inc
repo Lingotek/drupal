@@ -178,6 +178,9 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $form['delete'] = array(
     '#markup' => l(t('Delete selected content'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/delete/' . $entity_type, array('attributes' => array('id' => 'delete-link', 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-small', 'ltk-hidden-modal-trigger')))),
   );
+  $form['delete_translations'] = array(
+    '#markup' => l(t('Delete local translations'), LINGOTEK_MENU_MAIN_BASE_URL . '/manage/delete-translations/' . $entity_type, array('attributes' => array('id' => 'delete-translations-link', 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-small', 'ltk-hidden-modal-trigger')))),
+  );
   $form['pop_up_link'] = array(
     '#markup' => l(t('Hidden pop-up'), '', array('attributes' => array('id' => 'popup-link', 'class' => array('ctools-use-modal', 'ctools-modal-lingotek-large', 'ltk-hidden-modal-trigger')))),
   );
@@ -372,6 +375,7 @@ function lingotek_grid_action_options($entity_type) {
 
   }
   else {
+    $action_options['delete_translations'] = t('Delete local translations');
     $action_options['edit'] = t('Edit translation settings');
 
     $api = LingotekApi::instance();
@@ -759,7 +763,7 @@ function lingotek_grid_action_submit($form, $form_state) {
         $target_locales = ($locale == 'all') ? lingotek_get_target_locales() : array($locale);
         lingotek_grid_download_selected($entity_type, $entity_ids, $target_locales);
       }
-      elseif ($action == 'delete' || $action == 'reset') {
+      elseif ($action == 'delete' || $action == 'reset' || $action == 'delete-translations') {
         // ajax ctools modal employed (see lingotek_bulk_grid_form() and lingotek.bulk_grid.js)
       }
       elseif ($action == 'edit') { // If editing node settings
@@ -2420,8 +2424,8 @@ function lingotek_entity_delete_form($form, &$form_state, $nids = array(), $coll
   $form['confirm'] = array(
     '#type' => 'fieldset',
     '#prefix' => format_plural(count($entity_ids), '', '<div class="messages warning">' . t('This action will apply to @count entities.') . '</div>'),
-    '#title' => t('Are you sure you want to delete these entities?'),
-    '#description' => filter_xss($content_details_string),
+    '#title' => $entity_type == 'config' ? t('Are you sure you want to delete these translations?') : t('Are you sure you want to delete these entities?'),
+    '#description' => $entity_type == 'config' ? '<br/>'.filter_xss($content_details_string) : filter_xss($content_details_string),
     '#suffix' => '<i>' . t("Note: this action cannot be undone.") . '</i>',
     '#collapsible' => $collapse_fieldset,
     '#collapsed' => $collapse_fieldset,
@@ -2432,6 +2436,49 @@ function lingotek_entity_delete_form($form, &$form_state, $nids = array(), $coll
   $form['confirm']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Delete'),
+    '#submit' => array($submit_function),
+  );
+
+  $form['entity_ids'] = array(
+    '#type' => 'hidden',
+    '#value' => json_encode($entity_ids),
+  );
+
+  return $form;
+}
+
+/**
+ * Form constructor for the translations delete.
+ */
+function lingotek_entity_delete_translations_form($form, &$form_state, $nids = array(), $collapse_fieldset = TRUE) {
+  if (isset($form_state['entity_ids'])) {
+    $entity_ids = $form_state['entity_ids'];
+    $collapse_fieldset = FALSE;
+  }
+
+  $form = array();
+  if (!is_array($entity_ids)) {
+    $entity_ids = array($entity_ids);
+  }
+  $entity_type = $form_state['entity_type'];
+
+  $content_details_string = $entity_type . ' ' . t("entity ids") . ': ' . implode(", ", $entity_ids) . "<br/>";
+
+  $form['confirm'] = array(
+    '#type' => 'fieldset',
+    '#prefix' => format_plural(count($entity_ids), '', '<div class="messages warning">' . t('This action will apply to @count entities.') . '</div>'),
+    '#title' => t('Are you sure you want to delete these translations?'),
+    '#description' => '<br/>'.filter_xss($content_details_string),
+    '#suffix' => '<i>' . t("Note: this action cannot be undone.") . '</i>',
+    '#collapsible' => $collapse_fieldset,
+    '#collapsed' => $collapse_fieldset,
+  );
+
+  $submit_function = 'lingotek_entity_delete_translations_form_submit';
+
+  $form['confirm']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete Translations'),
     '#submit' => array($submit_function),
   );
 
@@ -2467,6 +2514,45 @@ function lingotek_entity_delete_form_submit($form, &$form_state) {
     drupal_set_message(format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     $form_state['executed'] = TRUE;
   }
+  $form_state['redirect'] = LINGOTEK_MENU_MAIN_BASE_URL . '/manage';
+  return lingotek_grid_filter_submit($form, $form_state);
+}
+
+/**
+ * Submit handler for the lingotek_entity_delete_translations form.
+ */
+function lingotek_entity_delete_translations_form_submit($form, &$form_state) {
+  if (isset($form_state['values']['entity_ids'])) {
+    $drupal_entity_ids_json = json_decode($form_state['values']['entity_ids']);
+  }
+  elseif (isset($form_state['entity_ids'])) {
+    $drupal_entity_ids_json = json_decode($form_state['entity_ids']);
+  }
+
+  $entity_type = isset($form_state['entity_type']) ? $form_state['entity_type'] : 'node';
+  $entity_ids = array();
+  foreach ($drupal_entity_ids_json as $id) {
+    $entity_ids[] = $id;
+  }
+
+  // Deletes translations based on whether it is node based translation or field based translation
+  if (!empty($entity_ids)) {
+    $entities = entity_load($entity_type, $entity_ids);
+    $count = 0;
+    foreach ($entities as $entity) {
+      if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
+        $count += 1;
+        lingotek_delete_node_translations($entity->nid);
+      }
+      if ($entity->tnid == 0) {
+        $count += 1;
+        lingotek_delete_field_translations($entity_type, $entity);
+      }
+    }
+  }
+
+  watchdog('content', format_plural($count, 'Deleted translations for 1 entity.', 'Deleted translations for @count entities.'));
+  drupal_set_message(format_plural($count, 'Deleted translations for 1 entity.', 'Deleted translations for @count entities.'));
   $form_state['redirect'] = LINGOTEK_MENU_MAIN_BASE_URL . '/manage';
   return lingotek_grid_filter_submit($form, $form_state);
 }

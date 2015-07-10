@@ -359,6 +359,14 @@ function lingotek_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/delete-translations/%/%'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page callback' => 'lingotek_popup',
+    'page arguments' => array('entity_delete_translations', 5, 6),
+    'type' => MENU_CALLBACK,
+  );
+
   $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/reset/%/%'] = array(
     'access arguments' => array('administer lingotek'),
     'file' => 'lingotek.bulk_grid.inc',
