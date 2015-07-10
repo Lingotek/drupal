@@ -2093,3 +2093,75 @@ function lingotek_get_languages($entity_type, $entity_id) {
   }
   return array_keys($existing_translations);
 }
+
+/**
+ * Returns an array of the nid's of target nodes for node based translation
+ *
+ * @param $nid The id of the source node
+ * @return $result An array of nid's for target nodes
+ */
+function lingotek_get_target_node_ids($nid) {
+  $result = db_select('node', 'n')
+    ->fields('n', array('nid'))
+    ->condition('n.tnid', $nid, '=')
+    ->execute()
+    ->fetchCol();
+
+  $source_nid_key = array_search($nid, $result);
+  if ($source_nid_key !== FALSE) {
+    unset($result[$source_nid_key]);
+  }
+
+  return $result;
+}
+
+/**
+ * Delete translations for node based entities
+ *
+ * @param $nid The id of the source node
+ */
+function lingotek_delete_node_translations($nid) {
+  $target_nids = lingotek_get_target_node_ids($nid);
+
+  foreach ($target_nids as $target_nid) {
+    entity_delete('node', $target_nid);
+  }
+
+  // Removes the target_sync_status data for each language
+  db_delete('lingotek_entity_metadata')
+    ->condition('entity_type', 'node')
+    ->condition('entity_id', $nid)
+    ->condition('entity_key', 'target_%', 'LIKE')
+    ->execute();
+}
+
+/**
+ * Delete translations for field based entities
+ *
+ * @param $entity_type
+ * @param $entity
+ */
+function lingotek_delete_field_translations($entity_type, $entity) {
+  $entity_data = entity_extract_ids($entity_type, $entity);
+  $fields = field_info_instances($entity_type, $extracted_data[2]);
+  $source_langcode[] = lingotek_entity_langcode($entity_type, $entity);
+  $langcodes = array_diff(lingotek_get_languages($entity_type, $entity_data[0]), $source_langcode); // removes source language code from array so source content isn't deleted
+
+  // Removes all target language content in each field that has translations
+  foreach ($fields[$entity_data[2]] as $field) {
+    $field_name = $field['field_name'];
+    foreach($langcodes as $langcode) {
+      if ($langcode && !empty($entity->$field_name)) {
+        $entity->{$field_name}[$langcode] = array();
+      }
+    }
+  }
+  entity_save($entity_type, $entity);
+
+  // Removes the target_sync_status data for each language
+  db_delete('lingotek_entity_metadata')
+    ->condition('entity_type', $entity_type)
+    ->condition('entity_id', $entity_data[0])
+    ->condition('entity_key', 'target_%', 'LIKE')
+    ->execute();
+}
