@@ -47,7 +47,7 @@ class LingotekSetupController extends LingotekControllerBase {
     $this->L->set('account.resources.community', $communities);
     if (count($communities) == 1) {
       // No choice necessary. Save and advance to next page.
-      $this->L->set('defaults.community', current(array_keys($communities)));
+      $this->L->set('default.community', current(array_keys($communities)));
       $this->L->getResources(TRUE); // update resources based on newly selected community
       return $this->redirect('lingotek.setup_defaults');
     }

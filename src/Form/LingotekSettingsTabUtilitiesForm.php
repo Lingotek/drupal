@@ -128,7 +128,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     // Update Callback URL row
     $update_callback_url_row = array();
     $update_callback_url_row['update_description'] = array(
-      '#markup' => '<H5>' . $this->t('Refresh Project, Workflow, and Vault Information') . '</H5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p>',
+      '#markup' => '<H5>' . $this->t('Update Notification Callback URL') . '</H5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p><b>' . t('Current notification callback URL: ' . '</b>' . t('<i>' . $this->L->get('account.callback_url') . '</i>')),
     );
     $update_callback_url_row['actions']['update_url'] = array(
       '#type' => 'submit',
@@ -185,7 +185,9 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   public function updateCallbackUrl() {
-    
+    $url = \Drupal::urlGenerator()->generate('<none>', [], ['absolute' => TRUE]) . 'lingotek/notify';
+    $this->L->set('account.callback_url', $url);
+    dpm($this->L->get());
   }
 
   public function runSelectedUtilities(array &$form, FormStateInterface $form_state) {
