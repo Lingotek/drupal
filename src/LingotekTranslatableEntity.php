@@ -301,7 +301,15 @@ class LingotekTranslatableEntity {
   }
 
   public function requestTranslations() {
-    // request translations via the API for all specified languages (in profile or all)
+    $target_languages = \Drupal::languageManager()->getLanguages();
+    $entity_langcode = $this->entity->language()->getId();
+
+    foreach($target_languages as $langcode => $language) {
+      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+      if ($langcode != $entity_langcode) {
+        $response = $this->addTarget($locale);
+      }
+    }
   }
 
   public function upload() {

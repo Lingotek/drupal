@@ -107,6 +107,25 @@ class Lingotek implements LingotekInterface {
     return $this->api->getProjectStatus($project_id);
   }
 
+  public function getProject($project_id) {
+    return $this->api->getProject($project_id);
+  }
+
+  public function setProjectCallBackUrl($project_id, $callback_url) {
+    $args = array(
+      'format' => 'JSON',
+      'callback_url' => $callback_url,
+    );
+
+    $response = $this->api->setProjectCallBackUrl($project_id, $args);
+
+    if ($response->getStatusCode() == '204') {
+      return TRUE;
+    }
+    //TODO: Log item
+    return FALSE;
+  }
+
   public function get($key) {
     return $this->config->get($key);
   }
@@ -123,6 +142,7 @@ class Lingotek implements LingotekInterface {
         'project_id' => $this->get('default.project'),
         'workflow_id' => $this->get('default.workflow'),
     );
+    dpm($defaults);
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
     $response = $this->api->addDocument($args);
 

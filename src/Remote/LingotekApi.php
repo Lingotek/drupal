@@ -175,6 +175,26 @@ class LingotekApi implements LingotekApiInterface {
     return $this->formatResponse($response);
   }
 
+  public function getProject($project_id) {
+    try {
+      $response = $this->lingotekClient->get('/api/project/' . $project_id, NULL, array('id' => $project_id), FALSE);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get project: ' . $e->getMessage());
+    }
+    return $response->json();
+  }
+
+  public function setProjectCallBackUrl($project_id, $args) {
+    try {
+      $response = $this->lingotekClient->patch('/api/project/' . $project_id, $args, array('_method' => 'PATCH'), FALSE);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get project: ' . $e->getMessage());
+    }
+    return $response;
+  }
+
   public function getVaults($community_id) {
     try {
       $response = $this->lingotekClient->get('/api/vault', NULL, array('community_id' => $community_id), FALSE);

@@ -39,6 +39,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
         if ($te) {
           $http_status_code = Response::HTTP_OK;
+          $te->setSourceStatus(Lingotek::STATUS_CURRENT);
           $result['request_translations'] = $te->requestTranslations();
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
@@ -51,8 +52,8 @@ class LingotekNotificationController extends LingotekControllerBase {
         $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
         if ($te) {
           $http_status_code = Response::HTTP_OK;
-          $result['set_target_status'] = $te->setTargetStatus(Lingotek::STATUS_READY);
-          $result['download'] = $te->download();
+          $result['set_target_status'] = $te->setTargetStatus($request->get('locale'), Lingotek::STATUS_READY);
+          $result['download'] = $te->download($request->get('locale'));
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
           $messages[] = "Document not found.";

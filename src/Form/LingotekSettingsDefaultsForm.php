@@ -74,7 +74,23 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     foreach($this->defaults_labels as $key => $label){
       $this->L->set('default.'.$key, $form_values[$key]);
     }
+
+    $this->checkCallBackUrl();
     $form_state->setRedirect('lingotek.dashboard');
     parent::submitForm($form, $form_state);
+  }
+
+  protected function checkCallBackUrl() {
+    $project_id = $this->L->get('default.project');
+    $response = $this->L->getProject($project_id);
+    $callback_url = $response['properties']['callback_url'];
+
+    // Assign a callback_url if the user's project doesn't have one
+    if (!$callback_url) {
+      $new_callback_url = \Drupal::urlGenerator()->generate('<none>', [], ['absolute' => TRUE]) . 'lingotek';
+      $this->L->set('account.callback_url', $new_callback_url);
+      $response['properties']['callback_url'] = $new_callback_url;
+      $new_response = $this->L->setProjectCallBackUrl($project_id, $new_callback_url);
+    }
   }
 }
