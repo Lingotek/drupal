@@ -37,20 +37,30 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->init();
-
     $defaults = $this->L->getDefaults();
     $resources = $this->L->getResources();
-    //dpm("defaults:"); dpm($defaults);
-    //dpm("resources:"); dpm($resources);
 
     foreach($this->defaults_labels as $key => $label){
-      $form[$key] = array(
-        '#title' => $label,
-        '#type' => 'select',
-        '#options' => $resources[$key],
-        '#default_value' => $defaults[$key],
-        '#required' => TRUE,
-      );
+      // If there's more than one choice, query the user (for workflow, just pick machine translation)
+      if (count($resources[$key]) > 1 && $key != 'workflow') { 
+        asort($resources[$key]);
+        $form[$key] = array(
+          '#title' => $label,
+          '#type' => 'select',
+          '#options' => $resources[$key],
+          '#default_value' => $defaults[$key],
+          '#required' => TRUE,
+        );
+      }
+      else {
+        if ($key === 'workflow') {
+          $value = array_search('Machine Translation', $resources[$key]);
+        }
+        else {
+          $value = current(array_keys($resources[$key]));
+        }
+        $this->L->set('default.' . $key, $value);
+      }
     }
 
     return parent::buildForm($form, $form_state);

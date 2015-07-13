@@ -103,6 +103,10 @@ class Lingotek implements LingotekInterface {
     return $this->getResource('account.resources.workflow', 'getWorkflows', $force);
   }
 
+  public function getProjectStatus($project_id) {
+    return $this->api->getProjectStatus($project_id);
+  }
+
   public function get($key) {
     return $this->config->get($key);
   }

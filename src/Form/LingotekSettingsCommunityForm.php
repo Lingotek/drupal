@@ -28,7 +28,6 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 	 */
 	public function buildForm(array $form, FormStateInterface $form_state) {
 		$form = parent::buildForm($form, $form_state);
-
 		$community_id = $this->L->get('default.community');
     $communities  = $this->L->getCommunities();
 
@@ -41,7 +40,7 @@ class LingotekSettingsCommunityForm extends LingotekConfigFormBase {
 		foreach ($communities as $id => $name) {
 			$community_options[$id] = $name . ' (' . $id . ')';
 		}
-
+		asort($community_options);
 		$form['community'] = array(
 			'#title'         => t('Community'),
 			'#type'          => 'select',

@@ -187,7 +187,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   public function updateCallbackUrl() {
     $url = \Drupal::urlGenerator()->generate('<none>', [], ['absolute' => TRUE]) . 'lingotek/notify';
     $this->L->set('account.callback_url', $url);
-    dpm($this->L->get());
   }
 
   public function runSelectedUtilities(array &$form, FormStateInterface $form_state) {
