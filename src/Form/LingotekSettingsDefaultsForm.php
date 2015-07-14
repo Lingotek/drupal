@@ -14,15 +14,32 @@ use Drupal\Core\Form\FormStateInterface;
  * Configure text display settings for this page.
  */
 class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
-
   protected $defaults_labels;
+  protected $defaults;
+  protected $resources;
 
   public function init(){
-    $this->defaults_labels = array(
-      'project' => $this->t('Default Project'),
-      'workflow' => $this->t('Default Workflow'),
-      'vault' => $this->t('Default Vault')
-    );
+    $this->defaults = $this->L->getDefaults();
+    $this->resources = $this->L->getResources();
+    $this->defaults_labels = array();
+
+    // Make visible only those options that have more than one choice
+    if (count($this->resources['project']) > 1) {
+      $this->defaults_labels['project'] = t('Default Project');
+    } 
+    elseif (count($this->resources['project']) == 1) {
+      $this->L->set('default.project', current(array_keys($this->resources['project'])));
+    }
+
+    if (count($this->resources['vault']) > 1) {
+      $this->defaults_labels['vault'] = t('Default Vault');
+    }
+    elseif (count($this->resources['vault']) == 1) {
+      $this->L->set('default.vault', current(array_keys($this->resources['vault'])));
+    }
+
+    //Set workflow to machine translation every time regardless if there's more than one choice
+    $this->L->set('default.workflow', array_search('Machine Translation', $this->resources['workflow']));
   }
 
   /**
@@ -37,32 +54,18 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->init();
-    $defaults = $this->L->getDefaults();
-    $resources = $this->L->getResources();
 
-    foreach($this->defaults_labels as $key => $label){
-      // If there's more than one choice, query the user (for workflow, just pick machine translation)
-      if (count($resources[$key]) > 1 && $key != 'workflow') { 
-        asort($resources[$key]);
-        $form[$key] = array(
-          '#title' => $label,
-          '#type' => 'select',
-          '#options' => $resources[$key],
-          '#default_value' => $defaults[$key],
-          '#required' => TRUE,
-        );
-      }
-      else {
-        if ($key === 'workflow') {
-          $value = array_search('Machine Translation', $resources[$key]);
-        }
-        else {
-          $value = current(array_keys($resources[$key]));
-        }
-        $this->L->set('default.' . $key, $value);
-      }
+    foreach($this->defaults_labels as $key => $label){ 
+      asort($this->resources[$key]);
+      $form[$key] = array(
+        '#title' => $label,
+        '#type' => 'select',
+        '#options' => $this->resources[$key],
+        '#default_value' => $this->defaults[$key],
+        '#required' => TRUE,
+      );
     }
-
+    
     return parent::buildForm($form, $form_state);
   }
 
@@ -72,7 +75,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
     foreach($this->defaults_labels as $key => $label){
-      $this->L->set('default.'.$key, $form_values[$key]);
+      $this->L->set('default.'. $key, $form_values[$key]);
     }
 
     $this->checkCallBackUrl();
@@ -93,4 +96,5 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       $new_response = $this->L->setProjectCallBackUrl($project_id, $new_callback_url);
     }
   }
+
 }

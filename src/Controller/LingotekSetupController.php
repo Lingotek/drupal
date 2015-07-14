@@ -68,7 +68,7 @@ class LingotekSetupController extends LingotekControllerBase {
     $projects = $this->L->getProjects();
     $vaults = $this->L->getVaults();
     // No choice necessary. Save and advance to the next page.
-    if (count($projects) < 2 && count($vaults) < 2) {
+    if (count($projects) == 1 && count($vaults) == 1) {
       return $this->redirect('lingotek.dashboard');
     }
     return array(

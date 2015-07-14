@@ -223,6 +223,7 @@ class Lingotek implements LingotekInterface {
   public function downloadDocument($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
+    dpm($this->get('default'));
     $response = $this->api->getTranslation($doc_id, $locale);
     if ($response->getStatusCode() == '200') {
       return $response->json();
