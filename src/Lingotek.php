@@ -138,11 +138,11 @@ class Lingotek implements LingotekInterface {
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
     $defaults = array(
-        'format' => 'JSON',
-        'project_id' => $this->get('default.project'),
-        'workflow_id' => $this->get('default.workflow'),
+      'format' => 'JSON',
+      'project_id' => $this->get('default.project'),
+      'workflow_id' => $this->get('default.workflow'),
     );
-    dpm($defaults);
+    
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
     $response = $this->api->addDocument($args);
 
@@ -151,7 +151,10 @@ class Lingotek implements LingotekInterface {
   }
 
   public function updateDocument($doc_id, $content) {
-    $args = array('content' => $content);
+    $args = array(
+      'format' => 'JSON',
+      'content' => $content,
+    );
     $response = $this->api->patchDocument($doc_id, $args);
     
     return $response;
@@ -223,7 +226,6 @@ class Lingotek implements LingotekInterface {
   public function downloadDocument($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
-    dpm($this->get('default'));
     $response = $this->api->getTranslation($doc_id, $locale);
     if ($response->getStatusCode() == '200') {
       return $response->json();

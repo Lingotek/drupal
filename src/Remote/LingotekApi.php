@@ -51,7 +51,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function addDocument($args) {
     try {
-      $response = $this->lingotekClient->post('/api/document', $args, NULL, TRUE);
+      $response = $this->lingotekClient->post('/api/document', $args, TRUE);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add document: ' . $e->getMessage());
@@ -68,13 +68,16 @@ class LingotekApi implements LingotekApiInterface {
 
   public function patchDocument($id, $args) {
     try {
-      $response = $this->lingotekClient->patch('/api/document' . '/' . $id, $args, array('_method' => 'PATCH'),TRUE);
+      $response = $this->lingotekClient->patch('/api/document/' . $id, $args, TRUE);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
     }
     if ($response->getStatusCode() == '202') {
-      return TRUE;
+      $data = $response->json();
+      if (!empty($data['properties']['id'])) {
+        return $data['properties']['id'];
+      }
     }
     // TODO: log warning
     return FALSE;
@@ -82,7 +85,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function deleteDocument($id) {
     try {
-      $response = $this->lingotekClient->delete('/api/document' . '/' . $id, array('_method' => 'DELETE'));
+      $response = $this->lingotekClient->delete('/api/document' . '/' . $id);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to delete document: ' . $e->getMessage());
@@ -155,29 +158,9 @@ class LingotekApi implements LingotekApiInterface {
     return $this->formatResponse($response);
   }
 
-  public function getProjects($community_id) {
-    try {
-      $response = $this->lingotekClient->get('/api/project', NULL, array('community_id' => $community_id, 'limit' => 100), FALSE);
-    }
-    catch (\Exception $e) {
-      throw new LingotekApiException('Failed to get projects: ' . $e->getMessage());
-    }
-    return $this->formatResponse($response);
-  }
-
-  public function getProjectStatus($project_id) {
-    try {
-      $response = $this->lingotekClient->get('/api/project/' . $project_id . '/status', NULL, array('id' => $project_id), FALSE);
-    }
-    catch (\Exception $e) {
-      throw new LingotekApiException('Failed to get project status: ' . $e->getMessage());
-    }
-    return $this->formatResponse($response);
-  }
-
   public function getProject($project_id) {
     try {
-      $response = $this->lingotekClient->get('/api/project/' . $project_id, NULL, array('id' => $project_id), FALSE);
+      $response = $this->lingotekClient->get('/api/project/' . $project_id); 
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get project: ' . $e->getMessage());
@@ -185,19 +168,30 @@ class LingotekApi implements LingotekApiInterface {
     return $response->json();
   }
 
-  public function setProjectCallBackUrl($project_id, $args) {
+  public function getProjects($community_id) {
     try {
-      $response = $this->lingotekClient->patch('/api/project/' . $project_id, $args, array('_method' => 'PATCH'), FALSE);
+      $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id, 'limit' => 100));
     }
     catch (\Exception $e) {
-      throw new LingotekApiException('Failed to get project: ' . $e->getMessage());
+      throw new LingotekApiException('Failed to get projects: ' . $e->getMessage());
+    }
+    return $this->formatResponse($response);
+  }
+
+  public function setProjectCallBackUrl($project_id, $args) {
+    try {
+      $response = $this->lingotekClient->patch('/api/project/' . $project_id, $args);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to patch project: ' . $e->getMessage());
     }
     return $response;
   }
 
+
   public function getVaults($community_id) {
     try {
-      $response = $this->lingotekClient->get('/api/vault', NULL, array('community_id' => $community_id), FALSE);
+      $response = $this->lingotekClient->get('/api/vault', array('community_id' => $community_id));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get vaults: ' . $e->getMessage());
@@ -207,7 +201,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getWorkflows($community_id) {
     try {
-      $response = $this->lingotekClient->get('/api/workflow', NULL, array('community_id' => $community_id), FALSE);
+      $response = $this->lingotekClient->get('/api/workflow', array('community_id' => $community_id));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get workflows: ' . $e->getMessage());

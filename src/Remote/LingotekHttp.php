@@ -45,7 +45,7 @@ class LingotekHttp implements LingotekHttpInterface {
    *
    * @since 0.1
    */
-  public function request($path, $args = array(), $params = array(), $method = 'GET', $use_multipart = FALSE) {
+  public function request($path, $args = array(), $method = 'GET', $use_multipart = FALSE) {
     $url = $this->config->get('account.sandbox_host') . $path;
     $request = $this->httpClient->createRequest($method, $url);
     $request->setHeaders($this->headers);
@@ -54,8 +54,8 @@ class LingotekHttp implements LingotekHttpInterface {
       $postBody->forceMultipartUpload($use_multipart);
       $postBody->replaceFields($args);
     }
-    if (!empty($params)) {
-      $request->setQuery($params);
+    elseif (!empty($args)) {
+      $request->setQuery($args);
     }
     try {
       $response = $this->httpClient->send($request);
@@ -71,16 +71,16 @@ class LingotekHttp implements LingotekHttpInterface {
   /*
    * send a GET request
    */
-  public function get($path, $args = array(), $params = array(), $use_multipart = FALSE) {
-    return $this->request($path, $args, $params, 'GET', $use_multipart);
+  public function get($path, $args = array()) {
+    return $this->request($path, $args, 'GET');
   }
 
   /*
    * send a POST request
    */
-  public function post($path, $args = array(), $params = array(), $use_multipart = FALSE) {
+  public function post($path, $args = array(), $use_multipart = FALSE) {
     try {
-      $response = $this->request($path, $args, $params, 'POST', $use_multipart);
+      $response = $this->request($path, $args, 'POST', $use_multipart);
     } catch (Exception $e) {
       throw $e;
     }
@@ -90,15 +90,20 @@ class LingotekHttp implements LingotekHttpInterface {
   /*
    * send a DELETE request
    */
-  public function delete($path, $params = array()) {
-    return $this->request($path, NULL, $params, 'POST');
+  public function delete($path, $args = array()) {
+    // Let the post method masquerade as a DELETE
+    $this->addHeader('X-HTTP-Method-Override', 'DELETE');
+    return $this->request($path, $args, 'POST');
   }
 
   /*
    * send a PATCH request
    */
-  public function patch($path, $args = array(), $params = array(), $use_multipart = FALSE) {
-    return $this->request($path, $args, $params,'POST', $use_multipart);
+  public function patch($path, $args = array(), $use_multipart = FALSE) {
+    // Let the post method masquerade as a PATCH
+    $this->addHeader('X-HTTP-Method-Override', 'PATCH');
+    //$args['_method'] = 'PATCH';
+    return $this->request($path, $args, 'POST', $use_multipart);
   }
 
   public function getCurrentToken() {

@@ -90,15 +90,16 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    //dpm($this->L->get());
     // All this code is to mimic the callback url actions.
     //Request bin stuff
     //$result = file_get_contents('http://requestb.in/s3ienss3');
     //dpm($result);
 
     // For document_uploaded endpoint
-    $lte = LingotekTranslatableEntity::loadById(252, 'node');
-    $lte->setSourceStatus(Lingotek::STATUS_CURRENT);
-    $lte->requestTranslations();
+    // $lte = LingotekTranslatableEntity::loadById(252, 'node');
+    // $lte->setSourceStatus(Lingotek::STATUS_CURRENT);
+    // $lte->requestTranslations();
 
     // For target endpoint
     // $lte = LingotekTranslatableEntity::loadById(252, 'node');
