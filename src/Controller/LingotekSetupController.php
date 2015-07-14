@@ -28,9 +28,8 @@ class LingotekSetupController extends LingotekControllerBase {
       $this->saveAccountInfo($account_info);
       drupal_set_message($this->t('Your account settings have been saved.'));
       
-      // No need to show the username and token if every worked ok
+      // No need to show the username and token if everything worked correctly
       return $this->redirect('lingotek.setup_community');
-      
       //return $this->getLingotekForm('LingotekSettingsAccountForm');
     }
     return array(
@@ -65,10 +64,12 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
-    $projects = $this->L->getProjects();
-    $vaults = $this->L->getVaults();
+    $resources = $this->L->getResources();
     // No choice necessary. Save and advance to the next page.
-    if (count($projects) == 1 && count($vaults) == 1) {
+    if (count($resources['project']) == 1 && count($resources['vault']) == 1) {
+      $this->L->set('default.project', current(array_keys($resources['project'])));
+      $this->L->set('default.vault', current(array_keys($resources['vault'])));
+      $this->L->set('default.workflow', array_search('Machine Translation', $resources['workflow']));
       return $this->redirect('lingotek.dashboard');
     }
     return array(
