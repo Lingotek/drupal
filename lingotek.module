@@ -154,7 +154,7 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
   $profiles = $L->get('profile');
   $lte_profile_id = $lte->getProfile();
   $lte_status = $lte->getSourceStatus();
-  $entity_has_changed = $lte->isEntityChanged();
+  $entity_has_changed = $lte->hasEntityChanged();
  
   // Find if the entity has auto-upload enabled
   // TODO: Use the LingotekProfile class to find auto-download property
@@ -178,8 +178,12 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
       drupal_set_message(t('<em>@node_title</em> was updated and sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
     }
   }
-  else{
-    $lte->setSourceStatus(Lingotek::STATUS_EDITED);
+  // Updated entity with manual-upload
+  elseif (!$lte_auto_upload){
+    if($entity_has_changed) {
+      $lte->setSourceStatus(Lingotek::STATUS_EDITED);
+      $lte->setTargetStatuses(Lingotek::STATUS_EDITED);
+    }
   }
 }
 

@@ -21,12 +21,22 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
   $entity = entity_load($entity_type, $entity_id);
   $te = LingotekTranslatableEntity::load($container, $entity);
   $source_data = json_encode($te->getSourceData());
-
   $L = $container->get('lingotek');
-  $doc_id = $L->uploadDocument($entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label(), $source_data, 'en_US');
-  if ($doc_id) {
-    $te->setDocId($doc_id);
-    $te->setSourceStatus(Lingotek::STATUS_PENDING);
+  
+  // Use upload with new entities.
+  if (!$te->getDocId()) {
+    $doc_id = $L->uploadDocument($entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label(), $source_data, 'en_US');
+    if ($doc_id) {
+      $te->setDocId($doc_id);
+      $te->setSourceStatus(Lingotek::STATUS_PENDING);
+      $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
+    }
+  }
+  
+  // Use update with existing entities that have been edited. 
+  elseif ($te->hasEntityChanged()) {
+    $response = $te->update();
+    $te->setTargetStatuses(Lingotek::STATUS_PENDING);
     $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
   }
 }

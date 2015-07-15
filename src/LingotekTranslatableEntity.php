@@ -136,7 +136,7 @@ class LingotekTranslatableEntity {
     return $this;
   }
 
-  public function isEntityChanged() {
+  public function hasEntityChanged() {
     $source_data = json_encode($this->getSourceData());
     $hash = md5($source_data);
     $old_hash = $this->getHash();
@@ -189,6 +189,17 @@ class LingotekTranslatableEntity {
     return $this->setMetadata('hash', $hash);
   }
 
+  public function setTargetStatuses($status) {
+    $target_languages = \Drupal::languageManager()->getLanguages();
+    $entity_langcode = $this->entity->language()->getId();
+
+    foreach($target_languages as $langcode => $language) {
+      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+      if ($langcode != $entity_langcode && $this->getTargetStatus($locale)) {
+        $this->setTargetStatus($locale, $status);
+      }
+    }
+  }
 
   /**
    * Gets a Lingotek metadata value for the given key.
@@ -307,6 +318,7 @@ class LingotekTranslatableEntity {
     foreach($target_languages as $langcode => $language) {
       $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
       if ($langcode != $entity_langcode) {
+        $this->setTargetStatus($locale, Lingotek::STATUS_PENDING);
         $response = $this->addTarget($locale);
       }
     }
