@@ -150,6 +150,32 @@ class LingotekTranslatableEntity {
     return false;
   }
 
+  public function hasAutomaticUpload() {
+    $profiles = $thisL->get('profile');
+    $lte_profile_id = $this->getProfile();
+      
+    foreach ($profiles as $profile_id => $profile) {
+      if ($profile['id'] == $lte_profile_id) {
+        $lte_auto_upload = $profile['auto_upload'];
+        break;
+      }
+    }
+    return $lte_auto_upload;
+  }
+
+  public function hasAutomaticDownload() {
+    $profiles = $thisL->get('profile');
+    $lte_profile_id = $this->getProfile();
+      
+    foreach ($profiles as $profile_id => $profile) {
+      if ($profile['id'] == $lte_profile_id) {
+        $lte_auto_download = $profile['auto_download'];
+        break;
+      }
+    }
+    return $lte_auto_download;
+  }
+
   public function getProfile() {
     return $this->getMetadata('profile');
   }

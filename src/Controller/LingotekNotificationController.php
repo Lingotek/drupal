@@ -37,7 +37,7 @@ class LingotekNotificationController extends LingotekControllerBase {
 
       case 'document_uploaded': // a document has uploaded and imported successfully for document_id
         $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
-        if ($te) {
+        if ($te && $te->hasAutomaticUpload()) {
           $http_status_code = Response::HTTP_OK;
           $te->setSourceStatus(Lingotek::STATUS_CURRENT);
           $result['request_translations'] = $te->requestTranslations();
@@ -50,7 +50,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         //TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         //ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
         $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
-        if ($te) {
+        if ($te && $te->hasAutomaticDownload()) {
           $http_status_code = Response::HTTP_OK;
           $result['set_target_status'] = $te->setTargetStatus($request->get('locale'), Lingotek::STATUS_READY);
           $result['download'] = $te->download($request->get('locale'));

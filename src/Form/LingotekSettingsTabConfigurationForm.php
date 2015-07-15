@@ -91,32 +91,41 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     dpm($this->L->get());
-    // All this code is to mimic the callback url actions.
+    // All this code is to mimic the callback url actions. I put it here
+    // just because the config save button doesn't do anything presently
+    // and I needed a place to trigger code.
     //Request bin stuff
     //$result = file_get_contents('http://requestb.in/s3ienss3');
     //dpm($result);
 
-    // For document_uploaded endpoint
-    // $lte = LingotekTranslatableEntity::loadById(252, 'node');
+    // Upload
+    // $lte = LingotekTranslatableEntity::loadById(314, 'node');
     // $lte->setSourceStatus(Lingotek::STATUS_CURRENT);
     // $lte->requestTranslations();
 
-    // For target endpoint
-    // $lte = LingotekTranslatableEntity::loadById(252, 'node');
-    // $lte->setTargetStatus('fr_FR', Lingotek::STATUS_READY);
-    // $lte->download('fr_FR');
-
+    // Check target progress
+    // $lte = LingotekTranslatableEntity::loadById(314, 'node');
     // $target_languages = \Drupal::languageManager()->getLanguages();
+    // $entity_langcode = $lte->entity->language()->getId();
 
     // foreach($target_languages as $langcode => $language) {
-    //     $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-    //     dpm($locale);
-        //$lte->download($locale);
-    
-        //}
+    //   $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+    //     if ($langcode != $entity_langcode) {
+    //       $lte->checkTargetStatus($locale);
+    //     }
+    // }
 
+    // Download translations
+    $lte = LingotekTranslatableEntity::loadById(314, 'node');
+    $target_languages = \Drupal::languageManager()->getLanguages();
+    $entity_langcode = $lte->entity->language()->getId();
 
-
+    foreach($target_languages as $langcode => $language) {
+      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+      if ($langcode != $entity_langcode) {
+        $lte->download($locale);
+      }
+    }
   }
 
   protected function retrieveProfileOptions() {
