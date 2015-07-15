@@ -102,7 +102,6 @@ class LingotekHttp implements LingotekHttpInterface {
   public function patch($path, $args = array(), $use_multipart = FALSE) {
     // Let the post method masquerade as a PATCH
     $this->addHeader('X-HTTP-Method-Override', 'PATCH');
-    //$args['_method'] = 'PATCH';
     return $this->request($path, $args, 'POST', $use_multipart);
   }
 

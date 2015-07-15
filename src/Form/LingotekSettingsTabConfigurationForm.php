@@ -90,7 +90,7 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    //dpm($this->L->get());
+    dpm($this->L->get());
     // All this code is to mimic the callback url actions.
     //Request bin stuff
     //$result = file_get_contents('http://requestb.in/s3ienss3');

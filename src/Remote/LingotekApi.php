@@ -74,10 +74,7 @@ class LingotekApi implements LingotekApiInterface {
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
     }
     if ($response->getStatusCode() == '202') {
-      $data = $response->json();
-      if (!empty($data['properties']['id'])) {
-        return $data['properties']['id'];
-      }
+      return TRUE;
     }
     // TODO: log warning
     return FALSE;
