@@ -1036,7 +1036,9 @@ function lingotek_grid_automatic_download($entity_type){
 function lingotek_grid_download_selected($entity_type, $entity_ids, $target_locales) {
   $operations = array();
   $entities = entity_load($entity_type, $entity_ids);
+  $all_target_locales = $target_locales;
   foreach ($entities as $entity) {
+    $target_locales = $all_target_locales; // must reset $target_locales to the original array or else some target languages may be skipped during download
     if (variable_get('lingotek_enable_language_specific_profiles')) {
       // Filter out the target languages that should not be included for this entity.
       $profile = LingotekProfile::loadByEntity($entity_type, $entity);
