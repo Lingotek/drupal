@@ -1,0 +1,79 @@
+lingotek.settings:
+  type: config_object
+  label: 'Lingotek settings'
+  mapping:
+    default:
+      type: mapping
+      label: 'Default'
+      mapping:
+        community:
+          type: string
+        project:
+          type: string
+        workflow:
+          type: string
+        vault:
+          type: string
+    preference:
+      type: mapping
+      label: 'Preference'
+      mapping:
+        advanced_parsing:
+          type: boolean
+        advanced_taxonomy_terms:
+          type: boolean
+        always_show_translate_tabs:
+          type: boolean
+    account:
+      type: mapping
+      label: 'Account'
+      mapping:
+        host:
+          type: string
+        authorize_path:
+          type: string
+        default_client_id:
+          type: string
+        plan_type:
+          type: string
+        resources:
+          type: mapping
+          label: 'Resources'
+          mapping:
+            community:
+              type: string
+            project:
+              type: string
+            workflow:
+              type: string
+            vault:
+              type: string
+    translate:
+      type: mapping
+      label: 'Translate'
+      mapping:
+        entity:
+            type: string
+        config:
+            type: string
+        interface:
+            type: string
+    field:
+      type: string
+    profile:
+      type: sequence
+      label: 'Profiles'
+      sequence:
+        type: lingotek.profile.[%key]
+lingotek.profile.*:
+  type: mapping
+  label: 'Lingotek settings'
+  mapping:
+    id:
+      type: integer
+    name:
+      type: string
+    auto_upload:
+      type: boolean
+    auto_download:
+      type: boolean
