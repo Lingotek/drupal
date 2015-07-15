@@ -2127,8 +2127,11 @@ function lingotek_delete_node_translations($nid) {
     entity_delete('node', $target_nid);
   }
 
-  // Removes the target_sync_status data for each language
-  db_delete('lingotek_entity_metadata')
+  // Sets target_sync_status to DELETED so if translations are re-downloaded they will appear as CURRENT
+  db_update('lingotek_entity_metadata')
+    ->fields(array(
+      'value' => 'DELETED',
+    ))
     ->condition('entity_type', 'node')
     ->condition('entity_id', $nid)
     ->condition('entity_key', 'target_%', 'LIKE')
@@ -2158,8 +2161,11 @@ function lingotek_delete_field_translations($entity_type, $entity) {
   }
   entity_save($entity_type, $entity);
 
-  // Removes the target_sync_status data for each language
-  db_delete('lingotek_entity_metadata')
+  // Sets target_sync_status to DELETED so if translations are re-downloaded they will appear as CURRENT
+  db_update('lingotek_entity_metadata')
+    ->fields(array(
+      'value' => 'DELETED',
+    ))
     ->condition('entity_type', $entity_type)
     ->condition('entity_id', $entity_data[0])
     ->condition('entity_key', 'target_%', 'LIKE')
