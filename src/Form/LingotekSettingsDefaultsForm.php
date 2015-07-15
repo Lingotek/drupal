@@ -89,7 +89,10 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     $callback_url = $response['properties']['callback_url'];
 
     // Assign a callback_url if the user's project doesn't have one
-    if (!$callback_url) {
+    if ($callback_url) {
+      $this->L->set('account.callback_url', $callback_url);
+    }
+    elseif (!$callback_url) {
       $new_callback_url = \Drupal::urlGenerator()->generate('<none>', [], ['absolute' => TRUE]) . 'lingotek/notify';
       $this->L->set('account.callback_url', $new_callback_url);
       $response['properties']['callback_url'] = $new_callback_url;
