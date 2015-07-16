@@ -11,6 +11,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Serialization\Json;
+use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekLog;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
@@ -203,20 +204,21 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   protected function lingotek_batch_identify_translations(){
-    $existing_languages = \Drupal::languageManager()->getLanguages();
-    $managed_entity_types = $this->retrieveManagedEntityTypes();
+    $nodes = \Drupal::entityManager()->getStorage('node')->loadMultiple();
+    $languages = \Drupal::languageManager()->getLanguages();
 
-    $nodes = \Drupal::entityManager()->getStorage('node');
-
-    // I. Identify field-based translations and set statuses
-    $fields_to_test_for_translations = array('body', 'comment');
-    foreach($managed_entity_types as $entity_type => $entity_type_details) {
-      foreach($existing_languages as $langcode => $language_details) {
-        $lingotek_locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-        
+    foreach ($nodes as $node) {
+      $entity_langcode = $node->language()->getId();
+      foreach ($languages as $langcode => $language) {
+        if ($node->hasTranslation($langcode) && $entity_langcode != $langcode) {
+          $lingotek_langcode = LingotekLocale::convertDrupal2Lingotek($langcode);
+          $lte = LingotekTranslatableEntity::loadById($node->id(), 'node');
+          if (!$lte->getTargetStatus($lingotek_langcode)) {
+            $lte->setTargetStatus($lingotek_langcode, Lingotek::STATUS_CURRENT);
+          }
+        }
       }
     }
-
   }
 
   protected function lingotek_cleanup_field_languages_for_nodes(){
@@ -249,15 +251,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
   protected function lingotek_add_missing_locales(){
     dpm('locales');
-  }
-
-  protected function retrieveManagedEntityTypes() {
-    $entity_types = \Drupal::entityManager()->getDefinitions();
-    $whitelist = array('node', 'comment', 'taxonomy_term');
-    $whitelist = array_flip($whitelist);
-    $enabled_types = array_intersect_key($entity_types, $whitelist);
-
-    return $enabled_types;
   }
 
 }

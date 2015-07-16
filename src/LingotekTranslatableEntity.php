@@ -151,7 +151,7 @@ class LingotekTranslatableEntity {
   }
 
   public function hasAutomaticUpload() {
-    $profiles = $thisL->get('profile');
+    $profiles = $this->L->get('profile');
     $lte_profile_id = $this->getProfile();
       
     foreach ($profiles as $profile_id => $profile) {
@@ -164,7 +164,7 @@ class LingotekTranslatableEntity {
   }
 
   public function hasAutomaticDownload() {
-    $profiles = $thisL->get('profile');
+    $profiles = $this->L->get('profile');
     $lte_profile_id = $this->getProfile();
       
     foreach ($profiles as $profile_id => $profile) {
