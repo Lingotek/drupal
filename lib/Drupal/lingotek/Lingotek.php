@@ -280,10 +280,16 @@ class Lingotek {
 
     $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale)); // standard conversion
     $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
+    $languages = language_list();
     if (!$enabled_check) {
       $exceptions = variable_get('lingotek_mapping_l2d_exceptions', self::$language_mapping_l2d_exceptions);
       if (array_key_exists($lingotek_locale, $exceptions)) {
         return $exceptions[$lingotek_locale];
+      }
+      foreach ($languages as $target) {
+        if ($target->language == $drupal_language_code) {
+          return $target->language;
+        }
       }
       return $drupal_general_code;
     }
@@ -291,7 +297,6 @@ class Lingotek {
     $ret = FALSE;
 
     // check to see if the lingotek_locale is set in the drupal languages table
-    $languages = language_list();
     foreach ($languages as $target) {
       if (isset($target->lingotek_locale) && strcmp($target->lingotek_locale, $lingotek_locale) == 0) {
         return $target->language;
