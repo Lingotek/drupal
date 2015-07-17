@@ -212,7 +212,9 @@ function lingotek_perform_action(nid, action) {
         //on page load
         lang_code = lang_code.toLowerCase();
         lang_code = lang_code.replace('_','-');
-        var href = 'http://localhost/drupal/lingotek/workbench/' + data.entity_type + '/' + entity_id + '/' + key;
+        var url = window.location.href;
+        url = url.substr(0,url.indexOf('admin'));
+        var href = url + 'lingotek/workbench/' + data.entity_type + '/' + entity_id + '/' + key;
         var link_text = key.substring(0,2);
         //accounts for multiple dialects, current format is to shorten the first language
         //and give the full language for all subsequent dialects of that language
