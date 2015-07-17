@@ -150,6 +150,17 @@ class LingotekTranslatableEntity {
     return false;
   }
 
+  public function setProfileForNewlyIdentifiedEntities() {
+    $current_profile = $this->L->get('translate.entity.' . $this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.profile');
+    
+    if ($current_profile == NULL) {
+      $this->setProfile(Lingotek::PROFILE_AUTOMATIC);
+    }
+    else {
+      $this->setProfile($current_profile);
+    }
+  }
+
   public function hasAutomaticUpload() {
     $profiles = $this->L->get('profile');
     $lte_profile_id = $this->getProfile();
@@ -207,6 +218,7 @@ class LingotekTranslatableEntity {
   public function setDocId($id) {
     return $this->setMetadata('document_id', $id);
   }
+  
   public function getHash() {
     return $this->getMetadata('hash');
   }

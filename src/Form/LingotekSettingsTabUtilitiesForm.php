@@ -214,7 +214,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
           $lingotek_langcode = LingotekLocale::convertDrupal2Lingotek($langcode);
           $lte = LingotekTranslatableEntity::loadById($node->id(), 'node');
           if (!$lte->getTargetStatus($lingotek_langcode)) {
-            $lte->setTargetStatus($lingotek_langcode, Lingotek::STATUS_CURRENT);
+            $lte->setTargetStatus($lingotek_langcode, Lingotek::STATUS_UNTRACKED);
           }
         }
       }

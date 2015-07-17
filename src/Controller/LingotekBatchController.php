@@ -3,10 +3,18 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\lingotek\Controller\LingotekControllerBase;
+use Drupal\lingotek\LingotekTranslatableEntity;
 
 class LingotekBatchController extends LingotekControllerBase {
 
   public function dispatch($action, $entity_type, $entity_id) {
+    $lte = LingotekTranslatableEntity::loadById($entity_id, $entity_type);
+    if (!$lte->getHash()) {
+      $lte->hasEntityChanged(); 
+    }
+    if (!$lte->getProfile()) {
+      $lte->setProfileForNewlyIdentifiedEntities(); 
+    }
     
     switch ($action) {
       case 'uploadSingle':

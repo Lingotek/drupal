@@ -99,12 +99,12 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
     //dpm($result);
 
     // Upload
-    // $lte = LingotekTranslatableEntity::loadById(314, 'node');
+    // $lte = LingotekTranslatableEntity::loadById(337, 'node');
     // $lte->setSourceStatus(Lingotek::STATUS_CURRENT);
     // $lte->requestTranslations();
 
     // Check target progress
-    // $lte = LingotekTranslatableEntity::loadById(314, 'node');
+    // $lte = LingotekTranslatableEntity::loadById(337, 'node');
     // $target_languages = \Drupal::languageManager()->getLanguages();
     // $entity_langcode = $lte->entity->language()->getId();
 
@@ -116,16 +116,16 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
     // }
 
     // Download translations
-    $lte = LingotekTranslatableEntity::loadById(314, 'node');
-    $target_languages = \Drupal::languageManager()->getLanguages();
-    $entity_langcode = $lte->entity->language()->getId();
+    // $lte = LingotekTranslatableEntity::loadById(337, 'node');
+    // $target_languages = \Drupal::languageManager()->getLanguages();
+    // $entity_langcode = $lte->entity->language()->getId();
 
-    foreach($target_languages as $langcode => $language) {
-      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-      if ($langcode != $entity_langcode) {
-        $lte->download($locale);
-      }
-    }
+    // foreach($target_languages as $langcode => $language) {
+    //   $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+    //   if ($langcode != $entity_langcode) {
+    //     $lte->download($locale);
+    //   }
+    // }
   }
 
   protected function retrieveProfileOptions() {

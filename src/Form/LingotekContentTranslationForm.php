@@ -37,7 +37,6 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $status_check_needed = ($source_status == Lingotek::STATUS_PENDING) ? TRUE : FALSE;
     $targets_ready = FALSE;
 
-
     $form_state->set('entity', $entity);
     $overview = $build['content_translation_overview'];
     $form['#title'] = $this->t('Translations of @title', array('@title' => $build['#entity']->label()));
@@ -79,8 +78,8 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
         $target_status = $lte->getTargetStatus($locale);
 
-        // Add-Targets button if languages haven't been added.
-        if ($source_status === Lingotek::STATUS_CURRENT && !empty($doc_id) && !isset($target_status)) {
+        // Add-Targets button if languages haven't been added, or if target status is UNTRACKED.
+        if ($source_status === Lingotek::STATUS_CURRENT && !empty($doc_id) && (!isset($target_status) || $target_status === Lingotek::STATUS_UNTRACKED)) {
           $path = '/admin/lingotek/entity/add_target/' . $doc_id . '/' . $locale;
           $this->addOperationLink($entity, $option, 'Request translation', $path, $language);
         }
