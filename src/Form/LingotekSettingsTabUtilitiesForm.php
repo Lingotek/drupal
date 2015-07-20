@@ -222,11 +222,27 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   protected function lingotek_cleanup_field_languages_for_nodes(){
-    dpm('nodes');
+    $nodes = \Drupal::entityManager()->getStorage('node')->loadMultiple();
+
+    foreach ($nodes as $node) {
+      $entity_langcode = $node->language()->getId();
+      if ($entity_langcode === 'und' || $entity_langcode === 'zxx') {
+        $field_item = $node->get('langcode');
+        $values = array('value' => 'en');
+        $field_item->setValue($values); 
+        $node->save();
+      }
+    }
   }
 
   protected function lingotek_cleanup_notify_entity_translation(){
-    dpm('entity');
+    $nodes = \Drupal::entityManager()->getStorage('node')->loadMultiple();
+
+    foreach ($nodes as $node) {
+      for ($node as $name => $items) {
+        dpm($items);
+      }
+    }
   }
 
   protected function lingotek_cleanup_field_languages_for_comments(){
