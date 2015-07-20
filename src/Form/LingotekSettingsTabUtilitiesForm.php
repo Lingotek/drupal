@@ -8,7 +8,9 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Url;
+use Drupal\Core\Language;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Serialization\Json;
 use Drupal\lingotek\Lingotek;
@@ -59,11 +61,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $cleanup_functions['lingotek_cleanup_field_languages_for_nodes'] = array(
       'title' => t('Prepare nodes'),
       'desc' => t('Sets all <i>language neutral</i> nodes (and underlying fields and path aliases) to be @lang.', array('@lang' => \Drupal::languageManager()->getDefaultLanguage()->getName())),
-    );
-
-    $cleanup_functions['lingotek_cleanup_notify_entity_translation'] = array(
-      'title' => t('Sync with Entity Translation'),
-      'desc' => t('Reports all translations managed by Lingotek to the Entity Translation module.'),
     );
 
     $cleanup_functions['lingotek_cleanup_field_languages_for_comments'] = array(
@@ -226,27 +223,25 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
     foreach ($nodes as $node) {
       $entity_langcode = $node->language()->getId();
-      if ($entity_langcode === 'und' || $entity_langcode === 'zxx') {
-        $field_item = $node->get('langcode');
-        $values = array('value' => 'en');
-        $field_item->setValue($values); 
-        $node->save();
-      }
-    }
-  }
-
-  protected function lingotek_cleanup_notify_entity_translation(){
-    $nodes = \Drupal::entityManager()->getStorage('node')->loadMultiple();
-
-    foreach ($nodes as $node) {
-      for ($node as $name => $items) {
-        dpm($items);
+      foreach ($node as $name => $items) {
+        if ($entity_langcode === LanguageInterface::LANGCODE_NOT_SPECIFIED || $entity_langcode === LanguageInterface::LANGCODE_NOT_APPLICABLE) {
+          if ($name === 'langcode'){
+            // This is how it's done in core (NodeForm.php)
+            $values = array('value' => 'en');
+            $items->setValue($values);
+          }
+          // setLangcode() may not be saving the langcode for some reason
+          else {
+            $items->setLangcode('en');
+          } 
+          $node->save();
+        }
       }
     }
   }
 
   protected function lingotek_cleanup_field_languages_for_comments(){
-    dpm('comments');
+  
   }
 
   protected function lingotek_cleanup_field_languages_for_taxonomy_terms(){
