@@ -281,7 +281,11 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   protected function lingotek_admin_prepare_blocks(){
-    dpm('blocks');
+    $blocks = \Drupal::entityManager()->getStorage('block_content')->loadMultiple();
+
+    foreach ($blocks as $block_name => $block) {
+      $block_langcode = $block->language()->getId();
+    }
   }
   
   protected function lingotek_admin_prepare_taxonomies(){
