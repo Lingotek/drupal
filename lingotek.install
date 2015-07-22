@@ -80,7 +80,7 @@ function lingotek_schema() {
       'config_key' => array(
         'description' => 'The ID for the Lingotek-associated value.',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 128,
         'not null' => TRUE,
         'default' => '',
       ),
