@@ -157,19 +157,41 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $theme_default = $config->get('default');
     $this->lang_regions = system_region_list($theme_default, REGIONS_VISIBLE);
     $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load('languageswitcher');
-    $this->lang_switcher_value = $this->lang_switcher->status();
-    $this->lang_region_selected = $this->lang_switcher->getRegion();
+    // If the website doesn't have a language switcher block yet, don't act on it.
+    if ($this->lang_switcher) {
+      $this->lang_switcher_value = $this->lang_switcher->status();
+      $this->lang_region_selected = $this->lang_switcher->getRegion();
+    }
+    else {
+      $this->lang_switcher_value = 0;
+      $this->lang_region_selected = $this->default_region;
+    }
   }
 
   protected function saveLanguageSwitcherSettings($form_values) {
-    $this->lang_switcher->setRegion($form_values['lang_switcher_select']);
-    if ($form_values['lang_switcher']) {
-      $this->lang_switcher->enable();
+    // If the website doesn't have a language switcher yet, don't act on it.
+    if ($this->lang_switcher) {
+      $this->lang_switcher->setRegion($form_values['lang_switcher_select']);
+      if ($form_values['lang_switcher']) {
+        $this->lang_switcher->enable();
+      }
+      else {
+        $this->lang_switcher->disable();
+      }
+      $this->lang_switcher->save();
     }
     else {
-      $this->lang_switcher->disable();
+      // If the user selects the checkbox, and no language switcher exists yet, create one.
+      if ($form_values['lang_switcher']) {
+        $config = $this->config('system.theme');
+        $theme_default = $config->get('default');
+        $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->create(array('plugin' => 'language_block:language_interface', 'theme' => $theme_default));
+        $this->lang_switcher->setRegion($form_values['lang_switcher_select']);
+        $this->lang_switcher->enable();
+        $this->lang_switcher->set('id', 'languageswitcher');
+        $this->lang_switcher->save();
+      }
     }
-    $this->lang_switcher->save();
   }
 
   protected function retrieveAdminMenu() {
