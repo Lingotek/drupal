@@ -65,7 +65,7 @@ EOD;
           $langcode = LingotekLocale::generateLingotek2Drupal($lingotek_locale);
           $l = ConfigurableLanguage::create(array(
                       'id' => $langcode,
-                      'name' => $language,
+                      'label' => $language,
                       'native' => $native,
                       'direction' => $rtl,
           ));
