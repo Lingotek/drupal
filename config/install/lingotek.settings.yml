@@ -14,10 +14,10 @@ account:
   default_client_id: 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
   plan_type: 'basic'
   resources:
-    community:
-    project:
-    workflow:
-    vault:
+    community: []
+    project: []
+    workflow: []
+    vault: []
 translate:
   entity: null
   config: null

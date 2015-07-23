@@ -28,6 +28,8 @@ lingotek.settings:
       type: mapping
       label: 'Account'
       mapping:
+        sandbox_host:
+          type: string
         host:
           type: string
         authorize_path:
@@ -41,13 +43,27 @@ lingotek.settings:
           label: 'Resources'
           mapping:
             community:
-              type: string
+              type: sequence
+              sequence:
+                type: string
             project:
-              type: string
+              type: sequence
+              sequence:
+                type: string
             workflow:
-              type: string
+              type: sequence
+              sequence:
+                type: string
             vault:
-              type: string
+              type: sequence
+              sequence:
+                type: string
+        access_token:
+          type: string
+        login_id:
+          type: string
+        callback_url:
+          type: string
     translate:
       type: mapping
       label: 'Translate'
