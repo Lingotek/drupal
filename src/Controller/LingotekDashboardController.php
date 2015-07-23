@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\lingotek\Controller\LingotekControllerBase;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -40,7 +41,7 @@ EOD;
     $string .= $d8_css_hack;
     return array(
       '#type' => 'markup',
-      '#markup' => $string,
+      '#markup' => SafeMarkup::set($string),
     );
   }
 
