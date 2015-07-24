@@ -153,12 +153,15 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveLanguageSwitcher() {
-    $config = $this->config('system.theme');
-    $theme_default = $config->get('default');
+    $theme_default = $this->config('system.theme')->get('default');
     $this->lang_regions = system_region_list($theme_default, REGIONS_VISIBLE);
-    $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load('languageswitcher');
-    // If the website doesn't have a language switcher block yet, don't act on it.
-    if ($this->lang_switcher) {
+    $ids = \Drupal::entityQuery('block')
+      ->condition('plugin', 'language_block:language_interface')
+      ->condition('theme', $theme_default)
+      ->execute();
+    if ($ids) {
+      // We just take the first language switcher.
+      $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load(reset($ids));
       $this->lang_switcher_value = $this->lang_switcher->status();
       $this->lang_region_selected = $this->lang_switcher->getRegion();
     }
