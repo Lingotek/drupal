@@ -110,29 +110,36 @@ class LingotekTranslatableEntity {
   public function saveTargetData($data, $locale) {
     // Logic adapted from TMGMT contrib module for saving
     // translated fields to their entity.
-
     /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $langcode = LingotekLocale::convertLingotek2Drupal($locale);
-    if (!$langcode) {
-      // TODO: log warning that downloaded translation's langcode is not enabled.
-      return FALSE;
-    }
+    $lock = \Drupal::lock();
+    if ($lock->acquire(__FUNCTION__)) {
+      $this->entity = entity_load($this->entity->getEntityTypeId(), $this->entity->id(), TRUE);
+      $langcode = LingotekLocale::convertLingotek2Drupal($locale);
+      if (!$langcode) {
+        // TODO: log warning that downloaded translation's langcode is not enabled.
+        return FALSE;
+      }
 
-    // initialize the translation on the Drupal side, if necessary
-    if (!$this->entity->hasTranslation($langcode)) {
-      $this->entity->addTranslation($langcode, $this->entity->toArray());
-    }
-    $translation = $this->entity->getTranslation($langcode);
-    foreach ($data as $name => $field_data) {
-      foreach ($field_data as $delta => $delta_data) {
-        foreach ($delta_data as $property => $property_data) {
-          if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
-            $translation->get($name)->offsetGet($delta)->set($property, $property_data);
+      // initialize the translation on the Drupal side, if necessary
+      if (!$this->entity->hasTranslation($langcode)) {
+        $this->entity->addTranslation($langcode, $this->entity->toArray());
+      }
+      $translation = $this->entity->getTranslation($langcode);
+      foreach ($data as $name => $field_data) {
+        foreach ($field_data as $delta => $delta_data) {
+          foreach ($delta_data as $property => $property_data) {
+            if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
+              $translation->get($name)->offsetGet($delta)->set($property, $property_data);
+            }
           }
         }
       }
+      $translation->save();
+      $lock->release(__FUNCTION__);
     }
-    $translation->save();
+    else {
+      $lock->wait(__FUNCTION__);
+    }
     return $this;
   }
 
@@ -393,8 +400,14 @@ class LingotekTranslatableEntity {
   public function download($locale) {
     $data = $this->L->downloadDocument($this->getDocId(), $locale);
     if ($data) {
-      $this->saveTargetData($data, $locale);
-      $this->setTargetStatus($locale, Lingotek::STATUS_CURRENT);
+      $transaction = db_transaction();
+      try {
+        $this->saveTargetData($data, $locale);
+        $this->setTargetStatus($locale, Lingotek::STATUS_CURRENT);
+      }
+      catch(Exception $e) {
+        $transaction->rollback();
+      }
       return TRUE;
     }
     return FALSE;
