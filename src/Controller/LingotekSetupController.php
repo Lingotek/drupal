@@ -70,6 +70,10 @@ class LingotekSetupController extends LingotekControllerBase {
       $this->L->set('default.project', current(array_keys($resources['project'])));
       $this->L->set('default.vault', current(array_keys($resources['vault'])));
       $this->L->set('default.workflow', array_search('Machine Translation', $resources['workflow']));
+      // Assign the project callback
+      $new_callback_url = \Drupal::urlGenerator()->generate('<none>', [], ['absolute' => TRUE]) . 'lingotek/notify';
+      $this->L->set('account.callback_url', $new_callback_url);
+      $new_response = $this->L->setProjectCallBackUrl($this->L->get('default.project'), $new_callback_url);
       return $this->redirect('lingotek.dashboard');
     }
     return array(
