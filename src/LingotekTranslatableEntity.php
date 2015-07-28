@@ -117,6 +117,7 @@ class LingotekTranslatableEntity {
       $langcode = LingotekLocale::convertLingotek2Drupal($locale);
       if (!$langcode) {
         // TODO: log warning that downloaded translation's langcode is not enabled.
+        $lock->release(__FUNCTION__);
         return FALSE;
       }
 
