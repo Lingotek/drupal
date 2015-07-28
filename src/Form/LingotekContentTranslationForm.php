@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
@@ -85,14 +86,14 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         }
         // Check-Progress button if the source upload status is PENDING.
         elseif ($target_status === Lingotek::STATUS_PENDING && $source_status === Lingotek::STATUS_CURRENT) {
-          $this->removeOperationLink($option, 'Add'); //maintain core functionality
+          $this->removeOperationLink($entity, $option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/check_target/' . $doc_id . '/' . $locale;
           $this->addOperationLink($entity, $option, 'Check translation status', $path, $language);
           $status_check_needed = TRUE;
         }
         // Download button if translations are READY or CURRENT.
         elseif ($target_status !== NULL && $source_status === Lingotek::STATUS_CURRENT) {
-          $this->removeOperationLink($option, 'Add'); //maintain core functionality
+          $this->removeOperationLink($entity, $option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/download/' . $doc_id . '/' . $locale;
           $this->addOperationLink($entity, $option, 'Download completed translation', $path, $language);
           $path = '/admin/lingotek/workbench/' . $doc_id . '/' . $locale;
@@ -206,7 +207,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     );
   }
 
-  protected function removeOperationLink(array &$option, $name) {
+  protected function removeOperationLink(ContentEntityInterface $entity, array &$option, $name) {
     $operation_col = $this->getOperationColumnId($entity, $option);
 
     unset($option[$operation_col]['data']['#links'][strtolower($name)]);

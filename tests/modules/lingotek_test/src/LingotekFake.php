@@ -47,6 +47,14 @@ class LingotekFake implements LingotekInterface {
         return 'lingofake/authorize';
       case 'account.default_client_id':
         return 'test_default_client_id';
+      case 'profile':
+        return [
+            ['id' => 1,
+              'name' => 'automatic',
+              'auto_upload' => TRUE,
+              'auto_download'=> TRUE,
+            ],
+          ];
     }
   }
 
