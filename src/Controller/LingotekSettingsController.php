@@ -13,12 +13,6 @@ class LingotekSettingsController extends LingotekControllerBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
-  
-    //$form_short_id values:  config, logging, utilities, language_switcher
-    $form_id = "lingotek_admin_{$form_short_id}_form";
-    if (!is_null($form_short_id) && function_exists($form_id)) {
-      return $this->getLingotekForm($form_id);
-    }
 
     $settings_tab = array (
       $this->getLingotekForm('LingotekSettingsTabAccountForm'),
