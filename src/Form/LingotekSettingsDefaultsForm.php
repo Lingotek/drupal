@@ -38,7 +38,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       $this->L->set('default.vault', current(array_keys($this->resources['vault'])));
     }
 
-    //Set workflow to machine translation every time regardless if there's more than one choice
+    // Set workflow to machine translation every time regardless if there's more than one choice
     $this->L->set('default.workflow', array_search('Machine Translation', $this->resources['workflow']));
   }
 

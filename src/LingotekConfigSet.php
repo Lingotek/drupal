@@ -351,7 +351,6 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   /**
-    /**
    * Return the set ID for a given Lingotek document ID, if it exists
    *
    * @param int

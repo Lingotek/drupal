@@ -62,7 +62,6 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           '#type' => 'checkbox',
           '#disabled' => TRUE,
         );
-
         // Check-Progress button if the source upload status is PENDING.
         if ($source_status === Lingotek::STATUS_PENDING && !empty($doc_id)) {
           $path = '/admin/lingotek/entity/check_upload/' . $doc_id;
@@ -76,9 +75,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       }
       else {
         // Buttons for the ENTITY TARGET LANGUAGE
-
         $target_status = $lte->getTargetStatus($locale);
-
         // Add-Targets button if languages haven't been added, or if target status is UNTRACKED.
         if ($source_status === Lingotek::STATUS_CURRENT && !empty($doc_id) && (!isset($target_status) || $target_status === Lingotek::STATUS_UNTRACKED)) {
           $path = '/admin/lingotek/entity/add_target/' . $doc_id . '/' . $locale;

@@ -64,7 +64,6 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
           '#markup' => $this->t($bundle['label']),
         );
         $row['profiles'] = $this->retrieveProfiles($bundle_id);
-        //$row['fields'] = $this->retrieveFields($entity_id, $bundle_id);
         $table[$bundle_id] = $row;
       }
     }
@@ -90,42 +89,7 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    dpm($this->L->get());
-    // All this code is to mimic the callback url actions. I put it here
-    // just because the config save button doesn't do anything presently
-    // and I needed a place to trigger code.
-    //Request bin stuff
-    //$result = file_get_contents('http://requestb.in/s3ienss3');
-    //dpm($result);
 
-    // Upload
-    // $lte = LingotekTranslatableEntity::loadById(337, 'node');
-    // $lte->setSourceStatus(Lingotek::STATUS_CURRENT);
-    // $lte->requestTranslations();
-
-    // Check target progress
-    // $lte = LingotekTranslatableEntity::loadById(337, 'node');
-    // $target_languages = \Drupal::languageManager()->getLanguages();
-    // $entity_langcode = $lte->entity->language()->getId();
-
-    // foreach($target_languages as $langcode => $language) {
-    //   $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-    //     if ($langcode != $entity_langcode) {
-    //       $lte->checkTargetStatus($locale);
-    //     }
-    // }
-
-    // Download translations
-    // $lte = LingotekTranslatableEntity::loadById(337, 'node');
-    // $target_languages = \Drupal::languageManager()->getLanguages();
-    // $entity_langcode = $lte->entity->language()->getId();
-
-    // foreach($target_languages as $langcode => $language) {
-    //   $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-    //   if ($langcode != $entity_langcode) {
-    //     $lte->download($locale);
-    //   }
-    // }
   }
 
   protected function retrieveProfileOptions() {
@@ -146,9 +110,6 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
         $this->bundles[$entity->id()] = $bundle;
       }
     }
-    //dpm($this->bundles);
-    // Test until I can find how to make config enity types translatable in the GUI
-    $this->bundles['block']['block']['translatable'] = 1;
   }
 
   protected function retrieveTranslatableBundles() {
@@ -165,15 +126,6 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
 
   protected function retrieveProfiles($bundle_id) {
     $option_num;
-
-    // Find which profile the user previously selected
-    // if ($this->L->get('translate.entity.' . $bundle_id)) {
-    //   $option_num = $this->L->get('translate.entity.' . $bundle_id);
-    // }
-    // else {
-    //   $option_num = $this->L->PROFILE_AUTOMATIC;
-    // }
-    
     $select = array(
       '#type' => 'select',
       '#options' => $this->profile_options,
@@ -191,13 +143,6 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
     // Find which fields the user previously selected
     foreach($fields as $field_id => $field) {
       if ($field->isTranslatable()) {
-        // if ($this->L->get('field.' . $bundle_id . '.' . $field_id)) {
-        //   $checkbox_choice = $this->L->get('field.' . $bundle_id . '.' . $field_id);
-        // }
-        // else {
-        //   $checkbox_choice = 0;
-        // }
-
         $field_checkbox = array(
           '#type' => 'checkbox',
           '#title' => $this->t($field->getLabel()),
