@@ -61,7 +61,7 @@ class LingotekNodeTranslation extends LingotekTestBase {
     $this->node = Node::load(1);
 
     // Check that the translate tab is in the node.
-    $this->drupalGet($this->node->url('edit-form'));
+    $this->drupalGet('node/1');
     $this->clickLink('Translate');
 
     // Check that we can upload the document to Lingotek.

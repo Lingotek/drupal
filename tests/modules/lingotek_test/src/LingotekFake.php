@@ -45,7 +45,13 @@ class LingotekFake implements LingotekInterface {
       case 'account.host':
         return \Drupal::request()->getSchemeAndHttpHost();
       case 'account.authorize_path':
-        return 'lingofake/authorize';
+        $path = \Drupal::request()->getBasePath();
+        if (!empty($path)){
+          // Remove the leading '/'.
+          $path = substr($path, 1);
+          $path .= '/';
+        }
+        return $path . 'lingofake/authorize';
       case 'account.default_client_id':
         return 'test_default_client_id';
       case 'profile':
