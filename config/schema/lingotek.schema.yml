@@ -69,11 +69,17 @@ lingotek.settings:
       label: 'Translate'
       mapping:
         entity:
-            type: string
+            type: sequence
+            sequence:
+              type: sequence
         config:
-            type: string
+            type: sequence
+            sequence:
+              type: sequence
         interface:
-            type: string
+            type: sequence
+            sequence:
+              type: sequence
     field:
       type: string
     profile:

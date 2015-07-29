@@ -18,5 +18,10 @@ interface LingotekInterface {
   public function getDefaults();
   public function getProject($project_id);
   public function setProjectCallBackUrl($project_id, $callback_url);
+  public function uploadDocument($title, $content, $locale = NULL);
+  public function documentImported($doc_id);
+  public function addTarget($doc_id, $locale);
+  public function getDocumentStatus($doc_id);
+  public function downloadDocument($doc_id, $locale);
 
 }

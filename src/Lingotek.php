@@ -193,7 +193,8 @@ class Lingotek implements LingotekInterface {
       $community_id = $this->get('default.community');
       $data = $this->api->$func($community_id);
       $this->set($resources_key, $data);
-      $default_key = 'default.' . end(explode(".", $resources_key));
+      $keys = explode(".", $resources_key);
+      $default_key = 'default.' . end($keys);
       $this->setValidDefaultIfNotSet($default_key, $data);
     }
     return $data;

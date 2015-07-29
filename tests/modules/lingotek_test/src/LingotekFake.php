@@ -2,6 +2,7 @@
 namespace Drupal\lingotek_test;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -135,4 +136,29 @@ class LingotekFake implements LingotekInterface {
       'resource' => 'test_resource',
     ];
   }
+
+  public function uploadDocument($title, $content, $locale = NULL) {
+    // If the upload is successful, we must return a valid hash.
+    return 'dummy-document-hash-id';
+  }
+
+  public function documentImported($doc_id) {
+    // Our document is always imported correctly.
+    return TRUE;
+  }
+
+  public function addTarget($doc_id, $locale) {
+    // Added locale as target.
+    return TRUE;
+  }
+
+  public function getDocumentStatus($doc_id) {
+    // Translation is done.
+    return TRUE;
+  }
+
+  public function downloadDocument($doc_id, $locale) {
+    return json_decode('{"title":[{"value":"Las llamas son chulas"}],"uid":[{"target_id":"1"}],"status":[{"value":1}],"created":[{"value":1438095034}],"changed":[{"value":1438095483}],"promote":[{"value":1}],"sticky":[{"value":0}],"revision_log":[{"value":""}],"revision_translation_affected":[{"value":"1"}],"content_translation_source":[{"value":"und"}],"content_translation_outdated":[{"value":"0"}],"body":[{"value":"Las llamas son muy chulas","format":"plain_text","summary":""}]}');
+  }
+
 }

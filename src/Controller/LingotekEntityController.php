@@ -77,9 +77,9 @@ class LingotekEntityController extends LingotekControllerBase {
   }
 
   protected function translationsPageRedirect($entity) {
-    $entity_type = $entity->getEntityTypeId();
-    $link = $entity_type . '/' . $entity->id() . '/translations';
-    return new RedirectResponse(Url::fromUri('base://' . $link)->toString() );
+    $entity_type_id = $entity->getEntityTypeId();
+    $uri = Url::fromRoute("entity.$entity_type_id.content_translation_overview", [$entity_type_id => $entity->id()]);
+    return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
   }
 
 }

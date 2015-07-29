@@ -19,9 +19,9 @@ account:
     workflow: []
     vault: []
 translate:
-  entity: null
-  config: null
-  interface: null
+  entity: []
+  config: []
+  interface: []
 field:
 profile:
   - id: 1
