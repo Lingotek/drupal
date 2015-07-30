@@ -82,12 +82,14 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     $entity_types = $this->L->get('translate.entity');
     
     // Count how many content types are using this $profile
-    foreach($entity_types as $entity_id => $bundles) {
-      foreach($bundles as $bundle) {
-        $profile_choice = $bundle['profile'];
+    if (!empty($entity_types)) {
+      foreach($entity_types as $entity_id => $bundles) {
+        foreach($bundles as $bundle) {
+          $profile_choice = $bundle['profile'];
 
-        if ($profile_choice == $profile['id']) {
-          $usage++;
+          if ($profile_choice == $profile['id']) {
+            $usage++;
+          }
         }
       }
     }

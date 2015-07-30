@@ -102,7 +102,6 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
 
   protected function retrieveBundles() {
     $entities = \Drupal::entityManager()->getDefinitions();
-    $entities['block']->set('translatable', 1);
     $this->bundles = array();
     foreach ($entities as $entity) {
       if ($entity instanceof \Drupal\Core\Config\Entity\ConfigEntityType) {

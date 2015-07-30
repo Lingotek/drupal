@@ -14,3 +14,9 @@ lingotek.connect:
   version: VERSION
   js:
     js/connect.js: {}
+
+lingotek.settings:
+  version: VERSION
+  css:
+    theme:
+      css/lingotek.settings.css: {}

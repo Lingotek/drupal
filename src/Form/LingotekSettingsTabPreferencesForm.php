@@ -153,21 +153,23 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveLanguageSwitcher() {
-    $theme_default = $this->config('system.theme')->get('default');
-    $this->lang_regions = system_region_list($theme_default, REGIONS_VISIBLE);
-    $ids = \Drupal::entityQuery('block')
-      ->condition('plugin', 'language_block:language_interface')
-      ->condition('theme', $theme_default)
-      ->execute();
-    if ($ids) {
-      // We just take the first language switcher.
-      $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load(reset($ids));
-      $this->lang_switcher_value = $this->lang_switcher->status();
-      $this->lang_region_selected = $this->lang_switcher->getRegion();
-    }
-    else {
-      $this->lang_switcher_value = 0;
-      $this->lang_region_selected = $this->default_region;
+    if (\Drupal::moduleHandler()->moduleExists('block')) {
+      $theme_default = $this->config('system.theme')->get('default');
+      $this->lang_regions = system_region_list($theme_default, REGIONS_VISIBLE);
+      $ids = \Drupal::entityQuery('block')
+        ->condition('plugin', 'language_block:language_interface')
+        ->condition('theme', $theme_default)
+        ->execute();
+      if ($ids) {
+        // We just take the first language switcher.
+        $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load(reset($ids));
+        $this->lang_switcher_value = $this->lang_switcher->status();
+        $this->lang_region_selected = $this->lang_switcher->getRegion();
+      }
+      else {
+        $this->lang_switcher_value = 0;
+        $this->lang_region_selected = $this->default_region;
+      }
     }
   }
 

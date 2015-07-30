@@ -7,10 +7,8 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
-use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\lingotek\Lingotek;
 
 /**
@@ -108,6 +106,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       );
     }
 
+    $form['#attached']['library'][] = 'lingotek/lingotek.settings';
+
     return $form;
   }
 
@@ -119,17 +119,20 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $data = array();
     
     // For every content type, save the profile and fields in the Lingotek object
-    foreach($form_values as $entity => $bundles) {
-      foreach($bundles as $bundle_id => $bundle) {
+    foreach ($this->translatable_bundles as $entity_id => $bundles) {
+      foreach($form_values[$entity_id] as $bundle_id => $bundle) {
         foreach($bundle['fields'] as $field_id => $field_choice) {
           if ($field_choice == 1) {
-            $data[$entity][$bundle_id]['field'][$field_id] = $bundles[$bundle_id]['fields'][$field_id];
+            $data[$entity_id][$bundle_id]['field'][$field_id] = $form_values[$entity_id][$bundle_id]['fields'][$field_id];
+            if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
+              $data[$entity_id][$bundle_id]['field'][$field_id . ':properties'] = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'];
+            }
           }
         }
-        $data[$entity][$bundle_id]['profile'] = $bundles[$bundle_id]['profiles'];  
+        $data[$entity_id][$bundle_id]['profile'] = $form_values[$entity_id][$bundle_id]['profiles'];
       }
     }
-    $this->L->set('translate.entity', $data);
+    $this->configFactory()->getEditable('lingotek.settings')->set('translate.entity', $data)->save();
     parent::submitForm($form, $form_state);
   }
 
@@ -146,7 +149,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $this->bundles = array();
 
     foreach ($entities as $entity) {
-      if ($entity instanceof \Drupal\Core\Entity\ContentEntityType) {
+      if ($entity instanceof \Drupal\Core\Entity\ContentEntityType && $entity->hasKey('langcode')) {
         $bundle = \Drupal::entityManager()->getBundleInfo($entity->id());
         $this->bundles[$entity->id()] = $bundle;
       }
@@ -166,16 +169,13 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveProfiles($entity_id, $bundle_id) {
-    $option_num;
+    $option_num = Lingotek::PROFILE_AUTOMATIC;
 
     // Find which profile the user previously selected
     if ($this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile')) {
       $option_num = $this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile');
     }
-    else {
-      $option_num = Lingotek::PROFILE_AUTOMATIC;
-    }
-    
+
     $select = array(
       '#type' => 'select',
       '#options' => $this->profile_options,
@@ -186,26 +186,49 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveFields($entity_id, $bundle_id) {
-    $fields = \Drupal::entityManager()->getFieldDefinitions($entity_id, $bundle_id);
-    $field_checkboxes = array ();
-    $checkbox_choice;
-    
-    // Find which fields the user previously selected
-    foreach($fields as $field_id => $field) {
-      if ($field->isTranslatable()) {
-        if ($this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id)) {
-          $checkbox_choice = $this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id);
-        }
-        else {
-          $checkbox_choice = 0;
-        }
+    $entity_type = \Drupal::entityManager()->getDefinition($entity_id);
+    $config = $this->config('lingotek.settings');
 
-        $field_checkbox = array(
-          '#type' => 'checkbox',
-          '#title' => $this->t($field->getLabel()),
-          '#default_value' => $checkbox_choice,
-        );
-        $field_checkboxes[$field_id] = $field_checkbox;
+    $content_translation_manager = \Drupal::service('content_translation.manager');
+    $storage_definitions = \Drupal::entityManager()->getFieldStorageDefinitions($entity_id);
+    $field_checkboxes = array ();
+
+    if ($content_translation_manager->isSupported($entity_id)) {
+      $fields = \Drupal::entityManager()->getFieldDefinitions($entity_id, $bundle_id);
+      // Find which fields the user previously selected
+      foreach ($fields as $field_id => $field_definition) {
+        $checkbox_choice = 0;
+        if (!empty($storage_definitions[$field_id]) &&
+              $storage_definitions[$field_id]->getProvider() != 'content_translation' &&
+              !in_array($storage_definitions[$field_id]->getName(), [$entity_type->getKey('langcode'), $entity_type->getKey('default_langcode'), 'revision_translation_affected']) &&
+          $field_definition->isTranslatable() && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
+
+          if ($value = $config->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id)) {
+            $checkbox_choice = $value;
+          }
+          $field_checkbox = array(
+            '#type' => 'checkbox',
+            '#title' => $this->t($field_definition->getLabel()),
+            '#default_value' => $checkbox_choice,
+          );
+          $field_checkboxes[$field_id] = $field_checkbox;
+
+
+          // Display the column translatability configuration widget.
+          module_load_include('inc', 'content_translation', 'content_translation.admin');
+          $column_element = content_translation_field_sync_widget($field_definition);
+          if ($column_element) {
+            $properties_checkbox_choice = $config->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id . ':properties' );
+            $field_checkbox = array(
+              '#type' => 'checkboxes',
+              '#options' => $column_element['#options'],
+              '#default_value' => $properties_checkbox_choice ?: [] ,
+              '#attributes' => ['class' => array('field-property-checkbox')],
+            );
+            $field_checkboxes[$field_id . ':properties' ] = $field_checkbox;
+          }
+          // $checkbox_choice = $config->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.field.' . $field_id . '.' . $property_id);
+        }
       }
     }
 

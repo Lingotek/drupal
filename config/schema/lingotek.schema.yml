@@ -72,14 +72,20 @@ lingotek.settings:
             type: sequence
             sequence:
               type: sequence
+              sequence:
+                type: ignore
         config:
             type: sequence
             sequence:
               type: sequence
+              sequence:
+                type: ignore
         interface:
             type: sequence
             sequence:
               type: sequence
+              sequence:
+                type: ignore
     field:
       type: string
     profile:

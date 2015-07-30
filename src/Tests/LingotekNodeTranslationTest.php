@@ -2,7 +2,6 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Language\LanguageManager;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
@@ -13,7 +12,7 @@ use Drupal\node\NodeInterface;
  *
  * @group lingotek
  */
-class LingotekNodeTranslation extends LingotekTestBase {
+class LingotekNodeTranslationTest extends LingotekTestBase {
 
   /**
    * Modules to install.
@@ -29,6 +28,14 @@ class LingotekNodeTranslation extends LingotekTestBase {
 
   protected function setUp() {
     parent::setUp();
+
+    // Create Article node types.
+    if ($this->profile != 'standard') {
+      $this->drupalCreateContentType(array(
+        'type' => 'article',
+        'name' => 'Article'
+      ));
+    }
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->save();
@@ -64,11 +71,8 @@ class LingotekNodeTranslation extends LingotekTestBase {
     $this->drupalGet('node/1');
     $this->clickLink('Translate');
 
-    // Check that we can upload the document to Lingotek.
-    $this->clickLink('Upload');
-    $this->assertText('Uploaded 1 document to Lingotek.');
-
-    // Check the upload status.
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
     $this->clickLink('Check Upload Status');
     $this->assertText('The import for node #1 is complete.');
 
