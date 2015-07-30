@@ -392,7 +392,7 @@ class LingotekTranslatableEntity {
   public function update() {
     $source_data = json_encode($this->getSourceData());
     if ($this->L->updateDocument($this->getDocId(), $source_data)){
-      $this->setSourceStatus(Lingotek::STATUS_PENDING);
+      $this->setSourceStatus(Lingotek::STATUS_CURRENT);
       return TRUE;
     }
     return FALSE;

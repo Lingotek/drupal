@@ -73,11 +73,7 @@ class LingotekApi implements LingotekApiInterface {
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to patch (update) document: ' . $e->getMessage());
     }
-    if ($response->getStatusCode() == '202') {
-      return TRUE;
-    }
-    // TODO: log warning
-    return FALSE;
+    return $response;
   }
 
   public function deleteDocument($id) {
