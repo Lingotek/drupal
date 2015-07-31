@@ -145,6 +145,7 @@ class LingotekFake implements LingotekInterface {
 
   public function uploadDocument($title, $content, $locale = NULL) {
     // If the upload is successful, we must return a valid hash.
+    \Drupal::state()->set('lingotek.uploaded_content', $content);
     return 'dummy-document-hash-id';
   }
 

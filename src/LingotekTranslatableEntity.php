@@ -92,15 +92,36 @@ class LingotekTranslatableEntity {
         $translatable_fields[$field_name] = $definition;
       }
     }
+    $field_definitions = $this->entity_manager->getFieldDefinitions($entity_type->id(), $this->entity->bundle());
 
+    $config = \Drupal::config('lingotek.settings');
     $data = array();
     $translation = $this->entity->getTranslation($this->entity->language()->getId());
     foreach ($translatable_fields as $k => $definition) {
-      $field = $translation->get($k);
-      foreach ($field as $fkey => $fval) {
-        foreach ($fval->getProperties() as $pkey => $pval) {
-          // TODO: add a check for the fields that should be sent up for translation.
-          $data[$k][$fkey][$pkey] = $pval->getValue();
+      // Check if the field is marked for upload.
+      if ($config->get('translate.entity.' . $entity_type->id() . '.' . $this->entity->bundle() . '.field.' . $k )) {
+        // If there is only one relevant attribute, upload it.
+        // Get the column translatability configuration.
+        module_load_include('inc', 'content_translation', 'content_translation.admin');
+        $column_element = content_translation_field_sync_widget($field_definitions[$k]);
+
+        $field = $translation->get($k);
+        foreach ($field as $fkey => $fval) {
+          // If we have only one relevant column, upload that. If not, check
+          // our settings.
+          if (!$column_element) {
+            $property_name = $storage_definitions[$k]->getMainPropertyName();
+            $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
+          }
+          else {
+            $configured_properties = $config->get('translate.entity.' . $entity_type->id() . '.' . $this->entity->bundle() . '.field.' . $k . ':properties');
+            $properties = $fval->getProperties();
+            foreach ($properties as $pkey => $pval) {
+              if (isset($configured_properties[$pkey]) && $configured_properties[$pkey]) {
+                $data[$k][$fkey][$pkey] = $pval->getValue();
+              }
+            }
+          }
         }
       }
     }
