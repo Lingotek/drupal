@@ -19,7 +19,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['node'];
+  public static $modules = ['node', 'image'];
 
   /**
    * @var NodeInterface
@@ -36,6 +36,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
         'name' => 'Article'
       ));
     }
+    $this->createImageField('field_image', 'article');
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->save();
@@ -54,6 +55,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
       'node[article][profiles]' => 1,
       'node[article][fields][title]' => 1,
       'node[article][fields][body]' => 1,
+      'node[article][fields][field_image]' => 1,
+      'node[article][fields][field_image:properties][alt]' => 'alt',
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
@@ -66,21 +69,31 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
+    $test_image = current($this->drupalGetTestFiles('image'));
+
     // Create a node.
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $edit['files[field_image_0]'] = drupal_realpath($test_image->uri);
+
+    $this->drupalPostForm('node/add/article', $edit, t('Preview'));
+
+    unset($edit['files[field_image_0]']);
+    $edit['field_image[0][alt]'] = 'Llamas are cool';
+    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
 
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
-    $this->assertEqual(2, count($data));
+    $this->assertEqual(3, count($data));
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertEqual(1, count($data['field_image'][0]));
+    $this->assertTrue(isset($data['field_image'][0]['alt']));
 
     // Check that the translate tab is in the node.
     $this->drupalGet('node/1');
