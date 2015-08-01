@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
@@ -420,7 +421,13 @@ class LingotekTranslatableEntity {
   }
 
   public function download($locale) {
-    $data = $this->L->downloadDocument($this->getDocId(), $locale);
+    try {
+      $data = $this->L->downloadDocument($this->getDocId(), $locale);
+    } catch (LingotekApiException $exception) {
+      // TODO: log issue
+      return FALSE;
+    }
+
     if ($data) {
       $transaction = db_transaction();
       try {

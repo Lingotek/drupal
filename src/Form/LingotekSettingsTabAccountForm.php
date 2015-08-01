@@ -10,6 +10,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 
 /**
@@ -35,8 +36,12 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       $isEnterprise = 'No';
     }
 
-    if ($this->L->getAccountInfo()) {  
-      $connectionStatus = 'Active';
+    try {
+      if ($this->L->getAccountInfo()) {
+        $connectionStatus = 'Active';
+      }
+    } catch(LingotekApiException $exception) {
+      drupal_set_message('There was a problem checking your account status.', 'warning');
     }
 
     $statusRow = array(
