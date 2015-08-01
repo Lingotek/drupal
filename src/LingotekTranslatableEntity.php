@@ -320,7 +320,7 @@ class LingotekTranslatableEntity {
           'entity_type' => $this->entity->getEntityTypeId(),
           'entity_key' => $key,
           'value' => $value,
-          'created' => $this->entity->getCreatedTime(),
+          'created' => method_exists($this->entity, 'getCreatedTime') ? $this->entity->getCreatedTime() : -1,
           'modified' => $this->entity->getChangedTime(),
         ))
         ->execute();
@@ -328,7 +328,7 @@ class LingotekTranslatableEntity {
       db_update('lingotek_entity_metadata')
         ->fields(array(
           'value' => $value,
-          'created' => $this->entity->getCreatedTime(),
+          'created' => method_exists($this->entity, 'getCreatedTime') ? $this->entity->getCreatedTime() : -1,
           'modified' => $this->entity->getChangedTime(),
         ))
         ->condition('entity_id', $this->entity->id())

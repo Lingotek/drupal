@@ -6,6 +6,8 @@
  * Implements Drupal-related hooks for the Lingotek Translation module.
  */
 
+use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -93,61 +95,78 @@ function lingotek_entity_delete(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_form_BASE_FORM_ID_alter().
+ * Implements hook_form_alter().
  */
-function lingotek_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  //TODO: see if there's a entity_form_alter()
-  $container = \Drupal::getContainer();
-  $L = $container->get('lingotek');
-  $profiles = $L->get('profile');
-  $entity = $form_state->getFormObject()->getEntity();
-  $lte = LingotekTranslatableEntity::load($container, $entity);
-  $default_profile  = Lingotek::PROFILE_AUTOMATIC;
-  $options = array();
+function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form_object = $form_state->getFormObject();
+  if ($form_object instanceof ContentEntityFormInterface) {
+    $entity = $form_object->getEntity();
 
-  // Use the entity's profile if set, else use the content type's profile
-  $entity_profile = $lte->getProfile();
-  if ($entity_profile != NULL) {
-    $default_profile = $entity_profile;
-  }
-  else {
-    if ($entity->getType() === 'article') {
-      $default_profile = $L->get('translate.entity.node.article');
+    /** @var ContentTranslationManagerInterface $content_translation_manager */
+    $content_translation_manager = \Drupal::service('content_translation.manager');
+    $config = \Drupal::config('lingotek.settings');
+    // If content translation is not enabled and lingotek configured, don't add
+    // the form element.
+    if (!$content_translation_manager->isEnabled($entity->getEntityTypeId(), $entity->bundle()) ||
+      !$config->get('translate.entity.' . $entity->getEntityTypeId() . '.' . $entity->bundle())) {
+      return;
     }
-    elseif ($entity->getType() === 'page') {
-      $default_profile = $L->get('translate.entity.node.page');
+    $container = \Drupal::getContainer();
+    $L = $container->get('lingotek');
+    $profiles = $L->get('profile');
+    /** @var ContentEntityInterface $entity */
+    $entity = $form_state->getFormObject()->getEntity();
+    $lte = LingotekTranslatableEntity::load($container, $entity);
+    $default_profile  = Lingotek::PROFILE_AUTOMATIC;
+    $options = array();
+
+    // Use the entity's profile if set, else use the content type's profile
+    $entity_profile = $lte->getProfile();
+    if ($entity_profile != NULL) {
+      $default_profile = $entity_profile;
     }
-  }
+    else {
+      if ($entity->getEntityTypeId() == 'node') {
+        if ($entity->getType() === 'article') {
+          $default_profile = $L->get('translate.entity.node.article');
+        }
+        elseif ($entity->getType() === 'page') {
+          $default_profile = $L->get('translate.entity.node.page');
+        }
+      }
+    }
+    foreach ($profiles as $profile) {
+      $options[$profile['id']] = ucwords($profile['name']);
+    }
 
-  foreach ($profiles as $profile) {
-    $options[$profile['id']] = ucwords($profile['name']);
-  }
-  
-  $form['lingotek_translation_management'] = array(
-    '#type' => 'details',
-    '#title' => t('Translation Management'),
-    '#description' => t('The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek\'s translation tools and services without ever having to leave the comfort of your Drupal environment.'),
-    '#group' => 'advanced',
-  );
+    $form['lingotek_translation_management'] = array(
+      '#type' => 'details',
+      '#title' => t('Translation Management'),
+      '#description' => t('The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek\'s translation tools and services without ever having to leave the comfort of your Drupal environment.'),
+      '#group' => 'advanced',
+      '#weight' => 50,
+    );
 
-  $form['lingotek_translation_management']['lingotek_translation_profile'] = array(
-    '#type' => 'select',
-    '#title' => t('Translation Profile'),
-    '#options' => $options,
-    '#default_value' => $default_profile,
-  );
+    $form['lingotek_translation_management']['lingotek_translation_profile'] = array(
+      '#type' => 'select',
+      '#title' => t('Translation Profile'),
+      '#options' => $options,
+      '#default_value' => $default_profile,
+    );
 
-  foreach (array_keys($form['actions']) as $action) {
-    if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
-      $form['actions'][$action]['#submit'][] = 'lingotek_form_node_form_submit';
+    foreach (array_keys($form['actions']) as $action) {
+      if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+        $form['actions'][$action]['#submit'][] = 'lingotek_form_content_entity_form_submit';
+      }
     }
   }
 }
 
-function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) {
+function lingotek_form_content_entity_form_submit ($form, FormStateInterface $form_state) {
   $form_values = $form_state->getValues();
   $container = \Drupal::getContainer();
   $L = $container->get('lingotek');
+  /** @var ContentEntityInterface $entity */
   $entity = $form_state->getFormObject()->getEntity();
   $lte = LingotekTranslatableEntity::load($container, $entity);
   $lte->setProfile($form_values['lingotek_translation_profile']);
@@ -159,14 +178,14 @@ function lingotek_form_node_form_submit ($form, FormStateInterface $form_state) 
     // New entity with auto-upload
     if ($lte_status == NULL) {
       $doc_id = $lte->upload();
-      drupal_set_message(t('<em>@node_title</em> sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
+      drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
     // Updated entity with auto-upload
     elseif ($entity_has_changed) {
       $lte->setSourceStatus(Lingotek::STATUS_EDITED);
       $response = $lte->update();
       $lte->setTargetStatuses(Lingotek::STATUS_PENDING);
-      drupal_set_message(t('<em>@node_title</em> was updated and sent to Lingotek successfully.', array('@node_title' => $entity->getTitle())));
+      drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
   }
   // Updated entity with manual-upload
