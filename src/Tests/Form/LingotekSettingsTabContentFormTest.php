@@ -42,7 +42,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
    */
   public function testNoUntranslatableEntitiesAreShown() {
     $this->drupalGet('admin/lingotek/settings');
-    $this->assertText('There are no translatable content types specified');
+    $this->assertText('There are no translatable content entities specified');
   }
 
   /**

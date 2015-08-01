@@ -31,6 +31,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $entity_type_definitions = \Drupal::entityManager()->getDefinitions();
     $this->profiles = $this->L->get('profile');
 
     // Get the profiles
@@ -44,7 +45,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
 
     $form['parent_details'] = array(
       '#type' => 'details',
-      '#title' => 'Translate Content Types'
+      '#title' => t('Translate Content Entities'),
     );
     
     $form['parent_details']['list']['#type'] = 'container';
@@ -53,7 +54,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     // If user specifies no translatable entities, post this message
     if (empty($this->translatable_bundles)) {
       $form['parent_details']['empty_message'] = array(
-        '#markup' => t('There are no translatable content types specified'),
+        '#markup' => t('There are no translatable content entities specified'),
       );
     }
     
@@ -62,12 +63,13 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       $entity_key = 'entity-' . $entity_id;
       $form['parent_details']['list'][$entity_key] = array(
         '#type' => 'details',
-        '#title' => $entity_id,
+        '#title' => $entity_type_definitions[$entity_id]->getLabel(),
         'content' => array(),
       );
 
+      $bundle_label = $entity_type_definitions[$entity_id]->getBundleLabel();
       $header = array(
-        $this->t('Content Type'),
+        $bundle_label,
         $this->t('Translation Profile'),
         $this->t('Fields'),
       );
