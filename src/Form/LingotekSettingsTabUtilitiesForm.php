@@ -168,12 +168,15 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   public function disassociateAllTranslations() {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
     $doc_ids = LingotekSync::getAllLocalDocIds();
     // Delete tms documents if the preference checkbox is checked
     if ($this->L->get('preference.delete_tms_documents_upon_disassociation')) {
       foreach($doc_ids as $doc_index => $doc_id) {
-        $lte = LingotekTranslatableEntity::loadByDocId($doc_id);
-        $response = $lte->delete();
+        $entity = $translation_service->loadByDocumentId($doc_id);
+        $response = $translation_service->delete($entity);
       }
     }
 

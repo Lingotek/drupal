@@ -8,10 +8,18 @@ use Drupal\lingotek\LingotekTranslatableEntity;
 class LingotekBatchController extends LingotekControllerBase {
 
   public function dispatch($action, $entity_type, $entity_id) {
-    $lte = LingotekTranslatableEntity::loadById($entity_id, $entity_type);
-    if (!$lte->getHash()) {
-      $lte->hasEntityChanged(); 
-    }
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $L = \Drupal::service('lingotek');
+
+    $entity = \Drupal::entityManager()->getStorage($entity_type)->load($entity_id);
+
+    // ToDo: Remove profile functionality from LingotekTranslatableEntity.
+    $lte = LingotekTranslatableEntity::load($L, $entity);
+
+    // This forces the hash to be set.
+    $translation_service->hasEntityChanged($entity);
+
     if (!$lte->getProfile()) {
       $lte->setProfileForNewlyIdentifiedEntities(); 
     }

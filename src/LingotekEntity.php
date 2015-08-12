@@ -418,7 +418,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
    */
   public function setLanguage($language = NULL) {
     if (empty($language)) {
-      $drupal_locale = Lingotek::convertDrupal2Lingotek($this->entity->language);
+      $drupal_locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language);
       if (!empty($this->entity->lingotek['allow_source_overwriting']) && !empty($this->entity->lingotek['source_language_' . $drupal_locale])) {
         $language = $this->entity->lingotek['source_language_' . $drupal_locale];
       }
@@ -427,7 +427,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
       }
     }
     $this->language = $language;
-    $this->locale = Lingotek::convertDrupal2Lingotek($this->language);
+    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->language);
     $this->language_targets = Lingotek::getLanguagesWithoutSource($this->locale);
   }
 }

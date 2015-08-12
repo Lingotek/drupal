@@ -48,136 +48,14 @@ class LingotekTranslatableEntity {
     $this->entity_manager = \Drupal::entityManager();
   }
 
-  public static function load(ContainerInterface $container, $entity) {
-    $lingotek = $container->get('lingotek');
+  public static function load(LingotekInterface $lingotek, $entity) {
     return new static($entity, $lingotek);
   }
 
-  public static function loadByDocId($doc_id) {
-    $entity = FALSE;
-
-    $query = db_select('lingotek_entity_metadata', 'l')->fields('l', array('entity_id', 'entity_type'));
-    $query->condition('entity_key', 'document_id');
-    $query->condition('value', $doc_id);
-    $result = $query->execute();
-
-    if ($record = $result->fetchAssoc()) {
-      $id = $record['entity_id'];
-      $entity_type = $record['entity_type'];
-    }
-    if ($id && $entity_type) {
-      $entity = self::loadById($id, $entity_type);
-    }
-    return $entity;
-  }
-
   public static function loadById($id, $entity_type) {
-    $container = \Drupal::getContainer();
+    $L = \Drupal::service('lingotek');
     $entity = entity_load($entity_type, $id);
-    return self::load($container, $entity);
-  }
-
-  public function getSourceLocale() {
-    $this->locale = LingotekLocale::convertDrupal2Lingotek($this->entity->language()->getId());
-    return $this->locale;
-  }
-
-  public function getSourceData() {
-    // Logic adapted from Content Translation core module and TMGMT contrib
-    // module for pulling translatable field info from content entities.
-    $entity_type = $this->entity->getEntityType();
-    $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entity_manager->getFieldStorageDefinitions($entity_type->id()) : array();
-    $translatable_fields = array();
-    foreach ($this->entity->getFields(FALSE) as $field_name => $definition) {
-      if (!empty($storage_definitions[$field_name]) && $storage_definitions[$field_name]->isTranslatable() && $field_name != $entity_type->getKey('langcode') && $field_name != $entity_type->getKey('default_langcode')) {
-        $translatable_fields[$field_name] = $definition;
-      }
-    }
-    $field_definitions = $this->entity_manager->getFieldDefinitions($entity_type->id(), $this->entity->bundle());
-
-    $config = \Drupal::config('lingotek.settings');
-    $data = array();
-    $translation = $this->entity->getTranslation($this->entity->language()->getId());
-    foreach ($translatable_fields as $k => $definition) {
-      // Check if the field is marked for upload.
-      if ($config->get('translate.entity.' . $entity_type->id() . '.' . $this->entity->bundle() . '.field.' . $k )) {
-        // If there is only one relevant attribute, upload it.
-        // Get the column translatability configuration.
-        module_load_include('inc', 'content_translation', 'content_translation.admin');
-        $column_element = content_translation_field_sync_widget($field_definitions[$k]);
-
-        $field = $translation->get($k);
-        foreach ($field as $fkey => $fval) {
-          // If we have only one relevant column, upload that. If not, check
-          // our settings.
-          if (!$column_element) {
-            $property_name = $storage_definitions[$k]->getMainPropertyName();
-            $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
-          }
-          else {
-            $configured_properties = $config->get('translate.entity.' . $entity_type->id() . '.' . $this->entity->bundle() . '.field.' . $k . ':properties');
-            $properties = $fval->getProperties();
-            foreach ($properties as $pkey => $pval) {
-              if (isset($configured_properties[$pkey]) && $configured_properties[$pkey]) {
-                $data[$k][$fkey][$pkey] = $pval->getValue();
-              }
-            }
-          }
-        }
-      }
-    }
-    return $data;
-  }
-
-  public function saveTargetData($data, $locale) {
-    // Logic adapted from TMGMT contrib module for saving
-    // translated fields to their entity.
-    /* @var \Drupal\Core\Entity\ContentEntityInterface $entity */
-    $lock = \Drupal::lock();
-    if ($lock->acquire(__FUNCTION__)) {
-      $this->entity = entity_load($this->entity->getEntityTypeId(), $this->entity->id(), TRUE);
-      $langcode = LingotekLocale::convertLingotek2Drupal($locale);
-      if (!$langcode) {
-        // TODO: log warning that downloaded translation's langcode is not enabled.
-        $lock->release(__FUNCTION__);
-        return FALSE;
-      }
-
-      // initialize the translation on the Drupal side, if necessary
-      if (!$this->entity->hasTranslation($langcode)) {
-        $this->entity->addTranslation($langcode, $this->entity->toArray());
-      }
-      $translation = $this->entity->getTranslation($langcode);
-      foreach ($data as $name => $field_data) {
-        foreach ($field_data as $delta => $delta_data) {
-          foreach ($delta_data as $property => $property_data) {
-            if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
-              $translation->get($name)->offsetGet($delta)->set($property, $property_data);
-            }
-          }
-        }
-      }
-      $translation->save();
-      $lock->release(__FUNCTION__);
-    }
-    else {
-      $lock->wait(__FUNCTION__);
-    }
-    return $this;
-  }
-
-  public function hasEntityChanged() {
-    $source_data = json_encode($this->getSourceData());
-    $hash = md5($source_data);
-    $old_hash = $this->getHash();
-
-    if (!$old_hash || strcmp($hash, $old_hash)){
-      $this->setHash($hash);
-      
-      return true;
-    }
-
-    return false;
+    return self::load($L, $entity);
   }
 
   public function setProfileForNewlyIdentifiedEntities() {
@@ -257,18 +135,6 @@ class LingotekTranslatableEntity {
     return $this->setMetadata('hash', $hash);
   }
 
-  public function setTargetStatuses($status) {
-    $target_languages = \Drupal::languageManager()->getLanguages();
-    $entity_langcode = $this->entity->language()->getId();
-
-    foreach($target_languages as $langcode => $language) {
-      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-      if ($langcode != $entity_langcode && $this->getTargetStatus($locale)) {
-        $this->setTargetStatus($locale, $status);
-      }
-    }
-  }
-
   /**
    * Gets a Lingotek metadata value for the given key.
    *
@@ -339,107 +205,6 @@ class LingotekTranslatableEntity {
     
     }
     return $this;
-  }
-
-  public function deleteMetadata() {
-    $metadata = $this->getMetadata();
-    
-    foreach($metadata as $key => $value) {
-      db_delete('lingotek_entity_metadata')
-        ->condition('entity_id', $this->entity->id())
-        ->condition('entity_type', $this->entity->getEntityTypeId())
-        ->condition('entity_key', $key, 'LIKE')
-        ->execute();
-    }
-  }
-
-  public function checkSourceStatus() {
-    if ($this->L->documentImported($this->getDocId())) {
-      $this->setSourceStatus(Lingotek::STATUS_CURRENT);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  public function checkTargetStatus($locale) {
-    $current_status = $this->getTargetStatus($locale);
-    if (($current_status == Lingotek::STATUS_PENDING) && $this->L->getDocumentStatus($this->getDocId())) {
-      $current_status = Lingotek::STATUS_READY;
-      $this->setTargetStatus($locale, $current_status);
-    }
-    return $current_status;
-  }
-
-  //perhaps this function should be protected
-  public function addTarget($locale) {
-    if ($this->L->addTarget($this->getDocId(), $locale)) {
-      $this->setTargetStatus($locale, Lingotek::STATUS_PENDING);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  public function requestTranslations() {
-    $target_languages = \Drupal::languageManager()->getLanguages();
-    $entity_langcode = $this->entity->language()->getId();
-
-    foreach($target_languages as $langcode => $language) {
-      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-      if ($langcode != $entity_langcode) {
-        $this->setTargetStatus($locale, Lingotek::STATUS_PENDING);
-        $response = $this->addTarget($locale);
-      }
-    }
-  }
-
-  public function upload() {
-    $source_data = json_encode($this->getSourceData());
-    $document_name = $this->entity->bundle() . ' (' . $this->entity->getEntityTypeId() . '): ' . $this->entity->label();
-    $doc_id = $this->L->uploadDocument($document_name, $source_data, $this->getSourceLocale());
-    if ($doc_id) {
-      $this->setDocId($doc_id);
-      $this->setSourceStatus(Lingotek::STATUS_PENDING);
-      return $doc_id;
-    }
-    return FALSE;
-  }
-
-  public function delete() {
-    if($this->L->deleteDocument($this->getDocId())) {
-      return TRUE;
-    }  
-    return FALSE;
-  }
-
-  public function update() {
-    $source_data = json_encode($this->getSourceData());
-    if ($this->L->updateDocument($this->getDocId(), $source_data)){
-      $this->setSourceStatus(Lingotek::STATUS_CURRENT);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  public function download($locale) {
-    try {
-      $data = $this->L->downloadDocument($this->getDocId(), $locale);
-    } catch (LingotekApiException $exception) {
-      // TODO: log issue
-      return FALSE;
-    }
-
-    if ($data) {
-      $transaction = db_transaction();
-      try {
-        $this->saveTargetData($data, $locale);
-        $this->setTargetStatus($locale, Lingotek::STATUS_CURRENT);
-      }
-      catch(Exception $e) {
-        $transaction->rollback();
-      }
-      return TRUE;
-    }
-    return FALSE;
   }
 
 }

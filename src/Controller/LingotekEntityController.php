@@ -13,45 +13,54 @@ class LingotekEntityController extends LingotekControllerBase {
   protected $translations_link;
 
   public function checkUpload($doc_id) {
-    $te = LingotekTranslatableEntity::loadByDocId($doc_id);
-    if (!$te) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $entity = $translation_service->loadByDocumentId($doc_id);
+    if (!$entity) {
       // TODO: log warning
-      return $this->translationsPageRedirect($te->entity);
+      return $this->translationsPageRedirect($entity);
     }
-    if ($te->checkSourceStatus()) {
-      drupal_set_message(t('The import for @entity_type #@entity_id is complete.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())));
+    if ($translation_service->checkSourceStatus($entity)) {
+      drupal_set_message(t('The import for @entity_type #@entity_id is complete.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     } else {
-      drupal_set_message(t('The import for @entity_type #@entity_id is still pending.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())));
+      drupal_set_message(t('The import for @entity_type #@entity_id is still pending.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     }
-    return $this->translationsPageRedirect($te->entity);
+    return $this->translationsPageRedirect($entity);
   }
 
   public function checkTarget($doc_id, $locale) {
-    $te = LingotekTranslatableEntity::loadByDocId($doc_id);
-    if (!$te) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $entity = $translation_service->loadByDocumentId($doc_id);
+    if (!$entity) {
       // TODO: log warning
-      return $this->translationsPageRedirect($te->entity);
+      return $this->translationsPageRedirect($entity);
     }
-    if ($te->checkTargetStatus($locale) == Lingotek::STATUS_READY) {
-      drupal_set_message(t('The @locale translation for @entity_type #@entity_id is ready for download.', array('@locale' => $locale, '@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())));
+    if ($translation_service->checkTargetStatus($entity, $locale) === Lingotek::STATUS_READY) {
+      drupal_set_message(t('The @locale translation for @entity_type #@entity_id is ready for download.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     } else {
-      drupal_set_message(t('The @locale translation for @entity_type #@entity_id is still in progress.', array('@locale' => $locale, '@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())));
+      drupal_set_message(t('The @locale translation for @entity_type #@entity_id is still in progress.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     }
-    return $this->translationsPageRedirect($te->entity);
+    return $this->translationsPageRedirect($entity);
   }
 
   public function addTarget($doc_id, $locale) {
-    $te = LingotekTranslatableEntity::loadByDocId($doc_id);
-    if (!$te) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $entity = $translation_service->loadByDocumentId($doc_id);
+    if (!$entity) {
       // TODO: log warning
-      return $this->translationsPageRedirect($te->entity);
+      return $this->translationsPageRedirect($entity);
     }
-    if ($te->addTarget($locale)) {
-      drupal_set_message(t("Locale '@locale' was added as a translation target for @entity_type #@entity_id.", array('@locale' => $locale, '@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())));
+    if ($translation_service->addTarget($entity, $locale)) {
+      drupal_set_message(t("Locale '@locale' was added as a translation target for @entity_type #@entity_id.", array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     } else {
-      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type #@entity_id.", array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id())), 'warning');
+      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type #@entity_id.", array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())), 'warning');
     }
-    return $this->translationsPageRedirect($te->entity);
+    return $this->translationsPageRedirect($entity);
   }
 
   public function upload($entity_type, $entity_id) {
@@ -63,17 +72,20 @@ class LingotekEntityController extends LingotekControllerBase {
   }
 
   public function download($doc_id, $locale) {
-    $te = LingotekTranslatableEntity::loadByDocId($doc_id);
-    if (!$te) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $entity = $translation_service->loadByDocumentId($doc_id);
+    if (!$entity) {
       // TODO: log warning
-      return $this->translationsPageRedirect($te->entity);
+      return $this->translationsPageRedirect($entity);
     }
-    if ($te->download($locale)) {
-      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale has been downloaded.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id(), '@locale' => $locale)));
+    if ($translation_service->downloadDocument($entity, $locale)) {
+      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale has been downloaded.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id(), '@locale' => $locale)));
     } else {
-      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale failed to download.', array('@entity_type' => $te->entity->getEntityTypeId(), '@entity_id' => $te->entity->id(), '@locale' => $locale)), 'error');
+      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale failed to download.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id(), '@locale' => $locale)), 'error');
     }
-    return $this->translationsPageRedirect($te->entity);
+    return $this->translationsPageRedirect($entity);
   }
 
   protected function translationsPageRedirect($entity) {

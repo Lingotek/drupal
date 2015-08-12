@@ -84,14 +84,15 @@ function lingotek_entity_delete(EntityInterface $entity) {
   if (!($entity instanceof ContentEntityInterface)) {
     return;
   }
-  $container = \Drupal::getContainer();
-  $lte = LingotekTranslatableEntity::load($container, $entity);
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
+
   // Delete the TMS document if it hasn't been disassociated
-  if ($lte->getDocId()) {
-    $response = $lte->delete(); 
+  if ($translation_service->getDocumentId($entity)) {
+    $response = $translation_service->delete($entity);
   }
-  // Delete the local metadata  
-  $lte->deleteMetadata();
+  // Delete the local metadata.
+  $translation_service->deleteMetadata($entity);
 }
 
 /**
@@ -116,7 +117,9 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     $profiles = $L->get('profile');
     /** @var ContentEntityInterface $entity */
     $entity = $form_state->getFormObject()->getEntity();
-    $lte = LingotekTranslatableEntity::load($container, $entity);
+
+    // ToDo: Remove profile functionality from LingotekTranslatableEntity.
+    $lte = LingotekTranslatableEntity::load($L, $entity);
     $default_profile  = Lingotek::PROFILE_AUTOMATIC;
     $options = array();
 
@@ -162,37 +165,47 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   }
 }
 
+/**
+ * @param $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ */
 function lingotek_form_content_entity_form_submit ($form, FormStateInterface $form_state) {
   $form_values = $form_state->getValues();
   $container = \Drupal::getContainer();
   $L = $container->get('lingotek');
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
+
   /** @var ContentEntityInterface $entity */
   $entity = $form_state->getFormObject()->getEntity();
-  $lte = LingotekTranslatableEntity::load($container, $entity);
+
+  // ToDo: Remove profile functionality from LingotekTranslatableEntity.
+  $lte = LingotekTranslatableEntity::load($L, $entity);
   $lte->setProfile($form_values['lingotek_translation_profile']);
-  $lte_auto_upload = $lte->hasAutomaticUpload();
-  $lte_status = $lte->getSourceStatus();
-  $entity_has_changed = $lte->hasEntityChanged();
+  $has_autoupload = $lte->hasAutomaticUpload();
+
+  $source_status = $translation_service->getSourceStatus($entity);
+  $entity_has_changed = $translation_service->hasEntityChanged($entity);
   
-  if ($lte_auto_upload) {
+  if ($has_autoupload) {
     // New entity with auto-upload
-    if ($lte_status == NULL) {
-      $doc_id = $lte->upload();
+    if ($source_status == NULL) {
+      $document_id = $translation_service->uploadDocument($entity);
       drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
     // Updated entity with auto-upload
     elseif ($entity_has_changed) {
-      $lte->setSourceStatus(Lingotek::STATUS_EDITED);
-      $response = $lte->update();
-      $lte->setTargetStatuses(Lingotek::STATUS_PENDING);
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+      $response = $translation_service->updateDocument($entity);
+      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
   }
   // Updated entity with manual-upload
-  elseif (!$lte_auto_upload){
+  elseif (!$has_autoupload){
     if($entity_has_changed) {
-      $lte->setSourceStatus(Lingotek::STATUS_EDITED);
-      $lte->setTargetStatuses(Lingotek::STATUS_EDITED);
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_EDITED);
     }
   }
 }

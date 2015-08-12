@@ -15,6 +15,9 @@ use Symfony\Component\HttpFoundation\Response;
 class LingotekNotificationController extends LingotekControllerBase {
 
   public function endpoint(Request $request) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
     $request_method = $request->getMethod();
     $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
     $type = $request->get('type');
@@ -36,11 +39,13 @@ class LingotekNotificationController extends LingotekControllerBase {
         break;
 
       case 'document_uploaded': // a document has uploaded and imported successfully for document_id
-        $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
-        if ($te && $te->hasAutomaticUpload()) {
+        $entity = $translation_service->loadByDocumentId($request->get('document_id'));
+        $te = LingotekTranslatableEntity::load($entity);
+        // ToDo: Remove profile functionality from LingotekTranslatableEntity.
+        if ($entity && $te->hasAutomaticDownload()) {
           $http_status_code = Response::HTTP_OK;
-          $te->setSourceStatus(Lingotek::STATUS_CURRENT);
-          $result['request_translations'] = $te->requestTranslations();
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          $result['request_translations'] = $translation_service->requestTranslations($entity);
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
         }
@@ -49,11 +54,13 @@ class LingotekNotificationController extends LingotekControllerBase {
       case 'target': // translation (i.e., chinese) has been completed for a document
         //TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         //ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
-        $te = LingotekTranslatableEntity::loadByDocId($request->get('document_id'));
-        if ($te && $te->hasAutomaticDownload()) {
+        $entity = $translation_service->loadByDocumentId($request->get('document_id'));
+        // ToDo: Remove profile functionality from LingotekTranslatableEntity.
+        $te = LingotekTranslatableEntity::load($entity);
+        if ($entity && $te->hasAutomaticDownload()) {
           $http_status_code = Response::HTTP_OK;
-          $result['set_target_status'] = $te->setTargetStatus($request->get('locale'), Lingotek::STATUS_READY);
-          $result['download'] = $te->download($request->get('locale'));
+          $result['set_target_status'] = $translation_service->setTargetStatus($entity, $request->get('locale'), Lingotek::STATUS_READY);
+          $result['download'] = $translation_service->download($entity, $request->get('locale'));
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
           $messages[] = "Document not found.";

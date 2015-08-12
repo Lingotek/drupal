@@ -16,28 +16,29 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
     $context['message'] = t('Uploading @entity_type #@entity_id', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
   }
 
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
   // Prepare the entity's translatable content for upload.
   $container = \Drupal::getContainer();
   $entity = entity_load($entity_type, $entity_id);
-  $te = LingotekTranslatableEntity::load($container, $entity);
-  $source_data = json_encode($te->getSourceData());
-  $L = $container->get('lingotek');
-  
+
   // Use upload with new entities.
-  if (!$te->getDocId()) {
-    $doc_id = $L->uploadDocument($entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label(), $source_data, 'en_US');
-    if ($doc_id) {
-      $te->setDocId($doc_id);
-      $te->setSourceStatus(Lingotek::STATUS_PENDING);
+  if (!$translation_service->getDocumentId($entity)) {
+    $document_id = $translation_service->uploadDocument($entity);
+    if ($document_id) {
       $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     }
   }
   
   // Use update with existing entities that have been edited. 
-  elseif ($te->hasEntityChanged()) {
-    $response = $te->update();
-    $te->setTargetStatuses(Lingotek::STATUS_PENDING);
-    $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
+  elseif ($translation_service->hasEntityChanged($entity)) {
+    if ($translation_service->updateDocument($entity)) {
+      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
+      $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
+    }
+    else {
+      // ToDo: Log a problem happened uploading the document.
+    }
   }
 }
 
@@ -54,17 +55,17 @@ function lingotek_operation_content_download($entity_type, $entity_id, $locale, 
   if ($context) {
     $context['message'] = t('Downloading translation "@locale" for @entity_type #@entity_id', array('@entity_type' => $entity_type, '@entity_id' => $entity_id, '@locale' => $locale));
   }
-
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
   // Prepare the entity's translatable content for upload.
   $container = \Drupal::getContainer();
   $entity = entity_load($entity_type, $entity_id);
-  $te = LingotekTranslatableEntity::load($container, $entity);
 
-  $L = $container->get('lingotek');
-  $result = $L->downloadDocument($te->getDocId(), $locale);
-  if ($result) {
-    $te->setTargetStatus($locale, Lingotek::STATUS_CURRENT);
+  if ($translation_service->downloadDocument($entity, $locale)) {
     $context['results']['downloads'] = !empty($context['results']['downloads']) ? $context['results']['downloads'] + 1 : 1;
+  }
+  else {
+    // ToDo: Log a problem happened downloading the document.
   }
 }
 
