@@ -11,3 +11,4 @@ dependencies:
   - language
   - content_translation
   - config_translation
+  - language_key_value

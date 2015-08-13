@@ -119,7 +119,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
     $data = array();
-    
+
     // For every content type, save the profile and fields in the Lingotek object
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
       foreach($form_values[$entity_id] as $bundle_id => $bundle) {
@@ -135,6 +135,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       }
     }
     $this->configFactory()->getEditable('lingotek.settings')->set('translate.entity', $data)->save();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
     parent::submitForm($form, $form_state);
   }
 

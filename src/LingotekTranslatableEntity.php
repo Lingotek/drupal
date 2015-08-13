@@ -96,10 +96,13 @@ class LingotekTranslatableEntity {
   }
 
   public function getProfile() {
+    return $this->entity->lingotek_profile->value;
     return $this->getMetadata('profile');
   }
 
   public function setProfile($profile) {
+    return $this->entity->lingotek_profile->value = $profile;
+
     return $this->setMetadata('profile', $profile);
   }
 

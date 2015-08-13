@@ -10,6 +10,7 @@ use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekTranslatableEntity;
@@ -89,7 +90,7 @@ function lingotek_entity_delete(EntityInterface $entity) {
 
   // Delete the TMS document if it hasn't been disassociated
   if ($translation_service->getDocumentId($entity)) {
-    $response = $translation_service->delete($entity);
+    $response = $translation_service->deleteDocument($entity);
   }
   // Delete the local metadata.
   $translation_service->deleteMetadata($entity);
@@ -180,6 +181,8 @@ function lingotek_form_content_entity_form_submit ($form, FormStateInterface $fo
   $entity = $form_state->getFormObject()->getEntity();
 
   // ToDo: Remove profile functionality from LingotekTranslatableEntity.
+  // ToDo: validate.
+  $entity->lingotek_profile->value = $form_values['lingotek_translation_profile'];
   $lte = LingotekTranslatableEntity::load($L, $entity);
   $lte->setProfile($form_values['lingotek_translation_profile']);
   $has_autoupload = $lte->hasAutomaticUpload();
@@ -189,7 +192,7 @@ function lingotek_form_content_entity_form_submit ($form, FormStateInterface $fo
   
   if ($has_autoupload) {
     // New entity with auto-upload
-    if ($source_status == NULL) {
+    if ($source_status == NULL || $source_status == Lingotek::STATUS_UNTRACKED) {
       $document_id = $translation_service->uploadDocument($entity);
       drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
@@ -217,3 +220,41 @@ function lingotek_contextual_links_view_alter(&$element, $items) {
   // TODO
 }
 
+/**
+ * Implements hook_entity_type_alter().
+ */
+function lingotek_entity_type_alter(array &$entity_types) {
+  // Provide defaults for lingotek translation info.
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  foreach ($entity_types as $entity_type) {
+    if ($entity_type->isTranslatable()) {
+      if (!$entity_type->hasHandlerClass('lingotek')) {
+        $entity_type->setHandlerClass('lingotek', 'Drupal\lingotek\LingotekContentTranslationHandler');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function lingotek_entity_base_field_info(EntityTypeInterface $entity_type) {
+  // Taken from content_translation.
+  /** @var \Drupal\content_translation\ContentTranslationManagerInterface $manager */
+  $manager = \Drupal::service('content_translation.manager');
+  $entity_type_id = $entity_type->id();
+  if ($manager->isSupported($entity_type_id)) {
+    $definitions = \Drupal::entityManager()->getHandler($entity_type_id, 'lingotek')->getFieldDefinitions();
+    $installed_storage_definitions = \Drupal::entityManager()->getLastInstalledFieldStorageDefinitions($entity_type_id);
+    // We return metadata storage fields whenever content translation is enabled
+    // or it was enabled before, so that we keep translation metadata around
+    // when translation is disabled.
+    // @todo Re-evaluate this approach and consider removing field storage
+    //   definitions and the related field data if the entity type has no bundle
+    //   enabled for translation, once base field purging is supported.
+    //   See https://www.drupal.org/node/2282119.
+    if ($manager->isEnabled($entity_type_id) || array_intersect_key($definitions, $installed_storage_definitions)) {
+      return $definitions;
+    }
+  }
+}

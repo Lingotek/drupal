@@ -36,6 +36,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $entity_type = $entity->getEntityTypeId();
 
     $document_id = $translation_service->getDocumentId($entity);
+    $source_language = $translation_service->getSourceLocale($entity);
     $source_status = $translation_service->getSourceStatus($entity);
     $status_check_needed = ($source_status == Lingotek::STATUS_PENDING) ? TRUE : FALSE;
     $targets_ready = FALSE;
@@ -55,8 +56,9 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
     foreach ($languages as $langcode => $language) {
       $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+
       $option = array_shift($overview['#rows']);
-      if ($langcode == $entity_langcode) {
+      if ($source_language == $locale) {
         // Buttons for the ENTITY SOURCE LANGUAGE
         // We disable the checkbox for this row.
         $form['languages'][$langcode] = array(
