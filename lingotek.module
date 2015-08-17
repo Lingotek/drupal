@@ -92,8 +92,6 @@ function lingotek_entity_delete(EntityInterface $entity) {
   if ($translation_service->getDocumentId($entity)) {
     $response = $translation_service->deleteDocument($entity);
   }
-  // Delete the local metadata.
-  $translation_service->deleteMetadata($entity);
 }
 
 /**

@@ -185,7 +185,7 @@ interface LingotekContentTranslationServiceInterface {
    * @return boolean
    *   TRUE if the document was uploaded successfully, FALSE if not.
    */
-  public function uploadDocument(ContentEntityInterface &$entity);
+  public function uploadDocument(ContentEntityInterface $entity);
 
   /**
    * Downloads a document from the Lingotek service for a given locale.
