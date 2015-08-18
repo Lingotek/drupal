@@ -7,16 +7,79 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekTranslatableEntity;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form for bulk management of content.
  */
 class LingotekManagementForm extends FormBase {
+
+  /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
+  protected $entityManager;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * The entity query factory service.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $entityQuery;
+
+  /**
+   * The entity type id.
+   *
+   * @var string
+   */
+  protected $entityTypeId;
+
+  /**
+   * Constructs a new LingotekManagementForm object.
+   *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
+   *   The entity query factory.
+   * @param string $entity_type_id
+   *   The entity type id.
+   */
+  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, $entity_type_id) {
+    $this->entityManager = $entity_manager;
+    $this->languageManager = $language_manager;
+    $this->entityQuery = $entity_query;
+    $this->entityTypeId = $entity_type_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity.manager'),
+      $container->get('language_manager'),
+      $container->get('entity.query'),
+      \Drupal::routeMatch()->getParameter('entity_type_id')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -29,12 +92,10 @@ class LingotekManagementForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $entity_type_id = 'node';
-
-    /** @var EntityListBuilderInterface $list_builder */
-    $query = \Drupal::entityQuery($entity_type_id);
+    $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
+    $query = $this->entityQuery->get($this->entityTypeId);
     $ids = $query->execute();
-    $entities = \Drupal::entityManager()->getStorage($entity_type_id)->loadMultiple($ids);
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
@@ -44,16 +105,16 @@ class LingotekManagementForm extends FormBase {
       $translations = $this->getTranslationsStatuses($entity);
       $form['table'][$entity_id] = ['#type' => 'checkbox', '#value'=> $entity->id()];
       $rows[$entity_id] = [
-        'type' => \Drupal::entityManager()->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'],
-        'title' => \Drupal::linkGenerator()->generate($entity->label(), Url::fromRoute('entity.node.canonical', ['node' => $entity->id()])),
-        'langcode' => \Drupal::languageManager()->getLanguage($language_source)->getName(),
+        'type' => $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'],
+        'title' => $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])),
+        'langcode' => $this->languageManager->getLanguage($language_source)->getName(),
         'translations' => $translations,
         'profile' => $this->getProfile($entity),
       ];
     }
     $headers = [
-      'type' => 'Content type',
-      'title' => 'Title',
+      'type' => $entity_type->getBundleLabel(),
+      'title' => $entity_type->getKey('label'),
       'langcode' => 'Language source',
       'translations' => 'Translations',
       'profile' => 'Profile',
@@ -72,7 +133,7 @@ class LingotekManagementForm extends FormBase {
     $options['check'] = $this->t('Check progress of translations');
     $options['disassociate'] = $this->t('Disassociate translations');
     $options['Download']['download'] = $this->t('Download all translations');
-    foreach (\Drupal::languageManager()->getLanguages() as $langcode => $language) {
+    foreach ($this->languageManager->getLanguages() as $langcode => $language) {
       $options['Download']['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
     }
 
@@ -139,8 +200,7 @@ class LingotekManagementForm extends FormBase {
    */
   protected function createUploadBatch($values) {
     $operations = [];
-    $entity_type_id = 'node';
-    $entities = \Drupal::entityManager()->getStorage($entity_type_id)->loadMultiple($values);
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
 
     foreach ($entities as $entity) {
       $operations[] = [[$this, 'uploadDocument'], [$entity]];
@@ -160,8 +220,7 @@ class LingotekManagementForm extends FormBase {
    */
   protected function createUploadCheckStatusBatch($values) {
     $operations = [];
-    $entity_type_id = 'node';
-    $entities = \Drupal::entityManager()->getStorage($entity_type_id)->loadMultiple($values);
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
 
     foreach ($entities as $entity) {
       $operations[] = [[$this, 'checkDocumentUploadStatus'], [$entity]];
@@ -182,8 +241,7 @@ class LingotekManagementForm extends FormBase {
   protected function createDownloadBatch($values) {
     $requests = [];
     $downloads = [];
-    $entity_type_id = 'node';
-    $entities = \Drupal::entityManager()->getStorage($entity_type_id)->loadMultiple($values);
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
 
     foreach ($entities as $entity) {
       $requests[] = [[$this, 'requestTranslations'], [$entity]];
@@ -207,8 +265,7 @@ class LingotekManagementForm extends FormBase {
   protected function createLanguageDownloadBatch($values, $language) {
     $requests = [];
     $downloads = [];
-    $entity_type_id = 'node';
-    $entities = \Drupal::entityManager()->getStorage($entity_type_id)->loadMultiple($values);
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
 
     foreach ($entities as $entity) {
       $requests[] = [[$this, 'requestTranslation'], [$entity, $language]];
@@ -294,7 +351,7 @@ class LingotekManagementForm extends FormBase {
   public function downloadTranslations(ContentEntityInterface $entity) {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
-    $languages = \Drupal::languageManager()->getLanguages();
+    $languages = $this->languageManager->getLanguages();
     foreach ($languages as $langcode => $language) {
       $translation_service->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
     }

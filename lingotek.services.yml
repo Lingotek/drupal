@@ -13,6 +13,6 @@ services:
     arguments: ['@lingotek', '@entity.manager', '@language_manager']
   lingotek.content_translation_subscriber:
     class: Drupal\lingotek\Routing\LingotekRouteSubscriber
-    arguments: ['@content_translation.manager']
+    arguments: ['@entity.manager']
     tags:
       - { name: event_subscriber }
