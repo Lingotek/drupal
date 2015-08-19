@@ -1,0 +1,6 @@
+id: automatic
+label: Automatic
+weight: 30
+locked: true
+auto_upload: true
+auto_download: true

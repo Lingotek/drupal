@@ -15,6 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class for wrapping entities with translation meta data and functions.
+ * @deprecated
  */
 class LingotekTranslatableEntity {
 

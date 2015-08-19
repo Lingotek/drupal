@@ -11,15 +11,12 @@ use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\String;
-use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekLocale;
-use Drupal\lingotek\LingotekLog;
-use Drupal\lingotek\LingotekSync;
-use Drupal\lingotek\LingotekTranslatableEntity;
 
 /**
  * Configure Lingotek
+ *
+ * @deprecated
  */
 class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
   protected $profiles;
@@ -36,7 +33,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $this->profiles = $this->L->get('profile');
+    $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
     $this->profile_index = 0;
 
     $header = array(
@@ -109,7 +106,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     }
     else {
       $title = t('Add New Profile');
-      $url = Url::fromRoute('lingotek.settings_profile');
+      $url = Url::fromRoute('entity.profile.add_form');
     }
 
     // If it's a disabled profile, no link is provided

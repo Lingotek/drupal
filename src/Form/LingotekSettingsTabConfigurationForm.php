@@ -7,13 +7,8 @@
 
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
-use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\Form\LingotekConfigFormBase;
-use Drupal\lingotek\LingotekTranslatableEntity;
-use Drupal\lingotek\LingotekLocale;
 
 /**
  * Configure Lingotek

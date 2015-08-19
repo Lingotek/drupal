@@ -3,8 +3,6 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekTranslatableEntity;
-use Drupal\lingotek\Controller\LingotekControllerBase;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 

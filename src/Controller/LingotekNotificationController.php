@@ -2,9 +2,8 @@
 
 namespace Drupal\lingotek\Controller;
 
-use Drupal\lingotek\Controller\LingotekControllerBase;
+use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekTranslatableEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,9 +39,10 @@ class LingotekNotificationController extends LingotekControllerBase {
 
       case 'document_uploaded': // a document has uploaded and imported successfully for document_id
         $entity = $translation_service->loadByDocumentId($request->get('document_id'));
-        $te = LingotekTranslatableEntity::load($entity);
-        // ToDo: Remove profile functionality from LingotekTranslatableEntity.
-        if ($entity && $te->hasAutomaticDownload()) {
+        $profile_id = $entity->lingotek_profile->target_id;
+        /** @var LingotekProfile $profile */
+        $profile = LingotekProfile::load($profile_id);
+        if ($entity && $profile->hasAutomaticDownload()) {
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
           $result['request_translations'] = $translation_service->requestTranslations($entity);
@@ -55,9 +55,10 @@ class LingotekNotificationController extends LingotekControllerBase {
         //TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         //ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
         $entity = $translation_service->loadByDocumentId($request->get('document_id'));
-        // ToDo: Remove profile functionality from LingotekTranslatableEntity.
-        $te = LingotekTranslatableEntity::load($entity);
-        if ($entity && $te->hasAutomaticDownload()) {
+        $profile_id = $entity->lingotek_profile->target_id;
+        /** @var LingotekProfile $profile */
+        $profile = LingotekProfile::load($profile_id);
+        if ($entity && $profile->hasAutomaticDownload()) {
           $http_status_code = Response::HTTP_OK;
           $result['set_target_status'] = $translation_service->setTargetStatus($entity, $request->get('locale'), Lingotek::STATUS_READY);
           $result['download'] = $translation_service->download($entity, $request->get('locale'));

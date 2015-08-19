@@ -13,8 +13,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\LingotekLocale;
-use Drupal\lingotek\LingotekTranslatableEntity;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -103,13 +103,14 @@ class LingotekManagementForm extends FormBase {
     foreach ($entities as $entity_id => $entity) {
       $language_source = LingotekLocale::convertLingotek2Drupal($translation_service->getSourceLocale($entity));
       $translations = $this->getTranslationsStatuses($entity);
+      $profile = $this->getProfile($entity);
       $form['table'][$entity_id] = ['#type' => 'checkbox', '#value'=> $entity->id()];
       $rows[$entity_id] = [
         'type' => $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'],
         'title' => $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])),
         'langcode' => $this->languageManager->getLanguage($language_source)->getName(),
         'translations' => $translations,
-        'profile' => $this->getProfile($entity),
+        'profile' => $profile ? $profile->label() : '',
       ];
     }
     $headers = [
@@ -394,12 +395,14 @@ class LingotekManagementForm extends FormBase {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
-   * @return string
-   *   The profile name.
+   * @return LingotekProfile
+   *   The profile.
    */
   protected function getProfile(ContentEntityInterface &$entity) {
-    $te = LingotekTranslatableEntity::load(\Drupal::service('lingotek'), $entity);
-    $profile = $te->getProfile();
+    $profile = NULL;
+    if ($profile_id = $entity->lingotek_profile->target_id) {
+      $profile = LingotekProfile::load($profile_id);
+    }
     return $profile;
   }
 

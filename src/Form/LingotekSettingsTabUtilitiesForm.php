@@ -18,7 +18,6 @@ use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekLog;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\lingotek\LingotekSync;
-use Drupal\lingotek\LingotekTranslatableEntity;
 
 /**
  * Configure Lingotek
@@ -207,6 +206,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   protected function lingotek_batch_identify_translations(){
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
     $nodes = \Drupal::entityManager()->getStorage('node')->loadMultiple();
     $languages = \Drupal::languageManager()->getLanguages();
 
@@ -215,9 +216,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
       foreach ($languages as $langcode => $language) {
         if ($node->hasTranslation($langcode) && $entity_langcode != $langcode) {
           $lingotek_langcode = LingotekLocale::convertDrupal2Lingotek($langcode);
-          $lte = LingotekTranslatableEntity::loadById($node->id(), 'node');
-          if (!$lte->getTargetStatus($lingotek_langcode)) {
-            $lte->setTargetStatus($lingotek_langcode, Lingotek::STATUS_UNTRACKED);
+          if (!$translation_service->getTargetStatus($entity, $lingotek_langcode)) {
+            $translation_service->setTargetStatus($entity, $lingotek_langcode, Lingotek::STATUS_UNTRACKED);
           }
         }
       }

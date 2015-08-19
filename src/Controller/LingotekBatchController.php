@@ -2,9 +2,6 @@
 
 namespace Drupal\lingotek\Controller;
 
-use Drupal\lingotek\Controller\LingotekControllerBase;
-use Drupal\lingotek\LingotekTranslatableEntity;
-
 class LingotekBatchController extends LingotekControllerBase {
 
   public function dispatch($action, $entity_type, $entity_id) {
@@ -14,14 +11,12 @@ class LingotekBatchController extends LingotekControllerBase {
 
     $entity = \Drupal::entityManager()->getStorage($entity_type)->load($entity_id);
 
-    // ToDo: Remove profile functionality from LingotekTranslatableEntity.
-    $lte = LingotekTranslatableEntity::load($L, $entity);
-
     // This forces the hash to be set.
     $translation_service->hasEntityChanged($entity);
 
-    if (!$lte->getProfile()) {
-      $lte->setProfileForNewlyIdentifiedEntities(); 
+    if (!$entity->lingotek_profile->target_id) {
+      $entity->lingotek_profile->target_id = $L->get('translate.entity.' . $entity->getEntityTypeId() . '.' . $entity->bundle() . '.profile');
+      $entity->save();
     }
     
     switch ($action) {

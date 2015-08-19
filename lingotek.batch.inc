@@ -6,7 +6,6 @@
  */
 
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekTranslatableEntity;
 
 /**
  * Wrapper function for running content uploads.
@@ -19,7 +18,6 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
   // Prepare the entity's translatable content for upload.
-  $container = \Drupal::getContainer();
   $entity = entity_load($entity_type, $entity_id);
 
   // Use upload with new entities.
@@ -58,7 +56,6 @@ function lingotek_operation_content_download($entity_type, $entity_id, $locale, 
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
   // Prepare the entity's translatable content for upload.
-  $container = \Drupal::getContainer();
   $entity = entity_load($entity_type, $entity_id);
 
   if ($translation_service->downloadDocument($entity, $locale)) {

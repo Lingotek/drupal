@@ -1,0 +1,6 @@
+id: disabled
+label: Disabled
+weight: 100
+locked: true
+auto_upload: false
+auto_download: false

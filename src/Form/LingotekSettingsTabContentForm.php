@@ -140,10 +140,10 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveProfileOptions() {
-    $this->profile_options = array();
+    $this->profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
 
     foreach ($this->profiles as $profile) {
-      $this->profile_options[$profile['id']] = ucwords($profile['name']);
+      $this->profile_options[$profile->id()] = $profile->label();
     }
   }
 

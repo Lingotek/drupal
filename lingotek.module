@@ -13,8 +13,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekTranslatableEntity;
-use Drupal\lingotek\LingotekLocale;
 use Drupal\node\Form;
 
 /**
@@ -117,17 +115,18 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     /** @var ContentEntityInterface $entity */
     $entity = $form_state->getFormObject()->getEntity();
 
-    // ToDo: Remove profile functionality from LingotekTranslatableEntity.
-    $lte = LingotekTranslatableEntity::load($L, $entity);
     $default_profile  = Lingotek::PROFILE_AUTOMATIC;
     $options = array();
 
+    $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
+
     // Use the entity's profile if set, else use the content type's profile
-    $entity_profile = $lte->getProfile();
+    $entity_profile = $entity->lingotek_profile->target_id;
     if ($entity_profile != NULL) {
       $default_profile = $entity_profile;
     }
     else {
+      // ToDo: This should be generic.
       if ($entity->getEntityTypeId() == 'node') {
         if ($entity->getType() === 'article') {
           $default_profile = $L->get('translate.entity.node.article');
@@ -138,7 +137,8 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       }
     }
     foreach ($profiles as $profile) {
-      $options[$profile['id']] = ucwords($profile['name']);
+      /** \Drupal\lingotek\LingotekProfileInterface $profile */
+      $options[$profile->id()] = $profile->label();
     }
 
     $form['lingotek_translation_management'] = array(
@@ -178,12 +178,14 @@ function lingotek_form_content_entity_form_submit ($form, FormStateInterface $fo
   /** @var ContentEntityInterface $entity */
   $entity = $form_state->getFormObject()->getEntity();
 
-  // ToDo: Remove profile functionality from LingotekTranslatableEntity.
   // ToDo: validate.
-  $entity->lingotek_profile->value = $form_values['lingotek_translation_profile'];
-  $lte = LingotekTranslatableEntity::load($L, $entity);
-  $lte->setProfile($form_values['lingotek_translation_profile']);
-  $has_autoupload = $lte->hasAutomaticUpload();
+  $entity->lingotek_profile->target_id = $form_values['lingotek_translation_profile'];
+
+  $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
+  $profile = $profiles[$form_values['lingotek_translation_profile']];
+
+  $entity->save();
+  $has_autoupload = $profile->hasAutomaticUpload();
 
   $source_status = $translation_service->getSourceStatus($entity);
   $entity_has_changed = $translation_service->hasEntityChanged($entity);

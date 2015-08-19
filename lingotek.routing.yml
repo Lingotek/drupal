@@ -135,5 +135,29 @@ lingotek.workbench:
   requirements:
     _permission: 'administer lingotek'
 
+entity.profile.add_form:
+  path: '/admin/lingotek/settings/profile/add'
+  defaults:
+    _entity_form: 'profile.add'
+    _title: 'Add a Lingotek Profile'
+  requirements:
+    _permission: 'administer lingotek'
+
+entity.profile.edit_form:
+  path: '/admin/lingotek/settings/profile/{profile}/edit'
+  defaults:
+    _entity_form: 'profile.edit'
+    _title: 'Edit Profile'
+  requirements:
+    _permission: 'administer lingotek'
+
+entity.profile.delete_form:
+  path: '/admin/lingotek/settings/profile/{profile}/delete'
+  defaults:
+    _entity_form: 'profile.delete'
+    _title: 'Delete Profile'
+  requirements:
+    _permission: 'administer lingotek'
+
 
 

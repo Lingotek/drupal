@@ -93,15 +93,26 @@ lingotek.settings:
       label: 'Profiles'
       sequence:
         type: lingotek.profile.[%key]
+
 lingotek.profile.*:
-  type: mapping
-  label: 'Lingotek settings'
+  type: config_entity
+  label: 'Lingotek Profile'
   mapping:
     id:
-      type: integer
-    name:
       type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    weight:
+      type: integer
+      label: 'Weight'
+    locked:
+      type: boolean
+      label: 'Locked'
     auto_upload:
       type: boolean
+      label: 'Automatic Upload'
     auto_download:
       type: boolean
+      label: 'Automatic Download'

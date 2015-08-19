@@ -11,12 +11,14 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityHandlerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\TypedData\EntityDataDefinition;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\TypedData\DataReferenceDefinition;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LingotekContentTranslationHandler implements LingotekContentTranslationHandlerInterface, EntityHandlerInterface {
@@ -90,9 +92,10 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
       ->setLabel(t('Lingotek hash'))
       ->setDescription(t('A hash of the Lingotek saved entity data, required for checking for changes.'));
 
-    $definitions['lingotek_profile'] = BaseFieldDefinition::create('string')
+    $definitions['lingotek_profile'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Lingotek profile'))
-      ->setDescription(t('The Lingotek profile defining this translation.'));
+      ->setDescription(t('The Lingotek profile defining this translation.'))
+      ->setSetting('target_type', 'profile');
 
     $definitions['lingotek_translation_source'] = BaseFieldDefinition::create('language')
       ->setLabel(t('Lingotek translation source'))

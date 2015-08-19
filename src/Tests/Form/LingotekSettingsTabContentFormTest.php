@@ -67,7 +67,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     // Check the title and body fields.
     $edit = [
-      'node[article][profiles]' => 1,
+      'node[article][profiles]' => 'automatic',
       'node[article][fields][title]' => 1,
       'node[article][fields][body]' => 1,
       'node[article][fields][field_image]' => 1,
@@ -76,6 +76,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
     // Check that values are kept in the form.
+    $this->assertFieldByName('node[article][profiles]', 'automatic');
     $this->assertFieldChecked('edit-node-article-fields-title');
     $this->assertFieldChecked('edit-node-article-fields-body');
     $this->assertFieldChecked('edit-node-article-fields-field-image');
@@ -91,7 +92,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['alt']);
     $this->assertFalse($config_data['translate']['entity']['node']['article']['field']['field_image:properties']['title']);
     $this->assertFalse(array_key_exists('revision_log', $config_data['translate']['entity']['node']['article']['field']));
-    $this->assertEqual(1, $config_data['translate']['entity']['node']['article']['profile']);
+    $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
   }
 
 

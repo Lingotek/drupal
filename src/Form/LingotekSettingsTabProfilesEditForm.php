@@ -10,6 +10,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\String;
+use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
 
 /**
@@ -17,14 +18,13 @@ use Drupal\lingotek\Form\LingotekConfigFormBase;
  */
 class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
   protected $profile;
-  protected $first_custom_id = 4;
-  protected $is_custom_id;
   protected $profile_vaults;
   protected $auto_upload_disabled;
   protected $auto_download_disabled;
   protected $profile_name_disabled;
   protected $profile_index; 
   protected $profile_usage;
+  protected $is_custom_id = 1; // Disallow removing for now.
 
   /**
    * {@inheritdoc}
@@ -39,7 +39,6 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $this->retrieveProfileFromUrl();
-    $this->isCustomId();
     $this->retrieveProfileVaults();
     $this->retrieveEnabledSettings();
 
@@ -165,26 +164,21 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
 
   protected function retrieveProfileFromUrl() {
     if (isset($_GET['profile_choice']) and isset($_GET['profile_index']) and isset($_GET['profile_usage'])) {
-      $this->profile = $_GET['profile_choice'];
+      $this->profile = LingotekProfile::load($_GET['profile_choice']);
       $this->profile_index = $_GET['profile_index'];
-      $this->profile_usage = $_GET['profile_usage'];
+      $this->profile_usage = 1;// $_GET['profile_usage'];
     }
   }
 
-  protected function isCustomId(){
-    $this->is_custom_id = FALSE;
-
-    if ($this->profile['id'] >= $this->first_custom_id) {
-      $this->is_custom_id = TRUE;
-    }  
-  }
-
   protected function retrieveProfileVaults() {
+    $personal_vault = [];
     $personal_vault_key = $this->L->get('default.vault');
     $community_vault = $this->L->get('account.resources.vault');
-    $personal_vault = array(
+    if (isset($community_vault[$personal_vault_key])) {
+      $personal_vault = array(
         $personal_vault_key => $community_vault[$personal_vault_key]
       );
+    }
     $this->profile_vaults = array(
       'Personal Vaults' => $personal_vault,
       'Community Vaults' => $community_vault,
@@ -213,38 +207,24 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
   }
 
   protected function saveNewProfile($name, $auto_upload, $auto_download) {
-    $profiles = $this->L->get('profile');
-    end($profiles);
-    $end_index = key($profiles);
-    $end_id = $profiles[$end_index]['id'];
-    $end_index++;
-    $end_id++;
-    $new_profile = array(
-      'id' => $end_id,
-      'name' => $name,
-      'auto_upload' => $auto_upload == 0 ? NULL : $auto_upload,
-      'auto_download' => $auto_download == 0 ? NULL : $auto_download,
-    );
-    
-    $this->L->set('profile.' . $end_index, $new_profile);
+    $profile = LingotekProfile::create(['id' => \Drupal::transliteration()->transliterate($name), 'label' => $name, 'auto_upload' => $auto_upload, 'auto_download' => $auto_download]);
+    $profile->save();
   }
 
   protected function updateCustomProfile($name, $auto_upload, $auto_download) {
-    $current_profile_id = $this->profile['id'];
-    $new_profile = array(
-      'id' => $current_profile_id,
-      'name' => $name,
-      'auto_upload' => $auto_upload == 0 ? NULL : $auto_upload,
-      'auto_download' => $auto_download == 0 ? NULL : $auto_download,
-    );
-    
-    $this->L->set('profile.' . $this->profile_index, $new_profile);
+    /** @var LingotekProfile $current_profile */
+    $current_profile = $this->profile;
+    $current_profile->set('label', $name);
+    $current_profile->setAutoDownload($auto_download);
+    $current_profile->setAutoUpload($auto_upload);
+    $current_profile->save();
   }
 
   protected function deleteCustomProfile() {
-    $profiles = $this->L->get('profile');
-    unset($profiles[$this->profile_index]);
-    $this->L->set('profile', $profiles);
+    $current_profile = $this->profile;
+    if (!$current_profile->isLocked()) {
+      $current_profile->save();
+    }
   }
 
 }
