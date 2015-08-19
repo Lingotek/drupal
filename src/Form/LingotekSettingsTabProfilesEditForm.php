@@ -215,8 +215,8 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
     /** @var LingotekProfile $current_profile */
     $current_profile = $this->profile;
     $current_profile->set('label', $name);
-    $current_profile->setAutoDownload($auto_download);
-    $current_profile->setAutoUpload($auto_upload);
+    $current_profile->setAutomaticDownload($auto_download);
+    $current_profile->setAutomaticUpload($auto_upload);
     $current_profile->save();
   }
 

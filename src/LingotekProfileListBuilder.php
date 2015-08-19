@@ -145,8 +145,8 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
       if (!$entity->isLocked() && (
           $entity->hasAutomaticUpload() != $form_state->getValue(['profile', $entity_id, 'auto_upload']) ||
           $entity->hasAutomaticDownload() != $form_state->getValue(['profile', $entity_id, 'auto_download']))) {
-        $entity->setAutoUpload($form_state->getValue(['profile', $entity_id, 'auto_upload']));
-        $entity->setAutoDownload($form_state->getValue(['profile', $entity_id, 'auto_download']));
+        $entity->setAutomaticUpload($form_state->getValue(['profile', $entity_id, 'auto_upload']));
+        $entity->setAutomaticDownload($form_state->getValue(['profile', $entity_id, 'auto_download']));
         $entity->save();
       }
     }

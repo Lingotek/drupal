@@ -122,7 +122,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * {@inheritdoc}
    */
-  public function setAutoUpload($auto_upload) {
+  public function setAutomaticUpload($auto_upload) {
     $this->auto_upload = $auto_upload;
     return $this;
   }
@@ -137,7 +137,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * {@inheritdoc}
    */
-  public function setAutoDownload($auto_download) {
+  public function setAutomaticDownload($auto_download) {
     $this->auto_download = $auto_download;
     return $this;
   }

@@ -55,7 +55,7 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    * @param bool $auto_upload
    *   Whether the profile indicates automatic uploads or not.
    */
-  public function setAutoUpload($auto_upload);
+  public function setAutomaticUpload($auto_upload);
 
   /**
    * Returns whether this profile indicates automatic download of translations.
@@ -63,7 +63,7 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    * @return bool
    *   Whether the profile indicates automatic download or not.
    */
-  public function isAutoDownload();
+  public function hasAutomaticDownload();
 
   /**
    * Sets whether this profile indicates automatic download of translations.
@@ -71,6 +71,6 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    * @param bool $auto_download
    *   Whether the profile indicates automatic download or not.
    */
-  public function setAutoDownload($auto_download);
+  public function setAutomaticDownload($auto_download);
 
 }
