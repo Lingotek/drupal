@@ -29,7 +29,7 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $this->profiles = $this->L->get('profile');
+    $this->profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
     
     // Get the default profiles
     $this->retrieveProfileOptions();
@@ -91,7 +91,7 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
     $this->profile_options = array();
 
     foreach ($this->profiles as $profile) {
-      $this->profile_options[$profile['id']] = ucwords($profile['name']);
+      $this->profile_options[$profile->id()] = $profile->label();
     }
   }
 
