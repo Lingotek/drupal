@@ -52,6 +52,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     $edit = [
+      'node[article][enabled]' => 1,
       'node[article][profiles]' => 'automatic',
       'node[article][fields][title]' => 1,
       'node[article][fields][body]' => 1,

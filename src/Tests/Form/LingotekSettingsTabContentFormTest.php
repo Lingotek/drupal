@@ -61,12 +61,15 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
     $this->assertNoText('There are no translatable content types specified');
     $this->assertNoField('node[article][fields][langcode]');
+    $this->assertField('node[article][enabled]');
+    $this->assertField('node[article][profiles]');
     $this->assertField('node[article][fields][title]');
     $this->assertField('node[article][fields][revision_log]');
     $this->assertField('node[article][fields][body]');
 
     // Check the title and body fields.
     $edit = [
+      'node[article][enabled]' => 1,
       'node[article][profiles]' => 'automatic',
       'node[article][fields][title]' => 1,
       'node[article][fields][body]' => 1,
@@ -76,6 +79,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
     // Check that values are kept in the form.
+    $this->assertFieldChecked('edit-node-article-enabled');
     $this->assertFieldByName('node[article][profiles]', 'automatic');
     $this->assertFieldChecked('edit-node-article-fields-title');
     $this->assertFieldChecked('edit-node-article-fields-body');
@@ -86,6 +90,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     // Check that the config is correctly saved.
     $config_data = $this->config('lingotek.settings')->getRawData();
+    $this->assertTrue($config_data['translate']['entity']['node']['article']['enabled']);
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['title']);
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['body']);
     $this->assertTrue($config_data['translate']['entity']['node']['article']['field']['field_image']);

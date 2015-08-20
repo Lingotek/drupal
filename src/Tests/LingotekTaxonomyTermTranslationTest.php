@@ -60,6 +60,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
 
     $bundle = $this->vocabulary->id();
     $edit = [
+      "taxonomy_term[$bundle][enabled]" => 1,
       "taxonomy_term[$bundle][profiles]" => 'automatic',
       "taxonomy_term[$bundle][fields][name]" => 1,
       "taxonomy_term[$bundle][fields][description]" => 1,

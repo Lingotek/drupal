@@ -69,6 +69,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
 
       $bundle_label = $entity_type_definitions[$entity_id]->getBundleLabel();
       $header = array(
+        $this->t('Enable'),
         $bundle_label,
         $this->t('Translation Profile'),
         $this->t('Fields'),
@@ -83,6 +84,11 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       // II. Loop through bundles per entity and make a table
       foreach ($bundles as $bundle_id => $bundle) {
         $row = array();
+        $row['enabled'] = [
+          '#type' => 'checkbox',
+          '#label' => $this->t('Enabled'),
+          '#default_value' => \Drupal::config('lingotek.settings')->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.enabled'),
+        ];
         $row['content_type'] = array(
           '#markup' => $this->t($bundle['label']),
         );
@@ -123,15 +129,19 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     // For every content type, save the profile and fields in the Lingotek object
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
       foreach($form_values[$entity_id] as $bundle_id => $bundle) {
-        foreach($bundle['fields'] as $field_id => $field_choice) {
-          if ($field_choice == 1) {
-            $data[$entity_id][$bundle_id]['field'][$field_id] = $form_values[$entity_id][$bundle_id]['fields'][$field_id];
-            if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
-              $data[$entity_id][$bundle_id]['field'][$field_id . ':properties'] = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'];
+        // Only process if we have marked the checkbox.
+        if ($bundle['enabled']) {
+          foreach ($bundle['fields'] as $field_id => $field_choice) {
+            if ($field_choice == 1) {
+              $data[$entity_id][$bundle_id]['field'][$field_id] = $form_values[$entity_id][$bundle_id]['fields'][$field_id];
+              if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
+                $data[$entity_id][$bundle_id]['field'][$field_id . ':properties'] = $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'];
+              }
             }
           }
+          $data[$entity_id][$bundle_id]['profile'] = $form_values[$entity_id][$bundle_id]['profiles'];
+          $data[$entity_id][$bundle_id]['enabled'] = TRUE;
         }
-        $data[$entity_id][$bundle_id]['profile'] = $form_values[$entity_id][$bundle_id]['profiles'];
       }
     }
     $this->configFactory()->getEditable('lingotek.settings')->set('translate.entity', $data)->save();
