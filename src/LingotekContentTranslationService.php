@@ -270,6 +270,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function addTarget(ContentEntityInterface &$entity, $locale) {
+    if ($locale == LingotekLocale::convertDrupal2Lingotek($entity->language()->getId())) {
+      // We don't want to translate from one language to itself.
+      return FALSE;
+    }
     if ($document_id = $this->getDocumentId($entity)) {
       $current_status = $this->getTargetStatus($entity, $locale);
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT) {
@@ -292,7 +296,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
       foreach ($target_languages as $langcode => $language) {
         $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-        if ($langcode != $entity_langcode) {
+        if ($langcode !== $entity_langcode) {
           $response = $this->addTarget($entity, $locale);
           $this->setTargetStatus($entity, $locale, Lingotek::STATUS_PENDING);
         }

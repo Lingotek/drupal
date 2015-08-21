@@ -101,14 +101,14 @@ class LingotekManagementForm extends FormBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $rows = [];
     foreach ($entities as $entity_id => $entity) {
-      $language_source = LingotekLocale::convertLingotek2Drupal($translation_service->getSourceLocale($entity));
+      $source = $this->getSourceStatus($entity);
       $translations = $this->getTranslationsStatuses($entity);
       $profile = $this->getProfile($entity);
       $form['table'][$entity_id] = ['#type' => 'checkbox', '#value'=> $entity->id()];
       $rows[$entity_id] = [
         'type' => $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'],
         'title' => $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])),
-        'langcode' => $this->languageManager->getLanguage($language_source)->getName(),
+        'source' => $source,
         'translations' => $translations,
         'profile' => $profile ? $profile->label() : '',
       ];
@@ -116,9 +116,9 @@ class LingotekManagementForm extends FormBase {
     $headers = [
       'type' => $entity_type->getBundleLabel(),
       'title' => $entity_type->getKey('label'),
-      'langcode' => 'Language source',
-      'translations' => 'Translations',
-      'profile' => 'Profile',
+      'source' => $this->t('Language source'),
+      'translations' => $this->t('Translations'),
+      'profile' => $this->t('Profile'),
     ];
 
     // Build an 'Update options' form.
@@ -151,7 +151,7 @@ class LingotekManagementForm extends FormBase {
       '#type' => '#pager',
       '#weight' => 50,
     ];
-
+    $form['#attached']['library'][] = 'lingotek/lingotek';
     return $form;
   }
 
@@ -433,7 +433,9 @@ class LingotekManagementForm extends FormBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $languages = $this->languageManager->getLanguages();
     foreach ($languages as $langcode => $language) {
-      $translation_service->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
+      if ($langcode !== $entity->language()->getId()) {
+        $translation_service->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
+      }
     }
   }
 
@@ -449,6 +451,22 @@ class LingotekManagementForm extends FormBase {
     $translation_service->deleteMetadata($entity);
   }
 
+  protected function getSourceStatus(ContentEntityInterface $entity) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $language_source = LingotekLocale::convertLingotek2Drupal($translation_service->getSourceLocale($entity));
+
+    $source_status = $translation_service->getSourceStatus($entity);
+    return array('data' => array(
+      '#type' => 'inline_template',
+      '#template' => '<span class="language-icon source-{{status}}" title="{{status}}">{{language}}</span>',
+      '#context' => array(
+        'language' => $this->languageManager->getLanguage($language_source)->getName(),
+        'status' => strtolower($source_status),
+      ),
+    ));
+  }
+
   /**
    * Gets the translation status of an entity in a format ready to display.
    *
@@ -460,7 +478,9 @@ class LingotekManagementForm extends FormBase {
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
     foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
-      $translations[$field_value->key] = $field_value->value;
+      if ($field_value->key !== $entity->language()->getId()) {
+        $translations[$field_value->key] = $field_value->value;
+      }
     }
     return $this->formatTranslations($translations);
   }
@@ -474,11 +494,18 @@ class LingotekManagementForm extends FormBase {
    * @return string
    */
   protected function formatTranslations(array $translations) {
-    $value = [];
+    $languages = [];
     foreach ($translations as $langcode => $status) {
-      $value[] = $langcode . '>' . $status;
+      $languages[] = ['language' => strtoupper(LingotekLocale::convertLingotek2Drupal($langcode)) , 'status' => strtolower($status)];
     }
-    return join('; ', $value);
+    return array('data' => array(
+      '#type' => 'inline_template',
+      '#template' => '{% for language in languages %}<span class="language-icon target-{{language.status}}" title="{{language.status}}">{{language.language}}</span> {% endfor %}',
+      '#context' => array(
+        'languages' => $languages,
+      ),
+    ));
+
   }
 
   /**
@@ -507,14 +534,14 @@ class LingotekManagementForm extends FormBase {
     $operations = [];
     $operations['upload'] = $this->t('Upload source for translation');
     $operations['check_upload'] = $this->t('Check upload progress');
-    $operations['Request translations']['request_translations'] = $this->t('Request all translations');
-    $operations['Check translation progress']['check_translations'] = $this->t('Check progress of all translations');
-    $operations['Download']['download'] = $this->t('Download all translations');
+    $operations[$this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
+    $operations[$this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
+    $operations[$this->t('Download')]['download'] = $this->t('Download all translations');
     $operations['disassociate'] = $this->t('Disassociate translations');
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
-      $operations['Request translations']['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName()]);
-      $operations['Check translation progress']['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName()]);
-      $operations['Download']['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
+      $operations[$this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName()]);
+      $operations[$this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName()]);
+      $operations[$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
     }
     return $operations;
   }
