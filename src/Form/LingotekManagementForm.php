@@ -129,18 +129,15 @@ class LingotekManagementForm extends FormBase {
       '#attributes' => array('class' => array('container-inline')),
       '#weight' => 10,
     );
-
-    $options = $this->generateOperations();
-
     $form['options']['operation'] = array(
       '#type' => 'select',
       '#title' => $this->t('Action'),
       '#title_display' => 'invisible',
-      '#options' => $options,
+      '#options' => $this->generateOperations(),
     );
     $form['options']['submit'] = array(
       '#type' => 'submit',
-      '#value' => $this->t('Update'),
+      '#value' => $this->t('Execute'),
     );
 
     $form['table'] = [
