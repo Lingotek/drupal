@@ -49,6 +49,15 @@ interface LingotekContentTranslationServiceInterface {
   public function setSourceStatus(ContentEntityInterface &$entity, $status);
 
   /**
+   * Gets the current status of all the target translations.
+   *
+   * @param ContentEntityInterface &$entity
+   *   The entity which status we want to check.
+   *
+   */
+  public function checkTargetStatuses(ContentEntityInterface &$entity);
+
+  /**
    * Gets the current status of the target translation.
    *
    * @param ContentEntityInterface &$entity

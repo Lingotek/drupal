@@ -91,6 +91,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
+  public function checkTargetStatuses(ContentEntityInterface &$entity) {
+    foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
+      $locale = $value->key;
+      $current_status = $value->value;
+      if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
+        $current_status = Lingotek::STATUS_READY;
+        $this->setTargetStatus($entity, $locale, $current_status);
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function checkTargetStatus(ContentEntityInterface &$entity, $locale) {
     $current_status = $this->getTargetStatus($entity, $locale);
     if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
@@ -356,9 +370,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function deleteMetadata(ContentEntityInterface &$entity) {
-    $this->setTargetStatuses($entity, NULL);
-    $this->setDocumentId($entity, NULL);
-    $this->setSourceStatus($entity, NULL);
+    $entity->lingotek_translation_status = NULL;
+    $entity->lingotek_document_id = NULL;
+    $entity->save();
   }
 
   /**

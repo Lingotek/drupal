@@ -130,13 +130,7 @@ class LingotekManagementForm extends FormBase {
       '#weight' => 10,
     );
 
-    $options['upload'] = $this->t('Upload source for translation');
-    $options['check'] = $this->t('Check progress of translations');
-    $options['disassociate'] = $this->t('Disassociate translations');
-    $options['Download']['download'] = $this->t('Download all translations');
-    foreach ($this->languageManager->getLanguages() as $langcode => $language) {
-      $options['Download']['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
-    }
+    $options = $this->generateOperations();
 
     $form['options']['operation'] = array(
       '#type' => 'select',
@@ -176,21 +170,73 @@ class LingotekManagementForm extends FormBase {
         $this->createUploadBatch($values);
         $processed = TRUE;
         break;
-      case 'check':
+      case 'check_upload':
         $this->createUploadCheckStatusBatch($values);
+        $processed = TRUE;
+        break;
+      case 'request_translations':
+        $this->createRequestTranslationsBatch($values);
+        $processed = TRUE;
+        break;
+      case 'check_translations':
+        $this->createTranslationCheckStatusBatch($values);
         $processed = TRUE;
         break;
       case 'download':
         $this->createDownloadBatch($values);
         $processed = TRUE;
         break;
+      case 'disassociate':
+        $this->createDisassociateBatch($values);
+        $processed = TRUE;
+        break;
     }
     if (!$processed) {
-      if (substr($operation, 0, 9) === 'download:') {
+      if (0 === strpos($operation, 'request_translation:')) {
+        list($operation, $language) = explode(':', $operation);
+        $this->createLanguageRequestTranslationBatch($values, $language);
+        $processed = TRUE;
+      }
+      if (0 === strpos($operation, 'check_translation:')) {
+        list($operation, $language) = explode(':', $operation);
+        $this->createLanguageTranslationCheckStatusBatch($values, $language);
+        $processed = TRUE;
+      }
+      if (0 === strpos($operation, 'download:')) {
         list($operation, $language) = explode(':', $operation);
         $this->createLanguageDownloadBatch($values, $language);
+        $processed = TRUE;
       }
     }
+    if ($processed) {
+      drupal_set_message('Operations completed successfully.');
+    }
+  }
+
+  /**
+   * Performs an operation to several values in a batch.
+   *
+   * @param string $operation
+   *   The method in this object we need to call.
+   * @param array $values
+   *   Array of ids to process.
+   * @param string $title
+   *   The title for the batch progress.
+   * @param string $language
+   *   The language code for the request. NULL if is not applicable.
+   */
+  protected function createBatch($operation, $values, $title, $language = NULL) {
+    $operations = [];
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
+
+    foreach ($entities as $entity) {
+      $operations[] = [[$this, $operation], [$entity, $language]];
+    }
+    $batch = array(
+      'title' => $title,
+      'operations' => $operations,
+    );
+    batch_set($batch);
   }
 
   /**
@@ -200,37 +246,61 @@ class LingotekManagementForm extends FormBase {
    *   Array of ids to upload.
    */
   protected function createUploadBatch($values) {
-    $operations = [];
-    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
-
-    foreach ($entities as $entity) {
-      $operations[] = [[$this, 'uploadDocument'], [$entity]];
-    }
-    $batch = array(
-      'title' => t('Uploading content to Lingotek service'),
-      'operations' => $operations,
-    );
-    batch_set($batch);
+    $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'));
   }
 
   /**
-   * Create and set an upload check status batch.
+   * Create and set a check upload status batch.
    *
    * @param array $values
    *   Array of ids to upload.
    */
   protected function createUploadCheckStatusBatch($values) {
-    $operations = [];
-    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
+    $this->createBatch('checkDocumentUploadStatus', $values, $this->t('Checking content upload status with the Lingotek service'));
+  }
 
-    foreach ($entities as $entity) {
-      $operations[] = [[$this, 'checkDocumentUploadStatus'], [$entity]];
-    }
-    $batch = array(
-      'title' => t('Checking uploaded status with Lingotek service'),
-      'operations' => $operations,
-    );
-    batch_set($batch);
+  /**
+   * Create and set a request translations batch for all languages.
+   *
+   * @param array $values
+   *   Array of ids to upload.
+   */
+  protected function createRequestTranslationsBatch($values) {
+    $this->createBatch('requestTranslations', $values, $this->t('Requesting translations to Lingotek service.'));
+  }
+
+  /**
+   * Create and set a request translations batch for all languages.
+   *
+   * @param array $values
+   *   Array of ids to upload.
+   * @param string $language
+   *   Language code for the request.
+   */
+  protected function createLanguageRequestTranslationBatch($values, $language) {
+    $this->createBatch('requestTranslation', $values, $this->t('Requesting translations to Lingotek service.'), $language);
+  }
+
+  /**
+   * Create and set a check translation status batch for all languages.
+   *
+   * @param array $values
+   *   Array of ids to upload.
+   */
+  protected function createTranslationCheckStatusBatch($values) {
+    $this->createBatch('checkTranslationStatuses', $values, $this->t('Checking translations status from the Lingotek service.'));
+  }
+
+  /**
+   * Create and set a check translation status batch for a given language.
+   *
+   * @param array $values
+   *   Array of ids to upload.
+   * @param string $language
+   *   Language code for the request.
+   */
+  protected function createLanguageTranslationCheckStatusBatch($values, $language) {
+    $this->createBatch('checkTranslationStatus', $values, $this->t('Checking translations status from the Lingotek service.'), $language);
   }
 
   /**
@@ -240,19 +310,7 @@ class LingotekManagementForm extends FormBase {
    *   Array of ids to upload.
    */
   protected function createDownloadBatch($values) {
-    $requests = [];
-    $downloads = [];
-    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
-
-    foreach ($entities as $entity) {
-      $requests[] = [[$this, 'requestTranslations'], [$entity]];
-      $downloads[] = [[$this, 'downloadTranslations'], [$entity]];
-    }
-    $batch = array(
-      'title' => t('Requesting translations to Lingotek service'),
-      'operations' => array_merge($requests, $downloads),
-    );
-    batch_set($batch);
+    $this->createBatch('downloadTranslations', $values, $this->t('Downloading translations from the Lingotek service.'));
   }
 
   /**
@@ -261,22 +319,20 @@ class LingotekManagementForm extends FormBase {
    * @param array $values
    *   Array of ids to upload.
    * @param string $language
-   *   Language code to request.
+   *   Language code for the request.
    */
   protected function createLanguageDownloadBatch($values, $language) {
-    $requests = [];
-    $downloads = [];
-    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
+    $this->createBatch('downloadTranslation', $values, $this->t('Requesting translations to Lingotek service'), $language);
+  }
 
-    foreach ($entities as $entity) {
-      $requests[] = [[$this, 'requestTranslation'], [$entity, $language]];
-      $downloads[] = [[$this, 'downloadTranslation'], [$entity, $language]];
-    }
-    $batch = array(
-      'title' => t('Requesting translations to Lingotek service'),
-      'operations' => array_merge($requests, $downloads),
-    );
-    batch_set($batch);
+  /**
+   * Create and set a disassociate batch.
+   *
+   * @param array $values
+   *   Array of ids to disassociate.
+   */
+  protected function createDisassociateBatch($values) {
+    $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
   }
 
   /**
@@ -304,7 +360,7 @@ class LingotekManagementForm extends FormBase {
   }
 
   /**
-   * Request all translations for a given content in a given language.
+   * Request all translations for a given content.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
@@ -313,6 +369,32 @@ class LingotekManagementForm extends FormBase {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $translation_service->requestTranslations($entity);
+  }
+
+  /**
+   * Checks all translations statuses for a given content.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function checkTranslationStatuses(ContentEntityInterface $entity) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->checkTargetStatuses($entity);
+  }
+
+  /**
+   * Checks translation status for a given content in a given language.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   * @param string $language
+   *   The language to check.
+   */
+  public function checkTranslationStatus(ContentEntityInterface $entity, $language) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->checkTargetStatus($entity, LingotekLocale::convertDrupal2Lingotek($language));
   }
 
   /**
@@ -356,6 +438,18 @@ class LingotekManagementForm extends FormBase {
     foreach ($languages as $langcode => $language) {
       $translation_service->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
     }
+  }
+
+  /**
+   * Disassociate the content from Lingotek.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function disassociate(ContentEntityInterface $entity) {
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->deleteMetadata($entity);
   }
 
   /**
@@ -404,6 +498,28 @@ class LingotekManagementForm extends FormBase {
       $profile = LingotekProfile::load($profile_id);
     }
     return $profile;
+  }
+
+  /**
+   * Get the bulk operations for the management form.
+   *
+   * @return array
+   *   Array with the bulk operations.
+   */
+  public function generateOperations() {
+    $operations = [];
+    $operations['upload'] = $this->t('Upload source for translation');
+    $operations['check_upload'] = $this->t('Check upload progress');
+    $operations['Request translations']['request_translations'] = $this->t('Request all translations');
+    $operations['Check translation progress']['check_translations'] = $this->t('Check progress of all translations');
+    $operations['Download']['download'] = $this->t('Download all translations');
+    $operations['disassociate'] = $this->t('Disassociate translations');
+    foreach ($this->languageManager->getLanguages() as $langcode => $language) {
+      $operations['Request translations']['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName()]);
+      $operations['Check translation progress']['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName()]);
+      $operations['Download']['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
+    }
+    return $operations;
   }
 
 }
