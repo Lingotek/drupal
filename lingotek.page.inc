@@ -684,6 +684,9 @@ function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale)
 function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, TRUE);
   $entity = entity_load_single($entity_type, $entity_id);
+  if(!$entity){
+    drupal_not_found();
+  }
 
   // check for node-based target translation
   if(lingotek_uses_node_translation($entity)) {
