@@ -15,6 +15,8 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\LingotekLocale;
+use Drupal\user\PrivateTempStore;
+use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -93,7 +95,39 @@ class LingotekManagementForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
-    $query = $this->entityQuery->get($this->entityTypeId);
+    $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
+    $query = $this->entityQuery->get($this->entityTypeId)->pager(10);
+    $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
+
+    // Filter results.
+    /** @var PrivateTempStoreFactory $temp_store */
+    $temp_store_factory = \Drupal::service('user.private_tempstore');
+    /** @var PrivateTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('lingotek.management.filter.' . $this->entityTypeId);
+    $labelFilter = $temp_store->get('label');
+    $bundleFilter = $temp_store->get('bundle');
+    $profileFilter = $temp_store->get('profile');
+    $sourceLanguageFilter = $temp_store->get('source_language');
+    if ($has_bundles && $bundleFilter) {
+      $query->condition($entity_type->getKey('bundle'), $bundleFilter);
+    }
+    if ($labelFilter) {
+      if ($has_bundles) {
+        $query->condition($entity_type->getKey('label'), '%' . $labelFilter . '%', 'LIKE');
+      }
+      else {
+        $query->condition('name', '%' . $labelFilter . '%', 'LIKE');
+      }
+    }
+    if ($profileFilter) {
+      $query->condition('lingotek_profile', $profileFilter);
+    }
+    if ($sourceLanguageFilter) {
+      $query->condition($entity_type->getKey('langcode'), $sourceLanguageFilter);
+      $query->condition('default_langcode', 1);
+
+    }
+
     $ids = $query->execute();
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
@@ -105,21 +139,84 @@ class LingotekManagementForm extends FormBase {
       $translations = $this->getTranslationsStatuses($entity);
       $profile = $this->getProfile($entity);
       $form['table'][$entity_id] = ['#type' => 'checkbox', '#value'=> $entity->id()];
-      $rows[$entity_id] = [
-        'type' => $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'],
+      $rows[$entity_id] = [];
+      if ($has_bundles) {
+        $rows[$entity_id]['bundle'] = $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'];
+      }
+      $rows[$entity_id] += [
         'title' => $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])),
         'source' => $source,
         'translations' => $translations,
         'profile' => $profile ? $profile->label() : '',
       ];
     }
-    $headers = [
-      'type' => $entity_type->getBundleLabel(),
-      'title' => $entity_type->getKey('label'),
+    $headers = [];
+    if ($has_bundles) {
+      $headers['bundle'] = $entity_type->getBundleLabel();
+    }
+    $headers += [
+      'title' => $has_bundles ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
       'source' => $this->t('Language source'),
       'translations' => $this->t('Translations'),
       'profile' => $this->t('Profile'),
     ];
+
+    // Add filters.
+    $form['filters'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Filter'),
+      '#open' => TRUE,
+      '#weight' => 5,
+      '#tree' => TRUE,
+    );
+    $form['filters']['wrapper'] = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('form--inline', 'clearfix')),
+    );
+    $form['filters']['wrapper']['label'] = array(
+      '#type' => 'textfield',
+      '#title' => $has_bundles ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
+      '#placeholder' => $this->t('Filter by @title', ['@title' => $entity_type->getBundleLabel()]),
+      '#default_value' => $labelFilter,
+      '#attributes' => array('class' => array('form-item')),
+    );
+    if ($has_bundles) {
+      $form['filters']['wrapper']['bundle'] = array(
+        '#type' => 'select',
+        '#title' => $entity_type->getBundleLabel(),
+        '#options' => ['' => $this->t('All')] + $this->getAllBundles(),
+        '#default_value' => $bundleFilter,
+        '#attributes' => array('class' => array('form-item')),
+      );
+    }
+    $form['filters']['wrapper']['source_language'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Source language'),
+      '#options' => ['' => $this->t('All languages')] + $this->getAllLanguages(),
+      '#default_value' => $sourceLanguageFilter,
+      '#attributes' => array('class' => array('form-item')),
+    );
+    $form['filters']['wrapper']['profile'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Profile'),
+      '#options' => ['' => $this->t('All')] + $this->getAllProfiles(),
+      '#default_value' => $profileFilter,
+      '#attributes' => array('class' => array('form-item')),
+    );
+    $form['filters']['actions'] = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('clearfix'),),
+    );
+    $form['filters']['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Filter'),
+      '#submit' => array('::filterForm'),
+    );
+    $form['filters']['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Reset'),
+      '#submit' => array('::resetFilterForm'),
+    );
 
     // Build an 'Update options' form.
     $form['options'] = array(
@@ -148,11 +245,51 @@ class LingotekManagementForm extends FormBase {
       '#weight' => 30,
     ];
     $form['pager'] = [
-      '#type' => '#pager',
+      '#type' => 'pager',
       '#weight' => 50,
     ];
     $form['#attached']['library'][] = 'lingotek/lingotek';
     return $form;
+  }
+
+  /**
+   * Form submission handler for resetting the filters.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public function resetFilterForm(array &$form, FormStateInterface $form_state) {
+    /** @var PrivateTempStoreFactory $temp_store */
+    $temp_store_factory = \Drupal::service('user.private_tempstore');
+    /** @var PrivateTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('lingotek.management.filter.' . $this->entityTypeId);
+    $temp_store->delete('label');
+    $temp_store->delete('profile');
+    $temp_store->delete('source_language');
+    $temp_store->delete('bundle');
+  }
+
+  /**
+   * Form submission handler for filtering.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public function filterForm(array &$form, FormStateInterface $form_state) {
+    /** @var PrivateTempStoreFactory $temp_store */
+    $temp_store_factory = \Drupal::service('user.private_tempstore');
+    /** @var PrivateTempStore $temp_store */
+    $temp_store = $temp_store_factory->get('lingotek.management.filter.' . $this->entityTypeId);
+    $temp_store->set('label', $form_state->getValue(['filters', 'wrapper', 'label']));
+    $temp_store->set('profile', $form_state->getValue(['filters', 'wrapper', 'profile']));
+    $temp_store->set('source_language', $form_state->getValue(['filters', 'wrapper', 'source_language']));
+    $temp_store->set('bundle', $form_state->getValue(['filters', 'wrapper', 'bundle']));
+    // If we apply any filters, we need to go to the first page again.
+    $form_state->setRedirect('<current>');
   }
 
   /**
@@ -451,6 +588,15 @@ class LingotekManagementForm extends FormBase {
     $translation_service->deleteMetadata($entity);
   }
 
+  /**
+   * Gets the source status of an entity in a format ready to display.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   *
+   * @return array
+   *   A render array.
+   */
   protected function getSourceStatus(ContentEntityInterface $entity) {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
@@ -473,7 +619,8 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    *
-   * @return string
+   * @return array
+   *   A render array.
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
@@ -491,7 +638,8 @@ class LingotekManagementForm extends FormBase {
    * @param array $translations
    *   Pairs of language - status.
    *
-   * @return string
+   * @return array
+   *   A render array.
    */
   protected function formatTranslations(array $translations) {
     $languages = [];
@@ -522,6 +670,51 @@ class LingotekManagementForm extends FormBase {
       $profile = LingotekProfile::load($profile_id);
     }
     return $profile;
+  }
+
+  /**
+   * Gets alls the bundles as options.
+   *
+   * @return array
+   *   The bundles as a valid options array.
+   */
+  protected function getAllBundles() {
+    $bundles = $this->entityManager->getBundleInfo($this->entityTypeId);
+    $options = [];
+    foreach ($bundles as $id => $bundle) {
+      $options[$id] = $bundle['label'];
+    }
+    return $options;
+  }
+
+  /**
+   * Gets all the profiles as options.
+   *
+   * @return array
+   *   The profiles as a valid options array.
+   */
+  protected function getAllProfiles() {
+    $profiles = LingotekProfile::loadMultiple();
+    $options = [];
+    foreach ($profiles as $id => $profile) {
+      $options[$id] = $profile->label();
+    }
+    return $options;
+  }
+
+  /**
+   * Gets all the languages as options.
+   *
+   * @return array
+   *   The languages as a valid options array.
+   */
+  protected function getAllLanguages() {
+    $languages = $this->languageManager->getLanguages();
+    $options = [];
+    foreach ($languages as $id => $language) {
+      $options[$id] = $language->getName();
+    }
+    return $options;
   }
 
   /**
