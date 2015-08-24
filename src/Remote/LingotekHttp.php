@@ -2,14 +2,13 @@
 
 namespace Drupal\lingotek\Remote;
 
-use Drupal\Core\Config\ConfigFactory;
-use Drupal\lingotek\Remote\LingotekHttpInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\RequestOptions;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /*
- * a simple wrapper to Drupal http functions
+ * Lingotek HTTP implementation using Guzzle.
  */
 class LingotekHttp implements LingotekHttpInterface {
 
@@ -21,18 +20,27 @@ class LingotekHttp implements LingotekHttpInterface {
   protected $httpClient;
 
   /**
-   * An array for storing header info
+   * An array for storing headers info
    *
    * @var array
    */
   protected $headers = array();
 
-  public function __construct(ClientInterface $httpClient, ConfigFactory $config) {
-    $this->httpClient = $httpClient;
-    $this->config     = $config->getEditable('lingotek.settings');
+  /**
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The Guzzle HTTP client.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   */
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory) {
+    $this->httpClient = $http_client;
+    $this->config = $config_factory->get('lingotek.settings');
     $this->setDefaultHeaders();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container) {
     return new static (
       $container->get('http_client'),
@@ -41,50 +49,40 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   /*
-   * send a request specified by method
-   *
-   * @since 0.1
-   */
-  public function request($path, $args = array(), $method = 'GET', $use_multipart = FALSE) {
-    $url = $this->config->get('account.sandbox_host') . $path;
-    $request = $this->httpClient->createRequest($method, $url);
-    $request->setHeaders($this->headers);
-    if ($method == 'POST') {
-      $postBody = $request->getBody();
-      $postBody->forceMultipartUpload($use_multipart);
-      $postBody->replaceFields($args);
-    }
-    elseif (!empty($args)) {
-      $request->setQuery($args);
-    }
-    try {
-      $response = $this->httpClient->send($request);
-    }
-     catch (RequestException $e) {
-      watchdog_exception('lingotek', $e, 'Request to Lingotek service failed: %error', array('%error' => $e->getMessage()));
-      drupal_set_message(t('Request to Lingotek service failed: %error', array('%error' => $e->getMessage())), 'warning');
-      throw $e;
-    }
-    return $response;
-  }
-
-  /*
    * send a GET request
    */
   public function get($path, $args = array()) {
-    return $this->request($path, $args, 'GET');
+    $options = [];
+    if (count($args)) {
+      $options = [RequestOptions::QUERY => $args];
+    }
+    return $this->httpClient->get($this->config->get('account.sandbox_host') . $path,
+      [
+        RequestOptions::HEADERS => $this->headers,
+      ] + $options
+    );
   }
 
   /*
    * send a POST request
    */
   public function post($path, $args = array(), $use_multipart = FALSE) {
-    try {
-      $response = $this->request($path, $args, 'POST', $use_multipart);
-    } catch (Exception $e) {
-      throw $e;
+    $options = [];
+    if (count($args) && $use_multipart) {
+      $multipart = [];
+      foreach ($args as $name => $contents) {
+        $multipart[] = ['name' => $name, 'contents' => $contents];
+      }
+      $options[RequestOptions::MULTIPART] = $multipart;
     }
-    return $response;
+    elseif (count($args) && !$use_multipart) {
+      $options[RequestOptions::FORM_PARAMS] = $args;
+    }
+    return $this->httpClient->post($this->config->get('account.sandbox_host') . $path,
+      [
+        RequestOptions::HEADERS => $this->headers,
+      ] + $options
+    );
   }
 
   /*
@@ -93,7 +91,15 @@ class LingotekHttp implements LingotekHttpInterface {
   public function delete($path, $args = array()) {
     // Let the post method masquerade as a DELETE
     $this->addHeader('X-HTTP-Method-Override', 'DELETE');
-    return $this->request($path, $args, 'POST');
+    $options = [];
+    if (count($args)) {
+      $options = [RequestOptions::QUERY => $args];
+    }
+    return $this->httpClient->delete($this->config->get('account.sandbox_host') . $path,
+      [
+        RequestOptions::HEADERS => $this->headers,
+      ] + $options
+    );
   }
 
   /*
@@ -102,7 +108,13 @@ class LingotekHttp implements LingotekHttpInterface {
   public function patch($path, $args = array(), $use_multipart = FALSE) {
     // Let the post method masquerade as a PATCH
     $this->addHeader('X-HTTP-Method-Override', 'PATCH');
-    return $this->request($path, $args, 'POST', $use_multipart);
+
+    return $this->httpClient->patch($this->config->get('account.sandbox_host') . $path,
+      [
+        RequestOptions::FORM_PARAMS => $args,
+        RequestOptions::HEADERS => $this->headers,
+      ]
+    );
   }
 
   public function getCurrentToken() {
@@ -131,35 +143,6 @@ class LingotekHttp implements LingotekHttpInterface {
       $this->addHeader('Authorization', 'bearer ' . $token);
     }
     return $this;
-  }
-
-  /*
-   * formats a request as multipart
-   * greatly inspired from mailgun wordpress plugin
-   *
-   * @since 0.1
-   */
-  public function formatAsMultipart(&$body) {
-    $boundary = '----------------------------32052ee8fd2c';// arbitrary boundary
-
-    $this->addHeader('Content-Type', 'multipart/form-data; boundary=' . $boundary);
-    $data = '';
-
-    foreach ($body as $key => $value) {
-      if (is_array($value)) {
-        foreach ($value as $k => $v) {
-          $data .= '--' . $boundary . "\r\n";
-          $data .= 'Content-Disposition: form-data; name="' . $key . '[' . $k . ']"' . "\r\n\r\n";
-          $data .= $v . "\r\n";
-        }
-      } else {
-        $data .= '--' . $boundary . "\r\n";
-        $data .= 'Content-Disposition: form-data; name="' . $key . '"' . "\r\n\r\n";
-        $data .= $value . "\r\n";
-      }
-    }
-
-    $body = $data . '--' . $boundary . '--';
   }
 
 }

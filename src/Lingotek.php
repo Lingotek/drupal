@@ -65,7 +65,7 @@ class Lingotek implements LingotekInterface {
       return FALSE;
     }
     if ($response) {
-      return $response->json();
+      return json_decode($response->getBody(), TRUE);
     }
     // TODO: log a warning
     return FALSE;
@@ -220,7 +220,7 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     $response = $this->api->getDocumentStatus($doc_id);
     if ($response->getStatusCode() == '200') {
-      $progress_json = $response->json();
+      $progress_json = json_decode($response->getBody(), TRUE);
       $progress = !empty($progress_json['properties']['progress']) ? $progress_json['properties']['progress'] : NULL;
       if ($progress === self::PROGRESS_COMPLETE) {
         return TRUE;
@@ -234,7 +234,7 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     $response = $this->api->getTranslation($doc_id, $locale);
     if ($response->getStatusCode() == '200') {
-      return $response->json();
+      return json_decode($response->getBody(), TRUE);
     }
     return FALSE;
   }

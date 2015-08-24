@@ -7,8 +7,6 @@
 
 namespace Drupal\lingotek\Remote;
 
-use Drupal\lingotek\Remote\LingotekApiInterface;
-use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -21,7 +19,7 @@ class LingotekApi implements LingotekApiInterface {
   /**
    * The HTTP client to interact with the Lingotek service.
    *
-   * @var \Drupal\lingotek\Remote\LingotekHttp
+   * @var \Drupal\lingotek\Remote\LingotekHttpInterface
    */
   protected $lingotekClient;
 
@@ -34,7 +32,7 @@ class LingotekApi implements LingotekApiInterface {
 
   public static function create(ContainerInterface $container) {
     return new static(
-            $container->get('lingotek.http_client')
+      $container->get('lingotek.http_client')
     );
   }
 
@@ -57,7 +55,7 @@ class LingotekApi implements LingotekApiInterface {
       throw new LingotekApiException('Failed to add document: ' . $e->getMessage());
     }
     if ($response->getStatusCode() == '202') {
-      $data = $response->json();
+      $data = json_decode($response->getBody(), TRUE);
       if (!empty($data['properties']['id'])) {
         return $data['properties']['id'];
       }
@@ -204,7 +202,7 @@ class LingotekApi implements LingotekApiInterface {
 
   protected function formatResponse($response) {
     $formatted_response = array();
-    $json_response = $response->json();
+    $json_response = json_decode($response->getBody(), TRUE);
     if (!empty($json_response['entities'])) {
       foreach ($json_response['entities'] as $entity) {
         if (!empty($entity['properties']['id']) && !empty($entity['properties']['title'])) {

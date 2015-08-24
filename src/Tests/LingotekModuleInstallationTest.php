@@ -31,14 +31,14 @@ class LingotekModuleInstallationTest extends WebTestBase {
 
     // Post the form enabling the lingotek module.
     $edit = ['modules[Multilingual][lingotek][enable]' => '1'];
-    $this->drupalPostForm(NULL, $edit, 'Save configuration');
+    $this->drupalPostForm(NULL, $edit, 'Install');
 
     // Dependencies installation is requested.
     $this->assertText('Some required modules must be enabled');
     $this->drupalPostForm(NULL, [], 'Continue');
 
-    // The module is enabled successfully.
-    $this->assertText('The configuration options have been saved.');
+    // The module is enabled successfully with its dependencies.
+    $this->assertText('modules have been enabled: Lingotek Translation');
   }
 
 }

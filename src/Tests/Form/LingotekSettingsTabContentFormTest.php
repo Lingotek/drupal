@@ -54,8 +54,14 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
 
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
     $this->rebuildContainer();
+
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
 
     // Check the form contains the article type and only its text-based fields.
     $this->drupalGet('admin/lingotek/settings');

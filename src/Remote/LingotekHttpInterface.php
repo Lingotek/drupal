@@ -12,7 +12,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 interface LingotekHttpInterface {
 
   public static function create(ContainerInterface $container);
-  public function request($path, $args = array(), $method = 'GET');
   public function get($path, $args = array());
   public function post($path, $args = array());
   public function delete($path, $args = array());
