@@ -147,15 +147,14 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   }
 
   protected function getOperationColumnId(ContentEntityInterface $entity, array $option) {
-    // For now, just return the known column id for operations
-    if (count($option) == 5) {
-      // Source-language column present.
-      return 4;
+    $found = -1;
+    foreach ($option as $index => $column) {
+      if (isset($column['data']) && isset($column['data']['#type']) && $column['data']['#type'] === 'operations') {
+        $found = $index;
+        break;
+      }
     }
-    else {
-      // Source-language column absent.
-      return 3;
-    }
+    return $found;
   }
 
   /*
