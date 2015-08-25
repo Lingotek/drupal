@@ -31,7 +31,6 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
   // Use update with existing entities that have been edited. 
   elseif ($translation_service->hasEntityChanged($entity)) {
     if ($translation_service->updateDocument($entity)) {
-      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     }
     else {

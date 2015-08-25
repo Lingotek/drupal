@@ -71,7 +71,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           $this->addOperationLink($entity, $option, 'Check Upload Status', $path, $language);
         }
         // Upload button if the status is EDITED or non-existent.
-        elseif ($source_status === Lingotek::STATUS_EDITED || $source_status === NULL) {
+        elseif ($source_status === Lingotek::STATUS_EDITED || $source_status === Lingotek::STATUS_UNTRACKED || $source_status === NULL) {
           $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
           $this->addOperationLink($entity, $option, 'Upload', $path, $language);
         }

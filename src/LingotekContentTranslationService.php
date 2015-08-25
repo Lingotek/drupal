@@ -71,11 +71,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getSourceStatus(ContentEntityInterface &$entity) {
     $source_language = LanguageInterface::LANGCODE_NOT_SPECIFIED;
-    if ($entity->lingotek_translation_source) {
+    if ($entity->lingotek_translation_source->value !== NULL) {
       $source_language = $entity->lingotek_translation_source->value;
     }
     if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED) {
-      $source_language = $entity->language()->getId();
+      $source_language = $entity->getUntranslated()->language()->getId();
     }
     return $this->getTargetStatus($entity, $source_language);
   }
@@ -85,8 +85,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setSourceStatus(ContentEntityInterface &$entity, $status) {
     $source_language = $entity->lingotek_translation_source->value;
-    if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED) {
-      $source_language = $entity->language()->getId();
+    if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED || $source_language == NULL) {
+      $source_language = $entity->getUntranslated()->language()->getId();
     }
     return $this->setTargetStatus($entity, $source_language, $status);
   }
@@ -161,7 +161,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setTargetStatuses(ContentEntityInterface &$entity, $status) {
     $target_languages = $this->languageManager->getLanguages();
-    $entity_langcode = $entity->language()->getId();
+    $entity_langcode = $entity->getUntranslated()->language()->getId();
 
     foreach($target_languages as $langcode => $language) {
       $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
@@ -200,7 +200,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function getSourceLocale(ContentEntityInterface &$entity) {
-    $source_language = $entity->language()->getId();
+    $source_language = $entity->getUntranslated()->language()->getId();
     return LingotekLocale::convertDrupal2Lingotek($source_language);
   }
 
@@ -222,7 +222,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     $config = \Drupal::config('lingotek.settings');
     $data = array();
-    $translation = $entity->getTranslation($entity->language()->getId());
+    $source_entity = $entity->getUntranslated();
     foreach ($translatable_fields as $k => $definition) {
       // Check if the field is marked for upload.
       if ($config->get('translate.entity.' . $entity_type->id() . '.' . $entity->bundle() . '.field.' . $k )) {
@@ -231,7 +231,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         module_load_include('inc', 'content_translation', 'content_translation.admin');
         $column_element = content_translation_field_sync_widget($field_definitions[$k]);
 
-        $field = $translation->get($k);
+        $field = $source_entity->get($k);
         foreach ($field as $fkey => $fval) {
           // If we have only one relevant column, upload that. If not, check
           // our settings.
@@ -273,7 +273,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function addTarget(ContentEntityInterface &$entity, $locale) {
-    if ($locale == LingotekLocale::convertDrupal2Lingotek($entity->language()->getId())) {
+    if ($locale == LingotekLocale::convertDrupal2Lingotek($entity->getUntranslated()->language()->getId())) {
       // We don't want to translate from one language to itself.
       return FALSE;
     }
@@ -295,7 +295,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function requestTranslations(ContentEntityInterface &$entity) {
     if ($document_id = $this->getDocumentId($entity)) {
       $target_languages = $this->languageManager->getLanguages();
-      $entity_langcode = $entity->language()->getId();
+      $entity_langcode = $entity->getUntranslated()->language()->getId();
 
       foreach ($target_languages as $langcode => $language) {
         $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
