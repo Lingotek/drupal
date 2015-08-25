@@ -16,7 +16,7 @@
   background-image: url("/modules/lingotek/images/lingotek_000000.png");
 }
 
-span.language-icon {
+a.language-icon {
   background-color:#80a49e;
   border-radius: 3px;
   margin-right: 3px;

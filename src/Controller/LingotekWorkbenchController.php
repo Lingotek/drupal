@@ -2,9 +2,9 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\lingotek\Controller\LingotekControllerBase;
 use Drupal\Core\Url;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class LingotekWorkbenchController extends LingotekControllerBase {
 
@@ -26,7 +26,7 @@ class LingotekWorkbenchController extends LingotekControllerBase {
       $account['login_id'],
       $account['sandbox_host']
     );
-    return new RedirectResponse(Url::fromUri($link)->toString() );
+    return new TrustedRedirectResponse(Url::fromUri($link)->toString() );
   }
 
   /*

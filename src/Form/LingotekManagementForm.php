@@ -649,7 +649,10 @@ class LingotekManagementForm extends FormBase {
     if ($entity->lingotek_translation_status) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
         if ($field_value->key !== $entity->language()->getId()) {
-          $translations[$field_value->key] = $field_value->value;
+          $translations[$field_value->key] = [
+            'status' => $field_value->value,
+            'url' => Url::fromRoute('lingotek.workbench', ['doc_id' => $entity->lingotek_document_id->value, 'locale' => $field_value->key]),
+          ];
         }
       }
     }
@@ -667,12 +670,16 @@ class LingotekManagementForm extends FormBase {
    */
   protected function formatTranslations(array $translations) {
     $languages = [];
-    foreach ($translations as $langcode => $status) {
-      $languages[] = ['language' => strtoupper(LingotekLocale::convertLingotek2Drupal($langcode)) , 'status' => strtolower($status)];
+    foreach ($translations as $langcode => $data) {
+      $languages[] = [
+        'language' => strtoupper(LingotekLocale::convertLingotek2Drupal($langcode)) ,
+        'status' => strtolower($data['status']),
+        'url' => $data['url'],
+      ];
     }
     return array('data' => array(
       '#type' => 'inline_template',
-      '#template' => '{% for language in languages %}<span class="language-icon target-{{language.status}}" title="{{language.status}}">{{language.language}}</span> {% endfor %}',
+      '#template' => '{% for language in languages %}<a href="{{ language.url }}" class="language-icon target-{{language.status}}" title="{{language.status}}">{{language.language}}</a> {% endfor %}',
       '#context' => array(
         'languages' => $languages,
       ),
