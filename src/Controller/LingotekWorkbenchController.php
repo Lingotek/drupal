@@ -14,7 +14,7 @@ class LingotekWorkbenchController extends LingotekControllerBase {
 
   protected function workbenchPageRedirect($doc_id, $locale) {
     // Get account settings to build workbench link.
-    $account = $this->L->get('account');
+    $account = $this->lingotek->get('account');
 
     // generate an external link to the Lingotek Workbench
     $link = self::generateWorkbenchLink(

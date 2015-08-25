@@ -25,7 +25,7 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
    *   The factory for configuration objects.
    */
   public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config) {
-    $this->L = $lingotek;
+    $this->lingotek = $lingotek;
     parent::__construct($config);
   }
 

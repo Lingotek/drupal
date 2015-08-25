@@ -66,7 +66,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Enable advanced handling of taxonomy terms'),
       '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
-      '#default_value' => $this->L->get('preference.advanced_taxonomy_terms'),
+      '#default_value' => $this->lingotek->get('preference.advanced_taxonomy_terms'),
     );
 
     $form['prefs']['hide_top_level'] = array(
@@ -80,14 +80,14 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Show language label on node pages'),
       '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
-      '#default_value' => $this->L->get('preference.show_language_labels'),
+      '#default_value' => $this->lingotek->get('preference.show_language_labels'),
     );
 
     $form['prefs']['always_show_translate_tabs'] = array(
       '#type' => 'checkbox',
       '#title' => t('Always show non-Lingotek translate tabs'),
       '#description' => t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
-      '#default_value' => $this->L->get('preference.always_show_translate_tabs'),
+      '#default_value' => $this->lingotek->get('preference.always_show_translate_tabs'),
     );
 
     $form['prefs']['allow_local_editing'] = array(
@@ -96,7 +96,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Allow local editing of Lingotek translations'),
       '#description' => t('If checked, local editing of translations managed by Lingotek will be allowed. (Note: any changes made may be overwritten if the translation is downloaded from Lingotek again.)'),
-      '#default_value' => $this->L->get('preference.allow_local_editing'),
+      '#default_value' => $this->lingotek->get('preference.allow_local_editing'),
       '#states' => array(
         'visible' => array(
           ':input[name="always_show_translate_tabs"]' => array('checked' => TRUE),
@@ -108,21 +108,21 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Enable language-specific profiles'),
       '#description' => t('If checked, languages enabled for Lingotek translation will not automatically be queued for all content. Instead, languages enabled for Lingotek will be added to the available languages for profiles but will be disabled by default on profiles that have existing content. (Note: this cannot be unchecked if language-specific settings are in use.)'),
-      '#default_value' => $this->L->get('preference.language_specific_profiles'),
+      '#default_value' => $this->lingotek->get('preference.language_specific_profiles'),
     );
 
     $form['prefs']['delete_tms_documents_upon_disassociation'] = array(
       '#type' => 'checkbox',
       '#title' => t('Delete documents from Lingotek TMS when disassociating'),
       '#description' => t('Your documents will remain in your Drupal site but will be deleted from the Lingotek TMS if this option is checked.'),
-      '#default_value' => $this->L->get('preference.delete_tms_documents_upon_disassociation'),
+      '#default_value' => $this->lingotek->get('preference.delete_tms_documents_upon_disassociation'),
     );
 
     $form['prefs']['advanced_parsing'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable advanced features'),
       '#description' => t('Some features may not be available without an ' . \Drupal::l(t('Enterprise License'), Url::fromUri('http://www.lingotek.com')) . ' for the Lingotek TMS. Call 801.331.7777 for details.'),
-      '#default_value' => $this->L->get('preference.advanced_parsing'),
+      '#default_value' => $this->lingotek->get('preference.advanced_parsing'),
     );
     
     $form['prefs']['actions']['#type'] = 'actions';
@@ -145,10 +145,10 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->saveLanguageSwitcherSettings($form_values);
     $this->saveShowLanguageFields($form_values);
     $this->saveAlwaysShowTranslateTabs($form_values);
-    $this->L->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
-    $this->L->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
-    $this->L->set('preference.advanced_parsing', $form_values['advanced_parsing']);
-    $this->L->set('preference.delete_tms_documents_upon_disassociation', $form_values['delete_tms_documents_upon_disassociation']);
+    $this->lingotek->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
+    $this->lingotek->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
+    $this->lingotek->set('preference.advanced_parsing', $form_values['advanced_parsing']);
+    $this->lingotek->set('preference.delete_tms_documents_upon_disassociation', $form_values['delete_tms_documents_upon_disassociation']);
     parent::submitForm($form, $form_state);
   }
 
@@ -241,18 +241,18 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function saveAlwaysShowTranslateTabs($form_values) {
-    $this->L->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
+    $this->lingotek->set('preference.always_show_translate_tabs', $form_values['always_show_translate_tabs']);
     if ($form_values['always_show_translate_tabs']) {
-      $this->L->set('preference.allow_local_editing', $form_values['allow_local_editing']);
+      $this->lingotek->set('preference.allow_local_editing', $form_values['allow_local_editing']);
     }
     else {
-      $this->L->set('preference.allow_local_editing', 0);
+      $this->lingotek->set('preference.allow_local_editing', 0);
     }
   }
 
   protected function saveShowLanguageFields($form_values) {
     // Only save if there's a change to the show_language_labels choice
-    if ($this->L->get('preference.show_language_labels') != $form_values['show_language_labels']) {
+    if ($this->lingotek->get('preference.show_language_labels') != $form_values['show_language_labels']) {
       $bundles = \Drupal::entityManager()->getBundleInfo('node');
     
       foreach($bundles as $bundle_id => $bundle) {
@@ -278,7 +278,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         }
       }
     }
-    $this->L->set('preference.show_language_labels', $form_values['show_language_labels']);
+    $this->lingotek->set('preference.show_language_labels', $form_values['show_language_labels']);
   }
 
 }

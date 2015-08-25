@@ -143,7 +143,7 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
       $this->updateCustomProfile(strtolower($form_values['name']), $form_values['auto_upload'], $form_values['auto_download']);
     }
 
-    $this->L->set('default.vault', $form_values['vault']);
+    $this->lingotek->set('default.vault', $form_values['vault']);
 
     $form_state->setRedirect('lingotek.settings');
     parent::submitForm($form, $form_state);
@@ -172,8 +172,8 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
 
   protected function retrieveProfileVaults() {
     $personal_vault = [];
-    $personal_vault_key = $this->L->get('default.vault');
-    $community_vault = $this->L->get('account.resources.vault');
+    $personal_vault_key = $this->lingotek->get('default.vault');
+    $community_vault = $this->lingotek->get('account.resources.vault');
     if (isset($community_vault[$personal_vault_key])) {
       $personal_vault = array(
         $personal_vault_key => $community_vault[$personal_vault_key]

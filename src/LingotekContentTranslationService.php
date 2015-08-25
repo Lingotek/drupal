@@ -70,7 +70,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function getSourceStatus(ContentEntityInterface &$entity) {
-    $source_language = $entity->lingotek_translation_source->value;
+    $source_language = LanguageInterface::LANGCODE_NOT_SPECIFIED;
+    if ($entity->lingotek_translation_source) {
+      $source_language = $entity->lingotek_translation_source->value;
+    }
     if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED) {
       $source_language = $entity->language()->getId();
     }
@@ -135,7 +138,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setTargetStatus(ContentEntityInterface &$entity, $locale, $status) {
     $set = FALSE;
-    if (count($entity->lingotek_translation_status) > 0) {
+    if ($entity->hasField('lingotek_translation_status') && count($entity->lingotek_translation_status) > 0) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
         if ($value->key == $locale) {
           $value->value = $status;
@@ -143,7 +146,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
     }
-    if (!$set) {
+    if (!$set && $entity->hasField('lingotek_translation_status')) {
       $entity->lingotek_translation_status->appendItem(['key' => $locale, 'value' => $status]);
       $set = TRUE;
     }

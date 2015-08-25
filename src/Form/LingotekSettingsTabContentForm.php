@@ -32,7 +32,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $entity_type_definitions = \Drupal::entityManager()->getDefinitions();
-    $this->profiles = $this->L->get('profile');
+    $this->profiles = $this->lingotek->get('profile');
 
     // Get the profiles
     $this->retrieveProfileOptions();
@@ -54,7 +54,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     // If user specifies no translatable entities, post this message
     if (empty($this->translatable_bundles)) {
       $form['parent_details']['empty_message'] = array(
-        '#markup' => t('There are no translatable content entities specified'),
+        '#markup' => t('There are no translatable content entities specified. You can enable translation for the desired content entities on the <a href="!translation-entity">Content language</a> page.',
+          ['!translation-entity' => \Drupal::url('language.content_settings_page')]),
       );
     }
     
@@ -185,8 +186,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $option_num = Lingotek::PROFILE_AUTOMATIC;
 
     // Find which profile the user previously selected
-    if ($this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile')) {
-      $option_num = $this->L->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile');
+    if ($this->lingotek->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile')) {
+      $option_num = $this->lingotek->get('translate.entity.' . $entity_id . '.' . $bundle_id . '.profile');
     }
 
     $select = array(

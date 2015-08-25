@@ -125,7 +125,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     // Update Callback URL row
     $update_callback_url_row = array();
     $update_callback_url_row['update_description'] = array(
-      '#markup' => '<H5>' . $this->t('Update Notification Callback URL') . '</H5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p><b>' . t('Current notification callback URL: ' . '</b>' . t('<i>' . $this->L->get('account.callback_url') . '</i>')),
+      '#markup' => '<H5>' . $this->t('Update Notification Callback URL') . '</H5>' . '<p>' . $this->t('Update the notification callback URL. This can be run whenever your site is moved (e.g., domain name change or sub-directory re-location) or whenever you would like your security token re-generated.') . '</p><b>' . t('Current notification callback URL: ' . '</b>' . t('<i>' . $this->lingotek->get('account.callback_url') . '</i>')),
     );
     $update_callback_url_row['actions']['update_url'] = array(
       '#type' => 'submit',
@@ -161,8 +161,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
 
   public function refreshResources() {
-    $resources = $this->L->getResources(TRUE);
-    $this->L->set('account.resources', $resources);
+    $resources = $this->lingotek->getResources(TRUE);
+    $this->lingotek->set('account.resources', $resources);
     drupal_set_message($this->t('Project, workflow, and vault information have been refreshed.'));
   }
 
@@ -172,7 +172,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
     $doc_ids = LingotekSync::getAllLocalDocIds();
     // Delete tms documents if the preference checkbox is checked
-    if ($this->L->get('preference.delete_tms_documents_upon_disassociation')) {
+    if ($this->lingotek->get('preference.delete_tms_documents_upon_disassociation')) {
       foreach($doc_ids as $doc_index => $doc_id) {
         $entity = $translation_service->loadByDocumentId($doc_id);
         $response = $translation_service->delete($entity);
@@ -186,8 +186,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
   public function updateCallbackUrl() {
     $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-    $this->L->set('account.callback_url', $new_callback_url);
-    $new_response = $this->L->setProjectCallBackUrl($this->L->get('default.project'), $new_callback_url);
+    $this->lingotek->set('account.callback_url', $new_callback_url);
+    $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
     
     if ($new_response) {
       drupal_set_message($this->t('The callback URL has been updated.'));
@@ -216,8 +216,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
       foreach ($languages as $langcode => $language) {
         if ($node->hasTranslation($langcode) && $entity_langcode != $langcode) {
           $lingotek_langcode = LingotekLocale::convertDrupal2Lingotek($langcode);
-          if (!$translation_service->getTargetStatus($entity, $lingotek_langcode)) {
-            $translation_service->setTargetStatus($entity, $lingotek_langcode, Lingotek::STATUS_UNTRACKED);
+          if (!$translation_service->getTargetStatus($node, $lingotek_langcode)) {
+            $translation_service->setTargetStatus($node, $lingotek_langcode, Lingotek::STATUS_UNTRACKED);
           }
         }
       }
@@ -295,15 +295,15 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   }
   
   protected function lingotek_admin_prepare_taxonomies(){
-    dpm('taxonomies');
+    drupal_set_message(__FUNCTION__ . ' not implemented');
   }
 
   protected function lingotek_admin_prepare_menus(){
-    dpm('menus');
+    drupal_set_message(__FUNCTION__ . ' not implemented');
   }
 
   protected function lingotek_add_missing_locales(){
-    dpm('locales');
+    drupal_set_message(__FUNCTION__ . ' not implemented');
   }
 
 }

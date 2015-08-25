@@ -6,15 +6,18 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Routing\LinkGeneratorTrait;
 use Drupal\Core\Url;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\LingotekLocale;
+use Drupal\lingotek\LingotekSetupTrait;
 use Drupal\user\PrivateTempStore;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -23,6 +26,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Form for bulk management of content.
  */
 class LingotekManagementForm extends FormBase {
+
+  use LingotekSetupTrait;
 
   /**
    * The entity manager.
@@ -69,6 +74,7 @@ class LingotekManagementForm extends FormBase {
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
     $this->entityTypeId = $entity_type_id;
+    $this->lingotek = \Drupal::service('lingotek');
   }
 
   /**
@@ -94,6 +100,24 @@ class LingotekManagementForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    if ($redirect = $this->checkSetup()) {
+      return $redirect;
+    }
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    /** @var ContentTranslationManagerInterface $content_translation_manager */
+    $content_translation_manager = \Drupal::service('content_translation.manager');
+    if (!$content_translation_manager->isEnabled($this->entityTypeId)) {
+      $form['enable_content_translation']['#markup'] =
+      $this->t('You need to enable content translation first. You can enable translation for the desired content entities on the <a href="!translation-entity">Content language</a> page.',
+        ['!translation-entity' => \Drupal::url('language.content_settings_page')]) . '<br/>';
+      $form['enable_lingotek']['#markup'] =
+        $this->t('Then you need to configure how you want to translate your content with Lingotek. Enable translation for the desired content entities on the <a href="!lingotek-translation-entity">Lingotek settings</a> page.',
+          ['!lingotek-translation-entity' => \Drupal::url('lingotek.settings')]);
+      return $form;
+    }
+
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
     $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
     $query = $this->entityQuery->get($this->entityTypeId)->pager(10);
@@ -131,8 +155,6 @@ class LingotekManagementForm extends FormBase {
     $ids = $query->execute();
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
     $rows = [];
     foreach ($entities as $entity_id => $entity) {
       $source = $this->getSourceStatus($entity);
@@ -624,9 +646,11 @@ class LingotekManagementForm extends FormBase {
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
-    foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
-      if ($field_value->key !== $entity->language()->getId()) {
-        $translations[$field_value->key] = $field_value->value;
+    if ($entity->lingotek_translation_status) {
+      foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
+        if ($field_value->key !== $entity->language()->getId()) {
+          $translations[$field_value->key] = $field_value->value;
+        }
       }
     }
     return $this->formatTranslations($translations);
@@ -666,8 +690,10 @@ class LingotekManagementForm extends FormBase {
    */
   protected function getProfile(ContentEntityInterface &$entity) {
     $profile = NULL;
-    if ($profile_id = $entity->lingotek_profile->target_id) {
-      $profile = LingotekProfile::load($profile_id);
+    if ($entity->hasField('lingotek_profile')) {
+      if ($profile_id = $entity->lingotek_profile->target_id) {
+        $profile = LingotekProfile::load($profile_id);
+      }
     }
     return $profile;
   }

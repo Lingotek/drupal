@@ -32,12 +32,12 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $isEnterprise = 'Yes';
     $connectionStatus = 'Inactive';
 
-    if ($this->L->get('account.plan_type') == 'basic') {
+    if ($this->lingotek->get('account.plan_type') == 'basic') {
       $isEnterprise = 'No';
     }
 
     try {
-      if ($this->L->getAccountInfo()) {
+      if ($this->lingotek->getAccountInfo()) {
         $connectionStatus = 'Active';
       }
     } catch(LingotekApiException $exception) {
@@ -51,28 +51,28 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       array('#markup' => $this->t('<b>Enterprise:</b>')), array('#markup' => $this->t($isEnterprise)),
     );
     $activationRow = array(
-      array('#markup' => $this->t('<b>Activation Name:</b>')), array('#markup' => $this->t($this->L->get('account.login_id'))),
+      array('#markup' => $this->t('<b>Activation Name:</b>')), array('#markup' => $this->t($this->lingotek->get('account.login_id'))),
     );
     $communityRow = array(
-      array('#markup' => $this->t('<b>Community Identifier:</b>')), array('#markup' => $this->t($this->L->get('default.community'))),
+      array('#markup' => $this->t('<b>Community Identifier:</b>')), array('#markup' => $this->t($this->lingotek->get('default.community'))),
     );
     $tokenRow = array(
-      array('#markup' => $this->t('<b>Access Token:</b>')), array('#markup' => $this->t($this->L->get('account.access_token'))),
+      array('#markup' => $this->t('<b>Access Token:</b>')), array('#markup' => $this->t($this->lingotek->get('account.access_token'))),
     );
     $workflowRow = array(
-      array('#markup' => $this->t('<b>Workflow:</b>')), array('#markup' => $this->t($this->L->get('default.workflow'))),
+      array('#markup' => $this->t('<b>Workflow:</b>')), array('#markup' => $this->t($this->lingotek->get('default.workflow'))),
     );
     $integrationRow = array(
-      array('#markup' => $this->t('<b>Integration Method:</b>')), array('#markup' => $this->t($this->L->get('account.default_client_id'))),
+      array('#markup' => $this->t('<b>Integration Method:</b>')), array('#markup' => $this->t($this->lingotek->get('account.default_client_id'))),
     );
     $projectRow = array(
-      array('#markup' => $this->t('<b>Project ID:</b>')), array('#markup' => $this->t($this->L->get('default.project'))),
+      array('#markup' => $this->t('<b>Project ID:</b>')), array('#markup' => $this->t($this->lingotek->get('default.project'))),
     );
     $vaultRow = array(
-      array('#markup' => $this->t('<b>Vault ID:</b>')), array('#markup' => $this->t($this->L->get('default.vault'))),
+      array('#markup' => $this->t('<b>Vault ID:</b>')), array('#markup' => $this->t($this->lingotek->get('default.vault'))),
     );
     $tmsRow = array(
-      array('#markup' => $this->t('<b>Lingotek TMS Server:</b>')), array('#markup' => $this->t($this->L->get('account.host'))),
+      array('#markup' => $this->t('<b>Lingotek TMS Server:</b>')), array('#markup' => $this->t($this->lingotek->get('account.host'))),
     );
     $gmcRow = array(
       array('#markup' => $this->t('<b>Lingotek GMC Server:</b>')), array('#markup' => $this->t('https://gmc.lingotek.com')),

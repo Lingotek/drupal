@@ -11,6 +11,7 @@ use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Routing\UrlGeneratorTrait;
+use Drupal\lingotek\LingotekSetupTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class LingotekControllerBase extends ControllerBase {
 
-  //use UrlGeneratorTrait;
+  use LingotekSetupTrait;
 
   /**
    * A Symfony request instance
@@ -27,13 +28,6 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
-
-  /**
-   * A lingotek connector object
-   *
-   * @var \Drupal\lingotek\LingotekInterface
-   */
-  protected $L;
 
   /**
    * The form builder.
@@ -64,7 +58,7 @@ abstract class LingotekControllerBase extends ControllerBase {
    */
   public function __construct(Request $request, LingotekInterface $lingotek, FormBuilderInterface $form_builder) {
     $this->request = $request;
-    $this->L = $lingotek;
+    $this->lingotek = $lingotek;
     $this->formBuilder = $form_builder;
   }
 
@@ -86,20 +80,7 @@ abstract class LingotekControllerBase extends ControllerBase {
   public function connected() {
     $access_token = $this->request->query->get('access_token');
     if ($access_token) {
-      $this->L->set('access_token', $access_token);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  /**
-   * Checks if Lingotek module is completely set up.
-   *
-   * @return boolean TRUE if connected, FALSE otherwise.
-   */
-  public function setupCompleted() {
-    $info = $this->L->get('account');
-    if (!empty($info['access_token']) && !empty($info['login_id'])) {
+      $this->lingotek->set('access_token', $access_token);
       return TRUE;
     }
     return FALSE;
@@ -112,19 +93,6 @@ abstract class LingotekControllerBase extends ControllerBase {
    */
   protected function getLingotekForm($local_form_path) {
     return $this->formBuilder->getForm('\\Drupal\\lingotek\\Form\\' . $local_form_path, $this->request);
-  }
-
-  /**
-   * Verify the Lingotek Translation module has been properly initialized.
-   *
-   * @return mixed \Symfony\Component\HttpFoundation\RedirectResponse or FALSE
-   *   A redirect response object, or FALSE if setup is complete.
-   */
-  protected function checkSetup() {
-    if (!$this->setupCompleted()) {
-      return $this->redirect('lingotek.setup_account');
-    }
-    return FALSE;
   }
 
 //  /**

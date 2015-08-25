@@ -42,16 +42,16 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
-    $communities = $this->L->getCommunities();
+    $communities = $this->lingotek->getCommunities();
     if (empty($communities)) {
       // TODO: Log an error that no communities exist.
       return $this->redirect('lingotek.setup_account');
     }
-    $this->L->set('account.resources.community', $communities);
+    $this->lingotek->set('account.resources.community', $communities);
     if (count($communities) == 1) {
       // No choice necessary. Save and advance to next page.
-      $this->L->set('default.community', current(array_keys($communities)));
-      $this->L->getResources(TRUE); // update resources based on newly selected community
+      $this->lingotek->set('default.community', current(array_keys($communities)));
+      $this->lingotek->getResources(TRUE); // update resources based on newly selected community
       return $this->redirect('lingotek.setup_defaults');
     }
     return array(
@@ -64,16 +64,16 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
-    $resources = $this->L->getResources();
+    $resources = $this->lingotek->getResources();
     // No choice necessary. Save and advance to the next page.
     if (count($resources['project']) == 1 && count($resources['vault']) == 1) {
-      $this->L->set('default.project', current(array_keys($resources['project'])));
-      $this->L->set('default.vault', current(array_keys($resources['vault'])));
-      $this->L->set('default.workflow', array_search('Machine Translation', $resources['workflow']));
+      $this->lingotek->set('default.project', current(array_keys($resources['project'])));
+      $this->lingotek->set('default.vault', current(array_keys($resources['vault'])));
+      $this->lingotek->set('default.workflow', array_search('Machine Translation', $resources['workflow']));
       // Assign the project callback
       $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-      $this->L->set('account.callback_url', $new_callback_url);
-      $new_response = $this->L->setProjectCallBackUrl($this->L->get('default.project'), $new_callback_url);
+      $this->lingotek->set('account.callback_url', $new_callback_url);
+      $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
       return $this->redirect('lingotek.dashboard');
     }
     return array(
@@ -88,19 +88,19 @@ class LingotekSetupController extends LingotekControllerBase {
 
   protected function saveToken($token) {
     if (!empty($token)) {
-      $this->L->set('account.access_token', $token);
+      $this->lingotek->set('account.access_token', $token);
     }
   }
 
   protected function  saveAccountInfo($account_info) {
     if (!empty($account_info)) {
-      $this->L->set('account.login_id', $account_info['login_id']);
-      $this->L->set('account.access_token', $account_info['id']);
+      $this->lingotek->set('account.login_id', $account_info['login_id']);
+      $this->lingotek->set('account.access_token', $account_info['id']);
     }
   }
 
   protected function fetchAccountInfo() {
-    return $this->L->getAccountInfo();
+    return $this->lingotek->getAccountInfo();
   }
 
 }

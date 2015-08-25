@@ -140,14 +140,14 @@ EOD;
   protected function getDashboardInfo() {
     global $base_url, $base_root;
     return array(
-        "community_id" => $this->L->get('default.community'),
-        "external_id" => $this->L->get('account.login_id'),
-        "vault_id" => $this->L->get('default.vault'),
-        "workflow_id" => $this->L->get('default.workflow'),
-        "project_id" => $this->L->get('default.project'),
+        "community_id" => $this->lingotek->get('default.community'),
+        "external_id" => $this->lingotek->get('account.login_id'),
+        "vault_id" => $this->lingotek->get('default.vault'),
+        "workflow_id" => $this->lingotek->get('default.workflow'),
+        "project_id" => $this->lingotek->get('default.project'),
         "first_name" => 'Drupal User',
         "last_name" => '',
-        "email" => $this->L->get('account.login_id'),
+        "email" => $this->lingotek->get('account.login_id'),
         // cms
         "cms_site_id" => $base_url,
         "cms_site_key" => $base_url,
