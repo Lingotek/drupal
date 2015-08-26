@@ -46,7 +46,17 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     if ($needs_updates) {
       drupal_static_reset();
       \Drupal::entityManager()->clearCachedDefinitions();
-      \Drupal::service('entity.definition_update_manager')->applyUpdates();
+      \Drupal::service('router.builder')->rebuild();
+      if (\Drupal::service('entity.definition_update_manager')->needsUpdates()) {
+        $storage_definitions = \Drupal::entityManager()->getFieldStorageDefinitions($entity_type_id);
+        $installed_storage_definitions = \Drupal::entityManager()->getLastInstalledFieldStorageDefinitions($entity_type_id);
+        foreach (array_diff_key($storage_definitions, $installed_storage_definitions) as $storage_definition) {
+          /** @var $storage_definition \Drupal\Core\Field\FieldStorageDefinitionInterface */
+          if ($storage_definition->getProvider() == 'lingotek') {
+            \Drupal::entityManager()->onFieldStorageDefinitionCreate($storage_definition);
+          }
+        }
+      }
     }
   }
 
