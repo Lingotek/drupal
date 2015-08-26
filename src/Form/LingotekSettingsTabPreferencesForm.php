@@ -9,9 +9,6 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Component\Utility\String;
-use Drupal\lingotek\Form\LingotekConfigFormBase;
 
 /**
  * Configure Lingotek

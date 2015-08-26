@@ -8,7 +8,6 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Component\Utility\String;
 
 /**
  * Configure Lingotek
