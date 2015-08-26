@@ -208,6 +208,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function getSourceData(ContentEntityInterface &$entity) {
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+
     // Logic adapted from Content Translation core module and TMGMT contrib
     // module for pulling translatable field info from content entities.
     $entity_type = $entity->getEntityType();
@@ -220,12 +223,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $field_definitions = $this->entityManager->getFieldDefinitions($entity_type->id(), $entity->bundle());
 
-    $config = \Drupal::config('lingotek.settings');
     $data = array();
     $source_entity = $entity->getUntranslated();
     foreach ($translatable_fields as $k => $definition) {
       // Check if the field is marked for upload.
-      if ($config->get('translate.entity.' . $entity_type->id() . '.' . $entity->bundle() . '.field.' . $k )) {
+      if ($lingotek_config->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k)) {
         // If there is only one relevant attribute, upload it.
         // Get the column translatability configuration.
         module_load_include('inc', 'content_translation', 'content_translation.admin');
@@ -240,7 +242,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
           }
           else {
-            $configured_properties = $config->get('translate.entity.' . $entity_type->id() . '.' . $entity->bundle() . '.field.' . $k . ':properties');
+            $configured_properties = $lingotek_config->getFieldPropertiesLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k);
             $properties = $fval->getProperties();
             foreach ($properties as $pkey => $pval) {
               if (isset($configured_properties[$pkey]) && $configured_properties[$pkey]) {

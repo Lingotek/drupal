@@ -102,44 +102,18 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
     /** @var ContentTranslationManagerInterface $content_translation_manager */
     $content_translation_manager = \Drupal::service('content_translation.manager');
-    $config = \Drupal::config('lingotek.settings');
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+
     // If content translation is not enabled and lingotek configured, don't add
     // the form element.
     if (!$content_translation_manager->isEnabled($entity->getEntityTypeId(), $entity->bundle()) ||
-      !$config->get('translate.entity.' . $entity->getEntityTypeId() . '.' . $entity->bundle())) {
+      !$lingotek_config->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
       return;
     }
-    $container = \Drupal::getContainer();
-    $L = $container->get('lingotek');
-    $profiles = $L->get('profile');
-    /** @var ContentEntityInterface $entity */
-    $entity = $form_state->getFormObject()->getEntity();
 
-    $default_profile  = Lingotek::PROFILE_AUTOMATIC;
-    $options = array();
-
-    $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
-
-    // Use the entity's profile if set, else use the content type's profile
-    $entity_profile = $entity->lingotek_profile->target_id;
-    if ($entity_profile != NULL) {
-      $default_profile = $entity_profile;
-    }
-    else {
-      // ToDo: This should be generic.
-      if ($entity->getEntityTypeId() == 'node') {
-        if ($entity->getType() === 'article') {
-          $default_profile = $L->get('translate.entity.node.article');
-        }
-        elseif ($entity->getType() === 'page') {
-          $default_profile = $L->get('translate.entity.node.page');
-        }
-      }
-    }
-    foreach ($profiles as $profile) {
-      /** \Drupal\lingotek\LingotekProfileInterface $profile */
-      $options[$profile->id()] = $profile->label();
-    }
+    $default_profile = $lingotek_config->getEntityProfile($entity);
+    $profile_options = $lingotek_config->getProfileOptions();
 
     $form['lingotek_translation_management'] = array(
       '#type' => 'details',
@@ -152,8 +126,8 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     $form['lingotek_translation_management']['lingotek_translation_profile'] = array(
       '#type' => 'select',
       '#title' => t('Translation Profile'),
-      '#options' => $options,
-      '#default_value' => $default_profile,
+      '#options' => $profile_options,
+      '#default_value' => $default_profile->id(),
     );
 
     foreach (array_keys($form['actions']) as $action) {
@@ -170,21 +144,17 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
  */
 function lingotek_form_content_entity_form_submit ($form, FormStateInterface $form_state) {
   $form_values = $form_state->getValues();
-  $container = \Drupal::getContainer();
-  $L = $container->get('lingotek');
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
-
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+  $lingotek_config = \Drupal::service('lingotek.configuration');
   /** @var ContentEntityInterface $entity */
   $entity = $form_state->getFormObject()->getEntity();
 
-  // ToDo: validate.
-  $entity->lingotek_profile->target_id = $form_values['lingotek_translation_profile'];
+  $profile_id = $form_values['lingotek_translation_profile'];
+  $lingotek_config->setProfile($entity, $profile_id);
+  $profile = $lingotek_config->getEntityProfile($entity);
 
-  $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
-  $profile = $profiles[$form_values['lingotek_translation_profile']];
-
-  $entity->save();
   $has_autoupload = $profile->hasAutomaticUpload();
 
   $source_status = $translation_service->getSourceStatus($entity);
@@ -214,7 +184,7 @@ function lingotek_form_content_entity_form_submit ($form, FormStateInterface $fo
 }
 
 /**
- * Iplements hook_contextual_links_view_alter
+ * Implements hook_contextual_links_view_alter().
  */
 function lingotek_contextual_links_view_alter(&$element, $items) {
   // TODO
@@ -242,11 +212,12 @@ function lingotek_entity_base_field_info(EntityTypeInterface $entity_type) {
   // Taken from content_translation.
   /** @var \Drupal\content_translation\ContentTranslationManagerInterface $manager */
   $manager = \Drupal::service('content_translation.manager');
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+  $lingotek_config = \Drupal::service('lingotek.configuration');
+
   $entity_type_id = $entity_type->id();
-  // If we have already any bundles configured there already, we will get an
-  // array. If not, will be null.
-  $bundles = \Drupal::config('lingotek.settings')->get('translate.entity.' . $entity_type_id);
-  if ($manager->isEnabled($entity_type_id) && (NULL !== $bundles)) {
+
+  if ($manager->isEnabled($entity_type_id) && $lingotek_config->isEnabled($entity_type_id)) {
     $definitions = \Drupal::entityManager()->getHandler($entity_type_id, 'lingotek')->getFieldDefinitions();
     $installed_storage_definitions = \Drupal::entityManager()->getLastInstalledFieldStorageDefinitions($entity_type_id);
     // We return metadata storage fields whenever content translation is enabled

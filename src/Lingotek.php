@@ -129,10 +129,16 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  /**
+   * @deprecated
+   */
   public function get($key) {
     return $this->config->get($key);
   }
 
+  /**
+   * @deprecated
+   */
   public function set($key, $value) {
     $this->config->set($key, $value)->save();
   }

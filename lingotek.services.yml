@@ -8,6 +8,8 @@ services:
   lingotek.api:
     class: Drupal\lingotek\Remote\LingotekApi
     arguments: ['@lingotek.http_client']
+  lingotek.configuration:
+    class: Drupal\lingotek\LingotekConfigurationService
   lingotek.content_translation:
     class: Drupal\lingotek\LingotekContentTranslationService
     arguments: ['@lingotek', '@entity.manager', '@language_manager']
