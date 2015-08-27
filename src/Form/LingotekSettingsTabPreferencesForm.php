@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Core\Menu\MenuLinkManager;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -213,6 +214,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected function saveAdminMenu($form_values) {
     $updated_values;
     $menu_tree = \Drupal::menuTree();
+    /** @var MenuLinkManager $menu_link_manager */
     $menu_link_manager = $menu_tree->menuLinkManager;
 
     // Only run if there's been a change to avoid clearing the cache if we don't have to
@@ -229,7 +231,12 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       }
 
       $menu_link_manager->updateDefinition('lingotek.dashboard', $updated_values);
-    
+      $ids = $menu_link_manager->getChildIds('lingotek.dashboard');
+      foreach ($ids as $child_link) {
+        $menu_link_manager->updateDefinition($child_link, $updated_values);
+      }
+
+
       if ($updated_values['enabled']) {
         $menu_link_manager->resetLink('lingotek.dashboard');
       }
