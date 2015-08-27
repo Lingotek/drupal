@@ -254,6 +254,14 @@ interface LingotekContentTranslationServiceInterface {
   public function loadByDocumentId($document_id);
 
   /**
+   * Gets all local document ids.
+   *
+   * @return string[]
+   *   Gets all local document ids.
+   */
+  public function getAllLocalDocumentIds();
+
+  /**
    * Save the entity translation.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity

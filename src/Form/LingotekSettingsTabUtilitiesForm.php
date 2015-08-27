@@ -12,7 +12,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
-use Drupal\lingotek\LingotekSync;
 
 /**
  * Configure Lingotek
@@ -164,18 +163,11 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   public function disassociateAllTranslations() {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
-
-    $doc_ids = LingotekSync::getAllLocalDocIds();
-    // Delete tms documents if the preference checkbox is checked
-    if ($this->lingotek->get('preference.delete_tms_documents_upon_disassociation')) {
-      foreach($doc_ids as $doc_index => $doc_id) {
-        $entity = $translation_service->loadByDocumentId($doc_id);
-        $response = $translation_service->delete($entity);
-      }
+    $doc_ids = $translation_service->getAllLocalDocumentIds();
+    foreach ($doc_ids as $doc_id) {
+      $entity = $translation_service->loadByDocumentId($doc_id);
+      $translation_service->deleteMetadata($entity);
     }
-
-    LingotekSync::disassociateAllEntities();
-    LingotekSync::disassociateAllSets();
     drupal_set_message($this->t('All translations have been disassociated.'));
   }
 

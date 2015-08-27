@@ -34,6 +34,9 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+
     $this->retrieveLanguageSwitcher();
     $this->retrieveAdminMenu();
     
@@ -113,7 +116,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Delete documents from Lingotek TMS when disassociating'),
       '#description' => t('Your documents will remain in your Drupal site but will be deleted from the Lingotek TMS if this option is checked.'),
-      '#default_value' => $this->lingotek->get('preference.delete_tms_documents_upon_disassociation'),
+      '#default_value' => $lingotek_config->mustDeleteRemoteAfterDisassociation(),
     );
 
     $form['prefs']['advanced_parsing'] = array(
@@ -137,6 +140,9 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+
     $form_values = $form_state->getValues();
   
     $this->saveAdminMenu($form_values);
@@ -146,7 +152,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->lingotek->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
     $this->lingotek->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->lingotek->set('preference.advanced_parsing', $form_values['advanced_parsing']);
-    $this->lingotek->set('preference.delete_tms_documents_upon_disassociation', $form_values['delete_tms_documents_upon_disassociation']);
+    $lingotek_config->setDeleteRemoteAfterDisassociation($form_values['delete_tms_documents_upon_disassociation']);
     parent::submitForm($form, $form_state);
   }
 

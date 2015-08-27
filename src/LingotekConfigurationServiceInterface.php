@@ -164,4 +164,19 @@ interface LingotekConfigurationServiceInterface {
    */
   public function setFieldPropertiesLingotekEnabled($entity_type_id, $bundle, $field_name, array $properties);
 
+  /**
+   * Determines if remote documents must be deleted after disassociation.
+   *
+   * @return boolean
+   */
+  public function mustDeleteRemoteAfterDisassociation();
+
+  /**
+   * Sets if remote documents must be deleted after disassociation.
+   *
+   * @param boolean $delete
+   *   TRUE if remote documents must be deleted, FALSE otherwise.
+   */
+  public function setDeleteRemoteAfterDisassociation($delete);
+
 }

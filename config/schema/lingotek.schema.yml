@@ -24,6 +24,8 @@ lingotek.settings:
           type: boolean
         always_show_translate_tabs:
           type: boolean
+        delete_tms_documents_upon_disassociation:
+          type: boolean
     account:
       type: mapping
       label: 'Account'

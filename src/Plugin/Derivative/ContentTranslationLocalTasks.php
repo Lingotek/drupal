@@ -26,7 +26,7 @@ class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriv
   protected $basePluginId;
 
   /**
-   * The content translation manager.
+   * The Lingotek configuration service.
    *
    * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
    */
@@ -38,7 +38,7 @@ class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriv
    * @param string $base_plugin_id
    *   The base plugin ID.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
-   *   The content translation manager.
+   *   The Lingotek configuration service.
    */
   public function __construct($base_plugin_id, LingotekConfigurationServiceInterface $lingotek_configuration) {
     $this->basePluginId = $base_plugin_id;

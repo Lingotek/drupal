@@ -25,6 +25,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   protected $lingotek;
 
   /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
    * The entity manager.
    *
    * @var \Drupal\Core\Entity\EntityManagerInterface
@@ -43,13 +50,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    *   An lingotek object.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   An entity manager object.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    */
-  public function __construct(LingotekInterface $lingotek, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
+  public function __construct(LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
     $this->lingotek = $lingotek;
+    $this->lingotekConfiguration = $lingotek_configuration;
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
   }
@@ -379,6 +389,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function deleteMetadata(ContentEntityInterface &$entity) {
+    if ($this->lingotekConfiguration->mustDeleteRemoteAfterDisassociation()) {
+      $this->deleteDocument($entity);
+    }
     $entity->lingotek_translation_status = NULL;
     $entity->lingotek_document_id = NULL;
     $entity->save();
@@ -398,6 +411,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $entity = $this->entityManager->getStorage($metadata['entity_type'])->load($metadata['entity_id']);
     }
     return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAllLocalDocumentIds() {
+    $metadata = \Drupal::database()->select('lingotek_content_metadata','lcm')
+      ->fields('lcm', ['document_id'])
+      ->execute()
+      ->fetchAssoc();
+    return array_values($metadata);
   }
 
   /**
