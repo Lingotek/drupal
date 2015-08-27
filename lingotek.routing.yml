@@ -65,9 +65,8 @@ lingotek.settings_profile:
 lingotek.manage:
   path: '/admin/lingotek/manage'
   defaults:
-    _form: 'Drupal\lingotek\Form\LingotekManagementForm'
+    _controller: '\Drupal\lingotek\Controller\LingotekManagementController::content'
     _title: 'Manage Translations'
-    entity_type_id: 'node'
   requirements:
     _permission: 'administer lingotek'
 

@@ -13,9 +13,9 @@ use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Routing\LinkGeneratorTrait;
 use Drupal\Core\Url;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekSetupTrait;
 use Drupal\user\PrivateTempStore;
@@ -51,6 +51,27 @@ class LingotekManagementForm extends FormBase {
   protected $entityQuery;
 
   /**
+   * The content translation manager.
+   *
+   * @var \Drupal\content_translation\ContentTranslationManagerInterface
+   */
+  protected $contentTranslationManager;
+
+  /**
+   * The Lingotek content translation service.
+   *
+   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
+   */
+  protected $translationService;
+
+  /**
+   * The tempstore factory.
+   *
+   * @var \Drupal\user\PrivateTempStoreFactory
+   */
+  protected $tempStoreFactory;
+
+  /**
    * The entity type id.
    *
    * @var string
@@ -66,13 +87,22 @@ class LingotekManagementForm extends FormBase {
    *   The language manager.
    * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
    *   The entity query factory.
+   * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
+   *   The Lingotek content translation service.
+   * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
+   *   The content translation manager.
+   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   *   The factory for the temp store object.
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, $entity_type_id) {
+  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, $entity_type_id) {
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
+    $this->contentTranslationManager = $content_translation_manager;
+    $this->translationService = $translation_service;
+    $this->tempStoreFactory = $temp_store_factory;
     $this->entityTypeId = $entity_type_id;
     $this->lingotek = \Drupal::service('lingotek');
   }
@@ -85,6 +115,9 @@ class LingotekManagementForm extends FormBase {
       $container->get('entity.manager'),
       $container->get('language_manager'),
       $container->get('entity.query'),
+      $container->get('content_translation.manager'),
+      $container->get('lingotek.content_translation'),
+      $container->get('user.private_tempstore'),
       \Drupal::routeMatch()->getParameter('entity_type_id')
     );
   }
@@ -104,30 +137,14 @@ class LingotekManagementForm extends FormBase {
       return $redirect;
     }
 
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    /** @var ContentTranslationManagerInterface $content_translation_manager */
-    $content_translation_manager = \Drupal::service('content_translation.manager');
-    if (!$content_translation_manager->isEnabled($this->entityTypeId)) {
-      $form['enable_content_translation']['#markup'] =
-      $this->t('You need to enable content translation first. You can enable translation for the desired content entities on the <a href="!translation-entity">Content language</a> page.',
-        ['!translation-entity' => \Drupal::url('language.content_settings_page')]) . '<br/>';
-      $form['enable_lingotek']['#markup'] =
-        $this->t('Then you need to configure how you want to translate your content with Lingotek. Enable translation for the desired content entities on the <a href="!lingotek-translation-entity">Lingotek settings</a> page.',
-          ['!lingotek-translation-entity' => \Drupal::url('lingotek.settings')]);
-      return $form;
-    }
-
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
     $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
     $query = $this->entityQuery->get($this->entityTypeId)->pager(10);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
     // Filter results.
-    /** @var PrivateTempStoreFactory $temp_store */
-    $temp_store_factory = \Drupal::service('user.private_tempstore');
     /** @var PrivateTempStore $temp_store */
-    $temp_store = $temp_store_factory->get('lingotek.management.filter.' . $this->entityTypeId);
+    $temp_store = $this->tempStoreFactory->get('lingotek.management.filter.' . $this->entityTypeId);
     $labelFilter = $temp_store->get('label');
     $bundleFilter = $temp_store->get('bundle');
     $profileFilter = $temp_store->get('profile');
@@ -283,10 +300,8 @@ class LingotekManagementForm extends FormBase {
    *   The current state of the form.
    */
   public function resetFilterForm(array &$form, FormStateInterface $form_state) {
-    /** @var PrivateTempStoreFactory $temp_store */
-    $temp_store_factory = \Drupal::service('user.private_tempstore');
     /** @var PrivateTempStore $temp_store */
-    $temp_store = $temp_store_factory->get('lingotek.management.filter.' . $this->entityTypeId);
+    $temp_store = $this->tempStoreFactory->get('lingotek.management.filter.' . $this->entityTypeId);
     $temp_store->delete('label');
     $temp_store->delete('profile');
     $temp_store->delete('source_language');
@@ -302,10 +317,8 @@ class LingotekManagementForm extends FormBase {
    *   The current state of the form.
    */
   public function filterForm(array &$form, FormStateInterface $form_state) {
-    /** @var PrivateTempStoreFactory $temp_store */
-    $temp_store_factory = \Drupal::service('user.private_tempstore');
     /** @var PrivateTempStore $temp_store */
-    $temp_store = $temp_store_factory->get('lingotek.management.filter.' . $this->entityTypeId);
+    $temp_store = $this->tempStoreFactory->get('lingotek.management.filter.' . $this->entityTypeId);
     $temp_store->set('label', $form_state->getValue(['filters', 'wrapper', 'label']));
     $temp_store->set('profile', $form_state->getValue(['filters', 'wrapper', 'profile']));
     $temp_store->set('source_language', $form_state->getValue(['filters', 'wrapper', 'source_language']));
@@ -498,9 +511,7 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function uploadDocument(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->uploadDocument($entity);
+    $this->translationService->uploadDocument($entity);
   }
 
   /**
@@ -510,9 +521,7 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function checkDocumentUploadStatus(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->checkSourceStatus($entity);
+    $this->translationService->checkSourceStatus($entity);
   }
 
   /**
@@ -522,9 +531,7 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function requestTranslations(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->requestTranslations($entity);
+    $this->translationService->requestTranslations($entity);
   }
 
   /**
@@ -534,9 +541,7 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function checkTranslationStatuses(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->checkTargetStatuses($entity);
+    $this->translationService->checkTargetStatuses($entity);
   }
 
   /**
@@ -548,9 +553,7 @@ class LingotekManagementForm extends FormBase {
    *   The language to check.
    */
   public function checkTranslationStatus(ContentEntityInterface $entity, $language) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->checkTargetStatus($entity, LingotekLocale::convertDrupal2Lingotek($language));
+    $this->translationService->checkTargetStatus($entity, LingotekLocale::convertDrupal2Lingotek($language));
   }
 
   /**
@@ -562,9 +565,7 @@ class LingotekManagementForm extends FormBase {
    *   The language to download.
    */
   public function requestTranslation(ContentEntityInterface $entity, $language) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->addTarget($entity, LingotekLocale::convertDrupal2Lingotek($language));
+    $this->translationService->addTarget($entity, LingotekLocale::convertDrupal2Lingotek($language));
   }
 
   /**
@@ -576,9 +577,7 @@ class LingotekManagementForm extends FormBase {
    *   The language to download.
    */
   public function downloadTranslation(ContentEntityInterface $entity, $language) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($language));
+    $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($language));
   }
 
   /**
@@ -588,12 +587,10 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function downloadTranslations(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
     $languages = $this->languageManager->getLanguages();
     foreach ($languages as $langcode => $language) {
       if ($langcode !== $entity->language()->getId()) {
-        $translation_service->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
+        $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
       }
     }
   }
@@ -605,9 +602,7 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function disassociate(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $translation_service->deleteMetadata($entity);
+    $this->translationService->deleteMetadata($entity);
   }
 
   /**
@@ -620,11 +615,9 @@ class LingotekManagementForm extends FormBase {
    *   A render array.
    */
   protected function getSourceStatus(ContentEntityInterface $entity) {
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-    $language_source = LingotekLocale::convertLingotek2Drupal($translation_service->getSourceLocale($entity));
+    $language_source = LingotekLocale::convertLingotek2Drupal($this->translationService->getSourceLocale($entity));
 
-    $source_status = $translation_service->getSourceStatus($entity);
+    $source_status = $this->translationService->getSourceStatus($entity);
     return array('data' => array(
       '#type' => 'inline_template',
       '#template' => '<span class="language-icon source-{{status}}" title="{{status}}">{{language}}</span>',

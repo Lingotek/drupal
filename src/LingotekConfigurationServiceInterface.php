@@ -15,6 +15,14 @@ use Drupal\lingotek\Entity\LingotekProfile;
 interface LingotekConfigurationServiceInterface {
 
   /**
+   * Gets the entity types that are enabled for Lingotek content translation.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeInterface[]
+   *   An array of entity types that are enabled for Lingotek content translation.
+   */
+  public function getEnabledEntityTypes();
+
+  /**
    * Determines whether the given entity type is Lingotek translatable.
    *
    * @param string $entity_type_id

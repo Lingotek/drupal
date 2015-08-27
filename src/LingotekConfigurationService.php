@@ -19,24 +19,50 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
+  public function getEnabledEntityTypes() {
+    $enabled = array();
+    foreach (\Drupal::entityManager()->getDefinitions() as $entity_type_id => $entity_type) {
+      if ($this->isEnabled($entity_type_id)) {
+        $enabled[$entity_type_id] = $entity_type;
+      }
+    }
+    return $enabled;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function isEnabled($entity_type_id, $bundle = NULL) {
+    $result = FALSE;
     $config = \Drupal::config('lingotek.settings');
     if ($bundle === NULL) {
-      $key = 'translate.entity.' . $entity_type_id;
+      // Check if any bundle is enabled.
+      $bundles = \Drupal::entityManager()->getBundleInfo($entity_type_id);
+      foreach ($bundles as $bundle_id => $bundle_definition) {
+        $result = $this->isEnabled($entity_type_id, $bundle_id);
+        if ($result) {
+          break;
+        }
+      }
     }
     else {
       $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.enabled';
+      $result = !!$config->get($key);
     }
-    return !!$config->get($key);
+    return $result;
   }
 
   /**
    * {@inheritDoc}
    */
   public function setEnabled($entity_type_id, $bundle, $enabled = TRUE) {
-    $needs_updates = FALSE;
+    $needs_updates = $needs_router_rebuild = FALSE;
     if ($enabled && !$this->isEnabled($entity_type_id)) {
       $needs_updates = TRUE;
+      $needs_router_rebuild = TRUE;
+    }
+    if (!$enabled && $this->isEnabled($entity_type_id)) {
+      $needs_router_rebuild = TRUE;
     }
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.enabled';
@@ -46,7 +72,6 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     if ($needs_updates) {
       drupal_static_reset();
       \Drupal::entityManager()->clearCachedDefinitions();
-      \Drupal::service('router.builder')->rebuild();
       if (\Drupal::service('entity.definition_update_manager')->needsUpdates()) {
         $storage_definitions = \Drupal::entityManager()->getFieldStorageDefinitions($entity_type_id);
         $installed_storage_definitions = \Drupal::entityManager()->getLastInstalledFieldStorageDefinitions($entity_type_id);
@@ -58,6 +83,10 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
         }
       }
     }
+    if ($needs_router_rebuild) {
+      \Drupal::service('router.builder')->rebuild();
+    }
+
   }
 
   /**
