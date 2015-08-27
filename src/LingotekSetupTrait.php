@@ -22,7 +22,7 @@ trait LingotekSetupTrait {
   /**
    * Verify the Lingotek Translation module has been properly initialized.
    *
-   * @return mixed \Symfony\Component\HttpFoundation\RedirectResponse or FALSE
+   * @return mixed Symfony\Component\HttpFoundation\RedirectResponse or FALSE
    *   A redirect response object, or FALSE if setup is complete.
    */
   protected function checkSetup() {
