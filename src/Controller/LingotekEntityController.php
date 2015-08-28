@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Controller;
 
 use Drupal\lingotek\Lingotek;
 use Drupal\Core\Url;
+use Drupal\lingotek\LingotekLocale;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class LingotekEntityController extends LingotekControllerBase {
@@ -36,7 +37,7 @@ class LingotekEntityController extends LingotekControllerBase {
       // TODO: log warning
       return $this->translationsPageRedirect($entity);
     }
-    if ($translation_service->checkTargetStatus($entity, $locale) === Lingotek::STATUS_READY) {
+    if ($translation_service->checkTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale)) === Lingotek::STATUS_READY) {
       drupal_set_message(t('The @locale translation for @entity_type #@entity_id is ready for download.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     } else {
       drupal_set_message(t('The @locale translation for @entity_type #@entity_id is still in progress.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));

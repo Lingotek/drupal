@@ -83,8 +83,10 @@ function lingotek_entity_delete(EntityInterface $entity) {
   if (!($entity instanceof ContentEntityInterface)) {
     return;
   }
+
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
+
 
   // Delete the TMS document if it hasn't been disassociated
   if ($translation_service->getDocumentId($entity)) {

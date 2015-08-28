@@ -641,10 +641,10 @@ class LingotekManagementForm extends FormBase {
     $translations = [];
     if ($entity->lingotek_translation_status) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
-        if ($field_value->key !== $entity->language()->getId()) {
-          $translations[$field_value->key] = [
+        if ($field_value->language !== $entity->language()->getId()) {
+          $translations[$field_value->language] = [
             'status' => $field_value->value,
-            'url' => Url::fromRoute('lingotek.workbench', ['doc_id' => $entity->lingotek_document_id->value, 'locale' => $field_value->key]),
+            'url' => Url::fromRoute('lingotek.workbench', ['doc_id' => $entity->lingotek_document_id->value, 'locale' => LingotekLocale::convertDrupal2Lingotek($field_value->language)]),
           ];
         }
       }
@@ -665,7 +665,7 @@ class LingotekManagementForm extends FormBase {
     $languages = [];
     foreach ($translations as $langcode => $data) {
       $languages[] = [
-        'language' => strtoupper(LingotekLocale::convertLingotek2Drupal($langcode)) ,
+        'language' => strtoupper($langcode) ,
         'status' => strtolower($data['status']),
         'url' => $data['url'],
       ];
