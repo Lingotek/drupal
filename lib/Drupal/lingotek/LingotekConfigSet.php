@@ -342,7 +342,19 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->fetchCol();
     return $doc_ids;
   }
-
+  public static function getAllUnsetWorkflowConfigDocIds() {
+    $setWorkflowSetIds = db_select('linkgotek_config_metadata', 'lcm')
+            ->fields('lcm', array('id'))
+            ->condition('config_key', 'workflow_id')
+            ->fetchCol();
+    $doc_ids = db_select('lingotek_config_metadata', 'l')
+        ->fields('l', array('value'))
+        ->condition('config_key', 'document_id')
+        ->condition('id', $setWorkflowSetIds, "NOT IN")
+        ->execute()
+        ->fetchCol();
+    return $doc_ids;
+  }
   public function getSourceLocale() {
     return $this->language->lingotek_locale;
   }

@@ -96,11 +96,19 @@ class LingotekSync {
   }
   
   public static function setAllTargetStatus($entity_type, $entity_id, $status) {
+    if($entity_type === 'config'){
+        $query = db_update('lingotek_config_metadata')
+            ->condition('id', $entity_id, "=")
+            ->condition('config_key', 'target_sync_status%', 'LIKE')
+            ->fields(array('value' => $status, 'modified' => time()))
+            ->execute();
+      return;
+    }
     $query = db_update('lingotek_entity_metadata')
         ->condition('entity_type', $entity_type)
-      ->condition('entity_id', $entity_id)
-      ->condition('entity_key', 'target_sync_status%', 'LIKE')
-      ->fields(array('value' => $status, 'modified' => time()))
+        ->condition('entity_id', $entity_id)
+        ->condition('entity_key', 'target_sync_status%', 'LIKE')
+        ->fields(array('value' => $status, 'modified' => time()))
         ->execute();
   }
 
@@ -819,6 +827,33 @@ class LingotekSync {
     $doc_ids = $query->execute()->fetchCol();
 
     return $doc_ids;
+  }
+  
+  public static function updateConfigSetWorkflow($set_id, $workflow_id){
+    $insertRecord = array(
+        "value" => $workflow_id,
+        "created" => time(),
+        "modified" => time(),
+        "id" => $set_id,
+        "config_key" => 'workflow_id'
+    );
+    $updateRecord = array(
+        "value" => $workflow_id,
+        "modified" => time()
+    );
+    db_merge('lingotek_config_metadata')
+            ->key(array('id' => $set_id, 'config_key' => 'workflow_id'))
+            ->insertFields($insertRecord)
+            ->updateFields($updateRecord)
+            ->execute();
+//    drupal_write_record('lingotek_config_metadata', $record);
+  }
+  
+  public static function getWorkflowIdFromConfigSet($sid){
+    $query = db_select('lingotek_config_metadata', 'lcm');
+    $query->addField('lcm', 'value');
+    $query->condition('id', $sid, '=');
+    return $query->execute()->fetchCol();
   }
 
   public static function getChunkIdsByStatus($status) {

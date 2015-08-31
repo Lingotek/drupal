@@ -1142,7 +1142,8 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
 
     // SUBMIT THE WORKFLOW CHANGES TO TMS
     $entity_type = $form_state['entity_type'];
-    $document_ids = LingotekSync::getDocIdsFromEntityIds($entity_type, $nids);
+    $document_ids = $entity_type !== 'config' ? LingotekSync::getDocIdsFromEntityIds($entity_type, $nids)
+            : LingotekSync::getConfigDocIdsFromSetIds($nids);
     if (!$document_ids) {
       return;
     }
@@ -1153,10 +1154,17 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
 
     // CREATE/UPDATE WORKFLOW ENTRIES IN THE LINGOTEK METADATA TABLE
     foreach ($nids as $nid) {
-      lingotek_keystore($entity_type, $nid, 'workflow_id', $workflow_id);
-      LingotekSync::setAllTargetStatus($entity_type, $nid, LingotekSync::STATUS_PENDING);
+      if($entity_type === 'config'){
+        LingotekSync::updateConfigSetWorkflow($nid, $workflow_id);
+        LingotekSync::setAllTargetStatus($entity_type, $nid, LingotekSync::STATUS_PENDING);
+      }
+      else {
+        lingotek_keystore($entity_type, $nid, 'workflow_id', $workflow_id);
+        LingotekSync::setAllTargetStatus($entity_type, $nid, LingotekSync::STATUS_PENDING);
+      }
     }
   }
+  
 }
 
 function lingotek_get_global_profile() {
@@ -2261,14 +2269,19 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
   $bulk_grid = FALSE;
   $multiple = FALSE;
   $curr_workflow_id = '';
-
+  $entity_type = $form_state['entity_type'];
   if (isset($form_state['nids'])) {
     $nids = $form_state['nids'];
     $bulk_grid = TRUE;
     $multiple = count($nids) > 1;
     if (!$multiple) {
-      $node = lingotek_node_load_default(reset($nids));
-      $curr_workflow_id = $node->lingotek['workflow_id'];
+      if($entity_type === 'config'){
+        $curr_workflow_id = LingotekSync::getWorkflowIdFromConfigSet($nids[0]);
+      }
+      else {
+        $node = lingotek_node_load_default(reset($nids));
+        $curr_workflow_id = $node->lingotek['workflow_id'];
+      }
     }
     else {
       if (!$second_run) {

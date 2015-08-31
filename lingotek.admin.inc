@@ -756,6 +756,17 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       )
     );
 
+    $form['additional_translation']['overwrite_config_set_workflow'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include config sets that have been explicitly changed to another workflow.'),
+      '#default_value' => FALSE,
+      '#description' => t('All config sets will be changed, regardless of individual changes made'),
+      '#states' => array(
+          'visible' => array(':input[name="addtl_prefill_phases_checkbox"]' => array('checked' => TRUE)
+        )
+      )
+    );
+
     $form['additional_translation']['addtl_prefill_phase_select'] = array(
       '#title' => t("Desired Prefill Phase"),
       '#description' => t('Please select the highest phase which should be prefilled for the new workflow'),
@@ -945,7 +956,7 @@ function lingotek_save_config_profile($form_state) {
   $workflow_id = isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
   $prefill_phase = isset($form_state['values']['addtl_prefill_phase_select']) ? $form_state['values']['addtl_prefill_phase_select'] : NULL;
   $config_checkbox = isset($form_state['values']['addtl_prefill_phases_checkbox']) ? $form_state['values']['addtl_prefill_phases_checkbox'] : FALSE;
-
+  $overwrite_config_set_workflow = isset($form_state['values']['overwrite_config_set_workflow']) ? $form_state['values']['overwrite_config_set_workflow'] : TRUE;
   $profile = array(
     'project_id' => $project_id,
     'vault_id' => $vault_id,
@@ -963,8 +974,9 @@ function lingotek_save_config_profile($form_state) {
   }
 
   if ($config_checkbox == TRUE) {
+    $document_ids = $overwrite_config_set_workflow === TRUE ? LingotekConfigSet::getAllConfigDocIds() : LingotekConfigSet::getAllUnsetWorkflowConfigDocIds();
     // Change all other workflows retroactively
-    $document_ids = LingotekConfigSet::getAllConfigDocIds();
+    
     if (!empty($document_ids)) {
       $api = LingotekApi::instance();
       $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);

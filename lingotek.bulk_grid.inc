@@ -369,7 +369,11 @@ function lingotek_grid_action_options($entity_type) {
     'reset' => t('Disassociate translations'),
     'delete' => $delete_text,
   );
-
+	$api = LingotekApi::instance();
+	$workflows = $api->listWorkflows();
+	if (is_array($workflows) && count($workflows) > 1) {
+		$action_options['workflow'] = t('Change workflow');
+  }
   if ($entity_type == 'config') {
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
 
@@ -377,13 +381,6 @@ function lingotek_grid_action_options($entity_type) {
   else {
     $action_options['delete_translations'] = t('Delete local translations');
     $action_options['edit'] = t('Edit translation settings');
-
-    $api = LingotekApi::instance();
-    $workflows = $api->listWorkflows();
-    if (is_array($workflows) && count($workflows) > 1) {
-      $action_options['workflow'] = t('Change workflow');
-    }
-
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
   }
 
@@ -927,6 +924,11 @@ function lingotek_config_build_column_checkboxes($form_state) {
       '#title' => t('Textgroup'),
       '#default_value' => isset($c_grid_custom[$prefix . 'textgroup' . $suffix]) ? $c_grid_custom[$prefix . 'textgroup' . $suffix] : in_array('textgroup', $columns['defaults']),
     ),
+    'workflow' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Workflow'),
+      '#default_value' =>isset($c_grid_custom[$prefix . 'textgroup' . $suffix]) ? $c_grid_custom[$prefix . 'workflow' . $suffix] : in_array('workflow', $columns['defaults']),
+    ),
   );
   $column_elements = array_intersect_key($column_elements, $columns['columns']); // Reduces the output columns to the defaults specified in 'lingotek_grid_define_columns'
 
@@ -1296,6 +1298,7 @@ function lingotek_config_define_columns() {
       'location' => 'location',
       'context' => 'context',
       'doc_id' => 'doc_id',
+      'workflow' => 'workflow',
       'textgroup' => 'textgroup',
     ),
     'defaults' => array(
@@ -1305,6 +1308,7 @@ function lingotek_config_define_columns() {
       'source_uploaded' => 'source_uploaded',
       'translations' => 'translations',
       'textgroup' => 'textgroup',
+      'workflow' => 'workflow',
     ),
   );
   return $columns;
@@ -2381,7 +2385,9 @@ function lingotek_edit_nodes($entity_type, $nids) {
  */
 function lingotek_change_workflow($entity_type, $nids) {
   $nids = explode(',', $nids);
-
+  if($entity_type === 'config'){
+    $nids = LingotekSync::getSetIdsFromLids($nids);
+  }
   ctools_include('node.pages', 'node', '');
   ctools_include('modal');
   ctools_include('ajax');
