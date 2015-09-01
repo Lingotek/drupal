@@ -112,6 +112,23 @@ class LingotekSync {
         ->execute();
   }
 
+  public static function bulkSetAllTargetStatus($entity_type, $entity_ids, $status){
+    if($entity_type === 'config'){
+        $query = db_update('lingotek_config_metadata')
+            ->condition('id', $entity_ids, "IN")
+            ->condition('config_key', 'target_sync_status%', 'LIKE')
+            ->fields(array('value' => $status, 'modified' => time()))
+            ->execute();
+      return;
+    }
+    $query = db_update('lingotek_entity_metadata')
+        ->condition('entity_type', $entity_type)
+        ->condition('entity_id', $entity_ids, "IN")
+        ->condition('entity_key', 'target_sync_status%', 'LIKE')
+        ->fields(array('value' => $status, 'modified' => time()))
+        ->execute();
+  }
+
   public static function setUploadStatus($entity_type, $entity_id, $status) {
     return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);
   }
