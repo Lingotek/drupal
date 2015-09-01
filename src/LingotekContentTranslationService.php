@@ -293,7 +293,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
-      $current_status = $this->getTargetStatus($entity, $locale);
+      $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
           $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
