@@ -302,6 +302,15 @@ function lingotek_sync_upload_config_set($set_id, &$context) {
   }
   $api = LingotekApi::instance();
   $set = LingotekConfigSet::loadById($set_id);
+  $query = db_select('lingotek_config_metadata', 'lcm');
+  $query->addField('lcm', 'value');
+  $query->condition('id', $set_id, '=');
+  $query->condition('config_key', 'workflow_id', '=');
+  $workflow_id = $query->execute()->fetchField();
+  if($workflow_id !== NULL){
+    $set->setWorkflowId($workflow_id);
+  }
+
   module_invoke_all('lingotek_pre_upload', $set);
   if ($existing_document = $set->hasLingotekDocId()) {
     LingotekLog::trace('existing document: @existing', array('@existing' => $existing_document));

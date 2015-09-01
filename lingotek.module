@@ -1144,6 +1144,11 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
     $entity_type = $form_state['entity_type'];
     $document_ids = $entity_type !== 'config' ? LingotekSync::getDocIdsFromEntityIds($entity_type, $nids)
             : LingotekSync::getConfigDocIdsFromSetIds($nids);
+    if($entity_type === 'config'){
+      foreach($nids as $nid) {
+        LingotekSync::updateConfigSetWorkflow($nid, $workflow_id);
+      }
+    }
     if (!$document_ids) {
       return;
     }
@@ -1155,7 +1160,6 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
     // CREATE/UPDATE WORKFLOW ENTRIES IN THE LINGOTEK METADATA TABLE
     foreach ($nids as $nid) {
       if($entity_type === 'config'){
-        LingotekSync::updateConfigSetWorkflow($nid, $workflow_id);
         LingotekSync::setAllTargetStatus($entity_type, $nid, LingotekSync::STATUS_PENDING);
       }
       else {

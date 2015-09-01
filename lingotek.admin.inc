@@ -762,8 +762,8 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
       '#default_value' => FALSE,
       '#description' => t('All config sets will be changed, regardless of individual changes made'),
       '#states' => array(
-          'visible' => array(':input[name="addtl_prefill_phases_checkbox"]' => array('checked' => TRUE)
-        )
+          'visible' => array(':input[name="addtl_workflow_id"]' => array('!value' => $stored_workflow_id),
+                     ':input[name="addtl_prefill_phases_checkbox"]' => array('checked' => TRUE))
       )
     );
 
@@ -974,9 +974,12 @@ function lingotek_save_config_profile($form_state) {
   }
 
   if ($config_checkbox == TRUE) {
-    $document_ids = $overwrite_config_set_workflow === TRUE ? LingotekConfigSet::getAllConfigDocIds() : LingotekConfigSet::getAllUnsetWorkflowConfigDocIds();
+    $document_ids = $overwrite_config_set_workflow == TRUE ? LingotekConfigSet::getAllConfigDocIds() 
+        : LingotekConfigSet::getAllUnsetWorkflowConfigDocIds();
     // Change all other workflows retroactively
-    
+    if($overwrite_config_set_workflow == TRUE){
+      LingotekConfigSet::deleteConfigSetWorkflowIds();//removes workflows set on config sets. Defaults to the config default.
+    }
     if (!empty($document_ids)) {
       $api = LingotekApi::instance();
       $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
@@ -2001,6 +2004,7 @@ function lingotek_config_default_workflow_form_callback($form, $form_state) {
   return array(
     $form['additional_translation']['addtl_workflow_id'],
     $form['additional_translation']['addtl_prefill_phases_checkbox'],
+    $form['additional_translation']['overwrite_config_set_workflow'],
     $form['additional_translation']['addtl_prefill_phase_select'],
   );
 }

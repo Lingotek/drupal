@@ -2383,10 +2383,13 @@ function lingotek_edit_nodes($entity_type, $nids) {
  *
  * Returns a fully rendered html form
  */
-function lingotek_change_workflow($entity_type, $nids) {
-  $nids = explode(',', $nids);
+function lingotek_change_workflow($entity_type, $entity_ids) {
+  $entity_ids = explode(',', $entity_ids);
   if($entity_type === 'config'){
-    $nids = LingotekSync::getSetIdsFromLids($nids);
+    foreach($entity_ids as $entity_id) {
+      LingotekConfigSet::getSetId($entity_id);
+    }
+    $entity_ids = LingotekSync::getSetIdsFromLids($entity_ids);
   }
   ctools_include('node.pages', 'node', '');
   ctools_include('modal');
@@ -2395,7 +2398,7 @@ function lingotek_change_workflow($entity_type, $nids) {
   $form_state = array(
     'ajax' => TRUE,
     'entity_type' => $entity_type,
-    'nids' => $nids,
+    'nids' => $entity_ids,
   );
   $output = ctools_modal_form_wrapper('lingotek_get_change_workflow_form', $form_state);
 
