@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Contains \Drupal\Lingotek\Form\LingotekManagementForm.
  */
 
@@ -14,7 +15,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
-use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekSetupTrait;
@@ -49,6 +50,13 @@ class LingotekManagementForm extends FormBase {
    * @var \Drupal\Core\Entity\Query\QueryFactory
    */
   protected $entityQuery;
+
+  /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
 
   /**
    * The content translation manager.
@@ -87,6 +95,8 @@ class LingotekManagementForm extends FormBase {
    *   The language manager.
    * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
    *   The entity query factory.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
    * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    *   The Lingotek content translation service.
    * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
@@ -96,7 +106,7 @@ class LingotekManagementForm extends FormBase {
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, $entity_type_id) {
+  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekConfigurationServiceInterface $lingotek_configuration, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, $entity_type_id) {
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
@@ -105,6 +115,7 @@ class LingotekManagementForm extends FormBase {
     $this->tempStoreFactory = $temp_store_factory;
     $this->entityTypeId = $entity_type_id;
     $this->lingotek = \Drupal::service('lingotek');
+    $this->lingotekConfiguration = $lingotek_configuration;
   }
 
   /**
@@ -115,6 +126,7 @@ class LingotekManagementForm extends FormBase {
       $container->get('entity.manager'),
       $container->get('language_manager'),
       $container->get('entity.query'),
+      $container->get('lingotek.configuration'),
       $container->get('content_translation.manager'),
       $container->get('lingotek.content_translation'),
       $container->get('user.private_tempstore'),
@@ -176,7 +188,7 @@ class LingotekManagementForm extends FormBase {
     foreach ($entities as $entity_id => $entity) {
       $source = $this->getSourceStatus($entity);
       $translations = $this->getTranslationsStatuses($entity);
-      $profile = $this->getProfile($entity);
+      $profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE);
       $form['table'][$entity_id] = ['#type' => 'checkbox', '#value'=> $entity->id()];
       $rows[$entity_id] = [];
       if ($has_bundles) {
@@ -238,7 +250,7 @@ class LingotekManagementForm extends FormBase {
     $form['filters']['wrapper']['profile'] = array(
       '#type' => 'select',
       '#title' => $this->t('Profile'),
-      '#options' => ['' => $this->t('All')] + $this->getAllProfiles(),
+      '#options' => ['' => $this->t('All')] + $this->lingotekConfiguration->getProfileOptions(),
       '#default_value' => $profileFilter,
       '#attributes' => array('class' => array('form-item')),
     );
@@ -377,9 +389,6 @@ class LingotekManagementForm extends FormBase {
         $processed = TRUE;
       }
     }
-    if ($processed) {
-      drupal_set_message('Operations completed successfully.');
-    }
   }
 
   /**
@@ -404,8 +413,17 @@ class LingotekManagementForm extends FormBase {
     $batch = array(
       'title' => $title,
       'operations' => $operations,
+      'finished' => [$this, 'batchFinished'],
+      'progressive' => TRUE,
     );
     batch_set($batch);
+  }
+
+
+  public function batchFinished($success, $results, $operations) {
+    if ($success) {
+      drupal_set_message('Operations completed.');
+    }
   }
 
   /**
@@ -510,8 +528,16 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function uploadDocument(ContentEntityInterface $entity) {
-    $this->translationService->uploadDocument($entity);
+  public function uploadDocument(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Uploading @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->uploadDocument($entity);
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -520,8 +546,16 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function checkDocumentUploadStatus(ContentEntityInterface $entity) {
-    $this->translationService->checkSourceStatus($entity);
+  public function checkDocumentUploadStatus(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Checking status of @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->checkSourceStatus($entity);
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -530,8 +564,16 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function requestTranslations(ContentEntityInterface $entity) {
-    $this->translationService->requestTranslations($entity);
+  public function requestTranslations(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Requesting translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->requestTranslations($entity);
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -540,8 +582,16 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function checkTranslationStatuses(ContentEntityInterface $entity) {
-    $this->translationService->checkTargetStatuses($entity);
+  public function checkTranslationStatuses(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Checking translation status for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->checkTargetStatuses($entity);
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -552,8 +602,16 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to check.
    */
-  public function checkTranslationStatus(ContentEntityInterface $entity, $language) {
-    $this->translationService->checkTargetStatus($entity, LingotekLocale::convertDrupal2Lingotek($language));
+  public function checkTranslationStatus(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Checking translation status for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->checkTargetStatus($entity, LingotekLocale::convertDrupal2Lingotek($language));
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -564,8 +622,16 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to download.
    */
-  public function requestTranslation(ContentEntityInterface $entity, $language) {
-    $this->translationService->addTarget($entity, LingotekLocale::convertDrupal2Lingotek($language));
+  public function requestTranslation(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->addTarget($entity, LingotekLocale::convertDrupal2Lingotek($language));
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -576,8 +642,16 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to download.
    */
-  public function downloadTranslation(ContentEntityInterface $entity, $language) {
-    $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($language));
+  public function downloadTranslation(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($language));
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -586,12 +660,20 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function downloadTranslations(ContentEntityInterface $entity) {
-    $languages = $this->languageManager->getLanguages();
-    foreach ($languages as $langcode => $language) {
-      if ($langcode !== $entity->language()->getId()) {
-        $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
+  public function downloadTranslations(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Downloading all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $languages = $this->languageManager->getLanguages();
+      foreach ($languages as $langcode => $language) {
+        if ($langcode !== $entity->language()->getId()) {
+          $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
+        }
       }
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
   }
 
@@ -601,8 +683,16 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function disassociate(ContentEntityInterface $entity) {
-    $this->translationService->deleteMetadata($entity);
+  public function disassociate(ContentEntityInterface $entity, $language, &$context) {
+    $context['message'] = $this->t('Disassociating all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $this->translationService->deleteMetadata($entity);
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -639,7 +729,7 @@ class LingotekManagementForm extends FormBase {
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
-    if ($entity->lingotek_translation_status) {
+    if ($entity->lingotek_translation_status && $entity->lingotek_document_id) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
         if ($field_value->language !== $entity->language()->getId()) {
           $translations[$field_value->language] = [
@@ -681,24 +771,6 @@ class LingotekManagementForm extends FormBase {
   }
 
   /**
-   * Gets the profile name for display.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   * @return LingotekProfile
-   *   The profile.
-   */
-  protected function getProfile(ContentEntityInterface &$entity) {
-    $profile = NULL;
-    if ($entity->hasField('lingotek_profile')) {
-      if ($profile_id = $entity->lingotek_profile->target_id) {
-        $profile = LingotekProfile::load($profile_id);
-      }
-    }
-    return $profile;
-  }
-
-  /**
    * Gets alls the bundles as options.
    *
    * @return array
@@ -709,21 +781,6 @@ class LingotekManagementForm extends FormBase {
     $options = [];
     foreach ($bundles as $id => $bundle) {
       $options[$id] = $bundle['label'];
-    }
-    return $options;
-  }
-
-  /**
-   * Gets all the profiles as options.
-   *
-   * @return array
-   *   The profiles as a valid options array.
-   */
-  protected function getAllProfiles() {
-    $profiles = LingotekProfile::loadMultiple();
-    $options = [];
-    foreach ($profiles as $id => $profile) {
-      $options[$id] = $profile->label();
     }
     return $options;
   }

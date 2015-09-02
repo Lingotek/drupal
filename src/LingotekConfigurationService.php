@@ -92,10 +92,10 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
-  public function getDefaultProfileId($entity_type_id, $bundle) {
+  public function getDefaultProfileId($entity_type_id, $bundle, $provide_default = TRUE) {
     $config = \Drupal::config('lingotek.settings');
     $profile_id = $config->get('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile');
-    if ($profile_id === NULL) {
+    if ($provide_default && $profile_id === NULL) {
       $profile_id = Lingotek::PROFILE_AUTOMATIC;
     }
     return $profile_id;
@@ -113,12 +113,12 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
-  public function getEntityProfile(ContentEntityInterface $entity) {
-    $profile_id = $this->getDefaultProfileId($entity->getEntityTypeId(), $entity->bundle());
+  public function getEntityProfile(ContentEntityInterface $entity, $provide_default = TRUE) {
+    $profile_id = $this->getDefaultProfileId($entity->getEntityTypeId(), $entity->bundle(), $provide_default);
     if ($entity->lingotek_profile && $entity->lingotek_profile->target_id) {
       $profile_id = $entity->lingotek_profile->target_id;
     }
-    return LingotekProfile::load($profile_id);
+    return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
 
   /**

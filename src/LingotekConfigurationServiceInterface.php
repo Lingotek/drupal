@@ -82,11 +82,14 @@ interface LingotekConfigurationServiceInterface {
    *
    * @param ContentEntityInterface $entity
    *   The entity.
+   * @param bool $provide_default
+   *   If TRUE, and the entity does not have a profile, will retrieve the default
+   *   for this entity type and bundle. Defaults to TRUE.
    *
    * @returns LingotekProfile
    *   The default profile.
    */
-  public function getEntityProfile(ContentEntityInterface $entity);
+  public function getEntityProfile(ContentEntityInterface $entity, $provide_default = TRUE);
 
   /**
    * Sets the default Lingotek profile for the given entity.
