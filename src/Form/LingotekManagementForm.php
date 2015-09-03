@@ -730,12 +730,13 @@ class LingotekManagementForm extends FormBase {
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
-    if ($entity->lingotek_translation_status && $entity->lingotek_document_id) {
+    $document_id = $this->translationService->getDocumentId($entity);
+    if ($entity->lingotek_translation_status && $document_id) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
         if ($field_value->language !== $entity->language()->getId()) {
           $translations[$field_value->language] = [
             'status' => $field_value->value,
-            'url' => Url::fromRoute('lingotek.workbench', ['doc_id' => $entity->lingotek_document_id->value, 'locale' => LingotekLocale::convertDrupal2Lingotek($field_value->language)]),
+            'url' => Url::fromRoute('lingotek.workbench', ['doc_id' => $document_id, 'locale' => LingotekLocale::convertDrupal2Lingotek($field_value->language)]),
           ];
         }
       }
