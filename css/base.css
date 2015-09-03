@@ -16,58 +16,67 @@
   background-image: url("/modules/lingotek/images/lingotek_000000.png");
 }
 
-a.language-icon {
+.language-icon {
   background-color:#80a49e;
   border-radius: 3px;
   margin-right: 3px;
-  padding: 1px 4px;
+  padding: 4px 4px;
   color: #fff;
   white-space: nowrap;
   border: 1px solid #fff;
 }
+.language-icon.source-pending ,
 .language-icon.target-pending {
   background-color: #CE2029;
   border: 1px solid #CE2029;
 }
 
+.language-icon.source-current ,
 .language-icon.target-current {
   background-color: rgba(68,135,204,0.9);
   border: 1px solid rgba(68,135,204,1);
 }
 
+.language-icon.source-ready ,
 .language-icon.target-ready {
   background-color: #59ad1a;
   border: 1px solid #59ad1a;
 }
 
+.language-icon.source-edited ,
 .language-icon.target-edited {
   background-color:#999;
   border: 1px solid #999;
 }
 
+.language-icon.source-untracked ,
 .language-icon.target-untracked {
   color: #aaa;
   background-color:inherit;
   border: 1px #ccc solid;
 }
 
+.language-icon.source-pending.source-disabled ,
 .language-icon.target-pending.target-disabled {
   background-color: inherit;
   border: 1px solid rgba(206,32,41,0.5);
   color: #aaa;
 }
 
+.language-icon.source-ready.source-disabled ,
 .language-icon.target-ready.target-disabled {
   background-color: inherit;
   border: 1px solid rgba(89,173,26,0.8);
   color: #aaa;
 }
 
+.language-icon.source-current.source-disabled ,
 .language-icon.target-current.target-disabled {
   background-color: inherit;
   border: 1px solid rgba(68,135,204,0.8);
   color: #aaa;
 }
+.language-icon.source-non-lingotek ,
 .language-icon.target-non-lingotek {
   background-color: inherit;
   border: 1px solid #ccc;
