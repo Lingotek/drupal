@@ -748,7 +748,8 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
     $form['additional_translation']['addtl_prefill_phases_checkbox'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
+//      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
+      '#title' => t('Change all current content in this profile to use the new workflow'),
       '#default_value' => FALSE,
       '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
       '#states' => array(
