@@ -92,10 +92,12 @@ interface LingotekContentTranslationServiceInterface {
    *   Lingotek translation language which we want to modify.
    * @param int $status
    *   Status of the translation. Use Lingotek constants.
+   * @param bool $save
+   *   If FALSE, the entity is not saved yet. Defaults to TRUE.
    *
    * @return ContentEntityInterface
    */
-  public function setTargetStatus(ContentEntityInterface &$entity, $locale, $status);
+  public function setTargetStatus(ContentEntityInterface &$entity, $locale, $status, $save = TRUE);
 
   /**
    * Sets the translation status of all translations of a given entity.

@@ -100,6 +100,11 @@ function lingotek_entity_delete(EntityInterface $entity) {
 function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form_object = $form_state->getFormObject();
   if ($form_object instanceof ContentEntityFormInterface) {
+    // If it is a delete form, return.
+    if ('delete' === $form_object->getOperation()) {
+      return;
+    }
+
     $entity = $form_object->getEntity();
 
     /** @var ContentTranslationManagerInterface $content_translation_manager */
@@ -165,13 +170,16 @@ function lingotek_form_content_entity_form_submit ($form, FormStateInterface $fo
   if ($has_autoupload) {
     // New entity with auto-upload
     if ($source_status == NULL || $source_status == Lingotek::STATUS_UNTRACKED) {
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
       $document_id = $translation_service->uploadDocument($entity);
+      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
     // Updated entity with auto-upload
     elseif ($entity_has_changed) {
       $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
       $response = $translation_service->updateDocument($entity);
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', array('@title' => $entity->label())));
     }
@@ -180,7 +188,7 @@ function lingotek_form_content_entity_form_submit ($form, FormStateInterface $fo
   elseif (!$has_autoupload){
     if($entity_has_changed) {
       $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
-      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_EDITED);
+      $translation_service->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
     }
   }
 }
@@ -231,6 +239,23 @@ function lingotek_entity_base_field_info(EntityTypeInterface $entity_type) {
     //   See https://www.drupal.org/node/2282119.
     if ($manager->isEnabled($entity_type_id) || array_intersect_key($definitions, $installed_storage_definitions)) {
       return $definitions;
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_translation_insert().
+ */
+function lingotek_entity_translation_insert(ContentEntityInterface $translation) {
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+  $lingotek_config = \Drupal::service('lingotek.configuration');
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
+  if ($lingotek_config->isEnabled($translation->getEntityTypeId(), $translation->bundle())) {
+    $status = $translation_service->getTargetStatus($translation, $translation->language()->getId());
+    // As untracked is a default, we save it anyway.
+    if ($status === Lingotek::STATUS_REQUEST || $status === Lingotek::STATUS_UNTRACKED) {
+      $translation = $translation_service->setTargetStatus($translation, $translation->language()->getId(), Lingotek::STATUS_UNTRACKED, FALSE);
     }
   }
 }

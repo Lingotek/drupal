@@ -33,7 +33,6 @@ class Lingotek implements LingotekInterface {
   const STATUS_PENDING = 'PENDING';
   const STATUS_CURRENT = 'CURRENT';
   const STATUS_READY = 'READY';
-  const STATUS_FAILED = 'FAILED';
   /**
    * Status untracked means the target has not been added yet.
    */

@@ -15,6 +15,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekLocale;
@@ -605,7 +606,7 @@ class LingotekManagementForm extends FormBase {
   public function checkTranslationStatus(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Checking translation status for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->checkTargetStatus($entity, LingotekLocale::convertDrupal2Lingotek($language));
+      $this->translationService->checkTargetStatus($entity, $language);
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -758,11 +759,12 @@ class LingotekManagementForm extends FormBase {
         'language' => strtoupper($langcode) ,
         'status' => strtolower($data['status']),
         'url' => $data['url'],
+        'render_link' => ($data['status'] !== Lingotek::STATUS_REQUEST) && ($data['status'] !== Lingotek::STATUS_UNTRACKED)
       ];
     }
     return array('data' => array(
       '#type' => 'inline_template',
-      '#template' => '{% for language in languages %}<a href="{{ language.url }}" class="language-icon target-{{language.status}}" title="{{language.status}}">{{language.language}}</a> {% endfor %}',
+      '#template' => '{% for language in languages %}{% if language.render_link %} <a href="{{ language.url }}" {%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status}}">{{language.language}}{%if language.render_link%}</a>{%else%}</span>{%endif%} {% endfor %}',
       '#context' => array(
         'languages' => $languages,
       ),
