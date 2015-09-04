@@ -4,6 +4,18 @@ lingotek:
     theme:
       css/base.css: {}
 
+lingotek.dashboard:
+  version: VERSION
+  css:
+    theme:
+      '//gmc.lingotek.com/v2/styles/ltk.css': {type: external }
+  js:
+    'js/lingotek.dashboard.js': {}
+    '//gmc.lingotek.com/v2/ltk.min.js': {type: external,minified: true}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+
 lingotek.icons:
   version: VERSION
   css:

@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\Component\Utility\SafeMarkup;
-use Drupal\lingotek\Controller\LingotekControllerBase;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\LanguageInterface;
@@ -30,19 +29,19 @@ class LingotekDashboardController extends LingotekControllerBase {
       return $redirect;
     }
     $cms_data = $this->getDashboardInfo();
-    $string = '<h2>' . t('Dashboard') . '</h2><script>var cms_data = ' . json_encode($cms_data, JSON_PRETTY_PRINT) . '</script> <link rel="stylesheet" href="http://gmc.lingotek.com/v2/styles/ltk.css"> <script src="http://gmc.lingotek.com/v2/ltk.min.js"></script> <div ltk-dashboard ng-app="LingotekApp" style="margin-top: -15px;"></div>';
-    $d8_css_hack = <<<EOD
-  <style>
-        body {
-          width: auto !important;
-        }
-  </style>
-EOD;
-    $string .= $d8_css_hack;
-    return array(
-      '#type' => 'markup',
-      '#markup' => SafeMarkup::set($string),
-    );
+    $build = [];
+    $build['#attached']['library'][] = 'lingotek/lingotek.dashboard';
+    $build['#attached']['drupalSettings']['lingotek']['cms_data'] = $cms_data;
+    $build['#title'] = $this->t('Dashboard');
+    $build['ltk-dashboard'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'ltk-dashboard' => '',
+        'ng-app' => 'LingotekApp',
+        'style' => 'margin-top: -15px;',
+      ],
+    ];
+    return $build;
   }
 
   public function endpoint(Request $request) {
