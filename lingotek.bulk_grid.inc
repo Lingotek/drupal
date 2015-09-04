@@ -999,7 +999,7 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
   $translation_status = array();
   foreach($results as $result){
     $entity_id = $result->entity_id;
-    $language_code = substr($result->entity_key,count($result->entity_key) - 6);
+    $language_code = substr($result->entity_key, strlen('target_sync_status_'));
     $translation_status[$entity_id][$language_code]['status'] = $result->value;
     if($entity_type === 'node'){
       $translation_status[$entity_id]['last_modified'] = lingotek_human_readable_timestamp($result->timestamp) . ' ago';

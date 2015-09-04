@@ -283,7 +283,10 @@ function lingotek_perform_action(nid, action) {
     $(row).find('a.language-icon').each(function () {
       var icon_href = $(this).attr('href');
       //retrieve the language code from the href
-      var language_code = icon_href.substring(icon_href.length - 5);
+      var language_code = icon_href.substring(icon_href.length - 'xx_XX'.length);//normal locale code
+      if(data[entity_id][language_code] === undefined){
+        var language_code = icon_href.substring(icon_href.length - 'xx'.length);//language code case
+      }
       var title = $(this).attr('title');
       var cutoff = title.indexOf('-');
       title = title.substring(0, cutoff + 1);
