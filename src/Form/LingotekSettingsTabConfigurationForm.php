@@ -7,7 +7,13 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\config_translation\ConfigEntityMapper;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure Lingotek
@@ -17,6 +23,77 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
   protected $profiles;
   protected $bundles;
   protected $translatable_bundles;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * The entity query factory service.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $entityQuery;
+
+  /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotekConfig
+   */
+  protected $lingotekConfig;
+
+  /**
+   * The Lingotek config translation service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translationService
+   */
+  protected $translationService;
+
+  /**
+   * A array of configuration mapper instances.
+   *
+   * @var \Drupal\config_translation\ConfigMapperInterface[]
+   */
+  protected $mappers;
+
+  /**
+   * Constructs a new LingotekManagementForm object.
+   *
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
+   *   The entity query factory.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config
+   *   The Lingotek config service.
+   * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service
+   *   The Lingotek config translation service.
+   * @param \Drupal\config_translation\ConfigMapperInterface[] $mappers
+   *   The configuration mapper manager.
+   */
+  public function __construct(LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekConfigurationServiceInterface $lingotek_config, LingotekConfigTranslationServiceInterface $translation_service, array $mappers) {
+    $this->languageManager = $language_manager;
+    $this->entityQuery = $entity_query;
+    $this->lingotekConfig = $lingotek_config;
+    $this->translationService = $translation_service;
+    $this->mappers = $mappers;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('language_manager'),
+      $container->get('entity.query'),
+      $container->get('lingotek.configuration'),
+      $container->get('lingotek.config_translation'),
+      $container->get('plugin.manager.config_translation.mapper')->getMappers()
+    );
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -28,21 +105,12 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $this->profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
-    
-    // Get the default profiles
-    $this->retrieveProfileOptions();
-
-    // Retrieve bundles
-    $this->retrieveBundles();
-
-    // Retrieve translatable bundles
-    $this->retrieveTranslatableBundles();
+    $profile_options = $this->lingotekConfig->getProfileOptions();
 
     $header = array(
-      $this->t('Configuration Type'),
-      $this->t('Translation Profile'),
-      $this->t('Fields'),
+      'enabled' => $this->t('Enable'),
+      'type' => $this->t('Configuration Type'),
+      'profile' => $this->t('Translation Profile'),
     );
 
     $table = array(
@@ -51,21 +119,33 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
       '#empty' => $this->t('No Entries'),
     );
 
-    foreach ($this->translatable_bundles as $entity_id => $bundles) {
-      foreach ($bundles as $bundle_id => $bundle) {
+    foreach ($this->mappers as $mapper) {
+      // We don't want to show config objects, where we only have one instance.
+      // Just show config entities.
+      if ($mapper instanceof ConfigEntityMapper) {
+        $enabled = $this->translationService->isEnabled($mapper->getPluginId());
         $row = array();
-        $row['content_type'] = array(
-          '#markup' => $this->t($bundle['label']),
+        $row['enabled'] = array(
+          '#type' => 'checkbox',
+          '#default_value' => $enabled,
         );
-        $row['profiles'] = $this->retrieveProfiles($bundle_id);
-        $table[$bundle_id] = $row;
+        $row['type'] = array(
+          '#markup' => $mapper->getTypeLabel(),
+        );
+        $row['profile'] = [
+          '#type' => 'select',
+          '#options' => $this->lingotekConfig->getProfileOptions(),
+          '#default_value' => $this->translationService->getDefaultProfile($mapper->getPluginId())->id(),
+        ];
+        $table[$mapper->getPluginId()] = $row;
       }
     }
+    ksort($table);
 
     $form['config'] = array(
       '#type' => 'details',
-      '#title' => 'Translate Configuration Types'
-    );  
+      '#title' => 'Translate Configuration Types',
+    );
 
     $form['config']['table'] = $table;
 
@@ -83,69 +163,20 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
-  }
-
-  protected function retrieveProfileOptions() {
-    $this->profile_options = array();
-
-    foreach ($this->profiles as $profile) {
-      $this->profile_options[$profile->id()] = $profile->label();
-    }
-  }
-
-  protected function retrieveBundles() {
-    $entities = \Drupal::entityManager()->getDefinitions();
-    $this->bundles = array();
-    foreach ($entities as $entity) {
-      if ($entity instanceof \Drupal\Core\Config\Entity\ConfigEntityType) {
-        $bundle = \Drupal::entityManager()->getBundleInfo($entity->id());
-        $this->bundles[$entity->id()] = $bundle;
+    $values = $form_state->getValue(['table']);
+    foreach ($values as $plugin_id => $data) {
+      // We only save the enabled status if it changed.
+      if ($data['enabled'] && !$this->translationService->isEnabled($plugin_id)) {
+        $this->translationService->setEnabled($plugin_id, TRUE);
+      }
+      if (!$data['enabled'] && $this->translationService->isEnabled($plugin_id)) {
+        $this->translationService->setEnabled($plugin_id, FALSE);
+      }
+      // If we enable it, we save the profile.
+      if ($data['enabled'] && $data['profile'] !== $this->translationService->getDefaultProfile($plugin_id)->id()) {
+        $this->translationService->setDefaultProfile($plugin_id, $data['profile']);
       }
     }
-  }
-
-  protected function retrieveTranslatableBundles() {
-    $this->translatable_bundles = array();
-
-    foreach ($this->bundles as $bundle_group_id => $bundle_group) {
-      foreach ($bundle_group as $bundle_id => $bundle) {
-        if ($bundle['translatable']) {
-          $this->translatable_bundles[$bundle_group_id][$bundle_id] = $bundle;
-        }
-      }
-    }
-  }
-
-  protected function retrieveProfiles($bundle_id) {
-    $option_num;
-    $select = array(
-      '#type' => 'select',
-      '#options' => $this->profile_options,
-      '#default_value' => 1,
-    );
-    
-    return $select;
-  }
-
-  protected function retrieveFields($entity_id, $bundle_id) {
-    $fields = \Drupal::entityManager()->getFieldDefinitions($entity_id, $bundle_id);
-    $field_checkboxes = array ();
-    $checkbox_choice;
-    
-    // Find which fields the user previously selected
-    foreach($fields as $field_id => $field) {
-      if ($field->isTranslatable()) {
-        $field_checkbox = array(
-          '#type' => 'checkbox',
-          '#title' => $this->t($field->getLabel()),
-          '#default_value' => 0,
-        );
-        $field_checkboxes[$field_id] = $field_checkbox;
-      }
-    }
-
-    return $field_checkboxes;
   }
 
 }
