@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\config_translation\ConfigEntityMapper;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
 
@@ -46,13 +47,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritDoc}
    */
   public function getEnabledConfigTypes() {
-    $mappers = array();
-    // ToDo: Implement.
+    $enabled_types = [];
     foreach ($this->mappers as $mapper) {
-      if ($row = $this->buildRow($mapper)) {
-        $mappers[$mapper->getWeight()][] = $row;
+      if ($mapper instanceof ConfigEntityMapper) {
+        $enabled = $this->isEnabled($mapper->getPluginId());
+        if ($enabled) {
+          $enabled_types[] = $mapper->getPluginId();
+        }
       }
     }
+    return $enabled_types;
   }
 
 
