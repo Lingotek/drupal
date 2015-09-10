@@ -45,6 +45,9 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
       if ($route->getDefault('_controller') == '\Drupal\content_translation\Controller\ContentTranslationController::overview') {
         $route->setDefault('_controller', '\Drupal\lingotek\Controller\LingotekContentTranslationController::overview');
       }
+      if ($route->getDefault('_controller') == '\Drupal\config_translation\Controller\ConfigTranslationController::itemPage') {
+        $route->setDefault('_controller', '\Drupal\lingotek\Controller\LingotekConfigTranslationController::itemPage');
+      }
     }
 
     foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {

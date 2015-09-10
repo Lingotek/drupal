@@ -126,6 +126,46 @@ lingotek.entity.download:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.config.upload:
+  path: '/admin/lingotek/config/upload/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::upload'
+    _title: 'Upload Source'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.config.check_upload:
+  path: '/admin/lingotek/config/check_upload/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::checkUpload'
+    _title: 'Check Source Status'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.config.request:
+  path: '/admin/lingotek/config/request/{entity_type}/{entity_id}/{locale}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::request'
+    _title: 'Request translation'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.config.check_download:
+  path: '/admin/lingotek/config/check_download/{entity_type}/{entity_id}/{locale}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::checkDownload'
+    _title: 'Check Target Status'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.config.download:
+  path: '/admin/lingotek/config/download/{entity_type}/{entity_id}/{locale}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::download'
+    _title: 'Download translation'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.workbench:
   path: '/admin/lingotek/workbench/{doc_id}/{locale}'
   defaults:
