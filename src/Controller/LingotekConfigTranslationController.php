@@ -125,7 +125,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           // the ability of requesting translations.
           if ($entity && $document_id = $this->translationService->getDocumentId($entity)) {
             $target_status = $this->translationService->getTargetStatus($entity, $langcode);
-            if ($target_status === NULL || $target_status == Lingotek::STATUS_UNTRACKED) {
+            if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_UNTRACKED) {
               $page['languages'][$langcode]['operations']['#links']['request'] = array(
                 'title' => $this->t('Request translation'),
                 'url' => Url::fromRoute('lingotek.config.request',
