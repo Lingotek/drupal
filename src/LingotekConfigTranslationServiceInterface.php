@@ -7,7 +7,10 @@
 
 namespace Drupal\lingotek;
 use Drupal\config_translation\ConfigEntityMapper;
+use Drupal\config_translation\ConfigMapperInterface;
 use Drupal\config_translation\ConfigMapperManagerInterface;
+use Drupal\config_translation\ConfigNamesMapper;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
 
@@ -70,12 +73,12 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Gets the configuration translatable properties of the given mapper.
    *
-   * @param \Drupal\config_translation\ConfigEntityMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The mapper.
    * @return array
    *   Canonical names of the translatable properties.
    */
-  public function getConfigTranslatableProperties(ConfigEntityMapper $mapper);
+  public function getConfigTranslatableProperties(ConfigNamesMapper $mapper);
 
   /**
    * Gets the document id in the Lingotek platform for a given entity.
@@ -219,7 +222,6 @@ interface LingotekConfigTranslationServiceInterface {
    */
   public function addTarget(ConfigEntityInterface &$entity, $locale);
 
-
   /**
    * Checks the status of the translation in the Lingotek service.
    *
@@ -245,5 +247,173 @@ interface LingotekConfigTranslationServiceInterface {
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadDocument(ConfigEntityInterface $entity, $locale);
+
+  /**
+   * Gets the document id in the Lingotek platform for a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which we want the document id.
+   *
+   * @return string
+   *   The document id in the Lingotek platform.
+   */
+  public function getConfigDocumentId(ConfigNamesMapper $mapper);
+
+  /**
+   * Sets the document id in the Lingotek platform for a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which we want to set the document id.
+   * @param string $document_id
+   *   The document id.
+   *
+   * @return string
+   *   The document id in the Lingotek platform.
+   */
+  public function setConfigDocumentId(ConfigNamesMapper $mapper, $document_id);
+
+  /**
+   * Sets the translation status of a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which status we want to change.
+   * @param int $status
+   *   Status of the translation. Use Lingotek class constants.
+   *
+   * @return ConfigEntityInterface
+   */
+  public function setConfigSourceStatus(ConfigNamesMapper $mapper, $status);
+
+  /**
+   * Gets the translation status of a given entity translation for a locale.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which status we want to get.
+   * @param string $locale
+   *   Lingotek translation language which we want to get.
+   *
+   * @return int
+   *   The status of the target translation (see Lingotek class constants)
+   */
+  public function getConfigTargetStatus(ConfigNamesMapper $mapper, $locale);
+
+  /**
+   * Sets the translation status of all translations of a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which status we want to change.
+   * @param string $locale
+   *   Lingotek translation language which we want to get.
+   * @param int $status
+   *   Status of the translation. Use Lingotek constants.
+   *
+   * @return ConfigEntityInterface
+   */
+  public function setConfigTargetStatus(ConfigNamesMapper $mapper, $locale, $status);
+
+  /**
+   * Sets the translation status of all translations of a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which status we want to change.
+   * @param int $status
+   *   Status of the translation. Use Lingotek constants.
+   *
+   * @return ConfigEntityInterface
+   */
+  public function setConfigTargetStatuses(ConfigNamesMapper $mapper, $status);
+
+  /**
+   * Gets the translation source locale of a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which we want to get the source locale.
+   *
+   * @return string
+   *   The locale as expected by the Lingotek service.
+   */
+  public function getConfigSourceLocale(ConfigNamesMapper $mapper);
+
+  /**
+   * Returns the source data that will be uploaded to the Lingotek service.
+   *
+   * Only those fields that have actual translatable text, and have marked for upload will
+   * be included.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which we want the source data.
+   *
+   * @return mixed
+   */
+  public function getConfigSourceData(ConfigNamesMapper $mapper);
+
+  /**
+   * Uploads a document to the Lingotek service.
+   *
+   * @param string $mapper_id
+   *   The entity being uploaded.
+   *
+   * @return boolean
+   *   TRUE if the document was uploaded successfully, FALSE if not.
+   */
+  public function uploadConfig($mapper_id);
+
+  /**
+   * Checks the source is uploaded correctly.
+   *
+   * @param string $mapper_id
+   *   The entity which status we want to check.
+   *
+   * @return boolean
+   *   True if the entity is uploaded successfully.
+   */
+  public function checkConfigSourceStatus($mapper_id);
+
+  /**
+   * Request a translation for a given entity in the given locale.
+   *
+   * @param string $mapper_id
+   *   The entity which target we want to add.
+   * @param string $locale
+   *   Lingotek translation language which we want to modify.
+   */
+  public function addConfigTarget($mapper_id, $locale);
+
+  /**
+   * Checks the source is uploaded correctly.
+   *
+   * @param string $mapper_id
+   *   The entity which status we want to check.
+   * @param string $locale
+   *   Lingotek translation language which we want to modify.
+   *
+   * @return boolean
+   *   True if the entity is uploaded successfully.
+   */
+  public function checkConfigTargetStatus($mapper_id, $locale);
+
+  /**
+   * Downloads a document to the Lingotek service.
+   *
+   * @param string $mapper_id
+   *   The entity being uploaded.
+   * @param string $locale
+   *   Lingotek translation language which we want to modify.
+   *
+   * @return boolean
+   *   TRUE if the document was downloaded successfully, FALSE if not.
+   */
+  public function downloadConfig($mapper_id, $locale);
+
+  /**
+   * Resends a document to the translation service.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity being updated.
+   *
+   * @return boolean
+   *   TRUE if the document was updated successfully, FALSE if not.
+   */
+  public function updateConfig(ConfigNamesMapper $mapper);
 
 }
