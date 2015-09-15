@@ -20,7 +20,7 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which status we want to check.
    *
    * @return boolean
-   *   True if the entity is uploaded succesfully.
+   *   True if the entity is uploaded successfully.
    */
   public function checkSourceStatus(ContentEntityInterface &$entity);
 
@@ -42,7 +42,6 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek class constants.
-
    *
    * @return ContentEntityInterface
    */
@@ -145,7 +144,7 @@ interface LingotekContentTranslationServiceInterface {
    */
   public function getSourceLocale(ContentEntityInterface &$entity);
 
-    /**
+  /**
    * Returns the source data that will be uploaded to the Lingotek service.
    *
    * Only those fields that have actual translatable text, and have marked for upload will
