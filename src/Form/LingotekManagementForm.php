@@ -711,12 +711,24 @@ class LingotekManagementForm extends FormBase {
     $source_status = $this->translationService->getSourceStatus($entity);
     return array('data' => array(
       '#type' => 'inline_template',
-      '#template' => '<span class="language-icon source-{{status}}" title="{{status}}">{{language}}</span>',
+      '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{{language}}</span>',
       '#context' => array(
         'language' => $this->languageManager->getLanguage($language_source)->getName(),
         'status' => strtolower($source_status),
+        'status_title' => $this->getSourceStatusText($source_status),
       ),
     ));
+  }
+
+  protected function getSourceStatusText($status) {
+    switch ($status) {
+      case Lingotek::STATUS_UNTRACKED:
+        return $this->t('Never uploaded');
+      case Lingotek::STATUS_EDITED:
+        return $this->t('Edited/Reupload');
+      default:
+        return ucfirst(strtolower($status));
+    }
   }
 
   /**
@@ -759,13 +771,14 @@ class LingotekManagementForm extends FormBase {
       $languages[] = [
         'language' => strtoupper($langcode) ,
         'status' => strtolower($data['status']),
+        'status_text' => $this->getSourceStatusText($data['status']),
         'url' => $data['url'],
         'render_link' => ($data['status'] !== Lingotek::STATUS_REQUEST) && ($data['status'] !== Lingotek::STATUS_UNTRACKED)
       ];
     }
     return array('data' => array(
       '#type' => 'inline_template',
-      '#template' => '{% for language in languages %}{% if language.render_link %} <a href="{{ language.url }}" {%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status}}">{{language.language}}{%if language.render_link%}</a>{%else%}</span>{%endif%} {% endfor %}',
+      '#template' => '{% for language in languages %}{% if language.render_link %} <a href="{{ language.url }}" {%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.render_link%}</a>{%else%}</span>{%endif%} {% endfor %}',
       '#context' => array(
         'languages' => $languages,
       ),

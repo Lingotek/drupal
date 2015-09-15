@@ -43,10 +43,16 @@
   border: 1px solid #59ad1a;
 }
 
+.language-icon.source-importing {
+  background-color: #46a000;
+  border: 1px solid #46a000;
+}
+
 .language-icon.source-edited ,
 .language-icon.target-edited {
-  background-color:#999;
-  border: 1px solid #999;
+  color: rgba(68,135,204,0.8);
+  background-color: transparent;;
+  border: 1px solid rgba(68,135,204,0.8);
 }
 
 .language-icon.source-untracked ,
@@ -76,8 +82,8 @@
   border: 1px solid rgba(68,135,204,0.8);
   color: #aaa;
 }
-.language-icon.source-non-lingotek ,
-.language-icon.target-non-lingotek {
+.language-icon.source-request,
+.language-icon.target-request {
   background-color: inherit;
   border: 1px solid #ccc;
   color: #aaa;
