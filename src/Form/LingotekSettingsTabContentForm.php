@@ -145,9 +145,13 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
                 $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
               }
             }
-            // We must ignore those.
-            elseif(strpos($field_id,':properties' !== 0)) {
+            else if ($field_choice == 0) {
               $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id, FALSE);
+              if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
+                $properties = array_keys($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
+                $properties = array_fill_keys($properties, 0);
+                $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $properties);
+              }
             }
           }
           $lingotek_config->setDefaultProfileId($entity_id, $bundle_id, $form_values[$entity_id][$bundle_id]['profiles']);

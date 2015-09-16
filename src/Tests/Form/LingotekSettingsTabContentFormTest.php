@@ -106,5 +106,52 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertEqual('automatic', $config_data['translate']['entity']['node']['article']['profile']);
   }
 
+  public function testICanDisableFields() {
+        // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+    // Check the form contains the article type and only its text-based fields.
+    $this->drupalGet('admin/lingotek/settings');
+    // Check the title and body fields.
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => 1,
+      'node[article][fields][field_image]' => 1,
+      'node[article][fields][field_image:properties][alt]' => 'alt',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    // Assert that body translation is enabled.
+    $this->assertFieldChecked('edit-node-article-fields-body');
+    $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
+
+    // Submit again unchecking body and image including subfields.
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => FALSE,
+      'node[article][fields][field_image]' => FALSE,
+      'node[article][fields][field_image:properties][alt]' => FALSE,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    // Those checkboxes should not be checked anymore.
+    $this->assertNoFieldChecked('edit-node-article-fields-body');
+    $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-alt');
+
+  }
 
 }
