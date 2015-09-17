@@ -709,7 +709,7 @@ class LingotekManagementForm extends FormBase {
     $language_source = LingotekLocale::convertLingotek2Drupal($this->translationService->getSourceLocale($entity));
 
     $source_status = $this->translationService->getSourceStatus($entity);
-    return array('data' => array(
+    $data = array('data' => array(
       '#type' => 'inline_template',
       '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{{language}}</span>',
       '#context' => array(
@@ -718,6 +718,10 @@ class LingotekManagementForm extends FormBase {
         'status_title' => $this->getSourceStatusText($entity, $source_status),
       ),
     ));
+    if ($source_status == Lingotek::STATUS_EDITED && !$this->translationService->getDocumentId($entity)) {
+      $data['data']['#context']['status'] = strtolower(Lingotek::STATUS_REQUEST);
+    }
+    return $data;
   }
 
   protected function getSourceStatusText($entity, $status) {
