@@ -221,9 +221,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function getSourceData(ContentEntityInterface &$entity) {
-    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
-    $lingotek_config = \Drupal::service('lingotek.configuration');
-
     // Logic adapted from Content Translation core module and TMGMT contrib
     // module for pulling translatable field info from content entities.
     $entity_type = $entity->getEntityType();
@@ -234,13 +231,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $translatable_fields[$field_name] = $definition;
       }
     }
-    $field_definitions = $this->entityManager->getFieldDefinitions($entity_type->id(), $entity->bundle());
+    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
 
     $data = array();
     $source_entity = $entity->getUntranslated();
     foreach ($translatable_fields as $k => $definition) {
       // Check if the field is marked for upload.
-      if ($lingotek_config->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k)) {
+      if ($this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k)) {
         // If there is only one relevant attribute, upload it.
         // Get the column translatability configuration.
         module_load_include('inc', 'content_translation', 'content_translation.admin');
@@ -255,7 +252,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
           }
           else {
-            $configured_properties = $lingotek_config->getFieldPropertiesLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k);
+            $configured_properties = $this->lingotekConfiguration->getFieldPropertiesLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k);
             $properties = $fval->getProperties();
             foreach ($properties as $pkey => $pval) {
               if (isset($configured_properties[$pkey]) && $configured_properties[$pkey]) {
@@ -294,7 +291,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     if ($document_id = $this->getDocumentId($entity)) {
       $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
-      if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT) {
+      if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
           $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
           return TRUE;
@@ -315,8 +312,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       foreach ($target_languages as $langcode => $language) {
         $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
         if ($langcode !== $entity_langcode) {
-          $response = $this->addTarget($entity, $locale);
-          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+          $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
+          if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
+            if ($this->lingotek->addTarget($document_id, $locale)) {
+              $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+            }
+          }
         }
       }
     }
