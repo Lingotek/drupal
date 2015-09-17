@@ -372,6 +372,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         try {
           $langcode = LingotekLocale::convertLingotek2Drupal($locale);
           $this->saveTargetData($entity, $langcode, $data);
+          // If the status was "Importing", and the target was added
+          // successfully, we can ensure that the content is current now.
+          $source_status = $this->getSourceStatus($entity);
+          if ($source_status == Lingotek::STATUS_IMPORTING) {
+            $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          }
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
         }
         catch (Exception $e) {
