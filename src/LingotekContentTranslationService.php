@@ -290,10 +290,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
+      $source_status = $this->getSourceStatus($entity);
       $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
           $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
+          // If the status was "Importing", and the target was added
+          // successfully, we can ensure that the content is current now.
+          if ($source_status == Lingotek::STATUS_IMPORTING) {
+            $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          }
           return TRUE;
         }
       }
@@ -312,10 +318,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       foreach ($target_languages as $langcode => $language) {
         $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
         if ($langcode !== $entity_langcode) {
+          $source_status = $this->getSourceStatus($entity);
           $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
           if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
             if ($this->lingotek->addTarget($document_id, $locale)) {
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+              // If the status was "Importing", and the target was added
+              // successfully, we can ensure that the content is current now.
+              if ($source_status == Lingotek::STATUS_IMPORTING) {
+                $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+              }
             }
           }
         }
