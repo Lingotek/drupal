@@ -778,7 +778,7 @@ class LingotekManagementForm extends FormBase {
     }
     return array('data' => array(
       '#type' => 'inline_template',
-      '#template' => '{% for language in languages %}{% if language.render_link %} <a href="{{ language.url }}" {%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.render_link%}</a>{%else%}</span>{%endif%} {% endfor %}',
+      '#template' => '{% for language in languages %}{% if language.render_link %} <a href="{{ language.url }}" target="_blank"{%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.render_link%}</a>{%else%}</span>{%endif%} {% endfor %}',
       '#context' => array(
         'languages' => $languages,
       ),

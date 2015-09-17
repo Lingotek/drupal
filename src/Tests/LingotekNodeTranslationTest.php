@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
+use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
@@ -115,6 +116,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->clickLink('Check translation status');
     $this->assertText('The es_ES translation for node #1 is ready for download.');
 
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
+    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_ES'), array('language' => ConfigurableLanguage::load('es')))->toString();
+    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node #1 into es_ES has been downloaded.');

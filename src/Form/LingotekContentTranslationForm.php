@@ -164,6 +164,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
   protected function addOperationLink(ContentEntityInterface $entity, array &$option, $name, $path, LanguageInterface $language) {
     $operation_col = $this->getOperationColumnId($entity, $option);
+    $open_in_window = FALSE;
 
     if (!isset($option[$operation_col]['data']['#links'])) {
       $option[$operation_col]['data']['#links'] = array();
@@ -196,6 +197,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
        $path = str_replace('/admin/lingotek/workbench/', '', $path);
        list($doc_id, $locale) = explode('/', $path);
        $url = Url::fromRoute('lingotek.workbench', array('doc_id' => $doc_id, 'locale' => $locale));
+       $open_in_window = TRUE;
     }
     else {
        die("failed to get known operation in addOperationLink: $path");
@@ -205,6 +207,9 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       'language' => $language,
       'url' => $url,
     );
+    if ($open_in_window) {
+      $option[$operation_col]['data']['#links'][strtolower($name)]['attributes']['target'] = '_blank';
+    }
   }
 
   protected function removeOperationLink(ContentEntityInterface $entity, array &$option, $name) {
