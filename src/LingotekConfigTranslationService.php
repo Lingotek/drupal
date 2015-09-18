@@ -338,7 +338,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     if ($document_id = $this->getDocumentId($entity)) {
       $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
-      if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT) {
+      if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
           $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
           return TRUE;
