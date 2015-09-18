@@ -48,13 +48,13 @@
   border: 1px solid #46a000;
 }
 
-.language-icon.source-edited ,
 .language-icon.target-edited {
   color: rgba(68,135,204,0.8);
   background-color: transparent;;
   border: 1px solid rgba(68,135,204,0.8);
 }
 
+.language-icon.source-edited ,
 .language-icon.source-untracked ,
 .language-icon.target-untracked {
   color: #aaa;

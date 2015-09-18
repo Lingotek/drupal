@@ -726,11 +726,34 @@ class LingotekManagementForm extends FormBase {
 
   protected function getSourceStatusText($entity, $status) {
     switch ($status) {
+      case Lingotek::STATUS_CURRENT:
+        return $this->t('Source uploaded');
       case Lingotek::STATUS_UNTRACKED:
         return $this->t('Never uploaded');
       case Lingotek::STATUS_EDITED:
         return ($this->translationService->getDocumentId($entity)) ?
-         $this->t('Edited/Reupload') : $this->t('Never uploaded');
+         $this->t('Upload') : $this->t('Never uploaded');
+      case Lingotek::STATUS_IMPORTING:
+        return $this->t('Source importing');
+      default:
+        return ucfirst(strtolower($status));
+    }
+  }
+
+  protected function getTargetStatusText($entity, $status) {
+    switch ($status) {
+      case Lingotek::STATUS_UNTRACKED:
+        return $this->t('No translation');
+      case Lingotek::STATUS_REQUEST:
+        return $this->t('Request translation');
+      case Lingotek::STATUS_PENDING:
+        return $this->t('In-progress');
+      case Lingotek::STATUS_READY:
+        return $this->t('Ready for Download');
+      case Lingotek::STATUS_CURRENT:
+        return $this->t('Current');
+      case Lingotek::STATUS_EDITED:
+        return $this->t('Not current');
       default:
         return ucfirst(strtolower($status));
     }
@@ -776,7 +799,7 @@ class LingotekManagementForm extends FormBase {
       $languages[] = [
         'language' => strtoupper($langcode) ,
         'status' => strtolower($data['status']),
-        'status_text' => $this->getSourceStatusText($entity, $data['status']),
+        'status_text' => $this->getTargetStatusText($entity, $data['status']),
         'url' => $data['url'],
         'render_link' => ($data['status'] !== Lingotek::STATUS_REQUEST) && ($data['status'] !== Lingotek::STATUS_UNTRACKED)
       ];

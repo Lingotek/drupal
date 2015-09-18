@@ -174,8 +174,29 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $entity_langcode = $entity->getUntranslated()->language()->getId();
 
     foreach($target_languages as $langcode => $language) {
-      if ($langcode != $entity_langcode && $this->getTargetStatus($entity, $langcode)) {
-        $this->setTargetStatus($entity, $langcode, $status);
+      if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
+        if ($current_status != Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_CURRENT) {
+          $this->setTargetStatus($entity, $langcode, $status);
+        }
+        elseif ($current_status == Lingotek::STATUS_EDITED && $status == Lingotek::STATUS_CURRENT) {
+          $this->setTargetStatus($entity, $langcode, $status);
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markTranslationsAsDirty(ContentEntityInterface &$entity) {
+    $target_languages = $this->languageManager->getLanguages();
+    $entity_langcode = $entity->getUntranslated()->language()->getId();
+
+    foreach($target_languages as $langcode => $language) {
+      if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
+        if ($current_status == Lingotek::STATUS_CURRENT) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+        }
       }
     }
   }
@@ -375,7 +396,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
           $source_status = $this->getSourceStatus($entity);
-          if ($source_status == Lingotek::STATUS_IMPORTING) {
+          if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
             $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
           }
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);

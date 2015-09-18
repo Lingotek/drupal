@@ -111,6 +111,16 @@ interface LingotekContentTranslationServiceInterface {
   public function setTargetStatuses(ContentEntityInterface &$entity, $status);
 
   /**
+   * Marks the translation status as dirty if they exist.
+   *
+   * @param ContentEntityInterface &$entity
+   *   The entity which status we want to change.
+   *
+   * @return ContentEntityInterface
+   */
+  public function markTranslationsAsDirty(ContentEntityInterface &$entity);
+
+  /**
    * Gets the document id in the Lingotek platform for a given entity.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
