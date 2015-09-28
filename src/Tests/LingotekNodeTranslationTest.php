@@ -20,7 +20,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['node', 'image'];
+  public static $modules = ['block', 'node', 'image'];
 
   /**
    * @var NodeInterface
@@ -29,6 +29,9 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
   protected function setUp() {
     parent::setUp();
+
+    // Place the actions block.
+    $this->drupalPlaceBlock('local_tasks_block');
 
     // Create Article node types.
     if ($this->profile != 'standard') {

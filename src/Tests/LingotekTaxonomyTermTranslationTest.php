@@ -21,7 +21,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['taxonomy'];
+  public static $modules = ['block', 'taxonomy'];
 
   /**
    * Vocabulary for testing.
@@ -39,6 +39,9 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
 
   protected function setUp() {
     parent::setUp();
+
+    // Place the actions block.
+    $this->drupalPlaceBlock('local_tasks_block');
 
     // Create Article node types.
     if ($this->profile != 'standard') {
