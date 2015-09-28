@@ -81,7 +81,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getSourceStatus(ContentEntityInterface &$entity) {
     $source_language = LanguageInterface::LANGCODE_NOT_SPECIFIED;
-    if ($entity->lingotek_translation_source->value !== NULL) {
+    if ($entity->lingotek_translation_source && $entity->lingotek_translation_source->value !== NULL) {
       $source_language = $entity->lingotek_translation_source->value;
     }
     if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED) {
