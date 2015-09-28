@@ -8,7 +8,7 @@ use Drupal\simpletest\WebTestBase;
 /**
  * Base class for Lingotek test. Performs authorization of the account.
  */
-class LingotekTestBase extends WebTestBase {
+abstract class LingotekTestBase extends WebTestBase {
 
   /*
    * Modules to install.
