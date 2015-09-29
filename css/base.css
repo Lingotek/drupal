@@ -47,6 +47,9 @@
   background-color: #46a000;
   border: 1px solid #46a000;
 }
+  .language-icon.source-importing a {
+    color: #fff;
+  }
 
 .language-icon.target-edited {
   color: rgba(68,135,204,0.8);
@@ -61,6 +64,9 @@
   background-color:inherit;
   border: 1px #ccc solid;
 }
+  .language-icon.source-edited a {
+    color: #aaa;
+  }
 
 .language-icon.source-pending.source-disabled ,
 .language-icon.target-pending.target-disabled {
@@ -88,3 +94,7 @@
   border: 1px solid #ccc;
   color: #aaa;
 }
+  .language-icon.source-request a,
+  .language-icon.target-request a {
+    color: #aaa;
+  }

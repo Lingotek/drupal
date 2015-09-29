@@ -709,15 +709,19 @@ class LingotekManagementForm extends FormBase {
     $language_source = LingotekLocale::convertLingotek2Drupal($this->translationService->getSourceLocale($entity));
 
     $source_status = $this->translationService->getSourceStatus($entity);
-    $data = array('data' => array(
-      '#type' => 'inline_template',
-      '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{{language}}</span>',
-      '#context' => array(
-        'language' => $this->languageManager->getLanguage($language_source)->getName(),
-        'status' => strtolower($source_status),
-        'status_title' => $this->getSourceStatusText($entity, $source_status),
-      ),
-    ));
+    $data = array(
+      'data' => array(
+        '#type' => 'inline_template',
+        '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{% if url %}<a href="{{url}}">{%endif%}{{language}}{%if url %}</a>{%endif%}</span>',
+        '#context' => array(
+          'language' => $this->languageManager->getLanguage($language_source)
+            ->getName(),
+          'status' => strtolower($source_status),
+          'status_title' => $this->getSourceStatusText($entity, $source_status),
+          'url' => $this->getSourceActionUrl($entity, $source_status),
+        ),
+      )
+    );
     if ($source_status == Lingotek::STATUS_EDITED && !$this->translationService->getDocumentId($entity)) {
       $data['data']['#context']['status'] = strtolower(Lingotek::STATUS_REQUEST);
     }
@@ -776,7 +780,8 @@ class LingotekManagementForm extends FormBase {
         if ($field_value->language !== $entity->language()->getId()) {
           $translations[$field_value->language] = [
             'status' => $field_value->value,
-            'url' => Url::fromRoute('lingotek.workbench', ['doc_id' => $document_id, 'locale' => LingotekLocale::convertDrupal2Lingotek($field_value->language)]),
+            'url' => $this->getTargetActionUrl($entity, $field_value->value, $field_value->language),
+            'new_window' => $field_value->value == Lingotek::STATUS_CURRENT,
           ];
         }
       }
@@ -797,20 +802,22 @@ class LingotekManagementForm extends FormBase {
     $languages = [];
     foreach ($translations as $langcode => $data) {
       $languages[] = [
-        'language' => strtoupper($langcode) ,
+        'language' => strtoupper($langcode),
         'status' => strtolower($data['status']),
         'status_text' => $this->getTargetStatusText($entity, $data['status']),
         'url' => $data['url'],
-        'render_link' => ($data['status'] !== Lingotek::STATUS_REQUEST) && ($data['status'] !== Lingotek::STATUS_UNTRACKED)
+        'new_window' => $data['new_window']
       ];
     }
-    return array('data' => array(
-      '#type' => 'inline_template',
-      '#template' => '{% for language in languages %}{% if language.render_link %} <a href="{{ language.url }}" target="_blank"{%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.render_link%}</a>{%else%}</span>{%endif%} {% endfor %}',
-      '#context' => array(
-        'languages' => $languages,
-      ),
-    ));
+    return array(
+      'data' => array(
+        '#type' => 'inline_template',
+        '#template' => '{% for language in languages %}{% if language.url %} <a href="{{ language.url }}" {%if language.new_window%}target="_blank"{%endif%}{%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.url%}</a>{%else%}</span>{%endif%} {% endfor %}',
+        '#context' => array(
+          'languages' => $languages,
+        ),
+      )
+    );
 
   }
 
@@ -864,6 +871,72 @@ class LingotekManagementForm extends FormBase {
       $operations[$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
     }
     return $operations;
+  }
+
+  /**
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   * @param String $source_status
+   * @return \Drupal\Core\Url
+   */
+  protected function getSourceActionUrl(ContentEntityInterface &$entity, $source_status) {
+    $url = NULL;
+    if ($source_status == Lingotek::STATUS_IMPORTING) {
+      $url = Url::fromRoute('lingotek.entity.check_upload',
+        ['doc_id' => $this->translationService->getDocumentId($entity)],
+        ['query' => $this->getDestinationArray()]);
+    }
+    if ($source_status == Lingotek::STATUS_EDITED) {
+      if ($doc_id = $this->translationService->getDocumentId($entity)) {
+        $url = Url::fromRoute('lingotek.entity.update',
+          ['doc_id' => $doc_id],
+          ['query' => $this->getDestinationArray()]);
+      }
+      else {
+        $url = Url::fromRoute('lingotek.entity.upload',
+          [
+            'entity_type' => $entity->getEntityTypeId(),
+            'entity_id' => $entity->id()
+          ],
+          ['query' => $this->getDestinationArray()]);
+      }
+    }
+    return $url;
+  }
+
+  protected function getTargetActionUrl(ContentEntityInterface &$entity, $target_status, $langcode) {
+    $url = NULL;
+    $document_id = $this->translationService->getDocumentId($entity);
+    if ($target_status == Lingotek::STATUS_REQUEST) {
+        $url = Url::fromRoute('lingotek.entity.add_target',
+          [
+            'doc_id' => $document_id,
+            'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+          ],
+          ['query' => $this->getDestinationArray()]);
+    }
+    if ($target_status == Lingotek::STATUS_PENDING) {
+      $url = Url::fromRoute('lingotek.entity.check_target',
+        [
+          'doc_id' => $document_id,
+          'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+        ],
+        ['query' => $this->getDestinationArray()]);
+    }
+    if ($target_status == Lingotek::STATUS_READY) {
+      $url = Url::fromRoute('lingotek.entity.download',
+        [
+          'doc_id' => $document_id,
+          'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+        ],
+        ['query' => $this->getDestinationArray()]);
+    }
+    if ($target_status == Lingotek::STATUS_CURRENT) {
+      $url = Url::fromRoute('lingotek.workbench', [
+        'doc_id' => $document_id,
+        'locale' => LingotekLocale::convertDrupal2Lingotek($langcode)
+      ]);
+    }
+    return $url;
   }
 
 }

@@ -63,11 +63,19 @@ class LingotekEntityController extends LingotekControllerBase {
   }
 
   public function upload($entity_type, $entity_id) {
-
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $translation_service->uploadDocument($entity);
+    return $this->translationsPageRedirect($entity);
   }
 
   public function update($doc_id) {
-
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $entity = $translation_service->loadByDocumentId($doc_id);
+    $translation_service->updateDocument($entity);
+    return $this->translationsPageRedirect($entity);
   }
 
   public function download($doc_id, $locale) {
