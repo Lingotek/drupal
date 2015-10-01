@@ -73,15 +73,17 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $config = $this->configFactory()->getEditable('lingotek.settings');
     $form_values = $form_state->getValues();
     foreach($this->defaults_labels as $key => $label){
-      $this->lingotek->set('default.'. $key, $form_values[$key]);
+      $config->set('default.'. $key, $form_values[$key]);
     }
 
     // Since the lingotek module is newly installed, assign the callback
     $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-    $this->lingotek->set('account.callback_url', $new_callback_url);
-    $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
+    $config->set('account.callback_url', $new_callback_url);
+    $new_response = $this->lingotek->setProjectCallBackUrl($config->get('default.project'), $new_callback_url);
+    $config->save();
     $form_state->setRedirect('lingotek.dashboard');
     parent::submitForm($form, $form_state);
   }

@@ -38,7 +38,7 @@ trait LingotekSetupTrait {
    * @return boolean TRUE if connected, FALSE otherwise.
    */
   public function setupCompleted() {
-    $info = $this->lingotek->get('account');
+    $info = $this->config('lingotek.settings')->get('account');
     if (!empty($info['access_token']) && !empty($info['login_id'])) {
       return TRUE;
     }

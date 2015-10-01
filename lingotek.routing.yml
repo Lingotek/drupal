@@ -46,6 +46,14 @@ lingotek.setup_defaults:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.account_disconnect:
+  path: '/admin/lingotek/setup/account/disconnect'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekAccountDisconnectForm'
+    _title: 'Lingotek Account Disconnect'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.settings:
   path: '/admin/lingotek/settings'
   defaults:

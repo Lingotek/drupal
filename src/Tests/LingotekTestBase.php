@@ -22,11 +22,7 @@ abstract class LingotekTestBase extends WebTestBase {
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
-    $this->drupalGet('admin/lingotek/setup/account');
-    $this->clickLink('Connect to Lingotek');
-    $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
-    $this->drupalPostForm(NULL, ['project' => 'test_project', 'vault' => 'test_vault'], 'Save configuration');
-
+    $this->connectToLingotek();
   }
 
   /**
@@ -75,6 +71,16 @@ abstract class LingotekTestBase extends WebTestBase {
 
     return $field_config;
 
+  }
+
+  protected function connectToLingotek() {
+    $this->drupalGet('admin/lingotek/setup/account');
+    $this->clickLink('Connect to Lingotek');
+    $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
+    $this->drupalPostForm(NULL, [
+      'project' => 'test_project',
+      'vault' => 'test_vault'
+    ], 'Save configuration');
   }
 
 

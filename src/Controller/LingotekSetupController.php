@@ -88,14 +88,16 @@ class LingotekSetupController extends LingotekControllerBase {
 
   protected function saveToken($token) {
     if (!empty($token)) {
-      $this->lingotek->set('account.access_token', $token);
+      \Drupal::configFactory()->getEditable('lingotek.settings')->set('account.access_token', $token)->save();
     }
   }
 
   protected function  saveAccountInfo($account_info) {
     if (!empty($account_info)) {
-      $this->lingotek->set('account.login_id', $account_info['login_id']);
-      $this->lingotek->set('account.access_token', $account_info['id']);
+      $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+      $config->set('account.login_id', $account_info['login_id']);
+      $config->set('account.access_token', $account_info['id']);
+      $config->save();
     }
   }
 

@@ -98,8 +98,23 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     );
 
     $form['account']['account_table'] = $accountTable;
+    $form['account']['actions']['#type'] = 'actions';
+    $form['account']['actions']['disconnect'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Disconnect'),
+      '#button_type' => 'danger',
+      '#submit' => array(array($this, 'disconnect')),
+    ];
 
      return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disconnect(array &$form, FormStateInterface $form_state) {
+    // Redirect to the confirmation form.
+    $form_state->setRedirect('lingotek.account_disconnect');
   }
 
 }
