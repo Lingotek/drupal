@@ -1366,6 +1366,9 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
         $entity->language = LANGUAGE_NONE;
       }
     }
+    elseif($entity_type == 'bean') {
+      $entity->language = language_default()->language;
+    }
   }
   return $entity;
 }
@@ -1378,7 +1381,7 @@ function lingotek_entity_load($entities, $entity_type) {
   if (empty($entities)) {
     return;
   }
-  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term');
+  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term', 'bean');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (in_array($entity_type, $special_entities)) {
     foreach ($entities as $e) {
@@ -1578,6 +1581,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     unset($target_locales['en_US']);
   }
 
+  if ($entity_type == 'bean' && $entity->language == LANGUAGE_NONE) {
+    $site_locale = Lingotek::convertDrupal2Lingotek(language_default()->language);
+    if(!empty($target_locales[$site_locale])){
+      unset($target_locales[$site_locale]);
+    }
+  }
+
   // Add pending statuses for all target locales on successful upload only
   if ($success) {
     foreach (array_keys($target_locales) as $locale) {
@@ -1623,6 +1633,9 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
 
   if (is_numeric($entity)) {
     $entity = lingotek_entity_load_single($entity_type, $entity);
+  }
+  elseif (empty($entity->language)) {
+    lingotek_entity_init_language($entity_type, $entity);
   }
 
   if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
@@ -2057,7 +2070,7 @@ function lingotek_entity_presave($entity, $entity_type) {
     }
   }
   // handle special entities
-  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane');
+  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (!in_array($entity_type, $special_entities)) {
     return;

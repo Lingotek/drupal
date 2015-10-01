@@ -1368,6 +1368,15 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#default_value' => variable_get('lingotek_advanced_taxonomy_terms', FALSE),
   );
 
+  if (module_exists('bean')) {
+    $form[$fkey]['lingotek_translate_beans'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable bean translation'),
+      '#default_value' => (variable_get('lingotek_translate_beans') ? 1 : 0),
+      '#description' => t('If checked, translatable bean fields will be managed by Lingotek.'),
+    );
+  }
+
   $form['prefs']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
@@ -1438,6 +1447,19 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
   lingotek_admin_language_switcher_form_submit($form, $form_state);
   $form_state['values']['lingotek_account_plan_type'] = ($form['prefs']['lingotek_account_plan_type']['#checked'] ? 'advanced' : 'standard');
   system_settings_form_submit($form, $form_state);
+  if (module_exists('bean') && variable_get('lingotek_translate_beans')) {
+    if (!db_field_exists('bean', 'language')) {
+      $schema['bean']['fields']['language'] = array(
+        'type' => 'char',
+        'length' => 8,
+        'not null' => TRUE,
+        'default' => language_default()->language,
+        'description' => 'Field added by Lingotek',
+      );
+
+      db_add_field('bean', 'language', $schema['bean']['fields']['language']);
+    }
+  }
   menu_rebuild();
 }
 

@@ -94,7 +94,7 @@ class LingotekSync {
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_keystore($entity_type, $entity_id, $key, $status, $update_on_dup);
   }
-  
+
   public static function setAllTargetStatus($entity_type, $entity_id, $status) {
     if($entity_type === 'config'){
         $query = db_update('lingotek_config_metadata')
@@ -187,6 +187,14 @@ class LingotekSync {
         ->condition('entity_id', $node_source_check, "NOT IN")
         ->condition('entity_id', $comment_source_check, "NOT IN")
         ->condition('entity_id', $taxonomy_source_check, "NOT IN");
+
+    if (module_exists('bean') && variable_get('lingotek_translate_beans')) {
+      $bean_source_check = db_select('bean', 'b');
+      $bean_source_check->addField('b', 'bid');
+      $bean_source_check->condition('b.language', $locale);
+      $query->condition('entity_id', $bean_source_check, "NOT IN");
+    }
+
     $entities = $query->execute()->fetchAll();
 
     foreach ($entities as $e) {

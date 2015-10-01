@@ -2102,6 +2102,9 @@ function lingotek_render_title($row, $entity_properties, $language) {
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $term_obj) : '';
   }
   else {
+    if ($entity_type == 'bean') {
+      $row = entity_load_single($entity_type, $row->bid);
+    }
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';
   }
 
@@ -2132,6 +2135,11 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   elseif ($entity_type == 'taxonomy_term') {
     $id = $row->tid;
     $row->language = isset($row->translation_mode) && $row->translation_mode == '1' ? 'en' : $row->language;
+  }
+  elseif ($entity_type == 'bean') {
+    $id = $row->bid;
+    // Assume all block entities are created in the site's default language.
+    $row->language = language_default()->language;
   }
   elseif (!empty($row->id)) {
     $id = $row->id;
