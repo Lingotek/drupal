@@ -60,9 +60,6 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $workflowRow = array(
       array('#markup' => $this->t('<b>Workflow:</b>')), array('#markup' => $this->t($config->get('default.workflow'))),
     );
-    $integrationRow = array(
-      array('#markup' => $this->t('<b>Integration Method:</b>')), array('#markup' => $this->t($config->get('account.default_client_id'))),
-    );
     $projectRow = array(
       array('#markup' => $this->t('<b>Project ID:</b>')), array('#markup' => $this->t($config->get('default.project'))),
     );
@@ -87,7 +84,6 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $accountTable['community_row'] = $communityRow;
     $accountTable['token_row'] = $tokenRow;
     $accountTable['workflow_row'] = $workflowRow;
-    $accountTable['integration_row'] = $integrationRow;
     $accountTable['project_row'] = $projectRow;
     $accountTable['vault_row'] = $vaultRow;
     $accountTable['tms_row'] = $tmsRow;
