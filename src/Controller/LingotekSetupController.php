@@ -47,10 +47,13 @@ class LingotekSetupController extends LingotekControllerBase {
       // TODO: Log an error that no communities exist.
       return $this->redirect('lingotek.setup_account');
     }
-    $this->lingotek->set('account.resources.community', $communities);
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('account.resources.community', $communities);
+    $config->save();
     if (count($communities) == 1) {
       // No choice necessary. Save and advance to next page.
-      $this->lingotek->set('default.community', current(array_keys($communities)));
+      $config->set('default.community', current(array_keys($communities)));
+      $config->save();
       $this->lingotek->getResources(TRUE); // update resources based on newly selected community
       return $this->redirect('lingotek.setup_defaults');
     }
