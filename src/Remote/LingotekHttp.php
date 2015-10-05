@@ -56,7 +56,7 @@ class LingotekHttp implements LingotekHttpInterface {
     if (count($args)) {
       $options = [RequestOptions::QUERY => $args];
     }
-    return $this->httpClient->get($this->config->get('account.sandbox_host') . $path,
+    return $this->httpClient->get($this->getBaseUrl() . $path,
       [
         RequestOptions::HEADERS => $this->headers,
       ] + $options
@@ -78,7 +78,7 @@ class LingotekHttp implements LingotekHttpInterface {
     elseif (count($args) && !$use_multipart) {
       $options[RequestOptions::FORM_PARAMS] = $args;
     }
-    return $this->httpClient->post($this->config->get('account.sandbox_host') . $path,
+    return $this->httpClient->post($this->getBaseUrl() . $path,
       [
         RequestOptions::HEADERS => $this->headers,
       ] + $options
@@ -95,7 +95,7 @@ class LingotekHttp implements LingotekHttpInterface {
     if (count($args)) {
       $options = [RequestOptions::QUERY => $args];
     }
-    return $this->httpClient->delete($this->config->get('account.sandbox_host') . $path,
+    return $this->httpClient->delete($this->getBaseUrl() . $path,
       [
         RequestOptions::HEADERS => $this->headers,
       ] + $options
@@ -109,7 +109,7 @@ class LingotekHttp implements LingotekHttpInterface {
     // Let the post method masquerade as a PATCH
     $this->addHeader('X-HTTP-Method-Override', 'PATCH');
 
-    return $this->httpClient->patch($this->config->get('account.sandbox_host') . $path,
+    return $this->httpClient->patch($this->getBaseUrl() . $path,
       [
         RequestOptions::FORM_PARAMS => $args,
         RequestOptions::HEADERS => $this->headers,
@@ -143,6 +143,14 @@ class LingotekHttp implements LingotekHttpInterface {
       $this->addHeader('Authorization', 'bearer ' . $token);
     }
     return $this;
+  }
+
+  protected function getBaseUrl() {
+    $base_url = $this->config->get('account.sandbox_host');
+    if ($this->config->get('account.use_production')) {
+      $base_url = $this->config->get('account.host');
+    }
+    return $base_url;
   }
 
 }

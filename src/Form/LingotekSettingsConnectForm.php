@@ -26,46 +26,53 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
   /** * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
     // build the redirecting link for authentication to Lingotek
-    $host = $this->lingotek->get('account.sandbox_host');
+    $host = $this->lingotek->get('account.host');
+    $sandbox_host = $this->lingotek->get('account.sandbox_host');
     $auth_path = $this->lingotek->get('account.authorize_path');
     $id = $this->lingotek->get('account.default_client_id');
-    $return_uri = new Url('lingotek.setup_account', array('success' => 'true'), array('absolute' => TRUE));
+    $return_uri = new Url('lingotek.setup_account', array('success' => 'true', 'prod' => 'prod'), array('absolute' => TRUE));
     $login = $this->lingotek->get('account.type');
 
-    $form = parent::buildForm($form, $form_state);
-    if (!isset($form['#attached'])) {
-      $form['#attached'] = array();
-    }
-    if (!isset($form['#attached']['js'])) {
-      $form['#attached']['library'] = array();
-    }
-
-    $form['#attached']['library'][] = 'lingotek/lingotek.connect';
-    $form['intro'] = array(
-      '#type' => 'markup',
-      '#markup' => $this->t('Get started by clicking the button below to connect your Lingotek account to this Drupal site.'),
-    );
-    //$form['actions']['submit']['#value'] = $this->t('Connect Account');
-    unset($form['actions']['submit']);
-
+    $lingotek_register_link = $host . '/' . 'lingopoint/portal/requestAccount.action?client_id=' . $id . '&response_type=token&app=' . urlencode($return_uri->toString());
     $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri->toString());
 
-    $form['actions']['submit'][] = array(
-      '#theme' => 'menu_local_action',
-      '#link' => array(
-        'title' => t('Connect to Lingotek'),
-        'url' => Url::fromUri($lingotek_connect_link),
-        'localized_options' => array(
-          'attributes' => array(
-            'title' => t('Connect to Lingotek'),
-            'class' => array('button--primary'),
-          )
+    $return_uri->setOption('prod', 'sandbox');
+    $lingotek_sandbox_link = $sandbox_host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri->toString());
+
+    $form['new_account'] = ['#type' => 'container'];
+    $form['new_account']['intro'] = array(
+      '#type' => 'markup',
+      '#markup' => $this->t('Get started by clicking the button below to connect your Lingotek account to this Drupal site.') . '<br/>',
+    );
+    $form['new_account']['submit'] = array(
+      '#type' => 'link',
+      '#title' => t('Connect New Lingotek Account'),
+      '#url' => Url::fromUri($lingotek_register_link),
+      '#options' => array(
+        'attributes' => array(
+          'title' => t('Connect to Lingotek'),
+          'class' => array('button', 'action-connect'),
         )
       ),
-      '#button_type' => 'primary',
     );
+    $form['connect_account'] = ['#type' => 'container'];
+    $form['connect_account']['text'] = ['#markup' => t('Do you already have a Lingotek account?') . ' '];
+    $form['connect_account']['link'] = [
+      '#type' => 'link',
+      '#title' => t('Connect Lingotek Account'),
+      '#url' => Url::fromUri($lingotek_connect_link),
+    ];
+    $form['connect_sandbox'] = ['#type' => 'container'];
+    $form['connect_sandbox']  = ['#markup' => t('Do you have a Lingotek sandbox account?') . ' '];
+    $form['connect_sandbox']['link'] = [
+      '#type' => 'link',
+      '#title' => t('Connect Sandbox Account'),
+      '#url' => Url::fromUri($lingotek_sandbox_link),
+    ];
+
+    $form['#attached']['library'][] = 'lingotek/lingotek.connect';
+    $form['#attached']['library'][] = 'lingotek/lingotek.icons';
 
     return $form;
   }

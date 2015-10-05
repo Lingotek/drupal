@@ -8,6 +8,7 @@ preference:
   advanced_taxonomy_terms: true
   always_show_translate_tabs: false
 account:
+  use_production: false
   sandbox_host: 'https://cms.lingotek.com'
   host: 'https://myaccount.lingotek.com'
   authorize_path: 'auth/authorize.html'

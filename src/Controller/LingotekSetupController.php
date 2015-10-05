@@ -24,6 +24,11 @@ class LingotekSetupController extends LingotekControllerBase {
     }
     if ($this->receivedToken()) {
       $this->saveToken($this->receivedToken());
+      $production = $this->request->get('prod');
+      if ($production == 'prod') {
+        $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+        $config->set('account.use_production', TRUE)->save();
+      }
       $account_info = $this->fetchAccountInfo();
       $this->saveAccountInfo($account_info);
       drupal_set_message($this->t('Your account settings have been saved.'));

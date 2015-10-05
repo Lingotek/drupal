@@ -30,10 +30,15 @@ lingotek.settings:
       type: mapping
       label: 'Account'
       mapping:
+        use_production:
+          type: boolean
+          label: 'Use production'
         sandbox_host:
           type: string
+          label: 'Sandbox Host'
         host:
           type: string
+          label: 'Lingotek Host'
         authorize_path:
           type: string
         default_client_id:
