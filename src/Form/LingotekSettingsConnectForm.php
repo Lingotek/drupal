@@ -47,11 +47,11 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     );
     $form['new_account']['submit'] = array(
       '#type' => 'link',
-      '#title' => t('Connect New Lingotek Account'),
+      '#title' => t('Create New Lingotek Account'),
       '#url' => Url::fromUri($lingotek_register_link),
       '#options' => array(
         'attributes' => array(
-          'title' => t('Connect to Lingotek'),
+          'title' => t('Create New Lingotek Account'),
           'class' => array('button', 'action-connect'),
         )
       ),

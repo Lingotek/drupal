@@ -75,7 +75,7 @@ abstract class LingotekTestBase extends WebTestBase {
 
   protected function connectToLingotek() {
     $this->drupalGet('admin/lingotek/setup/account');
-    $this->clickLink('Connect to Lingotek');
+    $this->clickLink('Connect Lingotek Account');
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',

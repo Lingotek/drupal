@@ -32,7 +32,7 @@ class LingotekAccountTest extends WebTestBase {
     // Try to navigate to the Dashboard page, and assert we are redirected.
     $this->drupalGet('admin/lingotek/setup/account');
     // Fake the connection to an account in Lingotek.
-    $this->clickLink('Connect to Lingotek');
+    $this->clickLink('Connect Lingotek Account');
     // Our fake backend generates a token, returns to the site, completes the
     // handshake and return some fake data.
     $this->assertText('Your account settings have been saved.');
@@ -56,7 +56,7 @@ class LingotekAccountTest extends WebTestBase {
     // Try to navigate to the Dashboard page, and assert we are redirected.
     $this->drupalGet('admin/lingotek');
     $this->assertUrl('admin/lingotek/setup/account');
-    $this->assertLink('Connect to Lingotek');
+    $this->assertLink('Connect Lingotek Account');
   }
 
 }
