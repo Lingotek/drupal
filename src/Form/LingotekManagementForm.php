@@ -861,14 +861,14 @@ class LingotekManagementForm extends FormBase {
     $operations = [];
     $operations['upload'] = $this->t('Upload source for translation');
     $operations['check_upload'] = $this->t('Check upload progress');
-    $operations[$this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
-    $operations[$this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
-    $operations[$this->t('Download')]['download'] = $this->t('Download all translations');
+    $operations[(string)$this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
+    $operations[(string)$this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
+    $operations[(string)$this->t('Download')]['download'] = $this->t('Download all translations');
     $operations['disassociate'] = $this->t('Disassociate translations');
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
-      $operations[$this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName()]);
-      $operations[$this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName()]);
-      $operations[$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
+      $operations[(string)$this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName()]);
+      $operations[(string)$this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName()]);
+      $operations[(string)$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
     }
     return $operations;
   }
