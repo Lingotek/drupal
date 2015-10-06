@@ -37,7 +37,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     $lingotek_register_link = $host . '/' . 'lingopoint/portal/requestAccount.action?client_id=' . $id . '&response_type=token&app=' . urlencode($return_uri->toString());
     $lingotek_connect_link = $host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri->toString());
 
-    $return_uri->setOption('prod', 'sandbox');
+    $return_uri->setRouteParameter('prod', 'sandbox');
     $lingotek_sandbox_link = $sandbox_host . '/' . $auth_path . '?client_id=' . $id . '&response_type=token&redirect_uri=' . urlencode($return_uri->toString());
 
     $form['new_account'] = ['#type' => 'container'];
