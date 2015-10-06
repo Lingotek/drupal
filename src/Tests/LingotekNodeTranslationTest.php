@@ -30,8 +30,9 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   protected function setUp() {
     parent::setUp();
 
-    // Place the actions block.
+    // Place the actions and title block.
     $this->drupalPlaceBlock('local_tasks_block');
+    $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
     if ($this->profile != 'standard') {
