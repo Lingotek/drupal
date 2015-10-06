@@ -150,7 +150,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   protected function getOperationColumnId(ContentEntityInterface $entity, array $option) {
     $found = -1;
     foreach ($option as $index => $column) {
-      if (isset($column['data']) && isset($column['data']['#type']) && $column['data']['#type'] === 'operations') {
+      if (is_array($column) && isset($column['data']) && isset($column['data']['#type']) && $column['data']['#type'] === 'operations') {
         $found = $index;
         break;
       }
