@@ -87,10 +87,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       ));
     }
     if ($mapper instanceof ConfigEntityMapper) {
-      $class = new \ReflectionClass($mapper);
-      $property = $class->getProperty('entity');
-      $property->setAccessible(true);
-      $entity = $property->getValue($mapper);
+      /** @var $mapper ConfigEntityMapper */
+      $entity = $mapper->getEntity();
       $entity_id = $entity->id();
     }
 
