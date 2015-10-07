@@ -76,37 +76,39 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Go to the bulk node management page.
     $this->drupalGet('admin/lingotek/manage/node');
 
+    $basepath = \Drupal::request()->getBasePath();
+
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref('/admin/lingotek/entity/upload/node/1?destination=/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=/admin/lingotek/manage/node');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('English');
 
     // There is a link for checking status.
-    $this->assertLinkByHref('/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we can already request a translation.
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('English');
     $this->assertText('The import for node #1 is complete.');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
     $this->assertText("Locale 'es_ES' was added as a translation target for node #1.");
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref('/admin/lingotek/entity/check_target/dummy-document-hash-id/es_ES?destination=/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
     $this->assertText('The es_ES translation for node #1 is ready for download.');
 
     // Download the Spanish translation.
-    $this->assertLinkByHref('/admin/lingotek/entity/download/dummy-document-hash-id/es_ES?destination=/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
     $this->assertText('The translation of node #1 into es_ES has been downloaded.');
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es_ES');
-    $workbench_link = $this->xpath("//a[@href='/admin/lingotek/workbench/dummy-document-hash-id/es_ES' and @target='_blank']");
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_ES');
+    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_ES' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
   }
 
