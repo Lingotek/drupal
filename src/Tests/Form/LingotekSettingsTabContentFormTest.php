@@ -91,7 +91,6 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertFieldChecked('edit-node-article-fields-field-image');
     $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-title');
-    $this->assertNoFieldChecked('edit-node-article-fields-revision-log');
 
     // Check that the config is correctly saved.
     $config_data = $this->config('lingotek.settings')->getRawData();
