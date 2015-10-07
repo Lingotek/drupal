@@ -70,7 +70,6 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertField('node[article][enabled]');
     $this->assertField('node[article][profiles]');
     $this->assertField('node[article][fields][title]');
-    $this->assertField('node[article][fields][revision_log]');
     $this->assertField('node[article][fields][body]');
 
     // Check the title and body fields.
