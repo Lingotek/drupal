@@ -41,6 +41,8 @@ class LingotekFake implements LingotekInterface {
             'login_id' => 'testUser@example.com',
           ];
         }
+      case 'account.login_id':
+        return 'testUser@example.com';
       case 'account.sandbox_host':
       case 'account.host':
         return \Drupal::request()->getSchemeAndHttpHost();

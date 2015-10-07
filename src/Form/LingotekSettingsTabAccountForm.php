@@ -49,28 +49,28 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       array('#markup' => $this->t('<b>Enterprise:</b>')), array('#markup' => $this->t($isEnterprise)),
     );
     $activationRow = array(
-      array('#markup' => $this->t('<b>Activation Name:</b>')), array('#markup' => $this->t($config->get('account.login_id'))),
+      array('#markup' => $this->t('<b>Activation Name:</b>')), array('#markup' => $config->get('account.login_id')),
     );
     $communityRow = array(
-      array('#markup' => $this->t('<b>Community Identifier:</b>')), array('#markup' => $this->t($config->get('default.community'))),
+      array('#markup' => $this->t('<b>Community Identifier:</b>')), array('#markup' => $config->get('default.community')),
     );
     $tokenRow = array(
-      array('#markup' => $this->t('<b>Access Token:</b>')), array('#markup' => $this->t($config->get('account.access_token'))),
+      array('#markup' => $this->t('<b>Access Token:</b>')), array('#markup' => $config->get('account.access_token')),
     );
     $workflowRow = array(
-      array('#markup' => $this->t('<b>Workflow:</b>')), array('#markup' => $this->t($config->get('default.workflow'))),
+      array('#markup' => $this->t('<b>Workflow:</b>')), array('#markup' => $config->get('default.workflow')),
     );
     $projectRow = array(
-      array('#markup' => $this->t('<b>Project ID:</b>')), array('#markup' => $this->t($config->get('default.project'))),
+      array('#markup' => $this->t('<b>Project ID:</b>')), array('#markup' => $config->get('default.project')),
     );
     $vaultRow = array(
-      array('#markup' => $this->t('<b>Vault ID:</b>')), array('#markup' => $this->t($config->get('default.vault'))),
+      array('#markup' => $this->t('<b>Vault ID:</b>')), array('#markup' => $config->get('default.vault')),
     );
     $tmsRow = array(
-      array('#markup' => $this->t('<b>Lingotek TMS Server:</b>')), array('#markup' => $this->t($config->get('account.host'))),
+      array('#markup' => $this->t('<b>Lingotek TMS Server:</b>')), array('#markup' => $config->get('account.host')),
     );
     $gmcRow = array(
-      array('#markup' => $this->t('<b>Lingotek GMC Server:</b>')), array('#markup' => $this->t('https://gmc.lingotek.com')),
+      array('#markup' => $this->t('<b>Lingotek GMC Server:</b>')), array('#markup' => 'https://gmc.lingotek.com'),
     );
     
     $accountTable = array(
