@@ -73,7 +73,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
 
     /** @var \Drupal\config_translation\ConfigMapperInterface $mapper */
     $mapper = $this->configMapperManager->createInstance($plugin_id);
-    $mapper->populateFromRequest($request);
+    $mapper->populateFromRouteMatch($route_match);
 
     $languages = $this->languageManager->getLanguages();
     $original_langcode = $mapper->getLangcode();
