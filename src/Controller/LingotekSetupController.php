@@ -51,7 +51,7 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
-    $communities = $this->lingotek->getCommunities();
+    $communities = $this->lingotek->getCommunities(TRUE);
     if (empty($communities)) {
       // TODO: Log an error that no communities exist.
       return $this->redirect('lingotek.setup_account');
