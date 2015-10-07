@@ -54,8 +54,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     // If user specifies no translatable entities, post this message
     if (empty($this->translatable_bundles)) {
       $form['parent_details']['empty_message'] = array(
-        '#markup' => t('There are no translatable content entities specified. You can enable translation for the desired content entities on the <a href="!translation-entity">Content language</a> page.',
-          ['!translation-entity' => \Drupal::url('language.content_settings_page')]),
+        '#markup' => t('There are no translatable content entities specified. You can enable translation for the desired content entities on the <a href=":translation-entity">Content language</a> page.',
+          [':translation-entity' => \Drupal::url('language.content_settings_page')]),
       );
     }
     
