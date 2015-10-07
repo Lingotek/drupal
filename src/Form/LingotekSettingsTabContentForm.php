@@ -234,7 +234,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           }
           $field_checkbox = array(
             '#type' => 'checkbox',
-            '#title' => $this->t($field_definition->getLabel()),
+            '#title' => $field_definition->getLabel(),
             '#default_value' => $checkbox_choice,
           );
           $field_checkboxes[$field_id] = $field_checkbox;
