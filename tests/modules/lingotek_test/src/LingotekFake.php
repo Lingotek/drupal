@@ -56,6 +56,14 @@ class LingotekFake implements LingotekInterface {
         return $path . 'lingofake/authorize';
       case 'account.default_client_id':
         return 'test_default_client_id';
+      case 'default.community':
+        return 'test_community';
+      case 'default.project':
+        return 'test_project';
+      case 'default.vault':
+        return 'test_vault';
+      case 'default.workflow':
+        return 'test_workflow';
       case 'profile':
         return [
             ['id' => 1,
@@ -68,7 +76,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function set($key, $value) {
-    // We ignore all calls.
+    $this->config->set($key, $value)->save();
   }
 
   public function getAccountInfo() {
