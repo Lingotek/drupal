@@ -14,14 +14,13 @@ use Drupal\Core\Form\FormStateInterface;
  * Configure text display settings for this page.
  */
 class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
-  protected $defaults_labels;
+  protected $defaults_labels = [];
   protected $defaults;
   protected $resources;
 
   public function init(){
     $this->defaults = $this->lingotek->getDefaults();
     $this->resources = $this->lingotek->getResources();
-    $this->defaults_labels = array();
 
     // Make visible only those options that have more than one choice
     if (count($this->resources['project']) > 1) {
@@ -39,7 +38,10 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     }
 
     // Set workflow to machine translation every time regardless if there's more than one choice
-    $this->lingotek->set('default.workflow', array_search('Machine Translation', $this->resources['workflow']));
+    $machine_translation = array_search('Machine Translation', $this->resources['workflow']);
+    if ($machine_translation) {
+      $this->lingotek->set('default.workflow', $machine_translation);
+    }
   }
 
   /**
@@ -78,14 +80,24 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     foreach($this->defaults_labels as $key => $label){
       $config->set('default.'. $key, $form_values[$key]);
     }
+    $config->save();
 
     // Since the lingotek module is newly installed, assign the callback
-    $new_callback_url = \Drupal::urlGenerator()->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
-    $config->set('account.callback_url', $new_callback_url);
-    $new_response = $this->lingotek->setProjectCallBackUrl($config->get('default.project'), $new_callback_url);
-    $config->save();
+    $this->setCallbackUrl($config);
+
     $form_state->setRedirect('lingotek.dashboard');
     parent::submitForm($form, $form_state);
   }
-   
+
+  /**
+   * @param $config
+   */
+  protected function setCallbackUrl($config) {
+    $new_callback_url = \Drupal::urlGenerator()
+      ->generateFromRoute('lingotek.notify', [], ['absolute' => TRUE]);
+    $config->set('account.callback_url', $new_callback_url);
+    $new_response = $this->lingotek->setProjectCallBackUrl($config->get('default.project'), $new_callback_url);
+    $config->save();
+  }
+
 }

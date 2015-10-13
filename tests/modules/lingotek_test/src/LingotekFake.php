@@ -57,13 +57,13 @@ class LingotekFake implements LingotekInterface {
       case 'account.default_client_id':
         return 'test_default_client_id';
       case 'default.community':
-        return 'test_community';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key): 'test_community';
       case 'default.project':
-        return 'test_project';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_project';
       case 'default.vault':
-        return 'test_vault';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_vault';
       case 'default.workflow':
-        return 'test_workflow';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_workflow';
       case 'profile':
         return [
             ['id' => 1,
@@ -76,7 +76,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function set($key, $value) {
-    $this->config->set($key, $value)->save();
+    \Drupal::configFactory()->getEditable('lingotek.settings')->set($key, $value)->save();
   }
 
   public function getAccountInfo() {
@@ -149,7 +149,7 @@ class LingotekFake implements LingotekInterface {
       'project' => 'test_project',
       'vault' => 'test_vault',
       'community' => 'test_community',
-      'resource' => 'test_resource',
+      'workflow' => 'test_workflow',
     ];
   }
 

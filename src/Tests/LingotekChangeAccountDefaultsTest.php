@@ -19,7 +19,7 @@ class LingotekChangeAccountDefaultsTest extends LingotekTestBase {
 
     // Click on the Community link.
     $this->clickLink(t('Edit defaults'), 0);
-    $this->drupalPostForm(NULL, ['community' => 'test_community2'], t('Next'));
+    $this->drupalPostForm(NULL, ['community' => 'test_community2'], t('Save configuration'));
 
     $config = $this->config('lingotek.settings');
     $this->assertIdentical('test_community2', $config->get('default.community'));
@@ -31,7 +31,7 @@ class LingotekChangeAccountDefaultsTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, ['project' => 'test_project2', 'vault' => 'test_vault2'], t('Save configuration'));
 
     $config = $this->config('lingotek.settings');
-    $this->assertIdentical('test_community2', $config->get('default.community'));
+    $this->assertIdentical('test_community', $config->get('default.community'));
     $this->assertIdentical('test_project2', $config->get('default.project'));
     $this->assertIdentical('test_vault2', $config->get('default.vault'));
 
