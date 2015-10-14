@@ -123,3 +123,6 @@ lingotek.profile.*:
     auto_download:
       type: boolean
       label: 'Automatic Download'
+    vault:
+      type: string
+      label: 'TM Vault'

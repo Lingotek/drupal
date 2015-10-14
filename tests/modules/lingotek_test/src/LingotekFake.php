@@ -2,8 +2,8 @@
 namespace Drupal\lingotek_test;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekInterface;
+use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -153,9 +153,10 @@ class LingotekFake implements LingotekInterface {
     ];
   }
 
-  public function uploadDocument($title, $content, $locale = NULL) {
+  public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL) {
     // If the upload is successful, we must return a valid hash.
     \Drupal::state()->set('lingotek.uploaded_content', $content);
+    \Drupal::state()->set('lingotek.used_profile', $profile->id());
     return 'dummy-document-hash-id';
   }
 

@@ -38,6 +38,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "locked",
  *     "auto_upload",
  *     "auto_download",
+ *     "vault",
  *   },
  *   links = {
  *     "add-form" = "/admin/lingotek/settings/profile/add",
@@ -91,6 +92,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   protected $auto_download = FALSE;
 
   /**
+   * Entities using this profile will use this vault.
+   *
+   * @var string
+   */
+  protected $vault = 'default';
+
+  /**
    * {@inheritdoc}
    */
   public function isLocked() {
@@ -139,6 +147,21 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function setAutomaticDownload($auto_download) {
     $this->auto_download = $auto_download;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getVault() {
+    return $this->vault;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setVault($vault) {
+    $this->vault = $vault;
     return $this;
   }
 

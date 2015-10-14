@@ -142,7 +142,7 @@ class Lingotek implements LingotekInterface {
     $this->config->set($key, $value)->save();
   }
 
-  public function uploadDocument($title, $content, $locale = NULL) {
+  public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL) {
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
     $defaults = array(
@@ -150,6 +150,10 @@ class Lingotek implements LingotekInterface {
       'project_id' => $this->get('default.project'),
       'workflow_id' => $this->get('default.workflow'),
     );
+
+    if ($profile !== NULL && $vault = $profile->getVault()) {
+      $defaults['vault_id'] = $vault;
+    }
     
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
     $response = $this->api->addDocument($args);

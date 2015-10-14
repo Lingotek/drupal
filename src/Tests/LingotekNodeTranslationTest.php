@@ -103,6 +103,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertEqual(1, count($data['field_image'][0]));
     $this->assertTrue(isset($data['field_image'][0]['alt']));
 
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+
     // Check that the translate tab is in the node.
     $this->drupalGet('node/1');
     $this->clickLink('Translate');

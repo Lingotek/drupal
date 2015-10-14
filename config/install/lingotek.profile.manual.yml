@@ -4,3 +4,4 @@ weight: 60
 locked: true
 auto_upload: false
 auto_download: false
+vault: default

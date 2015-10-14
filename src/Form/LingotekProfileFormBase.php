@@ -67,13 +67,16 @@ class LingotekProfileFormBase extends EntityForm {
       '#type' => 'markup',
       '#markup' => '<h3>' . $this->t('Profile settings impacting only new nodes') . '</h3><hr />',
     );
-    // ToDo: Fix vaults.
+
+    $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
+    $default_vault = $this->config('lingotek.settings')->get('default.vault');
+
     $form['vault'] = array(
       '#type' => 'select',
       '#title' => $this->t('Default Vault'),
-      '#options' => [],
+      '#options' => ['default' => 'Default ('. $vaults[$default_vault] . ')'] + $vaults,
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
-      '#default_value' => FALSE
+      '#default_value' => $this->entity->getVault(),
     );
     return $form;
   }
