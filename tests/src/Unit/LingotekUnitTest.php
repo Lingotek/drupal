@@ -50,6 +50,10 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::uploadDocument
    */
   public function testUploadDocument() {
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.project', 'project1'],['default.workflow', 'wf1'],['default.vault', 'default_vault']]));
+
     // Vault id has the original value.
     $this->api->expects($this->at(0))
       ->method('addDocument')
@@ -64,8 +68,15 @@ class LingotekUnitTest extends UnitTestCase {
               'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
               'vault_id' => 'another_test_vault']);
 
-    // If there is no profile, vault should not be included.
+    // If there is a profile with default vault, it must be replaced.
     $this->api->expects($this->at(2))
+      ->method('addDocument')
+      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+              'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
+              'vault_id' => 'default_vault']);
+
+    // If there is no profile, vault should not be included.
+    $this->api->expects($this->at(3))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
@@ -79,8 +90,13 @@ class LingotekUnitTest extends UnitTestCase {
     $profile = new LingotekProfile(['id' => 'profile2', 'vault' => 'another_test_vault'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
 
+    // We upload with a profile that has marked to use the default vault,
+    // so must be replaced.
+    $profile = new LingotekProfile(['id' => 'profile2', 'vault' => 'default'], 'lingotek_profile');
+    $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
+
     // We upload without a profile
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL);
-
   }
+
 }

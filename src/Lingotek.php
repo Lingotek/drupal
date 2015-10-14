@@ -152,6 +152,9 @@ class Lingotek implements LingotekInterface {
     );
 
     if ($profile !== NULL && $vault = $profile->getVault()) {
+      if ($vault === 'default') {
+        $vault = $this->get('default.vault');
+      }
       $defaults['vault_id'] = $vault;
     }
     
