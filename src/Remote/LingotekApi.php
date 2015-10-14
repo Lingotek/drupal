@@ -182,7 +182,8 @@ class LingotekApi implements LingotekApiInterface {
 
   public function getVaults($community_id) {
     try {
-      $response = $this->lingotekClient->get('/api/vault', array('community_id' => $community_id));
+      // We ignore $community_id, as it is not needed for getting the TM vaults.
+      $response = $this->lingotekClient->get('/api/vault', array('limit' => 100));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get vaults: ' . $e->getMessage());
