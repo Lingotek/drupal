@@ -220,8 +220,7 @@ class Lingotek implements LingotekInterface {
   protected function setValidDefaultIfNotSet($default_key, $resources) {
     $default_value = $this->get($default_key);
     $valid_resource_ids = array_keys($resources);
-    $key = $this->get($default_key);
-    if (empty($key) || !in_array($default_value, $valid_resource_ids)) {
+    if (empty($default_value) || !in_array($default_value, $valid_resource_ids)) {
       $value = current($valid_resource_ids);
       $this->set($default_key, $value);
     }

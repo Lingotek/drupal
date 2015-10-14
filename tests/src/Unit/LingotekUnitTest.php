@@ -20,30 +20,134 @@ class LingotekUnitTest extends UnitTestCase {
    */
   protected $lingotek;
 
-
   /**
    * @var LingotekHttpInterface
    */
   protected $api;
 
   /**
+   * @var \Drupal\Core\Config\Config
+   */
+  protected $config;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     $this->api = $this->getMock('\Drupal\lingotek\Remote\LingotekApiInterface');
-    $config = $this->getMockBuilder('\Drupal\Core\Config\Config')
+    $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
       ->disableOriginalConstructor()
       ->getMock();
-    $config->expects($this->any())
-      ->method('get')
-      ->will($this->returnValueMap([['default.project', 'project1'],['default.workflow', 'wf1']]));
-
     $config_factory = $this->getMock('\Drupal\Core\Config\ConfigFactoryInterface');
     $config_factory->expects($this->once())
       ->method('getEditable')
-      ->will($this->returnValue($config));
+      ->with('lingotek.settings')
+      ->will($this->returnValue($this->config));
 
     $this->lingotek = new Lingotek($this->api, $config_factory);
+  }
+
+  /**
+   * @covers ::getVaults
+   */
+  public function testGetVaultsWithData() {
+    // No call is performed when getting vaults without forcing.
+    $this->config->expects($this->once())
+      ->method('get')
+      ->with('account.resources.vault')
+      ->will($this->returnValue(['a_vault' => 'A vault']));
+    $this->api->expects($this->never())
+      ->method('getVaults');
+    $this->lingotek->getVaults(FALSE);
+  }
+
+  /**
+   * @covers ::getVaults
+   */
+  public function testGetVaultsWithNoData() {
+    // A call is performed when getting vaults and there are none locally.
+    $this->config->expects($this->at(0))
+      ->method('get')
+      ->with('account.resources.vault')
+      ->will($this->returnValue([]));
+    $this->config->expects($this->at(1))
+      ->method('get')
+      ->with('default.community')
+      ->will($this->returnValue(['my_community']));
+
+    // Ensure the call will be made.
+    $this->api->expects($this->once())
+      ->method('getVaults')
+      ->will($this->returnValue(['a_vault' => 'A vault']));
+
+    // And the results will be stored.
+    $this->config->expects($this->at(2))
+      ->method('set')
+      ->with('account.resources.vault', ['a_vault' => 'A vault'])
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(3))
+      ->method('save');
+
+    $this->config->expects($this->at(4))
+      ->method('get')
+      ->with('default.vault')
+      ->will($this->returnValue(NULL));
+
+    $this->config->expects($this->at(5))
+      ->method('set')
+      ->with('default.vault', 'a_vault')
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(6))
+      ->method('save');
+
+    $this->lingotek->getVaults(FALSE);
+  }
+
+  /**
+   * @covers ::getVaults
+   */
+  public function testGetVaultsWithDataButForcing() {
+    // A call is performed when forced even if there are vaults locally.
+    $this->config->expects($this->at(0))
+      ->method('get')
+      ->with('account.resources.vault')
+      ->will($this->returnValue(['a_vault' => 'A vault']));
+
+    $this->config->expects($this->at(1))
+      ->method('get')
+      ->with('default.community')
+      ->will($this->returnValue(['my_community']));
+
+    // Ensure the call will be made.
+    $this->api->expects($this->once())
+      ->method('getVaults')
+      ->will($this->returnValue(['a_vault' => 'A vault']));
+
+    // And the results will be stored.
+    $this->config->expects($this->at(2))
+      ->method('set')
+      ->with('account.resources.vault', ['a_vault' => 'A vault'])
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(3))
+      ->method('save');
+
+    $this->config->expects($this->at(4))
+      ->method('get')
+      ->with('default.vault')
+      ->will($this->returnValue(NULL));
+
+    $this->config->expects($this->at(5))
+      ->method('set')
+      ->with('default.vault', 'a_vault')
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(6))
+      ->method('save');
+
+    $this->lingotek->getVaults(TRUE);
   }
 
   /**
