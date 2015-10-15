@@ -126,3 +126,6 @@ lingotek.profile.*:
     vault:
       type: string
       label: 'TM Vault'
+    project:
+      type: string
+      label: 'TM Project'

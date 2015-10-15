@@ -39,6 +39,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "auto_upload",
  *     "auto_download",
  *     "vault",
+ *     "project",
  *   },
  *   links = {
  *     "add-form" = "/admin/lingotek/settings/profile/add",
@@ -97,6 +98,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var string
    */
   protected $vault = 'default';
+
+  /**
+   * Entities using this profile will use this project.
+   *
+   * @var string
+   */
+  protected $project = 'default';
 
   /**
    * {@inheritdoc}
@@ -162,6 +170,21 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function setVault($vault) {
     $this->vault = $vault;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProject() {
+    return $this->project;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProject($project) {
+    $this->project = $project;
     return $this;
   }
 

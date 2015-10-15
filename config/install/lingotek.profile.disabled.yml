@@ -5,3 +5,4 @@ locked: true
 auto_upload: false
 auto_download: false
 vault: default
+project: default

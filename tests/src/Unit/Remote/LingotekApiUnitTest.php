@@ -38,6 +38,23 @@ class LingotekApiUnitTest extends UnitTestCase {
     $this->lingotek_api = new LingotekApi($this->client);
   }
 
+
+  /**
+   * @covers ::getProjects
+   */
+  public function testGetProjects() {
+    // Ensure that the limit and the community_id are set.
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->client->expects($this->once())
+      ->method('get')
+      ->with('/api/project', ['limit' => 100, 'community_id' => 'my_community_id'])
+      ->will($this->returnValue($response));
+
+    $this->lingotek_api->getProjects('my_community_id');
+  }
+
   /**
    * @covers ::getVaults
    */

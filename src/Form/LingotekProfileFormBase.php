@@ -78,6 +78,18 @@ class LingotekProfileFormBase extends EntityForm {
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
       '#default_value' => $this->entity->getVault(),
     );
+
+    $projects = $this->config('lingotek.settings')->get('account.resources.project');
+    $default_project = $this->config('lingotek.settings')->get('default.project');
+
+    $form['project'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Default Project'),
+      '#options' => ['default' => 'Default ('. $projects[$default_project] . ')'] + $projects,
+      '#description' => $this->t('The default Translation Memory Project where translations are saved.'),
+      '#default_value' => $this->entity->getProject(),
+    );
+
     return $form;
   }
 

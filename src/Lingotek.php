@@ -151,6 +151,12 @@ class Lingotek implements LingotekInterface {
       'workflow_id' => $this->get('default.workflow'),
     );
 
+    if ($profile !== NULL && $project = $profile->getProject()) {
+      if ($project !== 'default') {
+        $defaults['project_id'] = $project;
+      }
+    }
+
     if ($profile !== NULL && $vault = $profile->getVault()) {
       if ($vault === 'default') {
         $vault = $this->get('default.vault');

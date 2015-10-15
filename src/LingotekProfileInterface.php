@@ -73,4 +73,45 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    */
   public function setAutomaticDownload($auto_download);
 
+  /**
+   * Gets the TM vault of the profile.
+   *
+   * @return string
+   *   The TM vault identifier, used to upload documents. If 'default', the
+   *   default site vault should be used.
+   */
+  public function getVault();
+
+  /**
+   * Sets the TM vault of the profile.
+   *
+   * @param string $vault
+   *   The TM vault identifier, used to upload documents. If 'default', the
+   *   default site vault should be used.
+   *
+   * @return $this
+   */
+  public function setVault($vault);
+
+
+  /**
+   * Gets the TM project of the profile.
+   *
+   * @return string
+   *   The TM project identifier, used to upload documents. If 'default', the
+   *   default site project should be used.
+   */
+  public function getProject();
+
+  /**
+   * Sets the TM vault of the profile.
+   *
+   * @param string $project
+   *   The TM project identifier, used to upload documents. If 'default', the
+   *   default site project should be used.
+   *
+   * @return $this
+   */
+  public function setProject($project);
+
 }

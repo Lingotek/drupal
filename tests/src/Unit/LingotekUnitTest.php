@@ -151,52 +151,155 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::getProjects
+   */
+  public function testGetProjectsWithData() {
+    // No call is performed when getting projects without forcing.
+    $this->config->expects($this->once())
+      ->method('get')
+      ->with('account.resources.project')
+      ->will($this->returnValue(['a_project' => 'A project']));
+    $this->api->expects($this->never())
+      ->method('getProjects');
+    $this->lingotek->getProjects(FALSE);
+  }
+
+  /**
+   * @covers ::getProjects
+   */
+  public function testGetProjectsWithNoData() {
+    // A call is performed when getting projects and there are none locally.
+    $this->config->expects($this->at(0))
+      ->method('get')
+      ->with('account.resources.project')
+      ->will($this->returnValue([]));
+    $this->config->expects($this->at(1))
+      ->method('get')
+      ->with('default.community')
+      ->will($this->returnValue(['my_community']));
+
+    // Ensure the call will be made.
+    $this->api->expects($this->once())
+      ->method('getProjects')
+      ->will($this->returnValue(['a_project' => 'A project']));
+
+    // And the results will be stored.
+    $this->config->expects($this->at(2))
+      ->method('set')
+      ->with('account.resources.project', ['a_project' => 'A project'])
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(3))
+      ->method('save');
+
+    $this->config->expects($this->at(4))
+      ->method('get')
+      ->with('default.project')
+      ->will($this->returnValue(NULL));
+
+    $this->config->expects($this->at(5))
+      ->method('set')
+      ->with('default.project', 'a_project')
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(6))
+      ->method('save');
+
+    $this->lingotek->getProjects(FALSE);
+  }
+
+  /**
+   * @covers ::getProjects
+   */
+  public function testGetProjectsWithDataButForcing() {
+    // A call is performed when forced even if there are projects locally.
+    $this->config->expects($this->at(0))
+      ->method('get')
+      ->with('account.resources.project')
+      ->will($this->returnValue(['a_project' => 'A project']));
+
+    $this->config->expects($this->at(1))
+      ->method('get')
+      ->with('default.community')
+      ->will($this->returnValue(['my_community']));
+
+    // Ensure the call will be made.
+    $this->api->expects($this->once())
+      ->method('getProjects')
+      ->will($this->returnValue(['a_project' => 'A project']));
+
+    // And the results will be stored.
+    $this->config->expects($this->at(2))
+      ->method('set')
+      ->with('account.resources.project', ['a_project' => 'A project'])
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(3))
+      ->method('save');
+
+    $this->config->expects($this->at(4))
+      ->method('get')
+      ->with('default.project')
+      ->will($this->returnValue(NULL));
+
+    $this->config->expects($this->at(5))
+      ->method('set')
+      ->with('default.project', 'a_project')
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(6))
+      ->method('save');
+
+    $this->lingotek->getProjects(TRUE);
+  }
+
+  /**
    * @covers ::uploadDocument
    */
   public function testUploadDocument() {
     $this->config->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['default.project', 'project1'],['default.workflow', 'wf1'],['default.vault', 'default_vault']]));
+      ->will($this->returnValueMap([['default.project', 'default_project'],['default.workflow', 'wf1'],['default.vault', 'default_vault']]));
 
     // Vault id has the original value.
     $this->api->expects($this->at(0))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'my_test_project', 'workflow_id' => 'wf1',
               'vault_id' => 'my_test_vault']);
 
     // Vault id has changed.
     $this->api->expects($this->at(1))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'another_test_project', 'workflow_id' => 'wf1',
               'vault_id' => 'another_test_vault']);
 
     // If there is a profile with default vault, it must be replaced.
     $this->api->expects($this->at(2))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'default_project', 'workflow_id' => 'wf1',
               'vault_id' => 'default_vault']);
 
     // If there is no profile, vault should not be included.
     $this->api->expects($this->at(3))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'project1', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'default_project', 'workflow_id' => 'wf1',
              ]);
 
-    // We upload with a profile that has a vault.
-    $profile = new LingotekProfile(['id' => 'profile1', 'vault' => 'my_test_vault'], 'lingotek_profile');
+    // We upload with a profile that has a vault and a project.
+    $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
 
-    // We upload with a profile that has another vault.
-    $profile = new LingotekProfile(['id' => 'profile2', 'vault' => 'another_test_vault'], 'lingotek_profile');
+    // We upload with a profile that has another vault and another project.
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'another_test_project', 'vault' => 'another_test_vault'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
 
-    // We upload with a profile that has marked to use the default vault,
+    // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
-    $profile = new LingotekProfile(['id' => 'profile2', 'vault' => 'default'], 'lingotek_profile');
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
 
     // We upload without a profile
