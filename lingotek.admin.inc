@@ -1458,6 +1458,7 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
       );
 
       db_add_field('bean', 'language', $schema['bean']['fields']['language']);
+      LingotekLog::warning('Language column has been added to the @module_name by Lingotek.', array('@module_name' => ('Bean')));
     }
   }
   menu_rebuild();

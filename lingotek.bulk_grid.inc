@@ -802,6 +802,11 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Title'),
       '#default_value' => isset($e_grid_custom[$prefix . 'title' . $suffix]) ? $e_grid_custom[$prefix . 'title' . $suffix] : in_array('title', $columns['defaults']),
     ),
+    'label' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Label'),
+      '#default_value' => isset($e_grid_custom[$prefix . 'label' . $suffix]) ? $e_grid_custom[$prefix . 'label' . $suffix] : in_array('label', $columns['defaults']),
+    ),
     'description' => array(
       '#type' => 'checkbox',
       '#disabled' => 'true',
@@ -1284,6 +1289,13 @@ function lingotek_grid_define_columns($entity_type) {
     $columns['columns']['description'] = 'description';
     $columns['defaults']['description'] = 'description';
   }
+  if ($entity_type == 'bean'){
+    $columns['columns']['label'] = 'label';
+    # REMOVED SO THAT EXISTING INSTALLS WITH COLUMN SETTINGS ALREADY SELECTED
+    # WILL NOT SEE THE BEAN LABEL FIELD AS "ON" WHEN IT IS REALLY NOT YET.
+    #$columns['defaults']['label'] = 'label';
+  }
+
   return $columns;
 }
 
@@ -1551,6 +1563,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     'nid' => array('data' => t('ID'), 'field' => 'n.' . $entity_id_key),
     'content_type' => array('data' => t('Content Type'), 'field' => 'type'),
     'title' => array('data' => t('Title'), 'field' => 'n.' . $label_col),
+    'label' => array('data' => t('Label'), 'field' => 'n.label'),
     'description' => array('data' => t('Description')),
     'language' => array('data' => t('Source Uploaded')), //, 'field' => 'upload_status'),
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
@@ -1575,6 +1588,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   // have a bundle column in their table.
   if (!$bundle_col && $entity_type != 'taxonomy_term') {
     unset($header['content_type']);
+  }
+
+  if ($entity_type != 'bean') {
+    unset($header['label']);
   }
 
   if (isset($entity_properties['changed'])) {
@@ -1691,6 +1708,10 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
       $query->addField('n', $info['entity keys']['bundle']);
     }
     $query->addField('n', $info['entity keys']['bundle'], 'type');
+    // beans have the $bundle_col, and also need the label
+    if ($entity_type == 'bean'){
+      $query->addField('n', 'label');
+    }
   }
 }
 
@@ -2000,6 +2021,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     $data = array(
       'nid' => $row->{$entity_id_key} ? : t('??'),
       'title' => $title,
+      'label' => isset($row->label) ? $row->label : '',
       'language' => $source,
       'translations' => $target_icons_str,
       'configuration' => $configuration,
@@ -2103,7 +2125,7 @@ function lingotek_render_title($row, $entity_properties, $language) {
   }
   else {
     if ($entity_type == 'bean') {
-      $row = entity_load_single($entity_type, $row->bid);
+      $row = lingotek_entity_load_single($entity_type, $row->bid);
     }
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';
   }

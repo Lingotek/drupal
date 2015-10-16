@@ -1068,3 +1068,33 @@ function lingotek_update_7700(&$sandbox) {
   registry_rebuild();
   return t('Rebuilt registry to include LingotekProfile class for module v7.x-7.00+');
 }
+
+/**
+ * Add a language column containing the site's default language to the Bean module's table
+ * to ensure compatibility.
+ */
+function lingotek_update_7701(&$sandbox) {
+  $module = 'bean';
+  $table = 'bean';
+  $output = t('Bean module not installed. No action taken.');
+  if (module_exists('bean')) {
+    if (!db_field_exists('bean', 'language')) {
+      $schema = drupal_get_schema_unprocessed($module, $table);
+      $schema['bean']['fields']['language'] = array(
+        'type' => 'char',
+        'length' => 8,
+        'not null' => TRUE,
+        'default' => language_default()->language,
+        'description' => 'Language used for third party translation',
+      );
+
+      db_add_field('bean', 'language', $schema['bean']['fields']['language']);
+      $output = t('Column @column was created for Bean module support.', array('@column' => 'Language'));
+    }
+    else {
+      $output = t('The @column column already exists. No action taken.', array('@column' => 'Language'));
+    }
+  }
+
+  return $output;
+}
