@@ -129,3 +129,11 @@ lingotek.profile.*:
     project:
       type: string
       label: 'TM Project'
+
+language.entity.*.third_party.lingotek:
+  type: mapping
+  label: 'Lingotek locale mapping'
+  mapping:
+    locale:
+      type: string
+      label: 'Lingotek locale code'

@@ -12,6 +12,8 @@ use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\language\ConfigurableLanguageInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 
 /**
@@ -311,11 +313,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
+      $drupal_language = $this->getConfigurableLanguageForLocale($locale);
       $source_status = $this->getSourceStatus($entity);
-      $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
+      $current_status = $this->getTargetStatus($entity, $drupal_language->id());
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
-          $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
+          $this->setTargetStatus($entity, $drupal_language->id(), Lingotek::STATUS_PENDING);
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
           if ($source_status == Lingotek::STATUS_IMPORTING) {
@@ -340,7 +343,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
         if ($langcode !== $entity_langcode) {
           $source_status = $this->getSourceStatus($entity);
-          $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
+          $current_status = $this->getTargetStatus($entity, $langcode);
           if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED  && $current_status !== Lingotek::STATUS_READY) {
             if ($this->lingotek->addTarget($document_id, $locale)) {
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
@@ -391,7 +394,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if ($data) {
         $transaction = db_transaction();
         try {
-          $langcode = LingotekLocale::convertLingotek2Drupal($locale);
+          $drupal_language = $this->getConfigurableLanguageForLocale($locale);
+          $langcode = $drupal_language->id();
           $this->saveTargetData($entity, $langcode, $data);
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
@@ -506,6 +510,24 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $lock->wait(__FUNCTION__);
     }
     return $entity;
+  }
+
+  /**
+   * @param $locale
+   * @return \Drupal\language\ConfigurableLanguageInterface|null
+   */
+  protected function getConfigurableLanguageForLocale($locale) {
+    $drupal_language = NULL;
+    $id = \Drupal::entityQuery('configurable_language')
+      ->condition('third_party_settings.lingotek.locale', $locale)
+      ->execute();
+    if (!empty($id)) {
+      $drupal_language = ConfigurableLanguage::load(reset($id));
+    }
+    else{
+      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
+    }
+    return $drupal_language;
   }
 
 }

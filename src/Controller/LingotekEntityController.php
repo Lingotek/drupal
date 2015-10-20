@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\Core\Url;
 use Drupal\lingotek\LingotekLocale;
@@ -37,7 +38,9 @@ class LingotekEntityController extends LingotekControllerBase {
       // TODO: log warning
       return $this->translationsPageRedirect($entity);
     }
-    if ($translation_service->checkTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale)) === Lingotek::STATUS_READY) {
+
+    $drupal_language = $this->getConfigurableLanguageForLocale($locale);
+    if ($translation_service->checkTargetStatus($entity, $drupal_language->id()) === Lingotek::STATUS_READY) {
       drupal_set_message(t('The @locale translation for @entity_type #@entity_id is ready for download.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     } else {
       drupal_set_message(t('The @locale translation for @entity_type #@entity_id is still in progress.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
@@ -57,7 +60,7 @@ class LingotekEntityController extends LingotekControllerBase {
     if ($translation_service->addTarget($entity, $locale)) {
       drupal_set_message(t("Locale '@locale' was added as a translation target for @entity_type #@entity_id.", array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
     } else {
-      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type #@entity_id.", array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())), 'warning');
+      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type #@entity_id.", array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id(), '@locale' => $locale)), 'warning');
     }
     return $this->translationsPageRedirect($entity);
   }
@@ -100,5 +103,25 @@ class LingotekEntityController extends LingotekControllerBase {
     $uri = Url::fromRoute("entity.$entity_type_id.content_translation_overview", [$entity_type_id => $entity->id()]);
     return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
   }
+
+
+  /**
+   * @param $locale
+   * @return \Drupal\language\ConfigurableLanguageInterface|null
+   */
+  protected function getConfigurableLanguageForLocale($locale) {
+    $drupal_language = NULL;
+    $id = \Drupal::entityQuery('configurable_language')
+      ->condition('third_party_settings.lingotek.locale', $locale)
+      ->execute();
+    if (!empty($id)) {
+      $drupal_language = ConfigurableLanguage::load(reset($id));
+    }
+    else{
+      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
+    }
+    return $drupal_language;
+  }
+
 
 }

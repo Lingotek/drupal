@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\LanguageInterface;
@@ -63,14 +64,15 @@ class LingotekDashboardController extends LingotekControllerBase {
         if (isset($language, $lingotek_locale, $direction)) {
           $rtl = ($direction == 'RTL') ? LanguageInterface::DIRECTION_RTL : LanguageInterface::DIRECTION_LTR;
           $langcode = LingotekLocale::generateLingotek2Drupal($lingotek_locale);
-          $l = ConfigurableLanguage::create(array(
+          $language = ConfigurableLanguage::create(array(
                       'id' => $langcode,
                       'label' => $language,
                       'native' => $native,
                       'direction' => $rtl,
           ));
-          $l->save();
-          $response += $this->getLanguageReport($langcode);
+          $language->setThirdPartySetting('lingotek', 'locale', $lingotek_locale);
+          $language->save();
+          $response += $this->getLanguageReport($language);
           $http_status_code = 200;
         }
 
@@ -110,11 +112,18 @@ class LingotekDashboardController extends LingotekControllerBase {
     $target_totals = array();
 
     // If we get a parameter, only return that language. Otherwise return all languages.
-    foreach ($available_languages as $l) {
-      $lingotek_locale = LingotekLocale::convertDrupal2Lingotek($l->getId());
+    foreach ($available_languages as $language) {
+      // We check if we have a saved lingotek locale.
+      // If not, we default to the id conversion.
+      // Language manager returns Language objects, not ConfigurableLanguage,
+      // because the language manager is initiated before the config system, and
+      // loads the configuration bypassing it.
+      $configurable_language = ConfigurableLanguage::load($language->getId());
+      $lingotek_locale = $configurable_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($configurable_language->getId()));
+
       if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $lingotek_locale)
         continue;
-      $language_report = $this->getLanguageReport($l->getId());
+      $language_report = $this->getLanguageReport($configurable_language);
       if ($lingotek_locale_requested == $lingotek_locale) {
         $response = $language_report;
       } else {
@@ -160,8 +169,9 @@ class LingotekDashboardController extends LingotekControllerBase {
     );
   }
 
-  protected function getLanguageReport($langcode, $active = 1, $enabled = 1) {
-    $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+  protected function getLanguageReport(ConfigurableLanguageInterface $language, $active = 1, $enabled = 1) {
+    $langcode = $language->id();
+    $locale = $language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($language->getId()));
     $types = $this->getEnabledTypes();
 
     $stat = array(
