@@ -20,7 +20,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['node'];
+  public static $modules = ['block', 'node'];
 
   /**
    * @var NodeInterface
@@ -110,6 +110,23 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_ES');
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_ES' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+  }
+
+  public function testAddContentLinkPresent() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Place the actions and title block.
+    $this->drupalPlaceBlock('local_actions_block');
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    // There should be a link for adding content.
+    $this->clickLink('Add content');
+
+    // And we should have been redirected to the article form.
+    $this->assertUrl(Url::fromRoute('node.add', ['node_type' => 'article']));
   }
 
 }
