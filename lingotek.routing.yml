@@ -30,6 +30,14 @@ lingotek.setup_account:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.setup_account_handshake:
+  path: '/admin/lingotek/setup/account/handshake'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekSetupController::handshake'
+    _title: 'Lingotek Account Info'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.setup_community:
   path: '/admin/lingotek/setup/community'
   defaults:

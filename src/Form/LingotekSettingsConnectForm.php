@@ -31,7 +31,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     $sandbox_host = $this->lingotek->get('account.sandbox_host');
     $auth_path = $this->lingotek->get('account.authorize_path');
     $id = $this->lingotek->get('account.default_client_id');
-    $return_uri = new Url('lingotek.setup_account', array('success' => 'true', 'prod' => 'prod'), array('absolute' => TRUE));
+    $return_uri = new Url('lingotek.setup_account_handshake', array('success' => 'true', 'prod' => 'prod'), array('absolute' => TRUE));
     $login = $this->lingotek->get('account.type');
 
     $lingotek_register_link = $host . '/' . 'lingopoint/portal/requestAccount.action?client_id=' . $id . '&response_type=token&app=' . urlencode($return_uri->toString());
@@ -71,7 +71,6 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
       '#url' => Url::fromUri($lingotek_sandbox_link),
     ];
 
-    $form['#attached']['library'][] = 'lingotek/lingotek.connect';
     $form['#attached']['library'][] = 'lingotek/lingotek.icons';
 
     return $form;

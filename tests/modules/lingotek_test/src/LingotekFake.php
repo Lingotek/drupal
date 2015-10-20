@@ -53,6 +53,9 @@ class LingotekFake implements LingotekInterface {
           $path = substr($path, 1);
           $path .= '/';
         }
+        if (\Drupal::state()->get('authorize_no_redirect', FALSE)) {
+          return $path . 'lingofake/authorize_no_redirect';
+        }
         return $path . 'lingofake/authorize';
       case 'account.default_client_id':
         return 'test_default_client_id';

@@ -22,6 +22,14 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($this->setupCompleted()) {
       return $this->getLingotekForm('LingotekSettingsAccountForm');
     }
+    $var = $this->request;
+    return array(
+      '#type' => 'markup',
+      'markup' => $this->getLingotekForm('LingotekSettingsConnectForm'),
+    );
+  }
+
+  public function handshake() {
     if ($this->receivedToken()) {
       $this->saveToken($this->receivedToken());
       $production = $this->request->get('prod');
@@ -36,15 +44,18 @@ class LingotekSetupController extends LingotekControllerBase {
       $account_info = $this->fetchAccountInfo();
       $this->saveAccountInfo($account_info);
       drupal_set_message($this->t('Your account settings have been saved.'));
-      
+
       // No need to show the username and token if everything worked correctly
       // Just go to the community page
       return $this->redirect('lingotek.setup_community');
     }
-    return array(
-      '#type' => 'markup',
-      'markup' => $this->getLingotekForm('LingotekSettingsConnectForm'),
-    );
+    else {
+      return array(
+        '#type' => 'markup',
+        '#markup' => $this->t('Connecting... Please wait to be redirected'),
+        '#attached' => ['library' => ['lingotek/lingotek.connect']],
+      );
+    }
   }
 
   public function communityPage() {

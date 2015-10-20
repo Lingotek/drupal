@@ -4,3 +4,10 @@ lingotek_test.fake_authorize:
     _controller: '\Drupal\lingotek_test\Controller\FakeAuthorizationController::authorize'
   requirements:
     _permission: 'administer lingotek'
+
+lingotek_test.fake_authorize_no_redirect:
+  path: '/lingofake/authorize_no_redirect'
+  defaults:
+    _controller: '\Drupal\lingotek_test\Controller\FakeAuthorizationController::authorizeNoRedirect'
+  requirements:
+    _permission: 'administer lingotek'

@@ -59,4 +59,20 @@ class LingotekAccountTest extends WebTestBase {
     $this->assertLink('Connect Lingotek Account');
   }
 
+  public function testHandshakePage() {
+    // We avoid the redirect so we can see where the user will land for some
+    // seconds.
+    \Drupal::state()->set('authorize_no_redirect', TRUE);
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+    // Try to navigate to the Dashboard page, and assert we are redirected.
+    $this->drupalGet('admin/lingotek/setup/account');
+
+      // Fake the connection to an account in Lingotek.
+    $this->clickLink('Connect Lingotek Account');
+    // Our fake backend generates a token, returns to the site and waits for the
+    // redirect.
+    $this->assertText('Connecting... Please wait to be redirected');
+  }
 }
