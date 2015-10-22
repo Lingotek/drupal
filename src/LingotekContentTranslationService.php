@@ -335,6 +335,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function requestTranslations(ContentEntityInterface &$entity) {
+    $languages = [];
     if ($document_id = $this->getDocumentId($entity)) {
       $target_languages = $this->languageManager->getLanguages();
       $entity_langcode = $entity->getUntranslated()->language()->getId();
@@ -346,6 +347,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $current_status = $this->getTargetStatus($entity, $langcode);
           if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED  && $current_status !== Lingotek::STATUS_READY) {
             if ($this->lingotek->addTarget($document_id, $locale)) {
+              $languages[] = $langcode;
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
               // If the status was "Importing", and the target was added
               // successfully, we can ensure that the content is current now.
@@ -357,6 +359,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
     }
+    return $languages;
   }
 
   /**

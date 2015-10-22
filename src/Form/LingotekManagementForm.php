@@ -590,15 +590,17 @@ class LingotekManagementForm extends FormBase {
    *   The entity.
    */
   public function requestTranslations(ContentEntityInterface $entity, $language, &$context) {
+    $result = NULL;
     $context['message'] = $this->t('Requesting translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->requestTranslations($entity);
+      $result = $this->translationService->requestTranslations($entity);
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
+    return $result;
   }
 
   /**

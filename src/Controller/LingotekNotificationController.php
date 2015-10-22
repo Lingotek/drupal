@@ -2,8 +2,10 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekLocale;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -60,8 +62,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         $profile = LingotekProfile::load($profile_id);
         if ($entity && $profile->hasAutomaticDownload()) {
           $http_status_code = Response::HTTP_OK;
-          $result['set_target_status'] = $translation_service->setTargetStatus($entity, $request->get('locale'), Lingotek::STATUS_READY);
-          $result['download'] = $translation_service->download($entity, $request->get('locale'));
+          $langcode = $this->getConfigurableLanguageForLocale($request->get('locale'))->id();
+          $result['set_target_status'] = $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+          $result['download'] = $translation_service->downloadDocument($entity, $request->get('locale'));
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
           $messages[] = "Document not found.";
@@ -87,6 +90,24 @@ class LingotekNotificationController extends LingotekControllerBase {
     );
 
     return JsonResponse::create($response, $http_status_code);
+  }
+
+  /**
+   * @param $locale
+   * @return \Drupal\language\ConfigurableLanguageInterface|null
+   */
+  protected function getConfigurableLanguageForLocale($locale) {
+    $drupal_language = NULL;
+    $id = \Drupal::entityQuery('configurable_language')
+      ->condition('third_party_settings.lingotek.locale', $locale)
+      ->execute();
+    if (!empty($id)) {
+      $drupal_language = ConfigurableLanguage::load(reset($id));
+    }
+    else{
+      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
+    }
+    return $drupal_language;
   }
 
 }
