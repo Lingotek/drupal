@@ -9,6 +9,7 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
@@ -373,6 +374,10 @@ class LingotekManagementForm extends FormBase {
         $this->createDisassociateBatch($values);
         $processed = TRUE;
         break;
+      case 'delete_nodes':
+        $this->redirectToDeleteMultipleNodesForm($values, $form_state);
+        $processed = TRUE;
+        break;
     }
     if (!$processed) {
       if (0 === strpos($operation, 'request_translation:')) {
@@ -522,6 +527,24 @@ class LingotekManagementForm extends FormBase {
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
+  }
+
+  /**
+   * Redirect to delete content form.
+   *
+   * @param array $values
+   *   Array of ids to delete.
+   */
+  protected function redirectToDeleteMultipleNodesForm($values, FormStateInterface $form_state) {
+    $entityInfo = [];
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
+    foreach ($entities as $entity) {
+      /** @var ContentEntityInterface $entity */
+      $language = $entity->getUntranslated()->language();
+      $entityInfo[$entity->id()] = [$language->getId() => $language->getId()];
+    }
+    $this->tempStoreFactory->get($this->entityTypeId . '_multiple_delete_confirm')->set($this->currentUser()->id(), $entityInfo);
+    $form_state->setRedirect($this->entityTypeId . '.multiple_delete_confirm', [], ['query' => $this->getDestinationArray()]);
   }
 
   /**
@@ -871,6 +894,13 @@ class LingotekManagementForm extends FormBase {
       $operations[(string)$this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() .')']);
       $operations[(string)$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
     }
+
+    // We add the delete operation in nodes and comments, as we have those
+    // operations in core.
+    if ($this->entityTypeId === 'node') {
+      $operations['delete_nodes'] = $this->t('Delete content');
+    }
+
     return $operations;
   }
 
