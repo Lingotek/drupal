@@ -1454,7 +1454,7 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
         'length' => 8,
         'not null' => TRUE,
         'default' => language_default()->language,
-        'description' => 'Field added by Lingotek',
+        'description' => 'Language used for third party translation',
       );
 
       db_add_field('bean', 'language', $schema['bean']['fields']['language']);
@@ -2512,6 +2512,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
       'title' => t('Prepare taxonomy terms with custom fields'),
       'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang.', array('@lang' => language_default('name'))),
+    );
+  }
+
+  if (module_exists('bean') && variable_get('lingotek_translate_beans', FALSE)) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_beans'] = array(
+      'title' => t('Prepare bean fields'),
+      'desc' => t('Sets all <i>language neutral</i> bean fields to be @lang.', array('@lang' => language_default('name'))),
     );
   }
 

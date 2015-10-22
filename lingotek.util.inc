@@ -1051,6 +1051,10 @@ function lingotek_cleanup_field_languages_for_taxonomy_terms() {
   lingotek_cleanup_field_languages('taxonomy_term');
 }
 
+function lingotek_cleanup_field_languages_for_beans() {
+  lingotek_cleanup_field_languages('bean');
+}
+
 /**
  * Report all Lingotek translations to the Entity Translation module
  */

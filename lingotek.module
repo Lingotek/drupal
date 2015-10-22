@@ -1366,9 +1366,8 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
         $entity->language = LANGUAGE_NONE;
       }
     }
-    elseif($entity_type == 'bean') {
-      $entity->language = language_default()->language;
-    }
+    // Removed setting bean's language to default_language() because it is now 
+    // taken care of in the 'Translate beans' preference and update 7701
   }
   return $entity;
 }
