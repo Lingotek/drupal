@@ -13,6 +13,7 @@ lingotek.dashboard_endpoint:
     _title: 'Lingotek Dashboard Endpoint'
   requirements:
     _permission: 'administer lingotek'
+    _method: 'GET|POST|DELETE'
 
 lingotek.notify:
   path: '/lingotek/notify'

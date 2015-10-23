@@ -7,10 +7,9 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\entity_reference\ConfigurableEntityReferenceItem;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\simpletest\WebTestBase;
 
 /**
  * Tests the Lingotek dashboard.
@@ -189,6 +188,37 @@ class LingotekDashboardTest extends LingotekTestBase {
     $returned_languages = array_keys($response['languages']);
     $this->assertIdentical(['en_US', 'es_AR', 'es_ES'], $returned_languages);
 
+  }
+
+  /**
+   * Tests that we can delete languages in the dashboard.
+   */
+  public function testDeleteLanguage() {
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('es')->save();
+
+    /** @var LanguageManagerInterface $language_manager */
+    $language_manager = \Drupal::service('language_manager');
+    $languages = $language_manager->getLanguages();
+    $this->assertIdentical(2, count($languages));
+
+    $response = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+      CURLOPT_CUSTOMREQUEST => 'DELETE',
+      CURLOPT_POSTFIELDS => 'code=es_ES',
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+        'Content-Type: application/x-www-form-urlencoded',
+      ),
+    ));
+    $response = json_decode($response, TRUE);
+    $this->assertIdentical('DELETE', $response['method']);
+    $this->assertIdentical('es', $response['language']);
+    $this->assertIdentical('Language removed: es_ES', $response['message']);
+
+    $language_manager->reset();
+    $languages = $language_manager->getLanguages();
+    $this->assertIdentical(1, count($languages));
   }
 
 }
