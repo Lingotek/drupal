@@ -929,7 +929,7 @@ class LingotekManagementForm extends FormBase {
         ['doc_id' => $this->translationService->getDocumentId($entity)],
         ['query' => $this->getDestinationArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED) {
+    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED) {
       if ($doc_id = $this->translationService->getDocumentId($entity)) {
         $url = Url::fromRoute('lingotek.entity.update',
           ['doc_id' => $doc_id],

@@ -445,8 +445,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     if ($this->lingotekConfiguration->mustDeleteRemoteAfterDisassociation()) {
       $this->deleteDocument($entity);
     }
+
+    $doc_id = $this->getDocumentId($entity);
     $entity->lingotek_translation_status = NULL;
     $entity->lingotek_document_id = NULL;
+
+    \Drupal::database()->delete('lingotek_content_metadata')
+      ->condition('document_id', $doc_id)
+      ->condition('entity_type', $entity->getEntityTypeId())
+      ->condition('entity_id', $entity->id())
+      ->execute();
+
     $entity->save();
   }
 
