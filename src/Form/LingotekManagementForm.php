@@ -950,7 +950,8 @@ class LingotekManagementForm extends FormBase {
           ],
           ['query' => $this->getDestinationArray()]);
     }
-    if ($target_status == Lingotek::STATUS_PENDING) {
+    if ($target_status == Lingotek::STATUS_PENDING ||
+        $target_status == Lingotek::STATUS_EDITED) {
       $url = Url::fromRoute('lingotek.entity.check_target',
         [
           'doc_id' => $document_id,

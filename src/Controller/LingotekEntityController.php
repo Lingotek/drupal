@@ -69,7 +69,9 @@ class LingotekEntityController extends LingotekControllerBase {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
-    $translation_service->uploadDocument($entity);
+    if ($translation_service->uploadDocument($entity)) {
+      drupal_set_message(t('@entity_type #@entity_id has been uploaded.', ['@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id()]));
+    }
     return $this->translationsPageRedirect($entity);
   }
 
@@ -77,7 +79,9 @@ class LingotekEntityController extends LingotekControllerBase {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $entity = $translation_service->loadByDocumentId($doc_id);
-    $translation_service->updateDocument($entity);
+    if ($translation_service->updateDocument($entity)) {
+      drupal_set_message(t('@entity_type #@entity_id has been updated.', ['@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id()]));
+    }
     return $this->translationsPageRedirect($entity);
   }
 

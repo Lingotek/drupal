@@ -83,6 +83,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('English');
+    $this->assertText('node #1 has been uploaded.');
 
     // There is a link for checking status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
@@ -127,6 +128,41 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // And we should have been redirected to the article form.
     $this->assertUrl(Url::fromRoute('node.add', ['node_type' => 'article']));
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testEditedNodeTranslationUsingLinks() {
+    // We need a node with translations first.
+    $this->testNodeTranslationUsingLinks();
+
+    // Edit the node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $edit['body[0][value]'] = 'Llamas are very cool EDITED';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    // Reupload the content.
+    $this->clickLink('English');
+    $this->assertText('node #1 has been updated.');
+
+    // Recheck status.
+    $this->clickLink('English');
+    $this->assertText('The import for node #1 is complete.');
+
+    // Request the translation after having been edited.
+    $this->clickLink('ES');
+    $this->assertText("The es_ES translation for node #1 is ready for download.");
+
+    // Download the translation.
+    $this->clickLink('ES');
+    $this->assertText('The translation of node #1 into es_ES has been downloaded.');
   }
 
 }

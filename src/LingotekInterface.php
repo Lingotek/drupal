@@ -21,6 +21,8 @@ interface LingotekInterface {
   public function setProjectCallBackUrl($project_id, $callback_url);
 
   /**
+   * Uploads a document to the Lingotek service.
+   *
    * @param string $title
    *   The title of the document as it will be seen in the TMS.
    * @param $content
@@ -33,6 +35,18 @@ interface LingotekInterface {
    * @return mixed
    */
   public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL);
+
+  /**
+   * Updates a document in the Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id to update.
+   * @param $content
+   *   The content of the document
+   *
+   * @return boolean
+   */
+  public function updateDocument($doc_id, $content);
 
   public function documentImported($doc_id);
   public function addTarget($doc_id, $locale);

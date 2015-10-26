@@ -163,6 +163,12 @@ class LingotekFake implements LingotekInterface {
     return 'dummy-document-hash-id';
   }
 
+  public function updateDocument($doc_id, $content) {
+    \Drupal::state()->set('lingotek.uploaded_content', $content);
+    // Our document is always imported correctly.
+    return TRUE;
+  }
+
   public function documentImported($doc_id) {
     // Our document is always imported correctly.
     return TRUE;

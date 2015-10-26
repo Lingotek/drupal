@@ -142,6 +142,9 @@ class Lingotek implements LingotekInterface {
     $this->config->set($key, $value)->save();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL) {
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
@@ -171,6 +174,9 @@ class Lingotek implements LingotekInterface {
     return $response;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function updateDocument($doc_id, $content) {
     $args = array(
       'format' => 'JSON',
