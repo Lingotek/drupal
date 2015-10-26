@@ -34,8 +34,9 @@ class LingotekApiUnitTest extends UnitTestCase {
     $this->client = $this->getMockBuilder('\Drupal\lingotek\Remote\LingotekHttpInterface')
       ->disableOriginalConstructor()
       ->getMock();
+    $logger = $this->getMockBuilder('\Psr\Log\LoggerInterface')->getMock();
 
-    $this->lingotek_api = new LingotekApi($this->client);
+    $this->lingotek_api = new LingotekApi($this->client, $logger);
   }
 
 
