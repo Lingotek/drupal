@@ -44,10 +44,11 @@ class LingotekNotificationController extends LingotekControllerBase {
         $profile_id = $entity->lingotek_profile->target_id;
         /** @var LingotekProfile $profile */
         $profile = LingotekProfile::load($profile_id);
-        if ($entity && $profile->hasAutomaticDownload()) {
+        if ($entity) {
           $http_status_code = Response::HTTP_OK;
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-          $result['request_translations'] = $translation_service->requestTranslations($entity);
+          $result['request_translations'] = ($profile->hasAutomaticUpload()) ?
+             $translation_service->requestTranslations($entity) : [];
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
         }
@@ -60,11 +61,13 @@ class LingotekNotificationController extends LingotekControllerBase {
         $profile_id = $entity->lingotek_profile->target_id;
         /** @var LingotekProfile $profile */
         $profile = LingotekProfile::load($profile_id);
-        if ($entity && $profile->hasAutomaticDownload()) {
+        if ($entity) {
           $http_status_code = Response::HTTP_OK;
-          $langcode = $this->getConfigurableLanguageForLocale($request->get('locale'))->id();
+          $locale = $request->get('locale');
+          $langcode = $this->getConfigurableLanguageForLocale($locale)->id();
           $result['set_target_status'] = $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-          $result['download'] = $translation_service->downloadDocument($entity, $request->get('locale'));
+          $result['download'] = $profile->hasAutomaticDownload() ?
+            $translation_service->downloadDocument($entity, $locale) : FALSE;
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;
           $messages[] = "Document not found.";

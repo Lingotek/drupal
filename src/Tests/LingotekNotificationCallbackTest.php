@@ -63,7 +63,7 @@ class LingotekNotificationCallbackTest extends LingotekTestBase {
   /**
    * Tests that a node can be translated using the links on the management page.
    */
-  public function testNodeTranslationUsingLinks() {
+  public function testAutomatedNotificationNodeTranslation() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -125,6 +125,7 @@ class LingotekNotificationCallbackTest extends LingotekTestBase {
     ]]), 'application/json', []);
     $response = json_decode($request, true);
     $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
 
     // Go to the bulk node management page.
     $this->drupalGet('admin/lingotek/manage/node');
@@ -140,6 +141,100 @@ class LingotekNotificationCallbackTest extends LingotekTestBase {
     // Go to the bulk node management page.
     $this->drupalGet('admin/lingotek/manage/node');
 
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testManualNotificationNodeTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    /** @var NodeInterface $node */
+    $node = Node::load(1);
+    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is edited, but not auto-uploaded.
+    $this->assertIdentical(Lingotek::STATUS_EDITED, $content_translation_service->getSourceStatus($node));
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+    // Clicking English must init the upload of content.
+    $this->clickLink('English');
+
+    // Simulate the notification of content successfully uploaded.
+    $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
+      'project_id' => 'test_project',
+      'document_id' => 'dummy-document-hash-id',
+      'complete' => 'false',
+      'type' => 'document_uploaded',
+      'progress' => '0',
+    ]]), 'application/json', []);
+    $response = json_decode($request, true);
+
+    // Translations are not requested.
+    $this->assertIdentical([], $response['result']['request_translations'], 'No translations has been requested after notification automatically.');
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $node_storage = $this->container->get('entity.manager')->getStorage('node');
+    // The node cache needs to be reset before reload.
+    $node_storage->resetCache(array(1));
+    $node = $node_storage->load(1);
+
+    // Assert the content is imported.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+    // Assert the target is ready to be requested.
+    $this->assertIdentical(Lingotek::STATUS_REQUEST, $content_translation_service->getTargetStatus($node, 'es'));
+
+    // Go to the bulk node management page and request a translation.
+    $this->drupalGet('admin/lingotek/manage/node');
+    $this->clickLink('ES');
+
+    // Simulate the notification of content successfully translated.
+    $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
+      'project_id' => 'test_project',
+      'document_id' => 'dummy-document-hash-id',
+      'locale_code' => 'es-ES',
+      'locale' => 'es_ES',
+      'complete' => 'true',
+      'type' => 'target',
+      'progress' => '100',
+    ]]), 'application/json', []);
+    $response = json_decode($request, true);
+    $this->verbose($request);
+    $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $node_storage = $this->container->get('entity.manager')->getStorage('node');
+    // The node cache needs to be reset before reload.
+    $node_storage->resetCache(array(1));
+    $node = $node_storage->load(1);
+
+    // Assert the target is ready.
+    $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+
+    // Go to the bulk node management page and download them.
+    $this->drupalGet('admin/lingotek/manage/node');
+    $this->clickLink('ES');
+
+    // The node cache needs to be reset before reload.
+    $node_storage->resetCache(array(1));
+    $node = $node_storage->load(1);
+    // Assert the target is current.
+    $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
   }
 
 }
