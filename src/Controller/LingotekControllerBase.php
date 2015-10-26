@@ -12,6 +12,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Routing\UrlGeneratorTrait;
 use Drupal\lingotek\LingotekSetupTrait;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -55,20 +56,25 @@ abstract class LingotekControllerBase extends ControllerBase {
    *
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
    */
-  public function __construct(Request $request, LingotekInterface $lingotek, FormBuilderInterface $form_builder) {
+  public function __construct(Request $request, LingotekInterface $lingotek, FormBuilderInterface $form_builder, LoggerInterface $logger) {
     $this->request = $request;
     $this->lingotek = $lingotek;
     $this->formBuilder = $form_builder;
+    $this->logger = $logger;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $request_stack = $container->get('request_stack');
     return new static(
-        $request_stack->getCurrentRequest(), $container->get('lingotek'), $container->get('form_builder')
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('lingotek'),
+      $container->get('form_builder'),
+      $container->get('logger.channel.lingotek')
     );
   }
 

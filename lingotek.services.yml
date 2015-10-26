@@ -7,7 +7,7 @@ services:
     arguments: ['@http_client', '@config.factory']
   lingotek.api:
     class: Drupal\lingotek\Remote\LingotekApi
-    arguments: ['@lingotek.http_client']
+    arguments: ['@lingotek.http_client', '@logger.channel.lingotek']
   lingotek.configuration:
     class: Drupal\lingotek\LingotekConfigurationService
   lingotek.content_translation:
@@ -21,3 +21,6 @@ services:
     arguments: ['@entity.manager']
     tags:
       - { name: event_subscriber }
+  logger.channel.lingotek:
+    parent: logger.channel_base
+    arguments: ['lingotek']

@@ -44,6 +44,7 @@ class LingotekSetupController extends LingotekControllerBase {
       $account_info = $this->fetchAccountInfo();
       $this->saveAccountInfo($account_info);
       drupal_set_message($this->t('Your account settings have been saved.'));
+      $this->logger->notice('Account connected to Lingotek.');
 
       // No need to show the username and token if everything worked correctly
       // Just go to the community page
