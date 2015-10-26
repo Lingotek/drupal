@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -811,6 +812,16 @@ class LingotekManagementForm extends FormBase {
           ];
         }
       }
+      $languages = $this->languageManager->getLanguages();
+      array_walk($languages, function($language, $langcode) use ($entity, &$translations) {
+        if (!isset($translations[$langcode]) && $langcode !== $entity->getUntranslated()->language()->getId()) {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_REQUEST,
+            'url' => $this->getTargetActionUrl($entity, Lingotek::STATUS_REQUEST, $langcode),
+            'new_window' => false,
+          ];
+        }
+      });
     }
     return $this->formatTranslations($entity, $translations);
   }

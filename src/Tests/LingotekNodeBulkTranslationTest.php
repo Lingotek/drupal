@@ -165,4 +165,25 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('The translation of node #1 into es_ES has been downloaded.');
   }
 
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testAddingLanguageAllowsRequesting() {
+    // We need a node with translations first.
+    $this->testNodeTranslationUsingLinks();
+
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('ca')->save();
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // There is a link for requesting the Catalan translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->clickLink('CA');
+    $this->assertText("Locale 'ca_ES' was added as a translation target for node #1.");
+  }
+
 }
