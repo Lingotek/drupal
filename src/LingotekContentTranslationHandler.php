@@ -103,7 +103,7 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
       ->setDefaultValue(LanguageInterface::LANGCODE_NOT_SPECIFIED)
       ->setTranslatable(TRUE);
 
-    $definitions['lingotek_translation_status'] = BaseFieldDefinition::create('language_key_value')
+    $definitions['lingotek_translation_status'] = BaseFieldDefinition::create('lingotek_language_key_value')
       ->setLabel(t('Lingotek translation status'))
       ->setDescription(t('The status of the source in case of being the source translation, or the status of the translation.'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
