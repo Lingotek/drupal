@@ -159,6 +159,7 @@ class LingotekFake implements LingotekInterface {
   public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL) {
     // If the upload is successful, we must return a valid hash.
     \Drupal::state()->set('lingotek.uploaded_content', $content);
+    \Drupal::state()->set('lingotek.uploaded_locale', $locale);
     \Drupal::state()->set('lingotek.used_profile', $profile->id());
     return 'dummy-document-hash-id';
   }
@@ -175,6 +176,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function addTarget($doc_id, $locale) {
+    \Drupal::state()->set('lingotek.added_target_locale', $locale);
     // Added locale as target.
     return TRUE;
   }
@@ -185,6 +187,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function downloadDocument($doc_id, $locale) {
+    \Drupal::state()->set('lingotek.downloaded_locale', $locale);
     $type = \Drupal::state()->get('lingotek.uploaded_content_type', 'node');
     switch ($type) {
       case 'node':

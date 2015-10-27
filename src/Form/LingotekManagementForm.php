@@ -650,10 +650,15 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to download.
    */
-  public function requestTranslation(ContentEntityInterface $entity, $language, &$context) {
-    $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
+  public function requestTranslation(ContentEntityInterface $entity, $langcode, &$context) {
+    $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
+    $language = ConfigurableLanguage::load($langcode);
+    $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+    if ($language) {
+      $locale = $language->getThirdPartySetting('lingotek', 'locale', $locale);
+    }
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->addTarget($entity, LingotekLocale::convertDrupal2Lingotek($language));
+      $this->translationService->addTarget($entity, $locale);
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -670,10 +675,15 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to download.
    */
-  public function downloadTranslation(ContentEntityInterface $entity, $language, &$context) {
-    $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
+  public function downloadTranslation(ContentEntityInterface $entity, $langcode, &$context) {
+    $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
+    $language = ConfigurableLanguage::load($langcode);
+    $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+    if ($language) {
+      $locale = $language->getThirdPartySetting('lingotek', 'locale', $locale);
+    }
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($language));
+      $this->translationService->downloadDocument($entity, $locale);
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());

@@ -44,7 +44,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->createImageField('field_image', 'article');
 
     // Add a language.
-    ConfigurableLanguage::createFromLangcode('es')->save();
+    ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
@@ -102,6 +102,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertTrue(isset($data['body'][0]['value']));
     $this->assertEqual(1, count($data['field_image'][0]));
     $this->assertTrue(isset($data['field_image'][0]['alt']));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
@@ -118,19 +119,21 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Request translation.
     $this->clickLink('Request translation');
-    $this->assertText("Locale 'es_ES' was added as a translation target for node #1.");
+    $this->assertText("Locale 'es_MX' was added as a translation target for node #1.");
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check translation status.
     $this->clickLink('Check translation status');
-    $this->assertText('The es_ES translation for node #1 is ready for download.');
+    $this->assertText('The es_MX translation for node #1 is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_ES'), array('language' => ConfigurableLanguage::load('es')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_MX'), array('language' => ConfigurableLanguage::load('es')))->toString();
     $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');
-    $this->assertText('The translation of node #1 into es_ES has been downloaded.');
+    $this->assertText('The translation of node #1 into es_MX has been downloaded.');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // The content is translated and published.
     $this->clickLink('Las llamas son chulas');

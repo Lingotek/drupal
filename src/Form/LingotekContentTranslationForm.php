@@ -8,6 +8,7 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\Form\LingotekConfigFormBase;
@@ -55,7 +56,8 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $entity_langcode = $entity->language()->getId();
 
     foreach ($languages as $langcode => $language) {
-      $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+      $config_language = ConfigurableLanguage::load($langcode);
+      $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
 
       $option = array_shift($overview['#rows']);
       if ($source_language == $locale) {
@@ -141,7 +143,9 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $locales = array();
     foreach ($selected_langcodes as $langcode => $selected) {
       if ($selected) {
-        $locales[] = LingotekLocale::convertDrupal2Lingotek($langcode);
+        $language = ConfigurableLanguage::load($langcode);
+        $locale = $language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
+        $locales[] = $locale;
       }
     }
 
