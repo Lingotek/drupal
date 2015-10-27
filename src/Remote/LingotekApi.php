@@ -159,7 +159,7 @@ class LingotekApi implements LingotekApiInterface {
   public function getCommunities() {
     try {
       $this->logger->debug('Lingotek::getCommunities called.');
-      $response = $this->lingotekClient->get('/api/community?limit=50');
+      $response = $this->lingotekClient->get('/api/community', ['limit' => 100]);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get communities: ' . $e->getMessage());
