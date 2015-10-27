@@ -704,7 +704,12 @@ class LingotekManagementForm extends FormBase {
       $languages = $this->languageManager->getLanguages();
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $entity->language()->getId()) {
-          $this->translationService->downloadDocument($entity, LingotekLocale::convertDrupal2Lingotek($langcode));
+          $language = ConfigurableLanguage::load($langcode);
+          $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+          if ($language) {
+            $locale = $language->getThirdPartySetting('lingotek', 'locale', $locale);
+          }
+          $this->translationService->downloadDocument($entity, $locale);
         }
       }
     }
