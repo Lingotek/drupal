@@ -341,7 +341,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $entity_langcode = $entity->getUntranslated()->language()->getId();
 
       foreach ($target_languages as $langcode => $language) {
-        $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
+        $config_language = ConfigurableLanguage::load($langcode);
+        $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
         if ($langcode !== $entity_langcode) {
           $source_status = $this->getSourceStatus($entity);
           $current_status = $this->getTargetStatus($entity, $langcode);
