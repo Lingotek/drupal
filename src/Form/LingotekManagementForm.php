@@ -781,22 +781,23 @@ class LingotekManagementForm extends FormBase {
     }
   }
 
-  protected function getTargetStatusText($entity, $status) {
+  protected function getTargetStatusText($entity, $status, $langcode) {
+    $language = ConfigurableLanguage::load($langcode);
     switch ($status) {
       case Lingotek::STATUS_UNTRACKED:
-        return $this->t('No translation');
+        return $language->label() . ' - ' . $this->t('No translation');
       case Lingotek::STATUS_REQUEST:
-        return $this->t('Request translation');
+        return $language->label() . ' - ' . $this->t('Request translation');
       case Lingotek::STATUS_PENDING:
-        return $this->t('In-progress');
+        return $language->label() . ' - ' . $this->t('In-progress');
       case Lingotek::STATUS_READY:
-        return $this->t('Ready for Download');
+        return $language->label() . ' - ' . $this->t('Ready for Download');
       case Lingotek::STATUS_CURRENT:
-        return $this->t('Current');
+        return $language->label() . ' - ' . $this->t('Current');
       case Lingotek::STATUS_EDITED:
-        return $this->t('Not current');
+        return $language->label() . ' - ' . $this->t('Not current');
       default:
-        return ucfirst(strtolower($status));
+        return $language->label() . ' - ' . ucfirst(strtolower($status));
     }
   }
 
@@ -851,7 +852,7 @@ class LingotekManagementForm extends FormBase {
       $languages[] = [
         'language' => strtoupper($langcode),
         'status' => strtolower($data['status']),
-        'status_text' => $this->getTargetStatusText($entity, $data['status']),
+        'status_text' => $this->getTargetStatusText($entity, $data['status'], $langcode),
         'url' => $data['url'],
         'new_window' => $data['new_window']
       ];
