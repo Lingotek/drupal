@@ -108,19 +108,19 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     // The document should have been automatically uploaded, so let's check
     // the upload status.
     $this->clickLink('Check Upload Status');
-    $this->assertText('The import for taxonomy_term #1 is complete.');
+    $this->assertText('The import for taxonomy_term Llamas are cool is complete.');
 
     // Request translation.
     $this->clickLink('Request translation');
-    $this->assertText("Locale 'es_ES' was added as a translation target for taxonomy_term #1.");
+    $this->assertText("Locale 'es_ES' was added as a translation target for taxonomy_term Llamas are cool.");
 
     // Check translation status.
     $this->clickLink('Check translation status');
-    $this->assertText('The es_ES translation for taxonomy_term #1 is ready for download.');
+    $this->assertText('The es_ES translation for taxonomy_term Llamas are cool is ready for download.');
 
     // Download translation.
     $this->clickLink('Download completed translation');
-    $this->assertText('The translation of taxonomy_term #1 into es_ES has been downloaded.');
+    $this->assertText('The translation of taxonomy_term Llamas are cool into es_ES has been downloaded.');
 
     // The content is translated and published.
     $this->clickLink('Las llamas son chulas');

@@ -22,9 +22,9 @@ class LingotekEntityController extends LingotekControllerBase {
       return $this->translationsPageRedirect($entity);
     }
     if ($translation_service->checkSourceStatus($entity)) {
-      drupal_set_message(t('The import for @entity_type #@entity_id is complete.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
+      drupal_set_message(t('The import for @entity_type %title is complete.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())));
     } else {
-      drupal_set_message(t('The import for @entity_type #@entity_id is still pending.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
+      drupal_set_message(t('The import for @entity_type %title is still pending.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())));
     }
     return $this->translationsPageRedirect($entity);
   }
@@ -41,9 +41,9 @@ class LingotekEntityController extends LingotekControllerBase {
 
     $drupal_language = $this->getConfigurableLanguageForLocale($locale);
     if ($translation_service->checkTargetStatus($entity, $drupal_language->id()) === Lingotek::STATUS_READY) {
-      drupal_set_message(t('The @locale translation for @entity_type #@entity_id is ready for download.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
+      drupal_set_message(t('The @locale translation for @entity_type %title is ready for download.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())));
     } else {
-      drupal_set_message(t('The @locale translation for @entity_type #@entity_id is still in progress.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
+      drupal_set_message(t('The @locale translation for @entity_type %title is still in progress.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())));
     }
     return $this->translationsPageRedirect($entity);
   }
@@ -58,9 +58,9 @@ class LingotekEntityController extends LingotekControllerBase {
       return $this->translationsPageRedirect($entity);
     }
     if ($translation_service->addTarget($entity, $locale)) {
-      drupal_set_message(t("Locale '@locale' was added as a translation target for @entity_type #@entity_id.", array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id())));
+      drupal_set_message(t("Locale '@locale' was added as a translation target for @entity_type %title.", array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())));
     } else {
-      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type #@entity_id.", array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id(), '@locale' => $locale)), 'warning');
+      drupal_set_message(t("There was a problem adding '@locale' as a translation target for @entity_type %title.", array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale)), 'warning');
     }
     return $this->translationsPageRedirect($entity);
   }
@@ -70,7 +70,7 @@ class LingotekEntityController extends LingotekControllerBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($translation_service->uploadDocument($entity)) {
-      drupal_set_message(t('@entity_type #@entity_id has been uploaded.', ['@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id()]));
+      drupal_set_message(t('@entity_type %title has been uploaded.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
     }
     return $this->translationsPageRedirect($entity);
   }
@@ -80,7 +80,7 @@ class LingotekEntityController extends LingotekControllerBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $entity = $translation_service->loadByDocumentId($doc_id);
     if ($translation_service->updateDocument($entity)) {
-      drupal_set_message(t('@entity_type #@entity_id has been updated.', ['@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id()]));
+      drupal_set_message(t('@entity_type %title has been updated.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
     }
     return $this->translationsPageRedirect($entity);
   }
@@ -95,9 +95,9 @@ class LingotekEntityController extends LingotekControllerBase {
       return $this->translationsPageRedirect($entity);
     }
     if ($translation_service->downloadDocument($entity, $locale)) {
-      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale has been downloaded.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id(), '@locale' => $locale)));
+      drupal_set_message(t('The translation of @entity_type %title into @locale has been downloaded.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale)));
     } else {
-      drupal_set_message(t('The translation of @entity_type #@entity_id into @locale failed to download.', array('@entity_type' => $entity->getEntityTypeId(), '@entity_id' => $entity->id(), '@locale' => $locale)), 'error');
+      drupal_set_message(t('The translation of @entity_type %title into @locale failed to download.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale)), 'error');
     }
     return $this->translationsPageRedirect($entity);
   }

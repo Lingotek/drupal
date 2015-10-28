@@ -83,7 +83,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('English');
-    $this->assertText('node #1 has been uploaded.');
+    $this->assertText('Node Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
@@ -91,23 +91,23 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('English');
-    $this->assertText('The import for node #1 is complete.');
+    $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
-    $this->assertText("Locale 'es_MX' was added as a translation target for node #1.");
+    $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
-    $this->assertText('The es_MX translation for node #1 is ready for download.');
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
-    $this->assertText('The translation of node #1 into es_MX has been downloaded.');
+    $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
@@ -225,19 +225,19 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     // Reupload the content.
     $this->clickLink('English');
-    $this->assertText('node #1 has been updated.');
+    $this->assertText('Node Llamas are cool EDITED has been updated.');
 
     // Recheck status.
     $this->clickLink('English');
-    $this->assertText('The import for node #1 is complete.');
+    $this->assertText('The import for node Llamas are cool EDITED is complete.');
 
     // Request the translation after having been edited.
     $this->clickLink('ES');
-    $this->assertText("The es_MX translation for node #1 is ready for download.");
+    $this->assertText("The es_MX translation for node Llamas are cool EDITED is ready for download.");
 
     // Download the translation.
     $this->clickLink('ES');
-    $this->assertText('The translation of node #1 into es_MX has been downloaded.');
+    $this->assertText('The translation of node Llamas are cool EDITED into es_MX has been downloaded.');
   }
 
   /**
@@ -258,7 +258,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // There is a link for requesting the Catalan translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('CA');
-    $this->assertText("Locale 'ca_ES' was added as a translation target for node #1.");
+    $this->assertText("Locale 'ca_ES' was added as a translation target for node Llamas are cool.");
   }
 
 }

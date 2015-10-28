@@ -108,23 +108,23 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
 
     // Clicking English must init the upload of content.
     $this->clickLink('English');
-    $this->assertText('node #1 has been uploaded.');
+    $this->assertText('Node Llamas are cool has been uploaded.');
 
     // There is a link for checking status.
     $this->clickLink('English');
-    $this->assertText('The import for node #1 is complete.');
+    $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the Spanish translation.
     $this->clickLink('ES');
-    $this->assertText("Locale 'es_ES' was added as a translation target for node #1.");
+    $this->assertText("Locale 'es_ES' was added as a translation target for node Llamas are cool.");
 
     // Check status of the Spanish translation.
     $this->clickLink('ES');
-    $this->assertText('The es_ES translation for node #1 is ready for download.');
+    $this->assertText('The es_ES translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.
     $this->clickLink('ES');
-    $this->assertText('The translation of node #1 into es_ES has been downloaded.');
+    $this->assertText('The translation of node Llamas are cool into es_ES has been downloaded.');
   }
 
 }

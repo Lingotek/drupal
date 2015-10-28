@@ -115,16 +115,16 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // The document should have been automatically uploaded, so let's check
     // the upload status.
     $this->clickLink('Check Upload Status');
-    $this->assertText('The import for node #1 is complete.');
+    $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
     $this->clickLink('Request translation');
-    $this->assertText("Locale 'es_MX' was added as a translation target for node #1.");
+    $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check translation status.
     $this->clickLink('Check translation status');
-    $this->assertText('The es_MX translation for node #1 is ready for download.');
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
@@ -132,7 +132,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');
-    $this->assertText('The translation of node #1 into es_MX has been downloaded.');
+    $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // The content is translated and published.

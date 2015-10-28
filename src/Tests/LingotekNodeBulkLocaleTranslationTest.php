@@ -105,23 +105,23 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('English');
-    $this->assertText('The import for node #1 is complete.');
+    $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
-    $this->assertText("Locale 'es_AR' was added as a translation target for node #1.");
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
-    $this->assertText('The es_AR translation for node #1 is ready for download.');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
-    $this->assertText('The translation of node #1 into es_AR has been downloaded.');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
 
     // Now the link is to the workbench, and it opens in a new tab.
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_AR');
