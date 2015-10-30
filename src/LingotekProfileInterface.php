@@ -93,7 +93,6 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    */
   public function setVault($vault);
 
-
   /**
    * Gets the TM project of the profile.
    *
@@ -113,5 +112,25 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function setProject($project);
+
+  /**
+   * Gets the workflow of the profile.
+   *
+   * @return string
+   *   The workflow identifier, used to request translations. If 'default', the
+   *   default site workflow should be used.
+   */
+  public function getWorkflow();
+
+  /**
+   * Sets the workflow of the profile.
+   *
+   * @param string $workflow
+   *   The workflow identifier, used to request translations. If 'default', the
+   *   default site project should be used.
+   *
+   * @return $this
+   */
+  public function setWorkflow($workflow);
 
 }

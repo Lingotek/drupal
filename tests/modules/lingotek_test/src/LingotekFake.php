@@ -175,8 +175,9 @@ class LingotekFake implements LingotekInterface {
     return TRUE;
   }
 
-  public function addTarget($doc_id, $locale) {
+  public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
     \Drupal::state()->set('lingotek.added_target_locale', $locale);
+    \Drupal::state()->set('lingotek.used_profile', $profile->id());
     // Added locale as target.
     return TRUE;
   }

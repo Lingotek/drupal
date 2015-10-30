@@ -49,7 +49,21 @@ interface LingotekInterface {
   public function updateDocument($doc_id, $content);
 
   public function documentImported($doc_id);
-  public function addTarget($doc_id, $locale);
+
+  /**
+   * Requests a translation to the Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id to translate.
+   * @param string $locale
+   *   The Lingotek locale to request.
+   * @param \Drupal\lingotek\LingotekProfileInterface $profile
+   *   The profile being used.
+   *
+   * @return mixed
+   */
+  public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL);
+
   public function getDocumentStatus($doc_id);
   public function downloadDocument($doc_id, $locale);
 

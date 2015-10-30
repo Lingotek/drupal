@@ -90,6 +90,17 @@ class LingotekProfileFormBase extends EntityForm {
       '#default_value' => $this->entity->getProject(),
     );
 
+    $workflows = $this->config('lingotek.settings')->get('account.resources.workflow');
+    $default_workflow = $this->config('lingotek.settings')->get('default.workflow');
+
+    $form['workflow'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Default Workflow'),
+      '#options' => ['default' => 'Default ('. $workflows[$default_workflow] . ')'] + $workflows,
+      '#description' => $this->t('The default Workflow which would be used for translations.'),
+      '#default_value' => $this->entity->getWorkflow(),
+    );
+
     return $form;
   }
 

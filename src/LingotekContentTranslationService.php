@@ -317,7 +317,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $source_status = $this->getSourceStatus($entity);
       $current_status = $this->getTargetStatus($entity, $drupal_language->id());
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
-        if ($this->lingotek->addTarget($document_id, $locale)) {
+        if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity))) {
           $this->setTargetStatus($entity, $drupal_language->id(), Lingotek::STATUS_PENDING);
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
@@ -347,7 +347,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $source_status = $this->getSourceStatus($entity);
           $current_status = $this->getTargetStatus($entity, $langcode);
           if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED  && $current_status !== Lingotek::STATUS_READY) {
-            if ($this->lingotek->addTarget($document_id, $locale)) {
+            if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity))) {
               $languages[] = $langcode;
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
               // If the status was "Importing", and the target was added

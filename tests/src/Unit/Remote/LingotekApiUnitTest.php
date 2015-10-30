@@ -40,6 +40,28 @@ class LingotekApiUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::addTranslation
+   */
+  public function testAddTranslation() {
+    // Ensure that the workflow is set when it's need to be.
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation', ['locale_code' => 'es_ES', 'workflow_id' => 'my_workflow'])
+      ->will($this->returnValue($response));
+
+    $this->client->expects($this->at(1))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation', ['locale_code' => 'es_ES'])
+      ->will($this->returnValue($response));
+
+    $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow');
+    $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', NULL);
+  }
+
+  /**
    * @covers ::getCommunities
    */
   public function testGetCommunities() {

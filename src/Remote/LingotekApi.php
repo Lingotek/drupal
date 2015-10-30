@@ -123,10 +123,14 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
-  public function addTranslation($id, $locale) {
+  public function addTranslation($id, $locale, $workflow_id = NULL) {
     try {
       $this->logger->debug('Lingotek::addTranslation called with id ' . $id . ' and locale ' . $locale);
-      $response = $this->lingotekClient->post('/api/document/' . $id . '/translation', array('locale_code' => $locale));
+      $args = ['locale_code' => $locale];
+      if ($workflow_id) {
+        $args['workflow_id'] = $workflow_id;
+      }
+      $response = $this->lingotekClient->post('/api/document/' . $id . '/translation', $args);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());

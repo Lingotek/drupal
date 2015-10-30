@@ -129,6 +129,9 @@ lingotek.profile.*:
     project:
       type: string
       label: 'TM Project'
+    workflow:
+      type: string
+      label: 'TM Workflow'
 
 language.entity.*.third_party.lingotek:
   type: mapping

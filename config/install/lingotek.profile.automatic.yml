@@ -6,3 +6,4 @@ auto_upload: true
 auto_download: true
 vault: default
 project: default
+workflow: default

@@ -259,34 +259,34 @@ class LingotekUnitTest extends UnitTestCase {
   public function testUploadDocument() {
     $this->config->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['default.project', 'default_project'],['default.workflow', 'wf1'],['default.vault', 'default_vault']]));
+      ->will($this->returnValueMap([['default.project', 'default_project'],['default.vault', 'default_vault']]));
 
     // Vault id has the original value.
     $this->api->expects($this->at(0))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'my_test_project', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'my_test_project',
               'vault_id' => 'my_test_vault']);
 
     // Vault id has changed.
     $this->api->expects($this->at(1))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'another_test_project', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'another_test_project',
               'vault_id' => 'another_test_vault']);
 
     // If there is a profile with default vault, it must be replaced.
     $this->api->expects($this->at(2))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'default_project', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'default_project',
               'vault_id' => 'default_vault']);
 
     // If there is no profile, vault should not be included.
     $this->api->expects($this->at(3))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'format' => 'JSON', 'project_id' => 'default_project', 'workflow_id' => 'wf1',
+              'format' => 'JSON', 'project_id' => 'default_project',
              ]);
 
     // We upload with a profile that has a vault and a project.
@@ -304,6 +304,62 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload without a profile
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL);
+  }
+
+  /**
+   * @covers ::addTarget
+   */
+  public function testAddTarget() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode()')
+      ->willReturn('201');
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+
+    // Workflow id has the original value.
+    $this->api->expects($this->at(0))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', 'my_test_workflow')
+      ->will($this->returnValue($response));
+
+    // Workflow id has changed.
+    $this->api->expects($this->at(1))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', 'another_test_workflow')
+      ->will($this->returnValue($response));
+
+    // If there is a profile with default workflow, it must be replaced.
+    $this->api->expects($this->at(2))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', 'default_workflow')
+      ->will($this->returnValue($response));
+
+    // If there is no profile, workflow should not be included.
+    $this->api->expects($this->at(3))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', NULL)
+      ->will($this->returnValue($response));
+
+    // We upload with a profile that has a workflow.
+    $profile = new LingotekProfile(['id' => 'profile1', 'workflow' => 'my_test_workflow'], 'lingotek_profile');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+
+    // We upload with a profile that has another vault and another project.
+    $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'another_test_workflow'], 'lingotek_profile');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+
+    // We upload with a profile that has marked to use the default vault and project,
+    // so must be replaced.
+    $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'default'], 'lingotek_profile');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+
+    // We upload without a profile
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', NULL);
   }
 
 }

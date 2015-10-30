@@ -40,6 +40,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "auto_download",
  *     "vault",
  *     "project",
+ *     "workflow",
  *   },
  *   links = {
  *     "add-form" = "/admin/lingotek/settings/profile/add",
@@ -105,6 +106,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var string
    */
   protected $project = 'default';
+
+  /**
+   * Entities using this profile will use this workflow.
+   *
+   * @var string
+   */
+  protected $workflow = 'default';
 
   /**
    * {@inheritdoc}
@@ -188,6 +196,20 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getWorkflow() {
+    return $this->workflow;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setWorkflow($workflow) {
+    $this->workflow = $workflow;
+    return $this;
+  }
   // ToDo: Avoid deletion if this profile is being used.
 
 }

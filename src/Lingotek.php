@@ -151,7 +151,6 @@ class Lingotek implements LingotekInterface {
     $defaults = array(
       'format' => 'JSON',
       'project_id' => $this->get('default.project'),
-      'workflow_id' => $this->get('default.workflow'),
     );
 
     if ($profile !== NULL && $project = $profile->getProject()) {
@@ -208,8 +207,15 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
-  public function addTarget($doc_id, $locale) {
-    $response = $this->api->addTranslation($doc_id, $locale);
+  public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
+    $workflow_id = NULL;
+    if ($profile !== NULL && $workflow_id = $profile->getWorkflow()) {
+      if ($workflow_id === 'default') {
+        $workflow_id = $this->get('default.workflow');
+      }
+    }
+
+    $response = $this->api->addTranslation($doc_id, $locale, $workflow_id);
     if ($response->getStatusCode() == '201') {
       return TRUE;
     }
