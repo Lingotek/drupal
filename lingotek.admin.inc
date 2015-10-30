@@ -748,11 +748,23 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
 
     $form['additional_translation']['addtl_prefill_phases_checkbox'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
+//      '#title' => t('Change all current content in this profile (@total in total) to use the new workflow', array('@total' => array_sum(lingotek_admin_profile_usage(LingotekSync::PROFILE_CONFIG)))),
+      '#title' => t('Change all current content in this profile to use the new workflow'),
       '#default_value' => FALSE,
       '#description' => t('All current translations will be removed and recreated using the new workflow, with translations pulled from the previous workflow'),
       '#states' => array(
         'invisible' => array(':input[name="addtl_workflow_id"]' => array('value' => $stored_workflow_id)),
+      )
+    );
+
+    $form['additional_translation']['overwrite_config_set_workflow'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include config sets that have been explicitly changed to another workflow.'),
+      '#default_value' => FALSE,
+      '#description' => t('All config sets will be changed, regardless of individual changes made'),
+      '#states' => array(
+          'visible' => array(':input[name="addtl_workflow_id"]' => array('!value' => $stored_workflow_id),
+                     ':input[name="addtl_prefill_phases_checkbox"]' => array('checked' => TRUE))
       )
     );
 
@@ -945,7 +957,7 @@ function lingotek_save_config_profile($form_state) {
   $workflow_id = isset($form_state['values']['addtl_workflow_id']) ? $form_state['values']['addtl_workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
   $prefill_phase = isset($form_state['values']['addtl_prefill_phase_select']) ? $form_state['values']['addtl_prefill_phase_select'] : NULL;
   $config_checkbox = isset($form_state['values']['addtl_prefill_phases_checkbox']) ? $form_state['values']['addtl_prefill_phases_checkbox'] : FALSE;
-
+  $overwrite_config_set_workflow = isset($form_state['values']['overwrite_config_set_workflow']) ? $form_state['values']['overwrite_config_set_workflow'] : TRUE;
   $profile = array(
     'project_id' => $project_id,
     'vault_id' => $vault_id,
@@ -963,8 +975,12 @@ function lingotek_save_config_profile($form_state) {
   }
 
   if ($config_checkbox == TRUE) {
+    $document_ids = $overwrite_config_set_workflow == TRUE ? LingotekConfigSet::getAllConfigDocIds() 
+        : LingotekConfigSet::getAllUnsetWorkflowConfigDocIds();
     // Change all other workflows retroactively
-    $document_ids = LingotekConfigSet::getAllConfigDocIds();
+    if($overwrite_config_set_workflow == TRUE){
+      LingotekConfigSet::deleteConfigSetWorkflowIds();//removes workflows set on config sets. Defaults to the config default.
+    }
     if (!empty($document_ids)) {
       $api = LingotekApi::instance();
       $api->changeWorkflow($document_ids, $workflow_id, $prefill_phase);
@@ -1351,6 +1367,15 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#default_value' => variable_get('lingotek_advanced_taxonomy_terms', FALSE),
   );
 
+  if (module_exists('bean')) {
+    $form[$fkey]['lingotek_translate_beans'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable bean translation'),
+      '#default_value' => (variable_get('lingotek_translate_beans') ? 1 : 0),
+      '#description' => t('If checked, translatable bean fields will be managed by Lingotek.'),
+    );
+  }
+
   $form['prefs']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
@@ -1421,6 +1446,20 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
   lingotek_admin_language_switcher_form_submit($form, $form_state);
   $form_state['values']['lingotek_account_plan_type'] = ($form['prefs']['lingotek_account_plan_type']['#checked'] ? 'advanced' : 'standard');
   system_settings_form_submit($form, $form_state);
+  if (module_exists('bean') && variable_get('lingotek_translate_beans')) {
+    if (!db_field_exists('bean', 'language')) {
+      $schema['bean']['fields']['language'] = array(
+        'type' => 'char',
+        'length' => 8,
+        'not null' => TRUE,
+        'default' => language_default()->language,
+        'description' => 'Language used for third party translation',
+      );
+
+      db_add_field('bean', 'language', $schema['bean']['fields']['language']);
+      LingotekLog::warning('Language column has been added to the @module_name by Lingotek.', array('@module_name' => ('Bean')));
+    }
+  }
   menu_rebuild();
 }
 
@@ -1988,6 +2027,7 @@ function lingotek_config_default_workflow_form_callback($form, $form_state) {
   return array(
     $form['additional_translation']['addtl_workflow_id'],
     $form['additional_translation']['addtl_prefill_phases_checkbox'],
+    $form['additional_translation']['overwrite_config_set_workflow'],
     $form['additional_translation']['addtl_prefill_phase_select'],
   );
 }
@@ -2471,6 +2511,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     $cleanup_functions['lingotek_cleanup_field_languages_for_taxonomy_terms'] = array(
       'title' => t('Prepare taxonomy terms with custom fields'),
       'desc' => t('Sets all <i>language neutral</i> taxonomy terms managed by Lingotek (and underlying fields) to be @lang.', array('@lang' => language_default('name'))),
+    );
+  }
+
+  if (module_exists('bean') && variable_get('lingotek_translate_beans', FALSE)) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_beans'] = array(
+      'title' => t('Prepare bean fields'),
+      'desc' => t('Sets all <i>language neutral</i> bean fields to be @lang.', array('@lang' => language_default('name'))),
     );
   }
 

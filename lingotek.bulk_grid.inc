@@ -369,7 +369,11 @@ function lingotek_grid_action_options($entity_type) {
     'reset' => t('Disassociate translations'),
     'delete' => $delete_text,
   );
-
+	$api = LingotekApi::instance();
+	$workflows = $api->listWorkflows();
+	if (is_array($workflows) && count($workflows) > 1) {
+		$action_options['workflow'] = t('Change workflow');
+  }
   if ($entity_type == 'config') {
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
 
@@ -377,13 +381,6 @@ function lingotek_grid_action_options($entity_type) {
   else {
     $action_options['delete_translations'] = t('Delete local translations');
     $action_options['edit'] = t('Edit translation settings');
-
-    $api = LingotekApi::instance();
-    $workflows = $api->listWorkflows();
-    if (is_array($workflows) && count($workflows) > 1) {
-      $action_options['workflow'] = t('Change workflow');
-    }
-
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
   }
 
@@ -805,6 +802,11 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Title'),
       '#default_value' => isset($e_grid_custom[$prefix . 'title' . $suffix]) ? $e_grid_custom[$prefix . 'title' . $suffix] : in_array('title', $columns['defaults']),
     ),
+    'label' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Label'),
+      '#default_value' => isset($e_grid_custom[$prefix . 'label' . $suffix]) ? $e_grid_custom[$prefix . 'label' . $suffix] : in_array('label', $columns['defaults']),
+    ),
     'description' => array(
       '#type' => 'checkbox',
       '#disabled' => 'true',
@@ -927,6 +929,11 @@ function lingotek_config_build_column_checkboxes($form_state) {
       '#title' => t('Textgroup'),
       '#default_value' => isset($c_grid_custom[$prefix . 'textgroup' . $suffix]) ? $c_grid_custom[$prefix . 'textgroup' . $suffix] : in_array('textgroup', $columns['defaults']),
     ),
+    'workflow' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Workflow'),
+      '#default_value' =>isset($c_grid_custom[$prefix . 'textgroup' . $suffix]) ? $c_grid_custom[$prefix . 'workflow' . $suffix] : in_array('workflow', $columns['defaults']),
+    ),
   );
   $column_elements = array_intersect_key($column_elements, $columns['columns']); // Reduces the output columns to the defaults specified in 'lingotek_grid_define_columns'
 
@@ -997,7 +1004,7 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
   $translation_status = array();
   foreach($results as $result){
     $entity_id = $result->entity_id;
-    $language_code = substr($result->entity_key,count($result->entity_key) - 6);
+    $language_code = substr($result->entity_key, strlen('target_sync_status_'));
     $translation_status[$entity_id][$language_code]['status'] = $result->value;
     if($entity_type === 'node'){
       $translation_status[$entity_id]['last_modified'] = lingotek_human_readable_timestamp($result->timestamp) . ' ago';
@@ -1282,6 +1289,13 @@ function lingotek_grid_define_columns($entity_type) {
     $columns['columns']['description'] = 'description';
     $columns['defaults']['description'] = 'description';
   }
+  if ($entity_type == 'bean'){
+    $columns['columns']['label'] = 'label';
+    # REMOVED SO THAT EXISTING INSTALLS WITH COLUMN SETTINGS ALREADY SELECTED
+    # WILL NOT SEE THE BEAN LABEL FIELD AS "ON" WHEN IT IS REALLY NOT YET.
+    #$columns['defaults']['label'] = 'label';
+  }
+
   return $columns;
 }
 
@@ -1296,6 +1310,7 @@ function lingotek_config_define_columns() {
       'location' => 'location',
       'context' => 'context',
       'doc_id' => 'doc_id',
+      'workflow' => 'workflow',
       'textgroup' => 'textgroup',
     ),
     'defaults' => array(
@@ -1305,6 +1320,7 @@ function lingotek_config_define_columns() {
       'source_uploaded' => 'source_uploaded',
       'translations' => 'translations',
       'textgroup' => 'textgroup',
+      'workflow' => 'workflow',
     ),
   );
   return $columns;
@@ -1547,6 +1563,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     'nid' => array('data' => t('ID'), 'field' => 'n.' . $entity_id_key),
     'content_type' => array('data' => t('Content Type'), 'field' => 'type'),
     'title' => array('data' => t('Title'), 'field' => 'n.' . $label_col),
+    'label' => array('data' => t('Label'), 'field' => 'n.label'),
     'description' => array('data' => t('Description')),
     'language' => array('data' => t('Source Uploaded')), //, 'field' => 'upload_status'),
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
@@ -1571,6 +1588,10 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   // have a bundle column in their table.
   if (!$bundle_col && $entity_type != 'taxonomy_term') {
     unset($header['content_type']);
+  }
+
+  if ($entity_type != 'bean') {
+    unset($header['label']);
   }
 
   if (isset($entity_properties['changed'])) {
@@ -1687,6 +1708,10 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
       $query->addField('n', $info['entity keys']['bundle']);
     }
     $query->addField('n', $info['entity keys']['bundle'], 'type');
+    // beans have the $bundle_col, and also need the label
+    if ($entity_type == 'bean'){
+      $query->addField('n', 'label');
+    }
   }
 }
 
@@ -1996,6 +2021,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     $data = array(
       'nid' => $row->{$entity_id_key} ? : t('??'),
       'title' => $title,
+      'label' => isset($row->label) ? $row->label : '',
       'language' => $source,
       'translations' => $target_icons_str,
       'configuration' => $configuration,
@@ -2098,6 +2124,9 @@ function lingotek_render_title($row, $entity_properties, $language) {
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $term_obj) : '';
   }
   else {
+    if ($entity_type == 'bean') {
+      $row = lingotek_entity_load_single($entity_type, $row->bid);
+    }
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';
   }
 
@@ -2128,6 +2157,11 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   elseif ($entity_type == 'taxonomy_term') {
     $id = $row->tid;
     $row->language = isset($row->translation_mode) && $row->translation_mode == '1' ? 'en' : $row->language;
+  }
+  elseif ($entity_type == 'bean') {
+    $id = $row->bid;
+    // Assume all block entities are created in the site's default language.
+    $row->language = language_default()->language;
   }
   elseif (!empty($row->id)) {
     $id = $row->id;
@@ -2379,9 +2413,14 @@ function lingotek_edit_nodes($entity_type, $nids) {
  *
  * Returns a fully rendered html form
  */
-function lingotek_change_workflow($entity_type, $nids) {
-  $nids = explode(',', $nids);
-
+function lingotek_change_workflow($entity_type, $entity_ids) {
+  $entity_ids = explode(',', $entity_ids);
+  if($entity_type === 'config'){
+    foreach($entity_ids as $entity_id) {
+      LingotekConfigSet::getSetId($entity_id);
+    }
+    $entity_ids = LingotekSync::getSetIdsFromLids($entity_ids);
+  }
   ctools_include('node.pages', 'node', '');
   ctools_include('modal');
   ctools_include('ajax');
@@ -2389,7 +2428,7 @@ function lingotek_change_workflow($entity_type, $nids) {
   $form_state = array(
     'ajax' => TRUE,
     'entity_type' => $entity_type,
-    'nids' => $nids,
+    'nids' => $entity_ids,
   );
   $output = ctools_modal_form_wrapper('lingotek_get_change_workflow_form', $form_state);
 

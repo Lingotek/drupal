@@ -33,6 +33,7 @@ function lingotek_config_header() {
     'context' => array('data' => t('Context'), 'field' => 'context'),
     'doc_id' => array('data' => t('Doc ID'), 'field' => 'document_id', 'display' => 'none'),
     'textgroup' => array('data' => t('Textgroup'), 'field' => 'textgroup'),
+    'workflow' => array('data' => t('Workflow'), 'field' => 'workflow'),
   );
 
   return $header;
@@ -137,7 +138,9 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
   // Lingotek Document ID
   $query->leftJoin('lingotek_config_metadata', 'lingo_document_id', 'lingo_document_id.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_document_id.config_key = \'document_id\'');
   $query->addField('lingo_document_id', 'value', 'document_id');
-
+  //Config Workflow ID
+  $query->leftJoin('lingotek_config_metadata', 'lingo_workflow_id', 'lingo_workflow_id.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_workflow_id.config_key = \'workflow_id\'');
+  $query->addField('lingo_workflow_id', 'value', 'workflow_id');
   // Entity Upload Status
   $query->leftJoin('lingotek_config_metadata', 'lingo_upload_status', 'lingo_upload_status.id = (SELECT set_id FROM lingotek_config_map WHERE lid = s.lid) AND lingo_upload_status.config_key = \'upload_status\' AND lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_DELETED . '\'');
   $query->addField('lingo_upload_status', 'value', 'upload_status');
@@ -287,6 +290,8 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
   $global_profile = lingotek_get_global_profile();
   $non_lingotek_config_translations = lingotek_get_locked_config_translations($lids);
   $table_data = array();
+  $api = LingotekApi::instance();
+  $workflows = $api->listWorkflows();
   foreach ($table_data_raw as $row) {
     $lid = $row->{'lid'};
     $row->lingotek = $global_profile;
@@ -332,7 +337,8 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
     $set_id = LingotekConfigSet::getSetId($lid, FALSE);
     $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
-
+    $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
+    $stored_workflow_id = $config_profile->getWorkflow();
     $data = array(
       'lid' => $lid ? : t('??'),
       'source' => '<a class="tooltips">' . $source_text . '<span>' . $escaped_source . '</span></a>',
@@ -342,7 +348,8 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
       'textgroup' => $row->{'textgroup'} == 'default' ? 'built-in interface' : $row->{'textgroup'},
       'translations' => $target_icons_str,
       'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
-      'set_name' => '<span class="set_name">' . $set_name . '</span>'
+      'set_name' => '<span class="set_name">' . $set_name . '</span>',
+      'workflow' => isset($row->{'workflow_id'}) ? $workflows[$row->{'workflow_id'}] : $workflows[$stored_workflow_id]
     );
 
     $table_data[$lid] = $data;

@@ -302,6 +302,11 @@ function lingotek_entity_xml_body($entity_type, $entity) {
     }
   }
 
+  // Workaround for the bean module's source-language problem.
+  if ($entity_type == 'bean') {
+    $entity->language = language_default()->language;
+  }
+
   $content_obj = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
   if ($entity_type == 'node') {
     //URL Alias related to the page:
@@ -607,7 +612,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   if (module_exists('taxonomy') && variable_get('lingotek_advanced_taxonomy_terms', FALSE)) {
     $whitelist[] = 'taxonomy_term';
   }
-
+  if (module_exists('bean') && variable_get('lingotek_translate_beans', FALSE)) {
+    $whitelist[] = 'bean';
+  }
   $whitelist = array_flip($whitelist);
   $enabled_types = array_intersect_key($type_info, $whitelist);
 
@@ -629,6 +636,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   }
   if (isset($enabled_types['fieldable_panels_pane'])) {
     $enabled_types['fieldable_panels_pane']['label'] = 'Fieldable Panels Panes';
+  }
+  if (isset($enabled_types['bean'])) {
+    $enabled_types['bean']['label'] = 'Beans';
   }
 
   // Allow other modules to add/remove entity types to the list supported.
@@ -1039,6 +1049,10 @@ function lingotek_cleanup_field_languages_for_fieldable_panels_panes() {
 
 function lingotek_cleanup_field_languages_for_taxonomy_terms() {
   lingotek_cleanup_field_languages('taxonomy_term');
+}
+
+function lingotek_cleanup_field_languages_for_beans() {
+  lingotek_cleanup_field_languages('bean');
 }
 
 /**
@@ -1965,6 +1979,10 @@ function lingotek_enabled_langcode($langcode) {
 }
 
 function lingotek_entity_langcode($entity_type, $entity) {
+  // Assume all bean content is created in the site's default language.
+  if ($entity_type == 'bean') {
+    return language_default()->language;
+  }
   $info = entity_get_info($entity_type);
   // Default to string 'language' if no language-related entity key is found.
   $lang_key = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
@@ -1997,6 +2015,13 @@ function lingotek_notify_if_no_languages_added() {
 function lingotek_entity_locale($entity_type, $entity) {
   $langcode = lingotek_entity_langcode($entity_type, $entity);
   return Lingotek::convertDrupal2Lingotek($langcode);
+}
+
+function lingotek_entity_init_language($entity_type, $entity) {
+  // For now, this is only a problem with bean entities not having a language at this point
+  if ($entity_type == 'bean' && empty($entity->language)) {
+    $entity->language = language_default()->language;
+  }
 }
 
 function lingotek_get_current_locales($entity_type, $entity_id) {

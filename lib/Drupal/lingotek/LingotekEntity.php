@@ -339,6 +339,10 @@ class LingotekEntity implements LingotekTranslatableEntity {
         return 'en_US';
       }
     }
+    if ($this->entity_type == 'bean') {
+      // Assume all block entities are created in the site's default language.
+      return Lingotek::convertDrupal2Lingotek(language_default()->language);
+    }
     return Lingotek::convertDrupal2Lingotek($this->language);
   }
 
@@ -420,12 +424,17 @@ class LingotekEntity implements LingotekTranslatableEntity {
    */
   public function setLanguage($language = NULL) {
     if (empty($language)) {
-      $drupal_locale = Lingotek::convertDrupal2Lingotek($this->entity->language);
-      if (!empty($this->entity->lingotek['allow_source_overwriting']) && !empty($this->entity->lingotek['source_language_' . $drupal_locale])) {
-        $language = $this->entity->lingotek['source_language_' . $drupal_locale];
+      if ($this->entity_type == 'bean') {
+        $language = language_default()->language;
       }
       else {
-        $language = $this->entity->language;
+        $drupal_locale = Lingotek::convertDrupal2Lingotek($this->entity->language);
+        if (!empty($this->entity->lingotek['allow_source_overwriting']) && !empty($this->entity->lingotek['source_language_' . $drupal_locale])) {
+          $language = $this->entity->lingotek['source_language_' . $drupal_locale];
+        }
+        else {
+          $language = $this->entity->language;
+        }
       }
     }
     $this->language = $language;

@@ -47,7 +47,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
    * A static flag for content updates.
    */
   protected static $content_update_in_progress = FALSE;
-
+  protected $workflow_id = null;
   /**
    * Constructor.
    *
@@ -192,6 +192,7 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     }
     return $existing_sid;
   }
+
   public static function bulkGetSetId($lid_map){
     $set_ids = array();
     foreach($lid_map as $textgroup => $lids){
@@ -341,6 +342,25 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
         ->execute()
         ->fetchCol();
     return $doc_ids;
+  }
+
+  public static function getAllUnsetWorkflowConfigDocIds() {
+    $setWorkflowSetIds = db_select('lingotek_config_metadata', 'lcm')
+        ->fields('lcm', array('id'))
+        ->condition('config_key', 'workflow_id');
+    $doc_ids = db_select('lingotek_config_metadata', 'l')
+        ->fields('l', array('value'))
+        ->condition('config_key', 'document_id')
+        ->condition('id', $setWorkflowSetIds, 'NOT IN')
+        ->execute()
+        ->fetchCol();
+    return $doc_ids;
+  }
+
+  public static function deleteConfigSetWorkflowIds(){
+    db_delete('lingotek_config_metadata')
+        ->condition('config_key', 'workflow_id', '=')
+        ->execute();
   }
 
   public function getSourceLocale() {
@@ -1149,12 +1169,19 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
   }
 
   public function getWorkflowId() {
-    $profiles = variable_get('lingotek_profiles');
-    $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
-    $workflow_id = array_key_exists('workflow_id', $config_profile) ? $config_profile['workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
+    if($this->workflow_id !== null){
+      $workflow_id = $this->workflow_id;
+    }
+    else {
+      $profiles = variable_get('lingotek_profiles');
+      $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
+      $workflow_id = array_key_exists('workflow_id', $config_profile) ? $config_profile['workflow_id'] : variable_get('lingotek_translate_config_workflow_id', '');
+    }
     return $workflow_id;
   }
-
+  public function setWorkflowId($workflow_id) {
+    $this->workflow_id = $workflow_id;
+  }
   public function getProjectId() {
     $profiles = variable_get('lingotek_profiles');
     $config_profile = $profiles[LingotekSync::PROFILE_CONFIG];
