@@ -40,49 +40,6 @@ function lingotek_schema() {
     ),
   );
 
-  $schema['lingotek_config_metadata'] = array(
-    'description' => 'Stores Lingotek-related metadata about Drupal translations from locales source and target tables.',
-    'fields' => array(
-      'id' => array(
-        'description' => 'the segment ID assigned to the given range of strings.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'config_key' => array(
-        'description' => 'The ID for the Lingotek-associated value.',
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'value' => array(
-        'description' => 'Value for the specified key.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'created' => array(
-                      'type' => 'int',
-        'description' => "created timestamp",
-        'default' => 0,
-        'not null' => TRUE,
-      ),
-      'modified' => array(
-        'type' => 'int',
-        'description' => "last modified timestamp",
-        'default' => 0,
-        'not null' => TRUE,
-      )
-    ),
-    'primary key' => array(
-      'id',
-      'config_key',
-    ),
-  );
-
   $schema['lingotek_translation_agent'] = array(
     'description' => 'An assignment of IDs to agents from which translations were added.',
     'fields' => array(
