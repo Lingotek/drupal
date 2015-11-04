@@ -237,7 +237,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getSourceLocale(ContentEntityInterface &$entity) {
     $source_language = $entity->getUntranslated()->language()->getId();
-    return LingotekLocale::convertDrupal2Lingotek($source_language);
+    $config_language = ConfigurableLanguage::load($source_language);
+    $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($source_language));
+    return $locale;
   }
 
   /**
@@ -308,7 +310,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function addTarget(ContentEntityInterface &$entity, $locale) {
-    if ($locale == LingotekLocale::convertDrupal2Lingotek($entity->getUntranslated()->language()->getId())) {
+    $source_langcode = $entity->getUntranslated()->language()->getId();
+    $config_language = ConfigurableLanguage::load($source_langcode);
+    $source_locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($source_langcode));
+
+    if ($locale == $source_locale) {
       // We don't want to translate from one language to itself.
       return FALSE;
     }

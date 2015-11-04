@@ -141,4 +141,22 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son muy chulas');
   }
 
+  /**
+   * Test that when a node is uploaded in a different locale that locale is used.
+   */
+  public function testAddingContentInDifferentLocale() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool es-MX';
+    $edit['body[0][value]'] = 'Llamas are very cool es-MX';
+    $edit['langcode[0][value]'] = 'es';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    $this->assertText('Llamas are cool es-MX sent to Lingotek successfully.');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.uploaded_locale'));
+  }
+
 }

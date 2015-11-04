@@ -261,4 +261,33 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertText("Locale 'ca_ES' was added as a translation target for node Llamas are cool.");
   }
 
+  /**
+   * Test that when a node is uploaded in a different locale that locale is used.
+   */
+  public function testAddingContentInDifferentLocale() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool es-MX';
+    $edit['body[0][value]'] = 'Llamas are very cool es-MX';
+    $edit['langcode[0][value]'] = 'es';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Clicking Spanish must init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    // And we cannot request yet a translation.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/en_US?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->clickLink('Spanish');
+    $this->assertText('Node Llamas are cool es-MX has been uploaded.');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.uploaded_locale'));
+  }
+
 }
