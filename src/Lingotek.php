@@ -50,7 +50,7 @@ class Lingotek implements LingotekInterface {
   const PROFILE_MANUAL = 'manual';
   const PROFILE_DISABLED = 'disabled';
 
-  public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config, LanguageLocaleMapperInterface $language_locale_mapper) {
+  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config) {
     $this->api = $api;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->config = $config->getEditable('lingotek.settings');

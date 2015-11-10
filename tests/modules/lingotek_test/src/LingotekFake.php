@@ -2,6 +2,7 @@
 namespace Drupal\lingotek_test;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\lingotek\Remote\LingotekApiInterface;
@@ -12,14 +13,16 @@ class LingotekFake implements LingotekInterface {
   protected $api;
   protected $config;
 
-  public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config) {
+  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config) {
     $this->api = $api;
+    $this->languageLocaleMapper = $language_locale_mapper;
     $this->config = $config->getEditable('lingotek.settings');
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
         $container->get('lingotek.api'),
+        $container->get('lingotek.language_locale_mapper'),
         $container->get('config.factory')
       );
   }
