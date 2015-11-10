@@ -101,6 +101,47 @@ class LingotekProfileFormBase extends EntityForm {
       '#default_value' => $this->entity->getWorkflow(),
     );
 
+    $form['language_overrides'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Target language specific settings'),
+      '#tree' => TRUE,
+    );
+    $languages = \Drupal::languageManager()->getLanguages();
+    foreach ($languages as $langcode => $language) {
+      $form['language_overrides'][$langcode] = array(
+        'overrides' => array(
+          '#type' => 'select',
+          '#title' => $language->getName() . ' (' . $language->getId() . ')',
+          '#options' => ['default' => $this->t('Use default settings'), 'custom' => $this->t('Use custom settings')],
+        ),
+        'custom' => array(
+          '#type' => 'container',
+          '#attributes' => array(
+            'class' => 'profile-language-overrides-container',
+          ),
+          '#states' => array(
+            'visible' => array(
+              ':input[name="language_overrides['.$langcode.'][overrides]"]' => array('value' => 'custom'),
+            ),
+          ),
+          'workflow' => array(
+            '#type' => 'select',
+            '#title' => $this->t('Default Workflow'),
+            '#options' => ['default' => 'Default ('. $workflows[$default_workflow] . ')'] + $workflows,
+            '#description' => $this->t('The default Workflow which would be used for translations.'),
+            '#default_value' => $this->entity->getWorkflow(),
+          ),
+          'auto_download' => array(
+            '#type' => 'checkbox',
+            '#title' => $this->t('Download Translations Automatically'),
+            '#description' => $this->t('When enabled, completed translations will automatically be downloaded from Lingotek. When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
+            '#disabled' => $this->entity->isLocked(),
+            '#default_value' => $this->entity->hasAutomaticDownload(),
+          ),
+        ),
+      );
+    }
+    $form['#attached']['library'][] = 'lingotek/lingotek.settings';
     return $form;
   }
 

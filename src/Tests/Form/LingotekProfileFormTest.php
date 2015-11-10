@@ -2,8 +2,8 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
@@ -113,6 +113,47 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
   }
 
+  /**
+   * Test profiles language settings override.
+   */
+  public function testProfileSettingsOverride() {
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+
+    $edit = [
+      'auto_upload' => FALSE,
+      'auto_download' => 1,
+      'project' => 'default',
+      'vault' => 'default',
+      'workflow' => 'default',
+      'language_overrides[es][overrides]' => 'custom',
+      'language_overrides[es][custom][auto_download]' => FALSE,
+      'language_overrides[es][custom][workflow]' => 'test_workflow',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Edit profile'));
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertFalse($profile->hasAutomaticUpload());
+    $this->assertTrue($profile->hasAutomaticDownload());
+    $this->assertIdentical('default', $profile->getProject());
+    $this->assertIdentical('default', $profile->getVault());
+    $this->assertIdentical('default', $profile->getWorkflow());
+    $this->assertIdentical('test_workflow', $profile->getWorkflowForTarget('es'));
+    $this->assertFalse($profile->hasAutomaticDownloadForTarget('es'));
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+  }
 
     /**
    * Asserts that a field in the current page is disabled.

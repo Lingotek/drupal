@@ -133,4 +133,28 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    */
   public function setWorkflow($workflow);
 
+  /**
+   * Returns whether this profile indicates automatic download of translations for
+   * an specific target language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return bool
+   *   Whether the profile indicates automatic download or not.
+   */
+  public function hasAutomaticDownloadForTarget($langcode);
+
+  /**
+   * Gets the workflow to be used for a given language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return string
+   *   The workflow identifier, used to request translations. If 'default', the
+   *   default site workflow should be used.
+   */
+  public function getWorkflowForTarget($langcode);
+
 }

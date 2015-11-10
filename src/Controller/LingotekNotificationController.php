@@ -67,7 +67,7 @@ class LingotekNotificationController extends LingotekControllerBase {
           $locale = $request->get('locale');
           $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->id();
           $result['set_target_status'] = $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-          $result['download'] = $profile->hasAutomaticDownload() ?
+          $result['download'] = $profile->hasAutomaticDownloadForTarget($langcode) ?
             $translation_service->downloadDocument($entity, $locale) : FALSE;
         } else {
           $http_status_code = Response::HTTP_NOT_FOUND;

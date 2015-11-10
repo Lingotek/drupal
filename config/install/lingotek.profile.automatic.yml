@@ -7,3 +7,4 @@ auto_download: true
 vault: default
 project: default
 workflow: default
+language_overrides: { }

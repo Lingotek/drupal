@@ -41,6 +41,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "vault",
  *     "project",
  *     "workflow",
+ *     "language_overrides",
  *   },
  *   links = {
  *     "add-form" = "/admin/lingotek/settings/profile/add",
@@ -113,6 +114,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var string
    */
   protected $workflow = 'default';
+
+  /**
+   * Specific target language settings override.
+   *
+   * @var string
+   */
+  protected $language_overrides = [];
 
   /**
    * {@inheritdoc}
@@ -211,5 +219,29 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     return $this;
   }
   // ToDo: Avoid deletion if this profile is being used.
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWorkflowForTarget($langcode) {
+    $workflow = $this->getWorkflow();
+    if (isset($this->language_overrides[$langcode]) &&
+      $this->language_overrides[$langcode]['overrides'] === 'custom') {
+      $workflow = $this->language_overrides[$langcode]['custom']['workflow'];
+    }
+    return $workflow;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAutomaticDownloadForTarget($langcode) {
+    $auto_download = $this->hasAutomaticDownload();
+    if (isset($this->language_overrides[$langcode]) &&
+      $this->language_overrides[$langcode]['overrides'] === 'custom') {
+      $auto_download = $this->language_overrides[$langcode]['custom']['auto_download'];
+    }
+    return $auto_download;
+  }
 
 }

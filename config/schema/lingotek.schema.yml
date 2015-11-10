@@ -132,6 +132,23 @@ lingotek.profile.*:
     workflow:
       type: string
       label: 'TM Workflow'
+    language_overrides:
+      type: sequence
+      label: 'Target language settings overrides'
+      sequence:
+        type: mapping
+        mapping:
+          overrides:
+            type: string
+          custom:
+            type: mapping
+            mapping:
+              workflow:
+                type: string
+                label: 'TM Workflow'
+              auto_download:
+                type: boolean
+                label: 'Automatic Download'
 
 language.entity.*.third_party.lingotek:
   type: mapping

@@ -325,10 +325,18 @@ class LingotekUnitTest extends UnitTestCase {
     $response->expects($this->any())
       ->method('getStatusCode()')
       ->willReturn('201');
+    $language = $this->getMock('\Drupal\language\ConfigurableLanguageInterface');
+    $language->expects($this->any())
+      ->method('getId')
+      ->will($this->returnValue('es'));
 
     $this->config->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.workflow', 'default_workflow']]));
+    $this->languageLocaleMapper->expects($this->any())
+      ->method('getConfigurableLanguageForLocale')
+      ->with('es_ES')
+      ->will($this->returnValue($language));
 
     // Workflow id has the original value.
     $this->api->expects($this->at(0))
@@ -348,8 +356,20 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('my_doc_id', 'es_ES', 'default_workflow')
       ->will($this->returnValue($response));
 
-    // If there is no profile, workflow should not be included.
+    // If there is a profile with a language override must be used.
     $this->api->expects($this->at(3))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', 'overridden_workflow')
+      ->will($this->returnValue($response));
+
+    // If there is a profile with a default workflow as override, it must be replaced.
+    $this->api->expects($this->at(4))
+      ->method('addTranslation')
+      ->with('my_doc_id', 'es_ES', 'default_workflow')
+      ->will($this->returnValue($response));
+
+    // If there is no profile, workflow should not be included.
+    $this->api->expects($this->at(5))
       ->method('addTranslation')
       ->with('my_doc_id', 'es_ES', NULL)
       ->will($this->returnValue($response));
@@ -365,6 +385,16 @@ class LingotekUnitTest extends UnitTestCase {
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'default'], 'lingotek_profile');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+
+    // We upload with a profile that has marked to use the default vault and project,
+    // but has an override.
+    $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'default', 'language_overrides' => ['es' => ['overrides' => 'custom', 'custom' => ['workflow' => 'overridden_workflow']]]], 'lingotek_profile');
+    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+
+    // We upload with a profile that has another vault and another project, but
+    // overriden with a default, so must be replaced.
+    $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'a_different_test_workflow', 'language_overrides' => ['es' => ['overrides' => 'custom', 'custom' => ['workflow' => 'default']]]], 'lingotek_profile');
     $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
 
     // We upload without a profile

@@ -217,7 +217,9 @@ class Lingotek implements LingotekInterface {
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
     $workflow_id = NULL;
-    if ($profile !== NULL && $workflow_id = $profile->getWorkflow()) {
+    $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+
+    if ($profile !== NULL && $workflow_id = $profile->getWorkflowForTarget($drupal_language->getId())) {
       if ($workflow_id === 'default') {
         $workflow_id = $this->get('default.workflow');
       }
