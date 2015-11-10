@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
@@ -29,6 +30,13 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @var \Symfony\Component\HttpFoundation\Request
    */
   protected $request;
+
+  /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
 
   /**
    * The form builder.
@@ -59,9 +67,10 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
    */
-  public function __construct(Request $request, LingotekInterface $lingotek, FormBuilderInterface $form_builder, LoggerInterface $logger) {
+  public function __construct(Request $request, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger) {
     $this->request = $request;
     $this->lingotek = $lingotek;
+    $this->languageLocaleMapper = $language_locale_mapper;
     $this->formBuilder = $form_builder;
     $this->logger = $logger;
   }
@@ -73,6 +82,7 @@ abstract class LingotekControllerBase extends ControllerBase {
     return new static(
       $container->get('request_stack')->getCurrentRequest(),
       $container->get('lingotek'),
+      $container->get('lingotek.language_locale_mapper'),
       $container->get('form_builder'),
       $container->get('logger.channel.lingotek')
     );

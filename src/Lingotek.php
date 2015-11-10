@@ -25,6 +25,13 @@ class Lingotek implements LingotekInterface {
   protected $api;
   protected $config;
 
+  /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
+
   // Translation Status.
   const STATUS_EDITED = 'EDITED';
   const STATUS_IMPORTING = 'IMPORTING';
@@ -43,14 +50,15 @@ class Lingotek implements LingotekInterface {
   const PROFILE_MANUAL = 'manual';
   const PROFILE_DISABLED = 'disabled';
 
-  public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config) {
+  public function __construct(LingotekApiInterface $api, ConfigFactoryInterface $config, LanguageLocaleMapperInterface $language_locale_mapper) {
     $this->api = $api;
+    $this->languageLocaleMapper = $language_locale_mapper;
     $this->config = $config->getEditable('lingotek.settings');
   }
 
   public static function create(ContainerInterface $container) {
     if (empty(self::$instance)) {
-      self::$instance = new Lingotek($container->get('lingotek.api'), $container->get('config.factory'));
+      self::$instance = new Lingotek($container->get('lingotek.api'), $container->get('lingotek.language_locale_mapper'), $container->get('config.factory'));
     }
     return self::$instance;
   }

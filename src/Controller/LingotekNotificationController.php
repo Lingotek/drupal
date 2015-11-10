@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Controller;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -64,7 +65,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         if ($entity) {
           $http_status_code = Response::HTTP_OK;
           $locale = $request->get('locale');
-          $langcode = $this->getConfigurableLanguageForLocale($locale)->id();
+          $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->id();
           $result['set_target_status'] = $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
           $result['download'] = $profile->hasAutomaticDownload() ?
             $translation_service->downloadDocument($entity, $locale) : FALSE;
@@ -93,24 +94,6 @@ class LingotekNotificationController extends LingotekControllerBase {
     );
 
     return JsonResponse::create($response, $http_status_code);
-  }
-
-  /**
-   * @param $locale
-   * @return \Drupal\language\ConfigurableLanguageInterface|null
-   */
-  protected function getConfigurableLanguageForLocale($locale) {
-    $drupal_language = NULL;
-    $id = \Drupal::entityQuery('configurable_language')
-      ->condition('third_party_settings.lingotek.locale', $locale)
-      ->execute();
-    if (!empty($id)) {
-      $drupal_language = ConfigurableLanguage::load(reset($id));
-    }
-    else{
-      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
-    }
-    return $drupal_language;
   }
 
 }

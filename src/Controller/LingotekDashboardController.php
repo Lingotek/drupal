@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Controller;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\language\ConfigurableLanguageInterface;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\LanguageInterface;
@@ -84,7 +85,7 @@ class LingotekDashboardController extends LingotekControllerBase {
         $parsed_content = [];
         parse_str($content, $parsed_content);
         $locale = $parsed_content['code'];
-        $language = $this->getConfigurableLanguageForLocale($locale);
+        $language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
         $response['language'] = $language->id();
         $language->delete();
         \Drupal::languageManager()->reset();
@@ -275,21 +276,4 @@ class LingotekDashboardController extends LingotekControllerBase {
     return $sumArray;
   }
 
-  /**
-   * @param $locale
-   * @return \Drupal\language\ConfigurableLanguageInterface|null
-   */
-  protected function getConfigurableLanguageForLocale($locale) {
-    $drupal_language = NULL;
-    $id = \Drupal::entityQuery('configurable_language')
-      ->condition('third_party_settings.lingotek.locale', $locale)
-      ->execute();
-    if (!empty($id)) {
-      $drupal_language = ConfigurableLanguage::load(reset($id));
-    }
-    else{
-      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
-    }
-    return $drupal_language;
-  }
 }

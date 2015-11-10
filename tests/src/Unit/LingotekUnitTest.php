@@ -20,6 +20,14 @@ class LingotekUnitTest extends UnitTestCase {
    */
   protected $lingotek;
 
+
+  /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
+
   /**
    * @var LingotekHttpInterface
    */
@@ -35,6 +43,7 @@ class LingotekUnitTest extends UnitTestCase {
    */
   protected function setUp() {
     $this->api = $this->getMock('\Drupal\lingotek\Remote\LingotekApiInterface');
+    $this->languageLocaleMapper =  $this->getMock('Drupal\lingotek\LanguageLocaleMapperInterface');
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
       ->disableOriginalConstructor()
       ->getMock();
@@ -44,7 +53,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('lingotek.settings')
       ->will($this->returnValue($this->config));
 
-    $this->lingotek = new Lingotek($this->api, $config_factory);
+    $this->lingotek = new Lingotek($this->api, $config_factory, $this->languageLocaleMapper);
   }
 
   /**

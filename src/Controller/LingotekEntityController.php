@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Controller;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\Core\Url;
 use Drupal\lingotek\LingotekLocale;
@@ -39,7 +40,7 @@ class LingotekEntityController extends LingotekControllerBase {
       return $this->translationsPageRedirect($entity);
     }
 
-    $drupal_language = $this->getConfigurableLanguageForLocale($locale);
+    $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
     if ($translation_service->checkTargetStatus($entity, $drupal_language->id()) === Lingotek::STATUS_READY) {
       drupal_set_message(t('The @locale translation for @entity_type %title is ready for download.', array('@locale' => $locale, '@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())));
     } else {
@@ -107,25 +108,5 @@ class LingotekEntityController extends LingotekControllerBase {
     $uri = Url::fromRoute("entity.$entity_type_id.content_translation_overview", [$entity_type_id => $entity->id()]);
     return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
   }
-
-
-  /**
-   * @param $locale
-   * @return \Drupal\language\ConfigurableLanguageInterface|null
-   */
-  protected function getConfigurableLanguageForLocale($locale) {
-    $drupal_language = NULL;
-    $id = \Drupal::entityQuery('configurable_language')
-      ->condition('third_party_settings.lingotek.locale', $locale)
-      ->execute();
-    if (!empty($id)) {
-      $drupal_language = ConfigurableLanguage::load(reset($id));
-    }
-    else{
-      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
-    }
-    return $drupal_language;
-  }
-
 
 }

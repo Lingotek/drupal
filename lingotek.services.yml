@@ -8,11 +8,14 @@ services:
   lingotek.api:
     class: Drupal\lingotek\Remote\LingotekApi
     arguments: ['@lingotek.http_client', '@logger.channel.lingotek']
+  lingotek.language_locale_mapper:
+    class: Drupal\lingotek\LanguageLocaleMapper
+    arguments: ['@entity.query']
   lingotek.configuration:
     class: Drupal\lingotek\LingotekConfigurationService
   lingotek.content_translation:
     class: Drupal\lingotek\LingotekContentTranslationService
-    arguments: ['@lingotek', '@lingotek.configuration', '@entity.manager', '@language_manager']
+    arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@entity.manager', '@language_manager']
   lingotek.config_translation:
     class: Drupal\lingotek\LingotekConfigTranslationService
     arguments: ['@lingotek', '@lingotek.configuration', '@entity.manager', '@language_manager', '@plugin.manager.config_translation.mapper']

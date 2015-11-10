@@ -27,6 +27,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   protected $lingotek;
 
   /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
+
+  /**
    * The Lingotek configuration service.
    *
    * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
@@ -52,6 +59,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    *   An lingotek object.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *  The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
@@ -59,8 +68,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    */
-  public function __construct(LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
     $this->lingotek = $lingotek;
+    $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
@@ -319,7 +329,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
-      $drupal_language = $this->getConfigurableLanguageForLocale($locale);
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
       $source_status = $this->getSourceStatus($entity);
       $current_status = $this->getTargetStatus($entity, $drupal_language->id());
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
@@ -404,7 +414,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if ($data) {
         $transaction = db_transaction();
         try {
-          $drupal_language = $this->getConfigurableLanguageForLocale($locale);
+          $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
           $langcode = $drupal_language->id();
           $this->saveTargetData($entity, $langcode, $data);
           // If the status was "Importing", and the target was added
@@ -529,24 +539,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $lock->wait(__FUNCTION__);
     }
     return $entity;
-  }
-
-  /**
-   * @param $locale
-   * @return \Drupal\language\ConfigurableLanguageInterface|null
-   */
-  protected function getConfigurableLanguageForLocale($locale) {
-    $drupal_language = NULL;
-    $id = \Drupal::entityQuery('configurable_language')
-      ->condition('third_party_settings.lingotek.locale', $locale)
-      ->execute();
-    if (!empty($id)) {
-      $drupal_language = ConfigurableLanguage::load(reset($id));
-    }
-    else{
-      $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
-    }
-    return $drupal_language;
   }
 
 }
