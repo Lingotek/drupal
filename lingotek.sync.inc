@@ -31,7 +31,12 @@ function lingotek_notify_url_update($show_messages = TRUE) {
   $success = LingotekSync::updateNotifyUrl();
   if ($show_messages) {
     if ($success) {
-      drupal_set_message(t("Notification callback URL successfully updated."));
+      if ($success === 'success') {
+        drupal_set_message(t("Notification callback URL successfully updated."));
+      }
+      else if ($success === 'localhost_url') {
+        drupal_set_message(t("Lingotek will not be able to notify Drupal, since the callback URL contains <i>localhost</i>."), 'warning');
+      }
     }
     else {
       drupal_set_message(t("Notification callback URL was not successfully updated."), 'error');

@@ -1064,6 +1064,9 @@ class LingotekSync {
     if ($success) {
       variable_set('lingotek_notify_url', $new_url);
       variable_set('lingotek_notify_security_token', $security_token);
+      if (strpos($new_url,'localhost') !== false) {
+        $success = 'localhost_url';
+      }
     }
     return $success;
   }
