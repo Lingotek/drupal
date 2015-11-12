@@ -53,7 +53,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('lingotek.settings')
       ->will($this->returnValue($this->config));
 
-    $this->lingotek = new Lingotek($this->api, $config_factory, $this->languageLocaleMapper);
+    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $config_factory);
   }
 
   /**
