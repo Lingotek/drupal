@@ -157,4 +157,15 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    */
   public function getWorkflowForTarget($langcode);
 
+  /**
+   * Checks if the profile has custom settings for a given target language.
+   *
+   * @param string $langcode
+   *   The language code.
+   *
+   * @return bool
+   *   TRUE if there are customizations, FALSE if not.
+   */
+  public function hasCustomSettingsForTarget($langcode);
+
 }

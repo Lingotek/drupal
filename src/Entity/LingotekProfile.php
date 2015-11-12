@@ -225,8 +225,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function getWorkflowForTarget($langcode) {
     $workflow = $this->getWorkflow();
-    if (isset($this->language_overrides[$langcode]) &&
-      $this->language_overrides[$langcode]['overrides'] === 'custom') {
+    if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
       $workflow = $this->language_overrides[$langcode]['custom']['workflow'];
     }
     return $workflow;
@@ -237,11 +236,17 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function hasAutomaticDownloadForTarget($langcode) {
     $auto_download = $this->hasAutomaticDownload();
-    if (isset($this->language_overrides[$langcode]) &&
-      $this->language_overrides[$langcode]['overrides'] === 'custom') {
+    if (isset($this->language_overrides[$langcode]) && $this->hasCustomSettingsForTarget($langcode)) {
       $auto_download = $this->language_overrides[$langcode]['custom']['auto_download'];
     }
     return $auto_download;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasCustomSettingsForTarget($langcode) {
+    return isset($this->language_overrides[$langcode]) && $this->language_overrides[$langcode]['overrides'] === 'custom';
   }
 
 }

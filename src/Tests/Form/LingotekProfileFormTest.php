@@ -111,6 +111,11 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('test_workflow', $profile->getWorkflow());
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+    $this->assertNoFieldChecked("edit-auto-upload");
+    $this->assertFieldChecked("edit-auto-download");
+    $this->assertOptionSelected('edit-project', 'test_project');
+    $this->assertOptionSelected('edit-vault', 'test_vault');
+    $this->assertOptionSelected('edit-workflow', 'test_workflow');
   }
 
   /**
@@ -119,6 +124,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
   public function testProfileSettingsOverride() {
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
 
     /** @var LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
@@ -129,16 +135,21 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $profile_id = $profile->id();
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+    $this->assertOptionSelected('edit-language-overrides-es-overrides', 'default');
+    $this->assertOptionSelected('edit-language-overrides-en-overrides', 'default');
 
     $edit = [
       'auto_upload' => FALSE,
       'auto_download' => 1,
       'project' => 'default',
       'vault' => 'default',
-      'workflow' => 'default',
+      'workflow' => 'another_workflow',
       'language_overrides[es][overrides]' => 'custom',
       'language_overrides[es][custom][auto_download]' => FALSE,
       'language_overrides[es][custom][workflow]' => 'test_workflow',
+      'language_overrides[de][overrides]' => 'custom',
+      'language_overrides[de][custom][auto_download]' => FALSE,
+      'language_overrides[de][custom][workflow]' => 'default',
     ];
     $this->drupalPostForm(NULL, $edit, t('Edit profile'));
 
@@ -148,11 +159,27 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertTrue($profile->hasAutomaticDownload());
     $this->assertIdentical('default', $profile->getProject());
     $this->assertIdentical('default', $profile->getVault());
-    $this->assertIdentical('default', $profile->getWorkflow());
+    $this->assertIdentical('another_workflow', $profile->getWorkflow());
     $this->assertIdentical('test_workflow', $profile->getWorkflowForTarget('es'));
+    $this->assertIdentical('default', $profile->getWorkflowForTarget('de'));
     $this->assertFalse($profile->hasAutomaticDownloadForTarget('es'));
+    $this->assertFalse($profile->hasAutomaticDownloadForTarget('de'));
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+    $this->assertNoFieldChecked("edit-auto-upload");
+    $this->assertFieldChecked("edit-auto-download");
+    $this->assertOptionSelected('edit-project', 'default');
+    $this->assertOptionSelected('edit-vault', 'default');
+    $this->assertOptionSelected('edit-workflow', 'another_workflow');
+    $this->assertOptionSelected('edit-language-overrides-es-overrides', 'custom');
+    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'custom');
+    $this->assertOptionSelected('edit-language-overrides-en-overrides', 'default');
+    $this->assertNoFieldChecked('edit-language-overrides-es-custom-auto-download');
+    $this->assertNoFieldChecked('edit-language-overrides-de-custom-auto-download');
+    $this->assertFieldChecked('edit-language-overrides-en-custom-auto-download');
+    $this->assertOptionSelected('edit-language-overrides-es-custom-workflow', 'test_workflow');
+    $this->assertOptionSelected('edit-language-overrides-de-custom-workflow', 'default');
+    $this->assertOptionSelected('edit-language-overrides-en-custom-workflow', 'default');
   }
 
     /**

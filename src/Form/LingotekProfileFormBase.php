@@ -8,6 +8,7 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\lingotek\LingotekProfileInterface;
 
 /**
  * Provides a common base class for Profile forms.
@@ -26,11 +27,13 @@ class LingotekProfileFormBase extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
+    /** @var LingotekProfileInterface $profile */
+    $profile = $this->entity;
     $form['id'] = array(
       '#type' => 'machine_name',
       '#description' => t('A unique machine-readable name. Can only contain lowercase letters, numbers, and underscores.'),
-      '#disabled' => !$this->entity->isNew(),
-      '#default_value' => $this->entity->id(),
+      '#disabled' => !$profile->isNew(),
+      '#default_value' => $profile->id(),
       '#machine_name' => array(
         'exists' => '\Drupal\lingotek\Entity\LingotekProfile::load',
         'source' => array('label'),
@@ -43,7 +46,7 @@ class LingotekProfileFormBase extends EntityForm {
       '#type' => 'textfield',
       '#title' => $this->t('Profile Name'),
       '#required' => TRUE,
-      '#default_value' => $this->entity->label(),
+      '#default_value' => $profile->label(),
     );
     $form['current_future_note'] = array(
       '#type' => 'markup',
@@ -53,15 +56,15 @@ class LingotekProfileFormBase extends EntityForm {
       '#type' => 'checkbox',
       '#title' => $this->t('Upload Content Automatically'),
       '#description' => $this->t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation. When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
-      '#disabled' => $this->entity->isLocked(),
-      '#default_value' => $this->entity->hasAutomaticUpload(),
+      '#disabled' => $profile->isLocked(),
+      '#default_value' => $profile->hasAutomaticUpload(),
     );
     $form['auto_download'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Download Translations Automatically'),
       '#description' => $this->t('When enabled, completed translations will automatically be downloaded from Lingotek. When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
-      '#disabled' => $this->entity->isLocked(),
-      '#default_value' => $this->entity->hasAutomaticDownload(),
+      '#disabled' => $profile->isLocked(),
+      '#default_value' => $profile->hasAutomaticDownload(),
     );
     $form['future_only_note'] = array(
       '#type' => 'markup',
@@ -76,7 +79,7 @@ class LingotekProfileFormBase extends EntityForm {
       '#title' => $this->t('Default Vault'),
       '#options' => ['default' => 'Default ('. $vaults[$default_vault] . ')'] + $vaults,
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
-      '#default_value' => $this->entity->getVault(),
+      '#default_value' => $profile->getVault(),
     );
 
     $projects = $this->config('lingotek.settings')->get('account.resources.project');
@@ -87,7 +90,7 @@ class LingotekProfileFormBase extends EntityForm {
       '#title' => $this->t('Default Project'),
       '#options' => ['default' => 'Default ('. $projects[$default_project] . ')'] + $projects,
       '#description' => $this->t('The default Translation Memory Project where translations are saved.'),
-      '#default_value' => $this->entity->getProject(),
+      '#default_value' => $profile->getProject(),
     );
 
     $workflows = $this->config('lingotek.settings')->get('account.resources.workflow');
@@ -98,7 +101,7 @@ class LingotekProfileFormBase extends EntityForm {
       '#title' => $this->t('Default Workflow'),
       '#options' => ['default' => 'Default ('. $workflows[$default_workflow] . ')'] + $workflows,
       '#description' => $this->t('The default Workflow which would be used for translations.'),
-      '#default_value' => $this->entity->getWorkflow(),
+      '#default_value' => $profile->getWorkflow(),
     );
 
     $form['language_overrides'] = array(
@@ -113,6 +116,7 @@ class LingotekProfileFormBase extends EntityForm {
           '#type' => 'select',
           '#title' => $language->getName() . ' (' . $language->getId() . ')',
           '#options' => ['default' => $this->t('Use default settings'), 'custom' => $this->t('Use custom settings')],
+          '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? 'custom' : 'default',
         ),
         'custom' => array(
           '#type' => 'container',
@@ -129,14 +133,14 @@ class LingotekProfileFormBase extends EntityForm {
             '#title' => $this->t('Default Workflow'),
             '#options' => ['default' => 'Default ('. $workflows[$default_workflow] . ')'] + $workflows,
             '#description' => $this->t('The default Workflow which would be used for translations.'),
-            '#default_value' => $this->entity->getWorkflow(),
+            '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
           ),
           'auto_download' => array(
             '#type' => 'checkbox',
             '#title' => $this->t('Download Translations Automatically'),
             '#description' => $this->t('When enabled, completed translations will automatically be downloaded from Lingotek. When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
-            '#disabled' => $this->entity->isLocked(),
-            '#default_value' => $this->entity->hasAutomaticDownload(),
+            '#disabled' => $profile->isLocked(),
+            '#default_value' => $profile->hasAutomaticDownloadForTarget($langcode),
           ),
         ),
       );

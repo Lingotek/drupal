@@ -6,9 +6,9 @@
 function lingotek_test_install() {
   $config = \Drupal::configFactory()->getEditable('lingotek.settings');
   $config->set('account.resources.community', ['test_community' => 'test_community']);
-  $config->set('account.resources.project', ['test_project' => 'test_project']);
-  $config->set('account.resources.vault', ['test_vault' => 'test_vault']);
-  $config->set('account.resources.workflow', ['test_workflow' => 'test_workflow']);
+  $config->set('account.resources.project', ['test_project' => 'test_project', 'another_project' => 'another_project']);
+  $config->set('account.resources.vault', ['test_vault' => 'test_vault', 'another_vault' => 'another_vault']);
+  $config->set('account.resources.workflow', ['test_workflow' => 'test_workflow', 'another_workflow' => 'another_workflow']);
   $config->set('default.workflow', 'test_workflow');
 
   $config->save();
