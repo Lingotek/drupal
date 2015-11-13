@@ -22,7 +22,6 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($this->setupCompleted()) {
       return $this->getLingotekForm('LingotekSettingsAccountForm');
     }
-    $var = $this->request;
     return array(
       '#type' => 'markup',
       'markup' => $this->getLingotekForm('LingotekSettingsConnectForm'),

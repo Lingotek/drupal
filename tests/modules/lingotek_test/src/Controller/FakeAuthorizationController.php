@@ -28,4 +28,10 @@ class FakeAuthorizationController extends ControllerBase {
     return new RedirectResponse($url);
   }
 
+  public function createAccountForm(Request $request) {
+    // We redirect as will happen after clicking cancel on the form.
+    $url = $request->get('app');
+    return new RedirectResponse($url);
+  }
+
 }
