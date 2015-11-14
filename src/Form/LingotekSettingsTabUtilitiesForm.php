@@ -142,16 +142,35 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
       '#submit' => array('::disassociateAllTranslations'),
     );
 
+    $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
+    $enable_debug_utilities_row = [];
+    $enable_debug_utilities_row['enable_debug_utilities_description'] = [
+      '#markup' => '<H5>' . $this->t('Debug utilities') . '</H5>' . '<p>' . $this->t('Should only be used to debug Lingotek') . '</p>',
+    ];
+    $enable_debug_utilities_row['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $debug_enabled ? $this->t('Disable debug operations') : $this->t('Enable debug operations'),
+      '#button_type' => 'primary',
+      '#submit' => array('::switchDebugUtilities'),
+    ];
+
+
     $lingotek_table['api_refresh'] = $api_refresh_row;
     $lingotek_table['update_url'] = $update_callback_url_row;
     $lingotek_table['disassociate'] = $disassociate_row;
-    
+    $lingotek_table['enable_debug_utilities'] = $enable_debug_utilities_row;
+
     $form['utilities']['utilities_title'] = array(
       '#markup' => '<br><br><H4>' . $this->t('Lingotek Utilities' . '</H4>'),
     );
     $form['utilities']['lingotek_table'] = $lingotek_table;
 
     return $form;
+  }
+
+  public function switchDebugUtilities() {
+    $value = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
+    \Drupal::state()->set('lingotek.enable_debug_utilities', !$value);
   }
 
   public function refreshResources() {

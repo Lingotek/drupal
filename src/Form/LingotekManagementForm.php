@@ -17,6 +17,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
@@ -351,6 +352,10 @@ class LingotekManagementForm extends FormBase {
     $values = array_keys(array_filter($form_state->getValue(['table'], function($key, $value){ return $value; })));
     $processed = FALSE;
     switch ($operation) {
+      case 'debug.export':
+        $this->createDebugExportBatch($values);
+        $processed = TRUE;
+        break;
       case 'upload':
         $this->createUploadBatch($values);
         $processed = TRUE;
@@ -443,6 +448,46 @@ class LingotekManagementForm extends FormBase {
   protected function createUploadBatch($values) {
     $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'));
   }
+
+  /**
+   * Create and set an export batch.
+   *
+   * @param array $values
+   *   Array of ids to upload.
+   */
+  protected function createDebugExportBatch($values) {
+    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
+
+    foreach ($entities as $entity) {
+      $operations[] = [[$this, 'debugExport'], [$entity]];
+    }
+    $batch = array(
+      'title' => $this->t('Exporting content (debugging purposes)'),
+      'operations' => $operations,
+      'finished' => [$this, 'debugExportFinished'],
+      'progressive' => TRUE,
+    );
+    batch_set($batch);
+  }
+
+  public function debugExportFinished($success, $results, $operations) {
+    if ($success) {
+      $links = [];
+      foreach ($results['exported'] as $result) {
+        $links[] = [
+          '#theme' => 'file_link',
+          '#file' => File::load($result),
+        ];
+      }
+      $build = [
+        '#theme' => 'item_list',
+        '#items' => $links,
+      ];
+      drupal_set_message($this->t('Exports available at: @exports',
+        ['@exports' => drupal_render($build)]));
+    }
+  }
+
 
   /**
    * Create and set a check upload status batch.
@@ -546,6 +591,42 @@ class LingotekManagementForm extends FormBase {
     }
     $this->tempStoreFactory->get($this->entityTypeId . '_multiple_delete_confirm')->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect($this->entityTypeId . '.multiple_delete_confirm', [], ['query' => $this->getDestinationArray()]);
+  }
+
+  /**
+   * Export source for debugging purposes.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function debugExport(ContentEntityInterface $entity, &$context) {
+    $context['message'] = $this->t('Exporting @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+      $data = $this->translationService->getSourceData($entity);
+      $data['_debug'] = [
+        'title' => $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label(),
+        'profile' => $profile ? $profile->id() : '<null>',
+        'source_locale' => $this->translationService->getSourceLocale($entity),
+      ];
+      $source_data = json_encode($data);
+      $filename = $entity->getEntityTypeId() . '.' . $entity->bundle() . '.' . $entity->id() . '.json';
+      $file = File::create([
+        'uid' => 1,
+        'filename' => $filename,
+        'uri' => 'public://' . $filename,
+        'filemime' => 'text/plain',
+        'created' => REQUEST_TIME,
+        'changed' => REQUEST_TIME,
+      ]);
+      file_put_contents($file->getFileUri(), $source_data);
+      $file->save();
+      $context['results']['exported'][] = $file->id();
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
   }
 
   /**
@@ -928,6 +1009,11 @@ class LingotekManagementForm extends FormBase {
     // operations in core.
     if ($this->entityTypeId === 'node') {
       $operations['delete_nodes'] = $this->t('Delete content');
+    }
+
+    $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
+    if ($debug_enabled) {
+      $operations['debug']['debug.export'] = $this->t('Debug: Export sources as JSON');
     }
 
     return $operations;
