@@ -33,6 +33,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       ));
 
       $this->createImageField('field_image', 'article');
+      $this->createImageField('user_picture', 'user', 'user');
     }
 
   }
@@ -53,6 +54,8 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     // picked up.
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+    ContentLanguageSettings::loadByEntityTypeBundle('user', 'user')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('user', 'user', TRUE);
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
@@ -80,6 +83,9 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       'node[article][fields][body]' => 1,
       'node[article][fields][field_image]' => 1,
       'node[article][fields][field_image:properties][alt]' => 'alt',
+      'user[user][enabled]' => 1,
+      'user[user][fields][user_picture]' => 1,
+      'user[user][fields][user_picture:properties][alt]' => 'alt',
     ];
     $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 

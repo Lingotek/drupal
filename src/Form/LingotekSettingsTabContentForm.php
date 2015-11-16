@@ -91,7 +91,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           '#default_value' => $lingotek_config->isEnabled($entity_id, $bundle_id),
         ];
         $row['content_type'] = array(
-          '#markup' => $this->t($bundle['label']),
+          '#markup' => $bundle['label'],
         );
         $row['profiles'] = $this->retrieveProfiles($entity_id, $bundle_id);
         $row['fields'] = $this->retrieveFields($entity_id, $bundle_id);

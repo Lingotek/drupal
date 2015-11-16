@@ -29,9 +29,11 @@ abstract class LingotekTestBase extends WebTestBase {
    * Create a new image field.
    *
    * @param string $name
-   *   The name of the new field (all lowercase), exclude the "field_" prefix.
+   *   The name of the new field (all lowercase).
    * @param string $type_name
-   *   The node type that this field will be added to.
+   *   The bundle that this field will be added to.
+   * @param string $entity_type_id
+   *   The entity type that this field will be added to. Defaults to 'node'
    * @param array $storage_settings
    *   A list of field storage settings that will be added to the defaults.
    * @param array $field_settings
@@ -39,10 +41,10 @@ abstract class LingotekTestBase extends WebTestBase {
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    */
-  function createImageField($name, $type_name, $storage_settings = array(), $field_settings = array(), $widget_settings = array()) {
+  function createImageField($name, $type_name, $entity_type_id = 'node', $storage_settings = array(), $field_settings = array(), $widget_settings = array()) {
     entity_create('field_storage_config', array(
       'field_name' => $name,
-      'entity_type' => 'node',
+      'entity_type' => $entity_type_id,
       'type' => 'image',
       'settings' => $storage_settings,
       'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
@@ -51,21 +53,21 @@ abstract class LingotekTestBase extends WebTestBase {
     $field_config = entity_create('field_config', array(
       'field_name' => $name,
       'label' => $name,
-      'entity_type' => 'node',
+      'entity_type' => $entity_type_id,
       'bundle' => $type_name,
       'required' => !empty($field_settings['required']),
       'settings' => $field_settings,
     ));
     $field_config->save();
 
-    entity_get_form_display('node', $type_name, 'default')
+    entity_get_form_display($entity_type_id, $type_name, 'default')
       ->setComponent($name, array(
         'type' => 'image_image',
         'settings' => $widget_settings,
       ))
       ->save();
 
-    entity_get_display('node', $type_name, 'default')
+    entity_get_display($entity_type_id, $type_name, 'default')
       ->setComponent($name)
       ->save();
 
