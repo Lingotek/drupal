@@ -2581,6 +2581,7 @@ function lingotek_entity_delete_translations_form_submit($form, &$form_state) {
     $entities = entity_load($entity_type, $entity_ids);
     $count = 0;
     foreach ($entities as $entity) {
+      $entity->lingotek_upload_override = FALSE;
       if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
         $count += 1;
         lingotek_delete_node_translations($entity->nid);
