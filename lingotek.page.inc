@@ -351,7 +351,7 @@ function lingotek_pm($node) {
       $document = LingotekDocument::load($node->lingotek['document_id']);
       $progress = $document->getProgress();
 
-      if ($progress->results == 'success') {
+      if ($progress && $progress->results == 'success') {
 
         $download_form = drupal_get_form('lingotek_download_translations_form', $node, $document);
         $output[] = array(
