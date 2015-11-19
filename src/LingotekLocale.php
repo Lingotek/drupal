@@ -262,7 +262,11 @@ class LingotekLocale {
    *   FALSE otherwise.
    */
   public static function convertLingotek2Drupal($lingotek_locale, $generate = FALSE) {
+    $installed_languages = \Drupal::languageManager()->getLanguages();
     $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale)); // standard conversion
+    if (isset($installed_languages[$drupal_language_code])) {
+      return $installed_languages[$drupal_language_code]->getId();
+    }
     $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
     $exceptions = self::$language_mapping_l2d_exceptions;
     if (array_key_exists($lingotek_locale, $exceptions)) {

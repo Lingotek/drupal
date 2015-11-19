@@ -30,6 +30,9 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
   protected function setUp() {
     parent::setUp();
 
+    // Create a locale outside of Lingotek dashboard.
+    ConfigurableLanguage::create(['id' => 'de-at', 'name' => 'German (AT)'])->save();
+
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
@@ -107,11 +110,20 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     $this->clickLink('English');
     $this->assertText('The import for node Llamas are cool is complete.');
 
+    // Request the German (AT) translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->clickLink('DE-AT');
+    $this->assertText("Locale 'de_AT' was added as a translation target for node Llamas are cool.");
+    // Check that the requested locale is the right one.
+    $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
+
     // Request the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+    // Check that the requested locale is the right one.
+    $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
