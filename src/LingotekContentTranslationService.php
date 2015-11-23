@@ -532,6 +532,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           }
         }
       }
+      // We need to set the content_translation source so the files are synced
+      // properly. See https://www.drupal.org/node/2544696 for more information.
+      $translation->set('content_translation_source', $entity->getUntranslated()->language()->getId());
       $translation->save();
       $lock->release(__FUNCTION__);
     }
