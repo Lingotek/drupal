@@ -119,7 +119,6 @@ class LingotekSetupController extends LingotekControllerBase {
     if (!empty($account_info)) {
       $config = \Drupal::configFactory()->getEditable('lingotek.settings');
       $config->set('account.login_id', $account_info['login_id']);
-      $config->set('account.access_token', $account_info['id']);
       $config->save();
     }
   }
