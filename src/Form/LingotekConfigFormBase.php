@@ -21,7 +21,7 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
    * Constructs a \Drupal\lingotek\Form\LingotekConfigFormBase object.
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
-   * @param \Drupal\Core\Config\ConfigFactory $config
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   The factory for configuration objects.
    */
   public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config) {

@@ -14,11 +14,11 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
@@ -34,6 +34,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class LingotekManagementForm extends FormBase {
 
   use LingotekSetupTrait;
+
+
+  /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
 
   /**
    * The entity manager.
@@ -102,6 +110,8 @@ class LingotekManagementForm extends FormBase {
    *   The entity query factory.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *  The language-locale mapper.
    * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    *   The Lingotek content translation service.
    * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
@@ -111,7 +121,7 @@ class LingotekManagementForm extends FormBase {
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekConfigurationServiceInterface $lingotek_configuration, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, $entity_type_id) {
+  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, $entity_type_id) {
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
@@ -121,6 +131,7 @@ class LingotekManagementForm extends FormBase {
     $this->entityTypeId = $entity_type_id;
     $this->lingotek = \Drupal::service('lingotek');
     $this->lingotekConfiguration = $lingotek_configuration;
+    $this->languageLocaleMapper = $language_locale_mapper;
   }
 
   /**
@@ -132,6 +143,7 @@ class LingotekManagementForm extends FormBase {
       $container->get('language_manager'),
       $container->get('entity.query'),
       $container->get('lingotek.configuration'),
+      $container->get('lingotek.language_locale_mapper'),
       $container->get('content_translation.manager'),
       $container->get('lingotek.content_translation'),
       $container->get('user.private_tempstore'),
@@ -733,11 +745,7 @@ class LingotekManagementForm extends FormBase {
    */
   public function requestTranslation(ContentEntityInterface $entity, $langcode, &$context) {
     $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
-    $language = ConfigurableLanguage::load($langcode);
-    $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-    if ($language) {
-      $locale = $language->getThirdPartySetting('lingotek', 'locale', $locale);
-    }
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       $this->translationService->addTarget($entity, $locale);
     }
@@ -758,11 +766,7 @@ class LingotekManagementForm extends FormBase {
    */
   public function downloadTranslation(ContentEntityInterface $entity, $langcode, &$context) {
     $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
-    $language = ConfigurableLanguage::load($langcode);
-    $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-    if ($language) {
-      $locale = $language->getThirdPartySetting('lingotek', 'locale', $locale);
-    }
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       $this->translationService->downloadDocument($entity, $locale);
     }
@@ -785,11 +789,7 @@ class LingotekManagementForm extends FormBase {
       $languages = $this->languageManager->getLanguages();
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $entity->language()->getId()) {
-          $language = ConfigurableLanguage::load($langcode);
-          $locale = LingotekLocale::convertDrupal2Lingotek($langcode);
-          if ($language) {
-            $locale = $language->getThirdPartySetting('lingotek', 'locale', $locale);
-          }
+          $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
           $this->translationService->downloadDocument($entity, $locale);
         }
       }
@@ -1052,9 +1052,7 @@ class LingotekManagementForm extends FormBase {
   protected function getTargetActionUrl(ContentEntityInterface &$entity, $target_status, $langcode) {
     $url = NULL;
     $document_id = $this->translationService->getDocumentId($entity);
-    $language = ConfigurableLanguage::load($langcode);
-    $locale = $language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
-
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($target_status == Lingotek::STATUS_REQUEST) {
         $url = Url::fromRoute('lingotek.entity.add_target',
           [

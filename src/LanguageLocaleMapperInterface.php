@@ -17,4 +17,15 @@ interface LanguageLocaleMapperInterface {
    */
   public function getConfigurableLanguageForLocale($locale);
 
+  /**
+   * Gets the Lingotek locale for the given Drupal langcode.
+   *
+   * @param string $langcode
+   *   The Drupal langcode.
+   *
+   * @return ConfigurableLanguageInterface|NULL
+   *   The Lingotek locale.
+   */
+  public function getLocaleForLangcode($langcode);
+
 }

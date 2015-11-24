@@ -124,12 +124,11 @@ class LingotekDashboardController extends LingotekControllerBase {
       // Language manager returns Language objects, not ConfigurableLanguage,
       // because the language manager is initiated before the config system, and
       // loads the configuration bypassing it.
-      $configurable_language = ConfigurableLanguage::load($language->getId());
-      $lingotek_locale = $configurable_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($configurable_language->getId()));
+      $lingotek_locale = $this->languageLocaleMapper->getLocaleForLangcode($language->getId());
 
       if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $lingotek_locale)
         continue;
-      $language_report = $this->getLanguageReport($configurable_language);
+      $language_report = $this->getLanguageReport($language);
       if ($lingotek_locale_requested == $lingotek_locale) {
         $response = $language_report;
       } else {
@@ -175,9 +174,10 @@ class LingotekDashboardController extends LingotekControllerBase {
     );
   }
 
-  protected function getLanguageReport(ConfigurableLanguageInterface $language, $active = 1, $enabled = 1) {
-    $langcode = $language->id();
-    $locale = $language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($language->getId()));
+  protected function getLanguageReport(LanguageInterface $language, $active = 1, $enabled = 1) {
+    $langcode = $language->getId();
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
+
     $types = $this->getEnabledTypes();
 
     $stat = array(

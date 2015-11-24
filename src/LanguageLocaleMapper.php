@@ -5,6 +5,7 @@ namespace Drupal\lingotek;
 
 
 use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 class LanguageLocaleMapper implements LanguageLocaleMapperInterface {
@@ -41,6 +42,16 @@ class LanguageLocaleMapper implements LanguageLocaleMapperInterface {
       $drupal_language = ConfigurableLanguage::load(LingotekLocale::convertLingotek2Drupal($locale));
     }
     return $drupal_language;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getLocaleForLangcode($langcode) {
+    /** @var ConfigurableLanguageInterface $config_language */
+    $config_language = ConfigurableLanguage::load($langcode);
+    $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
+    return $locale;
   }
 
 }

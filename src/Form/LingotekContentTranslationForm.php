@@ -7,17 +7,49 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekLocale;
-use Drupal\lingotek\Form\LingotekConfigFormBase;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LingotekContentTranslationForm extends LingotekConfigFormBase {
+
+  /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
+
+  /**
+   * Constructs a \Drupal\lingotek\Form\LingotekContentTranslationForm object.
+   *
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *  The language-locale mapper.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   The factory for configuration objects.
+   */
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config) {
+    parent::__construct($lingotek, $config);
+    $this->languageLocaleMapper = $language_locale_mapper;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static (
+      $container->get('lingotek'),
+      $container->get('lingotek.language_locale_mapper'),
+      $container->get('config.factory')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -56,8 +88,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $entity_langcode = $entity->language()->getId();
 
     foreach ($languages as $langcode => $language) {
-      $config_language = ConfigurableLanguage::load($langcode);
-      $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
+      $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
 
       $option = array_shift($overview['#rows']);
       if ($source_language == $locale) {
@@ -143,8 +174,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     $locales = array();
     foreach ($selected_langcodes as $langcode => $selected) {
       if ($selected) {
-        $language = ConfigurableLanguage::load($langcode);
-        $locale = $language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
+        $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
         $locales[] = $locale;
       }
     }
