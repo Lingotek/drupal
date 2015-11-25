@@ -524,8 +524,8 @@ function lingotek_mark_phases_complete($form, $form_state, $node, $document = NU
       foreach ($targets as $target) {
         $language = Lingotek::convertLingotek2Drupal($target->language);
         $current_phase = $document->currentPhase($target->id);
-
-        $phase_complete_percent = empty($current_phase->percentComplete) ? 0 : $current_phase->percentComplete;
+        $curr_percent = $current_phase->percentComplete;
+        $phase_complete_percent = empty($curr_percent) ? 0 : $curr_percent;
 
         if ($current_phase && $current_phase->canBeMarkedComplete()) {
           $phase_link = l($current_phase->name, '', array('attributes' => array(
