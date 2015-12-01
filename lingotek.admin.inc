@@ -1922,6 +1922,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#markup' => '<h3>' . t('Target Languages') . '</h3><hr />',
     );
     $languages = lingotek_get_target_locales(FALSE);
+    usort($languages, "lingotek_language_specific_profile_cmp");
     $form['defaults']['language_overrides'] = array();
     $settings_options = array(
       LingotekSync::PROFILE_INHERIT => 'Inherit default settings',
@@ -2014,6 +2015,14 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   );
 
   return $form;
+}
+
+function lingotek_language_specific_profile_cmp($a, $b)
+{
+  if (!isset($a->name) || !isset($b->name)) {
+    return 0;
+  }
+    return strcmp($a->name, $b->name);
 }
 
 function lingotek_profile_default_workflow_form_callback($form, $form_state) {
