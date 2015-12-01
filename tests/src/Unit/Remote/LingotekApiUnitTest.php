@@ -103,7 +103,7 @@ class LingotekApiUnitTest extends UnitTestCase {
       ->getMock();
     $this->client->expects($this->once())
       ->method('get')
-      ->with('/api/vault', ['limit' => 100, 'is_owned' => TRUE])
+      ->with('/api/vault', ['limit' => 100, 'is_owned' => 'TRUE'])
       ->will($this->returnValue($response));
 
     $this->lingotek_api->getVaults('community_id');
