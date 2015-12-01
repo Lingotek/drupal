@@ -209,7 +209,7 @@ class LingotekApi implements LingotekApiInterface {
     try {
       $this->logger->debug('Lingotek::getVaults called with id ' . $community_id);
       // We ignore $community_id, as it is not needed for getting the TM vaults.
-      $response = $this->lingotekClient->get('/api/vault', array('limit' => 100));
+      $response = $this->lingotekClient->get('/api/vault', array('limit' => 100, 'is_owned' => TRUE));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get vaults: ' . $e->getMessage());
