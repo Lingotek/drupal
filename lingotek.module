@@ -1140,13 +1140,25 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
       $prefill_phase = NULL;
     }
 
-    // SUBMIT THE WORKFLOW CHANGES TO TMS
     $entity_type = $form_state['entity_type'];
-    $document_ids = $entity_type !== 'config' ? LingotekSync::getDocIdsFromEntityIds($entity_type, $nids)
-            : LingotekSync::getConfigDocIdsFromSetIds($nids);
+    // SUBMIT THE WORKFLOW CHANGES TO TMS
+    lingotek_entity_change_workflow($entity_type, $nids, $workflow_id, $prefill_phase);
+  }
+}
+
+/**
+ * Changes an entity's workflow locally and on the TMS
+ * @param string $entity_type
+ * The entity type
+ * @param array $entity_ids
+ * The entity id
+ */
+function lingotek_entity_change_workflow($entity_type, $entity_ids, $workflow_id, $prefill_phase = null) {
+  $document_ids = $entity_type !== 'config' ? LingotekSync::getDocIdsFromEntityIds($entity_type, $entity_ids)
+            : LingotekSync::getConfigDocIdsFromSetIds($entity_ids);
     if($entity_type === 'config'){
-      foreach($nids as $nid) {
-        LingotekSync::updateConfigSetWorkflow($nid, $workflow_id);
+      foreach($entity_ids as $id) {
+        LingotekSync::updateConfigSetWorkflow($id, $workflow_id);
       }
     }
     if (!$document_ids) {
@@ -1159,15 +1171,13 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
 
     // CREATE/UPDATE WORKFLOW ENTRIES IN THE LINGOTEK METADATA TABLE
     if($entity_type === 'config') {
-      LingotekSync::bulkSetAllTargetStatus($entity_type, $nids, LingotekSync::STATUS_PENDING);
+      LingotekSync::bulkSetAllTargetStatus($entity_type, $entity_ids, LingotekSync::STATUS_PENDING);
       return;
     }
-    LingotekSync::bulkSetAllTargetStatus($entity_type, $nids, LingotekSync::STATUS_PENDING);
-    foreach ($nids as $nid) {
-      lingotek_keystore($entity_type, $nid, 'workflow_id', $workflow_id);
+    LingotekSync::bulkSetAllTargetStatus($entity_type, $entity_ids, LingotekSync::STATUS_PENDING);
+    foreach ($entity_ids as $id) {
+      lingotek_keystore($entity_type, $id, 'workflow_id', $workflow_id);
     }
-  }
-  
 }
 
 function lingotek_get_global_profile() {
@@ -1241,6 +1251,13 @@ function lingotek_get_profile_options() {
   unset($profile_options[LingotekSync::PROFILE_CONFIG]);
 
   return $profile_options;
+}
+
+function lingotek_get_workflow_options() {
+  $api = LingotekApi::instance();
+  $workflows = $api->listWorkflows();
+
+  return $workflows;
 }
 
 /**
