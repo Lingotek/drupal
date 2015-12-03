@@ -8,6 +8,7 @@
 namespace Drupal\lingotek;
 
 
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
 
@@ -86,7 +87,27 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     if ($needs_router_rebuild) {
       \Drupal::service('router.builder')->rebuild();
     }
+  }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getConfigEntityDefaultProfileId($plugin_id, $provide_default = TRUE) {
+    $config = \Drupal::config('lingotek.settings');
+    $profile_id = $config->get('translate.config.' . $plugin_id . '.profile');
+    if ($provide_default && $profile_id === NULL) {
+      $profile_id = Lingotek::PROFILE_AUTOMATIC;
+    }
+    return $profile_id;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function setConfigEntityDefaultProfileId($plugin_id, $profile_id) {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('translate.config.' . $plugin_id . '.profile', $profile_id);
+    $config->save();
   }
 
   /**
@@ -108,6 +129,14 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile', $profile_id);
     $config->save();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getConfigEntityProfile(ConfigEntityInterface $entity, $provide_default = TRUE) {
+    $profile_id = $this->getConfigEntityDefaultProfileId($entity->getEntityTypeId(), $provide_default);
+    return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
 
   /**

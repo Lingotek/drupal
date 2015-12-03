@@ -50,27 +50,6 @@ interface LingotekConfigTranslationServiceInterface {
   public function setEnabled($plugin_id, $enabled = TRUE);
 
   /**
-   * Gets the default profile for a config entity.
-   *
-   * @param string $plugin_id
-   *   The config entity plugin id.
-   *
-   * @return LingotekProfile
-   *   The Lingotek profile.
-   */
-  public function getDefaultProfile($plugin_id);
-
-  /**
-   * Sets the default profile for a config entity.
-   *
-   * @param string $plugin_id
-   *   The config entity plugin id.
-   * @param string $profile_id
-   *   The profile id.
-   */
-  public function setDefaultProfile($plugin_id, $profile_id);
-
-  /**
    * Gets the configuration translatable properties of the given mapper.
    *
    * @param \Drupal\config_translation\ConfigNamesMapper $mapper

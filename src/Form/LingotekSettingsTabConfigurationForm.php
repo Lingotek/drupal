@@ -135,7 +135,7 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
         $row['profile'] = [
           '#type' => 'select',
           '#options' => $this->lingotekConfig->getProfileOptions(),
-          '#default_value' => $this->translationService->getDefaultProfile($mapper->getPluginId())->id(),
+          '#default_value' => $this->lingotekConfig->getConfigEntityDefaultProfileId($mapper->getPluginId()),
         ];
         $table[$mapper->getPluginId()] = $row;
       }
@@ -173,8 +173,8 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
         $this->translationService->setEnabled($plugin_id, FALSE);
       }
       // If we enable it, we save the profile.
-      if ($data['enabled'] && $data['profile'] !== $this->translationService->getDefaultProfile($plugin_id)->id()) {
-        $this->translationService->setDefaultProfile($plugin_id, $data['profile']);
+      if ($data['enabled'] && $data['profile'] !== $this->lingotekConfig->getConfigEntityDefaultProfileId($plugin_id, FALSE)) {
+        $this->lingotekConfig->setConfigEntityDefaultProfileId($plugin_id, $data['profile']);
       }
     }
   }

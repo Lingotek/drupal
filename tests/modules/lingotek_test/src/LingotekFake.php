@@ -175,7 +175,7 @@ class LingotekFake implements LingotekInterface {
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
     \Drupal::state()->set('lingotek.added_target_locale', $locale);
-    \Drupal::state()->set('lingotek.used_profile', $profile->id());
+    \Drupal::state()->set('lingotek.used_profile', $profile ? $profile->id() : NULL);
     // Added locale as target.
     return TRUE;
   }
@@ -193,6 +193,8 @@ class LingotekFake implements LingotekInterface {
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"uid":[{"target_id":"1"}],"status":[{"value":1}],"created":[{"value":1438095034}],"changed":[{"value":1438095483}],"promote":[{"value":1}],"sticky":[{"value":0}],"revision_log":[{"value":""}],"revision_translation_affected":[{"value":"1"}],"content_translation_source":[{"value":"und"}],"content_translation_outdated":[{"value":"0"}],"body":[{"value":"Las llamas son muy chulas","format":"plain_text","summary":""}]}');
       case 'taxonomy_term':
         return json_decode('{"name":[{"value":"Las llamas son chulas"}],"description":[{"value":"Las llamas son muy chulas"}]}');
+      case 'content_type':
+        return json_decode('{"name":"Artículo","description":"Uso de <em>artículos<\/em> sensibles al tiempo contenidos como noticias, comunicados de prensa o entradas en el blog.","help":""}');
     }
   }
 

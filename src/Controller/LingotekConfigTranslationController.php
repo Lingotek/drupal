@@ -2,26 +2,32 @@
 
 namespace Drupal\lingotek\Controller;
 
-
 use Drupal\config_translation\ConfigEntityMapper;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\Controller\ConfigTranslationController;
 use Drupal\Core\Access\AccessManagerInterface;
-use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
-use Drupal\lingotek\LingotekLocale;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
 
 class LingotekConfigTranslationController extends ConfigTranslationController {
+
+  /**
+   * The language-locale mapper.
+   *
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   */
+  protected $languageLocaleMapper;
 
   /**
    * The Lingotek config translation service.
@@ -33,6 +39,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
   /**
    * Constructs a LingotekConfigTranslationController.
    *
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *  The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service
    *   The Lingotek config translation service.
    * @param \Drupal\config_translation\ConfigMapperManagerInterface $config_mapper_manager
@@ -48,8 +56,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    */
-  public function __construct(LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager) {
+  public function __construct(LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager) {
     parent::__construct($config_mapper_manager, $access_manager, $router, $path_processor, $account, $language_manager);
+    $this->languageLocaleMapper = $language_locale_mapper;
     $this->translationService = $translation_service;
   }
 
@@ -58,6 +67,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.config_translation'),
       $container->get('plugin.manager.config_translation.mapper'),
       $container->get('access_manager'),
@@ -94,6 +104,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
 
     foreach ($languages as $language) {
       $langcode = $language->getId();
+      $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
       if ($langcode === $original_langcode) {
         if ($entity_id === NULL) {
           $entity_id = $plugin_id;
@@ -143,7 +154,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
                   [
                     'entity_type' => $plugin_id,
                     'entity_id' => $entity_id,
-                    'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+                    'locale' => $locale,
                   ]),
               );
             }
@@ -154,7 +165,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
                   [
                     'entity_type' => $plugin_id,
                     'entity_id' => $entity_id,
-                    'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+                    'locale' => $locale,
                   ]),
               );
             }
@@ -165,7 +176,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
                   [
                     'entity_type' => $plugin_id,
                     'entity_id' => $entity_id,
-                    'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+                    'locale' => $locale,
                   ]),
               );
             }
@@ -180,7 +191,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
                   [
                     'entity_type' => $plugin_id,
                     'entity_id' => $entity_id,
-                    'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+                    'locale' => $locale,
                   ]),
               );
             }
@@ -191,7 +202,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
                   [
                     'entity_type' => $plugin_id,
                     'entity_id' => $entity_id,
-                    'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+                    'locale' => $locale,
                   ]),
               );
             }
@@ -202,7 +213,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
                   [
                     'entity_type' => $plugin_id,
                     'entity_id' => $entity_id,
-                    'locale' => LingotekLocale::convertDrupal2Lingotek($langcode),
+                    'locale' => $locale,
                   ]),
               );
             }
@@ -227,7 +238,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($this->translationService->uploadDocument($entity)) {
       drupal_set_message($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
     }
-    return new TrustedRedirectResponse($request->headers->get('referer'));
+    return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
 
   public function checkUpload($entity_type, $entity_id, Request $request) {
@@ -243,9 +254,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($this->translationService->checkSourceStatus($entity)) {
       drupal_set_message($this->t('%label status checked successfully', ['%label' => $entity->label()]));
     }
-    return new TrustedRedirectResponse($request->headers->get('referer'));
+    return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
-
 
   public function request($entity_type, $entity_id, $locale, Request $request) {
     if ($entity_type === $entity_id) {
@@ -260,7 +270,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($this->translationService->addTarget($entity, $locale)) {
       drupal_set_message($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
     }
-    return new TrustedRedirectResponse($request->headers->get('referer'));
+    return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
 
   public function checkDownload($entity_type, $entity_id, $locale, Request $request) {
@@ -274,9 +284,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->checkTargetStatus($entity, $locale)) {
-      drupal_set_message($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
+      drupal_set_message($this->t('Translation to %locale status checked successfully', ['%locale' => $locale]));
     }
-    return new TrustedRedirectResponse($request->headers->get('referer'));
+    return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
 
 
@@ -293,7 +303,25 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($this->translationService->downloadDocument($entity, $locale)) {
       drupal_set_message($this->t('Translation to %locale downloaded successfully', ['%locale' => $locale]));
     }
-    return new TrustedRedirectResponse($request->headers->get('referer'));
+    return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
+  }
+
+  /**
+   * Redirect to config entity translation overview page.
+   *
+   * @param string $entity_type
+   *   The config entity type id.
+   * @param string $entity_id
+   *   The config entity id.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect response.
+   */
+  protected function redirectToEntityTranslateOverview($entity_type, $entity_id) {
+    $mappers =  $this->configMapperManager->getMappers();
+    $mapper = $mappers[$entity_type];
+    $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id]);
+    return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
   }
 
 }

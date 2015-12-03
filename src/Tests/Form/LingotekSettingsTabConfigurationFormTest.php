@@ -32,8 +32,11 @@ class LingotekSettingsTabConfigurationFormTest extends LingotekTestBase {
 
     /** @var LingotekConfigTranslationServiceInterface $config_translation */
     $config_translation = \Drupal::service('lingotek.config_translation');
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+
     $this->assertTrue($config_translation->isEnabled('configurable_language'));
-    $this->assertEqual('manual', $config_translation->getDefaultProfile('configurable_language')->id());
+    $this->assertEqual('manual', $lingotek_config->getConfigEntityDefaultProfileId('configurable_language'));
     $this->assertEqual(['configurable_language'], $config_translation->getEnabledConfigTypes());
   }
 

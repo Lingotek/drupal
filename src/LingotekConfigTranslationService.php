@@ -8,18 +8,15 @@
 namespace Drupal\lingotek;
 
 use Drupal\config_translation\ConfigEntityMapper;
-use Drupal\config_translation\ConfigMapperInterface;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\ConfigNamesMapper;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Language\Language;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
-use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
  * Service for managing Lingotek configuration translations.
@@ -121,25 +118,6 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritDoc}
    */
-  public function getDefaultProfile($plugin_id) {
-    $config = \Drupal::config('lingotek.settings');
-    $key = 'translate.config.' . $plugin_id . '.profile';
-    $profile_id = $config->get($key);
-    return $profile_id ? LingotekProfile::load($profile_id) : LingotekProfile::load(Lingotek::PROFILE_AUTOMATIC);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function setDefaultProfile($plugin_id, $profile_id) {
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-    $key = 'translate.config.' . $plugin_id . '.profile';
-    $config->set($key, $profile_id)->save();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   public function getConfigTranslatableProperties(ConfigNamesMapper $mapper) {
     /** @var TypedConfigManagerInterface $typed_config */
     $typed_config = \Drupal::service('config.typed');
@@ -204,7 +182,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function setSourceStatus(ConfigEntityInterface &$entity, $status) {
-    $source_language = $entity->getThirdPartySetting('lingotek', 'lingotek_translation_source');
+    $source_language = NULL;
+    $translation_source = $entity->getThirdPartySetting('lingotek', 'lingotek_translation_source');
+    if ($translation_source) {
+      $source_language = key($translation_source);
+    }
     if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED || $source_language == NULL) {
       $source_language = $entity->language()->getId();
     }
@@ -218,7 +200,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function getTargetStatus(ConfigEntityInterface &$entity, $langcode) {
     $status = Lingotek::STATUS_UNTRACKED;
     $translation_status = $entity->getThirdPartySetting('lingotek', 'lingotek_translation_status');
-    if (count($translation_status) > 0) {
+    if (count($translation_status) > 0 && isset($translation_status[$langcode])) {
       $status = $translation_status[$langcode];
     }
     return $status;
@@ -292,7 +274,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getSourceData($entity));
     $document_name = $entity->id() . ' (config): ' . $entity->label();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $this->getDefaultProfile($entity));
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $this->lingotekConfiguration->getConfigEntityProfile($entity));
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
@@ -384,7 +366,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     return FALSE;
   }
 
-  public function saveTargetData(ConfigEntityInterface $entity, $langcode, array $data) {
+  public function saveTargetData(ConfigEntityInterface $entity, $langcode, $data) {
     /** @var ConfigEntityInterface $translated */
     $translated = $this->entityManager->getStorage($entity->getEntityTypeId())
       ->load($entity->id());
@@ -521,7 +503,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), $this->getConfigDefaultProfile($mapper->getPluginId()));
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity()));
     if ($document_id) {
       $this->setConfigDocumentId($mapper, $document_id);
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);

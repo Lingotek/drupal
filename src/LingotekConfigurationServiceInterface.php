@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\lingotek;
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
 
@@ -52,6 +53,21 @@ interface LingotekConfigurationServiceInterface {
   public function setEnabled($entity_type_id, $bundle, $enabled = TRUE);
 
   /**
+   * Determines the default Lingotek profile for the given config entity type.
+   *
+   * @param string $plugin_id
+   *   The type of the entity.
+   * @param bool $provide_default
+   *   If TRUE, and the entity does not have a profile, will retrieve the default
+   *   for this entity type and bundle. Defaults to TRUE.
+   *
+   * @returns string
+   *   The profile id.
+   *
+   */
+  public function getConfigEntityDefaultProfileId($plugin_id, $provide_default = TRUE);
+
+  /**
    * Determines the default Lingotek profile for the given entity type.
    *
    * @param string $entity_type_id
@@ -76,6 +92,20 @@ interface LingotekConfigurationServiceInterface {
    *   The profile id.
    */
   public function setDefaultProfileId($entity_type_id, $bundle, $profile_id);
+
+  /**
+   * Determines the default Lingotek profile for the given entity.
+   *
+   * @param ConfigEntityInterface $entity
+   *   The entity.
+   * @param bool $provide_default
+   *   If TRUE, and the entity does not have a profile, will retrieve the default
+   *   for this entity type and bundle. Defaults to TRUE.
+   *
+   * @returns LingotekProfile
+   *   The default profile.
+   */
+  public function getConfigEntityProfile(ConfigEntityInterface $entity, $provide_default = TRUE);
 
   /**
    * Determines the default Lingotek profile for the given entity.
