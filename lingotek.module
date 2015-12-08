@@ -2236,10 +2236,11 @@ function lingotek_entity_delete($entity, $type) {
  * This removes the target nodes of a source node.
  */
 function lingotek_delete_target_nodes($entity, $entity_type) {
-  $nid = $entity->nid;
-  $target_ids = lingotek_get_target_node_ids($nid);
+  $source_id = $entity->nid;
+  $target_ids = lingotek_get_target_node_ids($source_id);
 
   foreach ($target_ids as $id) {
+    LingotekSync::delete_entity_from_metadata($entity_type, $id);
     node_delete($id);
     LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_DELETED);
   }
