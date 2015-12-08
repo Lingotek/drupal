@@ -2146,21 +2146,23 @@ function lingotek_get_target_node_ids($nid) {
  * @param $nid The id of the source node
  */
 function lingotek_delete_node_translations($nid) {
+  // Get the source node
+  $source_node = lingotek_node_load_default($nid);
   $target_nids = lingotek_get_target_node_ids($nid);
+  $target_statuses = LingotekSync::getAllTargetStatusForEntity('node', $nid);
 
   foreach ($target_nids as $target_nid) {
     entity_delete('node', $target_nid);
   }
-
-  // Sets target_sync_status to DELETED so if translations are re-downloaded they will appear as CURRENT
-  db_update('lingotek_entity_metadata')
-    ->fields(array(
-      'value' => 'DELETED',
-    ))
-    ->condition('entity_type', 'node')
-    ->condition('entity_id', $nid)
-    ->condition('entity_key', 'target_%', 'LIKE')
-    ->execute();
+  // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
+  foreach ($target_statuses as $langcode => $status) {
+    if ($status == LingotekSync::STATUS_CURRENT && isset($source_node->lingotek['document_id'])) {
+      LingotekSync::setTargetStatus('node', $nid, $langcode, LingotekSync::STATUS_READY);
+    }
+    else {
+      LingotekSync::setTargetStatus('node', $nid, $langcode, LingotekSync::STATUS_DELETED);
+    }
+  }
 }
 
 /**
@@ -2170,6 +2172,7 @@ function lingotek_delete_node_translations($nid) {
  * @param $entity
  */
 function lingotek_delete_field_translations($entity_type, $entity) {
+  $target_status = LingotekSync::STATUS_DELETED;
   $entity_data = entity_extract_ids($entity_type, $entity);
   $fields = field_info_instances($entity_type, $extracted_data[2]);
   $source_langcode[] = lingotek_entity_langcode($entity_type, $entity);
@@ -2179,20 +2182,17 @@ function lingotek_delete_field_translations($entity_type, $entity) {
   foreach ($fields[$entity_data[2]] as $field) {
     $field_name = $field['field_name'];
     foreach($langcodes as $langcode) {
+      $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
+      $status = LingotekSync::getTargetStatus($entity->lingotek['document_id'], $lingotek_locale);
+      // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
+      if ($status == LingotekSync::STATUS_CURRENT && isset($entity->lingotek['document_id'])) {
+        $target_status = LingotekSync::STATUS_READY;
+      }
       if ($langcode && !empty($entity->$field_name)) {
         $entity->{$field_name}[$langcode] = array();
       }
+      LingotekSync::setTargetStatus($entity_type, $entity_data[0], $lingotek_locale, $target_status);
     }
   }
   entity_save($entity_type, $entity);
-
-  // Sets target_sync_status to DELETED so if translations are re-downloaded they will appear as CURRENT
-  db_update('lingotek_entity_metadata')
-    ->fields(array(
-      'value' => 'DELETED',
-    ))
-    ->condition('entity_type', $entity_type)
-    ->condition('entity_id', $entity_data[0])
-    ->condition('entity_key', 'target_%', 'LIKE')
-    ->execute();
 }
