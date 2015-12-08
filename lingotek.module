@@ -2217,7 +2217,7 @@ function lingotek_entity_delete($entity, $type) {
   if (isset($entity->lingotek['document_id']) && $entity->lingotek['document_id']) {
     $api = LingotekApi::instance();
     $api->removeDocument($entity->lingotek['document_id'], FALSE);
-    $lingotek_nodes_translation_method = variable_get('lingotek_nodes_translation_method');
+    $lingotek_nodes_translation_method = $entity->lingotek['lingotek_nodes_translation_method'];
 
     if ($lingotek_nodes_translation_method && $lingotek_nodes_translation_method == 'node') {
       lingotek_delete_target_nodes($entity, $type);
@@ -2225,10 +2225,7 @@ function lingotek_entity_delete($entity, $type) {
   }
 
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($type, $entity);
-  db_delete('lingotek_entity_metadata')
-      ->condition('entity_type', $type)
-    ->condition('entity_id', $id)
-    ->execute();
+  LingotekSync::delete_entity_from_metadata($type, $id);
 
   // Set a flag for the deleted entity so it's not re-uploaded if it
   // has nested entities within fields, such as field collections.
@@ -2239,30 +2236,12 @@ function lingotek_entity_delete($entity, $type) {
  * This removes the target nodes of a source node.
  */
 function lingotek_delete_target_nodes($entity, $entity_type) {
-  $tnid = $entity->tnid;
+  $nid = $entity->nid;
+  $target_ids = lingotek_get_target_node_ids($nid);
 
-  // Find the targets
-  $query = db_select('node', 'n')
-    ->fields('n', array('nid'))
-    ->condition('n.tnid', $tnid,'=')
-    ->condition('n.nid', $tnid,'!=');
-  $target_ids = $query->execute();
-
-  foreach($target_ids as $id) {
-    $nid = $id->nid;
-
-    // Delete the targets from lingotek_entity_metadata
-    db_delete('lingotek_entity_metadata')
-      ->condition('entity_type', $entity_type)
-      ->condition('entity_id', $nid)
-      ->execute();
-
-    // Set a flag for the deleted entity so it's not re-uploaded if it
-    // has nested entities within fields, such as field collections.
-    LingotekSync::setUploadStatus($entity_type, $nid, LingotekSync::STATUS_DELETED);
-
-    //Delete the target nodes
-    node_delete($nid);
+  foreach ($target_ids as $id) {
+    node_delete($id);
+    LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_DELETED);
   }
 }
 

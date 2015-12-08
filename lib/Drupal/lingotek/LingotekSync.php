@@ -202,6 +202,13 @@ class LingotekSync {
     }
   }
 
+  public static function delete_entity_from_metadata($entity_type, $entity_id) {
+    db_delete('lingotek_entity_metadata')
+    ->condition('entity_type', $entity_type)
+    ->condition('entity_id', $entity_id)
+    ->execute();
+  }
+
   public static function deleteTargetStatus($entity_type, $entity_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     return lingotek_keystore_delete($entity_type, $entity_id, $key);
