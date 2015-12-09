@@ -53,6 +53,21 @@ interface LingotekConfigurationServiceInterface {
   public function setEnabled($entity_type_id, $bundle, $enabled = TRUE);
 
   /**
+   * Determines the default Lingotek profile for the given config object.
+   *
+   * @param string $plugin_id
+   *   The type of the config.
+   * @param bool $provide_default
+   *   If TRUE, and the entity does not have a profile, will retrieve the default
+   *   for this entity type and bundle. Defaults to TRUE.
+   *
+   * @returns string
+   *   The profile id.
+   *
+   */
+  public function getConfigDefaultProfileId($plugin_id, $provide_default = TRUE);
+
+  /**
    * Determines the default Lingotek profile for the given config entity type.
    *
    * @param string $plugin_id
@@ -92,6 +107,20 @@ interface LingotekConfigurationServiceInterface {
    *   The profile id.
    */
   public function setDefaultProfileId($entity_type_id, $bundle, $profile_id);
+
+  /**
+   * Determines the default Lingotek profile for the given entity.
+   *
+   * @param string $plugin_id
+   *   The config plugin id.
+   * @param bool $provide_default
+   *   If TRUE, and the entity does not have a profile, will retrieve the default
+   *   for this entity type and bundle. Defaults to TRUE.
+   *
+   * @returns LingotekProfile
+   *   The default profile.
+   */
+  public function getConfigProfile($plugin_id, $provide_default = TRUE);
 
   /**
    * Determines the default Lingotek profile for the given entity.

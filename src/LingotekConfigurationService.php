@@ -92,6 +92,18 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
+  public function getConfigDefaultProfileId($plugin_id, $provide_default = TRUE) {
+    $config = \Drupal::config('lingotek.settings');
+    $profile_id = $config->get('translate.config.' . $plugin_id . '.profile');
+    if ($provide_default && $profile_id === NULL) {
+      $profile_id = Lingotek::PROFILE_AUTOMATIC;
+    }
+    return $profile_id;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function getConfigEntityDefaultProfileId($plugin_id, $provide_default = TRUE) {
     $config = \Drupal::config('lingotek.settings');
     $profile_id = $config->get('translate.config.' . $plugin_id . '.profile');
@@ -129,6 +141,14 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $config->set('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile', $profile_id);
     $config->save();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getConfigProfile($plugin_id, $provide_default = TRUE) {
+    $profile_id = $this->getConfigDefaultProfileId($plugin_id, $provide_default);
+    return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
 
   /**

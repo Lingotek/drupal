@@ -10,7 +10,7 @@ use Drupal\node\NodeInterface;
  *
  * @group lingotek
  */
-class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
+class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
 
   /**
    * Modules to install.
@@ -31,11 +31,6 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('local_tasks_block');
     $this->drupalPlaceBlock('page_title_block');
 
-    // Create Article node types.
-    $this->drupalCreateContentType(array(
-      'type' => 'article',
-      'name' => 'Article'
-    ));
 
     // Add locales.
     $post = [
@@ -65,48 +60,49 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
   /**
    * Tests that a node type can be translated.
    */
-  public function testContentTypeTranslation() {
+  public function testSystemSiteTranslation() {
     // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
     $this->drupalGet('/admin/config/regional/config-translation');
-    $this->drupalGet('/admin/config/regional/config-translation/node_type');
-    $this->clickLink(t('Translate'));
+    $this->clickLink(t('Translate'), 2);
 
     $this->clickLink(t('Upload'));
-    $this->assertText(t('Article uploaded successfully'));
+    $this->assertText(t('System information uploaded successfully'));
 
     // Check that only the translatable fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertEqual(3, count($data));
-    $this->assertTrue(array_key_exists('name', $data));
-    // Cannot use isset, the key exists but we are not providing values, so NULL.
-    $this->assertTrue(array_key_exists('description', $data));
-    $this->assertTrue(array_key_exists('help', $data));
+    $data = json_decode(\Drupal::state()
+      ->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertEqual(1, count($data));
+    $this->assertTrue(array_key_exists('system.site', $data));
+    $this->assertEqual(2, count($data['system.site']));
+    $this->assertTrue(array_key_exists('name', $data['system.site']));
+    $this->assertTrue(array_key_exists('slogan', $data['system.site']));
 
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
 
     $this->clickLink(t('Check upload status'));
-    $this->assertText(t('Article status checked successfully'));
+    $this->assertText(t('System information status checked successfully'));
 
     $this->clickLink(t('Request translation'));
     $this->assertText(t('Translation to es_AR requested successfully'));
-    $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.added_target_locale'));
+    $this->assertIdentical('es_AR', \Drupal::state()
+      ->get('lingotek.added_target_locale'));
 
     $this->clickLink(t('Check Download'));
-    $this->assertText(t('Translation to es_AR status checked successfully'));
+    $this->assertText(t('Translation to es_AR checked successfully'));
 
     $this->clickLink('Download');
     $this->assertText(t('Translation to es_AR downloaded successfully'));
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/translate/es-ar/edit');
+    $this->assertLinkByHref($basepath . '/admin/config/system/site-information/translate/es-ar/edit');
   }
 
 }

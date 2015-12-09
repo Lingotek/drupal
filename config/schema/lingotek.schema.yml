@@ -150,6 +150,25 @@ lingotek.profile.*:
                 type: boolean
                 label: 'Automatic Download'
 
+lingotek.lingotek_config_metadata.*:
+  type: config_entity
+  label: 'Lingotek Config Metadata'
+  mapping:
+    config_name:
+      type: string
+      label: 'Config name'
+    document_id:
+      type: string
+      label: 'Lingotek document id'
+    source_status:
+      type: sequence
+      sequence:
+        type: string
+    target_status:
+      type: sequence
+      sequence:
+        type: string
+
 language.entity.*.third_party.lingotek:
   type: mapping
   label: 'Lingotek locale mapping'

@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 
 /**
  * Service for managing Lingotek configuration translations.
@@ -393,11 +394,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function getConfigDocumentId(ConfigNamesMapper $mapper) {
     $document_id = NULL;
     foreach ($mapper->getConfigNames() as $config_name) {
-      $config = \Drupal::configFactory()->getEditable($config_name);
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
       break;
     }
-    $metadata = $config->get('lingotek_metadata') ?: [];
-    $document_id = isset($metadata['document_id']) ? $metadata['document_id'] : NULL;
+    $document_id = $metadata->getDocumentId();
     return $document_id;
   }
 
@@ -406,10 +406,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function setConfigDocumentId(ConfigNamesMapper $mapper, $document_id) {
     foreach ($mapper->getConfigNames() as $config_name) {
-      $config = \Drupal::configFactory()->getEditable($config_name);
-      $metadata = $config->get('lingotek_metadata') ?: [];
-      $metadata['document_id'] = $document_id;
-      $config->set('lingotek_metadata', $metadata)->save();
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setDocumentId($document_id);
+      $metadata->save();
     }
   }
 
@@ -418,7 +417,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function getConfigSourceLocale(ConfigNamesMapper $mapper) {
     $source_language = $mapper->getLangcode();
-    return LingotekLocale::convertDrupal2Lingotek($source_language);
+    return $source_language;
   }
 
   /**
@@ -429,10 +428,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $source_language = $this->getConfigSourceLocale($mapper);
     $status_value = [$source_language => $status];
     foreach ($config_names as $config_name) {
-      $config = \Drupal::configFactory()->getEditable($config_name);
-      $metadata = $config->get('lingotek_metadata') ?: [];
-      $metadata['source_status'] = $status_value;
-      $config->set('lingotek_metadata', $metadata)->save();
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setSourceStatus($status_value);
+      $metadata->save();
     }
   }
 
@@ -442,10 +440,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function getConfigTargetStatus(ConfigNamesMapper $mapper, $langcode) {
     $status = Lingotek::STATUS_UNTRACKED;
     foreach ($mapper->getConfigNames() as $config_name) {
-      $config = \Drupal::configFactory()->getEditable($config_name);
-      $metadata = $config->get('lingotek_metadata') ?: [];
-      $translation_status = $metadata['target_status'];
-      if (count($translation_status) > 0) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $translation_status = $metadata->getTargetStatus();
+      if (count($translation_status) > 0 && isset($translation_status[$langcode])) {
         $status = $translation_status[$langcode];
       }
     }
@@ -457,10 +454,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function setConfigTargetStatus(ConfigNamesMapper $mapper, $langcode, $status, $save = TRUE) {
     foreach ($mapper->getConfigNames() as $config_name) {
-      $config = \Drupal::configFactory()->getEditable($config_name);
-      $metadata = $config->get('lingotek_metadata') ?: [];
-      $metadata['target_status'][$langcode] = $status;
-      $config->set('lingotek_metadata', $metadata)->save();
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $target_status = $metadata->getTargetStatus();
+      $target_status[$langcode] = $status;
+      $metadata->setTargetStatus($target_status);
+      $metadata->save();
     }
   }
 
@@ -503,7 +501,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity()));
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), $this->lingotekConfiguration->getConfigProfile($mapper_id));
     if ($document_id) {
       $this->setConfigDocumentId($mapper, $document_id);
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
@@ -601,7 +599,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   }
 
 
-  public function saveConfigTargetData(ConfigNamesMapper $mapper, $langcode, array $data) {
+  public function saveConfigTargetData(ConfigNamesMapper $mapper, $langcode, $data) {
     $names = $mapper->getConfigNames();
     foreach ($names as $name) {
       $config_translation = $this->languageManager->getLanguageConfigOverride($langcode, $name);

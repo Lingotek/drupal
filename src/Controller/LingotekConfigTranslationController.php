@@ -19,6 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
+use Symfony\Component\Validator\Constraints\Null;
 
 class LingotekConfigTranslationController extends ConfigTranslationController {
 
@@ -80,7 +81,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
 
   public function itemPage(Request $request, RouteMatchInterface $route_match, $plugin_id) {
     $page = parent::itemPage($request, $route_match, $plugin_id);
-
+    $entity = NULL;
+    $entity_id = NULL;
     /** @var \Drupal\config_translation\ConfigMapperInterface $mapper */
     $mapper = $this->configMapperManager->createInstance($plugin_id);
     $mapper->populateFromRouteMatch($route_match);
@@ -232,7 +234,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       if ($this->translationService->uploadConfig($entity_type)) {
         drupal_set_message($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
       }
-      return new TrustedRedirectResponse($request->headers->get('referer'));
+      return $this->redirectToConfigTranslateOverview($entity_type);
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->uploadDocument($entity)) {
@@ -246,9 +248,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
       if ($this->translationService->checkConfigSourceStatus($entity_type)) {
-        drupal_set_message($this->t('%label  status checked successfully', ['%label' => $definition['title']]));
+        drupal_set_message($this->t('%label status checked successfully', ['%label' => $definition['title']]));
       }
-      return new TrustedRedirectResponse($request->headers->get('referer'));
+      return $this->redirectToConfigTranslateOverview($entity_type);
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->checkSourceStatus($entity)) {
@@ -264,7 +266,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       if ($this->translationService->addConfigTarget($entity_id, $locale)) {
         drupal_set_message($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
       }
-      return new TrustedRedirectResponse($request->headers->get('referer'));
+      return $this->redirectToConfigTranslateOverview($entity_type);
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->addTarget($entity, $locale)) {
@@ -278,9 +280,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
       if ($this->translationService->checkConfigTargetStatus($entity_id, $locale)) {
-        drupal_set_message($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
+        drupal_set_message($this->t('Translation to %locale checked successfully', ['%locale' => $locale]));
       }
-      return new TrustedRedirectResponse($request->headers->get('referer'));
+      return $this->redirectToConfigTranslateOverview($entity_type);
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->checkTargetStatus($entity, $locale)) {
@@ -297,7 +299,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       if ($this->translationService->downloadConfig($entity_id, $locale)) {
         drupal_set_message($this->t('Translation to %locale downloaded successfully', ['%locale' => $locale]));
       }
-      return new TrustedRedirectResponse($request->headers->get('referer'));
+      return $this->redirectToConfigTranslateOverview($entity_type);
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->downloadDocument($entity, $locale)) {
@@ -321,6 +323,22 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     $mappers =  $this->configMapperManager->getMappers();
     $mapper = $mappers[$entity_type];
     $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id]);
+    return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
+  }
+
+  /**
+   * Redirect to config translation overview page.
+   *
+   * @param string $plugin_id
+   *   The plugin id.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   A redirect response.
+   */
+  protected function redirectToConfigTranslateOverview($plugin_id) {
+    $mappers =  $this->configMapperManager->getMappers();
+    $mapper = $mappers[$plugin_id];
+    $uri = Url::fromRoute($mapper->getOverviewRouteName());
     return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
   }
 

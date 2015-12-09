@@ -8,8 +8,10 @@ node.type.*.third_party.lingotek:
     lingotek_translation_source:
       type: sequence
       sequence:
-        type: ignore
+        type: string
+        label: 'Source status'
     lingotek_translation_status:
       type: sequence
       sequence:
-        type: ignore
+        type: string
+        label: 'Target status'
