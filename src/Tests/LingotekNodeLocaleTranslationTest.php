@@ -131,7 +131,7 @@ class LingotekNodeLocaleTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLink('Request translation');
+    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.

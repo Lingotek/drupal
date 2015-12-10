@@ -94,7 +94,7 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     $this->clickLink(t('Check upload status'));
     $this->assertText(t('Article status checked successfully'));
 
-    $this->clickLink(t('Request translation'));
+    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText(t('Translation to es_AR requested successfully'));
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.added_target_locale'));
 

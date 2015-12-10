@@ -9,7 +9,6 @@ use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -19,7 +18,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
-use Symfony\Component\Validator\Constraints\Null;
 
 class LingotekConfigTranslationController extends ConfigTranslationController {
 
