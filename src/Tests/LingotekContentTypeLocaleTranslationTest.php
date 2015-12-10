@@ -87,6 +87,9 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     $this->assertTrue(array_key_exists('description', $data));
     $this->assertTrue(array_key_exists('help', $data));
 
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/admin/structure/types/manage/article'), $uploaded_url, 'The article type url was used.');
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');

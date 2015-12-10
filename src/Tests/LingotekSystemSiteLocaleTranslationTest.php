@@ -82,6 +82,9 @@ class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
     $this->assertTrue(array_key_exists('name', $data['system.site']));
     $this->assertTrue(array_key_exists('slogan', $data['system.site']));
 
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(NULL, $uploaded_url, 'The automatic profile was used.');
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');

@@ -153,17 +153,19 @@ class LingotekFake implements LingotekInterface {
     ];
   }
 
-  public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL) {
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL) {
     // If the upload is successful, we must return a valid hash.
     \Drupal::state()->set('lingotek.uploaded_title', $title);
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_locale', $locale);
-    \Drupal::state()->set('lingotek.used_profile', $profile->id());
+    \Drupal::state()->set('lingotek.uploaded_url', $url);
+    \Drupal::state()->set('lingotek.used_profile', $profile ? $profile->id() : NULL);
     return 'dummy-document-hash-id';
   }
 
-  public function updateDocument($doc_id, $content) {
+  public function updateDocument($doc_id, $content, $url = NULL) {
     \Drupal::state()->set('lingotek.uploaded_content', $content);
+    \Drupal::state()->set('lingotek.uploaded_content_url', $url);
     // Our document is always imported correctly.
     return TRUE;
   }

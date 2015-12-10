@@ -384,7 +384,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $source_data = json_encode($this->getSourceData($entity));
     $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $this->lingotekConfiguration->getEntityProfile($entity));
+    $url = $entity->toUrl()->setAbsolute(TRUE)->toString();
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getEntityProfile($entity));
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
@@ -436,7 +437,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function updateDocument(ContentEntityInterface &$entity) {
     $source_data = json_encode($this->getSourceData($entity));
     $document_id = $this->getDocumentId($entity);
-    if ($this->lingotek->updateDocument($document_id, $source_data)){
+    $url = $entity->toUrl()->setAbsolute()->toString();
+
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url)){
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       return $document_id;

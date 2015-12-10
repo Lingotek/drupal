@@ -275,7 +275,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getSourceData($entity));
     $document_name = $entity->id() . ' (config): ' . $entity->label();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $this->lingotekConfiguration->getConfigEntityProfile($entity));
+    $url = $entity->toUrl()->setAbsolute()->toString();
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity));
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
@@ -303,7 +304,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function updateDocument(ConfigEntityInterface &$entity) {
     $source_data = json_encode($this->getSourceData($entity));
     $document_id = $this->getDocumentId($entity);
-    if ($this->lingotek->updateDocument($document_id, $source_data)) {
+    $url = $entity->toUrl()->setAbsolute()->toString();
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       return $document_id;
@@ -501,7 +503,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), $this->lingotekConfiguration->getConfigProfile($mapper_id));
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id));
     if ($document_id) {
       $this->setConfigDocumentId($mapper, $document_id);
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);

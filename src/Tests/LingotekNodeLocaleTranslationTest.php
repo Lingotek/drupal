@@ -117,6 +117,10 @@ class LingotekNodeLocaleTranslationTest extends LingotekTestBase {
     $this->assertEqual(1, count($data['field_image'][0]));
     $this->assertTrue(isset($data['field_image'][0]['alt']));
 
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');

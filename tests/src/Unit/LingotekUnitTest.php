@@ -298,21 +298,31 @@ class LingotekUnitTest extends UnitTestCase {
               'format' => 'JSON', 'project_id' => 'default_project',
              ]);
 
+    // If there is an url, it should be included.
+    $this->api->expects($this->at(4))
+      ->method('addDocument')
+      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+        'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1'
+      ]);
+
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
+    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
     // We upload with a profile that has another vault and another project.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'another_test_project', 'vault' => 'another_test_vault'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
+    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default'], 'lingotek_profile');
-    $this->lingotek->uploadDocument('title', 'content', 'es', $profile);
+    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
-    // We upload without a profile
-    $this->lingotek->uploadDocument('title', 'content', 'es', NULL);
+    // We upload without a profile.
+    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, NULL);
+
+    // We upload without a profile, but with url.
+    $this->lingotek->uploadDocument('title', 'content', 'es', 'http://example.com/node/1', NULL);
   }
 
   /**

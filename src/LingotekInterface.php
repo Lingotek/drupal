@@ -29,12 +29,14 @@ interface LingotekInterface {
    *   The content of the document
    * @param string $locale
    *   The Lingotek locale.
+   * @param string $url
+   *   The document url in the site if any. This allows support for in-context review.
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   The profile being used.
    *
    * @return mixed
    */
-  public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL);
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL);
 
   /**
    * Updates a document in the Lingotek service.
@@ -43,10 +45,12 @@ interface LingotekInterface {
    *   The document id to update.
    * @param $content
    *   The content of the document
+   * @param string $url
+   *   The document url in the site if any. This allows support for in-context review.
    *
    * @return boolean
    */
-  public function updateDocument($doc_id, $content);
+  public function updateDocument($doc_id, $content, $url = NULL);
 
   public function documentImported($doc_id);
 

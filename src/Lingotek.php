@@ -153,7 +153,7 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function uploadDocument($title, $content, $locale = NULL, LingotekProfileInterface $profile = NULL) {
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL) {
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
     $defaults = array(
@@ -175,6 +175,9 @@ class Lingotek implements LingotekInterface {
     }
     
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
+    if ($url !== NULL) {
+      $args['external_url'] = $url;
+    }
     $response = $this->api->addDocument($args);
 
     // TODO: Response code should be 202 on success
@@ -184,11 +187,15 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateDocument($doc_id, $content) {
+  public function updateDocument($doc_id, $content, $url = NULL) {
     $args = array(
       'format' => 'JSON',
       'content' => $content,
     );
+    if ($url !== NULL) {
+      $args['external_url'] = $url;
+    }
+
     $response = $this->api->patchDocument($doc_id, $args);
     if ($response->getStatusCode() == '202') {
       return TRUE;
