@@ -2017,8 +2017,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   return $form;
 }
 
-function lingotek_language_specific_profile_cmp($a, $b)
-{
+function lingotek_language_specific_profile_cmp($a, $b) {
   if (!isset($a->name) || !isset($b->name)) {
     return 0;
   }
