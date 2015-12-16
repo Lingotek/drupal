@@ -262,7 +262,14 @@ class LingotekSession {
       }
     }
     elseif (isset($data->error)) {
-      $error = $data->error;
+      if (!empty($data->error)) {
+        $error = $data->error;
+      }
+      // If the user hasn't yet changed their password to be sso-compatible
+      else {
+        $sso_url = 'https://sso.lingotek.com/login';
+        $error = t('Make sure your password is compatible with ') . l(t('single sign on'), $sso_url);
+      }
     }
 
     if ($success) {
