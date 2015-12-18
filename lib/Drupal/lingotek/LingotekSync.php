@@ -852,6 +852,9 @@ class LingotekSync {
   }
 
   public static function getConfigDocIdsFromSetIds($sids) {
+    if (empty($sids)) {
+      return $sids;
+    }
     $query = db_select('lingotek_config_metadata', 'l');
     $query->addField('l', 'value');
     $query->condition('id', $sids, 'IN');

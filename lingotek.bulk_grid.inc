@@ -2778,7 +2778,7 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
 
-  if ($remove_from_tms) { //disassociate on TMS
+  if ($remove_from_tms && !empty($doc_ids)) { //disassociate on TMS
     $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
     //Deletes document data from lingotek_config_metadata table
     $query1 = db_delete('lingotek_config_metadata')
