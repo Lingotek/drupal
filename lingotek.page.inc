@@ -649,10 +649,9 @@ function page_sync_comment_translations($comment_id) {
  */
 function lingotek_workbench_redirect($entity_type, $entity_id, $lingotek_locale) {
   $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale);
-  $entitycache_table = "cache_entity_$entity_type";
 
-  if (module_exists('entitycache') && db_table_exists($entitycache_table)) {
-    cache_clear_all($entity_id, $entitycache_table);
+  if (module_exists('entitycache')) {
+    cache_clear_all($entity_id, "cache_entity_$entity_type");
   }
 
   if ($entity_type == 'config') {

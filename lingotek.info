@@ -6,6 +6,7 @@ php = "5.3"
 configure = admin/config/regional/lingotek/setup
 
 dependencies[] = locale
+dependencies[] = field_ui
 dependencies[] = title
 dependencies[] = block
 dependencies[] = menu
