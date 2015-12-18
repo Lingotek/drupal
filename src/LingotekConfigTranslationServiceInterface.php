@@ -202,6 +202,14 @@ interface LingotekConfigTranslationServiceInterface {
   public function addTarget(ConfigEntityInterface &$entity, $locale);
 
   /**
+   * Requests translations of a document in all the enabled locales.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity being requested for translations.
+   */
+  public function requestTranslations(ConfigEntityInterface &$entity);
+
+  /**
    * Checks the status of the translation in the Lingotek service.
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
@@ -215,6 +223,17 @@ interface LingotekConfigTranslationServiceInterface {
   public function checkTargetStatus(ConfigEntityInterface &$entity, $locale);
 
   /**
+   * Checks the status of all the translations in the Lingotek service.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity which status we want to check.
+   *
+   * @return boolean
+   *   True if the entity is checked successfully.
+   */
+  public function checkTargetStatuses(ConfigEntityInterface &$entity);
+
+  /**
    * Downloads a document from the Lingotek service for a given locale.
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
@@ -226,6 +245,28 @@ interface LingotekConfigTranslationServiceInterface {
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadDocument(ConfigEntityInterface $entity, $locale);
+
+  /**
+   * Deletes a document from the server and all related local data.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity which we want to delete.
+   *
+   * @return ContentEntityInterface
+   *   The entity.
+   */
+  public function deleteDocument(ConfigEntityInterface &$entity);
+
+  /**
+   * Deletes metadata.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity which we want to delete.
+   *
+   * @return ContentEntityInterface
+   *   The entity.
+   */
+  public function deleteMetadata(ConfigEntityInterface &$entity);
 
   /**
    * Gets the document id in the Lingotek platform for a given entity.
@@ -252,6 +293,17 @@ interface LingotekConfigTranslationServiceInterface {
   public function setConfigDocumentId(ConfigNamesMapper $mapper, $document_id);
 
   /**
+   * Gets the source status of a given entity.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which status we want to change.
+   *
+   * @return int
+   *   Status of the source. Use Lingotek class constants.
+   */
+  public function getConfigSourceStatus(ConfigNamesMapper $mapper);
+
+  /**
    * Sets the translation status of a given entity.
    *
    * @param ConfigNamesMapper $mapper
@@ -262,6 +314,17 @@ interface LingotekConfigTranslationServiceInterface {
    * @return ConfigEntityInterface
    */
   public function setConfigSourceStatus(ConfigNamesMapper $mapper, $status);
+
+  /**
+   * Gets the translation status of a given entity translation for all locales.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The entity which status we want to get.
+   *
+   * @return array
+   *   The status of the target translations (see Lingotek class constants)
+   */
+  public function getConfigTargetStatuses(ConfigNamesMapper $mapper);
 
   /**
    * Gets the translation status of a given entity translation for a locale.
@@ -359,17 +422,36 @@ interface LingotekConfigTranslationServiceInterface {
   public function addConfigTarget($mapper_id, $locale);
 
   /**
-   * Checks the source is uploaded correctly.
+   * Request all translations for a given mapper in all locales.
+   *
+   * @param string $mapper_id
+   *   The entity which target we want to add.
+   */
+  public function requestConfigTranslations($mapper_id);
+
+  /**
+   * Checks the status of the translation in the Lingotek service.
    *
    * @param string $mapper_id
    *   The entity which status we want to check.
    * @param string $locale
-   *   Lingotek translation language which we want to modify.
+   *   Lingotek translation language which we want to check.
    *
    * @return boolean
-   *   True if the entity is uploaded successfully.
+   *   True if the entity is available for download.
    */
   public function checkConfigTargetStatus($mapper_id, $locale);
+
+  /**
+   * Checks the status of the translations in the Lingotek service.
+   *
+   * @param string $mapper_id
+   *   The entity which status we want to check.
+   *
+   * @return boolean
+   *   True if the entity is available for download.
+   */
+  public function checkConfigTargetStatuses($mapper_id);
 
   /**
    * Downloads a document to the Lingotek service.
@@ -385,14 +467,32 @@ interface LingotekConfigTranslationServiceInterface {
   public function downloadConfig($mapper_id, $locale);
 
   /**
+   * Deletes a document from the server and all related local data.
+   *
+   * @param string $mapper_id
+   *   The entity being uploaded.
+   *
+   */
+  public function deleteConfigDocument($mapper_id);
+
+  /**
+   * Deletes metadata.
+   *
+   * @param string $mapper_id
+   *   The entity being uploaded.
+   *
+   */
+  public function deleteConfigMetadata($mapper_id);
+
+  /**
    * Resends a document to the translation service.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param $mapper_id
    *   The entity being updated.
    *
    * @return boolean
    *   TRUE if the document was updated successfully, FALSE if not.
    */
-  public function updateConfig(ConfigNamesMapper $mapper);
+  public function updateConfig($mapper_id);
 
 }

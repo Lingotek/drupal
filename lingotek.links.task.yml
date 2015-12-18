@@ -9,13 +9,19 @@ lingotek.settings:
   route_name: lingotek.settings
   base_route: lingotek.dashboard
   title: 'Settings'
-  weight: -8
+  weight: -5
 
 lingotek.manage:
   route_name: lingotek.manage
   base_route: lingotek.dashboard
-  title: 'Manage'
+  title: 'Content'
   weight: -9
+
+lingotek.manage_config:
+  route_name: lingotek.manage_config
+  base_route: lingotek.dashboard
+  title: 'Config'
+  weight: -8
 
 lingotek.manage.content:
   deriver: 'Drupal\lingotek\Plugin\Derivative\ContentTranslationLocalTasks'

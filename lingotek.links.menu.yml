@@ -10,14 +10,21 @@ lingotek.settings:
   title: 'Settings'
   description: 'Lingotek configuration'
   parent: 'lingotek.dashboard'
-  weight: 12
+  weight: 15
 
 lingotek.manage:
   route_name: 'lingotek.manage'
-  title: 'Manage'
-  description: 'Manage translations using Lingotek cloud-based localization'
+  title: 'Content'
+  description: 'Manage content translations using Lingotek cloud-based localization'
   parent: 'lingotek.dashboard'
   weight: 11
+
+lingotek.manage_config:
+  route_name: 'lingotek.manage_config'
+  title: 'Config'
+  description: 'Manage config translations using Lingotek cloud-based localization'
+  parent: 'lingotek.dashboard'
+  weight: 12
 
 lingotek.config.dashboard:
   route_name: 'lingotek.dashboard'

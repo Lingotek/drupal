@@ -95,6 +95,14 @@ lingotek.manage:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.manage_config:
+  path: '/admin/lingotek/config/manage'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekConfigManagementForm'
+    _title: 'Manage Configuration Translation'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.batch:
   path: '/admin/lingotek/batch/{action}/{entity_type}/{entity_id}'
   defaults:
@@ -156,6 +164,14 @@ lingotek.config.upload:
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::upload'
     _title: 'Upload Source'
+  requirements:
+    _permission: 'administer lingotek'
+
+lingotek.config.update:
+  path: '/admin/lingotek/config/update/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekConfigTranslationController::update'
+    _title: 'Update Source'
   requirements:
     _permission: 'administer lingotek'
 

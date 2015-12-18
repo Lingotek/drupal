@@ -241,6 +241,22 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
 
+  public function update($entity_type, $entity_id, Request $request) {
+    if ($entity_type === $entity_id) {
+      // It is not a config entity, but a config object.
+      $definition = $this->configMapperManager->getDefinition($entity_type);
+      if ($this->translationService->updateConfig($entity_type)) {
+        drupal_set_message($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
+      }
+      return $this->redirectToConfigTranslateOverview($entity_type);
+    }
+    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    if ($this->translationService->updateDocument($entity)) {
+      drupal_set_message($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
+    }
+    return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
+  }
+
   public function checkUpload($entity_type, $entity_id, Request $request) {
     if ($entity_type === $entity_id) {
       // It is not a config entity, but a config object.
