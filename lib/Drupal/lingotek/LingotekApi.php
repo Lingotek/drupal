@@ -145,19 +145,40 @@ class LingotekApi {
         }
         else {
           // Add targets with custom workflows after the fact, if language-specific profiles are detected
-          if (is_array($with_targets)) {
-            foreach ($with_targets as $target_locale => $target_attribs) {
-              if (!empty($result->id) && !empty($target_attribs['workflow_id'])) {
-                $tl_result = $this->addTranslationTarget($result->id, NULL, $target_locale, $target_attribs['workflow_id']);
+          // Also, we must wait until the document is imported since it's an asynchronous call
+          $i = 0;
+          $sleep_intervals = array(3, 1, 1, 1);
+          $done_processing = FALSE;
+          $params = array(
+            'id' => $result->id,
+          );
+
+          while(!$done_processing) {
+            $response = $this->request('getDocumentImportStatus', $params);
+            if ($response->status === 'COMPLETE') {
+              $done_processing = TRUE;
+              if (is_array($with_targets)) {
+                foreach ($with_targets as $target_locale => $target_attribs) {
+                  if (!empty($result->id) && !empty($target_attribs['workflow_id'])) {
+                    $tl_result = $this->addTranslationTarget($result->id, NULL, $target_locale, $target_attribs['workflow_id']);
+                  }
+                }
               }
             }
+            elseif($i > count($sleep_intervals) - 1) {
+              drupal_set_message(t('Uploading some language-specific targets failed because of network timeout. Please retry.'), 'warning', FALSE);
+              LingotekLog::error(t('Adding language-specific targets failed: ') . print_r('Document id: ' . $result->id, TRUE), array());
+              break;
+            }
+            else {
+              sleep($sleep_intervals[$i]);
+              $i++;
+            }
           }
-
           $entity_type = $translatable_object->getEntityType();
           lingotek_keystore($entity_type, $translatable_object->getId(), 'document_id', $result->id);
           lingotek_keystore($entity_type, $translatable_object->getId(), 'last_uploaded', time());
         }
-
         $success = TRUE;
       }
     }
