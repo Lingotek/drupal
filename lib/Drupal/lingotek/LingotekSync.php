@@ -172,10 +172,6 @@ class LingotekSync {
     $node_source_check->condition($or);
     $node_source_check->condition('n.language', $locale);
 
-    $comment_source_check = db_select('comment', 'c');
-    $comment_source_check->addField('c', 'cid');
-    $comment_source_check->condition('c.language', $locale);
-
     $taxonomy_source_check = db_select('taxonomy_term_data', 't');
     $taxonomy_source_check->addField('t', 'tid');
     $taxonomy_source_check->condition('t.language', $locale);
@@ -185,8 +181,14 @@ class LingotekSync {
         ->fields('meta', array('entity_id', 'entity_type'))
         ->condition('meta.entity_key', 'document_id')
         ->condition('entity_id', $node_source_check, "NOT IN")
-        ->condition('entity_id', $comment_source_check, "NOT IN")
         ->condition('entity_id', $taxonomy_source_check, "NOT IN");
+
+    if (module_exists('comment')) {
+      $comment_source_check = db_select('comment', 'c');
+      $comment_source_check->addField('c', 'cid');
+      $comment_source_check->condition('c.language', $locale);
+      $query->condition('entity_id', $comment_source_check, "NOT IN");
+    }
 
     if (module_exists('bean') && variable_get('lingotek_translate_beans')) {
       $bean_source_check = db_select('bean', 'b');
