@@ -480,8 +480,10 @@ function lingotek_access_dev_tools($node, $permission) {
   // OR when not showing advanced features
 
   $user_access = user_access($permission);
-  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->showAdvanced()) {
-    return FALSE;
+  if ($user_access) {
+    if ((module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->showAdvanced()) {
+      return FALSE;
+    }
   }
   // Default: Standard user access
   return $user_access;
