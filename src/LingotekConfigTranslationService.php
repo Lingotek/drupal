@@ -185,8 +185,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function getSourceStatus(ConfigEntityInterface &$entity) {
+    $status = Lingotek::STATUS_UNTRACKED;
     $source_status = $entity->getThirdPartySetting('lingotek', 'lingotek_translation_source');
-    return $source_status[$entity->language()->getId()];
+    if (isset($source_status[$entity->language()->getId()])) {
+      $status = $source_status[$entity->language()->getId()];
+    }
+    return $status;
   }
 
   /**
@@ -215,6 +219,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $status = $translation_status[$langcode];
     }
     return $status;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetStatuses(ConfigEntityInterface &$entity) {
+    $translation_status = $entity->getThirdPartySetting('lingotek', 'lingotek_translation_status');
+    return $translation_status;
   }
 
   /**
@@ -358,7 +370,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
           $source_status = $this->getSourceStatus($entity);
           $current_status = $this->getTargetStatus($entity, $langcode);
           if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED  && $current_status !== Lingotek::STATUS_READY) {
-            if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity))) {
+            if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getConfigEntityProfile($entity))) {
               $languages[] = $langcode;
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
               // If the status was "Importing", and the target was added
@@ -437,8 +449,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if ($this->lingotekConfiguration->mustDeleteRemoteAfterDisassociation()) {
       $this->deleteDocument($entity);
     }
-    $entity->setThirdPartySetting('lingotek', 'lingotek_translation_status', []);
-    $entity->setThirdPartySetting('lingotek', 'lingotek_document_id', NULL);
+    $entity->unsetThirdPartySetting('lingotek', 'lingotek_document_id');
+    $entity->unsetThirdPartySetting('lingotek', 'lingotek_translation_source');
+    $entity->unsetThirdPartySetting('lingotek', 'lingotek_translation_status');
+    $entity->save();
   }
 
 

@@ -118,6 +118,17 @@ interface LingotekConfigTranslationServiceInterface {
   public function getTargetStatus(ConfigEntityInterface &$entity, $locale);
 
   /**
+   * Gets the translation status of a given entity translation for all locales.
+   *
+   * @param ConfigEntityInterface &$entity
+   *   The entity which statuses we want to get.
+   *
+   * @return array
+   *   The status of the target translations (see Lingotek class constants)
+   */
+  public function getTargetStatuses(ConfigEntityInterface &$entity);
+
+  /**
    * Sets the translation status of a given entity translation for a locale.
    *
    * @param ConfigEntityInterface &$entity
