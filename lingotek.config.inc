@@ -292,11 +292,12 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
   $table_data = array();
   $api = LingotekApi::instance();
   $workflows = $api->listWorkflows();
+  $i18n_language = variable_get('i18n_string_source_language', language_default()->language);
   foreach ($table_data_raw as $row) {
     $lid = $row->{'lid'};
     $row->lingotek = $global_profile;
     $row->lingotek['profile'] = 1;
-    $row->language = 'en';
+    $row->language = $i18n_language;
 
     $locale_statuses = lingotek_build_locales_statuses($row, FALSE);
     $item_is_current = LingotekConfigSet::isLidCurrent($lid);
