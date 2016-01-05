@@ -2717,7 +2717,18 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
     }
   }
 
-  drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity.', 'Translations disassociated for @count entities.'));
+  $disassociated_entities = '(Entity ID\'s: ';
+
+  for ($i = 0; $i < count($entity_ids); $i++) {
+    if ($i == count($entity_ids) - 1) {
+      $disassociated_entities .= $entity_ids[$i] . ')';
+    }
+    else {
+      $disassociated_entities .= $entity_ids[$i] . ', ';
+    }
+  }
+
+  drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity. ' . $disassociated_entities, 'Translations disassociated for @count entities. ' . $disassociated_entities));
 }
 
 
