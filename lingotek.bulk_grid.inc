@@ -2808,4 +2808,18 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   if (!empty($lids)) {
     LingotekConfigSet::disassociateSegments($lids);
   }
+
+  $disassociated_config = '(Config ID\'s: ';
+
+  for ($i = 0; $i < count($lids); $i++) {
+    if ($i == count($lids) - 1) {
+      $disassociated_config .= $lids[$i] . ')';
+    }
+    else {
+      $disassociated_config .= $lids[$i] . ', ';
+    }
+  }
+
+  drupal_set_message(format_plural(count($lids), 'Translations disassociated for one config item. ' . $disassociated_config, 'Translations disassociated for @count config items. ' . $disassociated_config));
+
 }
