@@ -363,6 +363,16 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type, $st
     $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
     $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
     $stored_workflow_id = $config_profile->getWorkflow();
+    if(isset($row->{'workflow_id'}) && array_key_exists($row->{'workflow_id'}, $workflows)) {
+      $workflow = $workflows[$row->{'workflow_id'}];
+    }
+    else if(array_key_exists($stored_workflow_id, $workflows)) {
+      $workflow = $workflows[$stored_workflow_id];
+    }
+    else {
+      $workflow = '';
+    }
+
     $data = array(
       'lid' => $lid ? : t('??'),
       'source' => '<a class="tooltips">' . $source_text . '<span>' . $escaped_source . '</span></a>',
@@ -373,7 +383,7 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type, $st
       'translations' => $target_icons_str,
       'doc_id' => $row->document_id ? $row->document_id : t('N/A'),
       'set_name' => '<span class="set_name">' . $set_name . '</span>',
-      'workflow' => isset($row->{'workflow_id'}) ? $workflows[$row->{'workflow_id'}] : $workflows[$stored_workflow_id]
+      'workflow' => $workflow
     );
 
     $table_data[$lid] = $data;
