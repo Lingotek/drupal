@@ -38,7 +38,25 @@ function lingotek_config_header() {
 
   return $header;
 }
-
+function lingotek_row_status_query() {
+  $query1 = lingotek_config_start_query(null, 'not taxonomy');
+  lingotek_config_add_query_filters($query1);
+  $query2 = lingotek_config_start_query(null, 'taxonomy name');
+  lingotek_config_add_query_filters($query2);
+  $query3 = lingotek_config_start_query(null, 'taxonomy desc');
+  lingotek_config_add_query_filters($query3);
+  $query1->union($query2, 'UNION');
+  $query1->union($query3, 'UNION');
+  $query = db_select($query1, 'query_union')->fields('query_union');
+  $limit = isset($_SESSION['limit_select']) ? $_SESSION['limit_select'] : 10;
+  $table_data_raw = $query
+      ->extend('PagerDefault')
+      ->extend('TableSort')
+      ->limit($limit)
+      ->execute()
+      ->fetchAllAssoc('lid');
+  return lingotek_bulk_grid_parse_config_data($table_data_raw, null, TRUE);
+}
 function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only = FALSE) {
   $columns = isset($form_state['values']['columns']) ? $form_state['values']['columns'] : array();
   $header = lingotek_config_header();
@@ -66,7 +84,6 @@ function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only
       ->orderByHeader($form_state['values']['grid_header'])
       ->execute()
       ->fetchAllAssoc('lid');
-
   $table_data = lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type);
   if(isset($_SESSION['grid_filters'][$entity_type])){
     $all_filtered_results = $query
@@ -280,18 +297,21 @@ function lingotek_get_locked_config_translations($lids = NULL) {
   return $query->execute()->fetchAllAssoc('lid');
 }
 
-function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
+function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type, $status_query = FALSE) {
   $lingotek_languages = Lingotek::getLanguages();
 
   $lids = array_keys($table_data_raw);
   $existing_translations = !empty($lids) ? lingotek_config_add_existing_translations($lids, $lingotek_languages) : array();
 
-  $languages = language_list();
   $global_profile = lingotek_get_global_profile();
-  $non_lingotek_config_translations = lingotek_get_locked_config_translations($lids);
+  $row_status = array();
   $table_data = array();
-  $api = LingotekApi::instance();
-  $workflows = $api->listWorkflows();
+  if($status_query === FALSE) {
+    $non_lingotek_config_translations = lingotek_get_locked_config_translations($lids);
+    $api = LingotekApi::instance();
+    $workflows = $api->listWorkflows();
+    $languages = language_list();
+  }
   foreach ($table_data_raw as $row) {
     $lid = $row->{'lid'};
     $row->lingotek = $global_profile;
@@ -327,6 +347,10 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
         $locale_statuses[$existing_locale] = 'untracked';
       }
     }
+    if($status_query === TRUE) {
+      $row_status[$lid] = $locale_statuses;
+      continue;
+    }
 
     $escaped_source = htmlentities($row->{'source'});
     $source_text = lingotek_truncate_grid_text($escaped_source, 55);
@@ -353,6 +377,9 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type) {
     );
 
     $table_data[$lid] = $data;
+  }
+  if($status_query === TRUE) {
+    return $row_status;
   }
   return $table_data;
 }
