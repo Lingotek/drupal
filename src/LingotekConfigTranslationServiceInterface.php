@@ -156,6 +156,27 @@ interface LingotekConfigTranslationServiceInterface {
    */
   public function setTargetStatuses(ConfigEntityInterface &$entity, $status);
 
+  /**
+   * Marks the translation status as dirty if they exist.
+   *
+   * @param ConfigEntityInterface &$entity
+   *   The entity which status we want to change.
+   *
+   * @return ConfigEntityInterface
+   */
+  public function markTranslationsAsDirty(ConfigEntityInterface &$entity);
+
+  /**
+   * Checks if the source entity data has changed from last time we uploaded it.
+   *
+   * @param ConfigEntityInterface &$entity
+   *   The entity being checked
+   *
+   * @return boolean
+   *   TRUE if the entity has changed, false if not.
+   */
+  public function hasEntityChanged(ConfigEntityInterface &$entity);
+
   public function getSourceData(ConfigEntityInterface $entity);
 
   /**
@@ -505,5 +526,17 @@ interface LingotekConfigTranslationServiceInterface {
    *   TRUE if the document was updated successfully, FALSE if not.
    */
   public function updateConfig($mapper_id);
+
+
+  /**
+   * Loads the entity with the given document id.
+   *
+   * @param string $document_id
+   *   The document id.
+   *
+   * @return ContentEntityInterface
+   *   The entity with the given document id.
+   */
+  public function loadByDocumentId($document_id);
 
 }

@@ -16,7 +16,7 @@ use Drupal\node\NodeInterface;
  *
  * @group lingotek
  */
-class LingotekNotificationCallbackTest extends LingotekTestBase {
+class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
   /**
    * Modules to install.

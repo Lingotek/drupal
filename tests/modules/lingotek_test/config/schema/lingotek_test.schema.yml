@@ -5,6 +5,9 @@ node.type.*.third_party.lingotek:
     lingotek_document_id:
       type: string
       label: 'Lingotek document id'
+    lingotek_hash:
+      type: string
+      label: 'Lingotek hash'
     lingotek_translation_source:
       type: sequence
       sequence:

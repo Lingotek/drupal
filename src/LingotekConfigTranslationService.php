@@ -187,7 +187,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function getSourceStatus(ConfigEntityInterface &$entity) {
     $status = Lingotek::STATUS_UNTRACKED;
     $source_status = $entity->getThirdPartySetting('lingotek', 'lingotek_translation_source');
-    if (isset($source_status[$entity->language()->getId()])) {
+    if ($source_status !== NULL && isset($source_status[$entity->language()->getId()])) {
       $status = $source_status[$entity->language()->getId()];
     }
     return $status;
@@ -254,8 +254,46 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         $this->setTargetStatus($entity, $langcode, $status);
       }
     }
+    $entity->save();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function hasEntityChanged(ConfigEntityInterface &$entity) {
+    $source_data = json_encode($this->getSourceData($entity));
+    $hash = md5($source_data);
+    $old_hash = $entity->getThirdPartySetting('lingotek', 'lingotek_hash');
+    if (!$old_hash || strcmp($hash, $old_hash)){
+      // We cannot the save the entity in the same request it was created, so we
+      // need to reload it. See https://www.drupal.org/node/2645202.
+      $entity = $entity->load($entity->id());
+      $entity->setThirdPartySetting('lingotek', 'lingotek_hash', $hash);
+      $entity->save();
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function markTranslationsAsDirty(ConfigEntityInterface &$entity) {
+    $target_languages = $this->languageManager->getLanguages();
+    $entity_langcode = $entity->language()->getId();
+
+    foreach($target_languages as $langcode => $language) {
+      if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
+        if ($current_status == Lingotek::STATUS_CURRENT || $current_status == Lingotek::STATUS_UNTRACKED) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSourceData(ConfigEntityInterface $entity) {
     /** @var ConfigEntityMapper $mapper */
     $mapper = $this->configMapperManager->createInstance($entity->getEntityTypeId());
@@ -808,6 +846,35 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         $config_translation->save();
       }
     }
+  }
+
+  public function loadByDocumentId($document_id) {
+    // We cannot use a mapping table as in content, because config can be staged.
+    $entity = NULL;
+    // Check config first.
+    $config_mappers = array_filter($this->mappers, function($mapper) {
+      return ($mapper instanceof ConfigNamesMapper
+        && ! $mapper instanceof ConfigEntityMapper
+        && ! $mapper instanceof ConfigFieldMapper)
+        ;
+    });
+    foreach ($config_mappers as $mapper_id => $mapper) {
+      if ($this->getConfigDocumentId($mapper) === $document_id) {
+        return $mapper;
+      }
+    }
+    // If we failed, check config entities.
+    foreach ($this->mappers as $mapper_id => $mapper) {
+      if (!isset($config_mappers[$mapper_id])) {
+        $id = \Drupal::service('entity.query')->get($mapper_id)
+          ->condition('third_party_settings.lingotek.lingotek_document_id', $document_id)
+          ->execute();
+        if (!empty($id)) {
+          return $this->entityManager->getStorage($mapper_id)->load(reset($id));
+        }
+      }
+    }
+    return NULL;
   }
 
 }
