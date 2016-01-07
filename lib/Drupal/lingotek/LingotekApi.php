@@ -170,7 +170,7 @@ class LingotekApi {
    */
   private function upload_language_specific_targets($doc_id, $targets) {
     $i = 0;
-    $sleep_intervals = array(3, 1, 1, 1);
+    $sleep_intervals = array(10, 2, 1, 1);
     $done_processing = FALSE;
     $params = array(
       'id' => $doc_id
