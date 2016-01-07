@@ -22,10 +22,6 @@ function lingotek_drush_help($command) {
       return dt('Run the Lingotek prepare menus utility');
     case 'drush:lt-prepare-builtins':
       return dt('Run the Lingotek prepare built-ins utility');
-    case 'drush:lt-prepare-misc':
-      return dt('Run the Lingotek prepare misc. utility');
-    case 'drush:lt-prepare-labels':
-      return dt('Run the Lingotek prepare field labels utility');
   }
 }
 
@@ -106,32 +102,7 @@ function lingotek_drush_command() {
       'drush lt-prepare-builtins' => '',
     ),
   );
-  $items['lt-prepare-labels'] = array(
-    'command-hook' => 'prepare_labels',
-    'callback arguments' => array(
-      array(
-        'fields' => 'fields',
-      ),
-      'lingotek_translate_config_fields',
-    ),
-    'description' => dt('Prepare field labels for Lingotek translation.'),
-    'examples' => array(
-      'drush lt-prepare-labels' => '',
-    ),
-  );
-  $items['lt-prepare-misc'] = array(
-    'command-hook' => 'prepare_misc',
-    'callback arguments' => array(
-      array(
-        'misc' => 'misc',
-      ),
-      'lingotek_translate_config_misc',
-    ),
-    'description' => dt('Prepare miscellaneous strings for Lingotek translation.'),
-    'examples' => array(
-      'drush lt-prepare-misc' => '',
-    ),
-  );
+
   return $items;
 }
 
@@ -253,30 +224,6 @@ function drush_lingotek_prepare_menus($config_groups, $variable) {
     drush_lingotek_prepare_item($config_groups, $variable);
   } catch (Exception $e) {
     drush_set_error('lt-prepare-menus', $e->getMessage());
-  }
-}
-
-/**
- * Callback function for drush command lt-prepare-misc
- */
-function drush_lingotek_prepare_misc($config_groups, $variable) {
-  try {
-    lingotek_admin_prepare_misc();
-    drush_lingotek_prepare_item($config_groups, $variable);
-  } catch (Exception $e) {
-    drush_set_error('lt-prepare-misc', $e->getMessage());
-  }
-}
-
-/**
- * Callback function for drush command lt-prepare-labels
- */
-function drush_lingotek_prepare_labels($config_groups, $variable) {
-  try {
-    lingotek_admin_prepare_fields();
-    drush_lingotek_prepare_item($config_groups, $variable);
-  } catch (Exception $e) {
-    drush_set_error('lt-prepare-misc', $e->getMessage());
   }
 }
 
