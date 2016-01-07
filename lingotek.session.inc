@@ -262,8 +262,7 @@ class LingotekSession {
           $error = $response->error;
         }
         else {
-          $sso_url = 'https://sso.lingotek.com/login';
-          $error = t('Make sure your password is compatible with ') . l(t('single sign on'), $sso_url);
+          $error = t('Make sure your password is compatible with <a href="@sso_url">single sign on</a>.', array('@sso_url' => 'https://sso.lingotek.com/login'));
         }
       }
     }
