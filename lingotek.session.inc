@@ -258,7 +258,13 @@ class LingotekSession {
         $error = '';
       }
       elseif (isset($response->results) && $response->results == "fail") {
-        $error = $response->error;
+        if (!empty($response->error)){
+          $error = $response->error;
+        }
+        else {
+          $sso_url = 'https://sso.lingotek.com/login';
+          $error = t('Make sure your password is compatible with ') . l(t('single sign on'), $sso_url);
+        }
       }
     }
     elseif (isset($data->error)) {
