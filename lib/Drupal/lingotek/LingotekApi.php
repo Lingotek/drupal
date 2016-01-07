@@ -95,6 +95,12 @@ class LingotekApi {
       $this->addAdvancedParameters($parameters, $translatable_object);
       $has_language_specific_targets = FALSE;
 
+      // If the document has invalid characters, return without uploading
+      $invalid_xml = lingotek_keystore($translatable_object->getEntityType(), $translatable_object->getId(), 'invalid_xml');
+      if ($invalid_xml == 1) {
+        return FALSE;
+      }
+
       if ($with_targets) {
         if (is_array($with_targets)) {
           // Assumes language-specific profiles are enabled, so handle adding

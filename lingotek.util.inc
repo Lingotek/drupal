@@ -347,6 +347,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
   $translatable_field_types = lingotek_get_translatable_field_types();
   $enabled_fields = variable_get('lingotek_enabled_fields');
   $all_field_info = field_info_fields();
+  $has_invalid_xml = FALSE;
 
   foreach ($translatable_fields as $field_name) {
     $field_columns = $all_field_info[$field_name]['columns'];
@@ -403,6 +404,9 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
         }
 
         $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
+        if (lingotek_element_contains_invalid_xml($delta_column_content)) {
+          $has_invalid_xml = TRUE;
+        }
         // Handle element suffixes (all columns should be suffixed now)
         $column_obj = $field_obj->addChild($column_name);
         $element = $column_obj->addChild('element');
@@ -410,7 +414,28 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
       }
     }
   }
+  // If the document has invalid characters, flag it
+  $ln = LingotekEntity::load($entity, $entity_type);
+  if ($has_invalid_xml) {
+    lingotek_keystore($entity_type, $ln->getId(), 'invalid_xml', 1);
+    lingotek_keystore($entity_type, $ln->getId(), 'last_sync_error', 'Entity contains invalid xml characters');
+    LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_FAILED);
+  }
+  else {
+    lingotek_keystore_delete($entity_type, $ln->getId(), 'invalid_xml');
+  }
+
   return $content_obj;
+}
+
+/**
+* Checks for invalid xml characters
+*/
+function lingotek_element_contains_invalid_xml($element) {
+  if (preg_match("/&/", $element) || preg_match("/</", $element) || preg_match("/>/", $element)) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
