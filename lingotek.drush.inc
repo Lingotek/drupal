@@ -20,8 +20,9 @@ function lingotek_drush_help($command) {
       return dt('Run the Lingotek prepare vocabularies utility');
     case 'drush:lt-prepare-menus':
       return dt('Run the Lingotek prepare menus utility');
-    case 'drush:lt-prepare-builtins':
-      return dt('Run the Lingotek prepare built-ins utility');
+    // Commented out: error reported /home/{user}/.composer/vendor/drush/drush/commands/core/drupal/batch.inc on line 45 and 137
+    // case 'drush:lt-prepare-builtins':
+    //   return dt('Run the Lingotek prepare built-ins utility');
   }
 }
 
@@ -95,13 +96,14 @@ function lingotek_drush_command() {
       'drush lt-prepare-menus' => '',
     ),
   );
-  $items['lt-prepare-builtins'] = array(
-    'command-hook' => 'prepare_builtins',
-    'description' => dt('Prepare built-in strings for Lingotek translation.'),
-    'examples' => array(
-      'drush lt-prepare-builtins' => '',
-    ),
-  );
+  // Commented out: error reported /home/{user}/.composer/vendor/drush/drush/commands/core/drupal/batch.inc on line 45 and 137
+  // $items['lt-prepare-builtins'] = array(
+  //   'command-hook' => 'prepare_builtins',
+  //   'description' => dt('Prepare built-in strings for Lingotek translation.'),
+  //   'examples' => array(
+  //     'drush lt-prepare-builtins' => '',
+  //   ),
+  // );
 
   return $items;
 }
@@ -227,17 +229,18 @@ function drush_lingotek_prepare_menus($config_groups, $variable) {
   }
 }
 
+// Commented out: error reported /home/{user}/.composer/vendor/drush/drush/commands/core/drupal/batch.inc on line 45 and 137
 /**
  * Callback function for drush command lt-prepare-builtins
  */
-function drush_lingotek_prepare_builtins() {
-  try {
-    lingotek_admin_prepare_builtins($additional_operations);
-    drush_backend_batch_process();
-  } catch (Exception $e) {
-    drush_set_error('lt-prepare-builtins', $e->getMessage());
-  }
-}
+// function drush_lingotek_prepare_builtins() {
+//   try {
+//     lingotek_admin_prepare_builtins($additional_operations);
+//     drush_backend_batch_process();
+//   } catch (Exception $e) {
+//     drush_set_error('lt-prepare-builtins', $e->getMessage());
+//   }
+// }
 
 /**
  * @param $config_groups
