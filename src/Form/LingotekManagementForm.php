@@ -211,8 +211,9 @@ class LingotekManagementForm extends FormBase {
       if ($has_bundles) {
         $rows[$entity_id]['bundle'] = $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'];
       }
+
       $rows[$entity_id] += [
-        'title' => $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])),
+        'title' => $entity->hasLinkTemplate('canonical') ? $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])) : $entity->id(),
         'source' => $source,
         'translations' => $translations,
         'profile' => $profile ? $profile->label() : '',
@@ -223,7 +224,7 @@ class LingotekManagementForm extends FormBase {
       $headers['bundle'] = $entity_type->getBundleLabel();
     }
     $headers += [
-      'title' => $has_bundles ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
+      'title' => $has_bundles && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
       'source' => $this->t('Language source'),
       'translations' => $this->t('Translations'),
       'profile' => $this->t('Profile'),
@@ -243,7 +244,7 @@ class LingotekManagementForm extends FormBase {
     );
     $form['filters']['wrapper']['label'] = array(
       '#type' => 'textfield',
-      '#title' => $has_bundles ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
+      '#title' => $has_bundles && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
       '#placeholder' => $this->t('Filter by @title', ['@title' => $entity_type->getBundleLabel()]),
       '#default_value' => $labelFilter,
       '#attributes' => array('class' => array('form-item')),

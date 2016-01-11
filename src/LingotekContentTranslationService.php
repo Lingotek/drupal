@@ -384,7 +384,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $source_data = json_encode($this->getSourceData($entity));
     $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
-    $url = $entity->toUrl()->setAbsolute(TRUE)->toString();
+    $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
     $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getEntityProfile($entity));
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
