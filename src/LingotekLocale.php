@@ -210,7 +210,7 @@ class LingotekLocale {
   );
   public static $language_mapping_l2d_exceptions = array(
       'ar' => 'ar',
-      'zh_CN' => 'zh',
+      'zh_CN' => 'zh-hans',
       'zh_TW' => 'zh-hant'
   );
   public static $language_mapping_d2l_exceptions = array(
