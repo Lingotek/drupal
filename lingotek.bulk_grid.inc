@@ -1910,6 +1910,16 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 
       $query->condition('lingo_entity_id.entity_id', $uploadedQuery, 'IN');
     }
+    elseif(in_array("upload_failed", $filters['upload_status'])) {
+      $uploadFailedQuery = db_select('lingotek_entity_metadata','lingo_em');
+      $uploadFailedQuery->distinct();
+      $uploadFailedQuery->fields('lingo_em', array('entity_id'));
+      $uploadFailedQuery->condition('entity_key', 'invalid_xml');
+
+
+      $query->condition('lingo_entity_id.entity_id', $uploadFailedQuery, 'IN');
+      $query->condition('lingo_invalid_xml.value', '1');
+    }
     //other cases
     else {
       $query->condition('lingo_upload_status.value', $filters['upload_status'], 'IN');
