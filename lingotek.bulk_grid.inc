@@ -1386,6 +1386,8 @@ function lingotek_grid_build_filters($form_state) {
         'all' => t('All'),
         LingotekSync::STATUS_EDITED => t('Out of Sync'),
         LingotekSync::STATUS_CURRENT => t('In Sync'),
+        'uploaded' => t('Uploaded'),
+        'upload_failed' => t('Upload Failed'),
         'never' => t('Never Uploaded'),
         'disassoc' => t('Disassociated'),
       ),
@@ -1898,6 +1900,15 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 
       $query->condition('lingo_entity_id.entity_id', $disassocQuery, 'IN');
       $query->condition('lingo_entity_id.value', 'UNTRACKED');
+    }
+    elseif(in_array("uploaded", $filters['upload_status'])) {
+      $uploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
+      $uploadedQuery->distinct();
+      $uploadedQuery->fields('lingo_em', array('entity_id'));
+      $uploadedQuery->condition('entity_key', 'document_id');
+
+
+      $query->condition('lingo_entity_id.entity_id', $uploadedQuery, 'IN');
     }
     //other cases
     else {
