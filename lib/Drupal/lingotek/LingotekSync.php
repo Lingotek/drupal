@@ -110,6 +110,7 @@ class LingotekSync {
         ->condition('entity_key', 'target_sync_status%', 'LIKE')
         ->fields(array('value' => $status, 'modified' => time()))
         ->execute();
+    lingotek_cache_clear($entity_type, $entity_id);
   }
 
   public static function bulkSetAllTargetStatus($entity_type, $entity_ids, $status){
@@ -127,6 +128,9 @@ class LingotekSync {
         ->condition('entity_key', 'target_sync_status%', 'LIKE')
         ->fields(array('value' => $status, 'modified' => time()))
         ->execute();
+    foreach ($entity_ids as $eid) {
+      lingotek_cache_clear($entity_type, $eid);
+    }
   }
 
   public static function setUploadStatus($entity_type, $entity_id, $status) {
@@ -206,9 +210,10 @@ class LingotekSync {
 
   public static function delete_entity_from_metadata($entity_type, $entity_id) {
     db_delete('lingotek_entity_metadata')
-    ->condition('entity_type', $entity_type)
-    ->condition('entity_id', $entity_id)
-    ->execute();
+        ->condition('entity_type', $entity_type)
+        ->condition('entity_id', $entity_id)
+        ->execute();
+    lingotek_cache_clear($entity_type, $entity_id);
   }
 
   public static function deleteTargetStatus($entity_type, $entity_id, $lingotek_locale) {
@@ -232,6 +237,7 @@ class LingotekSync {
   public static function deleteTargetEntriesForAllDocs($lingotek_locale) {
     self::deleteTargetEntriesForAllEntities($lingotek_locale);
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
+    lingotek_cache_clear();
   }
   
   
@@ -906,6 +912,7 @@ class LingotekSync {
 
   public static function disassociateAllEntities() {
     db_truncate('lingotek_entity_metadata')->execute();
+    lingotek_cache_clear();
   }
 
   public static function disassociateAllSets() {
@@ -916,8 +923,9 @@ class LingotekSync {
     $eids = self::getNodeIdsFromDocIds($document_ids);
     db_delete('lingotek_entity_metadata')
         ->condition('entity_type', 'node')
-      ->condition('entity_id', $eids, 'IN')
-      ->execute();
+        ->condition('entity_id', $eids, 'IN')
+        ->execute();
+    lingotek_cache_clear('node');
   }
 
   public static function getAllLocalDocIds() {

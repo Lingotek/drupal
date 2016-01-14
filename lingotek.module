@@ -1058,6 +1058,7 @@ function lingotek_entity_save($entity, $entity_type) {
       ->condition('entity_id', $id)
       ->condition('entity_key', $remove, 'IN')
       ->execute();
+  lingotek_cache_clear($entity_type, $id);
 
   // Always store the entity's profile, in case the profile of the same content
   // type changes in the future to something else.
@@ -1406,10 +1407,25 @@ function lingotek_entity_load($entities, $entity_type) {
       lingotek_normalize_special_field_language($entity_type, $e);
     }
   }
+  // pull out the entities that already have cached lingotek info.
+  $filtered_entities = array();
+  foreach ($entities as $k => &$v) {
+    $lingotek_cache = lingotek_cache_get($entity_type, $k);
+    if (!empty($lingotek_cache)) {
+      $v->lingotek = $lingotek_cache;
+    }
+    else {
+      $filtered_entities[$k] = $v;
+    }
+  }
+
+  if (empty($filtered_entities)) {
+    return;
+  }
 
   $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
-      ->condition('l.entity_id', array_keys($entities), 'IN')
+      ->condition('l.entity_id', array_keys($filtered_entities), 'IN')
       ->condition('l.entity_type', $entity_type)
       ->condition('l.entity_key', 'target_%', 'NOT LIKE');
   $result = $query->execute();
@@ -1419,18 +1435,25 @@ function lingotek_entity_load($entities, $entity_type) {
     $values[$record->entity_id][$record->entity_key] = $record->value;
   }
 
-  foreach ($entities as &$entity) {
+  foreach ($filtered_entities as &$entity) {
 
     // Pull profile values for the entity
-    $entity_profile = LingotekProfile::loadByEntity($entity_type, $entity);
+    list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+    if (isset($values[$id]['profile'])) {
+      // Load the profile directly if we already know the profile ID.
+      $entity_profile = LingotekProfile::loadById($values[$id]['profile']);
+    }
+    else {
+      $entity_profile = LingotekProfile::loadByEntity($entity_type, $entity);
+    }
     $entity->lingotek = $entity_profile->getAttributes();
     $entity->lingotek['profile'] = $entity_profile->getId();
 
     // Overlay node-specific values (like doc ID, status, etc.) onto the entity
-    list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
     if (!empty($values[$id])) {
       $entity->lingotek = array_merge($entity->lingotek, $values[$id]);
     }
+    lingotek_cache_set($entity_type, $id, $entity->lingotek);
   }
 }
 
@@ -1483,13 +1506,13 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
     return;
   }
 
-  if (!$changed && $entity->lingotek['upload_status'] == 'CURRENT') {
+  if (!$changed && isset($entity->lingotek['upload_status']) && $entity->lingotek['upload_status'] == 'CURRENT') {
     return; //entity has no changes.
   }
 
   LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
 
-  if ($entity->lingotek['auto_upload']) {
+  if (isset($entity->lingotek['auto_upload']) && $entity->lingotek['auto_upload']) {
     lingotek_entity_upload($entity, $entity_type, $context);
   }
 }
@@ -2012,7 +2035,16 @@ function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
 function lingotek_normalize_special_field_language($entity_type, $entity, $read_only = TRUE) {
 
   $host_language = lingotek_get_host_language($entity_type, $entity, $read_only);
-  $excluded_fields = field_read_fields(array('type' => 'field_collection'));
+  $excluded_fields = &drupal_static(__FUNCTION__);
+  if (!isset($excluded_fields)) {
+    if ($cache = cache_get('lingotek_excluded_fc_fields')) {
+      $excluded_fields = $cache->data;
+    }
+    else {
+      $excluded_fields = field_read_fields(array('type' => 'field_collection'));
+      cache_set('lingotek__excluded_fc_fields', $excluded_fields, 'cache', CACHE_TEMPORARY);
+    }
+  }
 
   foreach ($entity as $key => $value) { // for each field in the entity
     // if the given field is a member of the field types then normalize the languages

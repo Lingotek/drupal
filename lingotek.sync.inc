@@ -301,6 +301,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
             'value' => $value,
           ))
         ->execute();
+      lingotek_cache_clear($entity_type, $entity_id);
     }
     return $progress_report;
   }
