@@ -2256,11 +2256,13 @@ function lingotek_field_language_alter(&$display_language, $context) {
  * Implements hook_node_delete().
  */
 function lingotek_node_delete($node) {
-  $entity = lingotek_entity_load_single('node', $node->nid);
+  $target_ids = lingotek_get_target_node_ids($node->nid);
 
-  // If it's a source node, and the entity's translation is noded-based, delete the target nodes
-  if (isset($entity->lingotek['document_id']) && $entity->lingotek['document_id'] && isset($entity->lingotek['lingotek_nodes_translation_method']) && $entity->lingotek['lingotek_nodes_translation_method'] == 'node') {
-    lingotek_delete_target_nodes($entity, 'node');
+  if (!empty($target_ids)) {
+    $entity = lingotek_entity_load_single('node', $node->nid);
+    if (isset($entity->lingotek['lingotek_nodes_translation_method']) && $entity->lingotek['lingotek_nodes_translation_method'] == 'node') {
+      lingotek_delete_target_nodes('node', $target_ids);
+    }
   }
 }
 
@@ -2287,10 +2289,7 @@ function lingotek_entity_delete($entity, $type) {
 /*
  * Removes the target nodes of a source node.
  */
-function lingotek_delete_target_nodes($entity, $entity_type) {
-  $source_id = $entity->nid;
-  $target_ids = lingotek_get_target_node_ids($source_id);
-
+function lingotek_delete_target_nodes($entity_type, $target_ids) {
   foreach ($target_ids as $id) {
     LingotekSync::delete_entity_from_metadata($entity_type, $id);
     node_delete($id);
