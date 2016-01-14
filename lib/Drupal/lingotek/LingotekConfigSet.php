@@ -62,9 +62,10 @@ class LingotekConfigSet implements LingotekTranslatableEntity {
     $this->source_data = self::getAllSegments($this->sid);
     $this->source_meta = self::getSetMeta($this->sid);
     $this->language = language_default();
-    if (!isset($this->language->lingotek_locale)) { // if Drupal variable 'language_default' does not exist
-      $this->language->lingotek_locale = Lingotek::convertDrupal2Lingotek($this->language->language);
-    }
+    // INT-791 Respecting the i18n_string_source_language setting
+    $i18n_language = variable_get('i18n_string_source_language', language_default()->language);
+    $this->language->language = $i18n_language;
+    $this->language->lingotek_locale = Lingotek::convertDrupal2Lingotek($this->language->language);
     $this->language_targets = Lingotek::getLanguagesWithoutSource($this->language->lingotek_locale);
   }
 

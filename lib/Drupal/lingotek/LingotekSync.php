@@ -110,6 +110,7 @@ class LingotekSync {
         ->condition('entity_key', 'target_sync_status%', 'LIKE')
         ->fields(array('value' => $status, 'modified' => time()))
         ->execute();
+    lingotek_cache_clear($entity_type, $entity_id);
   }
 
   public static function bulkSetAllTargetStatus($entity_type, $entity_ids, $status){
@@ -127,6 +128,9 @@ class LingotekSync {
         ->condition('entity_key', 'target_sync_status%', 'LIKE')
         ->fields(array('value' => $status, 'modified' => time()))
         ->execute();
+    foreach ($entity_ids as $eid) {
+      lingotek_cache_clear($entity_type, $eid);
+    }
   }
 
   public static function setUploadStatus($entity_type, $entity_id, $status) {
@@ -172,10 +176,6 @@ class LingotekSync {
     $node_source_check->condition($or);
     $node_source_check->condition('n.language', $locale);
 
-    $comment_source_check = db_select('comment', 'c');
-    $comment_source_check->addField('c', 'cid');
-    $comment_source_check->condition('c.language', $locale);
-
     $taxonomy_source_check = db_select('taxonomy_term_data', 't');
     $taxonomy_source_check->addField('t', 'tid');
     $taxonomy_source_check->condition('t.language', $locale);
@@ -185,8 +185,14 @@ class LingotekSync {
         ->fields('meta', array('entity_id', 'entity_type'))
         ->condition('meta.entity_key', 'document_id')
         ->condition('entity_id', $node_source_check, "NOT IN")
-        ->condition('entity_id', $comment_source_check, "NOT IN")
         ->condition('entity_id', $taxonomy_source_check, "NOT IN");
+
+    if (module_exists('comment')) {
+      $comment_source_check = db_select('comment', 'c');
+      $comment_source_check->addField('c', 'cid');
+      $comment_source_check->condition('c.language', $locale);
+      $query->condition('entity_id', $comment_source_check, "NOT IN");
+    }
 
     if (module_exists('bean') && variable_get('lingotek_translate_beans')) {
       $bean_source_check = db_select('bean', 'b');
@@ -200,6 +206,14 @@ class LingotekSync {
     foreach ($entities as $e) {
       self::setTargetStatus($e->entity_type, $e->entity_id, $lingotek_locale, self::STATUS_PENDING);
     }
+  }
+
+  public static function delete_entity_from_metadata($entity_type, $entity_id) {
+    db_delete('lingotek_entity_metadata')
+        ->condition('entity_type', $entity_type)
+        ->condition('entity_id', $entity_id)
+        ->execute();
+    lingotek_cache_clear($entity_type, $entity_id);
   }
 
   public static function deleteTargetStatus($entity_type, $entity_id, $lingotek_locale) {
@@ -223,6 +237,7 @@ class LingotekSync {
   public static function deleteTargetEntriesForAllDocs($lingotek_locale) {
     self::deleteTargetEntriesForAllEntities($lingotek_locale);
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
+    lingotek_cache_clear();
   }
   
   
@@ -845,6 +860,9 @@ class LingotekSync {
   }
 
   public static function getConfigDocIdsFromSetIds($sids) {
+    if (empty($sids)) {
+      return $sids;
+    }
     $query = db_select('lingotek_config_metadata', 'l');
     $query->addField('l', 'value');
     $query->condition('id', $sids, 'IN');
@@ -894,6 +912,7 @@ class LingotekSync {
 
   public static function disassociateAllEntities() {
     db_truncate('lingotek_entity_metadata')->execute();
+    lingotek_cache_clear();
   }
 
   public static function disassociateAllSets() {
@@ -904,8 +923,9 @@ class LingotekSync {
     $eids = self::getNodeIdsFromDocIds($document_ids);
     db_delete('lingotek_entity_metadata')
         ->condition('entity_type', 'node')
-      ->condition('entity_id', $eids, 'IN')
-      ->execute();
+        ->condition('entity_id', $eids, 'IN')
+        ->execute();
+    lingotek_cache_clear('node');
   }
 
   public static function getAllLocalDocIds() {
@@ -1064,6 +1084,9 @@ class LingotekSync {
     if ($success) {
       variable_set('lingotek_notify_url', $new_url);
       variable_set('lingotek_notify_security_token', $security_token);
+      if (strpos($new_url,'localhost') !== false) {
+        $success = 'localhost_url';
+      }
     }
     return $success;
   }

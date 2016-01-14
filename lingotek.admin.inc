@@ -903,18 +903,7 @@ function lingotek_admin_additional_translation_settings_form_submit($form, &$for
     lingotek_admin_prepare_menus();
     $config_groups['menu'] = 'menu';
   }
-  if (variable_get('lingotek_translate_config_views', 0) && isset($form_state['input']['lingotek_prepare_config_views'])) {
-    lingotek_admin_prepare_views();
-    $config_groups['views'] = 'views';
-  }
-  if (variable_get('lingotek_translate_config_fields', 0) && isset($form_state['input']['lingotek_prepare_config_fields'])) {
-    lingotek_admin_prepare_fields();
-    $config_groups['fields'] = 'fields';
-  }
-  if (variable_get('lingotek_translate_config_misc', 0) && isset($form_state['input']['lingotek_prepare_config_misc'])) {
-    lingotek_admin_prepare_misc();
-    $config_groups['misc'] = 'misc';
-  }
+
   // refresh all strings for each config type
   if (count($config_groups)) {
     // combine string refresh operations with other additional operations
@@ -1188,21 +1177,6 @@ function lingotek_admin_prepare_menus() {
   else {
     drupal_set_message(t('All menu links ready to display translations.'));
   }
-  return TRUE;
-}
-
-function lingotek_admin_prepare_views() {
-  // Stub for future preparations if necessary
-  return TRUE;
-}
-
-function lingotek_admin_prepare_fields() {
-  // Stub for future preparations if necessary
-  return TRUE;
-}
-
-function lingotek_admin_prepare_misc() {
-  // Stub for future preparations if necessary
   return TRUE;
 }
 
@@ -1921,6 +1895,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
       '#markup' => '<h3>' . t('Target Languages') . '</h3><hr />',
     );
     $languages = lingotek_get_target_locales(FALSE);
+    usort($languages, "lingotek_language_specific_profile_cmp");
     $form['defaults']['language_overrides'] = array();
     $settings_options = array(
       LingotekSync::PROFILE_INHERIT => 'Inherit default settings',
@@ -2013,6 +1988,13 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   );
 
   return $form;
+}
+
+function lingotek_language_specific_profile_cmp($a, $b) {
+  if (!isset($a->name) || !isset($b->name)) {
+    return 0;
+  }
+    return strcmp($a->name, $b->name);
 }
 
 function lingotek_profile_default_workflow_form_callback($form, $form_state) {

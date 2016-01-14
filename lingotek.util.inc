@@ -107,11 +107,13 @@ function lingotek_keystore($entity_type, $entity_id, $key = "", $value = "", $up
       $existing_value = lingotek_keystore($entity_type, $entity_id, $key);
       if ($existing_value === FALSE) { // insert
         $success = drupal_write_record('lingotek_entity_metadata', $row);
+        lingotek_cache_clear($entity_type, $entity_id);
         return $success ? "$entity_id : $key => $value (INSERTED)" : "$entity_id : $key !=> $value (INSERT FAILED)";
       }
       elseif ($update_on_dup) { // key exists -> update
         unset($row[db_escape_field('created')]); // retain original created timestamp
         $success = drupal_write_record('lingotek_entity_metadata', $row, array(db_escape_field('entity_type'), db_escape_field('entity_id'), db_escape_field('entity_key')));
+        lingotek_cache_clear($entity_type, $entity_id);
         return $success ? "$entity_id : $key => $value (UPDATED)" : "$entity_id : $key !=> $value (UPDATE FAILED)";
       }
       else { // key exists -> ignore (ignore on duplicate key)
@@ -141,7 +143,9 @@ function lingotek_keystore_delete($entity_type, $id, $key) {
   $query->condition('entity_type', $entity_type);
   $query->condition('entity_id', $id);
   $query->condition('entity_key', $key);
-  return $query->execute();
+  $result = $query->execute();
+  lingotek_cache_clear($entity_type, $id);
+  return $result;
 }
 
 /**
@@ -176,19 +180,26 @@ function lingotek_keystore_delete_multiple($entity_type, $entity_ids, $lingokey,
         ->condition('entity_id', $delete_nids, 'IN')
         ->condition('entity_key', $lingokey, $condition)
         ->execute();
+    foreach ($delete_nids as $eid) {
+      lingotek_cache_clear($entity_type, $eid);
+    }
   }
 }
 
 function lingotek_keystore_delete_all($entity_type, $id) {
   db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $entity_type)
-    ->condition('entity_id', $id)->execute();
+      ->condition('entity_id', $id)->execute();
+  lingotek_cache_clear($entity_type, $id);
 }
 
 function lingotek_keystore_delete_all_multiple($entity_type, $ids) {
   db_delete('lingotek_entity_metadata')
       ->condition('entity_type', $entity_type)
-    ->condition('entity_id', $ids, 'IN')->execute();
+      ->condition('entity_id', $ids, 'IN')->execute();
+  foreach ($ids as $eid) {
+    lingotek_cache_clear($entity_type, $eid);
+  }
 }
 
 /*
@@ -480,8 +491,10 @@ function lingotek_access_dev_tools($node, $permission) {
   // OR when not showing advanced features
 
   $user_access = user_access($permission);
-  if (($user_access && module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->showAdvanced()) {
-    return FALSE;
+  if ($user_access) {
+    if ((module_exists('entity_translation') && entity_translation_node_supported_type($node->type) && !lingotek_node_pushed($node)) || !LingotekAccount::instance()->showAdvanced()) {
+      return FALSE;
+    }
   }
   // Default: Standard user access
   return $user_access;
@@ -2146,21 +2159,23 @@ function lingotek_get_target_node_ids($nid) {
  * @param $nid The id of the source node
  */
 function lingotek_delete_node_translations($nid) {
+  // Get the source node
+  $source_node = lingotek_node_load_default($nid);
   $target_nids = lingotek_get_target_node_ids($nid);
+  $target_statuses = LingotekSync::getAllTargetStatusForEntity('node', $nid);
 
   foreach ($target_nids as $target_nid) {
     entity_delete('node', $target_nid);
   }
-
-  // Sets target_sync_status to DELETED so if translations are re-downloaded they will appear as CURRENT
-  db_update('lingotek_entity_metadata')
-    ->fields(array(
-      'value' => 'DELETED',
-    ))
-    ->condition('entity_type', 'node')
-    ->condition('entity_id', $nid)
-    ->condition('entity_key', 'target_%', 'LIKE')
-    ->execute();
+  // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
+  foreach ($target_statuses as $langcode => $status) {
+    if ($status == LingotekSync::STATUS_CURRENT && isset($source_node->lingotek['document_id'])) {
+      LingotekSync::setTargetStatus('node', $nid, $langcode, LingotekSync::STATUS_READY);
+    }
+    else {
+      LingotekSync::setTargetStatus('node', $nid, $langcode, LingotekSync::STATUS_DELETED);
+    }
+  }
 }
 
 /**
@@ -2170,6 +2185,7 @@ function lingotek_delete_node_translations($nid) {
  * @param $entity
  */
 function lingotek_delete_field_translations($entity_type, $entity) {
+  $target_status = LingotekSync::STATUS_DELETED;
   $entity_data = entity_extract_ids($entity_type, $entity);
   $fields = field_info_instances($entity_type, $extracted_data[2]);
   $source_langcode[] = lingotek_entity_langcode($entity_type, $entity);
@@ -2179,20 +2195,52 @@ function lingotek_delete_field_translations($entity_type, $entity) {
   foreach ($fields[$entity_data[2]] as $field) {
     $field_name = $field['field_name'];
     foreach($langcodes as $langcode) {
+      $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
+      $status = LingotekSync::getTargetStatus($entity->lingotek['document_id'], $lingotek_locale);
+      // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
+      if ($status == LingotekSync::STATUS_CURRENT && isset($entity->lingotek['document_id'])) {
+        $target_status = LingotekSync::STATUS_READY;
+      }
       if ($langcode && !empty($entity->$field_name)) {
         $entity->{$field_name}[$langcode] = array();
       }
+      LingotekSync::setTargetStatus($entity_type, $entity_data[0], $lingotek_locale, $target_status);
     }
   }
   entity_save($entity_type, $entity);
+}
 
-  // Sets target_sync_status to DELETED so if translations are re-downloaded they will appear as CURRENT
-  db_update('lingotek_entity_metadata')
-    ->fields(array(
-      'value' => 'DELETED',
-    ))
-    ->condition('entity_type', $entity_type)
-    ->condition('entity_id', $entity_data[0])
-    ->condition('entity_key', 'target_%', 'LIKE')
-    ->execute();
+/**
+ * Get cached Lingotek-specific metadata for a given entity
+ */
+function lingotek_cache_get($entity_type, $entity_id) {
+  $entry = cache_get('lingotek__' . $entity_type . '__' . $entity_id);
+  if ($entry) {
+    return $entry->data;
+  }
+  return array();
+}
+
+/**
+ * Set cached Lingotek-specific metadata for a given entity
+ */
+function lingotek_cache_set($entity_type, $entity_id, $info_to_cache) {
+  cache_set('lingotek__' . $entity_type . '__' . $entity_id, $info_to_cache, 'cache', CACHE_TEMPORARY);
+}
+
+/**
+ * Clear cached Lingotek-specific metadata for a given entity.
+ * - If entity_id is blank, then clear metadata for all entities of the type.
+ * - If both are blank, then clear metadata for all entities.
+ */
+function lingotek_cache_clear($entity_type = NULL, $entity_id = NULL) {
+  if ($entity_type == NULL && $entity_id == NULL) {
+    cache_clear_all('lingotek__', 'cache', TRUE);
+    return;
+  }
+  elseif ($entity_id == NULL) {
+    cache_clear_all('lingotek__' . $entity_type . '__', 'cache', TRUE);
+    return;
+  }
+  cache_clear_all('lingotek__' . $entity_type . '__' . $entity_id, 'cache');
 }

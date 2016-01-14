@@ -203,27 +203,29 @@ class LingotekEntity implements LingotekTranslatableEntity {
    */
   public function setMetadataValue($key, $value) {
     $metadata = $this->metadata();
+    $entity_type = $this->getEntityType();
+    $entity_id = $this->getId();
     if (!isset($metadata[$key])) {
       db_insert('lingotek_entity_metadata')
           ->fields(array(
-          'entity_id' => $this->getId(),
-          'entity_type' => $this->getEntityType(),
+          'entity_id' => $entity_id,
+          'entity_type' => $entity_type,
           'entity_key' => $key,
           'value' => $value,
         ))
         ->execute();
-
     }
     else {
       db_update('lingotek_entity_metadata')
           ->fields(array(
           'value' => $value
         ))
-        ->condition('entity_id', $this->getId())
-        ->condition('entity_type', $this->getEntityType())
+        ->condition('entity_id', $entity_id)
+        ->condition('entity_type', $entity_type)
         ->condition('entity_key', $key)
         ->execute();
     }
+    lingotek_cache_clear($entity_type, $entity_id);
   }
 
   /**
@@ -235,11 +237,14 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function deleteMetadataValue($key) {
     $metadata = $this->metadata();
     if (isset($metadata[$key])) {
+      $entity_type = $this->getEntityType();
+      $entity_id = $this->getId();
       db_delete('lingotek_entity_metadata')
-          ->condition('entity_id', $this->getId())
-        ->condition('entity_type', $this->getEntityType())
-        ->condition('entity_key', $key, 'LIKE')
-        ->execute();
+          ->condition('entity_id', $entity_id)
+          ->condition('entity_type', $entity_type)
+          ->condition('entity_key', $key, 'LIKE')
+          ->execute();
+      lingotek_cache_clear($entity_type, $entity_id);
     }
   }
 

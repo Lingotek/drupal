@@ -93,6 +93,7 @@ class LingotekApi {
       $parameters['workflowId'] = $translatable_object->getWorkflowId();
 
       $this->addAdvancedParameters($parameters, $translatable_object);
+      $has_language_specific_targets = FALSE;
 
       if ($with_targets) {
         if (is_array($with_targets)) {
@@ -103,6 +104,9 @@ class LingotekApi {
           foreach ($with_targets as $l => $v) {
             if (empty($v['workflow_id'])) {
               $default_targets[] = $l;
+            }
+            else {
+              $has_language_specific_targets = TRUE;
             }
           }
           if (!empty($default_targets)) {
@@ -145,23 +149,57 @@ class LingotekApi {
         }
         else {
           // Add targets with custom workflows after the fact, if language-specific profiles are detected
-          if (is_array($with_targets)) {
-            foreach ($with_targets as $target_locale => $target_attribs) {
-              if (!empty($result->id) && !empty($target_attribs['workflow_id'])) {
-                $tl_result = $this->addTranslationTarget($result->id, NULL, $target_locale, $target_attribs['workflow_id']);
-              }
-            }
+          if ($has_language_specific_targets) {
+            $this->upload_language_specific_targets($result->id, $with_targets);
           }
-
           $entity_type = $translatable_object->getEntityType();
           lingotek_keystore($entity_type, $translatable_object->getId(), 'document_id', $result->id);
           lingotek_keystore($entity_type, $translatable_object->getId(), 'last_uploaded', time());
         }
-
         $success = TRUE;
       }
     }
     return $success;
+  }
+
+  /**
+   * Waits until document import status is complete, then adds targets, or logs an error
+   * @param string $doc_id
+   * @param string $target_locale
+   * @param string $workflow_id
+   */
+  private function upload_language_specific_targets($doc_id, $targets) {
+    $i = 0;
+    $sleep_intervals = array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    $done_processing = FALSE;
+    $params = array(
+      'id' => $doc_id
+    );
+
+    while(!$done_processing) {
+      $response = $this->request('getDocumentImportStatus', $params);
+      if ($response->status === 'COMPLETE') {
+        $done_processing = TRUE;
+      }
+      elseif($i > count($sleep_intervals) - 1) {
+        drupal_set_message(t('Uploading some language-specific targets failed because of network timeout. Please retry.'), 'warning', FALSE);
+        LingotekLog::error(t('Adding language-specific targets failed: ') . print_r('Document id: ' . $doc_id, TRUE), array());
+        return;
+      }
+      else {
+        sleep($sleep_intervals[$i]);
+        $i++;
+      }
+    }
+
+    // The document has been imported successfully, now add the targets
+    if (is_array($targets)) {
+      foreach ($targets as $target_locale => $target_attribs) {
+        if (!empty($doc_id) && !empty($target_attribs['workflow_id'])) {
+          $tl_result = $this->addTranslationTarget($doc_id, NULL, $target_locale, $target_attribs['workflow_id']);
+        }
+      }
+    }
   }
 
   /**

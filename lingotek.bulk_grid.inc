@@ -2563,6 +2563,7 @@ function lingotek_entity_delete_translations_form_submit($form, &$form_state) {
     $entities = entity_load($entity_type, $entity_ids);
     $count = 0;
     foreach ($entities as $entity) {
+      $entity->lingotek_upload_override = FALSE;
       if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
         $count += 1;
         lingotek_delete_node_translations($entity->nid);
@@ -2698,7 +2699,18 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
     }
   }
 
-  drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity.', 'Translations disassociated for @count entities.'));
+  $disassociated_entities = '(Entity ID\'s: ';
+
+  for ($i = 0; $i < count($entity_ids); $i++) {
+    if ($i == count($entity_ids) - 1) {
+      $disassociated_entities .= $entity_ids[$i] . ')';
+    }
+    else {
+      $disassociated_entities .= $entity_ids[$i] . ', ';
+    }
+  }
+
+  drupal_set_message(format_plural(count($entity_ids), 'Translations disassociated for one entity. ' . $disassociated_entities, 'Translations disassociated for @count entities. ' . $disassociated_entities));
 }
 
 
@@ -2759,7 +2771,7 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
 
-  if ($remove_from_tms) { //disassociate on TMS
+  if ($remove_from_tms && !empty($doc_ids)) { //disassociate on TMS
     $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
     //Deletes document data from lingotek_config_metadata table
     $query1 = db_delete('lingotek_config_metadata')
@@ -2778,4 +2790,18 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   if (!empty($lids)) {
     LingotekConfigSet::disassociateSegments($lids);
   }
+
+  $disassociated_config = '(Config ID\'s: ';
+
+  for ($i = 0; $i < count($lids); $i++) {
+    if ($i == count($lids) - 1) {
+      $disassociated_config .= $lids[$i] . ')';
+    }
+    else {
+      $disassociated_config .= $lids[$i] . ', ';
+    }
+  }
+
+  drupal_set_message(format_plural(count($lids), 'Translations disassociated for one config item. ' . $disassociated_config, 'Translations disassociated for @count config items. ' . $disassociated_config));
+
 }
