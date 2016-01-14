@@ -278,11 +278,19 @@ function lingotek_perform_action(nid, action) {
       return;
     }
     if(data[entity_id].hasOwnProperty('last_modified')){
-      $('td',row).each(function(){
-        if($(this).text().indexOf('ago') > -1) {
-          $(this).text(data[entity_id]['last_modified']);
+       var main_table = document.getElementsByClassName('table-select-processed');
+      var table_headers = main_table[0].getElementsByTagName('th');
+      var last_modified_index = null;
+      for(var i = 0; i < table_headers.length; i++){
+        if(table_headers[i].textContent.toLowerCase().indexOf('modified') !== -1) {
+          last_modified_index = i;
+          break;
         }
-      });
+      }
+      if(last_modified_index !== null) {
+        var tds = row[0].getElementsByTagName('td');
+        tds[last_modified_index].textContent = data[entity_id]['last_modified'];
+      }
     }
     var entity_type = document.getElementById('entity-type').getAttribute('value');
     if(data[entity_id].length !== undefined && entity_type === 'config') {
