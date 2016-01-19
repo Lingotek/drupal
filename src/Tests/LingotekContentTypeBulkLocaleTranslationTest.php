@@ -53,15 +53,14 @@ class LingotekContentTypeBulkLocaleTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
 
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
   }
 
   /**
    * Tests that a node can be translated using the links on the management page.
    */
   public function testSystemSiteTranslationUsingLinks() {
-    // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
-
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -123,6 +122,41 @@ class LingotekContentTypeBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_AR');
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_AR' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+  }
+
+  /**
+   * Tests that source is updated after requesting translation.
+   */
+  public function testSourceUpdatedAfterRequestingTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Go to the bulk config management page.
+    $this->drupalGet('admin/lingotek/config/manage');
+
+    $edit = [
+      'filters[wrapper][bundle]' => 'node_type',  // Content types.
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Filter'));
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Upload it
+    $this->clickLink('English');
+    $this->assertText(t('Article uploaded successfully'));
+
+    // There is a link for checking status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // And we can already request a translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // Request the German (AT) translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->clickLink('DE-AT');
+    $this->assertText("Translation to de_AT requested successfully");
+
+    // Check that the source status has been updated.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
   }
 
 }

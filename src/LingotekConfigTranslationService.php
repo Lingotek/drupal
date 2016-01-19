@@ -382,10 +382,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
+      $source_status = $this->getSourceStatus($entity);
       $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
           $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
+          // If the status was "Importing", and the target was added
+          // successfully, we can ensure that the content is current now.
+          if ($source_status == Lingotek::STATUS_IMPORTING) {
+            $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          }
           return TRUE;
         }
       }
@@ -694,10 +700,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     if ($document_id = $this->getConfigDocumentId($mapper)) {
+      $source_status = $this->getConfigSourceStatus($mapper);
       $current_status = $this->getConfigTargetStatus($mapper, $locale);
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
           $this->setConfigTargetStatus($mapper, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
+          // If the status was "Importing", and the target was added
+          // successfully, we can ensure that the content is current now.
+          if ($source_status == Lingotek::STATUS_IMPORTING) {
+            $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
+          }
           return TRUE;
         }
       }

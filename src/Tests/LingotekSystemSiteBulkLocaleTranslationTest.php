@@ -107,4 +107,33 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
   }
 
+  /**
+   * Tests that source is updated after requesting translation.
+   */
+  public function testSourceUpdatedAfterRequestingTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Go to the bulk config management page.
+    $this->drupalGet('admin/lingotek/config/manage');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Upload it
+    $this->clickLink('English', 1);
+    $this->assertText(t('System information uploaded successfully'));
+
+    // There is a link for checking status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // And we can already request a translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // Request the German (AT) translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->clickLink('DE-AT');
+    $this->assertText("Translation to de_AT requested successfully");
+
+    // Check that the source status has been updated.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
+  }
 }

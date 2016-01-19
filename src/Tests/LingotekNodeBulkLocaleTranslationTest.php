@@ -141,4 +141,38 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
   }
 
+  /**
+   * Tests that source is updated after requesting translation.
+   */
+  public function testSourceUpdatedAfterRequestingTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // There is a link for checking status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+    // And we can already request a translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // Request the German (AT) translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->clickLink('DE-AT');
+    $this->assertText("Locale 'de_AT' was added as a translation target for node Llamas are cool.");
+
+    // Check that the source status has been updated.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+  }
+
 }
