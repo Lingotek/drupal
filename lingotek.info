@@ -5,6 +5,7 @@ core = "7.x"
 php = "5.3"
 configure = admin/config/regional/lingotek/setup
 
+
 dependencies[] = locale
 dependencies[] = title
 dependencies[] = block

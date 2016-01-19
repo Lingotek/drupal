@@ -202,9 +202,13 @@ function lingotek_perform_action(nid, action) {
   //update_empty_cells allows cells with no translations statuses to display them
   //when they are available
   function update_empty_cells(data, parent, entity_id) {
+    if(data[entity_id].length !== undefined) {
+      return;
+    }
     var used_keys = {};
+    var entity_type = document.getElementById('entity-type').getAttribute('value');
       for(var key in data[entity_id]){
-        if(!data[entity_id][key].hasOwnProperty('status')){
+        if(entity_type !== 'config' && !data[entity_id][key].hasOwnProperty('status')){
           continue;
         }
         var lang_code = key.valueOf();
@@ -226,7 +230,8 @@ function lingotek_perform_action(nid, action) {
         }
         //Create the appropriate title
         var title;
-        switch(data[entity_id][key].status) {
+        var status = entity_type !== 'config' ? data[entity_id][key].status : data[entity_id][key].toUpperCase();
+        switch(status) {
           case "READY":
             title = 'Ready to download';            
             break;
@@ -244,7 +249,7 @@ function lingotek_perform_action(nid, action) {
         var status_link = $('<a></a>').attr('href', href)
                 .attr('target','_blank')
                 .attr('title',title)
-                .addClass('language-icon target-' + data[entity_id][key].status.toLowerCase())
+                .addClass('language-icon target-' + status.toLowerCase())
                 .text(link_text);
 
         $('.emptyTD', parent).each(function(){
@@ -287,6 +292,12 @@ function lingotek_perform_action(nid, action) {
         tds[last_modified_index].textContent = data[entity_id]['last_modified'];
       }
     }
+    var entity_type = document.getElementById('entity-type').getAttribute('value');
+    if(data[entity_id].length !== undefined && entity_type === 'config') {
+      $('.language-icon', row).parent().empty().addClass('emptyTD');
+      $('.fa-check-square', row).removeClass().addClass('fa fa-square-o').attr('title', 'Needs to be Uploaded');
+      return;
+    }
     //iterate through each indicator and replace it with updated status
     $(row).find('a.language-icon').each(function () {
       var icon_href = $(this).attr('href');
@@ -298,8 +309,9 @@ function lingotek_perform_action(nid, action) {
       var title = $(this).attr('title');
       var cutoff = title.indexOf('-');
       title = title.substring(0, cutoff + 1);
-      
-      switch (data[entity_id][language_code].status) {
+      var status = entity_type !== 'config' ? data[entity_id][language_code].status
+        : data[entity_id][language_code].toUpperCase();
+      switch (status) {
         case "READY":
           //take out the empty checkbox in Source Uploaded and replace with 
           //checked, using this here solves a problem where uploading from 
@@ -314,8 +326,7 @@ function lingotek_perform_action(nid, action) {
           $(this).attr('title', title + ' Current');
           break;
         case "EDITED":
-          //remove check box in Source Uploaded and replace with upload link and 
-          //empty checkbox
+          //remove check box in Source Uploaded and replace with upload link and empty checkbox
           if($('.target-edited',row).length === 0){
             $('.lingotek-language-source', row)
                     .addClass('ltk-upload-button')
@@ -329,11 +340,18 @@ function lingotek_perform_action(nid, action) {
           $(this).attr('title', title + ' Not current');
           break;
         case "PENDING":
-          //take out the empty checkbox and replace with checked, using this here solves
+          //take out the empty checkbox and replace with checked
           $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
           $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-pending');
           $(this).attr('title', title + ' In progress');
+          break;
+        case "UNTRACKED":
+          $('.fa-check-square', row).removeClass().addClass('fa fa-square-o').attr('title', 'Needs to be Uploaded');
+          $('.ltk-upload-button', row).click(function() {
+            lingotek_perform_action(entity_id, 'upload');
+          });
+          $(this).removeClass().addClass('language-icon target-untracked').attr('title', title + 'In progress');
           break;
       }
     });
@@ -349,7 +367,6 @@ function lingotek_perform_action(nid, action) {
         //this creates the random fill in effect, not sure if its a keeper
         var i = Math.floor((Math.random() * 7) + 1);
         setTimeout(updateRowStatus,300 * i,data,parent,entity_id);
-//        updateRowStatus(data,parent,entity_id);
       }
     });
   }

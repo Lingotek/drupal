@@ -969,25 +969,7 @@ function lingotek_grid_update($entity_type) {
 function lingotek_grid_query_status($entity_type, $comma_separated_ids){
   $ids = explode(',', $comma_separated_ids);
   if($entity_type === 'config'){
-    $table_rows = lingotek_config_get_status($ids);
-    $key_column = 'config_key';
-    $id_column = 'lid';
-    $status_array = array();
-    foreach($table_rows['metadata'] as $table_row){
-      $language_code = substr($table_row->$key_column,count($table_row->$key_column) - 6);
-      $status_array[$table_row->$id_column][$language_code]['status'] = $table_row->value;
-      $first_language_code = substr($language_code, 0, 2);
-      $other_dialect_code = str_replace('_', '-', strtolower($language_code));
-      $dirty_status_array = $table_rows['dirty_status'];
-      if(isset($dirty_status_array[$table_row->$id_column])){
-        if(isset($dirty_status_array[$table_row->$id_column][$first_language_code])
-          || isset($dirty_status_array[$table_row->$id_column][$other_dialect_code])){
-          $status_array[$table_row->$id_column][$language_code]['status'] = 'EDITED';
-        }
-      }
-    }
-    $status_array['entity_type'] = $entity_type;
-    echo json_encode($status_array);
+    echo json_encode(lingotek_row_status_query());
     return;
   }
 

@@ -1235,7 +1235,6 @@ function lingotek_admin_advanced_parsing_form($form, &$form_state, $show_fieldse
     '#attributes' => array(
       'onclick' => 'return confirm("' . t('Are you sure?\n\nAll of your content-parsing settings will be reset to system defaults.') . '");'
       ),
-    //'#submit' => array('lingotek_admin_advanced_parsing_form_confirm'),
   );
 
   return $form;
