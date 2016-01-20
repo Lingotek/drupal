@@ -931,21 +931,24 @@ class LingotekConfigManagementForm extends FormBase {
 
   protected function getTargetStatusText(ConfigMapperInterface $mapper, $status, $langcode) {
     $language = ConfigurableLanguage::load($langcode);
-    switch ($status) {
-      case Lingotek::STATUS_UNTRACKED:
-        return $language->label() . ' - ' . $this->t('No translation');
-      case Lingotek::STATUS_REQUEST:
-        return $language->label() . ' - ' . $this->t('Request translation');
-      case Lingotek::STATUS_PENDING:
-        return $language->label() . ' - ' . $this->t('In-progress');
-      case Lingotek::STATUS_READY:
-        return $language->label() . ' - ' . $this->t('Ready for Download');
-      case Lingotek::STATUS_CURRENT:
-        return $language->label() . ' - ' . $this->t('Current');
-      case Lingotek::STATUS_EDITED:
-        return $language->label() . ' - ' . $this->t('Not current');
-      default:
-        return $language->label() . ' - ' . ucfirst(strtolower($status));
+    if ($language) {
+
+      switch ($status) {
+        case Lingotek::STATUS_UNTRACKED:
+          return $language->label() . ' - ' . $this->t('No translation');
+        case Lingotek::STATUS_REQUEST:
+          return $language->label() . ' - ' . $this->t('Request translation');
+        case Lingotek::STATUS_PENDING:
+          return $language->label() . ' - ' . $this->t('In-progress');
+        case Lingotek::STATUS_READY:
+          return $language->label() . ' - ' . $this->t('Ready for Download');
+        case Lingotek::STATUS_CURRENT:
+          return $language->label() . ' - ' . $this->t('Current');
+        case Lingotek::STATUS_EDITED:
+          return $language->label() . ' - ' . $this->t('Not current');
+        default:
+          return $language->label() . ' - ' . ucfirst(strtolower($status));
+      }
     }
   }
 
@@ -1121,27 +1124,30 @@ class LingotekConfigManagementForm extends FormBase {
       $this->translationService->getConfigDocumentId($mapper);
 
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-    if ($target_status == Lingotek::STATUS_REQUEST) {
+    if ($locale) {
+      if ($target_status == Lingotek::STATUS_REQUEST) {
         $url = Url::fromRoute('lingotek.config.request',
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);
-    }
-    if ($target_status == Lingotek::STATUS_PENDING ||
-        $target_status == Lingotek::STATUS_EDITED) {
-      $url = Url::fromRoute('lingotek.config.check_download',
-        $args + ['locale' => $locale],
-        ['query' => $this->getDestinationArray()]);
-    }
-    if ($target_status == Lingotek::STATUS_READY) {
-      $url = Url::fromRoute('lingotek.config.download',
-        $args + ['locale' => $locale],
-        ['query' => $this->getDestinationArray()]);
-    }
-    if ($target_status == Lingotek::STATUS_CURRENT) {
-      $url = Url::fromRoute('lingotek.workbench', [
-        'doc_id' => $document_id,
-        'locale' => $locale
-      ]);
+      }
+      if ($target_status == Lingotek::STATUS_PENDING ||
+        $target_status == Lingotek::STATUS_EDITED
+      ) {
+        $url = Url::fromRoute('lingotek.config.check_download',
+          $args + ['locale' => $locale],
+          ['query' => $this->getDestinationArray()]);
+      }
+      if ($target_status == Lingotek::STATUS_READY) {
+        $url = Url::fromRoute('lingotek.config.download',
+          $args + ['locale' => $locale],
+          ['query' => $this->getDestinationArray()]);
+      }
+      if ($target_status == Lingotek::STATUS_CURRENT) {
+        $url = Url::fromRoute('lingotek.workbench', [
+          'doc_id' => $document_id,
+          'locale' => $locale
+        ]);
+      }
     }
     return $url;
   }

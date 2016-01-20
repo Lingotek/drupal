@@ -323,7 +323,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function getSourceLocale(ConfigEntityInterface &$entity) {
     $source_language = $entity->language()->getId();
-    return LingotekLocale::convertDrupal2Lingotek($source_language);
+    return $this->languageLocaleMapper->getLocaleForLangcode($source_language);
   }
 
   /**
@@ -377,16 +377,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function addTarget(ConfigEntityInterface &$entity, $locale) {
-    if ($locale == LingotekLocale::convertDrupal2Lingotek($entity->language()->getId())) {
+    if ($locale == $this->languageLocaleMapper->getLocaleForLangcode($entity->language()->getId())) {
       // We don't want to translate from one language to itself.
       return FALSE;
     }
     if ($document_id = $this->getDocumentId($entity)) {
       $source_status = $this->getSourceStatus($entity);
-      $current_status = $this->getTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale));
+      $current_status = $this->getTargetStatus($entity, $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId());
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT && $current_status !== Lingotek::STATUS_EDITED) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
-          $this->setTargetStatus($entity, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
+          $this->setTargetStatus($entity, $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId(), Lingotek::STATUS_PENDING);
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
           if ($source_status == Lingotek::STATUS_IMPORTING) {
@@ -434,7 +434,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function checkTargetStatus(ConfigEntityInterface &$entity, $locale) {
-    $langcode = LingotekLocale::convertLingotek2Drupal($locale);
+    $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getTargetStatus($entity, $langcode);
     if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
       $current_status = Lingotek::STATUS_READY;
@@ -469,7 +469,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         return FALSE;
       }
       if ($data) {
-        $langcode = LingotekLocale::convertLingotek2Drupal($locale);
+        $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
         $this->saveTargetData($entity, $langcode, $data);
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
         return TRUE;
@@ -695,7 +695,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function addConfigTarget($mapper_id, $locale) {
     $mapper = $this->mappers[$mapper_id];
-    if ($locale == LingotekLocale::convertDrupal2Lingotek($mapper->getLangcode())) {
+    if ($locale == $this->languageLocaleMapper->getLocaleForLangcode($mapper->getLangcode())) {
       // We don't want to translate from one language to itself.
       return FALSE;
     }
@@ -704,7 +704,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $current_status = $this->getConfigTargetStatus($mapper, $locale);
       if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
         if ($this->lingotek->addTarget($document_id, $locale)) {
-          $this->setConfigTargetStatus($mapper, LingotekLocale::convertLingotek2Drupal($locale), Lingotek::STATUS_PENDING);
+          $this->setConfigTargetStatus($mapper, $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId(), Lingotek::STATUS_PENDING);
           // If the status was "Importing", and the target was added
           // successfully, we can ensure that the content is current now.
           if ($source_status == Lingotek::STATUS_IMPORTING) {
@@ -754,7 +754,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function checkConfigTargetStatus($mapper_id, $locale) {
     $mapper = $this->mappers[$mapper_id];
-    $langcode = LingotekLocale::convertLingotek2Drupal($locale);
+    $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getConfigTargetStatus($mapper, $langcode);
     if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getConfigDocumentId($mapper))) {
       $current_status = Lingotek::STATUS_READY;
@@ -796,7 +796,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         return FALSE;
       }
       if ($data) {
-        $langcode = LingotekLocale::convertLingotek2Drupal($locale);
+        $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
         $this->saveConfigTargetData($mapper, $langcode, $data);
         $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CURRENT);
         return TRUE;

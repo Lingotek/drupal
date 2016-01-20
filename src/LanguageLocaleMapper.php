@@ -50,7 +50,10 @@ class LanguageLocaleMapper implements LanguageLocaleMapperInterface {
   public function getLocaleForLangcode($langcode) {
     /** @var ConfigurableLanguageInterface $config_language */
     $config_language = ConfigurableLanguage::load($langcode);
-    $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
+    $locale = NULL;
+    if ($config_language) {
+      $locale = $config_language->getThirdPartySetting('lingotek', 'locale', LingotekLocale::convertDrupal2Lingotek($langcode));
+    }
     return $locale;
   }
 

@@ -105,7 +105,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     foreach ($languages as $language) {
       $langcode = $language->getId();
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-      if ($langcode === $original_langcode) {
+      if ($locale && $langcode === $original_langcode) {
         if ($entity_id === NULL) {
           $entity_id = $plugin_id;
         }
@@ -141,7 +141,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           }
         }
       }
-      if ($langcode !== $original_langcode) {
+      if ($locale && $langcode !== $original_langcode) {
         if (isset($page['languages'][$langcode]['operations']['#links']['add'])) {
           // If we have a config entity and it has a document id, we want to show
           // the ability of requesting translations.

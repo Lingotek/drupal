@@ -19,4 +19,9 @@ class LingotekLocaleTest extends WebTestBase {
     $this->assertIdentical('zh-hans', LingotekLocale::convertLingotek2Drupal('zh_CN'));
   }
 
+  public function testConvertLingotek2Drupal() {
+    // ToDo: Improve testing coverage.
+    $this->assertIdentical('zh_CN', LingotekLocale::convertDrupal2Lingotek('zh-hans'));
+  }
+
 }
