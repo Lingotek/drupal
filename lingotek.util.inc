@@ -415,14 +415,14 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
     }
   }
   // If the document has invalid characters, flag it
-  $ln = LingotekEntity::load($entity, $entity_type);
   if ($has_invalid_xml) {
-    lingotek_keystore($entity_type, $ln->getId(), 'invalid_xml', 1);
-    lingotek_keystore($entity_type, $ln->getId(), 'last_sync_error', 'Entity contains invalid xml characters');
+    lingotek_keystore($entity_type, $id, 'invalid_xml', 1);
+    lingotek_keystore($entity_type, $id, 'last_sync_error', 'Entity contains invalid XML characters');
     LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_FAILED);
   }
   else {
-    lingotek_keystore_delete($entity_type, $ln->getId(), 'invalid_xml');
+    lingotek_keystore_delete($entity_type, $id, 'invalid_xml');
+    lingotek_keystore($entity_type, $id, 'last_sync_error', '');
   }
 
   return $content_obj;
@@ -432,10 +432,107 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
 * Checks for invalid xml characters
 */
 function lingotek_element_contains_invalid_xml($element) {
-  if (preg_match("/&/", $element) || preg_match("/</", $element) || preg_match("/>/", $element)) {
-    return TRUE;
+  $invalid = FALSE;
+
+  // Valid XML Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+  for($i = 0; $i < strlen($element); $i++) {
+    $char = substr($element, $i, 1);
+    $dec = ord($char);
+    if ($dec == 9 || $dec == 10 || $dec == 13) {
+      continue;
+    }
+    elseif ($dec >= 32 && $dec <= 55295) {
+      if ($dec >= 127 && $dec <= 132) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 134 && $dec <= 159) {
+        $invalid = TRUE;
+        break;
+      }
+      continue;
+    }
+    elseif ($dec >= 57344 && $dec <= 65533) {
+      if ($dec >= 64976 && $dec <= 65007) {
+        $invalid = TRUE;
+        break;
+      }
+      continue;
+    }
+    elseif ($dec >= 65536 && $dec <= 1114111) {
+      if ($dec >= 131070 && $dec <= 131071) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 196606 && $dec <= 196607) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 262142 && $dec <= 262143) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 327678 && $dec <= 327679) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 393214 && $dec <= 393215) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 458750 && $dec <= 458751) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 524286 && $dec <= 524287) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 589822 && $dec <= 589823) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 720894 && $dec <= 655359) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 720894 && $dec <= 720895) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 786430 && $dec <= 786431) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 851966 && $dec <= 851967) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 917502 && $dec <= 917503) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 983038 && $dec <= 983039) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 1048574 && $dec <= 1048575) {
+        $invalid = TRUE;
+        break;
+      }
+      elseif ($dec >= 1114110 && $dec <= 1114111) {
+        $invalid = TRUE;
+        break;
+      }
+      continue;
+    }
+    else {
+      $invalid = TRUE;
+      break;
+    }
   }
-  return FALSE;
+
+  return $invalid;
 }
 
 /**
