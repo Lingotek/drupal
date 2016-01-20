@@ -442,88 +442,12 @@ function lingotek_element_contains_invalid_xml($element) {
       continue;
     }
     elseif ($dec >= 32 && $dec <= 55295) {
-      if ($dec >= 127 && $dec <= 132) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 134 && $dec <= 159) {
-        $invalid = TRUE;
-        break;
-      }
       continue;
     }
     elseif ($dec >= 57344 && $dec <= 65533) {
-      if ($dec >= 64976 && $dec <= 65007) {
-        $invalid = TRUE;
-        break;
-      }
       continue;
     }
     elseif ($dec >= 65536 && $dec <= 1114111) {
-      if ($dec >= 131070 && $dec <= 131071) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 196606 && $dec <= 196607) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 262142 && $dec <= 262143) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 327678 && $dec <= 327679) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 393214 && $dec <= 393215) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 458750 && $dec <= 458751) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 524286 && $dec <= 524287) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 589822 && $dec <= 589823) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 720894 && $dec <= 655359) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 720894 && $dec <= 720895) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 786430 && $dec <= 786431) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 851966 && $dec <= 851967) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 917502 && $dec <= 917503) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 983038 && $dec <= 983039) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 1048574 && $dec <= 1048575) {
-        $invalid = TRUE;
-        break;
-      }
-      elseif ($dec >= 1114110 && $dec <= 1114111) {
-        $invalid = TRUE;
-        break;
-      }
       continue;
     }
     else {
