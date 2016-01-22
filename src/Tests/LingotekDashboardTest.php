@@ -221,4 +221,32 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical(1, count($languages));
   }
 
+  /**
+   * Tests that there is a message when there are UI translations available.
+   */
+  public function testTranslationsAvailable() {
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
+
+    // Override Drupal core translation status as 'up-to-date'.
+    $status = locale_translation_get_status();
+    $status['drupal']['es'] = new \stdClass();
+    $status['drupal']['es']->type = 'current';
+    \Drupal::state()->set('locale.translation_status', $status);
+
+    // One language added, there are missing translations.
+    $this->drupalGet('admin/lingotek');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', array('@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status'))), 'Missing translations message');
+
+    // Set lingotek module to have a local translation available.
+    $status = locale_translation_get_status();
+    $status['lingotek']['es'] = new \stdClass();
+    $status['lingotek']['es']->type = 'local';
+    \Drupal::state()->set('locale.translation_status', $status);
+
+    // There are missing translations.
+    $this->drupalGet('admin/lingotek');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', array('@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status'))), 'Translations message visible');
+  }
+
 }

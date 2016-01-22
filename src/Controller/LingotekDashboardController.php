@@ -32,6 +32,8 @@ class LingotekDashboardController extends LingotekControllerBase {
     }
     $cms_data = $this->getDashboardInfo();
     $build = [];
+    $this->moduleHandler()->loadInclude('locale', 'install');
+    $requirements = locale_requirements('runtime');
     $build['#attached']['library'][] = 'lingotek/lingotek.dashboard';
     $build['#attached']['drupalSettings']['lingotek']['cms_data'] = $cms_data;
     $build['#title'] = $this->t('Dashboard');
@@ -43,6 +45,9 @@ class LingotekDashboardController extends LingotekControllerBase {
         'style' => 'margin-top: -15px;',
       ],
     ];
+    if (isset($requirements['locale_translation']) && isset($requirements['locale_translation']['description'])) {
+      drupal_set_message($requirements['locale_translation']['description'], 'warning');
+    }
     return $build;
   }
 
