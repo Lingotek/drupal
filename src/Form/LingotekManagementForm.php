@@ -872,7 +872,7 @@ class LingotekManagementForm extends FormBase {
     $language = ConfigurableLanguage::load($langcode);
     switch ($status) {
       case Lingotek::STATUS_UNTRACKED:
-        return $language->label() . ' - ' . $this->t('No translation');
+        return $language->label() . ' - ' . $this->t('Untracked translation');
       case Lingotek::STATUS_REQUEST:
         return $language->label() . ' - ' . $this->t('Request translation');
       case Lingotek::STATUS_PENDING:
@@ -899,18 +899,28 @@ class LingotekManagementForm extends FormBase {
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
+    $languages = $this->languageManager->getLanguages();
     $document_id = $this->translationService->getDocumentId($entity);
     if ($entity->lingotek_translation_status && $document_id) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
         if ($field_value->language !== $entity->language()->getId()) {
-          $translations[$field_value->language] = [
-            'status' => $field_value->value,
-            'url' => $this->getTargetActionUrl($entity, $field_value->value, $field_value->language),
-            'new_window' => $field_value->value == Lingotek::STATUS_CURRENT,
-          ];
+          // We may have an existing translation already.
+          if ($entity->hasTranslation($field_value->language) && $field_value->value == Lingotek::STATUS_REQUEST) {
+            $translations[$field_value->language] = [
+              'status' => Lingotek::STATUS_UNTRACKED,
+              'url' => $this->getTargetActionUrl($entity, Lingotek::STATUS_UNTRACKED, $field_value->language),
+              'new_window' => FALSE,
+            ];
+          }
+          else {
+            $translations[$field_value->language] = [
+              'status' => $field_value->value,
+              'url' => $this->getTargetActionUrl($entity, $field_value->value, $field_value->language),
+              'new_window' => $field_value->value == Lingotek::STATUS_CURRENT,
+            ];
+          }
         }
       }
-      $languages = $this->languageManager->getLanguages();
       array_walk($languages, function($language, $langcode) use ($entity, &$translations) {
         if (!isset($translations[$langcode]) && $langcode !== $entity->getUntranslated()->language()->getId()) {
           $translations[$langcode] = [
@@ -920,6 +930,19 @@ class LingotekManagementForm extends FormBase {
           ];
         }
       });
+    }
+    else {
+      foreach ($languages as $langcode => $language) {
+        // Show the untracked translations in the bulk management form, unless it's the
+        // source one.
+        if ($entity->hasTranslation($langcode) && $entity->getUntranslated()->language()->getId() !== $langcode) {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_UNTRACKED,
+            'url' => NULL,
+            'new_window' => false,
+          ];
+        }
+      }
     }
     return $this->formatTranslations($entity, $translations);
   }
@@ -1085,6 +1108,15 @@ class LingotekManagementForm extends FormBase {
         'locale' => $locale
       ]);
     }
+    if ($target_status == Lingotek::STATUS_UNTRACKED) {
+      $url = Url::fromRoute('lingotek.entity.add_target',
+        [
+          'doc_id' => $document_id,
+          'locale' => $locale,
+        ],
+        ['query' => $this->getDestinationArray()]);
+    }
+
     return $url;
   }
 

@@ -918,7 +918,7 @@ class LingotekConfigManagementForm extends FormBase {
       case Lingotek::STATUS_CURRENT:
         return $this->t('Source uploaded');
       case Lingotek::STATUS_UNTRACKED:
-        return $this->t('Never uploaded');
+        return $this->t('Untracked translation');
       case Lingotek::STATUS_EDITED:
         return ($this->translationService->getConfigDocumentId($mapper)) ?
          $this->t('Upload') : $this->t('Never uploaded');
@@ -935,7 +935,7 @@ class LingotekConfigManagementForm extends FormBase {
 
       switch ($status) {
         case Lingotek::STATUS_UNTRACKED:
-          return $language->label() . ' - ' . $this->t('No translation');
+          return $language->label() . ' - ' . $this->t('Untracked translation');
         case Lingotek::STATUS_REQUEST:
           return $language->label() . ' - ' . $this->t('Request translation');
         case Lingotek::STATUS_PENDING:
@@ -963,6 +963,8 @@ class LingotekConfigManagementForm extends FormBase {
    */
   protected function getTranslationsStatuses(ConfigMapperInterface &$mapper) {
     $translations = [];
+    $languages = $this->languageManager->getLanguages();
+
     $document_id = $mapper instanceof ConfigEntityMapper ?
       $this->translationService->getDocumentId($mapper->getEntity()) :
       $this->translationService->getConfigDocumentId($mapper);
@@ -974,15 +976,23 @@ class LingotekConfigManagementForm extends FormBase {
         $this->translationService->getConfigTargetStatuses($mapper);
 
       foreach ($translations_statuses as $langcode => $status) {
-        if ($langcode !== $mapper->getLangcode()) {
-          $translations[$langcode] = [
-            'status' => $status,
-            'url' => $this->getTargetActionUrl($mapper, $status, $langcode),
-            'new_window' => $status == Lingotek::STATUS_CURRENT,
-          ];
+        if (isset($languages[$langcode]) && $langcode !== $mapper->getLangcode()) {
+          if ($mapper->hasTranslation($languages[$langcode]) && $status == Lingotek::STATUS_REQUEST) {
+            $translations[$langcode] = [
+              'status' => Lingotek::STATUS_UNTRACKED,
+              'url' => $this->getTargetActionUrl($mapper, Lingotek::STATUS_UNTRACKED, $langcode),
+              'new_window' => $status == Lingotek::STATUS_CURRENT,
+            ];
+          }
+          else {
+            $translations[$langcode] = [
+              'status' => $status,
+              'url' => $this->getTargetActionUrl($mapper, $status, $langcode),
+              'new_window' => $status == Lingotek::STATUS_CURRENT,
+            ];
+          }
         }
       }
-      $languages = $this->languageManager->getLanguages();
       array_walk($languages, function($language, $langcode) use ($mapper, &$translations) {
         if (!isset($translations[$langcode]) && $langcode !== $mapper->getLangcode()) {
           $translations[$langcode] = [
@@ -992,6 +1002,19 @@ class LingotekConfigManagementForm extends FormBase {
           ];
         }
       });
+    }
+    else {
+      foreach ($languages as $langcode => $language) {
+        // Show the untracked translations in the bulk management form, unless it's the
+        // source one.
+        if ($mapper->hasTranslation($language) && $mapper->getLangcode() !== $langcode) {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_UNTRACKED,
+            'url' => NULL,
+            'new_window' => false,
+          ];
+        }
+      }
     }
     return $this->formatTranslations($mapper, $translations);
   }
@@ -1125,7 +1148,7 @@ class LingotekConfigManagementForm extends FormBase {
 
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($locale) {
-      if ($target_status == Lingotek::STATUS_REQUEST) {
+      if ($target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_UNTRACKED) {
         $url = Url::fromRoute('lingotek.config.request',
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);
