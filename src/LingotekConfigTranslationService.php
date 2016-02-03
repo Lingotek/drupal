@@ -296,8 +296,15 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function getSourceData(ConfigEntityInterface $entity) {
     /** @var ConfigEntityMapper $mapper */
-    $mapper = $this->configMapperManager->createInstance($entity->getEntityTypeId());
-    $mapper->setEntity($entity);
+    if ($entity->getEntityTypeId() == 'field_config') {
+      $id = $entity->getTargetEntityTypeId();
+      $mapper = $this->mappers[$id . '_fields'];
+      $mapper->setEntity($entity);
+    }
+    else {
+      $mapper = $this->configMapperManager->createInstance($entity->getEntityTypeId());
+      $mapper->setEntity($entity);
+    }
     $properties = $this->getConfigTranslatableProperties($mapper);
     $values = [];
     foreach ($mapper->getConfigNames() as $config_name) {
@@ -335,7 +342,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getSourceData($entity));
     $document_name = $entity->id() . ' (config): ' . $entity->label();
-    $url = $entity->toUrl()->setAbsolute()->toString();
+    $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
     $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity));
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
@@ -364,7 +371,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function updateDocument(ConfigEntityInterface &$entity) {
     $source_data = json_encode($this->getSourceData($entity));
     $document_id = $this->getDocumentId($entity);
-    $url = $entity->toUrl()->setAbsolute()->toString();
+    $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
     if ($this->lingotek->updateDocument($document_id, $source_data, $url)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
@@ -878,6 +885,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     // If we failed, check config entities.
     foreach ($this->mappers as $mapper_id => $mapper) {
       if (!isset($config_mappers[$mapper_id])) {
+        $id = NULL;
+        if (substr($mapper_id, -7) == '_fields') {
+          // Hack for fields, the entity is field config.
+          $mapper_id = 'field_config';
+        }
         $id = \Drupal::service('entity.query')->get($mapper_id)
           ->condition('third_party_settings.lingotek.lingotek_document_id', $document_id)
           ->execute();

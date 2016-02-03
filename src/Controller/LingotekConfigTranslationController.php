@@ -11,6 +11,7 @@ use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
@@ -234,6 +235,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
     }
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
+    }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->uploadDocument($entity)) {
       drupal_set_message($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
@@ -249,6 +255,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         drupal_set_message($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
+    }
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->updateDocument($entity)) {
@@ -266,6 +277,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
     }
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
+    }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->checkSourceStatus($entity)) {
       drupal_set_message($this->t('%label status checked successfully', ['%label' => $entity->label()]));
@@ -281,6 +297,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         drupal_set_message($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
+    }
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->addTarget($entity, $locale)) {
@@ -298,6 +319,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
     }
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
+    }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->checkTargetStatus($entity, $locale)) {
       drupal_set_message($this->t('Translation to %locale status checked successfully', ['%locale' => $locale]));
@@ -314,6 +340,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         drupal_set_message($this->t('Translation to %locale downloaded successfully', ['%locale' => $locale]));
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
+    }
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->downloadDocument($entity, $locale)) {
@@ -335,8 +366,18 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    */
   protected function redirectToEntityTranslateOverview($entity_type, $entity_id) {
     $mappers =  $this->configMapperManager->getMappers();
-    $mapper = $mappers[$entity_type];
-    $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id]);
+    if ($entity_type === 'field_config') {
+      $field_config = FieldConfig::load($entity_id);
+      $id = $field_config->getTargetEntityTypeId();
+      $mapper = $mappers[$id . '_fields'];
+      $mapper->setEntity($field_config);
+
+      $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id, $id . '_type' => $field_config->getTargetBundle()]);
+    }
+    else {
+      $mapper = $mappers[$entity_type];
+      $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id]);
+    }
     return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
   }
 

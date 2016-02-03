@@ -437,7 +437,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function updateDocument(ContentEntityInterface &$entity) {
     $source_data = json_encode($this->getSourceData($entity));
     $document_id = $this->getDocumentId($entity);
-    $url = $entity->toUrl()->setAbsolute()->toString();
+    $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
 
     if ($this->lingotek->updateDocument($document_id, $source_data, $url)){
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);

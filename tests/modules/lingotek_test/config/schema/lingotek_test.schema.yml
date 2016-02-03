@@ -18,3 +18,24 @@ node.type.*.third_party.lingotek:
       sequence:
         type: string
         label: 'Target status'
+
+field.field.*.*.*.third_party.lingotek:
+  type: mapping
+  label: 'Lingotek metadata'
+  mapping:
+    lingotek_document_id:
+      type: string
+      label: 'Lingotek document id'
+    lingotek_hash:
+      type: string
+      label: 'Lingotek hash'
+    lingotek_translation_source:
+      type: sequence
+      sequence:
+        type: string
+        label: 'Source status'
+    lingotek_translation_status:
+      type: sequence
+      sequence:
+        type: string
+        label: 'Target status'

@@ -17,6 +17,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\FieldStorageConfigInterface;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -152,6 +154,20 @@ class LingotekConfigManagementForm extends FormBase {
           ;
       });
     }
+    elseif (substr($this->filter, -7) == '_fields') {
+      $mapper = $this->mappers[$this->filter];
+      $base_entity_type = $mapper->getPluginDefinition()['base_entity_type'];
+      $ids = \Drupal::entityQuery('field_config')
+        ->condition('id', $base_entity_type . '.', 'STARTS_WITH')
+        ->execute();
+      $fields = FieldConfig::loadMultiple($ids);
+      $mappers = [];
+      foreach ($fields as $id => $field) {
+        $new_mapper = clone $mapper;
+        $new_mapper->setEntity($field);
+        $mappers[$field->id()] = $new_mapper;
+      }
+    }
     else {
       $mapper = $this->mappers[$this->filter];
       $ids = \Drupal::entityQuery($this->filter)->execute();
@@ -167,9 +183,11 @@ class LingotekConfigManagementForm extends FormBase {
 
     $rows = [];
     foreach ($mappers as $mapper_id => $mapper) {
+      $is_config_entity = $mapper instanceof ConfigEntityMapper;
+
       $source = $this->getSourceStatus($mapper);
       $translations = $this->getTranslationsStatuses($mapper);
-      $profile = $mapper instanceof ConfigEntityMapper ?
+      $profile = $is_config_entity ?
         $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity(), FALSE) :
         $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
       $form['table'][$mapper_id] = ['#type' => 'checkbox', '#value'=> $mapper_id];
@@ -346,15 +364,13 @@ class LingotekConfigManagementForm extends FormBase {
 
   protected function getAllBundles() {
     $mappers = array_filter($this->mappers, function($mapper) {
-      return ($mapper instanceof ConfigEntityMapper
-        && ! $mapper instanceof ConfigFieldMapper)
-        ;
+      // Filter config entity mappers and config field mappers.
+      return ($mapper instanceof ConfigEntityMapper);
     });
     $bundles = [];
     foreach ($mappers as $bundle => $mapper) {
       /** @var ConfigEntityMapper $mapper */
-      $definition = $mapper->getPluginDefinition();
-      $bundles[$bundle] = ucwords($definition['title']);
+      $bundles[$bundle] = $mapper->getTypeLabel();
     }
     return $bundles;
   }
@@ -379,7 +395,21 @@ class LingotekConfigManagementForm extends FormBase {
       foreach ($values as $value) {
         $mappers[$value] = $this->mappers[$value];
       }
-    } else {
+    }
+    elseif (substr($this->filter, -7) == '_fields') {
+      $mapper = $this->mappers[$this->filter];
+      $ids = \Drupal::entityQuery('field_config')
+        ->condition('id', $values)
+        ->execute();
+      $fields = FieldConfig::loadMultiple($ids);
+      $mappers = [];
+      foreach ($fields as $id => $field) {
+        $new_mapper = clone $mapper;
+        $new_mapper->setEntity($field);
+        $mappers[$field->id()] = $new_mapper;
+      }
+    }
+    else {
       $entities = \Drupal::entityManager()->getStorage($this->filter)->loadMultiple($values);
       foreach ($entities as $entity) {
         $mapper = clone $this->mappers[$this->filter];
@@ -428,7 +458,21 @@ class LingotekConfigManagementForm extends FormBase {
       foreach ($values as $value) {
         $mappers[$value] = $this->mappers[$value];
       }
-    } else {
+    }
+    elseif (substr($this->filter, -7) == '_fields') {
+      $mapper = $this->mappers[$this->filter];
+      $ids = \Drupal::entityQuery('field_config')
+        ->condition('id', $values)
+        ->execute();
+      $fields = FieldConfig::loadMultiple($ids);
+      $mappers = [];
+      foreach ($fields as $id => $field) {
+        $new_mapper = clone $mapper;
+        $new_mapper->setEntity($field);
+        $mappers[$field->id()] = $new_mapper;
+      }
+    }
+    else {
       $entities = \Drupal::entityManager()->getStorage($this->filter)->loadMultiple($values);
       foreach ($entities as $entity) {
         $mapper = clone $this->mappers[$this->filter];
@@ -566,12 +610,19 @@ class LingotekConfigManagementForm extends FormBase {
     if ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
       $data = $this->translationService->getConfigSourceData($mapper);
       $data['_debug'] = [
-        'title' => $mapper->getPluginId() . ' (config): ' . $mapper->getTitle(),
+        'title' => trim($mapper->getPluginId() . ' (config): ' . $mapper->getTitle()),
         'profile' => $profile ? $profile->id() : '<null>',
         'source_locale' => $this->translationService->getConfigSourceLocale($mapper),
       ];
-      $source_data = json_encode($data);
       $filename = 'config.' . $mapper->getPluginId() . '.json';
+      $plugin_definition = $mapper->getPluginDefinition();
+      if (isset($plugin_definition['entity_type']) && 'field_config' === $plugin_definition['entity_type']) {
+        $entity = $mapper->getEntity();
+        $data['_debug']['title'] = $entity->id() . ' (config): ' . $entity->label();
+        $filename = 'config.' . $entity->id() . '.json';
+      }
+      $source_data = json_encode($data);
+
       $file = File::create([
         'uid' => 1,
         'filename' => $filename,
@@ -882,16 +933,16 @@ class LingotekConfigManagementForm extends FormBase {
    *   A render array.
    */
   protected function getSourceStatus(ConfigMapperInterface $mapper) {
-    $entity = $mapper instanceof ConfigEntityMapper ?
-      $mapper->getEntity() : NULL;
+    $is_config_entity = $mapper instanceof ConfigEntityMapper;
+    $entity = $is_config_entity ? $mapper->getEntity() : NULL;
 
     $language_source = $this->languageLocaleMapper->getConfigurableLanguageForLocale(
-      $mapper instanceof ConfigEntityMapper ?
+      $is_config_entity ?
         $this->translationService->getSourceLocale($entity) :
         $this->translationService->getConfigSourceLocale($mapper)
     );
 
-    $source_status = $mapper instanceof ConfigEntityMapper ?
+    $source_status = $is_config_entity ?
       $this->translationService->getSourceStatus($entity) :
       $this->translationService->getConfigSourceStatus($mapper);
 
@@ -962,13 +1013,14 @@ class LingotekConfigManagementForm extends FormBase {
    *   A render array.
    */
   protected function getTranslationsStatuses(ConfigMapperInterface &$mapper) {
+    $is_config_entity = $mapper instanceof ConfigEntityMapper;
     $translations = [];
     $languages = $this->languageManager->getLanguages();
 
-    $document_id = $mapper instanceof ConfigEntityMapper ?
+    $document_id = $is_config_entity ?
       $this->translationService->getDocumentId($mapper->getEntity()) :
       $this->translationService->getConfigDocumentId($mapper);
-    $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
+    $entity = $is_config_entity ? $mapper->getEntity() : NULL;
 
     if ($document_id) {
       $translations_statuses = $mapper instanceof ConfigEntityMapper ?
@@ -1101,7 +1153,11 @@ class LingotekConfigManagementForm extends FormBase {
       'entity_type' => $mapper->getPluginId(),
       'entity_id' => $mapper->getPluginId(),
     ];
-    if ($mapper instanceof ConfigEntityMapper) {
+    if ($mapper instanceof ConfigEntityMapper && !$mapper instanceof ConfigFieldMapper) {
+      $args['entity_id'] = $mapper->getEntity()->id();
+    }
+    else if ($mapper instanceof ConfigFieldMapper) {
+      $args['entity_type'] = $mapper->getType();
       $args['entity_id'] = $mapper->getEntity()->id();
     }
     return $args;

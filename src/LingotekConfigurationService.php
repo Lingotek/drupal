@@ -155,7 +155,11 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function getConfigEntityProfile(ConfigEntityInterface $entity, $provide_default = TRUE) {
-    $profile_id = $this->getConfigEntityDefaultProfileId($entity->getEntityTypeId(), $provide_default);
+    $entity_type_id = $entity->getEntityTypeId();
+    if ('field_config' === $entity_type_id) {
+      $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
+    }
+    $profile_id = $this->getConfigEntityDefaultProfileId($entity_type_id, $provide_default);
     return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
 

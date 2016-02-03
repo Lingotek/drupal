@@ -64,7 +64,11 @@ function lingotek_entity_insert(EntityInterface $entity) {
     $configuration_service = \Drupal::service('lingotek.configuration');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
-    if ($translation_service->isEnabled($entity->getEntityTypeId())) {
+    $entity_type_id = $entity->getEntityTypeId();
+    if ($entity instanceof \Drupal\field\Entity\FieldConfig) {
+      $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
+    }
+    if ($translation_service->isEnabled($entity_type_id)) {
       $profile = $configuration_service->getConfigEntityProfile($entity);
       $has_autoupload = $profile->hasAutomaticUpload();
 
