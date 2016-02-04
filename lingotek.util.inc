@@ -2114,7 +2114,7 @@ function lingotek_get_languages($entity_type, $entity_id) {
   $drupal_langcodes = language_list();
   // check for node-based translations
   if ($entity_type == 'node' && module_exists('translation')) {
-    $target_nodes = lingotek_node_get_translations($entity_id);
+    $target_nodes = translation_node_get_translations($entity_id);
     foreach ($target_nodes as $langcode => $node_info) {
       $existing_translations[$langcode] = TRUE;
     }
