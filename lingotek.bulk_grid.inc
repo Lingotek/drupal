@@ -881,10 +881,15 @@ function lingotek_grid_build_column_checkboxes($form_state) {
       '#title' => t('Doc ID'),
       '#default_value' => isset($e_grid_custom[$prefix . 'document_id' . $suffix]) ? $e_grid_custom[$prefix . 'document_id' . $suffix] : in_array('document_id', $columns['defaults']),
     ),
-    'workflow' => array(
+    'workflow_id' => array(
       '#type' => 'checkbox',
-      '#title' => t('Workflow'),
-      '#default_value' => isset($e_grid_custom[$prefix . 'workflow' . $suffix]) ? $e_grid_custom[$prefix . 'workflow' . $suffix] : in_array('workflow', $columns['defaults']),
+      '#title' => t('Workflow ID'),
+      '#default_value' => isset($e_grid_custom[$prefix . 'workflow_id' . $suffix]) ? $e_grid_custom[$prefix . 'workflow_id' . $suffix] : in_array('workflow_id', $columns['defaults']),
+    ),
+    'workflow_name' => array(
+      '#type' => 'checkbox',
+      '#title' => t('Workflow Name'),
+      '#default_value' => isset($e_grid_custom[$prefix . 'workflow_name' . $suffix]) ? $e_grid_custom[$prefix . 'workflow_name' . $suffix] : in_array('workflow_name', $columns['defaults']),
     ),
     'changed' => array(
       '#type' => 'checkbox',
@@ -1302,7 +1307,8 @@ function lingotek_grid_define_columns($entity_type) {
     'translations' => 'translations',
     'configuration' => 'configuration',
     'document_id' => 'document_id',
-    'workflow' => 'workflow',
+    'workflow_id' => 'workflow_id',
+    'workflow_name' => 'workflow_name',
     'changed' => 'changed',
     'last_uploaded' => 'last_uploaded',
     'actions' => 'actions',
@@ -1613,7 +1619,8 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
     'language' => array('data' => t('Source Uploaded')), //, 'field' => 'upload_status'),
     'translations' => array('data' => t('Translations'), 'field' => 't_current_c'),
     'configuration' => array('data' => t('Profile')),
-    'workflow' => array('data' => t('Workflow'), 'field' => 'workflow'),
+    'workflow_id' => array('data' => t('Workflow ID'), 'field' => 'workflow_id'),
+    'workflow_name' => array('data' => t('Workflow Name'), 'field' => 'workflow_name'),
     'document_id' => array('data' => t('Doc ID'), 'field' => 'document_id'),
     'changed' => array('data' => t('Last Modified'), 'field' => 'changed'),
     'last_uploaded' => array('data' => t('Last Uploaded'), 'field' => 'last_uploaded'),
@@ -2144,6 +2151,9 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
       $is_sticky = 'Yes';
     }
 
+    $workflow_id = !empty($row->lingotek['workflow_id']) ? $row->lingotek['workflow_id'] : '';
+    $workflow_name = array_key_exists($workflow_id, $workflows) ? $workflows[$workflow_id] : '';
+
     // Build the data to be output for this row
     $data = array(
       'sticky' => $is_sticky,
@@ -2156,7 +2166,8 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
       'document_id' => $row->document_id ? : t('N/A'),
       'content_type' => isset($entity_properties['info']['bundles'][$row->type]['label']) ? $entity_properties['info']['bundles'][$row->type]['label'] : $row->type,
       'last_uploaded' => $row->last_uploaded ? t('@time ago', array('@time' => lingotek_human_readable_timestamp($row->last_uploaded))) : t('Never'),
-      'workflow' => (!empty($row->lingotek['workflow_id']) ? (isset($workflows[$row->lingotek['workflow_id']]) ? check_plain($workflows[$row->lingotek['workflow_id']]) : $row->lingotek['workflow_id']) : ''),
+      'workflow_id' => $workflow_id,
+      'workflow_name' => $workflow_name,
       'actions' => '<span class="lingotek-node-actions">' . $actions . '</span>',
       'description' => isset($row->description) ? $row->description : '',
     );
