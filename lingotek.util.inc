@@ -930,9 +930,21 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
     // DOES NOT EXIST, INSERT NEW INTO LANGUAGE TABLE
     // If not add it to the languages table first and then tack on the lingotek_locale and enable it
     $drupal_language_code = Lingotek::convertLingotek2Drupal($lingotek_locale, FALSE);
+
+    $predefined_languages = array();
+    if (module_exists('locale')) {
+      $predefined_languages = _locale_prepare_predefined_list();
+    }
+    $drupal_code_with_locale = strtolower(str_replace("_", "-", $lingotek_locale));
+
+    // Use a predefined Drupal language code, if available
+    if (array_key_exists($drupal_code_with_locale, $predefined_languages)) {
+      $drupal_language_code = $drupal_code_with_locale;
+    }
+
     if (lingotek_lookup_locale_exists($drupal_language_code)) { // drupal code is already being used, generate another
-      $errors = array($drupal_language_code);
-      $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale));
+    $errors = array($drupal_language_code);
+    $drupal_language_code = $drupal_code_with_locale;
       if (lingotek_lookup_locale_exists($drupal_language_code)) {
         $errors[] = $drupal_language_code;
         LingotekLog::error("Cannot add language code.  Attempted language codes already being used: !errors", array('!errors' => $errors));
