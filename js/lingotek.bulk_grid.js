@@ -351,7 +351,7 @@ function lingotek_perform_action(nid, action) {
           $('.ltk-upload-button', row).click(function() {
             lingotek_perform_action(entity_id, 'upload');
           });
-          $(this).removeClass().addClass('language-icon target-untracked').attr('title', title + 'Untracked');
+          $(this).removeClass().addClass('language-icon target-untracked').attr('title', title + ' Untracked');
           break;
       }
     });
