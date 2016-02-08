@@ -132,7 +132,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkTargetStatus(ContentEntityInterface &$entity, $langcode) {
     $current_status = $this->getTargetStatus($entity, $langcode);
-    if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
+    if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentTranslationStatus($this->getDocumentId($entity), $langcode)) {
       $current_status = Lingotek::STATUS_READY;
       $this->setTargetStatus($entity, $langcode, $current_status);
     }

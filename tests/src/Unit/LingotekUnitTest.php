@@ -411,4 +411,64 @@ class LingotekUnitTest extends UnitTestCase {
     $this->lingotek->addTarget('my_doc_id', 'es_ES', NULL);
   }
 
+  /**
+   * @covers ::getDocumentTranslationStatus
+   */
+  public function testGetDocumentTranslationStatus() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn('200');
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(
+        [
+          'entities' =>
+          [
+            [
+              'properties' =>
+                [
+                  'locale_code' => 'es-ES',
+                  'percent_complete' => 100,
+                ],
+            ],
+            [
+              'properties' =>
+                [
+                  'locale_code' => 'de-DE',
+                  'percent_complete' => 50,
+                ],
+            ],
+
+          ],
+        ]
+      ));
+    $this->api->expects($this->at(0))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'es_ES')
+      ->will($this->returnValue($response));
+    $this->api->expects($this->at(1))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'de_DE')
+      ->will($this->returnValue($response));
+    $this->api->expects($this->at(2))
+      ->method('getDocumentTranslationStatus')
+      ->with('my_doc_id', 'ca_ES')
+      ->will($this->returnValue($response));
+
+    // Assert that a complete translation is reported as completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'es_ES');
+    $this->assertEquals(TRUE, $result);
+
+    // Assert that an incomplete translation is reported as not completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
+    $this->assertEquals(FALSE, $result);
+
+    // Assert that an unrequested translation is reported as not completed.
+    $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');
+    $this->assertEquals(FALSE, $result);
+  }
+
 }

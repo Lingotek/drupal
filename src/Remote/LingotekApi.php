@@ -123,6 +123,17 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  public function getDocumentTranslationStatus($id, $locale) {
+    try {
+      $this->logger->debug('Lingotek::getDocumentTranslationStatus called with %id and %locale', ['%id' => $id, '%locale' => $locale]);
+      $response = $this->lingotekClient->get('/api/document/' . $id . '/translation');
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get document status: ' . $e->getMessage());
+    }
+    return $response;
+  }
+
   public function addTranslation($id, $locale, $workflow_id = NULL) {
     try {
       $this->logger->debug('Lingotek::addTranslation called with id ' . $id . ' and locale ' . $locale);

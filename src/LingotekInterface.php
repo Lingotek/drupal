@@ -68,7 +68,10 @@ interface LingotekInterface {
    */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL);
 
+
   public function getDocumentStatus($doc_id);
+  public function getDocumentTranslationStatus($doc_id, $locale);
+
   public function downloadDocument($doc_id, $locale);
 
 }

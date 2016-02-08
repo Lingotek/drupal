@@ -275,6 +275,30 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  public function getDocumentTranslationStatus($doc_id, $locale) {
+    // For now, a passthrough to the API object so the controllers do not
+    // need to include that class.
+    $response = $this->api->getDocumentTranslationStatus($doc_id, $locale);
+    $progress = 0;
+    if ($response->getStatusCode() == '200') {
+      $progress_json = json_decode($response->getBody(), TRUE);
+      $lingotek_locale = str_replace("_", "-", $locale);
+      if (!empty($progress_json['entities'])) {
+
+        foreach ($progress_json['entities'] as $index => $data) {
+          if ($data['properties']['locale_code'] === $lingotek_locale) {
+            $progress = $data['properties']['percent_complete'];
+            break;
+          }
+        }
+      }
+      if ($progress === self::PROGRESS_COMPLETE) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
   public function downloadDocument($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.

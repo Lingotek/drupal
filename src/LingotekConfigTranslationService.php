@@ -443,7 +443,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function checkTargetStatus(ConfigEntityInterface &$entity, $locale) {
     $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getTargetStatus($entity, $langcode);
-    if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
+
+    if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentTranslationStatus($this->getDocumentId($entity), $locale)) {
       $current_status = Lingotek::STATUS_READY;
       $this->setTargetStatus($entity, $langcode, $current_status);
     }
@@ -763,7 +764,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getConfigTargetStatus($mapper, $langcode);
-    if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getConfigDocumentId($mapper))) {
+    if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentTranslationStatus($this->getConfigDocumentId($mapper), $locale)) {
       $current_status = Lingotek::STATUS_READY;
       $this->setConfigTargetStatus($mapper, $langcode, $current_status);
     }

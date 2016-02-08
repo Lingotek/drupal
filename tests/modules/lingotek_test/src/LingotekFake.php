@@ -187,6 +187,11 @@ class LingotekFake implements LingotekInterface {
     return TRUE;
   }
 
+  public function getDocumentTranslationStatus($doc_id, $locale) {
+    // Translation is done.
+    return TRUE;
+  }
+
   public function downloadDocument($doc_id, $locale) {
     \Drupal::state()->set('lingotek.downloaded_locale', $locale);
     $type = \Drupal::state()->get('lingotek.uploaded_content_type', 'node');
