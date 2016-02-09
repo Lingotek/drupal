@@ -30,6 +30,9 @@ class LingotekSync {
   const PROFILE_MANUAL = 1;
   const PROFILE_INHERIT = 'INHERIT';
 
+  const STICKY = 1;
+  const NOT_STICKY = 0;
+
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
     if ($chunk_id = LingotekConfigSet::getIdByDocId($doc_id)) {

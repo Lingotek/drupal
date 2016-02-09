@@ -278,7 +278,7 @@ function lingotek_perform_action(nid, action) {
       return;
     }
     if(data[entity_id].hasOwnProperty('last_modified')){
-       var main_table = document.getElementsByClassName('table-select-processed');
+      var main_table = document.getElementsByClassName('table-select-processed');
       var table_headers = main_table[0].getElementsByTagName('th');
       var last_modified_index = null;
       for(var i = 0; i < table_headers.length; i++){
@@ -351,7 +351,7 @@ function lingotek_perform_action(nid, action) {
           $('.ltk-upload-button', row).click(function() {
             lingotek_perform_action(entity_id, 'upload');
           });
-          $(this).removeClass().addClass('language-icon target-untracked').attr('title', title + 'In progress');
+          $(this).removeClass().addClass('language-icon target-untracked').attr('title', title + ' Untracked');
           break;
       }
     });

@@ -1697,6 +1697,7 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
     '#title' => t('Profile Name'),
     '#default_value' => $form_state['values']['name'],
     '#disabled' => $is_custom_profile_id ? FALSE : TRUE,
+    '#required' => TRUE
   );
 
   $form['defaults']['current_future_note'] = array(
