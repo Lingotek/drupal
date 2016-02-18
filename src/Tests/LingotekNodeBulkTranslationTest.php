@@ -188,6 +188,84 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
   }
 
+  /**
+   * Tests that a node can be translated using the actions on the management page.
+   */
+  public function testNodeMultipleLanguageTranslationUsingActions() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    // Create another node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool 2';
+    $edit['body[0][value]'] = 'Llamas are very cool 2';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/2?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Request all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'operation' => 'request_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check status of all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Download all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+  }
+
   public function testAddContentLinkPresent() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);

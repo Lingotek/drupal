@@ -32,15 +32,15 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
   }
 
   /**
    * Tests that a config can be translated using the links on the management page.
    */
   public function testSystemSiteTranslationUsingLinks() {
-    // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
-
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -91,9 +91,6 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the actions on the management page.
    */
   public function testSystemSiteTranslationUsingActions() {
-    // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
-
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
@@ -182,6 +179,62 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     // Download the translation.
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX downloaded successfully');
+  }
+
+  /**
+   * Tests that a config object can be translated using the actions on the management page.
+   */
+  public function testSystemSiteMultipleLanguageTranslationUsingActions() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    // Go to the bulk config management page.
+    $this->drupalGet('admin/lingotek/config/manage');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Request all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'request_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check status of all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Download all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
   }
 
   /**

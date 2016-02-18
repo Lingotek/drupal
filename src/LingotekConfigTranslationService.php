@@ -798,9 +798,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
       $translation_status = $metadata->getTargetStatus();
       foreach ($translation_status as $language => $current_status) {
-        if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
+        if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getConfigDocumentId($mapper))) {
           $current_status = Lingotek::STATUS_READY;
-          $this->setTargetStatus($entity, $language, $current_status);
+          $this->setConfigTargetStatus($mapper, $language, $current_status);
         }
       }
     }

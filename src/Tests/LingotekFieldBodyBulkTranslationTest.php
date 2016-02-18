@@ -2,11 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a field using the bulk management form.
@@ -166,6 +162,73 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/de_AT' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+  }
+
+  /**
+   * Tests that a field can be translated using the actions on the management page.
+   */
+  public function testFieldBodyMultipleLanguageTranslationUsingActions() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Set upload as manual.
+    $edit = [
+      'table[node_fields][enabled]' => 1,
+      'table[node_fields][profile]' => 'manual',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    // Go to the bulk config management page.
+    $this->drupalGet('admin/lingotek/config/manage');
+    $edit = [
+      'filters[wrapper][bundle]' => 'node_fields',  // Content types.
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Filter'));
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Request all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'request_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check status of all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/field_config/node.article.body/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Download all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/field_config/node.article.body/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
   }
 
   /**

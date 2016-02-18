@@ -160,7 +160,17 @@ class LingotekFake implements LingotekInterface {
     \Drupal::state()->set('lingotek.uploaded_locale', $locale);
     \Drupal::state()->set('lingotek.uploaded_url', $url);
     \Drupal::state()->set('lingotek.used_profile', $profile ? $profile->id() : NULL);
-    return 'dummy-document-hash-id';
+
+    $count = \Drupal::state()->get('lingotek.uploaded_docs', 0);
+
+    $doc_id = 'dummy-document-hash-id';
+    if ($count > 0) {
+      $doc_id .= '-' . $count;
+    }
+    ++$count;
+    \Drupal::state()->set('lingotek.uploaded_docs', $count);
+
+    return $doc_id;
   }
 
   public function updateDocument($doc_id, $content, $url = NULL) {
