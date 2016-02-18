@@ -31,13 +31,15 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $phase_complete_percent = 0;
       }
       $language_link = l(lingotek_language_field_lookup('native', $target->language), 'lingotek/workbench/node/' . $node->nid . '/' . $target->language, array('attributes' => array('target' => '_blank')));
-      $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
+      $language_name = lingotek_language_field_lookup('name', $target->language);
+      $language_link .= ' (' . $language_name . ')';
 
       $lang_row = array(
         'column_1' => array('data' => $language_link, 'width' => '40%'),
         'column_2' => array('data' => lingotek_grid_create_progress_bar($target->percentComplete), 'width' => '40%'),
         'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="fa fa-check-sign ltk-complete-check" title="'.t('Workflow complete').'"></i>' : '<i class="fa fa-check-empty ltk-complete-check"></i>', 'width' => '20%'
         '#attributes' => array('class' => array('bold-row')),
+        'language_name' => $language_name,
       );
 
       LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $target->language));
@@ -49,6 +51,7 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
           'column_3' => $phase->isMarkedComplete ? '<i class="fa fa-check-sign ltk-complete-check" title="' . t('Phase complete') . '"></i>' : '<i class="fa fa-check-empty ltk-complete-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
+          'language_name' => $language_name,
         );
         $phase_rows[$target->language . '_' . $phase->name] = $phase_row;
         $marked_complete = $phase->isMarkedComplete;
@@ -65,18 +68,29 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       }
     }
 
-    ksort($lang_rows);
+    // Sort rows by language name
+    $lang_rows_sorted = array();
+    foreach ($lang_rows as $key => $row) {
+      $lang_rows_sorted[$key] = $row['language_name'];
+    }
+
+    array_multisort($lang_rows_sorted, SORT_ASC, $lang_rows);
 
     // Combine lang_rows and phase_rows in alphabetical order
     $rows = array();
     foreach ($lang_rows as $lang_key => $lang_row) {
+      unset($lang_row['language_name']);
       $rows [$lang_key] = $lang_row;
       foreach ($phase_rows as $phase_key => $phase_row) {
-        if (strpos((string)$phase_key, (string)$lang_key) !== false) {
+        unset($phase_row['language_name']);
+        if (strpos($phase_key, $lang_key) !== false) {
           $rows [$phase_key] = $phase_row;
         }
       }
     }
+
+    dpm('final rows');
+    dpm($rows);
 
     $form['fieldset'] = array(
       '#type' => 'fieldset',
