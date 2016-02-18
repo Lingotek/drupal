@@ -89,9 +89,6 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       }
     }
 
-    dpm('final rows');
-    dpm($rows);
-
     $form['fieldset'] = array(
       '#type' => 'fieldset',
       '#title' => t('Download Translations'),
