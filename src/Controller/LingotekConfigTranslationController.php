@@ -230,8 +230,16 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($entity_type === $entity_id) {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
-      if ($this->translationService->uploadConfig($entity_type)) {
-        drupal_set_message($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
+      $mappers =  $this->configMapperManager->getMappers();
+      if ($this->translationService->getConfigDocumentId($mappers[$entity_type])) {
+        if ($this->translationService->updateConfig($entity_type)) {
+          drupal_set_message($this->t('%label has been updated.', ['%label' => $definition['title']]));
+        }
+      }
+      else {
+        if ($this->translationService->uploadConfig($entity_type)) {
+          drupal_set_message($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
+        }
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
     }
@@ -241,8 +249,15 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $entity_type = 'field_config';
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
-    if ($this->translationService->uploadDocument($entity)) {
-      drupal_set_message($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
+    if ($this->translationService->getDocumentId($entity)) {
+      if ($this->translationService->updateDocument($entity)) {
+        drupal_set_message($this->t('%label has been updated.', ['%label' => $entity->label()]));
+      }
+    }
+    else {
+      if ($this->translationService->uploadDocument($entity)) {
+        drupal_set_message($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
+      }
     }
     return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
@@ -252,7 +267,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
       if ($this->translationService->updateConfig($entity_type)) {
-        drupal_set_message($this->t('%label uploaded successfully', ['%label' => $definition['title']]));
+        drupal_set_message($this->t('%label has been updated.', ['%label' => $definition['title']]));
       }
       return $this->redirectToConfigTranslateOverview($entity_type);
     }
@@ -263,7 +278,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     }
     $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->updateDocument($entity)) {
-      drupal_set_message($this->t('%label uploaded successfully', ['%label' => $entity->label()]));
+      drupal_set_message($this->t('%label has been updated.', ['%label' => $entity->label()]));
     }
     return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }

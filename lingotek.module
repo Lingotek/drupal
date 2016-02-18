@@ -85,7 +85,7 @@ function lingotek_entity_insert(EntityInterface $entity) {
       }
       // Updated entity with manual-upload
       elseif (!$has_autoupload){
-        if($entity_has_changed) {
+        if ($entity_has_changed) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           $translation_service->markTranslationsAsDirty($entity);
           $translation_service->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
@@ -102,7 +102,40 @@ function lingotek_entity_insert(EntityInterface $entity) {
  * Implements hook_entity_update().
  */
 function lingotek_entity_update(EntityInterface $entity) {
-  // Only act on content entities.
+  if ($entity instanceof \Drupal\Core\Config\Entity\ConfigEntityInterface) {
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configuration_service */
+    $configuration_service = \Drupal::service('lingotek.configuration');
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $entity_type_id = $entity->getEntityTypeId();
+    if ($entity instanceof \Drupal\field\Entity\FieldConfig) {
+      $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
+    }
+    if ($translation_service->isEnabled($entity_type_id)) {
+      $profile = $configuration_service->getConfigEntityProfile($entity);
+      $has_autoupload = $profile->hasAutomaticUpload();
+
+      $source_status = $translation_service->getSourceStatus($entity);
+      $entity_has_changed = $translation_service->hasEntityChanged($entity);
+
+      if ($has_autoupload) {
+        // Updated entity with auto-upload
+        $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+        $document_id = $translation_service->updateDocument($entity);
+        $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
+        $translation_service->markTranslationsAsDirty($entity);
+        $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
+      }
+      // Updated entity with manual-upload
+      elseif (!$has_autoupload){
+        if ($entity_has_changed) {
+          $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+          $translation_service->markTranslationsAsDirty($entity);
+          $translation_service->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
+        }
+      }
+    }
+  }
   if (!($entity instanceof ContentEntityInterface)) {
     return;
   }

@@ -49,6 +49,13 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
   protected $target_status = [];
 
   /**
+   * The Lingotek hash.
+   *
+   * @var string
+   */
+  protected $hash = NULL;
+
+  /**
    * {@inheritdoc}
    */
   public function getDocumentId() {
@@ -92,6 +99,22 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    */
   public function setTargetStatus(array $target_status) {
     $this->target_status = $target_status;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHash() {
+    return $this->hash;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setHash($hash) {
+    $this->hash = $hash;
 
     return $this;
   }

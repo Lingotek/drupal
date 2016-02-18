@@ -8,7 +8,6 @@
 /*
  * Implements hook_schema().
  */
-
 function lingotek_schema() {
   $schema['lingotek_content_metadata'] = array(
     'description' => 'Stores Lingotek-related metadata about Drupal entities.',
@@ -93,4 +92,69 @@ function lingotek_schema() {
   );
 
   return $schema;
+}
+
+/*
+ * Implements hook_update_N().
+ */
+function lingotek_update_8001() {
+  // Get all mappers and update config entity ones, but not field ones.
+  /** @var \Drupal\config_translation\ConfigMapperManager $mapper_manager */
+  $mapper_manager = \Drupal::service('plugin.manager.config_translation.mapper');
+  $mappers = $mapper_manager->getMappers();
+  foreach ($mappers as $mapper_id => $mapper) {
+    if ($mapper instanceof \Drupal\config_translation\ConfigEntityMapper &&
+       !$mapper instanceof \Drupal\config_translation\ConfigFieldMapper) {
+
+      $ids = \Drupal::service('entity.query')->get($mapper_id)
+        ->exists('third_party_settings.lingotek.lingotek_document_id')
+        ->execute();
+
+      if (!empty($ids)) {
+        /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface[] $entities */
+        $entities = \Drupal::entityManager()->getStorage($mapper_id)->loadMultiple($ids);
+        foreach ($entities as $entity) {
+          $settings = $entity->getThirdPartySettings('lingotek');
+
+          $metadata = \Drupal\lingotek\Entity\LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+          $metadata->setDocumentId($settings['lingotek_document_id']);
+          $metadata->setSourceStatus($settings['lingotek_translation_source']);
+          $metadata->setTargetStatus($settings['lingotek_translation_status']);
+          $metadata->setHash($settings['lingotek_hash']);
+          $metadata->save();
+
+          $entity->unsetThirdPartySetting('lingotek', 'lingotek_document_id');
+          $entity->unsetThirdPartySetting('lingotek', 'lingotek_translation_source');
+          $entity->unsetThirdPartySetting('lingotek', 'lingotek_translation_status');
+          $entity->unsetThirdPartySetting('lingotek', 'lingotek_hash');
+          $entity->save();
+        }
+      }
+    }
+  }
+  // Take care of fields now.
+  $ids = \Drupal::service('entity.query')->get('field_config')
+    ->exists('third_party_settings.lingotek.lingotek_document_id')
+    ->execute();
+  if (!empty($ids)) {
+    $entities = \Drupal::entityManager()->getStorage('field_config')->loadMultiple($ids);
+    foreach ($entities as $entity) {
+      $settings = $entity->getThirdPartySettings('lingotek');
+
+      $metadata = \Drupal\lingotek\Entity\LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+      $metadata->setDocumentId($settings['lingotek_document_id']);
+      $metadata->setSourceStatus($settings['lingotek_translation_source']);
+      $metadata->setTargetStatus($settings['lingotek_translation_status']);
+      $metadata->setHash($settings['lingotek_hash']);
+      $metadata->save();
+
+      $entity->unsetThirdPartySetting('lingotek', 'lingotek_document_id');
+      $entity->unsetThirdPartySetting('lingotek', 'lingotek_translation_source');
+      $entity->unsetThirdPartySetting('lingotek', 'lingotek_translation_status');
+      $entity->unsetThirdPartySetting('lingotek', 'lingotek_hash');
+      $entity->save();
+
+    }
+  }
+
 }

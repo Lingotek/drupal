@@ -51,4 +51,20 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    */
   public function setTargetStatus(array $target_status);
 
+
+  /**
+   * Gets the hash of the uploaded document.
+   */
+  public function getHash();
+
+  /**
+   * Sets the hash of the uploaded document.
+   *
+   * @param string $hash
+   *  The hash of the uploaded document.
+   *
+   * @return $this
+   */
+  public function setHash($hash);
+
 }

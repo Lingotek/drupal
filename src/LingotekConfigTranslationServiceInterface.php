@@ -527,6 +527,15 @@ interface LingotekConfigTranslationServiceInterface {
    */
   public function updateConfig($mapper_id);
 
+  /**
+   * Marks the translation status as dirty if they exist.
+   *
+   * @param ConfigNamesMapper $mapper
+   *   The mapper which status we want to change.
+   *
+   * @return ConfigNamesMapper
+   */
+  public function markConfigTranslationsAsDirty(ConfigNamesMapper $mapper_id);
 
   /**
    * Loads the entity with the given document id.

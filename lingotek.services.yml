@@ -27,3 +27,8 @@ services:
   logger.channel.lingotek:
     parent: logger.channel_base
     arguments: ['lingotek']
+  lingotek.config_subscriber:
+    class: Drupal\lingotek\EventSubscriber\LingotekConfigSubscriber
+    arguments: ['@lingotek.config_translation', '@plugin.manager.config_translation.mapper']
+    tags:
+      - { name: event_subscriber }

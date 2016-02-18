@@ -158,17 +158,16 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testEditedConfigTranslationUsingLinks() {
-    // ToDo: Add a test for this.
-    $this->pass('Test not implemented yet.'); return;
-
-    // We need a node with translations first.
+    // We need a config object with translations first.
     $this->testSystemSiteTranslationUsingLinks();
+
+    // Edit the object
+    $this->drupalPostForm('/admin/config/system/site-information', ['site_name' => 'My site'], t('Save configuration'));
 
     // Go to the bulk config management page.
     $this->drupalGet('admin/lingotek/config/manage');
 
     // Reupload the content.
-    // ToDo: We need to edit and upload again.
     $this->clickLink('English', 1);
     $this->assertText('System information has been updated.');
 
@@ -176,9 +175,9 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('English', 1);
     $this->assertText('System information status checked successfully');
 
-    // Request the translation after having been edited.
+    // Check the translation after having been edited.
     $this->clickLink('ES');
-    $this->assertText("Translation to es_MX requested successfully");
+    $this->assertText("Translation to es_MX checked successfully");
 
     // Download the translation.
     $this->clickLink('ES');

@@ -223,6 +223,10 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Go to the bulk node management page.
     $this->drupalGet('admin/lingotek/manage/node');
 
+    // Check the status is edited.
+    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
+
     // Reupload the content.
     $this->clickLink('English');
     $this->assertText('Node Llamas are cool EDITED has been updated.');
@@ -231,7 +235,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('English');
     $this->assertText('The import for node Llamas are cool EDITED is complete.');
 
-    // Request the translation after having been edited.
+    // Check the translation after having been edited.
     $this->clickLink('ES');
     $this->assertText("The es_MX translation for node Llamas are cool EDITED is ready for download.");
 

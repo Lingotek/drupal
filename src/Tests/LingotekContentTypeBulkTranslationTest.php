@@ -175,11 +175,11 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testEditedConfigTranslationUsingLinks() {
-    // ToDo: Add a test for this.
-    $this->pass('Test not implemented yet.'); return;
-
     // We need a node with translations first.
     $this->testContentTypeTranslationUsingLinks();
+
+    // Edit the object
+    $this->drupalPostForm('/admin/structure/types/manage/article', ['name' => 'Article EDITED'], t('Save content type'));
 
     // Go to the bulk config management page.
     $this->drupalGet('admin/lingotek/config/manage');
@@ -188,18 +188,13 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Filter'));
 
-    // Reupload the content.
-    // ToDo: We need to edit and upload again.
-    $this->clickLink('English');
-    $this->assertText('Article has been updated.');
-
     // Recheck status.
     $this->clickLink('English');
-    $this->assertText('Article status checked successfully');
+    $this->assertText('Article EDITED status checked successfully');
 
-    // Request the translation after having been edited.
+    // Check the translation after having been edited.
     $this->clickLink('ES');
-    $this->assertText("Translation to es_MX requested successfully");
+    $this->assertText("Translation to es_MX status checked successfully");
 
     // Download the translation.
     $this->clickLink('ES');

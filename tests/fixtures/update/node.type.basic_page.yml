@@ -1,0 +1,23 @@
+uuid: a4f8e75d-5195-4ddb-9000-c73045216029
+langcode: en
+status: true
+dependencies:
+  module:
+    - lingotek
+third_party_settings:
+  lingotek:
+    lingotek_document_id: 8bf008cd-6e36-43a3-a325-e33ae6befe13
+    lingotek_translation_source:
+      en: EDITED
+    lingotek_translation_status:
+      es: REQUEST
+    lingotek_hash: eb223fc107f7598b96c91e6852f9e58e
+_core:
+  default_config_hash: zhtPXoRcC6REiepM0k16zw__FDW5YOXDR6U2WlldTrs
+name: 'Basic page'
+type: basic_page
+description: 'Use <em>basic pages</em> for your static content, such as an ''About us'' page.'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: false

@@ -969,7 +969,7 @@ class LingotekConfigManagementForm extends FormBase {
       case Lingotek::STATUS_CURRENT:
         return $this->t('Source uploaded');
       case Lingotek::STATUS_UNTRACKED:
-        return $this->t('Untracked translation');
+        return $this->t('Never uploaded');
       case Lingotek::STATUS_EDITED:
         return ($this->translationService->getConfigDocumentId($mapper)) ?
          $this->t('Upload') : $this->t('Never uploaded');

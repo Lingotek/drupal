@@ -168,6 +168,9 @@ lingotek.lingotek_config_metadata.*:
       type: sequence
       sequence:
         type: string
+    hash:
+      type: string
+      label: 'Lingotek hash'
 
 language.entity.*.third_party.lingotek:
   type: mapping
