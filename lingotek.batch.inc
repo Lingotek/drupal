@@ -12,7 +12,7 @@ use Drupal\lingotek\Lingotek;
  */
 function lingotek_operation_content_upload($entity_type, $entity_id, &$context) {
   if ($context) {
-    $context['message'] = t('Uploading @entity_type #@entity_id', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
+    $context['message'] = t('Uploading @entity_type @entity_id', array('@entity_type' => $entity_type, '@entity_id' => $entity_id));
   }
 
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
@@ -26,6 +26,9 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
     if ($document_id) {
       $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     }
+    else {
+      // ToDo: Log a problem happened uploading the document.
+    }
   }
   
   // Use update with existing entities that have been edited. 
@@ -34,7 +37,7 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
       $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     }
     else {
-      // ToDo: Log a problem happened uploading the document.
+      // ToDo: Log a problem happened updating the document.
     }
   }
 }

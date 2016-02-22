@@ -173,6 +173,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $set = TRUE;
     }
     if ($set && $save) {
+      // If the entity supports revisions, ensure we don't create a new one.
+      if ($entity->getEntityType()->hasKey('revision')) {
+        $entity->setNewRevision(FALSE);
+      }
+      $entity->lingotek_processed = TRUE;
       $entity->save();
     }
     return $entity;
@@ -229,6 +234,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setDocumentId(ContentEntityInterface &$entity, $doc_id) {
     $entity->lingotek_document_id = $doc_id;
+    // If the entity supports revisions, ensure we don't create a new one.
+    if ($entity->getEntityType()->hasKey('revision')) {
+      $entity->setNewRevision(FALSE);
+    }
+    $entity->lingotek_processed = TRUE;
     $entity->save();
 
     \Drupal::database()->insert('lingotek_content_metadata')
@@ -308,6 +318,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $old_hash = $entity->lingotek_hash->value;
     if (!$old_hash || strcmp($hash, $old_hash)){
       $entity->lingotek_hash->value = $hash;
+      // If the entity supports revisions, ensure we don't create a new one.
+      if ($entity->getEntityType()->hasKey('revision')) {
+        $entity->setNewRevision(FALSE);
+      }
+      $entity->lingotek_processed = TRUE;
       $entity->save();
       return true;
     }
@@ -472,6 +487,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       ->condition('entity_id', $entity->id())
       ->execute();
 
+    // If the entity supports revisions, ensure we don't create a new one.
+    if ($entity->getEntityType()->hasKey('revision')) {
+      $entity->setNewRevision(FALSE);
+    }
+    $entity->lingotek_processed = TRUE;
     $entity->save();
   }
 
@@ -521,6 +541,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if (!$entity->hasTranslation($langcode)) {
         $entity->addTranslation($langcode, $entity->toArray());
       }
+      /** @var ContentEntityInterface $translation */
       $translation = $entity->getTranslation($langcode);
       foreach ($data as $name => $field_data) {
         foreach ($field_data as $delta => $delta_data) {
@@ -534,6 +555,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // We need to set the content_translation source so the files are synced
       // properly. See https://www.drupal.org/node/2544696 for more information.
       $translation->set('content_translation_source', $entity->getUntranslated()->language()->getId());
+      // If the entity supports revisions, ensure we don't create a new one.
+      if ($entity->getEntityType()->hasKey('revision')) {
+        $entity->setNewRevision(FALSE);
+      }
+      $entity->lingotek_processed = TRUE;
       $translation->save();
       $lock->release(__FUNCTION__);
     }

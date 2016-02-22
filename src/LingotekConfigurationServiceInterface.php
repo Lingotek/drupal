@@ -157,8 +157,10 @@ interface LingotekConfigurationServiceInterface {
    *   The entity.
    * @param string $profile_id
    *   The profile id.
+   * @param bool $save
+   *   Indicates if we should save the entity after setting the value.
    */
-  public function setProfile(ContentEntityInterface &$entity, $profile_id);
+  public function setProfile(ContentEntityInterface &$entity, $profile_id, $save = TRUE);
 
   /**
    * Helper function for getting all the profiles as select options.

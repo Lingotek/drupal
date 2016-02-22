@@ -177,9 +177,11 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
-  public function setProfile(ContentEntityInterface &$entity, $profile_id) {
+  public function setProfile(ContentEntityInterface &$entity, $profile_id, $save = TRUE) {
     $entity->lingotek_profile->target_id = $profile_id;
-    $entity->save();
+    if ($save) {
+      $entity->save();
+    }
   }
 
   /**
