@@ -693,7 +693,7 @@ function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_local
 
   // check for node-based target translation
   if(lingotek_uses_node_translation($entity)) {
-    $target_nodes = translation_node_get_translations($entity_id);
+    $target_nodes = lingotek_node_get_translations($entity_id);
     foreach ($target_nodes as $langcode => $node_info) {
       if($drupal_language_code == $langcode){
         // re-set entity to the target node instead of the source node

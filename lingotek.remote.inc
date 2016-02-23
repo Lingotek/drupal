@@ -24,7 +24,7 @@ function lingotek_get_target_node($node, $drupal_language_code) {
     return $node;
   }
 
-  $tset = translation_node_get_translations($node->nid);
+  $tset = lingotek_node_get_translations($node->nid);
 
   if ($node->tnid == 0) {
     $node->tnid = $node->nid;
