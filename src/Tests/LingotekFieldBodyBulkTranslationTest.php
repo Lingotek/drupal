@@ -82,6 +82,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/field_config/node.article.body/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
     $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to es_MX status checked successfully");
 
     // Download the Spanish translation.
@@ -148,6 +149,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
       'operation' => 'check_translation:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
     // Download the German translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/field_config/node.article.body/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');

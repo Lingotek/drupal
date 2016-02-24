@@ -118,6 +118,7 @@ class LingotekNodeExistingBulkTranslationTest extends LingotekTestBase {
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.

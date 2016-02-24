@@ -774,15 +774,16 @@ class LingotekConfigManagementForm extends FormBase {
     $profile = $mapper instanceof ConfigEntityMapper ?
       $this->lingotekConfiguration->getConfigEntityProfile($entity, FALSE) :
       $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE);
+    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
 
     // If there is no entity, it's a config object and we don't abort based on
     // the profile.
     if ($entity === NULL || $profile !== NULL) {
       if ($mapper instanceof ConfigEntityMapper){
-        $this->translationService->checkTargetStatus($entity, $langcode);
+        $this->translationService->checkTargetStatus($entity, $locale);
       }
       else {
-        $this->translationService->checkConfigTargetStatus($mapper->getPluginId(), $langcode);
+        $this->translationService->checkConfigTargetStatus($mapper->getPluginId(), $locale);
       }
     }
     else {

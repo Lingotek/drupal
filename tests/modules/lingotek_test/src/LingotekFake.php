@@ -198,6 +198,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentTranslationStatus($doc_id, $locale) {
+    \Drupal::state()->set('lingotek.checked_target_locale', $locale);
     // Translation is done.
     return TRUE;
   }

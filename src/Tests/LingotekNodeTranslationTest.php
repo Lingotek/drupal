@@ -124,6 +124,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Check translation status.
     $this->clickLink('Check translation status');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.

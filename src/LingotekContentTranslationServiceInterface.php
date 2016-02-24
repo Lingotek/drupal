@@ -61,13 +61,13 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param ContentEntityInterface &$entity
    *   The entity which status we want to check.
-   * @param string $locale
-   *   Lingotek translation language we want to check.
+   * @param string $langcode
+   *   Translation language we want to check.
    *
    * @return boolean
    *   True if the entity is uploaded succesfully.
    */
-  public function checkTargetStatus(ContentEntityInterface &$entity, $locale);
+  public function checkTargetStatus(ContentEntityInterface &$entity, $langcode);
 
   /**
    * Gets the translation status of a given entity translation for a locale.

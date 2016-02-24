@@ -86,6 +86,7 @@ class LingotekSystemSiteExistingBulkTranslationTest extends LingotekTestBase {
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
     $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to es_MX checked successfully");
 
     // Download the Spanish translation.

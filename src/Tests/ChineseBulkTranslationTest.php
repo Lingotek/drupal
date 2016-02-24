@@ -161,6 +161,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     // Check status of the Chinese translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath .'/admin/lingotek/config/manage');
     $this->clickLink('ZH');
+    $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to zh_CN checked successfully");
 
     // Download the Chinese translation.
@@ -219,6 +220,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/zh_CN?destination=' . $basepath .'/admin/lingotek/config/manage');
     $this->clickLink('ZH');
+    $this->assertIdentical('zh_CN', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to zh_CN status checked successfully");
 
     // Download the Spanish translation.
