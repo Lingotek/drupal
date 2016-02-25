@@ -75,3 +75,12 @@ function hook_lingotek_managed_entity_types_alter(array &$enabled_types, $includ
  */
 function hook_lingotek_entity_profiles_options_alter($entity_type, array &$options) {
 }
+
+/**
+* Alter the source URL of an entity before upload to TMS.
+*
+* @param string $source_url
+*  The entity's url.
+*/
+function hook_lingotek_source_URL_alter(&$source_url) {
+}

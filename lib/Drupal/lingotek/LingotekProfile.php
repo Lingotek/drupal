@@ -179,7 +179,7 @@ class LingotekProfile {
       foreach ($entities as $e) {
         if (isset($entity_counts[$e['type']])) {
           $entity_counts[$e['type']]++;
-          if (array_intersect($target_nodes, $e)) {
+          if (in_array($e['id'], $target_nodes)) {
             $entity_counts[$e['type']]--;
           }
         }

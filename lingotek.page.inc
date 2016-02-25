@@ -20,7 +20,8 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
   $sum_progress = 0;
   if ($document_progress->results == 'success') {
 
-    $rows = array();
+    $lang_rows = array();
+    $phase_rows = array();
     foreach ($document_progress->translationTargets as $target) {
       $current_phase = $document->currentPhase($target->id);
       $marked_complete = FALSE;
@@ -30,25 +31,29 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
         $phase_complete_percent = 0;
       }
       $language_link = l(lingotek_language_field_lookup('native', $target->language), 'lingotek/workbench/node/' . $node->nid . '/' . $target->language, array('attributes' => array('target' => '_blank')));
-      $language_link .= ' (' . lingotek_language_field_lookup('name', $target->language) . ')';
+      $language_name = lingotek_language_field_lookup('name', $target->language);
+      $language_link .= ' (' . $language_name . ')';
 
-      $row = array(
+      $lang_row = array(
         'column_1' => array('data' => $language_link, 'width' => '40%'),
         'column_2' => array('data' => lingotek_grid_create_progress_bar($target->percentComplete), 'width' => '40%'),
         'column_3' => array('data' => ''),//$target->percentComplete == 100 ? '<i class="fa fa-check-sign ltk-complete-check" title="'.t('Workflow complete').'"></i>' : '<i class="fa fa-check-empty ltk-complete-check"></i>', 'width' => '20%'
         '#attributes' => array('class' => array('bold-row')),
+        'language_name' => $language_name,
       );
 
       LingotekLog::trace("lingotek_pm table row [@locale]", array('@locale' => $target->language));
-      $rows[$target->language] = $row;
+      $lang_rows[$target->language] = $lang_row;
+
       foreach ($target->phases as $phase) {
-        $row = array(
+        $phase_row = array(
           'column_1' => $phase->name,
           'column_2' => lingotek_grid_create_progress_bar($phase->percentComplete),
           'column_3' => $phase->isMarkedComplete ? '<i class="fa fa-check-sign ltk-complete-check" title="' . t('Phase complete') . '"></i>' : '<i class="fa fa-check-empty ltk-complete-check"></i>',
           '#attributes' => array('class' => array('no-checkbox-row')),
+          'language_name' => $language_name,
         );
-        $rows[$target->language . '_' . $phase->name] = $row;
+        $phase_rows[$target->language . '_' . $phase->name] = $phase_row;
         $marked_complete = $phase->isMarkedComplete;
       }
 
@@ -60,6 +65,27 @@ function lingotek_download_translations_form($form, $form_state, $node, $documen
       if ($target_status_local === LingotekSync::STATUS_PENDING) {
         $target_status = ($marked_complete) ? LingotekSync::STATUS_READY : LingotekSync::STATUS_PENDING;
         lingotek_keystore('node', $node->nid, 'target_sync_status_' . $lingotek_locale, $target_status);
+      }
+    }
+
+    // Sort rows by language name
+    $lang_rows_sorted = array();
+    foreach ($lang_rows as $key => $row) {
+      $lang_rows_sorted[$key] = $row['language_name'];
+    }
+
+    array_multisort($lang_rows_sorted, SORT_ASC, $lang_rows);
+
+    // Combine lang_rows and phase_rows in alphabetical order
+    $rows = array();
+    foreach ($lang_rows as $lang_key => $lang_row) {
+      unset($lang_row['language_name']);
+      $rows [$lang_key] = $lang_row;
+      foreach ($phase_rows as $phase_key => $phase_row) {
+        unset($phase_row['language_name']);
+        if (strpos($phase_key, $lang_key) !== false) {
+          $rows [$phase_key] = $phase_row;
+        }
       }
     }
 
@@ -693,7 +719,7 @@ function lingotek_entity_view_redirect($entity_type, $entity_id, $lingotek_local
 
   // check for node-based target translation
   if(lingotek_uses_node_translation($entity)) {
-    $target_nodes = translation_node_get_translations($entity_id);
+    $target_nodes = lingotek_node_get_translations($entity_id);
     foreach ($target_nodes as $langcode => $node_info) {
       if($drupal_language_code == $langcode){
         // re-set entity to the target node instead of the source node

@@ -381,8 +381,8 @@ function lingotek_grid_action_options($entity_type) {
   else {
     $action_options['delete_translations'] = t('Delete local translations');
     $action_options['edit'] = t('Edit translation settings');
-    $action_options['sticky'] = t('Make selected content sticky');
-    $action_options['unsticky'] = t('Make selected content not sticky');
+    $action_options['marked'] = t('Mark content');
+    $action_options['unmarked'] = t('Unmark content');
     $action_options[t('Download')] = array('download_all' => t('Download All Translations'));
   }
 
@@ -774,47 +774,31 @@ function lingotek_grid_action_submit($form, $form_state) {
       elseif ($action == 'sync') { // If syncing the progress
         lingotek_update_target_progress_batch_create($entity_type, $entity_ids); // Run batch operations to get the progress report from Lingotek
       }
-      elseif ($action == 'sticky') {
-        lingotek_update_sticky_entities($entity_ids, $entity_type);
+      elseif ($action == 'marked') {
+        lingotek_update_marked_entities($entity_type, $entity_ids);
       }
-      elseif ($action == 'unsticky') {
-        lingotek_update_unsticky_entities($entity_ids, $entity_type);
+      elseif ($action == 'unmarked') {
+        lingotek_update_unmarked_entities($entity_type, $entity_ids);
       }
     }
   }
 }
 
 /**
-* Updates sticky value in the node or lingotek_entity_metadata tables
+* Updates marked value in the lingotek_entity_metadata table
 */
-function lingotek_update_sticky_entities($entity_ids, $entity_type) {
+function lingotek_update_marked_entities($entity_type, $entity_ids) {
   foreach($entity_ids as $entity_id) {
-    if ($entity_type == 'node') {
-      db_update('node')
-          ->fields(array('sticky' => LingotekSync::STICKY))
-          ->condition('nid', $entity_id , '=')
-          ->execute();
-    }
-    else {
-      lingotek_keystore($entity_type, $entity_id, 'sticky', LingotekSync::STICKY);
-    }
+    lingotek_keystore($entity_type, $entity_id, 'marked', LingotekSync::MARKED);
   }
 }
 
 /**
-* Updates sticky value in the node or lingotek_entity_metadata tables
+* Updates marked value in the lingotek_entity_metadata table
 */
-function lingotek_update_unsticky_entities($entity_ids, $entity_type) {
+function lingotek_update_unmarked_entities($entity_type, $entity_ids) {
   foreach($entity_ids as $entity_id) {
-    if ($entity_type == 'node') {
-      db_update('node')
-          ->fields(array('sticky' => LingotekSync::NOT_STICKY))
-          ->condition('nid', $entity_id , '=')
-          ->execute();
-    }
-    else {
-      lingotek_keystore_delete($entity_type, $entity_id, 'sticky');
-    }
+    lingotek_keystore_delete($entity_type, $entity_id, 'marked');
   }
 }
 
@@ -830,10 +814,10 @@ function lingotek_grid_build_column_checkboxes($form_state) {
   $e_grid_custom = isset($_SESSION['grid_custom'][$entity_type]) ? $_SESSION['grid_custom'][$entity_type] : array();
 
   $column_elements = array(
-    'sticky' => array(
+    'marked' => array(
       '#type' => 'checkbox',
-      '#title' => t('Sticky'),
-      '#default_value' => isset($e_grid_custom[$prefix . 'sticky' . $suffix]) ? $e_grid_custom[$prefix . 'sticky' . $suffix] : in_array('sticky', $columns['defaults']),
+      '#title' => t('Marked'),
+      '#default_value' => isset($e_grid_custom[$prefix . 'marked' . $suffix]) ? $e_grid_custom[$prefix . 'marked' . $suffix] : in_array('marked', $columns['defaults']),
     ),
     'nid' => array(
       '#type' => 'checkbox',
@@ -1299,7 +1283,7 @@ function lingotek_grid_reset_columns() {
 function lingotek_grid_define_columns($entity_type) {
   $columns = array();
   $columns['columns'] = array(
-    'sticky' => 'sticky',
+    'marked' => 'marked',
     'nid' => 'nid',
     'content_type' => 'content_type',
     'title' => 'title',
@@ -1430,14 +1414,14 @@ function lingotek_grid_build_filters($form_state) {
       ),
       '#multiple' => FALSE,
     ),
-    'status' => array (
+    'marked_status' => array (
       '#type' => 'select',
       '#default_value' => 'All',
-      '#title' => t('Status'),
+      '#title' => t('Marked status'),
       '#options' => array (
         'all' => t('All'),
-        'sticky' => t('Sticky'),
-        'unsticky' => t('Not sticky'),
+        'marked' => t('Marked'),
+        'unmarked' => t('Not marked'),
         ),
       '#multiple' => FALSE,
     ),
@@ -1610,7 +1594,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $columns = isset($form_state['values']['columns']) ? $form_state['values']['columns'] : array();
 
   $header = array(// Define the tentative source header
-    'sticky' => array('data' => t('Sticky')),
+    'marked' => array('data' => t('Marked')),
     'nid' => array('data' => t('ID'), 'field' => 'n.' . $entity_id_key),
     'content_type' => array('data' => t('Content Type'), 'field' => 'type'),
     'title' => array('data' => t('Title'), 'field' => 'n.' . $label_col),
@@ -1823,19 +1807,14 @@ function lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid) {
   $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
   $query->addField('lingo_workflow', 'value', 'workflow');
 
+  // Marked value
+  $query->leftJoin('lingotek_entity_metadata', 'lingo_marked', 'lingo_marked.entity_type =\'' . $entity_type . '\' AND lingo_marked.entity_id = ' . $eid . ' and lingo_marked.entity_key = \'marked\'');
+  $query->addField('lingo_marked', 'value', 'marked');
+
   // Original source language of the entity, in case of source overwriting option
   if ($entity_type == 'node') {
     $query->leftJoin('lingotek_entity_metadata', 'lingo_orig_lang', $eid . ' = lingo_orig_lang.entity_id and lingo_orig_lang.entity_type =\'' . $entity_type . '\' and lingo_orig_lang.entity_key = \'original_language\'');
     $query->addField('lingo_orig_lang', 'value', 'original_lang');
-
-    // Node sticky value
-    $query->leftJoin('node', 'n', 'n.nid = ' . $eid);
-    $query->addField('n', 'sticky');
-  }
-  else {
-  // Other entity sticky value
-    $query->leftJoin('lingotek_entity_metadata', 'lingo_sticky', 'lingo_sticky.entity_type =\'' . $entity_type . '\' AND lingo_sticky.entity_id = ' . $eid . ' and lingo_sticky.entity_key = \'sticky\'');
-    $query->addField('lingo_sticky', 'value', 'sticky');
   }
 }
 
@@ -1925,7 +1904,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 
   $array_fix = array('upload_status', 'content_type', 'auto_upload', 'auto_download',
     'crowdsourcing', 'url_alias', 'translation_status',
-    'locale_progress_percent', 'status');
+    'locale_progress_percent', 'marked_status');
 
   foreach ($array_fix as $value) {
     if (isset($filters[$value]) && !is_array($filters[$value])) {
@@ -1985,48 +1964,26 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
     }
   }
 
-  // Status
-  if (isset($filters['status']) && !in_array('all', $filters['status'])) {
-    if ($entity_type == 'node'){
-      // Sticky
-      if(in_array("sticky", $filters['status'])){
-        $stickyQuery = db_select('node','n');
-        $stickyQuery->distinct();
-        $stickyQuery->fields('n',array('nid'));
-        $stickyQuery->condition('sticky', NODE_STICKY);
+  // Marked status
+  if (isset($filters['marked_status']) && !in_array('all', $filters['marked_status'])) {
+    // Marked
+    if(in_array("marked", $filters['marked_status'])){
+      $markedQuery = db_select('lingotek_entity_metadata','lingo_em');
+      $markedQuery->distinct();
+      $markedQuery->fields('lingo_em',array('entity_id'));
+      $markedQuery->condition('entity_key', 'marked');
 
-        $query->condition('lingo_entity_id.entity_id', $stickyQuery, 'IN');
-      }
-      // Unsticky
-      else if(in_array("unsticky", $filters['status'])){
-        $unStickyQuery = db_select('node','n');
-        $unStickyQuery->distinct();
-        $unStickyQuery->fields('n',array('nid'));
-        $unStickyQuery->condition('sticky', NODE_NOT_STICKY);
-
-        $query->condition('lingo_entity_id.entity_id', $unStickyQuery, 'IN');
-      }
+      $query->condition('lingo_entity_id.entity_id', $markedQuery, 'IN');
+      $query->condition('lingo_marked.value', LingotekSync::MARKED);
     }
-    else {
-      if(in_array("sticky", $filters['status'])){
-        $stickyQuery = db_select('lingotek_entity_metadata','lingo_em');
-        $stickyQuery->distinct();
-        $stickyQuery->fields('lingo_em',array('entity_id'));
-        $stickyQuery->condition('entity_key', 'sticky');
+    // Unmarked
+    else if(in_array("unmarked", $filters['marked_status'])){
+      $unMarkedQuery = db_select('lingotek_entity_metadata','lingo_em');
+      $unMarkedQuery->distinct();
+      $unMarkedQuery->fields('lingo_em',array('entity_id'));
+      $unMarkedQuery->condition('entity_key', 'marked');
 
-        $query->condition('lingo_entity_id.entity_id', $stickyQuery, 'IN');
-        $query->condition('lingo_sticky.value', LingotekSync::STICKY);
-      }
-      // Unsticky
-      else if(in_array("unsticky", $filters['status'])){
-        $unStickyQuery = db_select('lingotek_entity_metadata','lingo_em');
-        $unStickyQuery->distinct();
-        $unStickyQuery->fields('lingo_em',array('entity_id'));
-        $unStickyQuery->condition('entity_key', 'sticky');
-
-        $query->condition('lingo_entity_id.entity_id', $unStickyQuery, 'NOT IN');
-        //$query->condition('lingo_sticky.value', LingotekSync::NOT_STICKY);
-      }
+      $query->condition('lingo_entity_id.entity_id', $unMarkedQuery, 'NOT IN');
     }
   }
 
@@ -2146,9 +2103,9 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     $actions = lingotek_render_actions($entity_properties['type'], $entity_id, $disabled_class);
     $title = $entity_properties['label_col'] ? lingotek_render_title($row, $entity_properties, $GLOBALS['language']) : '';
 
-    $is_sticky = '';
-    if (isset($row->sticky) && $row->sticky == LingotekSync::STICKY) {
-      $is_sticky = 'Yes';
+    $is_marked = '';
+    if (isset($row->marked) && $row->marked == LingotekSync::MARKED) {
+      $is_marked = 'Yes';
     }
 
     $workflow_id = !empty($row->lingotek['workflow_id']) ? $row->lingotek['workflow_id'] : '';
@@ -2156,7 +2113,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
 
     // Build the data to be output for this row
     $data = array(
-      'sticky' => $is_sticky,
+      'marked' => $is_marked,
       'nid' => $row->{$entity_id_key} ? : t('??'),
       'title' => $title,
       'label' => isset($row->label) ? $row->label : '',

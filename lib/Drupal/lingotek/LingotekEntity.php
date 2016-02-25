@@ -363,12 +363,15 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function getUrl() {
     global $base_url;
     $path = entity_uri($this->entity_type, $this->entity);
+    $url = '';
 
     if ($path) {
       $hack = (object) array('language' => ''); // this causes the url function to not prefix the url with the current language the user is viewing the site in
-      return $base_url . "/lingotek/view/" . $this->getEntityType() . '/' . $this->getId() . '/{locale}';
+      $url = $base_url . "/lingotek/view/" . $this->getEntityType() . '/' . $this->getId() . '/{locale}';
     }
-    return '';
+
+    drupal_alter('lingotek_source_URL', $url);
+    return $url;
   }
 
   public function preDownload($lingotek_locale, $completed) {
