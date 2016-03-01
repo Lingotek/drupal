@@ -305,6 +305,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
           }
         }
+
+        // If we have an entity reference, we may want to embed it.
+        $field_type = $field_definitions[$k]->getType();
+        if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
+          $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
+          foreach ($entity->{$k} as $field_item) {
+            $embedded_entity_id = $field_item->get('target_id')->getValue();
+            $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
+            $embedded_data = $this->getSourceData($embedded_entity);
+            $data[$k][$field_item->getName()] = $embedded_data;
+          }
+        }
       }
     }
     return $data;
@@ -545,24 +557,52 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       /** @var ContentEntityInterface $translation */
       $translation = $entity->getTranslation($langcode);
       foreach ($data as $name => $field_data) {
-        foreach ($field_data as $delta => $delta_data) {
-          foreach ($delta_data as $property => $property_data) {
-            if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
-              $translation->get($name)->offsetGet($delta)->set($property, $property_data);
+        if ($this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
+          $field_definition = $entity->getFieldDefinition($name);
+
+          // First we check if this is a entity reference, and save the translated entity.
+          $field_type = $field_definition->getType();
+          if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
+            $target_entity_type_id = $field_definition->getFieldStorageDefinition()
+              ->getSetting('target_type');
+            $index = 0;
+            foreach ($field_data as $field_item) {
+              $embedded_entity_id = $entity->{$name}->get($index)
+                ->get('target_id')
+                ->getValue();
+              $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
+                ->load($embedded_entity_id);
+              $this->saveTargetData($embedded_entity, $langcode, $field_item);
+              ++$index;
+            }
+          }
+          else {
+            // Save regular fields.
+            foreach ($field_data as $delta => $delta_data) {
+              foreach ($delta_data as $property => $property_data) {
+                if (method_exists($translation->get($name)
+                  ->offsetGet($delta), "set")) {
+                  $translation->get($name)
+                    ->offsetGet($delta)
+                    ->set($property, $property_data);
+                }
+              }
             }
           }
         }
+        // We need to set the content_translation source so the files are synced
+        // properly. See https://www.drupal.org/node/2544696 for more information.
+        $translation->set('content_translation_source', $entity->getUntranslated()
+          ->language()
+          ->getId());
+        // If the entity supports revisions, ensure we don't create a new one.
+        if ($entity->getEntityType()->hasKey('revision')) {
+          $entity->setNewRevision(FALSE);
+        }
+        $entity->lingotek_processed = TRUE;
+        $translation->save();
+        $lock->release(__FUNCTION__);
       }
-      // We need to set the content_translation source so the files are synced
-      // properly. See https://www.drupal.org/node/2544696 for more information.
-      $translation->set('content_translation_source', $entity->getUntranslated()->language()->getId());
-      // If the entity supports revisions, ensure we don't create a new one.
-      if ($entity->getEntityType()->hasKey('revision')) {
-        $entity->setNewRevision(FALSE);
-      }
-      $entity->lingotek_processed = TRUE;
-      $translation->save();
-      $lock->release(__FUNCTION__);
     }
     else {
       $lock->wait(__FUNCTION__);

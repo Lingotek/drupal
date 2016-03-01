@@ -215,6 +215,8 @@ class LingotekFake implements LingotekInterface {
         return json_decode('{"system.site":{"name":"Drupal","slogan":"Las llamas son muy chulas"}}');
       case 'content_type':
         return json_decode('{"name":"Artículo","description":"Uso de <em>artículos<\/em> sensibles al tiempo contenidos como noticias, comunicados de prensa o entradas en el blog.","help":""}');
+      case 'node+taxonomy_term':
+        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_tags":[{"name":[{"value":"Camélido"}]},{"name":[{"value":"Hervíboro"}]}]}');
     }
   }
 
