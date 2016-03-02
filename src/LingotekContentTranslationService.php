@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -275,6 +276,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $translatable_fields[$field_name] = $definition;
       }
     }
+    $default_display = entity_get_display($entity->getEntityTypeId(), $entity->bundle(), 'default');
+    if ($default_display !== NULL) {
+      uksort($translatable_fields, function($a, $b) use ($default_display) {
+        return SortArray::sortByKeyString($default_display->getComponent($a), $default_display->getComponent($b), 'weight');
+      });
+    }
+
     $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
 
     $data = array();
