@@ -301,7 +301,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           // our settings.
           if (!$column_element) {
             $property_name = $storage_definitions[$k]->getMainPropertyName();
-            $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
+            // We double-check that it exists, as there are some buggy
+            // getMainPropertyName() implementations. E.g.: https://www.drupal.org/node/2683431
+            if (isset($fval->$property_name)) {
+              $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
+            }
           }
           else {
             $configured_properties = $this->lingotekConfiguration->getFieldPropertiesLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $k);
@@ -324,6 +328,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $embedded_data = $this->getSourceData($embedded_entity);
             $data[$k][$field_item->getName()] = $embedded_data;
           }
+        }
+        // If there is a path item, we need to handle it separately. See
+        // https://www.drupal.org/node/2681241
+        if ($field_type === 'path') {
+          $path = \Drupal::service('path.alias_storage')->load(
+            ['source' => '/' . $entity->toUrl()->getInternalPath(), 'langcode' => $entity->language()->getId()]);
+          // Property hardcoded until https://www.drupal.org/node/2683431 is fixed.
+          $data[$k][0]['alias'] = $path['alias'];
         }
       }
     }
@@ -583,6 +595,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $this->saveTargetData($embedded_entity, $langcode, $field_item);
               ++$index;
             }
+          }
+          // If there is a path item, we need to handle it separately. See
+          // https://www.drupal.org/node/2681241
+          else if ($field_type === 'path') {
+            $pid = NULL;
+            $source = '/' . $entity->toUrl()->getInternalPath();
+            $path = \Drupal::service('path.alias_storage')->load(['source' => $source, 'langcode' => $langcode]);
+            if ($path) {
+              $pid = $path['pid'];
+            }
+            $alias = $field_data[0]['alias'];
+            \Drupal::service('path.alias_storage')->save($source, $alias, $langcode, $pid);
           }
           else {
             // Save regular fields.

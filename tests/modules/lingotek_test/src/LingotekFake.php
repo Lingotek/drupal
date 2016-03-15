@@ -208,15 +208,17 @@ class LingotekFake implements LingotekInterface {
     $type = \Drupal::state()->get('lingotek.uploaded_content_type', 'node');
     switch ($type) {
       case 'node':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"uid":[{"target_id":"1"}],"status":[{"value":1}],"created":[{"value":1438095034}],"changed":[{"value":1438095483}],"promote":[{"value":1}],"sticky":[{"value":0}],"revision_log":[{"value":""}],"revision_translation_affected":[{"value":"1"}],"content_translation_source":[{"value":"und"}],"content_translation_outdated":[{"value":"0"}],"body":[{"value":"Las llamas son muy chulas","format":"plain_text","summary":""}]}');
+        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"uid":[{"target_id":"1"}],"status":[{"value":1}],"created":[{"value":1438095034}],"changed":[{"value":1438095483}],"promote":[{"value":1}],"sticky":[{"value":0}],"revision_log":[{"value":""}],"revision_translation_affected":[{"value":"1"}],"content_translation_source":[{"value":"und"}],"content_translation_outdated":[{"value":"0"}],"body":[{"value":"Las llamas son muy chulas","format":"plain_text","summary":""}]}', TRUE);
       case 'taxonomy_term':
-        return json_decode('{"name":[{"value":"Las llamas son chulas"}],"description":[{"value":"Las llamas son muy chulas"}]}');
+        return json_decode('{"name":[{"value":"Las llamas son chulas"}],"description":[{"value":"Las llamas son muy chulas"}]}', TRUE);
       case 'system.site':
-        return json_decode('{"system.site":{"name":"Drupal","slogan":"Las llamas son muy chulas"}}');
+        return json_decode('{"system.site":{"name":"Drupal","slogan":"Las llamas son muy chulas"}}', TRUE);
       case 'content_type':
-        return json_decode('{"name":"Artículo","description":"Uso de <em>artículos<\/em> sensibles al tiempo contenidos como noticias, comunicados de prensa o entradas en el blog.","help":""}');
+        return json_decode('{"name":"Artículo","description":"Uso de <em>artículos<\/em> sensibles al tiempo contenidos como noticias, comunicados de prensa o entradas en el blog.","help":""}', TRUE);
       case 'node+taxonomy_term':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_tags":[{"name":[{"value":"Camélido"}]},{"name":[{"value":"Hervíboro"}]}]}');
+        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_tags":[{"name":[{"value":"Camélido"}]},{"name":[{"value":"Hervíboro"}]}]}', TRUE);
+      case 'node+path':
+        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"path":[{"alias":"/las-llamas-son-chulas"}]}', TRUE);
     }
   }
 
