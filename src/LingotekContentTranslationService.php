@@ -335,7 +335,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $path = \Drupal::service('path.alias_storage')->load(
             ['source' => '/' . $entity->toUrl()->getInternalPath(), 'langcode' => $entity->language()->getId()]);
           // Property hardcoded until https://www.drupal.org/node/2683431 is fixed.
-          $data[$k][0]['alias'] = $path['alias'];
+          if ($path) {
+            $data[$k][0]['alias'] = $path['alias'];
+          }
         }
       }
     }
@@ -606,7 +608,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $pid = $path['pid'];
             }
             $alias = $field_data[0]['alias'];
-            \Drupal::service('path.alias_storage')->save($source, $alias, $langcode, $pid);
+            if ($alias !== NULL) {
+              \Drupal::service('path.alias_storage')->save($source, $alias, $langcode, $pid);
+            }
           }
           else {
             // Save regular fields.
