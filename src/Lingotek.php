@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorTrait;
@@ -212,14 +213,14 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  /**
+   * @param $doc_id
+   * @return bool
+   *
+   * @deprecated in 8.x-1.4. Use ::getDocumentStatus() instead.
+   */
   public function documentImported($doc_id) {
-    // For now, a passthrough to the API object so the controllers do not
-    // need to include that class.
-    $response = $this->api->getDocument($doc_id);
-    if ($response->getStatusCode() == '200') {
-      return TRUE;
-    }
-    return FALSE;
+    return $this->getDocumentStatus($doc_id);
   }
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
@@ -264,13 +265,17 @@ class Lingotek implements LingotekInterface {
   public function getDocumentStatus($doc_id) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
-    $response = $this->api->getDocumentStatus($doc_id);
-    if ($response->getStatusCode() == '200') {
-      $progress_json = json_decode($response->getBody(), TRUE);
-      $progress = !empty($progress_json['properties']['progress']) ? $progress_json['properties']['progress'] : NULL;
-      if ($progress === self::PROGRESS_COMPLETE) {
+    try {
+      $response = $this->api->getDocumentStatus($doc_id);
+      if ($response->getStatusCode() == '200') {
+        // If an exception didn't happen, the document is succesfully imported.
+        // The status value there is related with translation status, so we must
+        // ignore it.
         return TRUE;
       }
+    }
+    catch (LingotekApiException $exception) {
+      return FALSE;
     }
     return FALSE;
   }

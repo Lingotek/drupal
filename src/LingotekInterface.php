@@ -52,6 +52,12 @@ interface LingotekInterface {
    */
   public function updateDocument($doc_id, $content, $url = NULL);
 
+  /**
+   * @param $doc_id
+   * @return mixed
+   *
+   * @deprecated in 8.x-1.4. Use ::getDocumentStatus() instead.
+   */
   public function documentImported($doc_id);
 
   /**

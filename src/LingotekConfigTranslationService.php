@@ -362,7 +362,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function checkSourceStatus(ConfigEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
-    if ($document_id && $this->lingotek->documentImported($document_id)) {
+    if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
       return TRUE;
     }
@@ -707,7 +707,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function checkConfigSourceStatus($mapper_id) {
     $mapper = $this->mappers[$mapper_id];
     $document_id = $this->getConfigDocumentId($mapper);
-    if ($document_id && $this->lingotek->documentImported($document_id)) {
+    if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
       return TRUE;
     }

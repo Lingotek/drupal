@@ -82,7 +82,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkSourceStatus(ContentEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
-    if ($document_id && $this->lingotek->documentImported($document_id)) {
+    if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
       return TRUE;
     }

@@ -40,6 +40,23 @@ class LingotekApiUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::getDocument
+   */
+  public function testGetDocument() {
+    // Ensure that the right call is done for testing if a document is imported.
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->client->expects($this->at(0))
+      ->method('get')
+      ->with('/api/document/fancy-document-id/status')
+      ->will($this->returnValue($response));
+
+    $this->lingotek_api->getDocument('fancy-document-id');
+  }
+
+
+  /**
    * @covers ::addTranslation
    */
   public function testAddTranslation() {
