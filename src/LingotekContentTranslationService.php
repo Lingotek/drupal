@@ -294,17 +294,31 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         // Get the column translatability configuration.
         module_load_include('inc', 'content_translation', 'content_translation.admin');
         $column_element = content_translation_field_sync_widget($field_definitions[$k]);
-
         $field = $source_entity->get($k);
+        $field_type = $field_definitions[$k]->getType();
+
         foreach ($field as $fkey => $fval) {
           // If we have only one relevant column, upload that. If not, check
           // our settings.
           if (!$column_element) {
-            $property_name = $storage_definitions[$k]->getMainPropertyName();
-            // We double-check that it exists, as there are some buggy
-            // getMainPropertyName() implementations. E.g.: https://www.drupal.org/node/2683431
-            if (isset($fval->$property_name)) {
-              $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
+            $properties = $fval->getProperties();
+            foreach ($properties as $property_name => $property_value) {
+              $property_definition = $storage_definitions[$k]->getPropertyDefinition($property_name);
+              $data_type = $property_definition->getDataType();
+              if (($data_type === 'string')
+                  && !$property_definition->isComputed()) {
+                // We double-check that it exists, as there are some buggy
+                // getMainPropertyName() implementations. E.g.: https://www.drupal.org/node/2683431
+                if (isset($fval->$property_name) && !empty($fval->$property_name)) {
+                  $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
+                }
+                // If there is a path item, we need to handle that the pid is a
+                // string but we don't want to upload it. See
+                // https://www.drupal.org/node/2689253.
+                if ($field_type === 'path') {
+                  unset($data[$k][$fkey]['pid']);
+                }
+              }
             }
           }
           else {
@@ -319,7 +333,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
 
         // If we have an entity reference, we may want to embed it.
-        $field_type = $field_definitions[$k]->getType();
         if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
           $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
           foreach ($entity->{$k} as $field_item) {
@@ -327,16 +340,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
             $embedded_data = $this->getSourceData($embedded_entity);
             $data[$k][$field_item->getName()] = $embedded_data;
-          }
-        }
-        // If there is a path item, we need to handle it separately. See
-        // https://www.drupal.org/node/2681241
-        if ($field_type === 'path') {
-          $path = \Drupal::service('path.alias_storage')->load(
-            ['source' => '/' . $entity->toUrl()->getInternalPath(), 'langcode' => $entity->language()->getId()]);
-          // Property hardcoded until https://www.drupal.org/node/2683431 is fixed.
-          if ($path) {
-            $data[$k][0]['alias'] = $path['alias'];
           }
         }
       }
