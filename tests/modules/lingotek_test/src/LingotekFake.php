@@ -223,6 +223,8 @@ class LingotekFake implements LingotekInterface {
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"path":[{"alias":null}]}', TRUE);
       case 'node+link':
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_link":[{"title":"Enlace con fotos de llamas"}]}', TRUE);
+      case 'node+metatag':
+        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_metatag":[{"description":"Este texto ayudará al SEO a encontrar mis llamas."}]}', TRUE);
     }
   }
 

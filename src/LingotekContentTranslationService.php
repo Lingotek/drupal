@@ -342,6 +342,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $data[$k][$field_item->getName()] = $embedded_data;
           }
         }
+        if ($field_type === 'metatag') {
+          foreach ($entity->{$k} as $field_item) {
+            $metatag_serialized = $field_item->get('value')->getValue();
+            $metatags = unserialize($metatag_serialized);
+            if ($metatags) {
+              $data[$k][$field_item->getName()] = $metatags;
+            }
+          }
+        }
       }
     }
     return $data;
@@ -613,6 +622,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $alias = $field_data[0]['alias'];
             if ($alias !== NULL) {
               \Drupal::service('path.alias_storage')->save($source, $alias, $langcode, $pid);
+            }
+          }
+          else if ($field_type === 'metatag') {
+            $index = 0;
+            foreach ($field_data as $field_item) {
+              $metatag_value = serialize($field_item);
+              $translation->{$name}->set($index, $metatag_value);
+              ++$index;
             }
           }
           else {
