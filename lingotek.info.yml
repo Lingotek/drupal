@@ -11,3 +11,6 @@ dependencies:
   - language
   - content_translation
   - config_translation
+
+test_dependencies:
+  - metatag
