@@ -342,7 +342,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             $data[$k][$field_item->getName()] = $embedded_data;
           }
         }
-        if ($field_type === 'metatag') {
+        // Paragraphs use the entity_reference_revisions field type.
+        else if ($field_type === 'entity_reference_revisions') {
+          $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
+          foreach ($entity->{$k} as $field_item) {
+            $embedded_entity_id = $field_item->get('target_id')->getValue();
+            $embedded_entity_revision_id = $field_item->get('target_revision_id')->getValue();
+            $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
+            $embedded_data = $this->getSourceData($embedded_entity);
+            $data[$k][$field_item->getName()] = $embedded_data;
+          }
+        }
+        else if ($field_type === 'metatag') {
           foreach ($entity->{$k} as $field_item) {
             $metatag_serialized = $field_item->get('value')->getValue();
             $metatags = unserialize($metatag_serialized);
@@ -607,6 +618,30 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
               $this->saveTargetData($embedded_entity, $langcode, $field_item);
+              // Now the embedded entity is saved, but we need to ensure
+              // the reference will be saved too.
+              $translation->{$name}->set($index, $embedded_entity_id);
+              ++$index;
+            }
+          }
+          // Paragraphs module use 'entity_reference_revisions'.
+          else if ($field_type === 'entity_reference_revisions') {
+            $target_entity_type_id = $field_definition->getFieldStorageDefinition()
+              ->getSetting('target_type');
+            $index = 0;
+            foreach ($field_data as $field_item) {
+              $embedded_entity_id = $entity->{$name}->get($index)
+                ->get('target_id')
+                ->getValue();
+              $embedded_entity_revision_id = $entity->{$name}->get($index)
+                ->get('target_revision_id')
+                ->getValue();
+              $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
+                ->loadRevision($embedded_entity_revision_id);
+              $this->saveTargetData($embedded_entity, $langcode, $field_item);
+              // Now the embedded entity is saved, but we need to ensure
+              // the reference will be saved too.
+              $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity_revision_id]);
               ++$index;
             }
           }
