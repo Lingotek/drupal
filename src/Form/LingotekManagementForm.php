@@ -18,6 +18,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
@@ -651,7 +652,12 @@ class LingotekManagementForm extends FormBase {
   public function uploadDocument(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Uploading @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->uploadDocument($entity);
+      try {
+        $this->translationService->uploadDocument($entity);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The upload for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -669,7 +675,12 @@ class LingotekManagementForm extends FormBase {
   public function checkDocumentUploadStatus(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Checking status of @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->checkSourceStatus($entity);
+      try {
+        $this->translationService->checkSourceStatus($entity);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The upload status check for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -688,7 +699,12 @@ class LingotekManagementForm extends FormBase {
     $result = NULL;
     $context['message'] = $this->t('Requesting translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $result = $this->translationService->requestTranslations($entity);
+      try {
+        $result = $this->translationService->requestTranslations($entity);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The request for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -707,7 +723,12 @@ class LingotekManagementForm extends FormBase {
   public function checkTranslationStatuses(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Checking translation status for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->checkTargetStatuses($entity);
+      try {
+        $this->translationService->checkTargetStatuses($entity);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The request for @entity_type %title translation status failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -727,7 +748,12 @@ class LingotekManagementForm extends FormBase {
   public function checkTranslationStatus(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Checking translation status for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->checkTargetStatus($entity, $language);
+      try {
+        $this->translationService->checkTargetStatus($entity, $language);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The request for @entity_type %title translation status failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -748,7 +774,12 @@ class LingotekManagementForm extends FormBase {
     $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->addTarget($entity, $locale);
+      try {
+        $this->translationService->addTarget($entity, $locale);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The request for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -769,7 +800,12 @@ class LingotekManagementForm extends FormBase {
     $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->downloadDocument($entity, $locale);
+      try {
+        $this->translationService->downloadDocument($entity, $locale);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The download for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
@@ -791,7 +827,12 @@ class LingotekManagementForm extends FormBase {
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $entity->language()->getId()) {
           $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-          $this->translationService->downloadDocument($entity, $locale);
+          try {
+            $this->translationService->downloadDocument($entity, $locale);
+          }
+          catch (LingotekApiException $exception) {
+            drupal_set_message(t('The download for @entity_type %title @locale translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale)), 'error');
+          }
         }
       }
     }
@@ -811,7 +852,13 @@ class LingotekManagementForm extends FormBase {
   public function disassociate(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Disassociating all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      $this->translationService->deleteMetadata($entity);
+      try {
+        $this->translationService->deleteMetadata($entity);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
+
     }
     else {
       $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());

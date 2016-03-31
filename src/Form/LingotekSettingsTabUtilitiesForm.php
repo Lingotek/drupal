@@ -181,13 +181,25 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
 
   public function disassociateAllTranslations() {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $error = FALSE;
     $translation_service = \Drupal::service('lingotek.content_translation');
     $doc_ids = $translation_service->getAllLocalDocumentIds();
     foreach ($doc_ids as $doc_id) {
       $entity = $translation_service->loadByDocumentId($doc_id);
-      $translation_service->deleteMetadata($entity);
+      try {
+        $translation_service->deleteMetadata($entity);
+      }
+      catch (LingotekApiException $exception) {
+        $error = TRUE;
+        drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
     }
-    drupal_set_message($this->t('All translations have been disassociated.'));
+    if ($error) {
+      drupal_set_message($this->t('Some translations may have been disassociated, but some failed.'), 'warning');
+    }
+    else {
+      drupal_set_message($this->t('All translations have been disassociated.'));
+    }
   }
 
   public function updateCallbackUrl() {

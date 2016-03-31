@@ -36,6 +36,7 @@ class LingotekBatchController extends LingotekControllerBase {
     $batch = array(
       'title' => $this->t('Uploading content to Lingotek'),
       'operations' => $this->getUploadOperations($entity_type, array($entity_id)),
+      'error_message' => t('An error happened.'),
       'finished' => 'lingotek_operation_content_upload_finished',
       'file' => drupal_get_path('module', 'lingotek') . '/lingotek.batch.inc',
     );
