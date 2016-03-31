@@ -58,7 +58,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'auto_upload' => 1,
       'auto_download' => 1,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Add profile'));
+    $this->drupalPostForm(NULL, $edit, t('Save'));
 
     $this->assertText(t('The Lingotek profile has been successfully saved.'));
 
@@ -100,7 +100,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'vault' => 'test_vault',
       'workflow' => 'test_workflow',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Edit profile'));
+    $this->drupalPostForm(NULL, $edit, t('Save'));
 
     /** @var LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
@@ -151,7 +151,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'language_overrides[de][custom][auto_download]' => FALSE,
       'language_overrides[de][custom][workflow]' => 'default',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Edit profile'));
+    $this->drupalPostForm(NULL, $edit, t('Save'));
 
     /** @var LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
