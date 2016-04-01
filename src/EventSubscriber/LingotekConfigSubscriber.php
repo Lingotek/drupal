@@ -60,6 +60,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
   public static function getSubscribedEvents() {
     return [
       ConfigEvents::SAVE => 'onConfigSave',
+      ConfigEvents::IMPORT => ['onConfigImporterImport', 80],
     ];
   }
 
@@ -82,6 +83,31 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
           }
         }
 
+      }
+    }
+  }
+
+  /**
+   * Listener for the ConfigImporter import event.
+   */
+  public function onConfigImporterImport() {
+    $entity_types = \Drupal::service('lingotek.configuration')->getEnabledEntityTypes();
+    \Drupal::entityManager()->clearCachedDefinitions();
+
+    if (\Drupal::service('entity.definition_update_manager')->needsUpdates()) {
+      foreach ($entity_types as $entity_type_id => $entity_type) {
+        $storage_definitions = \Drupal::entityManager()
+          ->getFieldStorageDefinitions($entity_type_id);
+        $installed_storage_definitions = \Drupal::entityManager()
+          ->getLastInstalledFieldStorageDefinitions($entity_type_id);
+
+        foreach (array_diff_key($storage_definitions, $installed_storage_definitions) as $storage_definition) {
+          /** @var $storage_definition \Drupal\Core\Field\FieldStorageDefinitionInterface */
+          if ($storage_definition->getProvider() == 'lingotek') {
+            \Drupal::entityManager()
+              ->onFieldStorageDefinitionCreate($storage_definition);
+          }
+        }
       }
     }
   }
