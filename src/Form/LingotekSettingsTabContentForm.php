@@ -8,6 +8,7 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\ContentEntityType;
 
 /**
  * Configure Lingotek
@@ -179,7 +180,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $this->bundles = array();
 
     foreach ($entities as $entity) {
-      if ($entity instanceof \Drupal\Core\Entity\ContentEntityType && $entity->hasKey('langcode')) {
+      if ($entity instanceof ContentEntityType && $entity->hasKey('langcode')) {
         $bundle = \Drupal::entityManager()->getBundleInfo($entity->id());
         $this->bundles[$entity->id()] = $bundle;
       }
