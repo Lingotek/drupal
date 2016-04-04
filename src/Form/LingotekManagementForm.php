@@ -8,6 +8,8 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -19,6 +21,7 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
@@ -36,6 +39,7 @@ class LingotekManagementForm extends FormBase {
 
   use LingotekSetupTrait;
 
+  use LingotekManagementFormHelperTrait;
 
   /**
    * The language-locale mapper.
@@ -85,13 +89,6 @@ class LingotekManagementForm extends FormBase {
    * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    */
   protected $translationService;
-
-  /**
-   * The tempstore factory.
-   *
-   * @var \Drupal\user\PrivateTempStoreFactory
-   */
-  protected $tempStoreFactory;
 
   /**
    * The entity type id.
@@ -166,15 +163,18 @@ class LingotekManagementForm extends FormBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
+    $items_per_page = $this->getItemsPerPage();
+
+    /** @var PrivateTempStore $temp_store */
+    $temp_store = $this->tempStoreFactory->get('lingotek.management.filter.' . $this->entityTypeId);
 
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
     $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
-    $query = $this->entityQuery->get($this->entityTypeId)->pager(10);
+
+    $query = $this->entityQuery->get($this->entityTypeId)->pager($items_per_page);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
     // Filter results.
-    /** @var PrivateTempStore $temp_store */
-    $temp_store = $this->tempStoreFactory->get('lingotek.management.filter.' . $this->entityTypeId);
     $labelFilter = $temp_store->get('label');
     $bundleFilter = $temp_store->get('bundle');
     $profileFilter = $temp_store->get('profile');
@@ -318,8 +318,27 @@ class LingotekManagementForm extends FormBase {
       '#type' => 'pager',
       '#weight' => 50,
     ];
+    $form['items_per_page'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Results per page:'),
+      '#options' => [10 => 10, 25 => 25, 50 => 50, 100 => 100, 250 => 250, 500 => 500],
+      '#default_value' => $items_per_page,
+      '#weight' => 60,
+      '#ajax' => [
+        'callback' => [$this, 'itemsPerPageCallback'],
+        'event' => 'change',
+      ]
+    ];
     $form['#attached']['library'][] = 'lingotek/lingotek';
+    $form['#attached']['library'][] = 'lingotek/lingotek.manage';
     return $form;
+  }
+
+  public function itemsPerPageCallback(array &$form, FormStateInterface $form_state) {
+    $ajax_response = new AjaxResponse();
+    $this->setItemsPerPage($form_state->getValue('items_per_page'));
+    $ajax_response->addCommand(new InvokeCommand('#lingotek-management', 'submit'));
+    return $ajax_response;
   }
 
   /**

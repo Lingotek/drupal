@@ -1,0 +1,11 @@
+.form-item-items-per-page {
+    text-align: center;
+}
+
+    .form-item-items-per-page label {
+        display: inline;
+    }
+
+    .form-item-items-per-page select {
+        display: inline;
+    }

@@ -32,3 +32,9 @@ lingotek.settings:
   css:
     theme:
       css/lingotek.settings.css: {}
+
+lingotek.manage:
+  version: VERSION
+  css:
+    theme:
+      css/lingotek.management.css: {}
