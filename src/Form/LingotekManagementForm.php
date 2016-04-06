@@ -17,6 +17,7 @@ use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -461,6 +462,7 @@ class LingotekManagementForm extends FormBase {
       'operations' => $operations,
       'finished' => [$this, 'batchFinished'],
       'progressive' => TRUE,
+      'batch_redirect' => $this->getRequest()->getUri(),
     );
     batch_set($batch);
   }
@@ -468,8 +470,10 @@ class LingotekManagementForm extends FormBase {
 
   public function batchFinished($success, $results, $operations) {
     if ($success) {
+      $batch = &batch_get();
       drupal_set_message('Operations completed.');
     }
+    return new LocalRedirectResponse($batch['sets'][0]['batch_redirect']);
   }
 
   /**
@@ -623,7 +627,7 @@ class LingotekManagementForm extends FormBase {
       $entityInfo[$entity->id()] = [$language->getId() => $language->getId()];
     }
     $this->tempStoreFactory->get($this->entityTypeId . '_multiple_delete_confirm')->set($this->currentUser()->id(), $entityInfo);
-    $form_state->setRedirect($this->entityTypeId . '.multiple_delete_confirm', [], ['query' => $this->getDestinationArray()]);
+    $form_state->setRedirect($this->entityTypeId . '.multiple_delete_confirm', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
 
   /**
@@ -1119,13 +1123,13 @@ class LingotekManagementForm extends FormBase {
     if ($source_status == Lingotek::STATUS_IMPORTING) {
       $url = Url::fromRoute('lingotek.entity.check_upload',
         ['doc_id' => $this->translationService->getDocumentId($entity)],
-        ['query' => $this->getDestinationArray()]);
+        ['query' => $this->getDestinationWithQueryArray()]);
     }
     if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED) {
       if ($doc_id = $this->translationService->getDocumentId($entity)) {
         $url = Url::fromRoute('lingotek.entity.update',
           ['doc_id' => $doc_id],
-          ['query' => $this->getDestinationArray()]);
+          ['query' => $this->getDestinationWithQueryArray()]);
       }
       else {
         $url = Url::fromRoute('lingotek.entity.upload',
@@ -1133,7 +1137,7 @@ class LingotekManagementForm extends FormBase {
             'entity_type' => $entity->getEntityTypeId(),
             'entity_id' => $entity->id()
           ],
-          ['query' => $this->getDestinationArray()]);
+          ['query' => $this->getDestinationWithQueryArray()]);
       }
     }
     return $url;
@@ -1149,7 +1153,7 @@ class LingotekManagementForm extends FormBase {
             'doc_id' => $document_id,
             'locale' => $locale,
           ],
-          ['query' => $this->getDestinationArray()]);
+          ['query' => $this->getDestinationWithQueryArray()]);
     }
     if ($target_status == Lingotek::STATUS_PENDING ||
         $target_status == Lingotek::STATUS_EDITED) {
@@ -1158,7 +1162,7 @@ class LingotekManagementForm extends FormBase {
           'doc_id' => $document_id,
           'locale' => $locale,
         ],
-        ['query' => $this->getDestinationArray()]);
+        ['query' => $this->getDestinationWithQueryArray()]);
     }
     if ($target_status == Lingotek::STATUS_READY) {
       $url = Url::fromRoute('lingotek.entity.download',
@@ -1166,7 +1170,7 @@ class LingotekManagementForm extends FormBase {
           'doc_id' => $document_id,
           'locale' => $locale,
         ],
-        ['query' => $this->getDestinationArray()]);
+        ['query' => $this->getDestinationWithQueryArray()]);
     }
     if ($target_status == Lingotek::STATUS_CURRENT) {
       $url = Url::fromRoute('lingotek.workbench', [
@@ -1180,10 +1184,14 @@ class LingotekManagementForm extends FormBase {
           'doc_id' => $document_id,
           'locale' => $locale,
         ],
-        ['query' => $this->getDestinationArray()]);
+        ['query' => $this->getDestinationWithQueryArray()]);
     }
 
     return $url;
+  }
+
+  protected function getDestinationWithQueryArray() {
+    return ['destination' => \Drupal::request()->getRequestUri()];
   }
 
 }
