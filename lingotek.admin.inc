@@ -1350,6 +1350,15 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     );
   }
 
+  if (module_exists('group')) {
+    $form[$fkey]['lingotek_translate_groups'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable group translation'),
+      '#default_value' => (variable_get('lingotek_translate_groups') ? 1 : 0),
+      '#description' => t('If checked, translatable group fields will be managed by Lingotek.'),
+    );
+  }
+
   $form['prefs']['lingotek_hide_tlmi'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide top-level menu item'),
@@ -1432,6 +1441,20 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
 
       db_add_field('bean', 'language', $schema['bean']['fields']['language']);
       LingotekLog::warning('Language column has been added to the @module_name by Lingotek.', array('@module_name' => ('Bean')));
+    }
+  }
+  if (module_exists('group') && variable_get('lingotek_translate_groups')) {
+    if (!db_field_exists('groups', 'language')) {
+      $schema['groups']['fields']['language'] = array(
+        'type' => 'char',
+        'length' => 8,
+        'not null' => TRUE,
+        'default' => language_default()->language,
+        'description' => 'Language used for third party translation',
+      );
+
+      db_add_field('groups', 'language', $schema['groups']['fields']['language']);
+      LingotekLog::warning('Language column has been added to the @module_name by Lingotek.', array('@module_name' => ('Group')));
     }
   }
   menu_rebuild();

@@ -1647,6 +1647,7 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
 
   // Execute the query
   $table_data_raw = $query->distinct()->execute()->fetchAllAssoc($entity_id_key);
+
   //save filtered id's to session for group download/upload
   if (isset($_SESSION['grid_filters'][$entity_type])) {
     $no_limit_query = lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, 500000, $bundle_col, $info, $entity_properties, $eid);
@@ -2223,6 +2224,9 @@ function lingotek_render_title($row, $entity_properties, $language) {
     if ($entity_type == 'bean') {
       $row = lingotek_entity_load_single($entity_type, $row->bid);
     }
+    elseif ($entity_type == 'group') {
+      $row = lingotek_entity_load_single($entity_type, $row->gid);
+    }
     $uri = isset($info['uri callback']) ? call_user_func($info['uri callback'], $row) : '';
   }
 
@@ -2257,6 +2261,10 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   elseif ($entity_type == 'bean') {
     $id = $row->bid;
     // Assume all block entities are created in the site's default language.
+    $row->language = language_default()->language;
+  }
+  elseif ($entity_type == 'group') {
+    $id = $row->gid;
     $row->language = language_default()->language;
   }
   elseif (!empty($row->id)) {
