@@ -2527,6 +2527,13 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
     );
   }
 
+  if (module_exists('group') && variable_get('lingotek_translate_groups', FALSE)) {
+    $cleanup_functions['lingotek_cleanup_field_languages_for_groups'] = array(
+      'title' => t('Prepare group fields'),
+      'desc' => t('Sets all <i>language neutral</i> group fields to be @lang.', array('@lang' => language_default('name'))),
+    );
+  }
+
   $cleanup_functions['lingotek_admin_prepare_blocks'] = array(
     'title' => t('Prepare blocks'),
     'desc' => t('Update all blocks to be translatable in the <i>Languages</i> settings.'),
@@ -2830,4 +2837,8 @@ function lingotek_get_all_column_names($fields) {
     }
   }
   return $column_names;
+}
+
+function lingotek_helpey() {
+  $test = 0;
 }

@@ -486,6 +486,10 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
           $edited = TRUE;
         }
       }
+      elseif ($entity_type = 'group') {
+        $entity->{$field_name}[$entity->{$language_field}] = $entity->{$field_name}[LANGUAGE_NONE];
+        $edited = TRUE;
+      }
       else {
         if (!empty($entity->{$field_name}[LANGUAGE_NONE]) && empty($entity->{$field_name}[$entity->{$language_field}])) {
           $entity->{$field_name}[$entity->{$language_field}] = $entity->{$field_name}[LANGUAGE_NONE];

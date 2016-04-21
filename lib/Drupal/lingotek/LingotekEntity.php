@@ -348,6 +348,9 @@ class LingotekEntity implements LingotekTranslatableEntity {
       // Assume all block entities are created in the site's default language.
       return Lingotek::convertDrupal2Lingotek(language_default()->language);
     }
+    if ($this->entity_type == 'group') {
+      return Lingotek::convertDrupal2Lingotek(language_default()->language);
+    }
     return Lingotek::convertDrupal2Lingotek($this->language);
   }
 
@@ -433,6 +436,9 @@ class LingotekEntity implements LingotekTranslatableEntity {
   public function setLanguage($language = NULL) {
     if (empty($language)) {
       if ($this->entity_type == 'bean') {
+        $language = language_default()->language;
+      }
+      elseif ($this->entity_type == 'group') {
         $language = language_default()->language;
       }
       else {

@@ -1646,6 +1646,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
     }
   }
 
+  if ($entity_type == 'group' && $entity->language == LANGUAGE_NONE) {
+    $site_locale = Lingotek::convertDrupal2Lingotek(language_default()->language);
+    if (!empty($target_locales[$site_locale])) {
+      unset($target_locales[$site_locale]);
+    }
+  }
+
   // Add pending statuses for all target locales on successful upload only
   if ($success) {
     foreach (array_keys($target_locales) as $locale) {
@@ -1687,6 +1694,8 @@ function lingotek_entity_download_triggered($entity, $entity_type, $lingotek_loc
  */
 
 function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$context = FALSE) {
+  lingotek_helpey();
+
   global $_lingotek_client;
 
   if (is_numeric($entity)) {
@@ -2121,7 +2130,7 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  */
 function lingotek_entity_presave($entity, $entity_type) {
   // handle special entities
-  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean');
+  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean', 'group');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (!in_array($entity_type, $special_entities)) {
     return;

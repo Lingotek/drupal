@@ -1137,6 +1137,10 @@ function lingotek_cleanup_field_languages_for_beans() {
   lingotek_cleanup_field_languages('bean');
 }
 
+function lingotek_cleanup_field_languages_for_groups() {
+  lingotek_cleanup_field_languages('group');
+}
+
 /**
  * Report all Lingotek translations to the Entity Translation module
  */
@@ -2065,6 +2069,9 @@ function lingotek_entity_langcode($entity_type, $entity) {
   if ($entity_type == 'bean') {
     return language_default()->language;
   }
+  if ($entity_type == 'group') {
+    return language_default()->language;
+  }
   $info = entity_get_info($entity_type);
   // Default to string 'language' if no language-related entity key is found.
   $lang_key = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
@@ -2102,6 +2109,9 @@ function lingotek_entity_locale($entity_type, $entity) {
 function lingotek_entity_init_language($entity_type, $entity) {
   // For now, this is only a problem with bean entities not having a language at this point
   if ($entity_type == 'bean' && empty($entity->language)) {
+    $entity->language = language_default()->language;
+  }
+  if ($entity_type == 'group' && empty($entity->language)) {
     $entity->language = language_default()->language;
   }
 }
