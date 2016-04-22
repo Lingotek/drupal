@@ -1694,8 +1694,6 @@ function lingotek_entity_download_triggered($entity, $entity_type, $lingotek_loc
  */
 
 function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$context = FALSE) {
-  lingotek_helpey();
-
   global $_lingotek_client;
 
   if (is_numeric($entity)) {

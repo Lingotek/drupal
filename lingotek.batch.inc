@@ -480,15 +480,11 @@ function lingotek_field_language_data_cleanup_update_entity($entity_type, $entit
   if ($entity->$language_field != LANGUAGE_NONE && ($entity_type != 'node' || !lingotek_uses_node_translation($entity))) {
     $translatable_fields = lingotek_translatable_fields();
     foreach ($translatable_fields as $field_name) {
-      if ($entity_type == 'bean') {
+      if ($entity_type == 'bean' || $entity_type == 'group') {
         if (!empty($entity->{$field_name}[LANGUAGE_NONE]) && empty($entity->{$field_name}[language_default()->language])) {
           $entity->{$field_name}[$entity->{$language_field}] = $entity->{$field_name}[LANGUAGE_NONE];
           $edited = TRUE;
         }
-      }
-      elseif ($entity_type = 'group') {
-        $entity->{$field_name}[$entity->{$language_field}] = $entity->{$field_name}[LANGUAGE_NONE];
-        $edited = TRUE;
       }
       else {
         if (!empty($entity->{$field_name}[LANGUAGE_NONE]) && empty($entity->{$field_name}[$entity->{$language_field}])) {

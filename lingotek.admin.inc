@@ -2838,7 +2838,3 @@ function lingotek_get_all_column_names($fields) {
   }
   return $column_names;
 }
-
-function lingotek_helpey() {
-  $test = 0;
-}
