@@ -337,7 +337,7 @@ function lingotek_community_select_form() {
     }
     else {
       // 0 Results, we have an error.  Or, we should create a community for them.
-      drupal_set_message(t('Error Accessing Account. Please contact customer service.'), 'error');
+      drupal_set_message(t('No Integration Method setup for your account. Please contact customer support.'), 'error');
       drupal_goto(LINGOTEK_MENU_LANG_BASE_URL . '/account-settings'); // Shouldnt be here.  So something messed up.  Go back.
     }
   } // END:  Community Select Paths
