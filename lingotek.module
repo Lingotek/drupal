@@ -1284,8 +1284,9 @@ function lingotek_node_view($node, $view_mode) {
   if ($view_mode != 'full') {
     return;
   }
+
   // Return if there's no $source_node->lingotek
-  if (!user_access('administer')) {
+  if (!user_access('administer lingotek')) {
     return;
   }
 
@@ -1435,8 +1436,9 @@ function lingotek_entity_load($entities, $entity_type) {
       $filtered_entities[$k] = $v;
     }
   }
+
   // Don't perform any queries upon page load
-  if (!user_access('administer')) {
+  if (!user_access('administer lingotek')) {
     return;
   }
 
