@@ -22,6 +22,7 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -828,6 +829,10 @@ class LingotekManagementForm extends FormBase {
       }
       catch (LingotekApiException $exception) {
         drupal_set_message(t('The download for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
+      catch (LingotekContentEntityStorageException $storage_exception) {
+        drupal_set_message(t('The download for @entity_type %title failed because of the length of one field translation value: %table.',
+          array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '%table' => $storage_exception->getTable())), 'error');
       }
     }
     else {

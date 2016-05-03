@@ -211,6 +211,9 @@ class LingotekFake implements LingotekInterface {
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"uid":[{"target_id":"1"}],"status":[{"value":1}],"created":[{"value":1438095034}],"changed":[{"value":1438095483}],"promote":[{"value":1}],"sticky":[{"value":0}],"revision_log":[{"value":""}],"revision_translation_affected":[{"value":"1"}],"content_translation_source":[{"value":"und"}],"content_translation_outdated":[{"value":"0"}],"body":[{"value":"Las llamas son muy chulas","format":"plain_text","summary":""}]}', TRUE);
       case 'taxonomy_term':
         return json_decode('{"name":[{"value":"Las llamas son chulas"}],"description":[{"value":"Las llamas son muy chulas"}]}', TRUE);
+      case 'taxonomy_term_long_title':
+        $value = str_repeat("Las llamas son chulas", 100);
+        return json_decode('{"name":[{"value":"' . $value . '"}],"description":[{"value":"Las llamas son muy chulas"}]}', TRUE);
       case 'system.site':
         return json_decode('{"system.site":{"name":"Drupal","slogan":"Las llamas son muy chulas"}}', TRUE);
       case 'content_type':

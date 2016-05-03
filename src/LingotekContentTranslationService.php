@@ -11,11 +11,14 @@ use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\lingotek\Exception\LingotekException;
 
 /**
  * Service for managing Lingotek content translations.
@@ -486,14 +489,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         try {
           $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
           $langcode = $drupal_language->id();
-          $this->saveTargetData($entity, $langcode, $data);
-          // If the status was "Importing", and the target was added
-          // successfully, we can ensure that the content is current now.
-          $source_status = $this->getSourceStatus($entity);
-          if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
-            $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          $saved = $this->saveTargetData($entity, $langcode, $data);
+          if ($saved) {
+            // If the status was "Importing", and the target was added
+            // successfully, we can ensure that the content is current now.
+            $source_status = $this->getSourceStatus($entity);
+            if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
+              $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+            }
+            $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
           }
-          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
         }
         catch (Exception $e) {
           $transaction->rollback();
@@ -691,8 +696,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $entity->setNewRevision(FALSE);
         }
         $entity->lingotek_processed = TRUE;
-        $translation->save();
-        $lock->release(__FUNCTION__);
+        try {
+          $translation->save();
+        }
+        catch (EntityStorageException $storage_exception) {
+          throw new LingotekContentEntityStorageException($entity, $storage_exception);
+        }
+        finally {
+          $lock->release(__FUNCTION__);
+        }
       }
     }
     else {
