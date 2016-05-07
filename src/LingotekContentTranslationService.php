@@ -341,8 +341,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           foreach ($entity->{$k} as $field_item) {
             $embedded_entity_id = $field_item->get('target_id')->getValue();
             $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
-            $embedded_data = $this->getSourceData($embedded_entity);
-            $data[$k][$field_item->getName()] = $embedded_data;
+            // We may have orphan references, so ensure that they exist before
+            // continuing.
+            if ($embedded_entity !== NULL) {
+              $embedded_data = $this->getSourceData($embedded_entity);
+              $data[$k][$field_item->getName()] = $embedded_data;
+            }
           }
         }
         // Paragraphs use the entity_reference_revisions field type.
@@ -622,10 +626,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 ->getValue();
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
-              $this->saveTargetData($embedded_entity, $langcode, $field_item);
-              // Now the embedded entity is saved, but we need to ensure
-              // the reference will be saved too.
-              $translation->{$name}->set($index, $embedded_entity_id);
+              // We may have orphan references, so ensure that they exist before
+              // continuing.
+              if ($embedded_entity !== NULL) {
+                $this->saveTargetData($embedded_entity, $langcode, $field_item);
+                // Now the embedded entity is saved, but we need to ensure
+                // the reference will be saved too.
+                $translation->{$name}->set($index, $embedded_entity_id);
+              }
               ++$index;
             }
           }
