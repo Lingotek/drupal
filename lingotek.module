@@ -1284,7 +1284,9 @@ function lingotek_node_view($node, $view_mode) {
   if ($view_mode != 'full') {
     return;
   }
+
   $source_node = lingotek_get_source_node($node);
+
   if (!lingotek_managed_entity('node', $source_node) || !lingotek_enabled_langcode($language->language)) {
     return;
   }
@@ -1292,7 +1294,6 @@ function lingotek_node_view($node, $view_mode) {
   $lingotek_has_doc_id = !empty($source_node->lingotek['document_id']);
   $community_translation_allowed = !empty($source_node->lingotek['allow_community_translation']);
   if ($community_translation_allowed && $lingotek_has_doc_id && !empty($source_node->lingotek['profile']) && $source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
-
     if ($language->language != $source_node->language) {
       $link = lingotek_get_workbench_url($source_node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
       if ($link != '') {
@@ -1413,7 +1414,6 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
  * Implements hook_entity_load().
  */
 function lingotek_entity_load($entities, $entity_type) {
-
   if (empty($entities)) {
     return;
   }
@@ -1434,6 +1434,13 @@ function lingotek_entity_load($entities, $entity_type) {
     else {
       $filtered_entities[$k] = $v;
     }
+  }
+
+  // Check for any of the Lingotek permission roles to cut down on database queries
+  $has_permissions = user_access('administer lingotek') || user_access('manage projects') || user_access('translation') || user_access('use lingotek developer tools') ? TRUE : FALSE;
+
+  if (!$has_permissions) {
+    return;
   }
 
   if (empty($filtered_entities)) {
@@ -2057,11 +2064,10 @@ function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
 }
 
 function lingotek_normalize_special_field_language($entity_type, $entity, $read_only = TRUE) {
-
   $host_language = lingotek_get_host_language($entity_type, $entity, $read_only);
   $excluded_fields = &drupal_static(__FUNCTION__);
   if (!isset($excluded_fields)) {
-    if ($cache = cache_get('lingotek_excluded_fc_fields')) {
+    if ($cache = cache_get('lingotek__excluded_fc_fields')) {
       $excluded_fields = $cache->data;
     }
     else {
