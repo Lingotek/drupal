@@ -204,6 +204,13 @@ class LingotekSync {
       $query->condition('entity_id', $bean_source_check, "NOT IN");
     }
 
+    if (module_exists('group') && variable_get('lingotek_translate_groups')) {
+      $group_source_check = db_select('group', 'g');
+      $group_source_check->addField('g', 'gid');
+      $group_source_check->condition('g.language', $locale);
+      $query->condition('entity_id', $group_source_check, "NOT IN");
+    }
+
     $entities = $query->execute()->fetchAll();
 
     foreach ($entities as $e) {

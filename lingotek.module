@@ -1401,6 +1401,10 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
     if ($entity_type == 'bean') {
       $entity->language = language_default()->language;
     }
+    // Groups don't load a language property, so we'll assign it.
+    if ($entity_type == 'group') {
+      $entity->language = language_default()->language;
+    }
   }
   return $entity;
 }
@@ -1413,7 +1417,7 @@ function lingotek_entity_load($entities, $entity_type) {
   if (empty($entities)) {
     return;
   }
-  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term', 'bean');
+  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term', 'bean', 'group');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (in_array($entity_type, $special_entities)) {
     foreach ($entities as $e) {
@@ -1638,6 +1642,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if ($entity_type == 'bean' && $entity->language == LANGUAGE_NONE) {
     $site_locale = Lingotek::convertDrupal2Lingotek(language_default()->language);
     if(!empty($target_locales[$site_locale])){
+      unset($target_locales[$site_locale]);
+    }
+  }
+
+  if ($entity_type == 'group' && $entity->language == LANGUAGE_NONE) {
+    $site_locale = Lingotek::convertDrupal2Lingotek(language_default()->language);
+    if (!empty($target_locales[$site_locale])) {
       unset($target_locales[$site_locale]);
     }
   }
@@ -2117,7 +2128,7 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  */
 function lingotek_entity_presave($entity, $entity_type) {
   // handle special entities
-  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean');
+  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean', 'group');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (!in_array($entity_type, $special_entities)) {
     return;
