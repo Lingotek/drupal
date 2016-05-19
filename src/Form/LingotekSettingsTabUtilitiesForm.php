@@ -171,6 +171,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   public function switchDebugUtilities() {
     $value = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
     \Drupal::state()->set('lingotek.enable_debug_utilities', !$value);
+    \Drupal::service("router.builder")->rebuild();
+    drupal_set_message($this->t('Debug utilities has been %enabled.', ['%enabled' => !$value ? $this->t('enabled') : $this->t('disabled')]));
   }
 
   public function refreshResources() {

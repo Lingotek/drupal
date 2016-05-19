@@ -50,9 +50,12 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
       }
     }
 
+    $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
     foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
       if ($entity_type->isTranslatable()
           && \Drupal::config('lingotek.settings')->get('translate.entity.' . $entity_type_id)) {
+
+        // Add a route for bulk translation management.
         $path = "admin/lingotek/manage/{$entity_type_id}";
         $options = array('_admin_route' => TRUE);
         $defaults = array(
@@ -69,6 +72,30 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
         );
         $collection->add("lingotek.manage.{$entity_type_id}", $route);
 
+        // Add a route for view metadata.
+        if ($debug_enabled) {
+          $path = ($entity_type->hasLinkTemplate('canonical') ?
+            $entity_type->getLinkTemplate('canonical') : $entity_type->getLinkTemplate('edit_form'))
+            . '/metadata';
+          $defaults = ['entity_type_id' => $entity_type_id];
+          $options = [
+            'parameters' => [
+              $entity_type_id => [
+                'type' => 'entity:' . $entity_type_id,
+              ],
+            ],
+          ];
+          $route = new Route(
+            $path,
+            [
+              '_form' => 'Drupal\lingotek\Form\LingotekMetadataEditForm',
+              '_title' => 'Edit translation metadata',
+            ] + $defaults,
+            ['_permission' => 'administer lingotek'],
+            $options
+          );
+          $collection->add("lingotek.metadata.{$entity_type_id}", $route);
+        }
       }
     }
 

@@ -26,5 +26,3 @@ lingotek.manage_config:
 lingotek.manage.content:
   deriver: 'Drupal\lingotek\Plugin\Derivative\ContentTranslationLocalTasks'
   weight: 100
-  base_route: lingotek.manage
-  parent_id: lingotek.manage

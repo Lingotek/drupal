@@ -318,7 +318,7 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     );
 
     foreach (array_keys($form['actions']) as $action) {
-      if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+      if ($action != 'preview' && $action != 'lingotek_metadata' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
         // We need to act before the node itself is saved.
         $submit_actions = $form['actions'][$action]['#submit'];
         array_unshift($submit_actions, 'lingotek_form_content_entity_form_submit');
@@ -338,11 +338,15 @@ function lingotek_form_content_entity_form_submit(array $form, FormStateInterfac
   $translation_service = \Drupal::service('lingotek.content_translation');
   /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
   $lingotek_config = \Drupal::service('lingotek.configuration');
+  /** @var ContentEntityFormInterface $entity_form */
+  $entity_form = $form_state->getFormObject();
   /** @var ContentEntityInterface $entity */
-  $entity = $form_state->getFormObject()->getEntity();
+  $entity = $entity_form->getEntity();
 
-  $profile_id = $form_values['lingotek_translation_profile'];
-  $lingotek_config->setProfile($entity, $profile_id, FALSE);
+  if ($entity_form->getOperation() !== 'lingotek_metadata') {
+    $profile_id = $form_values['lingotek_translation_profile'];
+    $lingotek_config->setProfile($entity, $profile_id, FALSE);
+  }
 }
 
 /**

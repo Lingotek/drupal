@@ -10,6 +10,7 @@ namespace Drupal\lingotek\Plugin\Derivative;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,6 +18,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides dynamic local tasks for Lingotek content translation management.
  */
 class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriverInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The base plugin ID
@@ -59,19 +62,37 @@ class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriv
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
+    $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
+
     // Create tabs for all possible entity types.
     foreach ($this->lingotekConfiguration->getEnabledEntityTypes() as $entity_type_id => $entity_type) {
-      $translation_route_name = "lingotek.manage.$entity_type_id";
+      $has_canonical_path = $entity_type->hasLinkTemplate('canonical');
 
+      // Create the entries for the tabs in the bulk manage pages.
+      $translation_route_name = "lingotek.manage.$entity_type_id";
       $base_route_name = "lingotek.manage";
       $this->derivatives[$translation_route_name] = array(
           'entity_type_id' => $entity_type_id,
           'title' => $entity_type->getLabel(),
           'route_name' => $translation_route_name,
           'base_route' => $base_route_name,
-          'id' => $translation_route_name,
+          'parent_id' => 'lingotek.manage',
         ) + $base_plugin_definition;
+
+      // Create the entries for the metadata tabs in the canonical entity urls.
+      if ($debug_enabled) {
+        $metadata_route_name = "lingotek.metadata.$entity_type_id";
+        $base_route_name = "entity.$entity_type_id." . ($has_canonical_path ? "canonical" : "edit_form");
+        $this->derivatives[$metadata_route_name] = array(
+            'title' => t('Lingotek Metadata'),
+            'entity_type' => $entity_type_id,
+            'route_name' => $metadata_route_name,
+            'base_route' => $base_route_name,
+            'weight' => 100,
+          ) + $base_plugin_definition;
+      }
     }
+
     return parent::getDerivativeDefinitions($base_plugin_definition);
   }
 
