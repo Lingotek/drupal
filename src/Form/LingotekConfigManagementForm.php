@@ -1205,13 +1205,15 @@ class LingotekConfigManagementForm extends FormBase {
   protected function formatTranslations(ConfigMapperInterface $mapper, array $translations) {
     $languages = [];
     foreach ($translations as $langcode => $data) {
-      $languages[] = [
-        'language' => strtoupper($langcode),
-        'status' => strtolower($data['status']),
-        'status_text' => $this->getTargetStatusText($mapper, $data['status'], $langcode),
-        'url' => $data['url'],
-        'new_window' => $data['new_window']
-      ];
+      if ($this->languageManager->getLanguage($langcode)) {
+        $languages[] = [
+          'language' => strtoupper($langcode),
+          'status' => strtolower($data['status']),
+          'status_text' => $this->getTargetStatusText($mapper, $data['status'], $langcode),
+          'url' => $data['url'],
+          'new_window' => $data['new_window']
+        ];
+      }
     }
     return array(
       'data' => array(

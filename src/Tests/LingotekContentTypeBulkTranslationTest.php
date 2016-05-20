@@ -309,6 +309,24 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a config can be translated using the links on the management page.
+   */
+  public function testFormWorksAfterRemovingLanguageWithStatuses() {
+    // We need a language added and requested.
+    $this->testAddingLanguageAllowsRequesting();
+
+    // Delete a language.
+    ConfigurableLanguage::load('es')->delete();
+
+    // Go to the bulk config management page.
+    $this->drupalGet('admin/lingotek/config/manage');
+
+    // There is no link for the Spanish translation.
+    $this->assertNoLink('ES');
+    $this->assertLink('CA');
+  }
+
+  /**
    * Test that when a config is uploaded in a different locale that locale is used.
    */
   // ToDo: Add a test for this.

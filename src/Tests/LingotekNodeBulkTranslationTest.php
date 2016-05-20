@@ -346,6 +346,24 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a config can be translated using the links on the management page.
+   */
+  public function testFormWorksAfterRemovingLanguageWithStatuses() {
+    // We need a language added and requested.
+    $this->testAddingLanguageAllowsRequesting();
+
+    // Delete a language.
+    ConfigurableLanguage::load('es')->delete();
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    // There is no link for the Spanish translation.
+    $this->assertNoLink('ES');
+    $this->assertLink('CA');
+  }
+
+  /**
    * Test that when a node is uploaded in a different locale that locale is used.
    */
   public function testAddingContentInDifferentLocale() {
