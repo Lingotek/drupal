@@ -1019,6 +1019,7 @@ class LingotekManagementForm extends FormBase {
         }
       }
     }
+    ksort($translations);
     return $this->formatTranslations($entity, $translations);
   }
 

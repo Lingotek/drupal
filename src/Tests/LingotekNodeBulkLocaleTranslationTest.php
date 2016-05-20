@@ -139,6 +139,13 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_AR');
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_AR' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+
+    // Check that the order of target languages is always alphabetical.
+    $target_links = $this->xpath("//a[contains(@class,'language-icon')]");
+    $this->assertEqual(count($target_links), 3, 'The three languages appear as targets');
+    $this->assertEqual('DE-AT', (string)$target_links[0], 'DE-AT is the first language');
+    $this->assertEqual('ES', (string)$target_links[1], 'ES is the second language');
+    $this->assertEqual('ES-ES', (string)$target_links[2], 'ES-ES is the third language');
   }
 
   /**

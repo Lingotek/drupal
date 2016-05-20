@@ -1187,6 +1187,7 @@ class LingotekConfigManagementForm extends FormBase {
         }
       }
     }
+    ksort($translations);
     return $this->formatTranslations($mapper, $translations);
   }
 
