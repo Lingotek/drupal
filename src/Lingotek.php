@@ -39,6 +39,7 @@ class Lingotek implements LingotekInterface {
   const STATUS_NONE = 'NONE';
   const STATUS_REQUEST = 'REQUEST';
   const STATUS_PENDING = 'PENDING';
+  const STATUS_INTERMEDIATE = 'INTERMEDIATE';
   const STATUS_CURRENT = 'CURRENT';
   const STATUS_READY = 'READY';
   /**

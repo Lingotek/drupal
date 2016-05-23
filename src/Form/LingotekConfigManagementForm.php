@@ -1116,6 +1116,8 @@ class LingotekConfigManagementForm extends FormBase {
           return $language->label() . ' - ' . $this->t('Current');
         case Lingotek::STATUS_EDITED:
           return $language->label() . ' - ' . $this->t('Not current');
+        case Lingotek::STATUS_INTERMEDIATE:
+          return $language->label() . ' - ' . $this->t('In-progress (interim translation downloaded)');
         default:
           return $language->label() . ' - ' . ucfirst(strtolower($status));
       }
@@ -1343,7 +1345,8 @@ class LingotekConfigManagementForm extends FormBase {
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);
       }
-      if ($target_status == Lingotek::STATUS_CURRENT) {
+      if ($target_status == Lingotek::STATUS_CURRENT ||
+        $target_status == Lingotek::STATUS_INTERMEDIATE) {
         $url = Url::fromRoute('lingotek.workbench', [
           'doc_id' => $document_id,
           'locale' => $locale

@@ -954,6 +954,8 @@ class LingotekManagementForm extends FormBase {
         return $language->label() . ' - ' . $this->t('In-progress');
       case Lingotek::STATUS_READY:
         return $language->label() . ' - ' . $this->t('Ready for Download');
+      case Lingotek::STATUS_INTERMEDIATE:
+        return $language->label() . ' - ' . $this->t('In-progress (interim translation downloaded)');
       case Lingotek::STATUS_CURRENT:
         return $language->label() . ' - ' . $this->t('Current');
       case Lingotek::STATUS_EDITED:
@@ -1180,7 +1182,8 @@ class LingotekManagementForm extends FormBase {
         ],
         ['query' => $this->getDestinationWithQueryArray()]);
     }
-    if ($target_status == Lingotek::STATUS_CURRENT) {
+    if ($target_status == Lingotek::STATUS_CURRENT ||
+        $target_status == Lingotek::STATUS_INTERMEDIATE) {
       $url = Url::fromRoute('lingotek.workbench', [
         'doc_id' => $document_id,
         'locale' => $locale

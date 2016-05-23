@@ -64,6 +64,7 @@ class LingotekNotificationController extends LingotekControllerBase {
         }
         break;
 
+      case 'phase':
       case 'target': // translation (i.e., chinese) has been completed for a document
         //TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         //ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
@@ -85,11 +86,6 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
-
-      case 'phase':
-
-        break;
-
       default: //ignore
         $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
         $messages[] = "Not implemented.";

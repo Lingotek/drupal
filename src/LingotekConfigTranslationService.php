@@ -482,6 +482,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         return FALSE;
       }
       if ($data) {
+        // Check the real status, because it may still need review or anything.
+        $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
+
         $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
         $this->saveTargetData($entity, $langcode, $data);
         // If the status was "Importing", and the target was added
@@ -490,7 +493,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
           $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
         }
-        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+        if ($status) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+        }
+        else {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
+        }
         return TRUE;
       }
 

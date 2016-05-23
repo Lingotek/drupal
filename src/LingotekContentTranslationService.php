@@ -489,6 +489,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
 
       if ($data) {
+        // Check the real status, because it may still need review or anything.
+        $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
         $transaction = db_transaction();
         try {
           $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
@@ -501,7 +503,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
               $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
             }
-            $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+            if ($status) {
+              $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+            }
+            else {
+              $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
+            }
           }
         }
         catch (Exception $e) {

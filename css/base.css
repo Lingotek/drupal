@@ -98,3 +98,13 @@
   .language-icon.target-request a {
     color: #aaa;
   }
+.language-icon.source-intermediate,
+.language-icon.target-intermediate {
+  background-color: #8FD8D8;
+  border: 1px solid #ccc;
+  color: #fff;
+}
+  .language-icon.source-intermediate a,
+  .language-icon.target-intermediate a {
+    color: #aaa;
+  }
