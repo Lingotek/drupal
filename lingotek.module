@@ -2368,7 +2368,7 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
     }
     else {
       if (!$second_run) {
-        drupal_set_message(t('You will be changing the workflow for @number nodes.', array('@number' => count($nids))), 'warning');
+        drupal_set_message(t('You will be changing the workflow for @number comments.', array('@number' => count($nids))), 'warning');
       }
       $node = new stdClass();
       $node->lingotek = lingotek_get_global_profile();
