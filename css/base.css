@@ -19,12 +19,19 @@
 .language-icon {
   background-color:#80a49e;
   border-radius: 3px;
-  margin-right: 3px;
+  margin-right: 1px;
   padding: 4px 4px;
   color: #fff;
   white-space: nowrap;
   border: 1px solid #fff;
 }
+
+a.language-icon {
+  margin-bottom: 2px;
+  display: inline-block;
+  text-align: center;
+}
+
 .language-icon.source-pending ,
 .language-icon.target-pending {
   background-color: #CE2029;
