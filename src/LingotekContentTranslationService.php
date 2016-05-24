@@ -122,11 +122,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
     foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
-      $language = $value->language;
+      $langcode = $value->language;
       $current_status = $value->value;
-      if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
+      $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
+      if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentTranslationStatus($this->getDocumentId($entity), $locale)) {
         $current_status = Lingotek::STATUS_READY;
-        $this->setTargetStatus($entity, $language, $current_status);
+        $this->setTargetStatus($entity, $langcode, $current_status);
       }
     }
   }
