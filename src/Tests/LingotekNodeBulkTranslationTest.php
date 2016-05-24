@@ -191,6 +191,120 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node can be translated using the actions on the management page for multiple locales.
+   */
+  public function testNodeTranslationUsingActionsForMultipleLocales() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add two languages.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Request all translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'request_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check all statuses.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Download all translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    // Now the link is to the workbench, and it opens in a new tab.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
+  }
+
+  /**
+   * Tests that a node can be translated using the actions on the management page for multiple locales after editing it.
+   */
+  public function testNodeTranslationUsingActionsForMultipleLocalesAfterEditing() {
+    $this->testNodeTranslationUsingActionsForMultipleLocales();
+
+    // Edit the node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    // Check all statuses, after being edited.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Download all translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    // Now the link is to the workbench, and it opens in a new tab.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
+  }
+
+  /**
    * Tests that a node can be translated using the actions on the management page.
    */
   public function testNodeMultipleLanguageTranslationUsingActions() {

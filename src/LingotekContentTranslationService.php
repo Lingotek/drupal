@@ -124,7 +124,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
       $language = $value->language;
       $current_status = $value->value;
-      if (($current_status == Lingotek::STATUS_PENDING) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
+      if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentStatus($this->getDocumentId($entity))) {
         $current_status = Lingotek::STATUS_READY;
         $this->setTargetStatus($entity, $language, $current_status);
       }
