@@ -180,9 +180,16 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-language-overrides-es-custom-workflow', 'test_workflow');
     $this->assertOptionSelected('edit-language-overrides-de-custom-workflow', 'default');
     $this->assertOptionSelected('edit-language-overrides-en-custom-workflow', 'default');
+
+    // Assert that the override languages are present and ordered alphabetically.
+    $selects = $this->xpath('//details[@id="edit-language-overrides"]/*/*//select');
+    // There must be 2 select options for each of the 3 languages.
+    $this->assertEqual(count($selects), 2*3, 'There are options for all the potential language overrides.');
+    // And the first one must be German alphabetically.
+    $this->assertEqual((string)$selects[0]['id'], 'edit-language-overrides-de-overrides', 'Languages are ordered alphabetically.');
   }
 
-    /**
+  /**
    * Asserts that a field in the current page is disabled.
    *
    * @param string $id

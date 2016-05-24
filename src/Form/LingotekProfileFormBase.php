@@ -110,6 +110,8 @@ class LingotekProfileFormBase extends EntityForm {
       '#tree' => TRUE,
     );
     $languages = \Drupal::languageManager()->getLanguages();
+    // We want to have them alphabetically.
+    ksort($languages);
     foreach ($languages as $langcode => $language) {
       $form['language_overrides'][$langcode] = array(
         'overrides' => array(
