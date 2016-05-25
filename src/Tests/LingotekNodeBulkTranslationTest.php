@@ -304,6 +304,46 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
   }
 
+  public function testNodeTranslationUsingActionsForMultipleLocalesAfterEditingWithPendingPhases() {
+    $this->testNodeTranslationUsingActionsForMultipleLocales();
+
+    // Edit the node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Go to the bulk node management page.
+    $this->drupalGet('admin/lingotek/manage/node');
+
+    // Ensure we won't get a completed document because there are phases pending.
+    \Drupal::state()->set('lingotek.document_completion', FALSE);
+
+    // Check all statuses, after being edited.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Download all translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    // Now the link is to the workbench, and it opens in a new tab.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
+  }
+
   /**
    * Tests that a node can be translated using the actions on the management page.
    */

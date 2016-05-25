@@ -125,9 +125,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $langcode = $value->language;
       $current_status = $value->value;
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-      if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentTranslationStatus($this->getDocumentId($entity), $locale)) {
-        $current_status = Lingotek::STATUS_READY;
-        $this->setTargetStatus($entity, $langcode, $current_status);
+      $document_id = $this->getDocumentId($entity);
+      if ($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) {
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) ||
+            // We may not be ready, but some phases must be complete. Let's try to
+            // download data, and if there is anything, we can assume a phase is
+            // completed.
+            // ToDo: Instead of downloading would be nice if we could check phases.
+            $this->lingotek->downloadDocument($document_id, $locale)) {
+          $current_status = Lingotek::STATUS_READY;
+          $this->setTargetStatus($entity, $langcode, $current_status);
+        }
       }
     }
   }
