@@ -2032,10 +2032,12 @@ function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
 
   $site_default_lang = language_default();
   $site_default_langcode = $site_default_lang->language;
-
-  if (!$read_only && isset($_POST['language'])) {
-    return $_POST['language'];
+  $host_language = $_POST['language'];
+  dpm($host_language);  
+  if (!$read_only && isset($host_language)) {
+    return $host_language;
   }
+  
   $host = (module_exists('field_collection') && $entity_type == 'field_collection_item' ? lingotek_get_fc_parent($entity) : NULL);
   if (!$host) {
     // unable to locate parent.  Abort.

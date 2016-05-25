@@ -10,7 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
 		$store = OAuthStore::instance();
 		$user_id = 1; // this should not be hardcoded, of course
-		$key   = $store->updateConsumer($_POST, $user_id, true);
+		$params = array();
+		foreach ($_POST as $key => $value){
+			$params[$key] = $value;
+		}
+		$key = $store->updateConsumer($params, $user_id, true);
 
 		$c = $store->getConsumer($key, $user_id);
 		echo 'Your consumer key is: <strong>' . $c['consumer_key'] . '</strong><br />';

@@ -140,8 +140,11 @@ function lingotek_dashboard_command_ajax() {
   switch ($method) {
     case 'POST': // Add/Insert Target Language
       $message = 'POST: Insert a new Target Language';
-      $lingotek_locale = $_POST['code'];
-      $parameters = $_POST;
+      $lingotek_locale = check_plain($_POST['code']);
+      $parameters = array();
+      foreach($_POST as $key => $value){
+        $parameters[$key] = check_plain($value);
+      }
       if (strlen($lingotek_locale) > 1) {
         // Adds the language locale to the local list of languages and to the Lingotek project (via the API).
         $include_all_docs_in_project = variable_get('lingotek_enable_language_specific_profiles', FALSE) ? FALSE : TRUE;
@@ -171,8 +174,13 @@ function lingotek_dashboard_command_ajax() {
     default:
       // Retrieve the Target Languages and Status
       $message = 'GET: retrieve the details of the locale(s)';
+
       $parameters = $_GET;
-      $response = isset($_GET['code']) ? lingotek_get_language_details($_GET['code']) : lingotek_get_language_details();
+      $temp = array();
+      foreach ($_GET as $key => $value){  
+        $temp[$key] = check_plain($value);
+      }
+      $response = isset($temp['code']) ? lingotek_get_language_details($temp['code']) : lingotek_get_language_details();
       break;
   }
   //lingotek_json_output_cors(array('response' => $response, 'message' => $message, 'data' => $data, 'method' => $method  ));

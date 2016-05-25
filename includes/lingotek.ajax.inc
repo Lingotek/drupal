@@ -26,19 +26,21 @@ function lingotek_page_mark_phases_complete($node) {
         $targets = LingotekDocument::load($lingotek_document_id)->translationTargets();
         $api = LingotekApi::instance();
         foreach ($_POST['targets'] as $target) {
-          if ($remote_target = $api->getTranslationTarget($targets[$target]->id)) {
-            $current_phase_id = lingotek_current_phase($remote_target->phases);
-            if ($api->markPhaseComplete($current_phase_id)) {
-              drupal_set_message(t('Marked phase complete for @language', array('@language' => $languages[$target]->name)));
+            $target = check_plain($target);
+            if ($remote_target = $api->getTranslationTarget($targets[$target]->id)) {
+              $current_phase_id = lingotek_current_phase($remote_target->phases);
+              if ($api->markPhaseComplete($current_phase_id)) {
+                drupal_set_message(t('Marked phase complete for @language', array('@language' => $languages[$target]->name)));
+              }
+              else {
+                drupal_set_message(t('Unable to mark the current phase as complete for @language.',
+                  array('@language' => $languages[$target]->name)), 'error');
+              }
             }
             else {
               drupal_set_message(t('Unable to mark the current phase as complete for @language.',
                 array('@language' => $languages[$target]->name)), 'error');
             }
-          }
-          else {
-            drupal_set_message(t('Unable to mark the current phase as complete for @language.',
-              array('@language' => $languages[$target]->name)), 'error');
           }
         }
       }

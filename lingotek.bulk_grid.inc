@@ -39,7 +39,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
     if (!isset($_SESSION['grid_custom_parameters'])) {
       $_SESSION['grid_custom_parameters'] = array();
     }
-    $_SESSION['grid_custom_parameters'][$entity_type] = $_GET;
+    $temp = array();
+    foreach ($_GET as $key => $value){  
+        $temp[$key] = check_plain($value);
+    }
+    $_SESSION['grid_custom_parameters'][$entity_type] = $temp;
     if ($_SESSION['grid_custom_parameters'][$entity_type]['q']) {
       unset($_SESSION['grid_custom_parameters'][$entity_type]['q']);
     }
