@@ -115,7 +115,7 @@ function assert_request_vars_all()
 	{		
 		foreach(func_get_args() as $a)
 		{
-			if (!isset($check_plain(row[$a]))
+			if (!isset($check_plain(row[$a])))
 			{
 				header('HTTP/1.1 400 Bad Request');
 				echo 'Bad request.';
