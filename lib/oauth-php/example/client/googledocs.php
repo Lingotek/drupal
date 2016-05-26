@@ -78,7 +78,7 @@ try
 		// echo "oauth_verifier = '" . $oauthVerifier . "'<br/>";
 		$params = array();
 		foreach($_GET as $key => $value){
-			$params[$key] = check_plain($value);
+			$params[$key] = filter_xss($value);
 		}
 		$tokenResultParams = $params;
 		

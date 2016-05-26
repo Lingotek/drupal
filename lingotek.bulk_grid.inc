@@ -41,7 +41,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     }
     $temp = array();
     foreach ($_GET as $key => $value){  
-        $temp[$key] = check_plain($value);
+        $temp[$key] = filter_xss($value);
     }
     $_SESSION['grid_custom_parameters'][$entity_type] = $temp;
     if ($_SESSION['grid_custom_parameters'][$entity_type]['q']) {
