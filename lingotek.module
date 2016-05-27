@@ -1284,7 +1284,9 @@ function lingotek_node_view($node, $view_mode) {
   if ($view_mode != 'full') {
     return;
   }
+
   $source_node = lingotek_get_source_node($node);
+
   if (!lingotek_managed_entity('node', $source_node) || !lingotek_enabled_langcode($language->language)) {
     return;
   }
@@ -1292,7 +1294,6 @@ function lingotek_node_view($node, $view_mode) {
   $lingotek_has_doc_id = !empty($source_node->lingotek['document_id']);
   $community_translation_allowed = !empty($source_node->lingotek['allow_community_translation']);
   if ($community_translation_allowed && $lingotek_has_doc_id && !empty($source_node->lingotek['profile']) && $source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
-
     if ($language->language != $source_node->language) {
       $link = lingotek_get_workbench_url($source_node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
       if ($link != '') {
@@ -1401,6 +1402,10 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
     if ($entity_type == 'bean') {
       $entity->language = language_default()->language;
     }
+    // Groups don't load a language property, so we'll assign it.
+    if ($entity_type == 'group') {
+      $entity->language = language_default()->language;
+    }
   }
   return $entity;
 }
@@ -1409,11 +1414,10 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
  * Implements hook_entity_load().
  */
 function lingotek_entity_load($entities, $entity_type) {
-
   if (empty($entities)) {
     return;
   }
-  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term', 'bean');
+  $default_special_entities = array('field_collection_item', 'message_type', 'taxonomy_term', 'bean', 'group');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (in_array($entity_type, $special_entities)) {
     foreach ($entities as $e) {
@@ -1430,6 +1434,13 @@ function lingotek_entity_load($entities, $entity_type) {
     else {
       $filtered_entities[$k] = $v;
     }
+  }
+
+  // Check for any of the Lingotek permission roles to cut down on database queries
+  $has_permissions = user_access('administer lingotek') || user_access('manage projects') || user_access('translation') || user_access('use lingotek developer tools') ? TRUE : FALSE;
+
+  if (!$has_permissions) {
+    return;
   }
 
   if (empty($filtered_entities)) {
@@ -1638,6 +1649,13 @@ function lingotek_entity_upload($entity, $entity_type, &$context = array()) {
   if ($entity_type == 'bean' && $entity->language == LANGUAGE_NONE) {
     $site_locale = Lingotek::convertDrupal2Lingotek(language_default()->language);
     if(!empty($target_locales[$site_locale])){
+      unset($target_locales[$site_locale]);
+    }
+  }
+
+  if ($entity_type == 'group' && $entity->language == LANGUAGE_NONE) {
+    $site_locale = Lingotek::convertDrupal2Lingotek(language_default()->language);
+    if (!empty($target_locales[$site_locale])) {
       unset($target_locales[$site_locale]);
     }
   }
@@ -2046,11 +2064,10 @@ function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
 }
 
 function lingotek_normalize_special_field_language($entity_type, $entity, $read_only = TRUE) {
-
   $host_language = lingotek_get_host_language($entity_type, $entity, $read_only);
   $excluded_fields = &drupal_static(__FUNCTION__);
   if (!isset($excluded_fields)) {
-    if ($cache = cache_get('lingotek_excluded_fc_fields')) {
+    if ($cache = cache_get('lingotek__excluded_fc_fields')) {
       $excluded_fields = $cache->data;
     }
     else {
@@ -2117,7 +2134,7 @@ function lingotek_normalize_special_field_language($entity_type, $entity, $read_
  */
 function lingotek_entity_presave($entity, $entity_type) {
   // handle special entities
-  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean');
+  $default_special_entities = array('field_collection_item', 'taxonomy_term', 'message_type', 'fieldable_panels_pane', 'bean', 'group');
   $special_entities = variable_get('lingotek_special_entity_types', $default_special_entities);
   if (!in_array($entity_type, $special_entities)) {
     return;
@@ -2351,7 +2368,7 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
     }
     else {
       if (!$second_run) {
-        drupal_set_message(t('You will be changing the workflow for @number nodes.', array('@number' => count($nids))), 'warning');
+        drupal_set_message(t('You will be changing the workflow for @number comments.', array('@number' => count($nids))), 'warning');
       }
       $node = new stdClass();
       $node->lingotek = lingotek_get_global_profile();
