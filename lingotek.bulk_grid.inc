@@ -87,12 +87,10 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $page = pager_find_page() + 1; // Get current page from url
   $limit_select = (isset($_SESSION['limit_select']) ? (int)$_SESSION['limit_select'] : 0);
 
-  if ($entity_type == 'config') {
-    $total_entity_rows = lingotek_config_get_rows($entity_type, $form, $form_state, TRUE);
-  }
-  else {
-    $total_entity_rows = lingotek_grid_get_rows($entity_type, $form, $form_state, TRUE);
-  }
+  // Run query to get table rows
+  $table_data = $entity_type == 'config' ? lingotek_config_get_rows($entity_type, $form, $form_state) : lingotek_grid_get_rows($entity_type, $form, $form_state);
+
+  $total_entity_rows = count($table_data);
 
   if ((int)($page - 1) * $limit_select > $total_entity_rows) {
     // reset the page to be the last set of results
@@ -103,34 +101,11 @@ function lingotek_bulk_grid_form($form, $form_state) {
     }
   }
 
-  $filter_set = FALSE;
-  if (isset($_SESSION['grid_filters'][$entity_type])) {
-    foreach ($_SESSION['grid_filters'][$entity_type] as $key => $value) {
-      if($key === 'filtered_ids' || $key === 'filtered_config_lids') {//these keys are filter metadata
-        continue;
-      }
-      if (is_array($value)) {
-        $keys = array_keys($value);
-        if (count($keys) == 1) {
-          if ($keys[0] !== '' && $keys[0] !== 'all') {
-            $filter_set = TRUE;
-          }
-        }
-        elseif (count($keys) > 1) {
-          $filter_set = TRUE;
-        }
-      }
-      else {
-        // $value === '0' accounts for the case of the automatic profile
-        if ((!empty($value) && $value !== 'all') || $value === '0') {
-          $filter_set = TRUE;
-        }
-      }
-    }
-  }
 
-  // Run query to get table rows
-  $table_data = $entity_type == 'config' ? lingotek_config_get_rows($entity_type, $form, $form_state) : lingotek_grid_get_rows($entity_type, $form, $form_state);
+  $filter_set = lingotek_filter_set_check($entity_type);
+
+
+
 
   $results_first = (($page - 1) * $limit_select) + 1;
   $results_last = $results_first + count($table_data) - 1;
@@ -358,6 +333,36 @@ function lingotek_bulk_grid_form($form, $form_state) {
   );
 
   return $form;
+}
+
+function lingotek_filter_set_check($entity_type) {
+  $filter_set = FALSE;
+  if (isset($_SESSION['grid_filters'][$entity_type])) {
+    foreach ($_SESSION['grid_filters'][$entity_type] as $key => $value) {
+      if($key === 'filtered_ids' || $key === 'filtered_config_lids') {//these keys are filter metadata
+        continue;
+      }
+      if (is_array($value)) {
+        $keys = array_keys($value);
+        if (count($keys) == 1) {
+          if ($keys[0] !== '' && $keys[0] !== 'all') {
+            $filter_set = TRUE;
+          }
+        }
+        elseif (count($keys) > 1) {
+          $filter_set = TRUE;
+        }
+      }
+      else {
+        // $value === '0' accounts for the case of the automatic profile
+        if ((!empty($value) && $value !== 'all') || $value === '0') {
+          $filter_set = TRUE;
+        }
+      }
+    }
+  }
+
+  return $filter_set;
 }
 
 function lingotek_grid_action_options($entity_type) {
@@ -1648,8 +1653,9 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   // Execute the query
   $table_data_raw = $query->distinct()->execute()->fetchAllAssoc($entity_id_key);
 
+
   //save filtered id's to session for group download/upload
-  if (isset($_SESSION['grid_filters'][$entity_type])) {
+  if (lingotek_filter_set_check($entity_type)) {
     $no_limit_query = lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, 500000, $bundle_col, $info, $entity_properties, $eid);
     lingotek_bulk_grid_filter_query($no_limit_query, $entity_type, $eid, $label_col, $info);
     $no_limit_query_raw = $no_limit_query->distinct()->execute();
@@ -1680,7 +1686,6 @@ function lingotek_bulk_grid_refine_source_header($header, $columns) {
 
 function lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, $limit, $bundle_col, $info, $entity_properties, $eid) {
   $base_table = $info['base table'];
-
   if ($count_only) {
     $query = db_select('' . $base_table . '', 'n');
   }
@@ -1714,6 +1719,7 @@ function lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $lab
   lingotek_bulk_grid_query_add_statuses($query, $entity_type, $eid);
   lingotek_bulk_grid_query_add_localized_title($query, $entity_type, $eid, $label_col);
   lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid);
+
 
   return $query;
 }
