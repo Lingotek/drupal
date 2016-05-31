@@ -140,7 +140,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
   $last_field_name = NULL;
 
   foreach ($xml as $field_name => $content) {
-
     // URL alias translation (currently available for nodes only)
     if ($entity_type == 'node' && $field_name == 'url_alias' && $url_alias_translation == 1) {
       lingotek_save_url_alias($content, $entity, $langcode);
@@ -634,4 +633,3 @@ function lingotek_get_workbench_url_by_phases($document_id, $phases, $label = FA
 
   return $l;
 }
-
