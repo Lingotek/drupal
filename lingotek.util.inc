@@ -2069,6 +2069,10 @@ function lingotek_entity_langcode($entity_type, $entity) {
   if ($entity_type == 'bean') {
     return language_default()->language;
   }
+  // See if the group's source isn't the same as the site default
+  if ($entity_type == 'group') {
+    return lingotek_get_group_source($entity->gid);
+  }
 
   $info = entity_get_info($entity_type);
   // Default to string 'language' if no language-related entity key is found.
