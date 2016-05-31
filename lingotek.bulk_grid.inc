@@ -91,7 +91,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
   $table_data = $entity_type == 'config' ? lingotek_config_get_rows($entity_type, $form, $form_state) : lingotek_grid_get_rows($entity_type, $form, $form_state);
 
   $total_entity_rows = count($table_data);
-  if ((int)(($page - 1) * $limit_select) / ($page - 1) < $total_entity_rows || $total_entity_rows == 0) {
+  if ((int)($limit_select) < $total_entity_rows || $total_entity_rows == 0) {
     // reset the page to be the last set of results
     $page = 1;
     $_SESSION['grid_custom_parameters'][$entity_type]['page'] = 0;
