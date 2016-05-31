@@ -2278,7 +2278,8 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   }
   elseif ($entity_type == 'group') {
     $id = $row->gid;
-    $row->language = language_default()->language;
+    $language = lingotek_get_group_source($id);
+    $row->language = $language;
   }
   elseif (!empty($row->id)) {
     $id = $row->id;
@@ -2356,6 +2357,11 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
 }
 
 function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statuses = array(), $disabled = FALSE, $source_language = NULL, $allow_source_overwriting = FALSE, $allow_target_localization = FALSE, $non_lingotek_config_translations = array()) {
+
+  if ($entity_type == 'group') {
+    $source_language = lingotek_get_group_source($entity_id);
+  }
+
   $icons = array();
 
   $legend = array(

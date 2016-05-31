@@ -320,7 +320,7 @@ function lingotek_entity_xml_body($entity_type, $entity) {
 
   // Workaround for the group module's source-language problem.
   if ($entity_type == 'group') {
-    $entity->language = language_default()->language;
+    $entity->language = lingotek_get_group_source($entity->gid);
   }
 
   $content_obj = lingotek_xml_fields($entity_type, $entity, $translatable, $entity->language);
@@ -1699,7 +1699,7 @@ function lingotek_cleanup_field_collection_fields() {
     foreach ($fc_langs as $fc_lang) {
       $fc_fields_found += (int) $fc_lang;
     }
-    db_query("UPDATE IGNORE {field_data_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "'");
+    db_query("UPDATE IGNORE {field_data_" . $fc_field_name . "} SET language = '" . LANGUAGE_NONE . "' where entity_type <> 'group'");
 
     // Find all unnecessary fields (language-specific) for removal.
     $fc_langs = lingotek_cleanup_get_dirty_field_collection_fields("field_data_" . $fc_field_name);
@@ -2069,9 +2069,7 @@ function lingotek_entity_langcode($entity_type, $entity) {
   if ($entity_type == 'bean') {
     return language_default()->language;
   }
-  if ($entity_type == 'group') {
-    return language_default()->language;
-  }
+
   $info = entity_get_info($entity_type);
   // Default to string 'language' if no language-related entity key is found.
   $lang_key = !empty($info['entity keys']['language']) ? $info['entity keys']['language'] : 'language';
@@ -2322,4 +2320,19 @@ function lingotek_cache_clear($entity_type = NULL, $entity_id = NULL) {
     return;
   }
   cache_clear_all('lingotek__' . $entity_type . '__' . $entity_id, 'cache');
+}
+
+/**
+ * Loads a source language for a group type
+ */
+function lingotek_get_group_source($entity_id) {
+  $row = db_select('entity_translation', 'et')
+    ->fields('et')
+    ->condition('entity_type', 'group')
+    ->condition('entity_id', $entity_id)
+    ->condition('source', '')
+    ->execute()
+    ->fetch(PDO::FETCH_ASSOC);
+
+    return $row['language'];
 }
