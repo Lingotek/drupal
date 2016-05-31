@@ -1680,7 +1680,6 @@ function lingotek_bulk_grid_refine_source_header($header, $columns) {
 
 function lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $label_col, $entity_type, $limit, $bundle_col, $info, $entity_properties, $eid) {
   $base_table = $info['base table'];
-  // file_put_contents('sethlog.txt', $base_table, FILE_APPEND);
   if ($count_only) {
     $query = db_select('' . $base_table . '', 'n');
   }
