@@ -67,7 +67,7 @@ class LingotekSync {
     }
     return $targets;
   }
-  
+
   public static function getTargetStatusOptions() {
     return array(
       'STATUS_CURRENT' => self::STATUS_CURRENT,
@@ -205,7 +205,7 @@ class LingotekSync {
     }
 
     if (module_exists('group') && variable_get('lingotek_translate_groups')) {
-      $group_source_check = db_select('group', 'g');
+      $group_source_check = db_select('groups', 'g');
       $group_source_check->addField('g', 'gid');
       $group_source_check->condition('g.language', $locale);
       $query->condition('entity_id', $group_source_check, "NOT IN");
@@ -249,13 +249,13 @@ class LingotekSync {
     self::deleteTargetEntriesForAllChunks($lingotek_locale);
     lingotek_cache_clear();
   }
-  
-  
+
+
   /**
    * getDocIdTargetsByStatus
-   * 
+   *
    * @param status (e.g., LingotekSync::READY)
-   * 
+   *
    * @return an array of associate arrays.  Each associate array will have a 'nid' (e.g., 5), 'locale' (e.g., 'de_DE'), and optionally 'doc_id' (e.g., 46677222-b5ec-47d5-880e-24632feffaf5)
    */
   public static function getTargetsByStatus($entity_type, $status, $include_doc_ids = FALSE) {
@@ -585,7 +585,7 @@ class LingotekSync {
   }
 
   public static function getETNodeIds() { // get nids for entity_translation nodes that are not lingotek pushed
-    $types = lingotek_translatable_node_types(); // get all translatable node types 
+    $types = lingotek_translatable_node_types(); // get all translatable node types
     $et_content_types = array();
     foreach ($types as $type) {
       if (lingotek_managed_by_entity_translation($type)) { // test if lingotek_managed_by_entity_translation
@@ -756,16 +756,16 @@ class LingotekSync {
     $query = db_select($info['base table'], 'base');
     $query->addField('base', $id_key);
     $query->leftJoin('lingotek_entity_metadata', 'upload', 'upload.entity_id = base.' . $id_key . ' and upload.entity_type =\'' . $entity_type . '\' and upload.entity_key = \'upload_status\'');
-    
+
     $query2 = db_select('lingotek_entity_metadata', 'lem');
     $query2->distinct();
     $query2->addField('lem', 'entity_id');
     $query2->condition('entity_key', 'profile');
     $query2->condition('entity_type', $entity_type);
     $query2->condition('value', 'DISABLED');
-    
+
     $query->condition('upload.entity_id', $query2, 'NOT IN');
-    
+
     if ($entity_type == 'node') {
       // Exclude any target nodes created using node-based translation.
       $tnid_query = db_or();
@@ -802,7 +802,7 @@ class LingotekSync {
    *   a string containing the desired status
    * @param $locales
    *   (optional) an array containing the locales to check
-   * 
+   *
    * @return an array of IDs
    */
   public static function getEntityIdsByTargetStatus($entity_type, $status, $locales = NULL) {
@@ -881,7 +881,7 @@ class LingotekSync {
 
     return $doc_ids;
   }
-  
+
   public static function updateConfigSetWorkflow($set_id, $workflow_id){
     $insertRecord = array(
         "value" => $workflow_id,
@@ -901,7 +901,7 @@ class LingotekSync {
             ->execute();
 //    drupal_write_record('lingotek_config_metadata', $record);
   }
-  
+
   public static function getWorkflowIdFromConfigSet($sid){
     $query = db_select('lingotek_config_metadata', 'lcm');
     $query->addField('lcm', 'value');
@@ -979,10 +979,10 @@ class LingotekSync {
     $query->condition('entity_key', $key);
     $query->condition('value', $lingotek_document_id);
     $result = $query->execute();
-    
+
     $found = FALSE;
     $type = FALSE;
-    
+
     if ($record = $result->fetchAssoc()) {
       $found = $record['entity_id'];
       $type = $record['entity_type'];
@@ -990,7 +990,7 @@ class LingotekSync {
 
     return array($found, $type);
   }
-  
+
   public static function getNodeIdFromDocId($lingotek_document_id) {
     list($id, $type) = LingotekSync::getEntityIdFromDocId($lingotek_document_id);
     return array($id, $type);
@@ -1010,7 +1010,7 @@ class LingotekSync {
   public static function getDocIdFromNodeId($drupal_node_id) {
     return getDocIdFromEntityId('node', $drupal_node_id);
   }
-  
+
   public static function getDocIdFromEntityId($entity_type, $entity_id) {
     $found = FALSE;
 
