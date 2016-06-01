@@ -349,7 +349,8 @@ class LingotekEntity implements LingotekTranslatableEntity {
       return Lingotek::convertDrupal2Lingotek(language_default()->language);
     }
     if ($this->entity_type == 'group') {
-      return Lingotek::convertDrupal2Lingotek(language_default()->language);
+      $group_language = lingotek_get_group_source($this->entity->gid);
+      return Lingotek::convertDrupal2Lingotek($group_language);
     }
     return Lingotek::convertDrupal2Lingotek($this->language);
   }
@@ -439,7 +440,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
         $language = language_default()->language;
       }
       elseif ($this->entity_type == 'group') {
-        $language = language_default()->language;
+        $language = lingotek_get_group_source($this->entity->gid);
       }
       else {
         $drupal_locale = Lingotek::convertDrupal2Lingotek($this->entity->language);

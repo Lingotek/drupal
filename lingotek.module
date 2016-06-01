@@ -1404,7 +1404,8 @@ function lingotek_entity_load_single($entity_type, $entity_id) {
     }
     // Groups don't load a language property, so we'll assign it.
     if ($entity_type == 'group') {
-      $entity->language = language_default()->language;
+      $language = lingotek_get_group_source($entity->gid);
+      $entity->language = $language;
     }
   }
   return $entity;
@@ -2141,7 +2142,9 @@ function lingotek_entity_presave($entity, $entity_type) {
   if (!in_array($entity_type, $special_entities)) {
     return;
   }
-  lingotek_normalize_special_field_language($entity_type, $entity, FALSE);
+  if($entity_type !== 'group') {
+    lingotek_normalize_special_field_language($entity_type, $entity, FALSE);
+  }
 }
 
 /**
