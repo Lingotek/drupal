@@ -20,7 +20,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['block', 'node', 'image', 'comment', 'paragraphs', 'paragraphs_demo'];
+  public static $modules = ['block', 'node', 'image', 'comment', 'paragraphs', 'lingotek_paragraphs_test'];
 
   /**
    * @var NodeInterface
@@ -106,8 +106,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
     $this->drupalPostForm(NULL, $edit, t('Save and publish'));
 
-    // The paragraphs_demo module creates a node, so the ID of our node is 2.
-    $this->node = Node::load(2);
+    $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded, including metatags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
@@ -118,14 +117,14 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Check that the url used was the right one.
     $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
-    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/2'), $uploaded_url, 'The node url was used.');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
 
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
 
     // Check that the translate tab is in the node.
-    $this->drupalGet('node/2');
+    $this->drupalGet('node/1');
     $this->clickLink('Translate');
 
     // The document should have been automatically uploaded, so let's check
