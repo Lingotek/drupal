@@ -14,7 +14,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  * Defines the LingotekProfile entity.
  *
  * @ConfigEntityType(
- *   id = "profile",
+ *   id = "lingotek_profile",
  *   label = @Translation("Lingotek Profile"),
  *   handlers = {
  *     "list_builder" = "Drupal\lingotek\LingotekProfileListBuilder",

@@ -32,7 +32,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
+    $profiles = \Drupal::entityManager()->getListBuilder('lingotek_profile')->load();
     $this->profile_index = 0;
 
     $header = array(
@@ -105,7 +105,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     }
     else {
       $title = t('Add New Profile');
-      $url = Url::fromRoute('entity.profile.add_form');
+      $url = Url::fromRoute('entity.lingotek_profile.add_form');
     }
 
     // If it's a disabled profile, no link is provided

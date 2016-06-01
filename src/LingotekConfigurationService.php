@@ -188,7 +188,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function getProfileOptions() {
-    $profiles = \Drupal::entityManager()->getListBuilder('profile')->load();
+    $profiles = \Drupal::entityManager()->getListBuilder('lingotek_profile')->load();
     foreach ($profiles as $profile) {
       /** \Drupal\lingotek\LingotekProfileInterface $profile */
       $options[$profile->id()] = $profile->label();

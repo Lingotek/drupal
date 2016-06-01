@@ -158,3 +158,13 @@ function lingotek_update_8001() {
   }
 
 }
+
+/**
+ * Update lingotek_profile definition after adding the lingotek prefix.
+ */
+function lingotek_update_8002() {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $manager->getEntityType('profile');
+  $entity_type->set('id', 'lingotek_profile');
+  $manager->installEntityType($entity_type);
+}

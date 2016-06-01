@@ -95,7 +95,7 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
     $definitions['lingotek_profile'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Lingotek profile'))
       ->setDescription(t('The Lingotek profile defining this translation.'))
-      ->setSetting('target_type', 'profile');
+      ->setSetting('target_type', 'lingotek_profile');
 
     $definitions['lingotek_translation_source'] = BaseFieldDefinition::create('language')
       ->setLabel(t('Lingotek translation source'))

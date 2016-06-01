@@ -38,7 +38,7 @@ class LingotekSettingsController extends LingotekControllerBase {
    */
   public function getProfileListForm() {
     $form_builder = \Drupal::formBuilder();
-    $original_form = $form_builder->getForm($this->entityManager()->getListBuilder('profile'), new FormState());
+    $original_form = $form_builder->getForm($this->entityManager()->getListBuilder('lingotek_profile'), new FormState());
     $form['profiles_wrapper'] = array(
       '#type' => 'details',
       '#title' => $this->t('Translation Profiles'),
@@ -48,7 +48,7 @@ class LingotekSettingsController extends LingotekControllerBase {
     $form['profiles_wrapper']['form']['add_link'] = [
       '#type' => 'link',
       '#title' => t('Add new Translation Profile'),
-      '#url' => Url::fromRoute('entity.profile.add_form'),
+      '#url' => Url::fromRoute('entity.lingotek_profile.add_form'),
       '#weight' => 50,
       '#ajax' => array(
         'class' => array('use-ajax'),
