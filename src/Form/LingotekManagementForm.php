@@ -302,7 +302,7 @@ class LingotekManagementForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Action'),
       '#title_display' => 'invisible',
-      '#options' => $this->generateOperations(),
+      '#options' => $this->generateBulkOptions(),
     );
     $form['options']['submit'] = array(
       '#type' => 'submit',
@@ -1095,7 +1095,7 @@ class LingotekManagementForm extends FormBase {
    * @return array
    *   Array with the bulk operations.
    */
-  public function generateOperations() {
+  public function generateBulkOptions() {
     $operations = [];
     $operations['upload'] = $this->t('Upload source for translation');
     $operations['check_upload'] = $this->t('Check upload progress');

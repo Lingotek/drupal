@@ -249,7 +249,7 @@ class LingotekConfigManagementForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Action'),
       '#title_display' => 'invisible',
-      '#options' => $this->generateOperations(),
+      '#options' => $this->generateBulkOptions(),
     );
     $form['options']['submit'] = array(
       '#type' => 'submit',
@@ -390,39 +390,7 @@ class LingotekConfigManagementForm extends FormBase {
    *   The language code for the request. NULL if is not applicable.
    */
   protected function createBatch($operation, $values, $title, $language = NULL) {
-    $operations = [];
-
-    $mappers = [];
-    if ($this->filter === 'config') {
-      foreach ($values as $value) {
-        $mappers[$value] = $this->mappers[$value];
-      }
-    }
-    elseif (substr($this->filter, -7) == '_fields') {
-      $mapper = $this->mappers[$this->filter];
-      $ids = \Drupal::entityQuery('field_config')
-        ->condition('id', $values)
-        ->execute();
-      $fields = FieldConfig::loadMultiple($ids);
-      $mappers = [];
-      foreach ($fields as $id => $field) {
-        $new_mapper = clone $mapper;
-        $new_mapper->setEntity($field);
-        $mappers[$field->id()] = $new_mapper;
-      }
-    }
-    else {
-      $entities = \Drupal::entityManager()->getStorage($this->filter)->loadMultiple($values);
-      foreach ($entities as $entity) {
-        $mapper = clone $this->mappers[$this->filter];
-        $mapper->setEntity($entity);
-        $mappers[$entity->id()] = $mapper;
-      }
-    }
-
-    foreach ($mappers as $mapper) {
-      $operations[] = [[$this, $operation], [$mapper, $language]];
-    }
+    $operations = $this->generateOperations($operation, $values, $language);
     $batch = array(
       'title' => $title,
       'operations' => $operations,
@@ -455,38 +423,7 @@ class LingotekConfigManagementForm extends FormBase {
    *   Array of ids to upload.
    */
   protected function createDebugExportBatch($values) {
-    $mappers = [];
-    if ($this->filter === 'config') {
-      foreach ($values as $value) {
-        $mappers[$value] = $this->mappers[$value];
-      }
-    }
-    elseif (substr($this->filter, -7) == '_fields') {
-      $mapper = $this->mappers[$this->filter];
-      $ids = \Drupal::entityQuery('field_config')
-        ->condition('id', $values)
-        ->execute();
-      $fields = FieldConfig::loadMultiple($ids);
-      $mappers = [];
-      foreach ($fields as $id => $field) {
-        $new_mapper = clone $mapper;
-        $new_mapper->setEntity($field);
-        $mappers[$field->id()] = $new_mapper;
-      }
-    }
-    else {
-      $entities = \Drupal::entityManager()->getStorage($this->filter)->loadMultiple($values);
-      foreach ($entities as $entity) {
-        $mapper = clone $this->mappers[$this->filter];
-        $mapper->setEntity($entity);
-        $mappers[$entity->id()] = $mapper;
-      }
-    }
-
-    foreach ($mappers as $mapper) {
-      $operations[] = [[$this, 'debugExport'], [$mapper]];
-    }
-
+    $operations = $this->generateOperations('debugExport', $values, NULL);
     $batch = array(
       'title' => $this->t('Exporting config entities (debugging purposes)'),
       'operations' => $operations,
@@ -607,7 +544,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function debugExport(ConfigMapperInterface $mapper, &$context) {
+  public function debugExport(ConfigMapperInterface $mapper, $language, &$context) {
     $context['message'] = $this->t('Exporting %label.', ['%label' => $mapper->getTitle()]);
     if ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
       $data = $this->translationService->getConfigSourceData($mapper);
@@ -918,24 +855,7 @@ class LingotekConfigManagementForm extends FormBase {
     // If there is no entity, it's a config object and we don't abort based on
     // the profile.
     if ($entity === NULL || $profile !== NULL) {
-      if ($mapper instanceof ConfigEntityMapper){
-        try {
-          $this->translationService->downloadDocument($entity, $locale);
-        }
-        catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-            ['%label' => $entity->label(), '@locale' => $locale]), 'error');
-        }
-      }
-      else {
-        try {
-          $this->translationService->downloadConfig($mapper->getPluginId(), $locale);
-        }
-        catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-            ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
-        }
-      }
+      $this->performTranslationDownload($mapper, $entity, $locale);
     }
     else {
       drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
@@ -963,25 +883,7 @@ class LingotekConfigManagementForm extends FormBase {
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $mapper->getLangcode()) {
           $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-          if ($mapper instanceof ConfigEntityMapper){
-            try {
-              $this->translationService->downloadDocument($entity, $locale);
-            }
-            catch (LingotekApiException $e) {
-              drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-                ['%label' => $entity->label(), '@locale' => $locale]), 'error');
-            }
-          }
-          else {
-            try {
-              $this->translationService->downloadConfig($mapper->getPluginId(), $locale);
-            }
-            catch (LingotekApiException $e) {
-              drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
-                ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
-            }
-
-          }
+          $this->performTranslationDownload($mapper, $entity, $locale);
         }
       }
     }
@@ -1250,7 +1152,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @return array
    *   Array with the bulk operations.
    */
-  public function generateOperations() {
+  public function generateBulkOptions() {
     $operations = [];
     $operations['upload'] = $this->t('Upload source for translation');
     $operations['check_upload'] = $this->t('Check upload progress');
@@ -1354,6 +1256,88 @@ class LingotekConfigManagementForm extends FormBase {
       }
     }
     return $url;
+  }
+
+  /**
+   * Generates an array of operations to be performed in a batch.
+   *
+   * @param string $operation
+   *   The operation (method of this object) to be executed.
+   * @param array $values
+   *   The mappers this operation will be applied to.
+   * @param $language
+   *   The language to be passed to that operation.
+   * @return array
+   *   An array of operations suitable for a batch.
+   */
+  protected function generateOperations($operation, $values, $language) {
+    $operations = [];
+
+    $mappers = [];
+    if ($this->filter === 'config') {
+      foreach ($values as $value) {
+        $mappers[$value] = $this->mappers[$value];
+      }
+    }
+    elseif (substr($this->filter, -7) == '_fields') {
+      $mapper = $this->mappers[$this->filter];
+      $ids = \Drupal::entityQuery('field_config')
+        ->condition('id', $values)
+        ->execute();
+      $fields = FieldConfig::loadMultiple($ids);
+      $mappers = [];
+      foreach ($fields as $id => $field) {
+        $new_mapper = clone $mapper;
+        $new_mapper->setEntity($field);
+        $mappers[$field->id()] = $new_mapper;
+      }
+    }
+    else {
+      $entities = \Drupal::entityManager()
+        ->getStorage($this->filter)
+        ->loadMultiple($values);
+      foreach ($entities as $entity) {
+        $mapper = clone $this->mappers[$this->filter];
+        $mapper->setEntity($entity);
+        $mappers[$entity->id()] = $mapper;
+      }
+    }
+
+    foreach ($mappers as $mapper) {
+      $operations[] = [[$this, $operation], [$mapper, $language]];
+    }
+    return $operations;
+  }
+
+  /**
+   * Actually performs the translation download.
+   *
+   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
+   *   The mapper to be used.
+   * @param $entity
+   *   The entity (in case it is a config entity mapper).
+   * @param $locale
+   *   The locale to be downloaded.
+   */
+  protected function performTranslationDownload(ConfigMapperInterface $mapper, $entity, $locale) {
+    if ($mapper instanceof ConfigEntityMapper) {
+      try {
+        $this->translationService->downloadDocument($entity, $locale);
+      }
+      catch (LingotekApiException $e) {
+        drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
+          ['%label' => $entity->label(), '@locale' => $locale]), 'error');
+      }
+    }
+    else {
+      try {
+        $this->translationService->downloadConfig($mapper->getPluginId(), $locale);
+      }
+      catch (LingotekApiException $e) {
+        drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
+          ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
+      }
+    }
   }
 
 }
