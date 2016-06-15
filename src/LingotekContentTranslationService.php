@@ -8,6 +8,7 @@
 namespace Drupal\lingotek;
 
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -45,6 +46,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   protected $lingotekConfiguration;
 
   /**
+   * The Lingotek configuration translation service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface
+   */
+  protected $lingotekConfigTranslation;
+
+  /**
    * The entity manager.
    *
    * @var \Drupal\Core\Entity\EntityManagerInterface
@@ -67,15 +75,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    *  The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
+   * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service
+   *   The Lingotek config translation service.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   An entity manager object.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
+    $this->lingotekConfigTranslation = $lingotek_config_translation;
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
   }
@@ -353,8 +364,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             // We may have orphan references, so ensure that they exist before
             // continuing.
             if ($embedded_entity !== NULL) {
-              $embedded_data = $this->getSourceData($embedded_entity);
-              $data[$k][$field_item->getName()] = $embedded_data;
+              // ToDo: It can be a content entity, or a config entity.
+              if ($embedded_entity instanceof ContentEntityInterface) {
+                $embedded_data = $this->getSourceData($embedded_entity);
+                $data[$k][$field_item->getName()] = $embedded_data;
+              }
+              else if ($embedded_entity instanceof ConfigEntityInterface) {
+                $embedded_data = $this->lingotekConfigTranslation->getSourceData($embedded_entity);
+                $data[$k][$field_item->getName()] = $embedded_data;
+              }
+            }
+            else {
+              // If the referenced entity doesn't exist, remove the target_id
+              // that may be already set.
+              unset($data[$k]);
             }
           }
         }
@@ -645,10 +668,19 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               // We may have orphan references, so ensure that they exist before
               // continuing.
               if ($embedded_entity !== NULL) {
-                $this->saveTargetData($embedded_entity, $langcode, $field_item);
-                // Now the embedded entity is saved, but we need to ensure
-                // the reference will be saved too.
-                $translation->{$name}->set($index, $embedded_entity_id);
+                // ToDo: It can be a content entity, or a config entity.
+                if ($embedded_entity instanceof ContentEntityInterface) {
+                  $this->saveTargetData($embedded_entity, $langcode, $field_item);
+                  // Now the embedded entity is saved, but we need to ensure
+                  // the reference will be saved too.
+                  $translation->{$name}->set($index, $embedded_entity_id);
+                }
+                else if ($embedded_entity instanceof ConfigEntityInterface) {
+                  $this->lingotekConfigTranslation->saveTargetData($embedded_entity, $langcode, $field_item);
+                  // Now the embedded entity is saved, but we need to ensure
+                  // the reference will be saved too.
+                  $translation->{$name}->set($index, $embedded_entity_id);
+                }
               }
               ++$index;
             }
