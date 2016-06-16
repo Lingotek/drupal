@@ -149,77 +149,12 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           // the ability of requesting translations.
           if ($entity && $document_id = $this->translationService->getDocumentId($entity)) {
             $target_status = $this->translationService->getTargetStatus($entity, $langcode);
-            if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_UNTRACKED) {
-              $page['languages'][$langcode]['operations']['#links']['request'] = array(
-                'title' => $this->t('Request translation'),
-                'url' => Url::fromRoute('lingotek.config.request',
-                  [
-                    'entity_type' => $plugin_id,
-                    'entity_id' => $entity_id,
-                    'locale' => $locale,
-                  ]),
-              );
-            }
-            elseif ($target_status == Lingotek::STATUS_PENDING) {
-              $page['languages'][$langcode]['operations']['#links']['check_download'] = array(
-                'title' => $this->t('Check Download'),
-                'url' => Url::fromRoute('lingotek.config.check_download',
-                  [
-                    'entity_type' => $plugin_id,
-                    'entity_id' => $entity_id,
-                    'locale' => $locale,
-                  ]),
-              );
-            }
-            elseif ($target_status == Lingotek::STATUS_READY) {
-              $page['languages'][$langcode]['operations']['#links']['download'] = array(
-                'title' => $this->t('Download'),
-                'url' => Url::fromRoute('lingotek.config.download',
-                  [
-                    'entity_type' => $plugin_id,
-                    'entity_id' => $entity_id,
-                    'locale' => $locale,
-                  ]),
-              );
-            }
+            $this->generateOperationsLinks($page, $plugin_id, $entity_id, $target_status, $langcode, $locale);
           }
           // If it is a ConfigNamesMapper object, we need to call another method.
           elseif ($entity_id === $plugin_id && $document_id = $this->translationService->getConfigDocumentId($mapper)) {
             $target_status = $this->translationService->getConfigTargetStatus($mapper, $langcode);
-            if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_UNTRACKED) {
-              $page['languages'][$langcode]['operations']['#links']['request'] = array(
-                'title' => $this->t('Request translation'),
-                'url' => Url::fromRoute('lingotek.config.request',
-                  [
-                    'entity_type' => $plugin_id,
-                    'entity_id' => $entity_id,
-                    'locale' => $locale,
-                  ]),
-              );
-            }
-            elseif ($target_status == Lingotek::STATUS_PENDING) {
-              $page['languages'][$langcode]['operations']['#links']['check_download'] = array(
-                'title' => $this->t('Check Download'),
-                'url' => Url::fromRoute('lingotek.config.check_download',
-                  [
-                    'entity_type' => $plugin_id,
-                    'entity_id' => $entity_id,
-                    'locale' => $locale,
-                  ]),
-              );
-            }
-            elseif ($target_status == Lingotek::STATUS_READY) {
-              $page['languages'][$langcode]['operations']['#links']['download'] = array(
-                'title' => $this->t('Download'),
-                'url' => Url::fromRoute('lingotek.config.download',
-                  [
-                    'entity_type' => $plugin_id,
-                    'entity_id' => $entity_id,
-                    'locale' => $locale,
-                  ]),
-              );
-            }
-
+            $this->generateOperationsLinks($page, $plugin_id, $entity_id, $target_status, $langcode, $locale);
           }
         }
       }
@@ -500,6 +435,54 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     $mapper = $mappers[$plugin_id];
     $uri = Url::fromRoute($mapper->getOverviewRouteName());
     return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
+  }
+
+  /**
+   * Generates the operation links for each language.
+   *
+   * @param array &$page
+   *   The reference of the page build render array where we need to add the
+   *   links to.
+   * @param string $plugin_id
+   *   The plugin id, which is needed for building the link. It could be the
+   *   entity type id or the plugin id of the config mapper.
+   * @param string $entity_id
+   *   The entity id. If it's a config mapper and not an entity, it would be the
+   *   plugin id.
+   * @param int $target_status
+   *   The target status for this language. This way we decide which link must
+   *   be shown.
+   * @param $langcode
+   *   The langcode of the translation we are building the link to. Used for
+   *   keying the link in the page array.
+   * @param $locale
+   *   Lingotek locale we are creating the link for. Used for building the link
+   *   itself.
+   */
+  protected function generateOperationsLinks(&$page, $plugin_id, $entity_id, $target_status, $langcode, $locale) {
+    $route_params = [
+      'entity_type' => $plugin_id,
+      'entity_id' => $entity_id,
+      'locale' => $locale,
+    ];
+    if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_UNTRACKED) {
+      $page['languages'][$langcode]['operations']['#links']['request'] = array(
+        'title' => $this->t('Request translation'),
+        'url' => Url::fromRoute('lingotek.config.request', $route_params),
+      );
+    }
+    elseif ($target_status == Lingotek::STATUS_PENDING) {
+      $page['languages'][$langcode]['operations']['#links']['check_download'] = array(
+        'title' => $this->t('Check Download'),
+        'url' => Url::fromRoute('lingotek.config.check_download', $route_params),
+      );
+    }
+    elseif ($target_status == Lingotek::STATUS_READY) {
+      $page['languages'][$langcode]['operations']['#links']['download'] = array(
+        'title' => $this->t('Download'),
+        'url' => Url::fromRoute('lingotek.config.download', $route_params),
+      );
+    }
   }
 
 }
