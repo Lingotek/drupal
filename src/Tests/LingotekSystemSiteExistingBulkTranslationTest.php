@@ -50,7 +50,7 @@ class LingotekSystemSiteExistingBulkTranslationTest extends LingotekTestBase {
   public function testSystemSiteIsUntracked() {
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

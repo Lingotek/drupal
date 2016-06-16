@@ -65,8 +65,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // There is no 'debug' option group.
     $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is no debug group.');
@@ -76,7 +75,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, [], t('Enable debug operations'));
 
     // Back to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
     // There should be a 'debug' option group with the right operation.
     $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is a debug group.');
     $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', array(':id' => 'edit-operation', ':value' => 'debug.export')), 'There is a debug export option.');
@@ -98,8 +97,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
     $this->drupalPostForm(NULL, [], t('Enable debug operations'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $edit = [
       'table[1]' => TRUE,  // Node 1.

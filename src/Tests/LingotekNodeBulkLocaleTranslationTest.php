@@ -90,8 +90,7 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -163,8 +162,7 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'automatic';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

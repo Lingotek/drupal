@@ -85,5 +85,31 @@ abstract class LingotekTestBase extends WebTestBase {
     ], 'Save configuration');
   }
 
+  /**
+   * Go to the content bulk management form.
+   *
+   * @param string $entity_type_id
+   *   Entity type ID we want to manage in bulk. By default is node.
+   */
+  protected function goToContentBulkManagementForm($entity_type_id = 'node') {
+    $this->drupalGet('admin/lingotek/manage/' . $entity_type_id);
+  }
+
+
+  /**
+   * Go to the config bulk management form and filter one kind of configuration.
+   *
+   * @param string $filter
+   *   Config name of the filter to apply. By default is NULL and will use the
+   *   current one.
+   */
+  protected function goToConfigBulkManagementForm($filter = NULL) {
+    $this->drupalGet('admin/lingotek/config/manage');
+
+    if ($filter !== NULL) {
+      $edit = ['filters[wrapper][bundle]' => $filter];
+      $this->drupalPostForm(NULL, $edit, t('Filter'));
+    }
+  }
 
 }

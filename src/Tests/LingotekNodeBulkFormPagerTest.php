@@ -77,8 +77,7 @@ class LingotekNodeBulkFormPagerTest extends LingotekTestBase {
       $nodes[$i] = $edit;
     }
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Navigate to page 2.
     $this->clickLink(t('Page 2'));

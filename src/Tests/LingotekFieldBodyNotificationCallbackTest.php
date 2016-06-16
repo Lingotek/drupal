@@ -57,11 +57,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     node_add_body_field($type);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     /** @var LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
@@ -84,7 +80,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     /** @var ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
@@ -97,8 +93,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is pending.
     $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'es'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // Simulate the notification of content successfully translated.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -115,7 +110,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // The field cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -125,8 +120,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'es'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-
+    $this->goToConfigBulkManagementForm();
   }
 
   /**
@@ -163,11 +157,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_EDITED, $config_translation_service->getSourceStatus($entity));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     // Clicking English must init the upload of content.
     $this->clickLink('English');
@@ -186,7 +176,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical([], $response['result']['request_translations'], 'No translations has been requested after notification automatically.');
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     /** @var ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
@@ -200,7 +190,8 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_REQUEST, $config_translation_service->getTargetStatus($entity, 'es'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
+
     // Request a translation.
     $this->clickLink('ES');
 
@@ -219,7 +210,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -229,7 +220,8 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_READY, $config_translation_service->getTargetStatus($entity, 'es'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
+
     // Download the translation.
     $this->clickLink('ES');
 
@@ -285,11 +277,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     // Simulate the notification of content successfully uploaded.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -303,7 +291,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(['de', 'es'], $response['result']['request_translations'], 'Spanish and German language has been requested after notification automatically.');
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -316,7 +304,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_PENDING, $config_translation_service->getTargetStatus($entity, 'de'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // Simulate the notification of content successfully translated.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -346,7 +334,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertTrue($response['result']['download'], 'German language has been downloaded after notification automatically.');
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -357,7 +345,8 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $config_translation_service->getTargetStatus($entity, 'de'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
+
     $this->clickLink('ES');
 
     // The node cache needs to be reset before reload.

@@ -51,7 +51,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // There is no 'debug' option group.
     $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is no debug group.');
@@ -61,7 +61,8 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, [], t('Enable debug operations'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
+
     // There should be a 'debug' option group with the right operation.
     $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is a debug group.');
     $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', array(':id' => 'edit-operation', ':value' => 'debug.export')), 'There is a debug export option.');
@@ -76,11 +77,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, [], t('Enable debug operations'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     $edit = [
       'table[node.article.body]' => TRUE,

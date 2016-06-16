@@ -88,8 +88,7 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Ensure the delete operation is there.
     $delete_option = $this->xpath('//*[@id="edit-operation"]/option[text()="Delete content"]');
@@ -148,8 +147,7 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
 
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
-    // Go to the bulk management page.
-    $this->drupalGet('admin/lingotek/manage/taxonomy_term');
+    $this->goToContentBulkManagementForm('taxonomy_term');
 
     // Ensure the delete operation is not there.
     $delete_option = $this->xpath('//*[@id="edit-operation"]/option[text()="Delete content"]');

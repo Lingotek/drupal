@@ -73,8 +73,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -135,8 +134,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -208,8 +206,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -277,8 +274,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $basepath = \Drupal::request()->getBasePath();
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Check all statuses, after being edited.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
@@ -314,8 +310,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $basepath = \Drupal::request()->getBasePath();
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Ensure we won't get a completed document because there are phases pending.
     \Drupal::state()->set('lingotek.document_completion', FALSE);
@@ -370,8 +365,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -429,8 +423,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Place the actions and title block.
     $this->drupalPlaceBlock('local_actions_block');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // There should be a link for adding content.
     $this->clickLink('Add content');
@@ -454,8 +447,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Check the status is edited.
     $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
@@ -488,8 +480,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Add a language.
     ConfigurableLanguage::createFromLangcode('ca')->save();
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -509,8 +500,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Delete a language.
     ConfigurableLanguage::load('es')->delete();
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // There is no link for the Spanish translation.
     $this->assertNoLink('ES');
@@ -532,8 +522,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

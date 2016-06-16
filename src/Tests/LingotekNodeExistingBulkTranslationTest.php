@@ -83,8 +83,7 @@ class LingotekNodeExistingBulkTranslationTest extends LingotekTestBase {
    */
   public function testNodeIsUntracked() {
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

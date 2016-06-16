@@ -41,7 +41,7 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     $this->createAndTranslateSystemSiteWithLinks();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // Mark the first two for disassociation.
     $edit = [
@@ -65,7 +65,7 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
 
   protected function createAndTranslateSystemSiteWithLinks() {
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // Clicking English must init the upload of content.
     $this->clickLink('English', 1);

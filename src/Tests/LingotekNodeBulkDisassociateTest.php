@@ -77,8 +77,7 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
 
     $this->createAndTranslateNodeWithLinks();
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Mark the first two for disassociation.
     $edit = [
@@ -101,8 +100,7 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
   }
 
   protected function createAndTranslateNodeWithLinks() {
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

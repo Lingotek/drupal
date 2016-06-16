@@ -52,12 +52,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_type',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -111,11 +106,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_type',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -193,11 +184,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_type',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -263,11 +250,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm('/admin/structure/types/manage/article', ['name' => 'Article EDITED'], t('Save content type'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_type',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_type');
 
     // Recheck status.
     $this->clickLink('English');
@@ -293,12 +276,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('ca')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_type',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -319,7 +297,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::load('es')->delete();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // There is no link for the Spanish translation.
     $this->assertNoLink('ES');

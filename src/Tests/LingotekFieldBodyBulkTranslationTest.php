@@ -49,12 +49,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -108,11 +103,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -184,11 +175,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -244,11 +231,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->testFieldBodyTranslationUsingLinks();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     // Reupload the content.
     // ToDo: We need to edit and upload again.
@@ -279,12 +262,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('ca')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     $basepath = \Drupal::request()->getBasePath();
 

@@ -74,11 +74,7 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
 
   protected function createAndTranslateFieldWithLinks() {
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_fields',
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_fields');
 
     // Clicking English must init the upload of content.
     $this->clickLink('English');

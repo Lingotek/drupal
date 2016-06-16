@@ -45,7 +45,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -99,7 +99,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -164,7 +164,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm('/admin/config/system/site-information', ['site_name' => 'My site'], t('Save configuration'));
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     // Reupload the content.
     $this->clickLink('English', 1);
@@ -194,7 +194,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -250,7 +250,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('ca')->save();
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

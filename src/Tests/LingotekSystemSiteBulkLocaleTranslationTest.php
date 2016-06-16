@@ -53,7 +53,7 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -116,7 +116,7 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 

@@ -79,8 +79,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -131,7 +130,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
+    $this->goToConfigBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -187,12 +186,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Go to the bulk config management page.
-    $this->drupalGet('admin/lingotek/config/manage');
-
-    $edit = [
-      'filters[wrapper][bundle]' => 'node_type',  // Content types.
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Filter'));
+    $this->goToConfigBulkManagementForm('node_type');
 
     $basepath = \Drupal::request()->getBasePath();
 

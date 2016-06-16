@@ -247,8 +247,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     $this->drupalPostForm("admin/structure/taxonomy/manage/$bundle/add", $edit, t('Save'));
 
-    // Go to the bulk taxonomy_term management page.
-    $this->drupalGet('admin/lingotek/manage/taxonomy_term');
+    $this->goToContentBulkManagementForm('taxonomy_term');
 
     $basepath = \Drupal::request()->getBasePath();
 
@@ -312,8 +311,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
     $this->drupalPostForm("admin/structure/taxonomy/manage/$bundle/add", $edit, t('Save'));
 
-    // Go to the bulk taxonomy_term management page.
-    $this->drupalGet('admin/lingotek/manage/taxonomy_term');
+    $this->goToContentBulkManagementForm('taxonomy_term');
 
     $basepath = \Drupal::request()->getBasePath();
 

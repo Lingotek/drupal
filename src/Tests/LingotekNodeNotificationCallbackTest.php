@@ -84,8 +84,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Simulate the notification of content successfully uploaded.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -98,8 +97,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $response = json_decode($request, true);
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -111,8 +109,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is pending.
     $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Simulate the notification of content successfully translated.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -128,8 +125,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->verbose($request);
     $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -139,8 +135,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is ready.
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
   }
 
@@ -167,8 +162,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Ensure we won't get a completed document because there are phases pending.
     \Drupal::state()->set('lingotek.document_completion', FALSE);
@@ -186,8 +180,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $response = json_decode($request, true);
     $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -206,8 +199,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // There are no phases pending anymore.
     \Drupal::state()->set('lingotek.document_completion', TRUE);
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Simulate the notification of content successfully translated.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -223,8 +215,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->verbose($request);
     $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -234,8 +225,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the target is ready.
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'es'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
   }
 
 
@@ -262,8 +252,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the content is edited, but not auto-uploaded.
     $this->assertIdentical(Lingotek::STATUS_EDITED, $content_translation_service->getSourceStatus($node));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
     // Clicking English must init the upload of content.
     $this->clickLink('English');
 
@@ -280,8 +269,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Translations are not requested.
     $this->assertIdentical([], $response['result']['request_translations'], 'No translations has been requested after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -294,7 +282,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_REQUEST, $content_translation_service->getTargetStatus($node, 'es'));
 
     // Go to the bulk node management page and request a translation.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
     $this->clickLink('ES');
 
     // Simulate the notification of content successfully translated.
@@ -311,8 +299,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->verbose($request);
     $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -323,7 +310,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
 
     // Go to the bulk node management page and download them.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
     $this->clickLink('ES');
 
     // The node cache needs to be reset before reload.
@@ -362,8 +349,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Simulate the notification of content successfully uploaded.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -376,8 +362,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $response = json_decode($request, true);
     $this->assertIdentical(['de', 'es'], $response['result']['request_translations'], 'Spanish and German language has been requested after notification automatically.');
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -390,8 +375,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
     $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'de'));
 
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     // Simulate the notification of content successfully translated.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
@@ -420,9 +404,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->verbose($request);
     $this->assertTrue($response['result']['download'], 'German language has been downloaded after notification automatically.');
 
-
-    // Go to the bulk node management page.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
 
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     // The node cache needs to be reset before reload.
@@ -434,7 +416,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'de'));
 
     // Go to the bulk node management page and download them.
-    $this->drupalGet('admin/lingotek/manage/node');
+    $this->goToContentBulkManagementForm();
     $this->clickLink('ES');
 
     // The node cache needs to be reset before reload.
