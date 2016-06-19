@@ -54,11 +54,7 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical('it_IT', $response['locale']);
     $this->assertIdentical(1, $response['active']);
     $this->assertIdentical(1, $response['enabled']);
-    $this->assertIdentical(0, $response['source']['types']['node']);
-    $this->assertIdentical(0, $response['source']['types']['comment']);
     $this->assertIdentical(0, $response['source']['total']);
-    $this->assertIdentical(0, $response['target']['types']['node']);
-    $this->assertIdentical(0, $response['target']['types']['comment']);
     $this->assertIdentical(0, $response['target']['total']);
   }
 

@@ -2,12 +2,18 @@
 
 namespace Drupal\lingotek\Controller;
 
-use Drupal\Component\Utility\SafeMarkup;
-use Drupal\language\ConfigurableLanguageInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\LanguageInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,6 +22,72 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  * Returns responses for lingotek module setup routes.
  */
 class LingotekDashboardController extends LingotekControllerBase {
+
+  /**
+   * The entity query factory.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $queryFactory;
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+
+  /**
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotek_configuration;
+
+  /**
+   * Constructs a LingotekControllerBase object.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Request instance.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The factory for configuration objects.
+   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
+   *   The entity query factory.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The lingotek service.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *  The language-locale mapper.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
+   */
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, QueryFactory $query_factory, LanguageManagerInterface $language_manager, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, FormBuilderInterface $form_builder, LoggerInterface $logger) {
+    parent::__construct($request, $config_factory, $lingotek, $language_locale_mapper, $form_builder, $logger);
+    $this->queryFactory = $query_factory;
+    $this->languageManager = $language_manager;
+    $this->lingotek_configuration = $lingotek_configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('config.factory'),
+      $container->get('entity.query'),
+      $container->get('language_manager'),
+      $container->get('lingotek'),
+      $container->get('lingotek.language_locale_mapper'),
+      $container->get('lingotek.configuration'),
+      $container->get('form_builder'),
+      $container->get('logger.channel.lingotek')
+    );
+  }
 
   /**
    * Presents a dashboard overview page of translation status through Lingotek.
@@ -93,7 +165,7 @@ class LingotekDashboardController extends LingotekControllerBase {
         $language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
         $response['language'] = $language->id();
         $language->delete();
-        \Drupal::languageManager()->reset();
+        $this->languageManager()->reset();
         $response['message'] = "Language removed: $locale";
         $http_status_code = Response::HTTP_OK; // language successfully removed.
         break;
@@ -116,7 +188,7 @@ class LingotekDashboardController extends LingotekControllerBase {
 
   private function getLanguageDetails($lingotek_locale_requested = NULL) {
     $response = array();
-    $available_languages = \Drupal::languageManager()->getLanguages();
+    $available_languages = $this->languageManager->getLanguages();
     $source_total = 0;
     $target_total = 0;
     $source_totals = array();
@@ -206,9 +278,14 @@ class LingotekDashboardController extends LingotekControllerBase {
     return $stat;
   }
 
+  /**
+   * Gets the entity type ids of entities to be translated with Lingotek.
+   *
+   * @return array The entity type names of content entities enabled.
+   */
   protected function getEnabledTypes() {
-    // WTD: get the types enabled for lingotek translation
-    return array('node', 'comment');
+    $types = $this->lingotek_configuration->getEnabledEntityTypes();
+    return empty($types) ? $types : array_keys($types);
   }
 
   protected function getSourceTypeCounts($langcode, $types = NULL) {
@@ -221,7 +298,7 @@ class LingotekDashboardController extends LingotekControllerBase {
   }
 
   protected function getSourceTypeCount($langcode, $type) {
-    $count = \Drupal::entityQuery($type)
+    $count = $this->queryFactory->get($type)
             ->condition('langcode', $langcode)
             ->condition('default_langcode', 1)
             ->count()
@@ -239,7 +316,7 @@ class LingotekDashboardController extends LingotekControllerBase {
   }
 
   protected function getTargetTypeCount($langcode, $type) {
-    $count = \Drupal::entityQuery($type)
+    $count = $this->queryFactory->get($type)
             ->condition('langcode', $langcode)
             ->condition('default_langcode', 0)
             ->count()

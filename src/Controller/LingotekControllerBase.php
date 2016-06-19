@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Controller\ControllerBase;
@@ -32,6 +33,13 @@ abstract class LingotekControllerBase extends ControllerBase {
   protected $request;
 
   /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * The language-locale mapper.
    *
    * @var \Drupal\lingotek\LanguageLocaleMapperInterface
@@ -46,13 +54,6 @@ abstract class LingotekControllerBase extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * A router instance for controlling redirects.
-   *
-   * @var TBD
-   */
-  protected $router;
-
-  /**
    * A logger instance.
    *
    * @var \Psr\Log\LoggerInterface
@@ -62,13 +63,22 @@ abstract class LingotekControllerBase extends ControllerBase {
   /**
    * Constructs a LingotekControllerBase object.
    *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Request instance.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The factory for configuration objects.
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The lingotek service.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *  The language-locale mapper.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
    */
-  public function __construct(Request $request, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger) {
+  public function __construct(Request $request, ConfigFactoryInterface $config_factory, LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, FormBuilderInterface $form_builder, LoggerInterface $logger) {
     $this->request = $request;
+    $this->configFactory = $config_factory;
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->formBuilder = $form_builder;
@@ -81,6 +91,7 @@ abstract class LingotekControllerBase extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack')->getCurrentRequest(),
+      $container->get('config.factory'),
       $container->get('lingotek'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('form_builder'),
@@ -111,13 +122,4 @@ abstract class LingotekControllerBase extends ControllerBase {
     return $this->formBuilder->getForm('\\Drupal\\lingotek\\Form\\' . $local_form_path, $this->request);
   }
 
-//  /**
-//   * {@inheritdoc}
-//   */
-//  public function redirect($route_name, $route_parameters = array(), $status = 302) {
-//    // TODO: initialize the route first, if it doesn't exist yet.
-//    if ($this->router->getRouteCollection()->get($route_name)) {
-//      return parent::redirect($route_name, $route_parameters, $status);
-//    }
-//  }
 }
