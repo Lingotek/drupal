@@ -40,7 +40,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
       $_SESSION['grid_custom_parameters'] = array();
     }
     $temp = array();
-    foreach ($_GET as $key => $value){  
+    foreach ($_GET as $key => $value){
         $temp[$key] = filter_xss($value);
     }
     $_SESSION['grid_custom_parameters'][$entity_type] = $temp;
@@ -626,6 +626,11 @@ function lingotek_grid_legend_form($form, $form_state) {
       . "<tr>"
         . '<td><div><a class="language-icon target-current">lang</a></div></td>'
         . '<td>' . t('This content is current, no translations are pending or ready for download') . '</td>'
+      . "</tr>"
+
+      . "<tr>"
+        . '<td><div><a class="language-icon target-interim-download">lang</a></div></td>'
+        . '<td>' . t('Part of translation workflow is done and it can be downloaded') . '</td>'
       . "</tr>"
 
       . "<tr>"
