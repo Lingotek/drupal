@@ -100,7 +100,7 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
 function lingotek_notifications() {
 
   drupal_page_is_cacheable(FALSE);
-  LingotekLog::trace('Received <pre>@data</pre>', array('@data' => var_export($_GET, TRUE)), 'callback');
+  LingotekLog::trace('Received <pre>@data</pre>', array('@data' => check_plain(var_export($_GET, TRUE))), 'callback');
 
   $document_id = ( isset($_GET['doc_id']) ) ? $_GET['doc_id'] : NULL;// uuid
   $document_idx = ( isset($_GET['doc_idx']) ) ? $_GET['doc_idx'] : NULL;// this is the deprecated document number
@@ -170,11 +170,11 @@ function lingotek_notifications() {
   $found = (isset($trans_obj) && $trans_obj);
 
   $response = array_merge($_GET, array(
-        'target_drupal_language_code' => $target_drupal_language_code,
-        'type' => isset($trans_obj) ? $trans_obj->getEntityType() : '',
-        'id' => isset($trans_obj) ? $trans_obj->getId() : '',
-        'found' => $found,
-        'download' => $downloaded,
+        'target_drupal_language_code' => check_plain($target_drupal_language_code),
+        'type' => isset($trans_obj) ? check_plain($trans_obj->getEntityType()) : '',
+        'id' => isset($trans_obj) ? check_plain($trans_obj->getId()) : '',
+        'found' => check_plain($found),
+        'download' => check_plain($downloaded),
       ));
 
   return drupal_json_output($response);
@@ -194,7 +194,11 @@ function lingotek_sync_endpoint() {
 
   switch ($method) {
     case 'GET':
-      $request['parameters'] = $parameters = $_GET;
+      $temp = array();
+      foreach ($_GET as $key => $value){  
+        $temp[$key] = check_plain($value);
+      }
+      $request['parameters'] = $parameters = $temp;
       /* $request['doc_ids'] = $document_ids = isset($parameters['doc_ids']) ? array_map(function($val) {
         return trim($val);
         }, explode(',', $parameters['doc_ids'])) : array(); */

@@ -526,7 +526,9 @@ class LingotekProfile {
       );
     }
     if (empty(self::$profiles[$this->getId()])) {
-      throw new LingotekException('Profile ID "' . $this->getId() . '" not found.');
+      drupal_set_message(t('Lingotek profile ID @profile_id not found.', array('@profile_id' => $this->getId())), 'error', FALSE);
+
+      //throw new LingotekException('Profile ID "' . $this->getId() . '" not found.');
     }
     if ($target_locale) {
       $attributes = $this->getTargetLocaleOverrides($target_locale);

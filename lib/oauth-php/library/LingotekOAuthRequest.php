@@ -696,7 +696,7 @@ class LingotekOAuthRequest
 			if (is_array($_POST) && count($_POST) > 1) 
 			{
 				foreach ($_POST AS $k => $v) {
-					$body .= $k . '=' . $this->urlencode($v) . '&';
+					$body .= $k . '=' . url_check($this->urlencode($v)) . '&';
 				} #end foreach
 				if(substr($body,-1) == '&')
 				{
