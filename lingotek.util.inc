@@ -2330,6 +2330,11 @@ function lingotek_cache_clear($entity_type = NULL, $entity_id = NULL) {
  * Loads a source language for a group type
  */
 function lingotek_get_group_source($entity_id) {
+  if (!module_exists('entity_translation')) {
+    drupal_set_message(t('The Entity Translation module is required for translation of Group module types.'), 'warning', FALSE);
+    return language_default()->language;
+  }
+
   $row = db_select('entity_translation', 'et')
     ->fields('et')
     ->condition('entity_type', 'group')
