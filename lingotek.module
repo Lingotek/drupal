@@ -1462,7 +1462,7 @@ function lingotek_entity_load($entities, $entity_type) {
     }
   }
 
-  if ($is_anonymous === TRUE && $is_cron === FALSE && $is_lingotek === FALSE && $is_admin_url == FALSE && $is_cron_var === FALSE) {
+  if ($is_anonymous === TRUE && $is_cron === FALSE && $is_lingotek === FALSE && $is_admin_url === FALSE && $is_cron_var === FALSE) {
     return;
   }
 
