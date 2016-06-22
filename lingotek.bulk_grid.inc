@@ -1116,6 +1116,7 @@ function config_download_ready($force_download, $comma_separated_ids = NULL, $en
   if($force_download != NULL){
     $ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
     $current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_CURRENT);
+    $intermediate_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_INTERMEDIATE);
     $edited_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_EDITED);
     $set_ids = array_merge($ready_lids, $current_lids,$edited_lids);
   }
@@ -2377,6 +2378,7 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
     LingotekSync::STATUS_PENDING => t('In progress'),
     LingotekSync::STATUS_READY => t('Ready to download'),
     LingotekSync::STATUS_CURRENT => t('Current'),
+    LingotekSync::STATUS_INTERMEDIATE => t('In progress (interim translation downloaded)'),
     LingotekSync::STATUS_EDITED => t('Not current'),
     LingotekSync::STATUS_UNTRACKED => t('Untracked'),
     LingotekSync::STATUS_TARGET_LOCALIZE => t('Pending localization'),
@@ -2393,6 +2395,7 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
     LingotekSync::STATUS_PENDING => $default_link,
     LingotekSync::STATUS_READY => $default_link,
     LingotekSync::STATUS_CURRENT => $default_link,
+    LingotekSync::STATUS_INTERMEDIATE => $default_link,
     LingotekSync::STATUS_EDITED => $default_link,
     LingotekSync::STATUS_UNTRACKED => $untracked_link,
     LingotekSync::STATUS_TARGET_LOCALIZE => $untracked_link,
