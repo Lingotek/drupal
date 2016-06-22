@@ -1437,10 +1437,32 @@ function lingotek_entity_load($entities, $entity_type) {
     }
   }
 
-  // Check for any of the Lingotek permission roles to cut down on database queries
-  $has_permissions = user_access('administer lingotek') || user_access('manage projects') || user_access('translation') || user_access('use lingotek developer tools') ? TRUE : FALSE;
+  // Check for callbacks and cron jobs, otherwise return
+  $is_anonymous = user_is_anonymous();
+  $dest_url     = drupal_get_destination();
+  $dest_str     = $dest_url['destination'];
 
-  if (!$has_permissions) {
+  $is_cron      = FALSE;
+  $is_cron_var  = FALSE;
+  $is_lingotek  = FALSE;
+  $is_admin_url = FALSE;
+  global $locks;
+  if ($is_anonymous) {
+    if (isset($locks['cron'])) {
+      $is_cron_var = TRUE;
+    }
+    if (strpos($dest_str, 'cron') !== FALSE) {
+      $is_cron = TRUE;
+    }
+    if (strpos($dest_str, 'lingotek') !== FALSE) {
+      $is_lingotek = TRUE;
+    }
+    if (strpos($dest_str, 'admin') !== FALSE) {
+      $is_admin_url = TRUE;
+    }
+  }
+
+  if ($is_anonymous === TRUE && $is_cron === FALSE && $is_lingotek === FALSE && $is_admin_url === FALSE && $is_cron_var === FALSE) {
     return;
   }
 
@@ -2034,11 +2056,10 @@ function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
   $site_default_lang = language_default();
   $site_default_langcode = $site_default_lang->language;
   $host_language = check_plain($_POST['language']);
-  dpm($host_language);  
   if (!$read_only && isset($host_language)) {
     return $host_language;
   }
-  
+
   $host = (module_exists('field_collection') && $entity_type == 'field_collection_item' ? lingotek_get_fc_parent($entity) : NULL);
   if (!$host) {
     // unable to locate parent.  Abort.
