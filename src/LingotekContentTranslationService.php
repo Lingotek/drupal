@@ -494,10 +494,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     if (!empty($entity->lingotek_document_id->value)) {
       return $this->updateDocument($entity);
     }
-    $source_data = json_encode($this->getSourceData($entity));
+    $source_data = $this->getSourceData($entity);
     $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getEntityProfile($entity));
+    $profile = $this->lingotekConfiguration->getEntityProfile($entity);
+
+    // Allow other modules to alter the data before is uploaded.
+    \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
+    $encoded_data = json_encode($source_data);
+
+    $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $profile);
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
@@ -556,11 +562,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function updateDocument(ContentEntityInterface &$entity) {
-    $source_data = json_encode($this->getSourceData($entity));
+    $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url)){
+    // Allow other modules to alter the data before is uploaded.
+    \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
+    $encoded_data = json_encode($source_data);
+
+    if ($this->lingotek->updateDocument($document_id, $encoded_data, $url)){
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       return $document_id;
@@ -752,6 +762,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $entity->setNewRevision(FALSE);
         }
         $entity->lingotek_processed = TRUE;
+        // Allow other modules to alter the translation before is saved.
+        \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_translation_presave', [&$translation, $langcode, $data]);
         try {
           $translation->save();
         }

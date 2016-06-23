@@ -1,0 +1,31 @@
+<?php
+
+use Drupal\Core\Entity\ContentEntityInterface;
+
+/**
+ * Implements hook_lingotek_content_entity_translation_presave().
+ *
+ * If the translation being saved is a press release, and it is the first time it
+ * is downloaded, always save them unpublished.
+ */
+function lingotek_test_lingotek_content_entity_translation_presave(ContentEntityInterface &$translation, $langcode, $data) {
+  if ($translation->getEntityTypeId() === 'node' && $translation->bundle() === 'press_release') {
+    if ($translation->isNewTranslation()) {
+      /** @var \Drupal\node\NodeInterface $translation */
+      $translation->setPublished(FALSE);
+    }
+  }
+}
+
+/**
+ * Implements hook_lingotek_content_entity_document_upload().
+ *
+ * If the document being uploaded is a press release, we add a field with the
+ * publication and we modify the original url.
+ */
+function lingotek_test_lingotek_content_entity_document_upload(array &$source_data, ContentEntityInterface &$entity, &$url) {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'animal') {
+    $url = \Drupal::request()->getBasePath() . '/animal/2016/llamas-are-cool';
+    $source_data['animal_date'] = '2016-05-01';
+  }
+}
