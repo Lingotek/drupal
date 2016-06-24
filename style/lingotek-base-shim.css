@@ -185,8 +185,13 @@ a:hover.tooltips span {
   border: 1px solid rgba(68,135,204,1);
 }
 
-.language-icon.target-interim-download {
+.language-icon.target-intermediate_current {
   background-color: rgba(143,216,216,0.9);
+  border: 1px solid rgba(255,255,255,1);
+}
+
+language-icon.target-intermediate_ready{
+  background-color: rgba(137,231,148,0.9);
   border: 1px solid rgba(255,255,255,1);
 }
 

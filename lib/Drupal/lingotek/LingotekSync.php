@@ -15,7 +15,8 @@ class LingotekSync {
   const STATUS_FAILED = 'FAILED';    // The node or target translation has failed during processing
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
-  const STATUS_INTERMEDIATE = 'INTERMEDIATE'; // Part of the target translation is done and ready for download what has been done
+  const STATUS_INTERMEDIATE_CURRENT = 'INTERMEDIATE_CURRENT'; // Part of the target translation is done and ready for download what has been done
+  const STATUS_INTERMEDIATE_READY = 'INTERMEDIATE_READY';
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation (ignored for upload by Lingotek)
   const STATUS_UNTRACKED = 'UNTRACKED'; // A translation was discovered that is not currently managed by Lingotek
   const STATUS_TARGET_LOCALIZE = 'TARGET_LOCALIZE'; // A localization must be made of the source before uploading to Lingotek
@@ -76,7 +77,8 @@ class LingotekSync {
       'STATUS_FAILED' => self::STATUS_FAILED,
       'STATUS_PENDING' => self::STATUS_PENDING,
       'STATUS_READY' => self::STATUS_READY,
-      'STATUS_INTERMEDIATE' => self::STATUS_INTERMEDIATE,
+      'STATUS_INTERMEDIATE_READY' => self::STATUS_INTERMEDIATE_READY,
+      'STATUS_INTERMEDIATE_CURRENT' => self::STATUS_INTERMEDIATE_CURRENT,
       'STATUS_TARGET' => self::STATUS_TARGET,
       'STATUS_UNTRACKED' => self::STATUS_UNTRACKED,
       'STATUS_TARGET_LOCALIZE' => self::STATUS_TARGET_LOCALIZE,
