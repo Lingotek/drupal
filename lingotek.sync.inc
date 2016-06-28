@@ -98,7 +98,6 @@ function lingotek_get_trans_obj($document_id, $document_idx) {
  * Registers the site translation notfication callback.
  */
 function lingotek_notifications() {
-
   drupal_page_is_cacheable(FALSE);
   LingotekLog::trace('Received <pre>@data</pre>', array('@data' => check_plain(var_export($_GET, TRUE))), 'callback');
 
@@ -106,7 +105,7 @@ function lingotek_notifications() {
   $document_idx = ( isset($_GET['doc_idx']) ) ? $_GET['doc_idx'] : NULL;// this is the deprecated document number
   $lingotek_locale = ( isset($_GET['target_code']) ) ? $_GET['target_code'] : NULL;
   $project_id = ( isset($_GET['project_id']) ) ? $_GET['project_id'] : NULL;
-  $completed = ( isset($_GET['completed']) ) ? $_GET['completed'] : 1;
+  $completed = ( isset($_GET['completed']) && $_GET['completed'] === 'true' ) ? 1 : 0;
   $security_token = ( isset($_GET['security_token']) ) ? $_GET['security_token'] : NULL;
 
   $stored_security_token = variable_get('lingotek_notify_security_token', NULL);
@@ -223,7 +222,6 @@ function lingotek_sync_endpoint() {
 *
 */
 function lingotek_get_and_update_target_progress($entity_type, $document_ids, $current_nids, $total_nids, &$context) {
-  dpm('update');
   $context['message'] = t('Checking status of translations (@current of @total complete)', array('@current' => $current_nids, '@total' => $total_nids));
   $api = LingotekApi::Instance();
   if (empty($document_ids)) {
@@ -237,7 +235,6 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
   $progress_report = $api->getProgressReport($project_id, $document_ids);
 
   $targets_count = LingotekSync::getTargetCountByDocumentIds($document_ids);
-  dpm($progress_report);
   if (isset($progress_report) && $progress_report->results == 'success') {
     $delete_nids_maybe = array();
     $entity_values = array();
@@ -258,7 +255,6 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
         }
       }
     }
-    dpm($progress_report->byDocumentIdAndTargetLocale);
     foreach ($progress_report->byDocumentIdAndTargetLocale as $doc_id => $completion) {
       list($entity_id, $entity_type_from_table) = LingotekSync::getEntityIdFromDocId($doc_id);
       if (!$entity_id) {
@@ -278,31 +274,15 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
               $to_status = LingotekSync::STATUS_READY; // Set it to ready
             }
             else {
-              if($percent < 100){
-                $to_status = LingotekSync::STATUS_INTERMEDIATE;
-              }
-              else{
-                $to_status = LingotekSync::STATUS_CURRENT; // Otherwise keep it at current
-              }
+              $to_status = LingotekSync::STATUS_CURRENT; // Otherwise keep it at current
             }
           }
           else { // If the workflow is not complete
-            /***************************************************
-            */
-            // add STATUS_INTERMEDIATE code here
-            if($status == LingotekSync::STATUS_CURRENT){
-              $to_status = LingotekSync::STATUS_INTERMEDIATE;
-            }
-            else if ($status == LingotekSync::STATUS_INTERMEDIATE || ($percent > 0 && $status == LingotekSync::STATUS_PENDING)){
-              //when new workflow translation is done and downloaded.
-              $to_status = LingotekSync::STATUS_READY;
-            }
-            else if ($status == LingotekSync::STATUS_READY){
-              // if new workflow is done.
-              //$to_status = LingotekSync::STATUS_INTERMEDIATE;
+            if ($percent == 0){
+              $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
             }
             else{
-              $to_status = LingotekSync::STATUS_PENDING; // Set it to pending
+              $to_status = $status;
             }
           }
           $entity_values[] = array($entity_type, $entity_id, 'target_sync_status_' . $language, $to_status);

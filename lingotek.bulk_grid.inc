@@ -585,12 +585,12 @@ function lingotek_grid_legend_form($form, $form_state) {
   $legend_table = "<table class='legend-table'>"
       . "<tr>"
         . '<td><div><i class="fa fa-cloud-upload fa-2x ltk-upload"></i></div></td>'
-        . '<td>'. t('Upload edited documents to Lingotek for translation.') .'</td>'
+        . '<td>'. t('Upload edited documents to Lingotek for translation') .'</td>'
       . "</tr>"
 
       . "<tr>"
         . '<td><div><i class="fa fa-refresh fa-2x ltk-refresh"></i></div></td>'
-        . '<td>' . t('Checks the progress of In Progress content. When ready, red icons (In Progress) will become green (Ready to Download).') . '</td>'
+        . '<td>' . t('Checks the progress of In Progress content. When ready, red icons (In Progress) will become green (Ready to Download)') . '</td>'
       . "</tr>"
 
       . "<tr>"
@@ -629,18 +629,18 @@ function lingotek_grid_legend_form($form, $form_state) {
       . "</tr>"
 
       . "<tr>"
-        . '<td><div><a class="language-icon target-intermediate-current">lang</a></div></td>'
-        . '<td>' . t('Part of translation workflow is done and it can be downloaded') . '</td>'
-      . "</tr>"
-
-      . "<tr>"
         . '<td><div><a class="language-icon target-ready">lang</a></div></td>'
         . '<td>' . t('This content has been translated and is ready to be downloaded') . '</td>'
       . "</tr>"
 
       . "<tr>"
-        . '<td><div><a class="language-icon target-intermediate-ready">lang</a></div></td>'
-        . '<td>' . t('Part of translation workflow is ready for download') . '</td>'
+        . '<td><div><a class="language-icon target-interim_current">lang</a></div></td>'
+        . '<td>' . t('This content has a interim translation downloaded') . '</td>'
+      . "</tr>"
+
+      . "<tr>"
+        . '<td><div><a class="language-icon target-interim_ready">lang</a></div></td>'
+        . '<td>' . t('This content has a interim translation available for download') . '</td>'
       . "</tr>"
 
       . "<tr>"
@@ -1015,13 +1015,11 @@ function lingotek_grid_update($entity_type) {
   }
 
   $active_locales = lingotek_get_target_locales();
-  $pending_nids = LingotekSync::getEntityIdsByTargetStatus($entity_type, LingotekSync::STATUS_PENDING, $active_locales);
-  $disabled_nids = LingotekSync::getEntityIdsByProfileStatus($entity_type, LingotekSync::PROFILE_DISABLED);
-  $nids = array_diff($pending_nids, $disabled_nids);
+  $entity_ids = LingotekSync::getEntityIdsByStatuses($entity_type, array(LingotekSync::STATUS_PENDING, LingotekSync::STATUS_INTERIM_READY, LingotekSync::STATUS_INTERIM_CURRENT), $active_locales);
   variable_set('lingotek_pending_last_updated', time());
-  if (count($nids) > 0) {
-    $_SESSION['lingotek_sync_nodes'] = count($nids);
-    lingotek_update_target_progress_batch_create($entity_type, $nids); // Run batch operations to sync all 'In Progress' nodes
+  if (count($entity_ids) > 0) {
+    $_SESSION['lingotek_sync_nodes'] = count($entity_ids);
+    lingotek_update_target_progress_batch_create($entity_type, $entity_ids); // Run batch operations to sync all 'In Progress' nodes
   }
   else {
     drupal_set_message(t('There are no in-progress translations to check.'));
@@ -1060,10 +1058,12 @@ function lingotek_grid_query_status($entity_type, $comma_separated_ids){
 }
 
 function lingotek_grid_automatic_download($entity_type){
+  $or = db_or()->condition('lem.value','READY')->condition('lem.value','INTERIM_READY');
   $query = db_select('lingotek_entity_metadata', 'lem');
   $query->addField('lem', 'entity_id');
   $query->addField('lem', 'entity_key');
-  $query->condition('lem.value', 'READY');
+  //$query->condition('lem.value', 'READY');
+  $query->condition($or);
   $query->condition('lem.entity_type', $entity_type);
   $results = $query->execute();
   $ids_to_check = array();
@@ -1121,7 +1121,7 @@ function config_download_ready($force_download, $comma_separated_ids = NULL, $en
   if($force_download != NULL){
     $ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
     $current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_CURRENT);
-    $intermediate_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_INTERMEDIATE);
+    $interim_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_INTERIM);
     $edited_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_EDITED);
     $set_ids = array_merge($ready_lids, $current_lids,$edited_lids);
   }
@@ -1144,7 +1144,7 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = NULL)
     config_download_ready(NULL, $comma_separated_ids, $entity_type);
     return;
   }
-  $targets = LingotekSync::getTargetsByStatus($entity_type, LingotekSync::STATUS_READY);
+  $targets = LingotekSync::getTargetsByStatuses($entity_type, array(LingotekSync::STATUS_READY, LingotekSync::STATUS_INTERIM_READY));
   if (!empty($targets)) {
     if($comma_separated_ids !== NULL || isset($_SESSION['grid_filters'][$entity_type])){
       if(isset($_SESSION['grid_filters'][$entity_type])){
@@ -1786,8 +1786,8 @@ function lingotek_bulk_grid_query_add_statuses($query, $entity_type, $eid) {
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_PENDING . "')", 't_pending');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_READY . "')", 't_ready');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_CURRENT . "')", 't_current');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_INTERMEDIATE_CURRENT . "')", 't_intermediate_current');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_INTERMEDIATE_READY . "')", 't_intermediate_ready');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_INTERIM_CURRENT . "')", 't_interim_current');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_INTERIM_READY . "')", 't_interim_ready');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_EDITED . "')", 't_edited');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_UNTRACKED . "')", 't_untracked');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(entity_key, 20, 10)) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key LIKE 'target_sync_status_%' AND value='" . LingotekSync::STATUS_TARGET_LOCALIZE . "')", 't_target_localize');
@@ -2226,7 +2226,7 @@ function lingotek_source_uploaded_icon($row) {
 }
 
 function lingotek_build_locales_statuses($row, $t_prefix = TRUE) {
-  $list_statuses = array('pending', 'ready', 'current', 'intermediate_ready', 'intermediate_current', 'edited', 'untracked');
+  $list_statuses = array('pending', 'ready', 'current', 'interim_ready', 'interim_current', 'edited', 'untracked');
   $locales_statuses = array();
   foreach ($list_statuses as $status) {
     $key = $t_prefix ? 't_' . $status : $status;
@@ -2385,8 +2385,8 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
     LingotekSync::STATUS_PENDING => t('In progress'),
     LingotekSync::STATUS_READY => t('Ready to download'),
     LingotekSync::STATUS_CURRENT => t('Current'),
-    LingotekSync::STATUS_INTERMEDIATE_READY => t('Ready to download Intermediate '),
-    LingotekSync::STATUS_INTERMEDIATE_CURRENT => t('Intermediate Current'),
+    LingotekSync::STATUS_INTERIM_READY => t('Ready to download the Interim translation'),
+    LingotekSync::STATUS_INTERIM_CURRENT => t('Interim Current'),
     LingotekSync::STATUS_EDITED => t('Not current'),
     LingotekSync::STATUS_UNTRACKED => t('Untracked'),
     LingotekSync::STATUS_TARGET_LOCALIZE => t('Pending localization'),
@@ -2403,8 +2403,8 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
     LingotekSync::STATUS_PENDING => $default_link,
     LingotekSync::STATUS_READY => $default_link,
     LingotekSync::STATUS_CURRENT => $default_link,
-    LingotekSync::STATUS_INTERMEDIATE_READY => $default_link,
-    LingotekSync::STATUS_INTERMEDIATE_CURRENT => $default_link,
+    LingotekSync::STATUS_INTERIM_READY => $default_link,
+    LingotekSync::STATUS_INTERIM_CURRENT => $default_link,
     LingotekSync::STATUS_EDITED => $default_link,
     LingotekSync::STATUS_UNTRACKED => $untracked_link,
     LingotekSync::STATUS_TARGET_LOCALIZE => $untracked_link,
