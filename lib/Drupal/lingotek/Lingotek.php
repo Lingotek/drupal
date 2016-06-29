@@ -208,7 +208,7 @@ class Lingotek {
   );
   public static $language_mapping_l2d_exceptions = array(
     'ar' => 'ar',
-    'zh_CN' => 'zh',
+    'zh_CN' => 'zh-hans',
     'zh_TW' => 'zh-hant'
   );
   public static $language_mapping_d2l_exceptions = array(
@@ -229,7 +229,6 @@ class Lingotek {
    *   FALSE otherwise.
    */
   public static function convertDrupal2Lingotek($drupal_language_code, $enabled_check = TRUE) {
-
     $lingotek_locale = FALSE;
 
     // standard conversion
@@ -277,7 +276,6 @@ class Lingotek {
    *   FALSE otherwise.
    */
   public static function convertLingotek2Drupal($lingotek_locale, $enabled_check = TRUE) {
-
     $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale)); // standard conversion
     $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
     $languages = language_list();
@@ -315,7 +313,6 @@ class Lingotek {
         $ret = $drupal_language_code;
       }
     }
-    //echo "\n\n convertLingotek2Drupal: ".$lingotek_locale." => ".$ret." \n\n";
     return $ret;
   }
 
