@@ -290,7 +290,7 @@ function lingotek_save_field_record($fname, $params) {
   try {
     drupal_write_record($fname, $params);
   } catch (PDOException $e) {
-    $log_message = t('The following error occured while writing to the database: SQLSTATE error @sqlError (Driver-specific error code @driverError): @errorMessage', array( '@sqlError' => $e->errorInfo[0], '@driverError' => $e->errorInfo[1], '@errorMessage' => $e->errorInfo[2]));
+    $log_message = t('The following error occurred while writing to the database: SQLSTATE error @sqlError (Driver-specific error code @driverError): @errorMessage', array( '@sqlError' => $e->errorInfo[0], '@driverError' => $e->errorInfo[1], '@errorMessage' => $e->errorInfo[2]));
     LingotekLog::error($log_message, $e);
     if ($e->errorInfo[0] === '22001') {
       $str_args = array();
