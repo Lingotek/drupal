@@ -290,6 +290,20 @@ function lingotek_save_field_record($fname, $params) {
   try {
     drupal_write_record($fname, $params);
   } catch (PDOException $e) {
+
+    /**
+     *Error logging became necessary for this try-catch when writing to the database
+     *because the drupal_write_record() was failing and we had no way of knowing
+     *why it was happening or even that is was happening because of the try-catch.
+     *
+     *The following code logs the error with the approriate detail and also displays
+     *a drupal message is the error is that the data was too long to be inserted
+     *into a specific column so that end users can know what happened and know why
+     *a particular translation is not working
+     *
+     *@author t.murphy 
+     *
+     */
     $log_message = t('The following error occurred while writing to the database: SQLSTATE error @sqlError (Driver-specific error code @driverError): @errorMessage', array( '@sqlError' => $e->errorInfo[0], '@driverError' => $e->errorInfo[1], '@errorMessage' => $e->errorInfo[2]));
     LingotekLog::error($log_message, $e);
     if ($e->errorInfo[0] === '22001') {
