@@ -2,3 +2,6 @@ administer lingotek:
   title: 'Administer Lingotek Translation Module'
   description: 'Use all features and tools in the Lingotek Translation Module.'
   restrict access: TRUE
+assign lingotek translation profiles:
+  title: 'Assign Lingotek translation profiles to content'
+  description: 'Assign Lingotek translation profiles to content. Defaults will be used if users cannot select a profile.'

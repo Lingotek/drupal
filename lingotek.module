@@ -17,30 +17,6 @@ use Drupal\lingotek\Lingotek;
 use Drupal\node\Form;
 
 /**
- * Implements hook_permission().
- */
-function lingotek_permission() {
-  return array(
-    'administer lingotek' => array(
-      'title' => t('Administer Lingotek'),
-      'description' => t('Access the administrative settings for the module.')
-    ),
-    'translation' => array(
-      'title' => t('Translate'),
-      'description' => t('Access to the translate content (e.g., the "Translations" tab will be available on nodes, comments will be translatable)')
-    ),
-    'manage projects' => array(
-      'title' => t('Project Management'),
-      'description' => t('Access the Lingotek tab on content types (Must also have permission to edit the content type in question).')
-    ),
-    'use lingotek developer tools' => array(
-      'title' => t('Developer'),
-      'description' => t('Access developer tools useful for detailed information and debugging')
-    ),
-  );
-}
-
-/**
  * Implements hook_toolbar().
  */
 function lingotek_toolbar() {
@@ -301,6 +277,9 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
     $default_profile = $lingotek_config->getEntityProfile($entity);
     $profile_options = $lingotek_config->getProfileOptions();
+    $current_user = \Drupal::currentUser();
+    $can_assign_profile = $current_user->hasPermission('assign lingotek translation profiles') ||
+      $current_user->hasPermission('administer lingotek');
 
     $form['lingotek_translation_management'] = array(
       '#type' => 'details',
@@ -308,6 +287,7 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#description' => t('The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek\'s translation tools and services without ever having to leave the comfort of your Drupal environment.'),
       '#group' => 'advanced',
       '#weight' => 50,
+      '#access' => $can_assign_profile,
     );
 
     $form['lingotek_translation_management']['lingotek_translation_profile'] = array(
@@ -315,6 +295,7 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#title' => t('Translation Profile'),
       '#options' => $profile_options,
       '#default_value' => $default_profile->id(),
+      '#access' => $can_assign_profile,
     );
 
     foreach (array_keys($form['actions']) as $action) {

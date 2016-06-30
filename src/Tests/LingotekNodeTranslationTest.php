@@ -160,4 +160,28 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.uploaded_locale'));
   }
 
+  /**
+   * Test that when a node is created we cannot assign a profile if using a restricted user.
+   */
+  public function testCannotAssignProfileToContentWithoutRightPermission() {
+    $editor = $this->drupalCreateUser(['bypass node access']);
+    // Login as editor.
+    $this->drupalLogin($editor);
+    // Get the node form.
+    $this->drupalGet('node/add/article');
+    // Assert translation profile cannot be assigned.
+    $this->assertNoField('lingotek_translation_profile');
+
+    $translation_manager = $this->drupalCreateUser([
+      'bypass node access',
+      'assign lingotek translation profiles'
+    ]);
+    // Login as translation manager.
+    $this->drupalLogin($translation_manager);
+    // Get the node form.
+    $this->drupalGet('node/add/article');
+    // Assert translation profile can be assigned.
+    $this->assertField('lingotek_translation_profile');
+  }
+
 }
