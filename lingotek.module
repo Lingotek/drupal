@@ -2055,10 +2055,8 @@ function lingotek_get_host_language($entity_type, $entity, $read_only = TRUE) {
 
   $site_default_lang = language_default();
   $site_default_langcode = $site_default_lang->language;
-  $host_language = null;
-  if(isset($_POST['language'])){
-    $host_language = check_plain($_POST['language']);
-  }
+  $host_language = isset($_POST['language']) ? $_POST['language'] : NULL;
+
   if (!$read_only && isset($host_language)) {
     return $host_language;
   }
