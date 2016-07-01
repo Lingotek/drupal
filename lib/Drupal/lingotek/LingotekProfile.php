@@ -27,10 +27,8 @@ class LingotekProfile {
   private function __construct($profile_id, $profile_attributes = array()) {
     $this->setId($profile_id);
     $this->setInherit(TRUE);
-
-    if (empty(self::$profiles)) {
-      $this->refresh();
-    }
+    $this->refresh();
+    
     if (empty(self::$global_profile)) {
       self::$global_profile = lingotek_get_global_profile();
     }
