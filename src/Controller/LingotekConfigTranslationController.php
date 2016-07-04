@@ -411,8 +411,9 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $id = $field_config->getTargetEntityTypeId();
       $mapper = $mappers[$id . '_fields'];
       $mapper->setEntity($field_config);
+      $entity_definition =  $this->entityManager->getDefinition($id);
 
-      $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id, $id . '_type' => $field_config->getTargetBundle()]);
+      $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id, $entity_definition->getBundleEntityType()  => $field_config->getTargetBundle()]);
     }
     else {
       $mapper = $mappers[$entity_type];
