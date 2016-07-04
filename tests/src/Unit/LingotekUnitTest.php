@@ -6,6 +6,7 @@ use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @coversDefaultClass \Drupal\lingotek\Lingotek
@@ -334,7 +335,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->getMock();
     $response->expects($this->any())
       ->method('getStatusCode()')
-      ->willReturn('201');
+      ->willReturn(Response::HTTP_CREATED);
     $language = $this->getMock('\Drupal\language\ConfigurableLanguageInterface');
     $language->expects($this->any())
       ->method('getId')
@@ -420,7 +421,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->getMock();
     $response->expects($this->any())
       ->method('getStatusCode')
-      ->willReturn('200');
+      ->willReturn(Response::HTTP_OK);
     $response->expects($this->any())
       ->method('getBody')
       ->willReturn(json_encode(

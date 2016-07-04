@@ -10,6 +10,7 @@ namespace Drupal\lingotek\Remote;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 /*
  * a simple connector to the Lingotek Translation API
@@ -64,7 +65,7 @@ class LingotekApi implements LingotekApiInterface {
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to add document: ' . $e->getMessage());
     }
-    if ($response->getStatusCode() == '202') {
+    if ($response->getStatusCode() == Response::HTTP_ACCEPTED) {
       $data = json_decode($response->getBody(), TRUE);
       if (!empty($data['properties']['id'])) {
         return $data['properties']['id'];

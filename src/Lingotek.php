@@ -13,6 +13,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\UrlGeneratorTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /*
  * The connecting class between Drupal and Lingotek
@@ -131,7 +132,7 @@ class Lingotek implements LingotekInterface {
 
     $response = $this->api->setProjectCallBackUrl($project_id, $args);
 
-    if ($response->getStatusCode() == '204') {
+    if ($response->getStatusCode() == Response::HTTP_NO_CONTENT) {
       return TRUE;
     }
     //TODO: Log item
@@ -199,7 +200,7 @@ class Lingotek implements LingotekInterface {
     }
 
     $response = $this->api->patchDocument($doc_id, $args);
-    if ($response->getStatusCode() == '202') {
+    if ($response->getStatusCode() == Response::HTTP_ACCEPTED) {
       return TRUE;
     }
     return FALSE;
@@ -208,7 +209,7 @@ class Lingotek implements LingotekInterface {
   public function deleteDocument($doc_id) {
     $response = $this->api->deleteDocument($doc_id);
 
-    if ($response->getStatusCode() == '204') {
+    if ($response->getStatusCode() == Response::HTTP_NO_CONTENT) {
       return TRUE;
     }
     return FALSE;
@@ -235,7 +236,7 @@ class Lingotek implements LingotekInterface {
     }
 
     $response = $this->api->addTranslation($doc_id, $locale, $workflow_id);
-    if ($response->getStatusCode() == '201') {
+    if ($response->getStatusCode() == Response::HTTP_CREATED) {
       return TRUE;
     }
     return FALSE;
@@ -268,7 +269,7 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     try {
       $response = $this->api->getDocumentStatus($doc_id);
-      if ($response->getStatusCode() == '200') {
+      if ($response->getStatusCode() == Response::HTTP_OK) {
         // If an exception didn't happen, the document is succesfully imported.
         // The status value there is related with translation status, so we must
         // ignore it.
@@ -286,7 +287,7 @@ class Lingotek implements LingotekInterface {
     // need to include that class.
     $response = $this->api->getDocumentTranslationStatus($doc_id, $locale);
     $progress = 0;
-    if ($response->getStatusCode() == '200') {
+    if ($response->getStatusCode() == Response::HTTP_OK) {
       $progress_json = json_decode($response->getBody(), TRUE);
       $lingotek_locale = str_replace("_", "-", $locale);
       if (!empty($progress_json['entities'])) {
@@ -309,7 +310,7 @@ class Lingotek implements LingotekInterface {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
     $response = $this->api->getTranslation($doc_id, $locale);
-    if ($response->getStatusCode() == '200') {
+    if ($response->getStatusCode() == Response::HTTP_OK) {
       return json_decode($response->getBody(), TRUE);
     }
     return FALSE;
