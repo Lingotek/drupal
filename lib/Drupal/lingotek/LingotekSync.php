@@ -490,6 +490,12 @@ class LingotekSync {
       }
 
       $query->condition('l.value', $status, 'IN');
+
+      // exclude orphaned targets (targets whose source language has been deleted)
+      if (db_field_exists($entity_base_table, 'language')) {
+        $query->condition('t.language', '', '!=');
+      }
+
       $count = $query->countQuery()->execute()->fetchField();
       $total_count += $count;
     }
