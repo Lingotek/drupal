@@ -185,6 +185,16 @@ a:hover.tooltips span {
   border: 1px solid rgba(68,135,204,1);
 }
 
+.language-icon.target-interim_current {
+  background-color: rgba(143,216,216,0.9);
+  border: 1px solid rgba(143,216,216,1);
+}
+
+language-icon.target-interim_ready{
+  background-color: rgba(137,231,148,0.9);
+  border: 1px solid rgba(137,231,148,1);
+}
+
 .language-icon.target-ready {
   background-color: #59ad1a;
   border: 1px solid #59ad1a;
@@ -376,7 +386,7 @@ a.ltk-action:hover {
     padding-bottom: 0;
     padding-left: 5px;
     height: 26px;
-    
+
 }
 .legend-table div{
     text-align: center;
@@ -401,7 +411,7 @@ a.ltk-action:hover {
   padding-top:3px;
   padding-bottom:3px;
 }
-#more-options{ 
+#more-options{
     transition:.3s;
 }
 .more-options-flip {
@@ -414,4 +424,3 @@ a.ltk-action:hover {
 #lingotek-admin-additional-translation-settings-form label{
  white-space: pre-wrap;
 }
-

@@ -15,6 +15,8 @@ class LingotekSync {
   const STATUS_FAILED = 'FAILED';    // The node or target translation has failed during processing
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
+  const STATUS_INTERIM_CURRENT = 'INTERIM_CURRENT'; // Part of the target translation is done and ready for download what has been done
+  const STATUS_INTERIM_READY = 'INTERIM_READY';
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation (ignored for upload by Lingotek)
   const STATUS_UNTRACKED = 'UNTRACKED'; // A translation was discovered that is not currently managed by Lingotek
   const STATUS_TARGET_LOCALIZE = 'TARGET_LOCALIZE'; // A localization must be made of the source before uploading to Lingotek
@@ -75,6 +77,8 @@ class LingotekSync {
       'STATUS_FAILED' => self::STATUS_FAILED,
       'STATUS_PENDING' => self::STATUS_PENDING,
       'STATUS_READY' => self::STATUS_READY,
+      'STATUS_INTERIM_READY' => self::STATUS_INTERIM_READY,
+      'STATUS_INTERIM_CURRENT' => self::STATUS_INTERIM_CURRENT,
       'STATUS_TARGET' => self::STATUS_TARGET,
       'STATUS_UNTRACKED' => self::STATUS_UNTRACKED,
       'STATUS_TARGET_LOCALIZE' => self::STATUS_TARGET_LOCALIZE,
@@ -258,13 +262,17 @@ class LingotekSync {
    *
    * @return an array of associate arrays.  Each associate array will have a 'nid' (e.g., 5), 'locale' (e.g., 'de_DE'), and optionally 'doc_id' (e.g., 46677222-b5ec-47d5-880e-24632feffaf5)
    */
-  public static function getTargetsByStatus($entity_type, $status, $include_doc_ids = FALSE) {
+  public static function getTargetsByStatuses($entity_type, $statuses=array(), $include_doc_ids = FALSE) {
     $target_language_search = '%';
     $query = db_select('lingotek_entity_metadata', 'l');
     $query->fields('l', array('entity_id', 'entity_key', 'value'));
     $query->condition('entity_type', $entity_type);
     $query->condition('entity_key', 'target_sync_status_' . $target_language_search, 'LIKE');
-    $query->condition('value', $status);
+    $or = db_or();
+    foreach($statuses as $status){
+      $or->condition('value', $status);
+    }
+    $query->condition($or);
     $result = $query->execute();
     $records = $result->fetchAll(); //$result->fetchAllAssoc('nid');
 
@@ -490,6 +498,12 @@ class LingotekSync {
       }
 
       $query->condition('l.value', $status, 'IN');
+
+      // exclude orphaned targets (targets whose source language has been deleted)
+      if (db_field_exists($entity_base_table, 'language')) {
+        $query->condition('t.language', '', '!=');
+      }
+
       $count = $query->countQuery()->execute()->fetchField();
       $total_count += $count;
     }
@@ -822,6 +836,33 @@ class LingotekSync {
       ->condition('entity_type', $entity_type)
       ->condition('entity_key', $target_locales, $verb)
       ->condition('value', $status);
+    $query->addField('l', 'entity_id', 'nid');
+    $result = $query->execute()->fetchCol();
+    return $result;
+  }
+
+  public static function getEntityIdsByStatuses($entity_type, $statuses = array(), $locales = NULL) {
+    if ($locales === NULL) {
+      $verb = 'LIKE';
+      $target_locales = 'target_sync_status_%';
+    }
+    else {
+      $verb = 'IN';
+      $target_locales = array();
+      foreach ($locales as $l) {
+        $target_locales[] = 'target_sync_status_' . $l;
+      }
+    }
+    $or = db_or();
+    foreach($statuses as $status){
+      $or->condition('value', $status);
+    }
+    $query = db_select('lingotek_entity_metadata', 'l')
+        ->distinct()
+      ->condition('entity_type', $entity_type)
+      ->condition('entity_key', $target_locales, $verb)
+      ->condition($or)
+      ->condition('value', LingotekSync::PROFILE_DISABLED, '<>');
     $query->addField('l', 'entity_id', 'nid');
     $result = $query->execute()->fetchCol();
     return $result;

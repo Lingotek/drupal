@@ -1293,7 +1293,7 @@ function lingotek_node_view($node, $view_mode) {
 
   $lingotek_has_doc_id = !empty($source_node->lingotek['document_id']);
   $community_translation_allowed = !empty($source_node->lingotek['allow_community_translation']);
-  if ($community_translation_allowed && $lingotek_has_doc_id && !empty($source_node->lingotek['profile']) && $source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
+  if ($community_translation_allowed && $lingotek_has_doc_id && isset($source_node->lingotek['profile']) && $source_node->lingotek['profile'] != LingotekSync::PROFILE_DISABLED) {
     if ($language->language != $source_node->language) {
       $link = lingotek_get_workbench_url($source_node->lingotek['document_id'], $language->lingotek_locale, t('Help make it better.'));
       if ($link != '') {
@@ -1425,17 +1425,7 @@ function lingotek_entity_load($entities, $entity_type) {
       lingotek_normalize_special_field_language($entity_type, $e);
     }
   }
-  // pull out the entities that already have cached lingotek info.
-  $filtered_entities = array();
-  foreach ($entities as $k => &$v) {
-    $lingotek_cache = lingotek_cache_get($entity_type, $k);
-    if (!empty($lingotek_cache)) {
-      $v->lingotek = $lingotek_cache;
-    }
-    else {
-      $filtered_entities[$k] = $v;
-    }
-  }
+
 
   // Check for callbacks and cron jobs, otherwise return
   $is_anonymous = user_is_anonymous();
@@ -1466,13 +1456,10 @@ function lingotek_entity_load($entities, $entity_type) {
     return;
   }
 
-  if (empty($filtered_entities)) {
-    return;
-  }
 
   $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
-      ->condition('l.entity_id', array_keys($filtered_entities), 'IN')
+      ->condition('l.entity_id', array_keys($entities), 'IN')
       ->condition('l.entity_type', $entity_type)
       ->condition('l.entity_key', 'target_%', 'NOT LIKE');
   $result = $query->execute();
@@ -1482,7 +1469,7 @@ function lingotek_entity_load($entities, $entity_type) {
     $values[$record->entity_id][$record->entity_key] = $record->value;
   }
 
-  foreach ($filtered_entities as &$entity) {
+  foreach ($entities as &$entity) {
 
     // Pull profile values for the entity
     list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
@@ -1500,7 +1487,6 @@ function lingotek_entity_load($entities, $entity_type) {
     if (!empty($values[$id])) {
       $entity->lingotek = array_merge($entity->lingotek, $values[$id]);
     }
-    lingotek_cache_set($entity_type, $id, $entity->lingotek);
   }
 }
 
@@ -1816,6 +1802,9 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   // translation not yet done would set the target statuses to current.
   if ($status == LingotekSync::STATUS_READY) {
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
+  }
+  else if ($status == LingotekSync::STATUS_INTERIM_READY) {
+    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_INTERIM_CURRENT);
   }
   // If local translations have been deleted than status will be DELETED. Just make the status CURRENT because you are downloading existing translations from Lingotek
   if ($status == LingotekSync::STATUS_DELETED) {
