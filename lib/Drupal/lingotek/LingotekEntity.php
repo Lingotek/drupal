@@ -382,6 +382,9 @@ class LingotekEntity implements LingotekTranslatableEntity {
     if ($completed) {
       lingotek_keystore($this->getEntityType(), $this->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_READY);
     }
+    else{
+      lingotek_keystore($this->getEntityType(), $this->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_INTERIM_READY);
+    }
   }
 
   public function postDownload($lingotek_locale, $completed) {

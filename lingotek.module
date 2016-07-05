@@ -1803,6 +1803,9 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   if ($status == LingotekSync::STATUS_READY) {
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
   }
+  else if ($status == LingotekSync::STATUS_INTERIM_READY) {
+    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_INTERIM_CURRENT);
+  }
   // If local translations have been deleted than status will be DELETED. Just make the status CURRENT because you are downloading existing translations from Lingotek
   if ($status == LingotekSync::STATUS_DELETED) {
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);

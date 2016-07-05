@@ -97,14 +97,14 @@ function lingotek_perform_action(nid, action) {
       modifyActionButtonURL('#download-ready', original_download_ready_URL);
     });
   }
- 
+
   function addClickToUploadButton() {
     original_upload_edited_URL = $('#upload-edited').attr('href');
     $('#upload-edited').click(function () {
       modifyActionButtonURL('#upload-edited', original_upload_edited_URL);
     });
   }
- 
+
   this.check_box_count = 0;
   function addClickToCheckboxes() {
     $('#edit-grid-container .form-checkbox').each(function () {
@@ -113,9 +113,9 @@ function lingotek_perform_action(nid, action) {
       });
     });
   }
- 
+
   //changes the href associated with the download/upload buttons after they are clicked
-  //but before the links are actually followed. Also checks to see if the results are 
+  //but before the links are actually followed. Also checks to see if the results are
   //filtered.
   function modifyActionButtonURL(element_id, original_URL) {
     var new_URL = original_URL.valueOf();//clones the original
@@ -125,7 +125,7 @@ function lingotek_perform_action(nid, action) {
     new_URL = entity_ids.length === 0 ? original_URL : new_URL;
     $(element_id).attr('href', new_URL);
   }
- 
+
   //looks at every currently displayed row and pushes the entity_id of each
   //row with a checked checkbox into the return variable
   function getIDArray(visible_check) {
@@ -147,7 +147,7 @@ function lingotek_perform_action(nid, action) {
     $('#upload-edited').attr('title', 'Upload all pending source content');
     $('#download-ready').attr('title', 'Download complete translations');
     var text = $('#clear-filters').text();
- 
+
     if (text === undefined || text === "") {
       $('.notify-filtered-action').hide();
     }
@@ -162,7 +162,7 @@ function lingotek_perform_action(nid, action) {
     var box_checked = $(event.target).attr('checked');
     //accounts for the select all box
     if ($(event.target).val() === 'on' && box_checked) {
-      this.check_box_count = $('#edit-grid-container .form-checkbox').length - 2; 
+      this.check_box_count = $('#edit-grid-container .form-checkbox').length - 2;
     }
     else if ($(event.target).val() === 'on' && !box_checked) {
       this.check_box_count = 0;
@@ -233,11 +233,16 @@ function lingotek_perform_action(nid, action) {
         var status = entity_type !== 'config' ? data[entity_id][key].status : data[entity_id][key].toUpperCase();
         switch(status) {
           case "READY":
-            title = 'Ready to download';            
+            title = 'Ready to download';
             break;
           case "CURRENT":
-            title = 'Current';            
+            title = 'Current';
             break;
+          case "INTERIM_READY":
+            title = 'Ready to Download Interim Translations';
+            break;
+          case "INTERIM_CURRENT":
+            title = 'Interim translation downloaded';
           case "EDITED":
             title = 'Needs to be Uploaded';
             break;
@@ -302,6 +307,8 @@ function lingotek_perform_action(nid, action) {
     $(row).find('a.language-icon').each(function () {
       var icon_href = $(this).attr('href');
       //retrieve the language code from the href
+      icon_href = icon_href.split("#")[0];
+
       var language_code = icon_href.substring(icon_href.length - 'xx_XX'.length);//normal locale code
       if(data[entity_id][language_code] === undefined){
         var language_code = icon_href.substring(icon_href.length - 'xx'.length);//language code case
@@ -313,8 +320,8 @@ function lingotek_perform_action(nid, action) {
         : data[entity_id][language_code].toUpperCase();
       switch (status) {
         case "READY":
-          //take out the empty checkbox in Source Uploaded and replace with 
-          //checked, using this here solves a problem where uploading from 
+          //take out the empty checkbox in Source Uploaded and replace with
+          //checked, using this here solves a problem where uploading from
           //out side the manager sometimes jumps to READY
           $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
           $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
@@ -325,6 +332,16 @@ function lingotek_perform_action(nid, action) {
           $(this).removeClass().addClass('language-icon target-current');
           $(this).attr('title', title + ' Current');
           break;
+        case "INTERIM_READY":
+          $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
+          $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
+          $(this).removeClass().addClass('language-icon target-interim_ready');
+          $(this).attr('title', title + ' Ready to download interim translation');
+          break;
+        case "INTERIM_CURRENT":
+            $(this).removeClass().addClass('language-icon target-interim_current');
+            $(this).attr('title', title + ' Interim Current');
+            break;
         case "EDITED":
           //remove check box in Source Uploaded and replace with upload link and empty checkbox
           if($('.target-edited',row).length === 0){
@@ -355,9 +372,9 @@ function lingotek_perform_action(nid, action) {
           break;
       }
     });
-    
+
   }
- 
+
   function updateStatusIndicators(data) {
     //the checkboxes always have the row's entity id
     $('#edit-grid-container .form-checkbox').each(function () {
@@ -370,7 +387,7 @@ function lingotek_perform_action(nid, action) {
       }
     });
   }
- 
+
   function pollTranslationStatus(){
     //makes it easy to find empty cells, the only empty ones will be in the status
     //column if the row hasn't been uploaded yet.
@@ -397,7 +414,7 @@ function lingotek_perform_action(nid, action) {
       }, 10000);
   }
   function pollAutomaticDownloads(){
-    //config section does not have profiles, so automatic downloads should not 
+    //config section does not have profiles, so automatic downloads should not
     //happen
     if($('#entity-type').val() === 'config'){
       return;
