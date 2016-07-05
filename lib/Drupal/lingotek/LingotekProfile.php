@@ -169,21 +169,49 @@ class LingotekProfile {
       return $count_types;
     }
     else {
+      /**
+       *This is a representation of the query and subquery we are building to get
+       *the usage for each profile.
+       *@author t.murphy, smithworx, jbhovik, clarticus
+       *
+       *
+       *SELECT count(*) as COUNT, entity_type as ENTITY_TYPE
+       *FROM lingotek_entity_metadata
+       *WHERE entity_key = 'profile'
+       *AND value = '<profile_id>'
+       *AND entity_id NOT IN
+       *           (SELECT entity_id
+       *           FROM lingotek_entity_metadata
+       *           WHERE entity_key = 'upload_status'
+       *           AND value = 'TARGET')
+       *GROUP BY entity_type;
+       *
+       */
+
+
+      $subquery = db_select('lingotek_entity_metadata', 'lem')
+          ->fields('lem', array('entity_id'))
+          ->condition('lem.entity_key', 'upload_status')
+          ->condition('lem.value', 'TARGET');
+      $entity_ids = $subquery->execute()->fetchCol();
+
+      $query = db_select('lingotek_entity_metadata', 'lem')
+          ->fields('lem', array('entity_type'))
+          ->condition('lem.entity_key', 'profile')
+          ->condition('lem.value', $this->getId());
+
+      if (!empty($entity_ids)) {
+        $query->condition('lem.entity_id', $entity_ids, 'NOT IN');
+      }
+
+
+      $query->groupBy('lem.entity_type');
+      $query->addExpression('count(lem.entity_id)', 'COUNT');
+      $entities = $query->execute()->fetchAll();
+
       $entity_counts = array();
-      $entities = $this->getEntities();
-      // used to remove the target nodes from the count in node based profiles
-      $target_nodes = LingotekSync::getNodeIdsByStatus('TARGET', TRUE);
-      // count up the entities by type
       foreach ($entities as $e) {
-        if (isset($entity_counts[$e['type']])) {
-          $entity_counts[$e['type']]++;
-          if (in_array($e['id'], $target_nodes)) {
-            $entity_counts[$e['type']]--;
-          }
-        }
-        else {
-          $entity_counts[$e['type']] = 1;
-        }
+        $entity_counts[$e->entity_type] = $e->COUNT;
       }
       return $entity_counts;
     }
