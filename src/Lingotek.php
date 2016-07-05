@@ -208,8 +208,8 @@ class Lingotek implements LingotekInterface {
 
   public function deleteDocument($doc_id) {
     $response = $this->api->deleteDocument($doc_id);
-
-    if ($response->getStatusCode() == Response::HTTP_NO_CONTENT) {
+    $status_code = $response->getStatusCode();
+    if ($status_code == Response::HTTP_NO_CONTENT || $status_code == Response::HTTP_ACCEPTED) {
       return TRUE;
     }
     return FALSE;

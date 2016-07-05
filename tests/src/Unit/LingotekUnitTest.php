@@ -334,7 +334,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())
-      ->method('getStatusCode()')
+      ->method('getStatusCode')
       ->willReturn(Response::HTTP_CREATED);
     $language = $this->getMock('\Drupal\language\ConfigurableLanguageInterface');
     $language->expects($this->any())
@@ -387,29 +387,59 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload with a profile that has a workflow.
     $profile = new LingotekProfile(['id' => 'profile1', 'workflow' => 'my_test_workflow'], 'lingotek_profile');
-    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 
     // We upload with a profile that has another vault and another project.
     $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'another_test_workflow'], 'lingotek_profile');
-    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'default'], 'lingotek_profile');
-    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 
     // We upload with a profile that has marked to use the default vault and project,
     // but has an override.
     $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'default', 'language_overrides' => ['es' => ['overrides' => 'custom', 'custom' => ['workflow' => 'overridden_workflow']]]], 'lingotek_profile');
-    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 
     // We upload with a profile that has another vault and another project, but
     // overriden with a default, so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'a_different_test_workflow', 'language_overrides' => ['es' => ['overrides' => 'custom', 'custom' => ['workflow' => 'default']]]], 'lingotek_profile');
-    $this->lingotek->addTarget('my_doc_id', 'es_ES', $profile);
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 
     // We upload without a profile
-    $this->lingotek->addTarget('my_doc_id', 'es_ES', NULL);
+    $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', NULL));
+  }
+
+  /**
+   * @covers ::deleteDocument
+   */
+  public function testDeleteDocument() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    // Both HTTP_ACCEPTED (202) AND HTTP_NO_CONTENT (204) are success statuses.
+    $response->expects($this->at(0))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+    $response->expects($this->at(1))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NO_CONTENT);
+
+    // Test returning an error.
+    $response->expects($this->at(2))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_INTERNAL_SERVER_ERROR);
+
+    $this->api->expects($this->any())
+      ->method('deleteDocument')
+      ->with('my_doc_id')
+      ->will($this->returnValue($response));
+
+    $this->assertTrue($this->lingotek->deleteDocument('my_doc_id'));
+    $this->assertTrue($this->lingotek->deleteDocument('my_doc_id'));
+    $this->assertFalse($this->lingotek->deleteDocument('my_doc_id'));
   }
 
   /**
