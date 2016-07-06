@@ -921,6 +921,54 @@ function lingotek_lookup_locale_exists($drupal_language_code) {
   return FALSE;
 }
 
+function lingotek_create_path_prefix($drupal_code) {
+  $prefix = '';
+  $prefix_without_hyphen = '';
+  $prefix_with_hyphen = $drupal_code;
+
+  // Create prefix without hyphen
+  if (strpos($drupal_code, '-') !== FALSE) {
+    $hyphen_pos = strpos($drupal_code, '-');
+    $prefix_without_hyphen = substr($drupal_code, 0, $hyphen_pos);
+  }
+  else {
+    $prefix_without_hyphen = $drupal_code;
+  }
+
+  $prefixes = db_select('languages', 'l')
+    ->fields('l', array('prefix'))
+    ->execute()
+    ->fetchCol();
+
+  // See if the path prefix without hyphen is already being used. If so, try prefix with hyphen
+  $prefix_without_hyphen_used = FALSE;
+  foreach($prefixes as $prefix) {
+    if ($prefix === $prefix_without_hyphen) {
+      $prefix_without_hyphen_used = TRUE;
+      break;
+    }
+  }
+  if (!$prefix_without_hyphen_used) {
+    $prefix = $prefix_without_hyphen;
+  }
+
+  // See if the path prefix with hyphen is already being used.
+  $prefix_with_hyphen_used = FALSE;
+  if ($prefix_without_hyphen_used) {
+    foreach($prefixes as $prefix) {
+      if ($prefix === $drupal_code) {
+        $prefix_with_hyphen_used = TRUE;
+        break;
+      }
+    }
+    if (!$prefix_with_hyphen_used) {
+      $prefix = $prefix_with_hyphen;
+    }
+  }
+
+  return $prefix;
+}
+
 /**
  * Adds the target language as being enabled.
  */
@@ -946,6 +994,7 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
     if (module_exists('locale')) {
       $predefined_languages = _locale_prepare_predefined_list();
     }
+
     $drupal_code_with_locale = strtolower(str_replace("_", "-", $lingotek_locale));
 
     // Use a predefined Drupal language code, if available
@@ -963,11 +1012,11 @@ function lingotek_add_target_language($lingotek_locale, $call_api = TRUE) {
       }
     }
 
+    $prefix = lingotek_create_path_prefix($drupal_language_code);
     $name = isset($_POST['language']) ? $_POST['language'] : NULL;
     $native = isset($_POST['native']) ? $_POST['native'] : NULL;
     $direction = isset($_POST['direction']) && (strcasecmp('RTL', $_POST['direction']) == 0 ) ? LANGUAGE_RTL : LANGUAGE_LTR;
     $domain = '';
-    $prefix = '';
     locale_add_language($drupal_language_code, $name, $native, $direction, $domain, $prefix); // Function from the Locale module.
   }
 
@@ -1160,7 +1209,7 @@ function lingotek_cleanup_notify_entity_translation() {
       $bundle_name = !empty($info['entity keys']['bundle']) ? $info['entity keys']['bundle'] : NULL;
       if ($bundle_name && lingotek_managed_by_entity_translation($entity->$bundle_name)) {
         $addtl_params = array('created' => $r->created, 'changed' => $r->modified);
-        list($languages_updated, $updates) = lingotek_entity_translation_save_status($r->entity_type, $entity, array(Lingotek::convertLingotek2Drupal($locale, FALSE)), $addtl_params);
+        list($languages_updated, $updates) = lingotek_entity_translation_save_status($r->entity_type, $entity, array(Lingotek::convertLingotek2Drupal($locale)), $addtl_params);
         $total_updates += $updates;
       }
     }
