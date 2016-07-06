@@ -1146,7 +1146,7 @@ function lingotek_grid_download_ready($entity_type, $comma_separated_ids = NULL)
   }
   $targets = LingotekSync::getTargetsByStatuses($entity_type, array(LingotekSync::STATUS_READY, LingotekSync::STATUS_INTERIM_READY));
   if (!empty($targets)) {
-    if($comma_separated_ids !== NULL || isset($_SESSION['grid_filters'][$entity_type])){
+    if($comma_separated_ids !== NULL || (isset($_SESSION['grid_filters'][$entity_type]) && !empty($_SESSION['grid_filters'][$entity_type]))){
       if(isset($_SESSION['grid_filters'][$entity_type])){
         $filtered_ids = isset($_SESSION['grid_filters'][$entity_type]['filtered_ids']) ? isset($_SESSION['grid_filters'][$entity_type]['filtered_ids']) : NULL;
         empty_array_check($filtered_ids, $entity_type, "There are no translations ready for download for this filter.");
