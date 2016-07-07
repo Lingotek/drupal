@@ -1085,12 +1085,10 @@ function lingotek_get_target_locales($codes_only = TRUE) {
 }
 
 /*
- * Get the Lingotek Content Types - returns the content types OR ids only
+ * Get the Lingotek Content Types. Returns the names of the content types
  *
- * @param $ids_only
- *  Boolean - return ids only rather than associative array of content type definitions
  * @return
- *  Mixed - associative array (or an array of keys when ids_only is TRUE)
+ *  Array of content type keys
  */
 
 function lingotek_get_content_types() {
