@@ -8,6 +8,7 @@ use Drupal\config_translation\Controller\ConfigTranslationController;
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
@@ -56,9 +57,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    *   The current user.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
    */
-  public function __construct(LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager) {
-    parent::__construct($config_mapper_manager, $access_manager, $router, $path_processor, $account, $language_manager);
+  public function __construct(LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager, RendererInterface $renderer) {
+    parent::__construct($config_mapper_manager, $access_manager, $router, $path_processor, $account, $language_manager, $renderer);
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->translationService = $translation_service;
   }
@@ -75,7 +78,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $container->get('router'),
       $container->get('path_processor_manager'),
       $container->get('current_user'),
-      $container->get('language_manager')
+      $container->get('language_manager'),
+      $container->get('renderer')
     );
   }
 
