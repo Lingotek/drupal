@@ -7,8 +7,7 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Config\ConfigImporter;
-use Drupal\Core\Config\StorageComparer;
+use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\simpletest\KernelTestBase;
 
@@ -31,7 +30,7 @@ class LingotekConfigImportTest extends KernelTestBase {
    *
    * @var array
    */
-  public static $modules = array('system', 'user', 'entity_test', 'language', 'locale', 'content_translation', 'config_translation', 'lingotek');
+  public static $modules = array('config_test', 'system', 'user', 'entity_test', 'language', 'locale', 'content_translation', 'config_translation', 'lingotek');
 
   /**
    * {@inheritdoc}
@@ -40,31 +39,33 @@ class LingotekConfigImportTest extends KernelTestBase {
     parent::setUp();
 
     $this->installEntitySchema('entity_test_mul');
-    $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
-
-    // Set up the ConfigImporter object for testing.
-    $storage_comparer = new StorageComparer(
-      $this->container->get('config.storage.sync'),
-      $this->container->get('config.storage'),
-      $this->container->get('config.manager')
-    );
-    $this->configImporter = new ConfigImporter(
-      $storage_comparer->createChangelist(),
-      $this->container->get('event_dispatcher'),
-      $this->container->get('config.manager'),
-      $this->container->get('lock'),
-      $this->container->get('config.typed'),
-      $this->container->get('module_handler'),
-      $this->container->get('module_installer'),
-      $this->container->get('theme_handler'),
-      $this->container->get('string_translation')
-    );
   }
 
   /**
    * Tests config import updates.
    */
-  function testConfigImportUpdates() {
+  public function testConfigImportUpdates() {
+    // Create a content entity and some config that depends on it.
+    $content_entity = EntityTestMul::create([]);
+    $content_entity->save();
+    $storage = $this->container->get('entity.manager')->getStorage('config_test');
+    // Test dependencies between modules.
+    $entity1 = $storage->create(
+      array(
+        'id' => 'entity1',
+        'dependencies' => array(
+          'enforced' => array(
+            'content' => array($content_entity->getConfigDependencyName())
+          )
+        )
+      )
+    );
+    $entity1->save();
+
+    // Copy all configuration to staging.
+    $this->copyConfig($this->container->get('config.storage'), $this->container->get('config.storage.sync'));
+
+    // Set up the lingotek configuration in staging.
     $entity_type_id = 'entity_test_mul';
     $config_name = 'lingotek.settings';
     $config_id = $entity_type_id . '.' . $entity_type_id;
@@ -117,7 +118,7 @@ class LingotekConfigImportTest extends KernelTestBase {
     $this->assertIdentical($sync->exists($config_name), TRUE, $config_name . ' found.');
 
     // Import.
-    $this->configImporter->reset()->import();
+    $this->configImporter()->import();
 
     // Verify the values appeared.
     $config = $this->config($config_name);
