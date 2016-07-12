@@ -425,7 +425,8 @@ function lingotek_update_7206(&$sandbox) {
 }
 
 /**
- * Change the value for LINGOTEK_ENABLED to a string to avoid collision.
+ * Change the value for old LINGOTEK_ENABLED define ('lingotek') to a string to
+ * avoid collision.
  */
 function lingotek_update_7207(&$sandbox) {
   $updated = array();
@@ -433,7 +434,7 @@ function lingotek_update_7207(&$sandbox) {
     $name = 'language_content_type_' . $type;
     if (variable_get($name) == 5) {
       $updated[] = $type;
-      variable_set($name, LINGOTEK_ENABLED);
+      variable_set($name, 'lingotek');
     }
   }
 
@@ -583,7 +584,7 @@ function lingotek_update_7403(&$sandbox) {
     foreach ($types as $t) {
       $translation_setting = variable_get('language_content_type_' . $t->type);
       if ($translation_setting == 'lingotek') {
-        variable_set('language_content_type_' . $t->type, "1");
+        variable_set('language_content_type_' . $t->type, '1');
         $fields = field_info_instances("node", $t->type);
         foreach ($fields as $field_name => $instance) {
           $field = field_info_field($field_name);
