@@ -118,7 +118,7 @@ function lingotek_operation_content_download_finished($success, $results, $opera
     drupal_set_message(\Drupal::service('renderer')->renderPlain($error_message), 'error');
   }
   $count = !empty($results['downloads']) ? $results['downloads'] : 0;
-  $message = \Drupal::translation()->formatPlural($count, 'Downloaded a document to Lingotek.', 'Uploaded @num documents to Lingotek.', array('@num' => $count));
+  $message = \Drupal::translation()->formatPlural($count, 'Downloaded a document from Lingotek.', 'Downloaded @num documents from Lingotek.', array('@num' => $count));
   if (isset($results['error'])) {
     drupal_set_message($message, 'warning');
   }
