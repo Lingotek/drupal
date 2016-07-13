@@ -2118,6 +2118,10 @@ function lingotek_entity_langcode($entity_type, $entity) {
   if ($entity_type == 'bean') {
     return language_default()->language;
   }
+  // See if the group's source isn't the same as the site default
+  if ($entity_type == 'group') {
+    return lingotek_get_group_source($entity->gid);
+  }
 
   $info = entity_get_info($entity_type);
   // Default to string 'language' if no language-related entity key is found.
@@ -2375,6 +2379,11 @@ function lingotek_cache_clear($entity_type = NULL, $entity_id = NULL) {
  * Loads a source language for a group type
  */
 function lingotek_get_group_source($entity_id) {
+  if (!module_exists('entity_translation')) {
+    drupal_set_message(t('The Entity Translation module is required for translation of Group module types.'), 'warning', FALSE);
+    return language_default()->language;
+  }
+
   $row = db_select('entity_translation', 'et')
     ->fields('et')
     ->condition('entity_type', 'group')

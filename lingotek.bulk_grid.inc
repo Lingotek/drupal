@@ -2296,7 +2296,7 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   }
   elseif ($entity_type == 'group') {
     $id = $row->gid;
-    $language = lingotek_get_group_source($id);
+    $language = lingotek_get_group_source($row->gid);
     $row->language = $language;
   }
   elseif (!empty($row->id)) {
