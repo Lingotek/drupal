@@ -282,7 +282,13 @@ class LingotekLocale {
 
   public static function generateLingotek2Drupal($lingotek_locale) {
     $drupal_language_code = strtolower(str_replace("_", "-", $lingotek_locale)); // standard conversion
-    $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
+    if ($hyphen_index = strpos($drupal_language_code, '-') > 0) {
+      $drupal_general_code = substr($drupal_language_code, 0, strpos($drupal_language_code, '-'));
+    }
+    else {
+      // We try with the given language, if we didn't have an hyphen (e.g. ar).
+      $drupal_general_code = $drupal_language_code;
+    }
 
     // check enabled list
     $enabled_languages = \Drupal::languageManager()->getLanguages();

@@ -24,4 +24,15 @@ class LingotekLocaleTest extends WebTestBase {
     $this->assertIdentical('zh_CN', LingotekLocale::convertDrupal2Lingotek('zh-hans'));
   }
 
+  public function testGenerateLingotek2Drupal() {
+    $language = LingotekLocale::generateLingotek2Drupal('es_ES');
+    $this->assertEqual('es', $language);
+
+    $language = LingotekLocale::generateLingotek2Drupal('de-AT');
+    $this->assertEqual('de', $language);
+
+    $language = LingotekLocale::generateLingotek2Drupal('ar');
+    $this->assertEqual('ar', $language);
+  }
+
 }

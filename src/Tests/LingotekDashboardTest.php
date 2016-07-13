@@ -84,6 +84,32 @@ class LingotekDashboardTest extends LingotekTestBase {
   }
 
   /**
+   * Test that arabic (somehow a special language) can be added.
+   */
+  public function testDashboardCanAddArabicLanguage() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $post = [
+      'code' => 'ar',
+      'language' => 'Arabic',
+      'native' => 'العربية',
+      'direction' => 'RTL',
+    ];
+    $request = $this->drupalPost('/admin/lingotek/dashboard_endpoint', 'application/json', $post);
+    $response = json_decode($request, TRUE);
+
+    $arabic_language = ConfigurableLanguage::load('ar');
+    /** @var $italian_language ConfigurableLanguageInterface */
+    $this->assertNotNull($arabic_language, 'Arabic language has been added.');
+    $this->assertIdentical('Arabic', $arabic_language->getName());
+    $this->assertIdentical(ConfigurableLanguage::DIRECTION_RTL, $arabic_language->getDirection());
+
+    // @ToDo: The native language is not saved.
+  }
+
+
+  /**
    * Test that different locales from same language can be added.
    */
   public function testDashboardAddLanguageAndThenLocale() {
