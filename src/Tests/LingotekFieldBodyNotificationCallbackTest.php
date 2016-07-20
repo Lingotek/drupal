@@ -31,7 +31,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('es')->save();
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
   }
 
   /**

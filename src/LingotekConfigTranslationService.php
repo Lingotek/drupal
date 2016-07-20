@@ -306,27 +306,17 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $mapper->setEntity($entity);
     }
     else {
-      $mapper = $this->configMapperManager->createInstance($entity->getEntityTypeId());
+      $mapper = clone $this->mappers[$entity->getEntityTypeId()];
       $mapper->setEntity($entity);
     }
-    $properties = $this->getConfigTranslatableProperties($mapper);
-    $values = [];
-    foreach ($mapper->getConfigNames() as $config_name) {
-      foreach ($properties[$config_name] as $property) {
-        $keys = explode('.', $property);
-        $value = $entity;
-        foreach ($keys as $key) {
-          if (is_array($value)) {
-            $value = $value[$key];
-          }
-          else {
-            $value = $value->get($key);
-          }
-        }
-        $values[$property] = $value;
-      }
+    $data = $this->getConfigSourceData($mapper);
+    // For retro-compatibility, if there is only one config name, we plain our
+    // data.
+    $names = $mapper->getConfigNames();
+    if (count($names) == 1) {
+      $data = $data[$names[0]];
     }
-    return $values;
+    return $data;
   }
 
   /**
@@ -535,26 +525,29 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
   }
 
-
+  /**
+   * {@inheritdoc}
+   */
   public function saveTargetData(ConfigEntityInterface $entity, $langcode, $data) {
-    /** @var ConfigEntityInterface $translated */
-    $translated = $this->entityManager->getStorage($entity->getEntityTypeId())
-      ->load($entity->id());
-
-    $type = $translated->getEntityType();
-    $prefix = $type->get('config_prefix')
-      ? $type->getProvider() . '.' . $type->get('config_prefix') . '.'
-      : $type->getProvider() . '.' . $type->get('id') . '.';
-
-    /** @var Config $config */
-    $name = $prefix . $entity->id();
-    // $config = \Drupal::configFactory()->getEditable($name);
-    $config_translation = $this->languageManager->getLanguageConfigOverride($langcode, $name);
-
-    foreach ($data as $property => $value) {
-      $config_translation->set($property, $value);
+    if ($entity->getEntityTypeId() == 'field_config') {
+      $id = $entity->getTargetEntityTypeId();
+      $mapper = $this->mappers[$id . '_fields'];
+      $mapper->setEntity($entity);
     }
-    $config_translation->save();
+    else {
+      $mapper = clone $this->mappers[$entity->getEntityTypeId()];
+      $mapper->setEntity($entity);
+    }
+    // For retro-compatibility, if there is only one config name, we expand our
+    // data.
+    $names = $mapper->getConfigNames();
+    if (count($names) == 1) {
+      $expanded[$names[0]] = $data;
+    }
+    else {
+      $expanded = $data;
+    }
+    $this->saveConfigTargetData($mapper, $langcode, $expanded);
   }
 
   /**

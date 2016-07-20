@@ -45,7 +45,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
   }
 
   /**
@@ -64,9 +64,10 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // Check that only the translatable fields have been uploaded.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertTrue(array_key_exists('label', $data));
+    $this->verbose(var_export($data, TRUE));
+    $this->assertTrue(array_key_exists('label', $data['field.field.node.article.body']));
     // Cannot use isset, the key exists but we are not providing values, so NULL.
-    $this->assertTrue(array_key_exists('description', $data));
+    $this->assertTrue(array_key_exists('description', $data['field.field.node.article.body']));
 
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
@@ -88,6 +89,11 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
     $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/fields/node.article.body/translate/es/edit');
+
+    // Check that the values are correct.
+    $this->clickLink('Edit', 1);
+    $this->assertFieldByName('translation[config_names][field.field.node.article.body][label]', 'Cuerpo');
+    $this->assertFieldByName('translation[config_names][field.field.node.article.body][description]', 'Cuerpo del contenido');
   }
 
 }

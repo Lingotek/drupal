@@ -40,7 +40,7 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
   }
 
 

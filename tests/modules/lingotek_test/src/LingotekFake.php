@@ -218,6 +218,18 @@ class LingotekFake implements LingotekInterface {
         return json_decode('{"system.site":{"name":"Drupal","slogan":"Las llamas son muy chulas"}}', TRUE);
       case 'content_type':
         return json_decode('{"name":"Artículo","description":"Uso de <em>artículos<\/em> sensibles al tiempo contenidos como noticias, comunicados de prensa o entradas en el blog.","help":""}', TRUE);
+      case 'body':
+        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+        $input = file_get_contents($path);
+        return json_decode($input, TRUE);
+      case 'contact_message_field':
+        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+        $input = file_get_contents($path);
+        return json_decode($input, TRUE);
+      case 'options':
+        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+        $input = file_get_contents($path);
+        return json_decode($input, TRUE);
       case 'node+taxonomy_term':
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_tags":[{"name":[{"value":"Camélido"}]},{"name":[{"value":"Hervíboro"}]}]}', TRUE);
       case 'node+contact_form':

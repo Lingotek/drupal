@@ -1,0 +1,11 @@
+{
+  "field.field.node.article.field_options": {
+    "label": "Opciones",
+    "description": "Descripción del campo"
+  },
+  "field.storage.node.field_options": {
+    "settings.allowed_values.0.label": "Cero",
+    "settings.allowed_values.1.label": "Uno"
+  }
+}
+
