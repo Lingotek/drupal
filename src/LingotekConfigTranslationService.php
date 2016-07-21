@@ -302,7 +302,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     /** @var ConfigEntityMapper $mapper */
     if ($entity->getEntityTypeId() == 'field_config') {
       $id = $entity->getTargetEntityTypeId();
-      $mapper = $this->mappers[$id . '_fields'];
+      $mapper = clone $this->mappers[$id . '_fields'];
       $mapper->setEntity($entity);
     }
     else {
@@ -531,11 +531,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function saveTargetData(ConfigEntityInterface $entity, $langcode, $data) {
     if ($entity->getEntityTypeId() == 'field_config') {
       $id = $entity->getTargetEntityTypeId();
-      $mapper = $this->mappers[$id . '_fields'];
+      $mapper = clone ($this->mappers[$id . '_fields']);
       $mapper->setEntity($entity);
     }
     else {
-      $mapper = clone $this->mappers[$entity->getEntityTypeId()];
+      $mapper = clone ($this->mappers[$entity->getEntityTypeId()]);
       $mapper->setEntity($entity);
     }
     // For retro-compatibility, if there is only one config name, we expand our
@@ -897,14 +897,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
   public function saveConfigTargetData(ConfigNamesMapper $mapper, $langcode, $data) {
     $names = $mapper->getConfigNames();
-    foreach ($names as $name) {
-      $config_translation = $this->languageManager->getLanguageConfigOverride($langcode, $name);
+    if (!empty($names)) {
+      foreach ($names as $name) {
+        $config_translation = $this->languageManager->getLanguageConfigOverride($langcode, $name);
 
-      foreach ($data as $name => $properties) {
-        foreach ($properties as $property => $value) {
-          $config_translation->set($property, $value);
+        foreach ($data as $name => $properties) {
+          foreach ($properties as $property => $value) {
+            $config_translation->set($property, $value);
+          }
+          $config_translation->save();
         }
-        $config_translation->save();
       }
     }
   }
