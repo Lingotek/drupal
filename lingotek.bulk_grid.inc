@@ -2285,6 +2285,9 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
   elseif ($entity_type == 'config') {
     $id = $row->lid;
   }
+  elseif ($entity_type == 'fieldable_panels_pane'){
+    $id = $row->fpid;
+  }
   elseif ($entity_type == 'taxonomy_term') {
     $id = $row->tid;
     $row->language = isset($row->translation_mode) && $row->translation_mode == '1' ? 'en' : $row->language;
