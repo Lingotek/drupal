@@ -1456,6 +1456,10 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
       db_add_field('groups', 'language', $schema['groups']['fields']['language']);
       LingotekLog::warning('Language column has been added to the @module_name by Lingotek.', array('@module_name' => ('Group')));
     }
+
+    if (!db_table_exists('entity_translation')) {
+      drupal_set_message(t('For Group translation, make sure you\'ve installed the Entity Translation module.'), 'warning', FALSE);
+    }
   }
   menu_rebuild();
 }

@@ -1085,12 +1085,10 @@ function lingotek_get_target_locales($codes_only = TRUE) {
 }
 
 /*
- * Get the Lingotek Content Types - returns the content types OR ids only
+ * Get the Lingotek Content Types. Returns the names of the content types
  *
- * @param $ids_only
- *  Boolean - return ids only rather than associative array of content type definitions
  * @return
- *  Mixed - associative array (or an array of keys when ids_only is TRUE)
+ *  Array of content type keys
  */
 
 function lingotek_get_content_types() {
@@ -2118,6 +2116,16 @@ function lingotek_entity_langcode($entity_type, $entity) {
   if ($entity_type == 'bean') {
     return language_default()->language;
   }
+  // Get the group source language. Sometimes the gid for a group isn't present.
+  if ($entity_type == 'group') {
+    if (isset($entity->gid)) {
+      $source_language = lingotek_get_group_source($entity->gid);
+    }
+    else {
+      $source_language = isset($entity->language) ? $entity->language : NULL;
+    }
+    return $source_language;
+  }
 
   $info = entity_get_info($entity_type);
   // Default to string 'language' if no language-related entity key is found.
@@ -2375,6 +2383,11 @@ function lingotek_cache_clear($entity_type = NULL, $entity_id = NULL) {
  * Loads a source language for a group type
  */
 function lingotek_get_group_source($entity_id) {
+  if (!module_exists('entity_translation')) {
+    drupal_set_message(t('The Entity Translation module is required for translation of Group module types.'), 'warning', FALSE);
+    return language_default()->language;
+  }
+
   $row = db_select('entity_translation', 'et')
     ->fields('et')
     ->condition('entity_type', 'group')
