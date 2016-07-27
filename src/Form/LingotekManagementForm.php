@@ -16,8 +16,10 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\LocalRedirectResponse;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -28,6 +30,7 @@ use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
+use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekSetupTrait;
 use Drupal\user\PrivateTempStore;
@@ -93,6 +96,13 @@ class LingotekManagementForm extends FormBase {
   protected $translationService;
 
   /**
+   * The state key value store.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * The entity type id.
    *
    * @var string
@@ -121,17 +131,19 @@ class LingotekManagementForm extends FormBase {
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, $entity_type_id) {
+  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, $entity_type_id) {
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
     $this->contentTranslationManager = $content_translation_manager;
+    $this->lingotek = $lingotek;
     $this->translationService = $translation_service;
     $this->tempStoreFactory = $temp_store_factory;
     $this->entityTypeId = $entity_type_id;
-    $this->lingotek = \Drupal::service('lingotek');
+    $this->lingotek = $lingotek;
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->languageLocaleMapper = $language_locale_mapper;
+    $this->state = $state;
   }
 
   /**
@@ -142,11 +154,13 @@ class LingotekManagementForm extends FormBase {
       $container->get('entity.manager'),
       $container->get('language_manager'),
       $container->get('entity.query'),
+      $container->get('lingotek'),
       $container->get('lingotek.configuration'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('content_translation.manager'),
       $container->get('lingotek.content_translation'),
       $container->get('user.private_tempstore'),
+      $container->get('state'),
       \Drupal::routeMatch()->getParameter('entity_type_id')
     );
   }
@@ -201,26 +215,36 @@ class LingotekManagementForm extends FormBase {
 
     }
 
+    // We don't want items with language undefined.
+    $query->condition($entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
+
     $ids = $query->execute();
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
     $rows = [];
-    foreach ($entities as $entity_id => $entity) {
-      $source = $this->getSourceStatus($entity);
-      $translations = $this->getTranslationsStatuses($entity);
-      $profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE);
-      $form['table'][$entity_id] = ['#type' => 'checkbox', '#value'=> $entity->id()];
-      $rows[$entity_id] = [];
-      if ($has_bundles) {
-        $rows[$entity_id]['bundle'] = $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'];
-      }
+    if (!empty($entities)) {
+      foreach ($entities as $entity_id => $entity) {
+        $source = $this->getSourceStatus($entity);
+        $translations = $this->getTranslationsStatuses($entity);
+        $profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE);
+        $form['table'][$entity_id] = [
+          '#type' => 'checkbox',
+          '#value' => $entity->id()
+        ];
+        $rows[$entity_id] = [];
+        if ($has_bundles) {
+          $rows[$entity_id]['bundle'] = $this->entityManager->getBundleInfo($entity->getEntityTypeId())[$entity->bundle()]['label'];
+        }
 
-      $rows[$entity_id] += [
-        'title' => $entity->hasLinkTemplate('canonical') ? $this->getLinkGenerator()->generate($entity->label(), Url::fromRoute($entity->urlInfo()->getRouteName(), [$this->entityTypeId => $entity->id()])) : $entity->id(),
-        'source' => $source,
-        'translations' => $translations,
-        'profile' => $profile ? $profile->label() : '',
-      ];
+        $rows[$entity_id] += [
+          'title' => $entity->hasLinkTemplate('canonical') ? $this->getLinkGenerator()
+            ->generate($entity->label(), Url::fromRoute($entity->urlInfo()
+              ->getRouteName(), [$this->entityTypeId => $entity->id()])) : $entity->id(),
+          'source' => $source,
+          'translations' => $translations,
+          'profile' => $profile ? $profile->label() : '',
+        ];
+      }
     }
     $headers = [];
     if ($has_bundles) {
@@ -1115,7 +1139,7 @@ class LingotekManagementForm extends FormBase {
       $operations['delete_nodes'] = $this->t('Delete content');
     }
 
-    $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
+    $debug_enabled = $this->state->get('lingotek.enable_debug_utilities', FALSE);
     if ($debug_enabled) {
       $operations['debug']['debug.export'] = $this->t('Debug: Export sources as JSON');
     }
