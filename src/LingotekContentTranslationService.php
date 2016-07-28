@@ -288,9 +288,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function getSourceData(ContentEntityInterface &$entity) {
+  public function getSourceData(ContentEntityInterface &$entity, &$visited = []) {
     // Logic adapted from Content Translation core module and TMGMT contrib
     // module for pulling translatable field info from content entities.
+    $visited[$entity->bundle()][] = $entity->id();
     $entity_type = $entity->getEntityType();
     $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityManager->getFieldStorageDefinitions($entity_type->id()) : array();
     $translatable_fields = array();
@@ -366,8 +367,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             if ($embedded_entity !== NULL) {
               // ToDo: It can be a content entity, or a config entity.
               if ($embedded_entity instanceof ContentEntityInterface) {
-                $embedded_data = $this->getSourceData($embedded_entity);
-                $data[$k][$field_item->getName()] = $embedded_data;
+                // We need to avoid cycles if we have several entity references
+                // referencing each other.
+                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
+                  $embedded_data = $this->getSourceData($embedded_entity, $visited);
+                  $data[$k][$field_item->getName()] = $embedded_data;
+                }
               }
               else if ($embedded_entity instanceof ConfigEntityInterface) {
                 $embedded_data = $this->lingotekConfigTranslation->getSourceData($embedded_entity);
