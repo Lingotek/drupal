@@ -2,7 +2,9 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
@@ -13,6 +15,11 @@ use Drupal\lingotek\Tests\LingotekTestBase;
  * @group lingotek
  */
 class LingotekProfileFormTest extends LingotekTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static $modules = ['node'];
 
   /**
    * Test that default profiles are present.
@@ -116,6 +123,159 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-project', 'test_project');
     $this->assertOptionSelected('edit-vault', 'test_vault');
     $this->assertOptionSelected('edit-workflow', 'test_workflow');
+  }
+
+  /**
+   * Test deleting profile.
+   */
+  public function testDeletingProfile() {
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
+
+    // Confirm the form.
+    $this->assertText('This action cannot be undone.');
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    // Profile was deleted.
+    $this->assertRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertNull($profile);
+  }
+
+  /**
+   * Test deleting profile being used in content is not deleted.
+   */
+  public function testDeletingProfileBeingUsedInContent() {
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    // Create Article node types.
+    $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = $profile_id;
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->assertUrl('/node/1', [], 'Node has been created.');
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
+
+    // Confirm the form.
+    $this->assertText(t('This action cannot be undone.'));
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    $this->assertNoRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
+    $this->assertRaw(t('The Lingotek profile %profile is being used so cannot be deleted.', ['%profile' => $profile->label()]));
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertNotNull($profile);
+  }
+
+  /**
+   * Test deleting profile being used in content is not deleted.
+   */
+  public function testDeletingProfileBeingUsedInConfigSettings() {
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    // Create Article node types.
+    $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
+
+    $edit = [
+      'table[node_type][enabled]' => 1,
+      'table[node_type][profile]' => $profile_id,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
+
+    // Confirm the form.
+    $this->assertText(t('This action cannot be undone.'));
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    $this->assertNoRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
+    $this->assertRaw(t('The Lingotek profile %profile is being used so cannot be deleted.', ['%profile' => $profile->label()]));
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertNotNull($profile);
+  }
+
+  /**
+   * Test deleting profile being configured for usage in content is not deleted.
+   */
+  public function testDeletingProfileBeingUsedInContentSettings() {
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    // Create Article node types.
+    $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => $profile_id,
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
+
+    // Confirm the form.
+    $this->assertText(t('This action cannot be undone.'));
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    $this->assertNoRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
+    $this->assertRaw(t('The Lingotek profile %profile is being used so cannot be deleted.', ['%profile' => $profile->label()]));
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertNotNull($profile);
   }
 
   /**

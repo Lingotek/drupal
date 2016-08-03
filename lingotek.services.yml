@@ -19,6 +19,9 @@ services:
   lingotek.config_translation:
     class: Drupal\lingotek\LingotekConfigTranslationService
     arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@entity.manager', '@language_manager', '@plugin.manager.config_translation.mapper']
+  lingotek.profile_usage:
+    class: Drupal\lingotek\LingotekProfileUsage
+    arguments: ['@lingotek.configuration', '@entity.query', '@plugin.manager.config_translation.mapper']
   lingotek.content_translation_subscriber:
     class: Drupal\lingotek\Routing\LingotekRouteSubscriber
     arguments: ['@entity.manager']

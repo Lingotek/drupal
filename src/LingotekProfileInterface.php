@@ -14,6 +14,26 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 interface LingotekProfileInterface extends ConfigEntityInterface {
 
   /**
+   * The profile is not being used.
+   */
+  const USED_NEVER = 0;
+
+  /**
+   * The profile is being used in content.
+   */
+  const USED_IN_CONTENT = 1;
+
+  /**
+   * The profile is being used in config.
+   */
+  const USED_IN_CONFIG = 2;
+
+  /**
+   * The profile is being used in config.
+   */
+  const USED_BY_SETTINGS = 3;
+
+  /**
    * Returns whether this profile is locked.
    *
    * @return bool
