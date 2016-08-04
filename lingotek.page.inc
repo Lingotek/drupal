@@ -10,7 +10,7 @@
  */
 function lingotek_download_translations_form($form, $form_state, $node, $document = NULL) {
 
-  module_load_include('lingotek', 'lingotek.bulk_grid', 'inc');
+  module_load_include('inc', 'lingotek', 'lingotek.bulk_grid');
   $form = array();
 
   $document = is_null($document) ? LingotekDocument::load($node->lingotek['document_id']) : $document;
