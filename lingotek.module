@@ -1442,6 +1442,7 @@ function lingotek_entity_load($entities, $entity_type) {
   $is_cron_var  = FALSE;
   $is_lingotek  = FALSE;
   $is_admin_url = FALSE;
+  $is_drush = FALSE;
   $has_permissions = user_access('administer lingotek') || user_access('manage projects') || user_access('translation') || user_access('use lingotek developer tools') ? TRUE : FALSE;
   global $locks;
   if ($is_anonymous) {
@@ -1457,9 +1458,12 @@ function lingotek_entity_load($entities, $entity_type) {
     if (strpos($dest_str, 'admin') !== FALSE) {
       $is_admin_url = TRUE;
     }
+    if (php_sapi_name() == "cli") {
+      $is_drush = TRUE;
+    }
   }
 
-  if ($is_anonymous === TRUE && $is_cron === FALSE && $is_lingotek === FALSE && $is_admin_url === FALSE && $is_cron_var === FALSE && $has_permissions === FALSE) {
+  if ($is_anonymous === TRUE && $is_cron === FALSE && $is_lingotek === FALSE && $is_admin_url === FALSE && $is_cron_var === FALSE && $has_permissions === FALSE && $is_drush === FALSE) {
     return;
   }
 
