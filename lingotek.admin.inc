@@ -121,7 +121,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
 
   $selector = '.lingotek-content-settings-table.' . $entity_type;
   $title_str = ($setup_complete ? t('Translate @types', array('@type' => $entity_type_info['label'])) : t('Which content types do you want translated?'));
-  
+
   $form['translation_' . $entity_type] = array(
     '#type' => $show_fieldset ? 'fieldset' : 'item',
     '#title' => check_plain($title_str),
@@ -133,10 +133,10 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     ),
     '#submit' => array('lingotek_admin_entity_bundle_profiles_form_submit'),
   );
-  $changeAllSelect = 'Set all to: <select id="change-all-profiles" onchange="lingotek_set_all(\''.$selector.'\', this)">';
+  $changeAllSelect = 'Set all to: <select id="change-all-profiles" name="all_profile_' .$entity_type .'" onchange="lingotek_set_all(\''.$selector.'\', this)">';
   $changeAllSelect .= '<option selected disabled hidden>Select Option...</option>';
   foreach($profiles_options as $key => $profile_option){
-    $changeAllSelect .= '<option value="' . $key . '">' . $profile_option 
+    $changeAllSelect .= '<option value="' . $key . '">' . $profile_option
         . '</option>';
   }
   $changeAllSelect .= '<select>';
@@ -688,7 +688,7 @@ function lingotek_admin_additional_translation_settings_form($form, &$form_state
     '#type' => 'hidden',
     '#value' => module_exists('i18nviews'),
   );
-  
+
   $hidden_i18n_field_value = array(
     '#id' => 'lingotek_i18n_field_enabled',
     '#type' => 'hidden',
@@ -964,7 +964,7 @@ function lingotek_save_config_profile($form_state) {
   }
 
   if ($config_checkbox == TRUE) {
-    $document_ids = $overwrite_config_set_workflow == TRUE ? LingotekConfigSet::getAllConfigDocIds() 
+    $document_ids = $overwrite_config_set_workflow == TRUE ? LingotekConfigSet::getAllConfigDocIds()
         : LingotekConfigSet::getAllUnsetWorkflowConfigDocIds();
     // Change all other workflows retroactively
     if($overwrite_config_set_workflow == TRUE){
