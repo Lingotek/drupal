@@ -1,0 +1,12 @@
+uuid: 42333f72-2859-402a-809c-d2a1b9514ccf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field_config.node.article.body
+config_name: field_config.node.article.body
+document_id: c854812f-5fa5-4059-bfb4-677e24093cc0
+source_status:
+  en: IMPORTING
+target_status: {  }
+hash: null

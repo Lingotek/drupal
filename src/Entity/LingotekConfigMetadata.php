@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\lingotek\LingotekConfigMetadataInterface;
 
 /**
@@ -151,9 +152,27 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
     parent::calculateDependencies();
 
     // Create dependency on the config.
-    $this->addDependency('config', $this->config_name);
+    $dependency_name = $this->getDependencyName();
+    $this->addDependency('config', $dependency_name);
 
     return $this;
+  }
+
+  public function getDependencyName() {
+    list($entity_type, $entity_id) = explode('.', $this->config_name, 2);
+    if ($entity_type === 'field_config') {
+      $field_config = FieldConfig::load($entity_id);
+      $value = $field_config->getConfigDependencyName();
+    }
+    else if ($this->entityManager()->hasDefinition($entity_type)) {
+      $storage = $this->entityManager()->getStorage($entity_type);
+      $entity = $storage->load($entity_id);
+      $value = $entity->getConfigDependencyName();
+    }
+    else {
+      $value = $this->config_name;
+    }
+    return $value;
   }
 
 }

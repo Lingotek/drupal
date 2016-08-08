@@ -1,0 +1,12 @@
+uuid: 49d94cab-7080-4fec-aeac-6c89f9a306f6
+langcode: en
+status: true
+dependencies:
+  config:
+    - node_type.article
+config_name: node_type.article
+document_id: 33ccd19a-19d6-4d6a-982d-82472091d6c7
+source_status:
+  en: IMPORTING
+target_status: {  }
+hash: null

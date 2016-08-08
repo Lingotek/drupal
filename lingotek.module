@@ -39,6 +39,10 @@ function lingotek_entity_insert(EntityInterface $entity) {
   /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configuration_service */
   $configuration_service = \Drupal::service('lingotek.configuration');
   if ($entity instanceof \Drupal\Core\Config\Entity\ConfigEntityInterface) {
+    if (\Drupal::isConfigSyncing()) {
+      // We don't want to react to configuration imports.
+      return;
+    }
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $entity_type_id = $entity->getEntityTypeId();
@@ -138,6 +142,10 @@ function lingotek_entity_update(EntityInterface $entity) {
   /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configuration_service */
   $configuration_service = \Drupal::service('lingotek.configuration');
   if ($entity instanceof \Drupal\Core\Config\Entity\ConfigEntityInterface) {
+    if (\Drupal::isConfigSyncing()) {
+      // We don't want to react to configuration imports.
+      return;
+    }
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $entity_type_id = $entity->getEntityTypeId();
@@ -232,6 +240,10 @@ function lingotek_entity_update(EntityInterface $entity) {
 function lingotek_entity_delete(EntityInterface $entity) {
   // Only act on content entities.
   if (!($entity instanceof ContentEntityInterface)) {
+    return;
+  }
+  if (\Drupal::isConfigSyncing()) {
+    // We don't want to react to configuration imports.
     return;
   }
 
