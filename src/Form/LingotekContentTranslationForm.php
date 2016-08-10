@@ -114,7 +114,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         $target_status = $translation_service->getTargetStatus($entity, $langcode);
         // Add-Targets button if languages haven't been added, or if target status is UNTRACKED.
         if (($source_status === Lingotek::STATUS_CURRENT || $source_status === Lingotek::STATUS_IMPORTING)
-              && !empty($document_id) && (!isset($target_status) || $target_status === Lingotek::STATUS_REQUEST)) {
+              && !empty($document_id) && (!isset($target_status)  || $target_status === Lingotek::STATUS_EDITED || $target_status === Lingotek::STATUS_REQUEST)) {
           $path = '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale;
           $this->addOperationLink($entity, $option, 'Request translation', $path, $language);
         }

@@ -523,6 +523,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function downloadDocument(ContentEntityInterface &$entity, $locale) {
     if ($document_id = $this->getDocumentId($entity)) {
+      $source_status = $this->getSourceStatus($entity);
+      if ($source_status === Lingotek::STATUS_EDITED) {
+        \Drupal::logger('lingotek')->warning('Blocked the download of a document %entity:%bundle:%id which status is edited, so the download may be outdated.',
+          ['%entity' => $entity->getEntityTypeId(), '%bundle' => $entity->bundle(), '%id' => $entity->id()]);
+        return FALSE;
+      }
       try {
         $data = $this->lingotek->downloadDocument($document_id, $locale);
       }
@@ -542,7 +548,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           if ($saved) {
             // If the status was "Importing", and the target was added
             // successfully, we can ensure that the content is current now.
-            $source_status = $this->getSourceStatus($entity);
             if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
               $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
             }
