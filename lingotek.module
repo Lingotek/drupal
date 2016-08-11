@@ -33,6 +33,32 @@ function lingotek_toolbar() {
 }
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function lingotek_module_implements_alter(&$implementations, $hook) {
+  // Make sure lingotek_entity_presave() comes last.
+  switch ($hook) {
+    // Move our hook_entity_type_alter() implementation to the end of the list.
+    case 'entity_presave':
+      $group = $implementations['lingotek'];
+      unset($implementations['lingotek']);
+      $implementations['lingotek'] = $group;
+      break;
+  }
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function lingotek_entity_presave(EntityInterface $entity) {
+  $configuration_service = \Drupal::service('lingotek.configuration');
+  if ($entity instanceof ContentEntityInterface && $configuration_service->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $translation_service->updateEntityHash($entity);
+  }
+}
+
+/**
  * Implements hook_entity_insert().
  */
 function lingotek_entity_insert(EntityInterface $entity) {
@@ -89,7 +115,8 @@ function lingotek_entity_insert(EntityInterface $entity) {
       $translation_service = \Drupal::service('lingotek.content_translation');
 
       $source_status = $translation_service->getSourceStatus($entity);
-      $entity_has_changed = $translation_service->hasEntityChanged($entity);
+      // Entity inserts are always changes.
+      $entity_has_changed = TRUE;
 
       if ($has_autoupload) {
         // New entity with auto-upload

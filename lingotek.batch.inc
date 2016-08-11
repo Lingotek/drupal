@@ -40,6 +40,8 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
   
   // Use update with existing entities that have been edited. 
   elseif ($translation_service->hasEntityChanged($entity)) {
+    // Update the hash on the entity. (Is this really necessary here?)
+    $entity->save();
     try {
       if ($translation_service->updateDocument($entity)) {
         $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;

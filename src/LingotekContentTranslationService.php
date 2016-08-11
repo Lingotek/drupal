@@ -414,21 +414,28 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
+  public function updateEntityHash(ContentEntityInterface $entity) {
+    $source_data = json_encode($this->getSourceData($entity));
+    $entity->lingotek_hash->value = md5($source_data);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function hasEntityChanged(ContentEntityInterface &$entity) {
+    // Perform the cheapest checks first.
+    if (isset($entity->original)) {
+      return $entity->lingotek_hash->value !== $entity->original->lingotek_hash->value;
+    }
+
+    // The following code should not be called very often, if at all.
+    $old_hash = $entity->lingotek_hash->value;
+    if (!$old_hash) {
+      return TRUE;
+    }
     $source_data = json_encode($this->getSourceData($entity));
     $hash = md5($source_data);
-    $old_hash = $entity->lingotek_hash->value;
-    if (!$old_hash || strcmp($hash, $old_hash)){
-      $entity->lingotek_hash->value = $hash;
-      // If the entity supports revisions, ensure we don't create a new one.
-      if ($entity->getEntityType()->hasKey('revision')) {
-        $entity->setNewRevision(FALSE);
-      }
-      $entity->lingotek_processed = TRUE;
-      $entity->save();
-      return true;
-    }
-    return false;
+    return (bool) strcmp($hash, $old_hash);
   }
 
   /**

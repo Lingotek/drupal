@@ -19,7 +19,9 @@ class LingotekBatchController extends LingotekControllerBase {
     $entity = \Drupal::entityManager()->getStorage($entity_type)->load($entity_id);
 
     // This forces the hash to be set.
-    $translation_service->hasEntityChanged($entity);
+    if ($translation_service->hasEntityChanged($entity)) {
+      $entity->save();
+    }
     $profile = $configuration_service->getEntityProfile($entity, TRUE);
 
     switch ($action) {

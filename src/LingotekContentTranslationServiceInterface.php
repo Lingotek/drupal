@@ -168,6 +168,16 @@ interface LingotekContentTranslationServiceInterface {
   public function getSourceData(ContentEntityInterface &$entity);
 
   /**
+   * Updates the entity hash.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
+   *   The entity being checked
+   *
+   * @return $this
+   */
+  public function updateEntityHash(ContentEntityInterface $entity);
+
+  /**
    * Checks if the source entity data has changed from last time we uploaded it.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
