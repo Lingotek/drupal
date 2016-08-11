@@ -1835,9 +1835,13 @@ function lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid) {
   $query->leftJoin('lingotek_entity_metadata', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
   $query->addField('lingo_last_sync_error', 'value', 'last_sync_error');
 
-  // Any specifically defined workflow
+  // Any specifically defined workflow_id
   $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
-  $query->addField('lingo_workflow', 'value', 'workflow');
+  $query->addField('lingo_workflow', 'value', 'workflow_id');
+
+  // Any specifically defined workflow_name
+  $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_name\'');
+  $query->addField('lingo_workflow', 'value', 'workflow_name');
 
   // Marked value
   $query->leftJoin('lingotek_entity_metadata', 'lingo_marked', 'lingo_marked.entity_type =\'' . $entity_type . '\' AND lingo_marked.entity_id = ' . $eid . ' and lingo_marked.entity_key = \'marked\'');

@@ -33,7 +33,7 @@ function lingotek_config_header() {
     'context' => array('data' => t('Context'), 'field' => 'context'),
     'doc_id' => array('data' => t('Doc ID'), 'field' => 'document_id', 'display' => 'none'),
     'textgroup' => array('data' => t('Textgroup'), 'field' => 'textgroup'),
-    'workflow' => array('data' => t('Workflow'), 'field' => 'workflow'),
+    'workflow' => array('data' => t('Workflow'), 'field' => 'workflow_id'),
   );
 
   return $header;
