@@ -7,6 +7,7 @@
 
 namespace Drupal\lingotek;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -659,17 +660,38 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function saveTargetData(ContentEntityInterface &$entity, $langcode, $data) {
+    // Without a defined langcode, we can't proceed
+    if (!$langcode) {
+      // TODO: log warning that downloaded translation's langcode is not enabled.
+      return FALSE;
+    }
+
     // Logic adapted from TMGMT contrib module for saving
     // translated fields to their entity.
     $lock = \Drupal::lock();
-    if ($lock->acquire(__FUNCTION__)) {
-      $entity = entity_load($entity->getEntityTypeId(), $entity->id(), TRUE);
-      if (!$langcode) {
-        // TODO: log warning that downloaded translation's langcode is not enabled.
-        $lock->release(__FUNCTION__);
-        return FALSE;
-      }
+    $lock_name = __FUNCTION__ . ':' . $entity->getEntityTypeId() . ':' . $entity->id();
 
+    $held = $lock->acquire($lock_name);
+
+    // It is critical that we acquire a lock on this entity since we want to ensure
+    // that our translation is saved.
+    if (!$held) {
+      if ($lock->wait($lock_name) === FALSE) {
+        $held = $lock->acquire($lock_name);
+      }
+    }
+
+    if (!$held) {
+      // We were unable to acquire the lock even after waiting, so we have to bail.
+      // (We don't have to call release() here since we never succeeded at acquiring it)
+      throw new \Exception(new FormattableMarkup('Unable to acquire lock for entity @id of type @type.', [
+        '@id' => $entity->id(),
+        '@type' => $entity->getEntityTypeId(),
+      ]));
+    }
+
+    try {
+      $entity = entity_load($entity->getEntityTypeId(), $entity->id(), TRUE);
       // initialize the translation on the Drupal side, if necessary
       if (!$entity->hasTranslation($langcode)) {
         $entity->addTranslation($langcode, $entity->toArray());
@@ -769,33 +791,28 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
           }
         }
-        // We need to set the content_translation source so the files are synced
-        // properly. See https://www.drupal.org/node/2544696 for more information.
-        $translation->set('content_translation_source', $entity->getUntranslated()
-          ->language()
-          ->getId());
-        // If the entity supports revisions, ensure we don't create a new one.
-        if ($entity->getEntityType()->hasKey('revision')) {
-          $entity->setNewRevision(FALSE);
-        }
-        $entity->lingotek_processed = TRUE;
-        // Allow other modules to alter the translation before is saved.
-        \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_translation_presave', [&$translation, $langcode, $data]);
-        try {
-          $translation->save();
-        }
-        catch (EntityStorageException $storage_exception) {
-          throw new LingotekContentEntityStorageException($entity, $storage_exception);
-        }
-        finally {
-          $lock->release(__FUNCTION__);
-        }
       }
+
+      // We need to set the content_translation source so the files are synced
+      // properly. See https://www.drupal.org/node/2544696 for more information.
+      $translation->set('content_translation_source', $entity->getUntranslated()->language()->getId());
+      // If the entity supports revisions, ensure we don't create a new one.
+      if ($entity->getEntityType()->hasKey('revision')) {
+        $entity->setNewRevision(FALSE);
+      }
+      $entity->lingotek_processed = TRUE;
+      // Allow other modules to alter the translation before is saved.
+      \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_translation_presave', [&$translation, $langcode, $data]);
+
+      $translation->save();
+
+      return $entity;
+    } catch (EntityStorageException $storage_exception) {
+      throw new LingotekContentEntityStorageException($entity, $storage_exception);
+    } finally {
+      // Ensure the lock is released, even if we crash.
+      $lock->release($lock_name);
     }
-    else {
-      $lock->wait(__FUNCTION__);
-    }
-    return $entity;
   }
 
 }
