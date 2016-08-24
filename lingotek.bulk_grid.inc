@@ -1722,11 +1722,12 @@ function lingotek_bulk_grid_query($form_state, $count_only, $entity_id_key, $lab
     }
   }
   if ($base_table == 'node') {
-    $query->innerJoin('node', 'node2', '(n.nid = node2.nid) AND (node2.tnid = 0 OR node2.tnid = node2.nid)');
+    $query->where('n.tnid = 0 OR n.tnid = n.nid');
   }
 
   // Entity Title and Name of Content Type (type)
   $query->fields('n', array($entity_id_key));
+  $query->addField('n', $entity_id_key, 'entity_id_key');
 
   if ($label_col) {
     $query->addField('n', $label_col, 'title');
@@ -1754,20 +1755,17 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     $query->addExpression("CONCAT('comment_node_',nn.type)", 'node_type');
   }
   elseif ($entity_type == 'taxonomy_term') {
-    $query->addField('n', 'description');
+    $taxonomy_bundles_with_custom_fields = db_select('field_config_instance', 'fci')
+      ->distinct()
+      ->fields('fci', array('bundle'))
+      ->condition('fci.entity_type', 'taxonomy_term');
 
+    $query->addField('n', 'description');
     $query->innerJoin('taxonomy_vocabulary', 'tv', 'n.vid = tv.vid');
     $query->addField('tv', 'name', 'tv_name');
     $query->addField('tv', 'machine_name', 'type');
     $query->addField('tv', 'i18n_mode', 'translation_mode');
-
-    // Remove taxonomy terms handled by config manage page.
-    $query->leftJoin('field_config_instance', 'fields', 'fields.bundle = tv.machine_name');
-    $or = db_or();
-    // Has no custom fields
-    $or->isNotNull('fields.bundle');
-    $or->condition('tv.i18n_mode', LINGOTEK_TAXONOMY_LOCALIZE_VALUE, '<>');
-    $query->condition($or);
+    $query->condition('tv.machine_name', $taxonomy_bundles_with_custom_fields, 'IN');
   }
   elseif ($bundle_col) {
     if ($info['entity keys']['bundle'] != 'type') {
@@ -1800,57 +1798,38 @@ function lingotek_bulk_grid_query_add_localized_title($query, $entity_type, $eid
   $localized_label_table = 'field_data_' . $label_col . '_field';
 
   if ($label_col && db_table_exists($localized_label_table)) {
-    $query->leftJoin('' . $localized_label_table . '', 't_title', 't_title.entity_id = ' . $eid . ' and t_title.entity_type = \'' . $entity_type . '\' and t_title.language=\'' . $GLOBALS['language']->language . '\'');
-    $query->addField('t_title', $label_col . '_field_value', 'localized_title');
+    $query->addExpression("(SELECT GROUP_CONCAT(" .  $label_col . '_field_value' . ") FROM {" . $localized_label_table . "} WHERE entity_id=" . $eid . " AND entity_type='" . $entity_type . "' AND language = '" . $GLOBALS['language']->language . "')", 'localized_title');
   }
 }
 
 function lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid) {
-  // left joins are necessary here because some lingotek table keys might not exist
   // Lingotek Document ID
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_document_id', 'lingo_document_id.entity_type =\'' . $entity_type . '\' AND lingo_document_id.entity_id = ' . $eid . ' and lingo_document_id.entity_key = \'document_id\'');
-  $query->addField('lingo_document_id', 'value', 'document_id');
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'document_id')", 'document_id');
 
-  // Invalid xml
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_invalid_xml', 'lingo_invalid_xml.entity_type =\'' . $entity_type . '\' AND lingo_invalid_xml.entity_id = ' . $eid . ' and lingo_invalid_xml.entity_key = \'invalid_xml\'');
-  $query->addField('lingo_invalid_xml', 'value', 'invalid_xml');
+  //Invalid xml
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'invalid_xml')", 'invalid_xml');
 
   // Entity Upload Status
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_upload_status', 'lingo_upload_status.entity_type =\'' . $entity_type . '\' AND lingo_upload_status.entity_id = ' . $eid . ' and lingo_upload_status.entity_key = \'upload_status\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_TARGET . '\' and lingo_upload_status.value <> \'' . LingotekSync::STATUS_DELETED . '\'');
-  $query->addField('lingo_upload_status', 'value', 'upload_status');
-
-  // Relevant entity ids
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_entity_id', 'lingo_entity_id.entity_type =\'' . $entity_type . '\' AND lingo_entity_id.entity_id = ' . $eid);
-  $query->addField('lingo_upload_status', 'value', 'upload_status');
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'upload_status' AND value <> '". LingotekSync::STATUS_TARGET . "' AND value <> '" . LingotekSync::STATUS_DELETED . "')", 'upload_status');
 
   // Profile Settings
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_profile', 'lingo_profile.entity_type =\'' . $entity_type . '\' AND lingo_profile.entity_id = ' . $eid . ' and lingo_profile.entity_key = \'profile\'');
-  $query->addField('lingo_profile', 'value', 'profile');
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'profile')", 'profile');
 
   // Last Uploaded Timestamp
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_last_uploaded', 'lingo_last_uploaded.entity_type =\'' . $entity_type . '\' AND lingo_last_uploaded.entity_id = ' . $eid . ' and lingo_last_uploaded.entity_key = \'last_uploaded\'');
-  $query->addField('lingo_last_uploaded', 'value', 'last_uploaded');
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'last_uploaded')", 'last_uploaded');
 
   // Any Upload Errors
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_last_sync_error', 'lingo_last_sync_error.entity_type =\'' . $entity_type . '\' AND lingo_last_sync_error.entity_id = ' . $eid . ' and lingo_last_sync_error.entity_key = \'last_sync_error\'');
-  $query->addField('lingo_last_sync_error', 'value', 'last_sync_error');
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'last_sync_error')", 'last_sync_error');
 
-  // Any specifically defined workflow_id
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_id\'');
-  $query->addField('lingo_workflow', 'value', 'workflow_id');
-
-  // Any specifically defined workflow_name
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_workflow', '' . $eid . ' = lingo_workflow.entity_id and lingo_workflow.entity_type =\'' . $entity_type . '\' and lingo_workflow.entity_key = \'workflow_name\'');
-  $query->addField('lingo_workflow', 'value', 'workflow_name');
+  // Any specifically defined workflow
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'workflow_id')", 'workflow');
 
   // Marked value
-  $query->leftJoin('lingotek_entity_metadata', 'lingo_marked', 'lingo_marked.entity_type =\'' . $entity_type . '\' AND lingo_marked.entity_id = ' . $eid . ' and lingo_marked.entity_key = \'marked\'');
-  $query->addField('lingo_marked', 'value', 'marked');
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'marked')", 'marked');
 
   // Original source language of the entity, in case of source overwriting option
   if ($entity_type == 'node') {
-    $query->leftJoin('lingotek_entity_metadata', 'lingo_orig_lang', $eid . ' = lingo_orig_lang.entity_id and lingo_orig_lang.entity_type =\'' . $entity_type . '\' and lingo_orig_lang.entity_key = \'original_language\'');
-    $query->addField('lingo_orig_lang', 'value', 'original_lang');
+    $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE'" . $eid . "' = entity_id and entity_type ='" . $entity_type . "' and entity_key = 'original_language')", 'original_lang');
   }
 }
 
@@ -1962,8 +1941,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $notUploadedQuery->fields('lingo_em',array('entity_id'));
       $notUploadedQuery->condition('entity_key', 'last_uploaded');
 
-
-      $query->condition('lingo_entity_id.entity_id', $notUploadedQuery, 'NOT IN');
+      $query->havingCondition('entity_id_key', $notUploadedQuery, 'NOT IN');
     }
     else if(in_array("disassoc", $filters['upload_status'])){
       $disassocQuery = db_select('lingotek_entity_metadata','lingo_em');
@@ -1971,9 +1949,8 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $disassocQuery->fields('lingo_em',array('entity_id'));
       $disassocQuery->condition('entity_key', 'last_uploaded');
 
-
-      $query->condition('lingo_entity_id.entity_id', $disassocQuery, 'IN');
-      $query->condition('lingo_entity_id.value', 'UNTRACKED');
+      $query->havingCondition('entity_id_key', $disassocQuery, 'IN');
+      $query->havingCondition('upload_status', 'UNTRACKED');
     }
     elseif(in_array("uploaded", $filters['upload_status'])) {
       $uploadedQuery = db_select('lingotek_entity_metadata','lingo_em');
@@ -1981,8 +1958,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $uploadedQuery->fields('lingo_em', array('entity_id'));
       $uploadedQuery->condition('entity_key', 'document_id');
 
-
-      $query->condition('lingo_entity_id.entity_id', $uploadedQuery, 'IN');
+      $query->havingCondition('entity_id_key', $uploadedQuery, 'IN');
     }
     elseif(in_array("upload_failed", $filters['upload_status'])) {
       $uploadFailedQuery = db_select('lingotek_entity_metadata','lingo_em');
@@ -1990,13 +1966,12 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $uploadFailedQuery->fields('lingo_em', array('entity_id'));
       $uploadFailedQuery->condition('entity_key', 'invalid_xml');
 
-
-      $query->condition('lingo_entity_id.entity_id', $uploadFailedQuery, 'IN');
-      $query->condition('lingo_invalid_xml.value', '1');
+      $query->havingCondition('entity_id_key', $uploadFailedQuery, 'IN');
+      $query->havingCondition('invalid_xml', '1');
     }
     //other cases
     else {
-      $query->condition('lingo_upload_status.value', $filters['upload_status'], 'IN');
+      $query->havingCondition('upload_status', $filters['upload_status'], 'IN');
     }
   }
 
@@ -2009,8 +1984,8 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $markedQuery->fields('lingo_em',array('entity_id'));
       $markedQuery->condition('entity_key', 'marked');
 
-      $query->condition('lingo_entity_id.entity_id', $markedQuery, 'IN');
-      $query->condition('lingo_marked.value', LingotekSync::MARKED);
+      $query->havingCondition('entity_id_key', $markedQuery, 'IN');
+      $query->havingCondition('marked', LingotekSync::MARKED);
     }
     // Unmarked
     else if(in_array("unmarked", $filters['marked_status'])){
@@ -2019,7 +1994,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
       $unMarkedQuery->fields('lingo_em',array('entity_id'));
       $unMarkedQuery->condition('entity_key', 'marked');
 
-      $query->condition('lingo_entity_id.entity_id', $unMarkedQuery, 'NOT IN');
+      $query->havingCondition('entity_id_key', $unMarkedQuery, 'NOT IN');
     }
   }
 
@@ -2062,10 +2037,10 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 function lingotek_filter_by_document_id($query, $filters) {
   if (isset($filters['document_id']) && $filters['document_id'] != '') {
     if ($filters['document_id'] == 'None') {
-      $query->condition('lingo_document_id.value', NULL);
+      $query->havingCondition('document_id', NULL);
     }
     else {
-      $query->condition('lingo_document_id.value', $filters['document_id']);
+      $query->havingCondition('document_id', $filters['document_id']);
     }
   }
 }
@@ -2073,14 +2048,14 @@ function lingotek_filter_by_document_id($query, $filters) {
 function lingotek_bulk_grid_filter_last_uploaded($query, $filters) {
   if (isset($filters['last_uploaded']) && $filters['last_uploaded'] != 'all') {
     if ($filters['last_uploaded'] == '1 day') {
-      $query->condition('lingo_last_uploaded.value', strToTime($filters['last_uploaded']), '<');
+      $query->havingCondition('last_uploaded', strToTime($filters['last_uploaded']), '<');
     }
     elseif ($filters['last_uploaded'] == 'unknown') {
-      $query->condition('lingo_last_uploaded.value', NULL);
+      $query->havingCondition('last_uploaded', NULL);
     }
     else {
       $params = explode(' ', $filters['last_uploaded'], 2); // string formatted like '< 1 week', so explode with a limit of two gives us array(0 => '<', 1 => '1 week')
-      $query->condition('lingo_last_uploaded.value', strToTime($params[1]), $params[0]);
+      $query->havingCondition('last_uploaded', strToTime($params[1]), $params[0]);
     }
   }
 }
