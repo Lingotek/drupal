@@ -126,4 +126,21 @@ class LingotekApiUnitTest extends UnitTestCase {
     $this->lingotek_api->getVaults('community_id');
   }
 
+  /**
+   * @covers ::getWorkflows
+   */
+  public function testGetWorkflows() {
+    $community_id = 'my_community_id';
+    // Ensure that the limit is set.
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $this->client->expects($this->once())
+      ->method('get')
+      ->with('/api/workflow', ['limit' => 100, 'community_id' => $community_id])
+      ->will($this->returnValue($response));
+
+    $this->lingotek_api->getWorkflows($community_id);
+  }
+
 }
