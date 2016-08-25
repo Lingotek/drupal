@@ -1821,8 +1821,11 @@ function lingotek_bulk_grid_query_add_keys($query, $entity_type, $eid) {
   // Any Upload Errors
   $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'last_sync_error')", 'last_sync_error');
 
-  // Any specifically defined workflow
-  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'workflow_id')", 'workflow');
+  // Any specifically defined workflow id
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'workflow_id')", 'workflow_id');
+
+  // Any specifically defined workflow name
+  $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'workflow_name')", 'workflow_name');
 
   // Marked value
   $query->addExpression("(SELECT GROUP_CONCAT(value) FROM {lingotek_entity_metadata} WHERE entity_type='" . $entity_type . "' AND entity_id=" . $eid . " AND entity_key = 'marked')", 'marked');
