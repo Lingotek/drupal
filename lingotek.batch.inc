@@ -157,6 +157,36 @@ function lingotek_get_sync_upload_batch_elements($entity_type, $upload_nids = ar
 }
 
 /**
+ * Update marked entities:  Creates the batch elements for marked entities.
+ */
+function lingotek_get_marked_batch_elements($entity_type, $entity_ids = array()) {
+  $operations = array();
+
+  if (is_array($entity_ids)) {
+    foreach ($entity_ids as $entity_id) {
+      $operations[] = array('lingotek_update_marked_entities', array($entity_type, $entity_id));
+    }
+  }
+
+  return $operations;
+}
+
+/**
+ * Update unmarked entities:  Creates the batch elements for unmarked entities.
+ */
+function lingotek_get_unmarked_batch_elements($entity_type, $entity_ids = array()) {
+  $operations = array();
+
+  if (is_array($entity_ids)) {
+    foreach ($entity_ids as $entity_id) {
+      $operations[] = array('lingotek_update_unmarked_entities', array($entity_type, $entity_id));
+    }
+  }
+
+  return $operations;
+}
+
+/**
  * Sync - Upload Config Batch Elements:  Creates the batch elements for config (ie. menus, taxonomies,
  * etc.), that need to be uploaded.
  */
@@ -291,6 +321,28 @@ function lingotek_sync_upload_node_finished($success, $results, $operations, $co
 
 function lingotek_sync_upload_config_finished($success, $results, $operations) {
   lingotek_sync_upload_node_finished($success, $results, $operations, TRUE);
+}
+
+function lingotek_update_marked_entities_finished($success, $results) {
+  if ($success) {
+    $message = t($results . ' entities have been marked.');
+    drupal_set_message(filter_xss($message), 'status');
+  }
+  else {
+    $message = t('Marking ' . $results . ' entities has failed.');
+    drupal_set_message(filter_xss($message), 'error');
+  }
+}
+
+function lingotek_update_unmarked_entities_finished($success, $results) {
+  if ($success) {
+    $message = t($results . ' entities have been unmarked.');
+    drupal_set_message(filter_xss($message), 'status');
+  }
+  else {
+    $message = t('Unmarking ' . $results . 'entities has failed.');
+    drupal_set_message(filter_xss($message), 'error');
+  }
 }
 
 /**

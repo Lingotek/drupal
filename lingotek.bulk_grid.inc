@@ -801,10 +801,30 @@ function lingotek_grid_action_submit($form, $form_state) {
         lingotek_update_target_progress_batch_create($entity_type, $entity_ids); // Run batch operations to get the progress report from Lingotek
       }
       elseif ($action == 'marked') {
-        lingotek_update_marked_entities($entity_type, $entity_ids);
+        $batch = array(
+          'title' => t('Updating Marked Entities'),
+          'finished' => 'lingotek_update_marked_entities_finished'
+        );
+
+        $operations = lingotek_get_marked_batch_elements($entity_type, $entity_ids);
+        $batch['operations'] = $operations;
+        $redirect = current_path();
+
+        batch_set($batch);
+        batch_process($redirect);
       }
       elseif ($action == 'unmarked') {
-        lingotek_update_unmarked_entities($entity_type, $entity_ids);
+        $batch = array(
+          'title' => t('Updating Unmarked Entities'),
+          'finished' => 'lingotek_update_unmarked_entities_finished'
+        );
+
+        $operations = lingotek_get_unmarked_batch_elements($entity_type, $entity_ids);
+        $batch['operations'] = $operations;
+        $redirect = current_path();
+
+        batch_set($batch);
+        batch_process($redirect);
       }
     }
   }
@@ -813,19 +833,29 @@ function lingotek_grid_action_submit($form, $form_state) {
 /**
 * Updates marked value in the lingotek_entity_metadata table
 */
-function lingotek_update_marked_entities($entity_type, $entity_ids) {
-  foreach($entity_ids as $entity_id) {
-    lingotek_keystore($entity_type, $entity_id, 'marked', LingotekSync::MARKED);
+function lingotek_update_marked_entities($entity_type, $entity_id, &$context) {
+  if(empty($context['results'])) {
+    $context['results'] = 1;
   }
+  else {
+    $context['results'] += 1;
+  }
+
+  lingotek_keystore($entity_type, $entity_id, 'marked', LingotekSync::MARKED);
 }
 
 /**
 * Updates marked value in the lingotek_entity_metadata table
 */
-function lingotek_update_unmarked_entities($entity_type, $entity_ids) {
-  foreach($entity_ids as $entity_id) {
-    lingotek_keystore_delete($entity_type, $entity_id, 'marked');
+function lingotek_update_unmarked_entities($entity_type, $entity_id, &$context) {
+  if(empty($context['results'])) {
+    $context['results'] = 1;
   }
+  else {
+    $context['results'] += 1;
+  }
+
+  lingotek_keystore_delete($entity_type, $entity_id, 'marked');
 }
 
 /**
