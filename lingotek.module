@@ -224,6 +224,14 @@ function lingotek_menu() {
   );
   $items[LINGOTEK_MENU_LANG_BASE_URL . '/manage'] = $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage'];
 
+  $items['lingotek/update-marked-value/%/%/%'] = array(
+    'access arguments' => array('administer lingotek'),
+    'file' => 'lingotek.bulk_grid.inc',
+    'page arguments' => array(2, 3, 4),
+    'page callback' => 'lingotek_update_marked_value_single',
+    'type' => MENU_CALLBACK,
+  );
+
   $entity_types = lingotek_managed_entity_types();
   foreach ($entity_types as $machine_name => $entity_type) {
     $items[LINGOTEK_MENU_MAIN_BASE_URL . '/manage/' . $machine_name] = array(

@@ -199,6 +199,31 @@ function lingotek_perform_action(nid, action) {
     $('#edit-search').css('min-height', height);
   }
 
+  function setupToggleMarked() {
+    $('.ltk-marked-button').bind('click',function(){
+      var $self = $(this);
+      var url = $self.attr('href');
+      var marked = url.substring(url.length - 1, url.length);
+      var elements = $self.attr('id').split("-");
+      var entityType = elements[1];
+      var entityId = elements[2];
+      var newMarkedValue = marked == 1 ? 0 : 1;
+      var markedClass0 = 'fa-square-o';
+      var markedClass1 = 'fa-check-square';
+      var newMarkedClass = newMarkedValue ? markedClass1 : markedClass0;
+      var newUrl = url.substring(0, url.length - 1) + newMarkedValue;
+      $.ajax({
+          url: url,
+          method: 'GET',
+          success: function (data) {
+            $self.attr('href',newUrl);
+            $self.removeClass(markedClass0 + ' ' + markedClass1);
+            $self.addClass(newMarkedClass);
+          }
+        });
+    });
+  }
+
   //update_empty_cells allows cells with no translations statuses to display them
   //when they are available
   function update_empty_cells(data, parent, entity_id) {
@@ -268,7 +293,7 @@ function lingotek_perform_action(nid, action) {
       //remove the identifying class
       $('.emptyTD',parent).removeClass();
       //update the source uploaded icon
-      $('.fa-square-o', parent).removeClass().addClass('fa fa-check-square');
+      $('.ltk-upload-button', parent).removeClass().addClass('fa fa-check-square');
       $('.fa-minus-square', parent).removeClass().addClass('fa fa-check-square').removeAttr('style');
   }
 
@@ -323,7 +348,7 @@ function lingotek_perform_action(nid, action) {
           //take out the empty checkbox in Source Uploaded and replace with
           //checked, using this here solves a problem where uploading from
           //out side the manager sometimes jumps to READY
-          $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
+          $('.ltk-upload-button', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
           $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-ready');
           $(this).attr('title', title + ' Ready to download');
@@ -333,7 +358,7 @@ function lingotek_perform_action(nid, action) {
           $(this).attr('title', title + ' Current');
           break;
         case "INTERIM_READY":
-          $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
+          $('.ltk-upload-button', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
           $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-interim_ready');
           $(this).attr('title', title + ' Ready to download interim translation');
@@ -358,7 +383,7 @@ function lingotek_perform_action(nid, action) {
           break;
         case "PENDING":
           //take out the empty checkbox and replace with checked
-          $('.fa-square-o', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
+          $('.ltk-upload-button', row).removeClass().addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
           $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-pending');
           $(this).attr('title', title + ' In progress');
@@ -437,6 +462,7 @@ function lingotek_perform_action(nid, action) {
   $(document).ready(function () {
     setupConfigMoreOptions();
     alignFields();
+    setupToggleMarked();
     pollTranslationStatus();
 //    pollAutomaticDownloads();
     addClickToDownloadReady();

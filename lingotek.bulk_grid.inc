@@ -831,6 +831,18 @@ function lingotek_grid_action_submit($form, $form_state) {
 }
 
 /**
+* Updates marked value in the lingotek_entity_metadata table for one row
+*/
+function lingotek_update_marked_value_single($entity_id, $entity_type, $marked_value) {
+  if ($marked_value == '1') {
+    lingotek_keystore_delete($entity_type, $entity_id, 'marked');
+  }
+  else {
+    lingotek_keystore($entity_type, $entity_id, 'marked', LingotekSync::MARKED);
+  }
+}
+
+/**
 * Updates marked value in the lingotek_entity_metadata table
 */
 function lingotek_update_marked_entities($entity_type, $entity_id, &$context) {
@@ -2146,6 +2158,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     }
 
     $entity_id = $row->{$entity_id_key};
+    $entity_type = $entity_properties['type'];
 
     $row->title = lingotek_truncate_grid_text($row->title, 55);
     $icon = lingotek_source_uploaded_icon($row);
@@ -2166,20 +2179,15 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
     $target_icons_str = implode('', array_values($translation_icons));
     $configuration = lingotek_render_configuration($row, $profiles, $disabled_class);
     $source = lingotek_render_source($entity_properties['type'], $row, $icon, $languages, $entity_properties['language_col']);
+    $marked_html = lingotek_render_marked_html($row, $entity_type, $entity_id);
     $actions = lingotek_render_actions($entity_properties['type'], $entity_id, $disabled_class);
     $title = $entity_properties['label_col'] ? lingotek_render_title($row, $entity_properties, $GLOBALS['language']) : '';
-
-    $is_marked = '';
-    if (isset($row->marked) && $row->marked == LingotekSync::MARKED) {
-      $is_marked = 'Yes';
-    }
-
     $workflow_id = !empty($row->lingotek['workflow_id']) ? $row->lingotek['workflow_id'] : '';
     $workflow_name = array_key_exists($workflow_id, $workflows) ? $workflows[$workflow_id] : '';
 
     // Build the data to be output for this row
     $data = array(
-      'marked' => $is_marked,
+      'marked' => $marked_html,
       'nid' => $row->{$entity_id_key} ? : t('??'),
       'title' => $title,
       'label' => isset($row->label) ? $row->label : '',
@@ -2348,6 +2356,15 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
     $source = '<span title="Upload Now" class="ltk-upload-button lingotek-language-source" onclick="lingotek_perform_action(' . $id . ',\'upload\')">' . $source . '</span>';
   }
   return $source;
+}
+
+function lingotek_render_marked_html($row, $entity_type, $entity_id) {
+  global $base_url;
+  $marked_value = (isset($row->marked) && $row->marked) ? 1 : 0;
+  $marked_icon = $marked_value ? "fa-check-square" : "fa-square-o";
+  $marked_html = '<span href="' . $base_url . '/lingotek/update-marked-value/' . $entity_id . '/' . $entity_type . '/' . $marked_value . '" class="ltk-marked-button fa ' . $marked_icon . '" id="marked-' . $entity_type . '-' . $entity_id . '"></span>';
+
+  return $marked_html;
 }
 
 function lingotek_render_configuration($row, $profiles, $disabled_class) {

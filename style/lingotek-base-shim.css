@@ -330,6 +330,17 @@ a.ltk-action:hover {
   color: #000;
 }
 
+.ltk-marked-button {
+  font-size: 150%;
+  white-space: nowrap;
+  color: #333;
+  cursor: pointer;
+}
+
+.ltk-marked-button:hover {
+  color: #000;
+}
+
 .node-configuration {
   color: #48C;
 }
