@@ -173,6 +173,25 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   /**
    * {@inheritDoc}
    */
+  public function getFieldsLingotekEnabled($entity_type_id, $bundle) {
+    $config = \Drupal::config('lingotek.settings');
+    $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.field';
+    $data = $config->get($key);
+    $fields = [];
+    foreach ($data as $field_name => $properties) {
+      if ($properties == 1) {
+        $fields[] = $field_name;
+      }
+      if (is_array($properties)) {
+        $fields[] = substr($field_name, 0, strpos($field_name, ':properties'));
+      }
+    }
+    return $fields;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   public function isFieldLingotekEnabled($entity_type_id, $bundle, $field_name) {
     $config = \Drupal::config('lingotek.settings');
     $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_name;

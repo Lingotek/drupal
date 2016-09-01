@@ -2,7 +2,10 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**
@@ -111,7 +114,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
   }
 
   public function testICanDisableFields() {
-        // Enable translation for the current entity type and ensure the change is
+    // Enable translation for the current entity type and ensure the change is
     // picked up.
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
@@ -156,6 +159,118 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertNoFieldChecked('edit-node-article-fields-body');
     $this->assertNoFieldChecked('edit-node-article-fields-field-imageproperties-alt');
 
+  }
+
+  /**
+   * Test that if we disable content translation for an entity or an entity
+   * field, they are disabled for Lingotek.
+   *
+   * @throws \Exception
+   */
+  public function testFieldsAreDisabledInLingotekIfFieldsAreMarkedAsNotTranslatable() {
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+    // Check the form contains the article type and only its text-based fields.
+    $this->drupalGet('admin/lingotek/settings');
+    // Check the title and body fields.
+    $edit = [
+      'node[article][enabled]' => 1,
+      'node[article][profiles]' => 'automatic',
+      'node[article][fields][title]' => 1,
+      'node[article][fields][body]' => 1,
+      'node[article][fields][field_image]' => 1,
+      'node[article][fields][field_image:properties][alt]' => 'alt',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    // Assert that body translation is enabled.
+    $this->assertFieldChecked('edit-node-article-fields-title', 'The title field is enabled after enabled for Lingotek translation');
+    $this->assertFieldChecked('edit-node-article-fields-body', 'The body field is enabled after enabled for Lingotek translation');
+    $this->assertFieldChecked('edit-node-article-fields-field-image', 'The image field is enabled after enabled for Lingotek translation');
+    $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt', 'The image alt property is enabled after enabled for Lingotek translation');
+
+    // Go to the content language settings, and disable the body field.
+    // It should result that the field is disabled in Lingotek too.
+    $edit = array(
+      'entity_types[node]' => TRUE,
+      'settings[node][article][settings][language][language_alterable]' => TRUE,
+      'settings[node][article][translatable]' => TRUE,
+      'settings[node][article][fields][title]' => TRUE,
+      'settings[node][article][fields][body]' => FALSE,
+      'settings[node][article][fields][field_image]' => FALSE,
+    );
+    $this->drupalPostForm('admin/config/regional/content-language', $edit, t('Save configuration'));
+
+    // Get the form and check the fields are not available, because they cannot be translated.
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertFieldChecked('edit-node-article-fields-title', 'The title field is enabled after other fields were disabled for content translation');
+    $this->assertNoFieldById('edit-node-article-fields-body', 'The body field is not present after disabled for content translation');
+    $this->assertNoFieldById('edit-node-article-fields-field-image', 'The image field is not present after disabled for content translation');
+    $this->assertNoFieldById('edit-node-article-fields-field-imageproperties-alt', 'The image alt property is not present after image was disabled for content translation');
+
+    // But also check that the fields are not enabled.
+    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+    $this->assertFalse($lingotek_config->isFieldLingotekEnabled('node', 'article', 'body'), 'The body field is disabled after being disabled for content translation');
+    $this->assertFalse($lingotek_config->isFieldLingotekEnabled('node', 'article', 'image'), 'The image field is disabled after being disabled for content translation');
+
+    // And if we disable the entity itself, it should not be enabled anymore.
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', FALSE);
+    $this->assertFalse($lingotek_config->isEnabled('node', 'article'), 'The article entity is disabled after being disabled for content translation');
+    $this->assertFalse($lingotek_config->isFieldLingotekEnabled('node', 'article', 'title'), 'The title field is disabled after the entity being disabled for content translation');
+  }
+
+  public function testFieldsAreNotAvailableIfTranslatableEvenIfStorageIsTranslatable() {
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+    // Ensure field storage is translatable.
+    $field_storage = FieldStorageConfig::loadByName('node', 'field_image');
+    $field_storage->setTranslatable(TRUE)->save();
+
+    // Ensure field instance is not translatable.
+    $field = FieldConfig::loadByName('node', 'article', 'field_image');
+    $field->setTranslatable(FALSE)->save();
+
+    // Ensure changes were saved correctly.
+    $field_storage = FieldStorageConfig::loadByName('node', 'field_image');
+    $field = FieldConfig::loadByName('node', 'article', 'field_image');
+    $this->assertTrue($field_storage->isTranslatable(), 'Field storage is translatable.');
+    $this->assertFalse($field->isTranslatable(), 'Field instance is not translatable.');
+
+    // Get the form and check the field is not available, even if the storage
+    // is translatable.
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertNoFieldById('edit-node-article-fields-field-image', '', 'The image field is not present after marked as not translatable.');
+
+    // Make the field translatable again.
+    $field->setTranslatable(TRUE)->save();
+
+    // If the field is translatable, the field is available again.
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertFieldById('edit-node-article-fields-field-image', '', 'The image field is present after marked as translatable.');
   }
 
 }

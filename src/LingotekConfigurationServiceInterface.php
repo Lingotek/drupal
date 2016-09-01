@@ -171,6 +171,19 @@ interface LingotekConfigurationServiceInterface {
   public function getProfileOptions();
 
   /**
+   * Gets the Lingotek enabled fields for a given bundle.
+   *
+   * @param string $entity_type_id
+   *   The type of the entity.
+   * @param string $bundle
+   *   The bundle of the entity.
+   *
+   * @returns array
+   *   Array of field names.
+   */
+  public function getFieldsLingotekEnabled($entity_type_id, $bundle);
+
+  /**
    * Determines if the field is enabled for Lingotek translation.
    *
    * @param string $entity_type_id

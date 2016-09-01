@@ -12,6 +12,7 @@ use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -81,7 +82,35 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
             $this->translationService->markConfigTranslationsAsDirty($mapper);
           }
         }
+      }
 
+      // If there are changes on content translation settings, we need to react to
+      // them in case the entity was enabled for Lingotek translation.
+      if (0 === strpos($config->getName(), 'language.content_settings.') && $event->isChanged('third_party_settings.content_translation.enabled')) {
+        $id = $config->get('id');
+        list($entity_type_id, $bundle) = explode('.', $id);
+        if (!$config->get('third_party_settings.content_translation.enabled')) {
+          /** @var LingotekConfigurationServiceInterface $lingotek_config */
+          $lingotek_config = \Drupal::service('lingotek.configuration');
+          if ($lingotek_config->isEnabled($entity_type_id, $bundle)) {
+            $lingotek_config->setEnabled($entity_type_id, $bundle, FALSE);
+            $fields = $lingotek_config->getFieldsLingotekEnabled($entity_type_id, $bundle);
+            foreach ($fields as $field_name) {
+              $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
+            }
+          }
+        }
+      }
+      if (0 === strpos($config->getName(), 'field.field.') && $event->isChanged('translatable')) {
+        $id = $config->get('id');
+        list($entity_type_id, $bundle, $field_name) = explode('.', $id);
+        if (!$config->get('translatable')) {
+          /** @var LingotekConfigurationServiceInterface $lingotek_config */
+          $lingotek_config = \Drupal::service('lingotek.configuration');
+          if ($lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
+            $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
+          }
+        }
       }
     }
 

@@ -294,10 +294,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     // module for pulling translatable field info from content entities.
     $visited[$entity->bundle()][] = $entity->id();
     $entity_type = $entity->getEntityType();
+    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityManager->getFieldStorageDefinitions($entity_type->id()) : array();
     $translatable_fields = array();
     foreach ($entity->getFields(FALSE) as $field_name => $definition) {
-      if (!empty($storage_definitions[$field_name]) && $storage_definitions[$field_name]->isTranslatable() && $field_name != $entity_type->getKey('langcode') && $field_name != $entity_type->getKey('default_langcode')) {
+      if (!empty($field_definitions[$field_name]) && $field_definitions[$field_name]->isTranslatable() && $field_name != $entity_type->getKey('langcode') && $field_name != $entity_type->getKey('default_langcode')) {
         $translatable_fields[$field_name] = $definition;
       }
     }
@@ -307,8 +308,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         return SortArray::sortByKeyString($default_display->getComponent($a), $default_display->getComponent($b), 'weight');
       });
     }
-
-    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
 
     $data = array();
     $source_entity = $entity->getUntranslated();
@@ -691,6 +690,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
 
     try {
+      /** @var ContentEntityInterface $entity */
       $entity = entity_load($entity->getEntityTypeId(), $entity->id(), TRUE);
       // initialize the translation on the Drupal side, if necessary
       if (!$entity->hasTranslation($langcode)) {
@@ -699,9 +699,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       /** @var ContentEntityInterface $translation */
       $translation = $entity->getTranslation($langcode);
       foreach ($data as $name => $field_data) {
-        if ($this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
-          $field_definition = $entity->getFieldDefinition($name);
-
+        $field_definition = $entity->getFieldDefinition($name);
+        if ($field_definition->isTranslatable() && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
           // First we check if this is a entity reference, and save the translated entity.
           $field_type = $field_definition->getType();
           if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
