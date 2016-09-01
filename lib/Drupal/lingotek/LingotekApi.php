@@ -97,7 +97,7 @@ class LingotekApi {
 
       // If the document has invalid characters, return without uploading
       $invalid_xml = lingotek_keystore($translatable_object->getEntityType(), $translatable_object->getId(), 'invalid_xml');
-      if ($invalid_xml == 1) {
+      if ($invalid_xml == LingotekSync::INVALID_XML_PRESENT) {
         return FALSE;
       }
 

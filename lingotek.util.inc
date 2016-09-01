@@ -432,7 +432,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
   }
   // If the document has invalid characters, flag it
   if ($has_invalid_xml) {
-    lingotek_keystore($entity_type, $id, 'invalid_xml', 1);
+    lingotek_keystore($entity_type, $id, 'invalid_xml', LingotekSync::INVALID_XML_PRESENT);
     lingotek_keystore($entity_type, $id, 'last_sync_error', 'Entity contains invalid XML characters');
     LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_FAILED);
   }
@@ -468,6 +468,7 @@ function lingotek_element_contains_invalid_xml($element) {
     }
     else {
       $invalid = TRUE;
+      drupal_set_message(t('Unable to upload to Lingotek because entity contains invalid XML characters.'), 'warning');
       break;
     }
   }
