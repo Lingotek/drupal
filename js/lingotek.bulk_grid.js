@@ -208,6 +208,7 @@ function lingotek_perform_action(nid, action) {
       var entityType = elements[1];
       var entityId = elements[2];
       var newMarkedValue = marked == 1 ? 0 : 1;
+      var title = newMarkedValue == 1 ? 'Unmark content' : 'Mark content';
       var markedClass0 = 'fa-square-o';
       var markedClass1 = 'fa-check-square';
       var newMarkedClass = newMarkedValue ? markedClass1 : markedClass0;
@@ -217,6 +218,7 @@ function lingotek_perform_action(nid, action) {
           method: 'GET',
           success: function (data) {
             $self.attr('href',newUrl);
+            $self.attr('title',title);
             $self.removeClass(markedClass0 + ' ' + markedClass1);
             $self.addClass(newMarkedClass);
           }

@@ -2361,8 +2361,9 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
 function lingotek_render_marked_html($row, $entity_type, $entity_id) {
   global $base_url;
   $marked_value = (isset($row->marked) && $row->marked) ? 1 : 0;
+  $title = $marked_value == 1 ? 'Unmark content' : 'Mark content';
   $marked_icon = $marked_value ? "fa-check-square" : "fa-square-o";
-  $marked_html = '<span href="' . $base_url . '/lingotek/update-marked-value/' . $entity_id . '/' . $entity_type . '/' . $marked_value . '" class="ltk-marked-button fa ' . $marked_icon . '" id="marked-' . $entity_type . '-' . $entity_id . '"></span>';
+  $marked_html = '<span href="' . $base_url . '/lingotek/update-marked-value/' . $entity_id . '/' . $entity_type . '/' . $marked_value . '" class="ltk-marked-button fa ' . $marked_icon . '" id="marked-' . $entity_type . '-' . $entity_id . '" title="' . $title . '"></span>';
 
   return $marked_html;
 }
