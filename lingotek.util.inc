@@ -422,6 +422,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
         $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
         if (lingotek_element_contains_invalid_xml($delta_column_content)) {
           $has_invalid_xml = TRUE;
+          break;
         }
         // Handle element suffixes (all columns should be suffixed now)
         $column_obj = $field_obj->addChild($column_name);
@@ -468,7 +469,6 @@ function lingotek_element_contains_invalid_xml($element) {
     }
     else {
       $invalid = TRUE;
-      drupal_set_message(t('Unable to upload to Lingotek because entity contains invalid XML characters.'), 'warning');
       break;
     }
   }
