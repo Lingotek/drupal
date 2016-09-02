@@ -2245,25 +2245,25 @@ function lingotek_source_uploaded_icon($row) {
   elseif (!is_null($row->upload_status)) {
     switch ($row->upload_status) {
       case LingotekSync::STATUS_EDITED:
-        $icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
+        $icon = '<i class="ltk-upload-checkbox fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
         break;
       case LingotekSync::STATUS_CURRENT:
-        $icon = '<i class="fa fa-check-square" title="' . t('Uploaded to Lingotek') . '"></i>';
+        $icon = '<i class="ltk-upload-checkbox fa fa-check-square" title="' . t('Uploaded to Lingotek') . '"></i>';
         break;
       case LingotekSync::STATUS_PENDING:
-        $icon = '<i class="fa fa-square" title="' . t('Upload to Lingotek in progress') . '"></i>';
+        $icon = '<i class="ltk-upload-checkbox fa fa-square" title="' . t('Upload to Lingotek in progress') . '"></i>';
         break;
       case LingotekSync::STATUS_FAILED:
         $error = $row->last_sync_error ? $row->last_sync_error : '';
-        $icon = '<i class="fa fa-warning" style="color: darkorange;" title="' . t('Lingotek processing failed @error', array('@error' => ': ' . $error)) . '"></i>';
+        $icon = '<i class="ltk-upload-checkbox fa fa-warning" style="color: darkorange;" title="' . t('Lingotek processing failed @error', array('@error' => ': ' . $error)) . '"></i>';
         break;
       default:
-        $icon = '<i class="fa fa-question-circle" style="color: darkorange;" title="' . t('Unknown upload status') . ': ' . check_plain($row->upload_status) . '"></i>';
+        $icon = '<i class="ltk-upload-checkbox fa fa-question-circle" style="color: darkorange;" title="' . t('Unknown upload status') . ': ' . check_plain($row->upload_status) . '"></i>';
         break;
     }
   }
   else {
-    $icon = '<i class="fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
+    $icon = '<i class="ltk-upload-checkbox fa fa-square-o" title="' . t('Needs to be uploaded') . '"></i>';
   }
   return $icon;
 }
@@ -2363,7 +2363,7 @@ function lingotek_render_marked_html($row, $entity_type, $entity_id) {
   $marked_value = (isset($row->marked) && $row->marked) ? 1 : 0;
   $title = $marked_value == 1 ? 'Unmark content' : 'Mark content';
   $marked_icon = $marked_value ? "fa-check-square" : "fa-square-o";
-  $marked_html = '<span href="' . $base_url . '/lingotek/update-marked-value/' . $entity_id . '/' . $entity_type . '/' . $marked_value . '" class="ltk-marked-button fa ' . $marked_icon . '" id="marked-' . $entity_type . '-' . $entity_id . '" title="' . $title . '"></span>';
+  $marked_html = '<span href="' . $base_url . '/lingotek/update-marked-value/' . $entity_id . '/' . $entity_type . '/' . $marked_value . '" class="ltk-marked-checkbox fa ' . $marked_icon . '" id="marked-' . $entity_type . '-' . $entity_id . '" title="' . $title . '"></span>';
 
   return $marked_html;
 }

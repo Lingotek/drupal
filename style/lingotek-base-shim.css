@@ -330,14 +330,14 @@ a.ltk-action:hover {
   color: #000;
 }
 
-.ltk-marked-button {
+.ltk-marked-checkbox {
   font-size: 150%;
   white-space: nowrap;
   color: #333;
   cursor: pointer;
 }
 
-.ltk-marked-button:hover {
+.ltk-marked-checkbox:hover {
   color: #000;
 }
 
