@@ -97,7 +97,8 @@ class LingotekApi {
 
       // If the document has invalid characters, return without uploading
       $invalid_xml = lingotek_keystore($translatable_object->getEntityType(), $translatable_object->getId(), 'invalid_xml');
-      if ($invalid_xml == 1) {
+      if ($invalid_xml == LingotekSync::INVALID_XML_PRESENT) {
+        drupal_set_message(t('Unable to upload to Lingotek because entity contains invalid XML characters.'), 'warning');
         return FALSE;
       }
 
@@ -246,6 +247,13 @@ class LingotekApi {
     $parameters['content'] = $this->check_url_alias_translation($translatable_object, $translatable_object->documentLingotekXML());
     $parameters['url'] = $translatable_object->getUrl();
     $parameters['format'] = $this->xmlFormat();
+
+    // If the document has invalid characters, return without uploading
+    $invalid_xml = lingotek_keystore($translatable_object->getEntityType(), $translatable_object->getId(), 'invalid_xml');
+    if ($invalid_xml == LingotekSync::INVALID_XML_PRESENT) {
+      drupal_set_message(t('Unable to upload to Lingotek because entity contains invalid XML characters.'), 'warning');
+      return FALSE;
+    }
 
     $this->addAdvancedParameters($parameters, $translatable_object);
 

@@ -2034,7 +2034,7 @@ function lingotek_bulk_grid_filter_popup_options($query, $filters, $eid, $info, 
 
 
       $query->condition('lingo_entity_id.entity_id', $uploadFailedQuery, 'IN');
-      $query->condition('lingo_invalid_xml.value', '1');
+      $query->condition('lingo_invalid_xml.value', LingotekSync::INVALID_XML_PRESENT);
     }
     //other cases
     else {

@@ -422,6 +422,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
         $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
         if (lingotek_element_contains_invalid_xml($delta_column_content)) {
           $has_invalid_xml = TRUE;
+          break;
         }
         // Handle element suffixes (all columns should be suffixed now)
         $column_obj = $field_obj->addChild($column_name);
@@ -432,7 +433,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
   }
   // If the document has invalid characters, flag it
   if ($has_invalid_xml) {
-    lingotek_keystore($entity_type, $id, 'invalid_xml', 1);
+    lingotek_keystore($entity_type, $id, 'invalid_xml', LingotekSync::INVALID_XML_PRESENT);
     lingotek_keystore($entity_type, $id, 'last_sync_error', 'Entity contains invalid XML characters');
     LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_FAILED);
   }

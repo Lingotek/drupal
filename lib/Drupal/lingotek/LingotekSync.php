@@ -31,9 +31,9 @@ class LingotekSync {
   const PROFILE_AUTOMATIC = 0;
   const PROFILE_MANUAL = 1;
   const PROFILE_INHERIT = 'INHERIT';
-
   const MARKED = 1;
   const NOT_MARKED = 0;
+  const INVALID_XML_PRESENT = 1;
 
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
