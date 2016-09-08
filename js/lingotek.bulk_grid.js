@@ -278,11 +278,12 @@ function lingotek_perform_action(nid, action) {
             break;
         }
         //create the link
-        var status_link = $('<a></a>').attr('href', href)
-                .attr('target','_blank')
-                .attr('title',title)
-                .addClass('language-icon target-' + status.toLowerCase())
-                .text(link_text);
+        var status_link = $('<a></a>');
+        status_link.attr('href', href);
+        status_link.attr('target','_blank');
+        status_link.attr('title',title);
+        status_link.addClass('language-icon target-' + status.toLowerCase());
+        status_link.text(link_text);
 
         $('.emptyTD', parent).each(function(){
           var index = $('td',parent).index($(this));
