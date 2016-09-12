@@ -225,10 +225,13 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       // Find which fields the user previously selected
       foreach ($fields as $field_id => $field_definition) {
         $checkbox_choice = 0;
+
+        // We allow non-translatable entity_reference_revisions fields through.
+        // See https://www.drupal.org/node/2788285
         if (!empty($storage_definitions[$field_id]) &&
               $storage_definitions[$field_id]->getProvider() != 'content_translation' &&
               !in_array($storage_definitions[$field_id]->getName(), [$entity_type->getKey('langcode'), $entity_type->getKey('default_langcode'), 'revision_translation_affected']) &&
-          $field_definition->isTranslatable() && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
+          ($field_definition->isTranslatable() || ($field_definition->getType()  == 'entity_reference_revisions')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
 
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
             $checkbox_choice = $value;

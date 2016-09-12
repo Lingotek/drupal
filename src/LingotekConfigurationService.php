@@ -193,9 +193,15 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function isFieldLingotekEnabled($entity_type_id, $bundle, $field_name) {
+    $field_definitions = \Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle);
     $config = \Drupal::config('lingotek.settings');
     $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_name;
-    return !!$config->get($key);
+
+    // We allow non-translatable entity_reference_revisions fields through.
+    // See https://www.drupal.org/node/2788285
+    return (!empty($field_definitions[$field_name])
+      && ($field_definitions[$field_name]->isTranslatable() || ($field_definitions[$field_name]->getType() == 'entity_reference_revisions'))
+      && !!$config->get($key));
   }
 
   /**

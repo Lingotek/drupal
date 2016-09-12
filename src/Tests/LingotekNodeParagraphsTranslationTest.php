@@ -56,7 +56,6 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'paragraphed_content_demo')->setLanguageAlterable(TRUE)->save();
     ContentLanguageSettings::loadByEntityTypeBundle('paragraph', 'image_text')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'paragraphed_content_demo', TRUE);
-    FieldConfig::load('node.paragraphed_content_demo.field_paragraphs_demo')->setTranslatable(TRUE)->save();
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();

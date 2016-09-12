@@ -107,7 +107,12 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
         if (!$config->get('translatable')) {
           /** @var LingotekConfigurationServiceInterface $lingotek_config */
           $lingotek_config = \Drupal::service('lingotek.configuration');
-          if ($lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
+          $field_definition = \Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle);
+          // We need to make an exception for hosted entities. The field
+          // reference may not be translatable, but we want to translate the
+          // hosted entity. See https://www.drupal.org/node/2735121.
+          if ($field_definition[$field_name]->getType() !== 'entity_reference_revisions' &&
+              $lingotek_config->isFieldLingotekEnabled($entity_type_id, $bundle, $field_name)) {
             $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
           }
         }
