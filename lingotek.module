@@ -2015,15 +2015,15 @@ function lingotek_comment_view($comment, $view_mode, $langcode) {
  * Implements hook_entity_info_alter().
  */
 function lingotek_entity_info_alter(&$entity_info) {
-
-  $default_storage_method = variable_get('lingotek_nodes_translation_method');
   $profiles = lingotek_get_profiles();
   $field_translation = FALSE;
 
   //Check if there is any active profile that's using field Translation.
   foreach ($profiles as $profile) {
-    if ($profile->getUsage() > 0 && !$profile->isNodeBased());
-    break;
+    if ($profile->getUsage() > 0 && !$profile->isNodeBased()) {
+      $field_translation = TRUE;
+      break;
+    }
   }
   
   if (isset($entity_info['comment'])) {
