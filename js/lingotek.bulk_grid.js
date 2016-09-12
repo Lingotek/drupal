@@ -69,20 +69,22 @@ function lingotek_perform_action(nid, action) {
       });
 
       $('input#edit-submit-actions.form-submit').hide();
-      $('#edit-select-actions').change(function () {
-        val = $(this).val();
+      $('#edit-select-actions').once('lingotek_once_id', function () {
+        $('#edit-select-actions').change(function () {
+          val = $(this).val();
 
-        if (val == 'reset' || val == 'delete') {
-          lingotek_trigger_modal($('#' + val + '-link'));
-        } else if (val == 'edit') {
-          lingotek_trigger_modal($('#edit-settings-link'));
-        } else if (val == 'workflow') {
-          lingotek_trigger_modal($('#change-workflow-link'));
-        } else if (val == 'delete_translations') {
-          lingotek_trigger_modal($('#delete-translations-link'));
-        } else {
-          $('input#edit-submit-actions.form-submit').trigger('click');
-        }
+          if (val == 'reset' || val == 'delete') {
+            lingotek_trigger_modal($('#' + val + '-link'));
+          } else if (val == 'edit') {
+            lingotek_trigger_modal($('#edit-settings-link'));
+          } else if (val == 'workflow') {
+            lingotek_trigger_modal($('#change-workflow-link'));
+          } else if (val == 'delete_translations') {
+            lingotek_trigger_modal($('#delete-translations-link'));
+          } else {
+            $('input#edit-submit-actions.form-submit').trigger('click');
+          }
+        });
       });
 
       $('#edit-limit-select').change(function () {
