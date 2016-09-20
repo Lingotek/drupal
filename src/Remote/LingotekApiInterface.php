@@ -20,6 +20,7 @@ interface LingotekApiInterface {
   public function getDocument($id);
   public function documentExists($id);
   public function getDocumentTranslationStatus($id, $locale);
+  public function getDocumentInfo($id);
   public function getDocumentStatus($id);
   public function addTranslation($id, $locale, $workflow_id = NULL);
   public function getTranslation($id, $locale);

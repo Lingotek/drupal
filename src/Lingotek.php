@@ -264,6 +264,28 @@ class Lingotek implements LingotekInterface {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getUploadedTimestamp($doc_id) {
+    // For now, a passthrough to the API object so the controllers do not
+    // need to include that class.
+    $modified_date = FALSE;
+    try {
+      $response = $this->api->getDocumentInfo($doc_id);
+      if ($response->getStatusCode() == Response::HTTP_OK) {
+        $response_json = json_decode($response->getBody(), TRUE);
+        // We have millisecond precision in Lingotek.
+        $modified_date = intval(floor($response_json['properties']['last_uploaded_date'] / 1000));
+      }
+    }
+    catch (LingotekApiException $exception) {
+      return FALSE;
+    }
+    return $modified_date;
+  }
+
+
   public function getDocumentStatus($doc_id) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.

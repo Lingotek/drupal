@@ -848,11 +848,6 @@ class LingotekManagementForm extends FormBase {
     $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      if ($this->translationService->getSourceStatus($entity) !== Lingotek::STATUS_CURRENT) {
-        drupal_set_message(t('The translation of @entity_type %title into @locale failed because it has been edited since being uploaded.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale,)), 'error');
-        return;
-      }
-
       try {
         $this->translationService->downloadDocument($entity, $locale);
       }
@@ -880,11 +875,6 @@ class LingotekManagementForm extends FormBase {
   public function downloadTranslations(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Downloading all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
-      if ($this->translationService->getSourceStatus($entity) !== Lingotek::STATUS_CURRENT) {
-        drupal_set_message(t('The translations of @entity_type %title failed because it has been edited since being uploaded.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
-        return;
-      }
-
       $languages = $this->languageManager->getLanguages();
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $entity->language()->getId()) {

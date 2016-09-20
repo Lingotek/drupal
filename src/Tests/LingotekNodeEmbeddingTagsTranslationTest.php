@@ -252,7 +252,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
 
-    // The document should have been automatically imported, so let's check
+    // The document should have been imported, so let's check
     // the upload status.
     $this->clickLink('Check Upload Status');
     $this->assertText('The import for node Llamas are cool is complete.');
@@ -278,6 +278,9 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Hervíboro');
+
+    $this->drupalGet('/taxonomy/term/2/translations');
+    $this->drupalGet('/es-ar/taxonomy/term/2');
   }
 
 }

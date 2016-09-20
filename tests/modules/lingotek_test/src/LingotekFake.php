@@ -170,12 +170,23 @@ class LingotekFake implements LingotekInterface {
     ++$count;
     \Drupal::state()->set('lingotek.uploaded_docs', $count);
 
+    // Save the timestamp of the upload.
+    $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
+    $timestamps[$doc_id] = REQUEST_TIME;
+    \Drupal::state()->set('lingotek.upload_timestamps', $timestamps);
+
     return $doc_id;
   }
 
   public function updateDocument($doc_id, $content, $url = NULL) {
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_content_url', $url);
+
+    // Save the timestamp of the upload.
+    $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
+    $timestamps[$doc_id] = REQUEST_TIME;
+    \Drupal::state()->set('lingotek.upload_timestamps', $timestamps);
+
     // Our document is always imported correctly.
     return TRUE;
   }
@@ -247,4 +258,12 @@ class LingotekFake implements LingotekInterface {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getUploadedTimestamp($doc_id) {
+    $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
+    $timestamp = isset($timestamps[$doc_id]) ? $timestamps[$doc_id] : NULL;
+    return $timestamp;
+  }
 }

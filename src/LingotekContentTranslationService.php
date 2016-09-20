@@ -527,11 +527,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function downloadDocument(ContentEntityInterface &$entity, $locale) {
     if ($document_id = $this->getDocumentId($entity)) {
       $source_status = $this->getSourceStatus($entity);
-      if ($source_status === Lingotek::STATUS_EDITED) {
-        \Drupal::logger('lingotek')->warning('Blocked the download of a document %entity:%bundle:%id which status is edited, so the download may be outdated.',
-          ['%entity' => $entity->getEntityTypeId(), '%bundle' => $entity->bundle(), '%id' => $entity->id()]);
-        return FALSE;
-      }
       try {
         $data = $this->lingotek->downloadDocument($document_id, $locale);
       }
@@ -652,6 +647,67 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   }
 
   /**
+   * Loads the correct revision is loaded from the database, bypassing caches.
+   *
+   * @param ContentEntityInterface $entity
+   *   The entity we want to load a revision from.
+   * @param int|NULL $revision
+   *   The revision id. NULL if we don't know it.
+   *
+   * @return ContentEntityInterface
+   *   The wanted revision of the entity.
+   */
+  protected function loadUploadedRevision(ContentEntityInterface $entity, $revision = NULL) {
+    $the_revision = NULL;
+
+    $entity_type = $entity->getEntityType();
+    $type = $entity->getEntityTypeId();
+
+    if ($entity_type->isRevisionable()) {
+      // If the entity type is revisionable, we need to check the proper revision.
+      // This may come from the uploaded data, but in case we didn't have it, we
+      // have to infer using the timestamp.
+      if ($revision !== NULL) {
+         $the_revision = entity_revision_load($type, $revision);
+      }
+      elseif ($revision === NULL && $entity->hasField('revision_timestamp')) {
+        // Let's find the better revision based on the timestamp.
+        $timestamp = $this->lingotek->getUploadedTimestamp($this->getDocumentId($entity));
+        $revision = $this->getClosestRevisionToTimestamp($entity, $timestamp);
+        $the_revision = entity_revision_load($type, $revision);
+      }
+      else {
+        // We didn't find a better option, but let's reload this one so it's not
+        // cached.
+        $the_revision = entity_revision_load($type, $entity->getRevisionId());
+      }
+    }
+    else {
+      $the_revision = entity_load($type, $entity->id(), TRUE);
+    }
+    return $the_revision;
+  }
+
+  protected function getClosestRevisionToTimestamp(ContentEntityInterface &$entity, $timestamp) {
+    $entity_id = $entity->id();
+
+    $query= \Drupal::database()->select($entity->getEntityType()->getRevisionDataTable(), 'nfr');
+    $query->fields('nfr', [$entity->getEntityType()->getKey('revision')]);
+    $query->addJoin('INNER', $entity->getEntityType()->getRevisionTable(), 'nr',
+        'nfr.vid = nr.vid and nfr.nid = nr.nid and nfr.langcode = nr.langcode'
+      );
+    $query->condition('nfr.'.$entity->getEntityType()->getKey('id'), $entity_id);
+    $query->condition('nfr.'.$entity->getEntityType()->getKey('langcode'), $entity->language()->getId());
+    $query->condition('nr.revision_timestamp', $timestamp, '<');
+    $query->orderBy('nfr.changed', 'DESC');
+    $query->range(0, 1);
+
+    $value = $query->execute();
+    $vids = $value->fetchAssoc();
+    return count($vids) === 1 ? $vids['vid'] : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function saveTargetData(ContentEntityInterface &$entity, $langcode, $data) {
@@ -661,8 +717,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return FALSE;
     }
 
-    // Logic adapted from TMGMT contrib module for saving
-    // translated fields to their entity.
     $lock = \Drupal::lock();
     $lock_name = __FUNCTION__ . ':' . $entity->getEntityTypeId() . ':' . $entity->id();
 
@@ -686,14 +740,21 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
 
     try {
+      // We need to load the revision that was uploaded for consistency. For that,
+      // we check if we have a valid revision in the response, and if not, we
+      // check the date of the uploaded document.
+      
       /** @var ContentEntityInterface $entity */
-      $entity = entity_load($entity->getEntityTypeId(), $entity->id(), TRUE);
-      // initialize the translation on the Drupal side, if necessary
-      if (!$entity->hasTranslation($langcode)) {
-        $entity->addTranslation($langcode, $entity->toArray());
-      }
+      $revision = isset($data['_revision']) ? $data['_revision'] : NULL;
+      $revision = $this->loadUploadedRevision($entity, $revision);
+
+      // Initialize the translation on the Drupal side, if necessary.
       /** @var ContentEntityInterface $translation */
+      if (!$entity->hasTranslation($langcode)) {
+        $entity->addTranslation($langcode, $revision->toArray());
+      }
       $translation = $entity->getTranslation($langcode);
+
       foreach ($data as $name => $field_data) {
         $field_definition = $entity->getFieldDefinition($name);
         if (($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions') && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
@@ -704,7 +765,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               ->getSetting('target_type');
             $index = 0;
             foreach ($field_data as $field_item) {
-              $embedded_entity_id = $entity->{$name}->get($index)
+              $embedded_entity_id = $revision->{$name}->get($index)
                 ->get('target_id')
                 ->getValue();
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
@@ -715,16 +776,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 // ToDo: It can be a content entity, or a config entity.
                 if ($embedded_entity instanceof ContentEntityInterface) {
                   $this->saveTargetData($embedded_entity, $langcode, $field_item);
-                  // Now the embedded entity is saved, but we need to ensure
-                  // the reference will be saved too.
-                  $translation->{$name}->set($index, $embedded_entity_id);
                 }
-                else if ($embedded_entity instanceof ConfigEntityInterface) {
+                elseif ($embedded_entity instanceof ConfigEntityInterface) {
                   $this->lingotekConfigTranslation->saveTargetData($embedded_entity, $langcode, $field_item);
-                  // Now the embedded entity is saved, but we need to ensure
-                  // the reference will be saved too.
-                  $translation->{$name}->set($index, $embedded_entity_id);
                 }
+                // Now the embedded entity is saved, but we need to ensure
+                // the reference will be saved too.
+                $translation->{$name}->set($index, $embedded_entity_id);
               }
               ++$index;
             }
@@ -735,10 +793,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               ->getSetting('target_type');
             $index = 0;
             foreach ($field_data as $field_item) {
-              $embedded_entity_id = $entity->{$name}->get($index)
+              $embedded_entity_id = $revision->{$name}->get($index)
                 ->get('target_id')
                 ->getValue();
-              $embedded_entity_revision_id = $entity->{$name}->get($index)
+              $embedded_entity_revision_id = $revision->{$name}->get($index)
                 ->get('target_revision_id')
                 ->getValue();
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
@@ -791,10 +849,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // We need to set the content_translation source so the files are synced
       // properly. See https://www.drupal.org/node/2544696 for more information.
       $translation->set('content_translation_source', $entity->getUntranslated()->language()->getId());
-      // If the entity supports revisions, ensure we don't create a new one.
-      if ($entity->getEntityType()->hasKey('revision')) {
-        $entity->setNewRevision(FALSE);
-      }
+
       $entity->lingotek_processed = TRUE;
       // Allow other modules to alter the translation before is saved.
       \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_translation_presave', [&$translation, $langcode, $data]);

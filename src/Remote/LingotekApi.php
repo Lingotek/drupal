@@ -113,6 +113,17 @@ class LingotekApi implements LingotekApiInterface {
     throw new Exception('Not implemented');
   }
 
+  public function getDocumentInfo($id) {
+    try {
+      $this->logger->debug('Lingotek::getDocumentStatus called with id ' . $id);
+      $response = $this->lingotekClient->get('/api/document/' . $id);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
+    }
+    return $response;
+  }
+
   public function getDocumentStatus($id) {
     try {
       $this->logger->debug('Lingotek::getDocumentStatus called with id ' . $id);

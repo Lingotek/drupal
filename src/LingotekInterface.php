@@ -76,6 +76,18 @@ interface LingotekInterface {
 
 
   public function getDocumentStatus($doc_id);
+
+  /**
+   * Gets the last edited timestamp from Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id in Lingotek.
+   *
+   * @return int
+   *   The timestamp.
+   */
+  public function getUploadedTimestamp($doc_id);
+
   public function getDocumentTranslationStatus($doc_id, $locale);
 
   public function downloadDocument($doc_id, $locale);
