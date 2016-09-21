@@ -231,7 +231,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         if (!empty($storage_definitions[$field_id]) &&
               $storage_definitions[$field_id]->getProvider() != 'content_translation' &&
               !in_array($storage_definitions[$field_id]->getName(), [$entity_type->getKey('langcode'), $entity_type->getKey('default_langcode'), 'revision_translation_affected']) &&
-          ($field_definition->isTranslatable() || ($field_definition->getType()  == 'entity_reference_revisions')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
+          ($field_definition->isTranslatable() || ($field_definition->getType()  == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
 
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
             $checkbox_choice = $value;
@@ -257,6 +257,19 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
             );
             $field_checkboxes[$field_id . ':properties' ] = $field_checkbox;
           }
+        }
+        // We have an exception here, if the entity alias is a computed field we
+        // may still want to translate it.
+        elseif ($field_definition->getType()  == 'path' && $field_definition->isComputed()) {
+          if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
+            $checkbox_choice = $value;
+          }
+          $field_checkbox = array(
+            '#type' => 'checkbox',
+            '#title' => $field_definition->getLabel(),
+            '#default_value' => $checkbox_choice,
+          );
+          $field_checkboxes[$field_id] = $field_checkbox;
         }
       }
     }

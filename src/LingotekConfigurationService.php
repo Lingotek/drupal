@@ -199,8 +199,11 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
 
     // We allow non-translatable entity_reference_revisions fields through.
     // See https://www.drupal.org/node/2788285
+    // We also support paths even if they are not translatable (which may happen
+    // if they are computed fields.
+    $excluded_types = ['path', 'entity_reference_revisions'];
     return (!empty($field_definitions[$field_name])
-      && ($field_definitions[$field_name]->isTranslatable() || ($field_definitions[$field_name]->getType() == 'entity_reference_revisions'))
+      && ($field_definitions[$field_name]->isTranslatable() || (in_array($field_definitions[$field_name]->getType(), $excluded_types)))
       && !!$config->get($key));
   }
 

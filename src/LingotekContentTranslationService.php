@@ -297,7 +297,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityManager->getFieldStorageDefinitions($entity_type->id()) : array();
     $translatable_fields = array();
-    foreach ($entity->getFields(FALSE) as $field_name => $definition) {
+    // We need to include computed fields, as we may have a URL alias.
+    foreach ($entity->getFields(TRUE) as $field_name => $definition) {
       if ($this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $field_name)
         && $field_name != $entity_type->getKey('langcode')
         && $field_name != $entity_type->getKey('default_langcode')) {
@@ -327,18 +328,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         if (!$column_element) {
           $properties = $fval->getProperties();
           foreach ($properties as $property_name => $property_value) {
-            $property_definition = $storage_definitions[$k]->getPropertyDefinition($property_name);
-            $data_type = $property_definition->getDataType();
-            if (($data_type === 'string')
-              && !$property_definition->isComputed()) {
-              if (isset($fval->$property_name) && !empty($fval->$property_name)) {
-                $data[$k][$fkey][$property_name] = $fval->get($property_name)->getValue();
-              }
-              // If there is a path item, we need to handle that the pid is a
-              // string but we don't want to upload it. See
-              // https://www.drupal.org/node/2689253.
-              if ($field_type === 'path') {
-                unset($data[$k][$fkey]['pid']);
+            if (isset($storage_definitions[$k])) {
+              $property_definition = $storage_definitions[$k]->getPropertyDefinition($property_name);
+              $data_type = $property_definition->getDataType();
+              if (($data_type === 'string') && !$property_definition->isComputed()) {
+                if (isset($fval->$property_name) && !empty($fval->$property_name)) {
+                  $data[$k][$fkey][$property_name] = $fval->get($property_name)
+                    ->getValue();
+                }
+                // If there is a path item, we need to handle that the pid is a
+                // string but we don't want to upload it. See
+                // https://www.drupal.org/node/2689253.
+                if ($field_type === 'path') {
+                  unset($data[$k][$fkey]['pid']);
+                }
               }
             }
           }
@@ -400,6 +403,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $metatags = unserialize($metatag_serialized);
           if ($metatags) {
             $data[$k][$field_item->getName()] = $metatags;
+          }
+        }
+      }
+      // We could have a path as computed field.
+      else if ($field_type === 'path') {
+        if ($entity->id()) {
+          $source = '/' . $entity->toUrl()->getInternalPath();
+          $path = \Drupal::service('path.alias_storage')->load(['source' => $source, 'langcode' => $entity->language()->getId()]);
+          $alias = $path['alias'];
+          if ($alias !== NULL) {
+            $data[$k][0]['alias'] = $alias;
           }
         }
       }
@@ -757,7 +771,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
       foreach ($data as $name => $field_data) {
         $field_definition = $entity->getFieldDefinition($name);
-        if (($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions') && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
+        if (($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions')
+          && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
           // First we check if this is a entity reference, and save the translated entity.
           $field_type = $field_definition->getType();
           if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
