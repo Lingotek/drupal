@@ -154,6 +154,7 @@ function lingotek_admin_entity_bundle_profiles_form($form, &$form_state, $entity
     $original_fields = field_info_instances($entity_type, $bundle_name);
     $fields = lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate);
     $translation_mode = ($entity_type == 'taxonomy_term') ? lingotek_get_translation_mode($bundle_name) : NULL;
+
     $config_handled = $entity_type == 'taxonomy_term' && empty($original_fields) && $translation_mode['#markup'] !== 'Translate';
     $translation_handling = $config_handled ? array('#markup' => 'Config') : array('#markup' => 'Bundle');
     $profiles = lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $entity_type, $profiles_options, $setup_complete, $config_handled);
@@ -290,11 +291,24 @@ function lingotek_node_settings_row_profiles($bundle_name, $entity_profiles, $en
 
 function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_complete, $translatable_field_types, $translate) {
   $field_types = field_info_fields();
+  $field_info_instances = field_info_instances($entity_type, $bundle_name);
+
+  if ($entity_type == 'menu_link') {
+    $field_info_instances = lingotek_get_menu_link_fields();
+  }
+
   $fields = array();
-  foreach (field_info_instances($entity_type, $bundle_name) as $field) {
+  foreach ($field_info_instances as $field) {
     $field_label = $field['label'];
     $field_machine_name = $field['field_name'];
-    $field_type = $field_types[$field['field_name']]['type'];
+
+    if ($entity_type == 'menu_link') {
+      $field_type = 'text';
+    }
+    else {
+      $field_type = $field_types[$field['field_name']]['type'];
+    }
+
     if (in_array($field_type, $translatable_field_types)) {
       $fields[$field_machine_name] = array(
         '#type' => 'checkbox',
@@ -352,6 +366,7 @@ function lingotek_node_settings_row_fields($entity_type, $bundle_name, $setup_co
     }
   }
   uasort($fields, 'lingotek_title_compare');
+
   return $fields;
 }
 
@@ -482,6 +497,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
   }
 
   $enabled_fields = variable_get('lingotek_enabled_fields', array());
+
   // Reset fields for the entity type but leave its existence there
   $enabled_fields[$entity_type] = array();
   $operations = array();
@@ -518,7 +534,9 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
             $field = field_info_field($content_field);
             $is_field_collection = key_exists($content_field, $field_collection_field_types);
             $field['translatable'] = $is_field_collection ? 0 : 1;
-            field_update_field($field);
+            if ($entity_type != 'menu_link') {
+              field_update_field($field);
+            }
           }
         }
       }
@@ -532,7 +550,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
         $legacy_field = array_pop($field_array);
         $content_type = implode('_', $field_array);
 
-//check to make sure that the content type is enabled
+        //check to make sure that the content type is enabled
         if ($form_state['input']['profile_' . $content_type] != LingotekSync::PROFILE_DISABLED) {
           // Do the actual title replacement
           $bundle = $content_type;
@@ -568,6 +586,7 @@ function lingotek_admin_entity_bundle_profiles_form_submit($form, &$form_state) 
     }
   }
   $_SESSION['lingotek_setup_path'][] = lingotek_get_entity_setup_path($entity_type);
+
   variable_set('lingotek_enabled_fields', $enabled_fields);
   drupal_set_message(t('Your content types have been updated.'));
 

@@ -1645,11 +1645,15 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;
-
   $entity_properties = array_flip($info['schema_fields_sql']['base table']);
-
   $label_col  = isset($info['entity keys']['label']) && $info['entity keys']['label'] ? $info['entity keys']['label'] : NULL;
+
+  if ($entity_type == 'menu_link') {
+    $label_col = 'link_title';
+  }
+
   $bundle_col = isset($info['entity keys']['bundle']) && $info['entity keys']['bundle'] && isset($entity_properties[$info['entity keys']['bundle']]) ? $info['entity keys']['bundle'] : NULL;
+
   // All managed entity types should have a language column.
   // Field collection entities have one, but it is called 'langcode'.
   // Message type entities have one, and it is called 'language'; but currently it does not appear in their entity keys.
@@ -1817,6 +1821,11 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     // beans have the $bundle_col, and also need the label
     if ($entity_type == 'bean'){
       $query->addField('n', 'label');
+    }
+    if ($entity_type == 'menu_link') {
+      $query->condition('n.language', LANGUAGE_NONE, '!=');
+      $query->groupBy('i18n_tsid');
+      $query->addExpression('MIN(i18n_tsid)');
     }
   }
 }
@@ -2130,6 +2139,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
 
   $table_data = array();
   $node_based_translations = array();
+
   foreach ($table_data_raw as $row) {
     if($row->language !== $language->language){
       $node_based_translations[] = $row->$entity_id_key;
@@ -2321,6 +2331,9 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
     $id = $row->gid;
     $language = lingotek_get_group_source($row->gid);
     $row->language = $language;
+  }
+  elseif ($entity_type == 'menu_link') {
+    $id = $row->mlid;
   }
   elseif (!empty($row->id)) {
     $id = $row->id;

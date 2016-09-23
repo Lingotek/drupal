@@ -1475,7 +1475,6 @@ function lingotek_entity_load($entities, $entity_type) {
     return;
   }
 
-
   $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
       ->condition('l.entity_id', array_keys($entities), 'IN')
@@ -2019,6 +2018,7 @@ function lingotek_comment_view($comment, $view_mode, $langcode) {
     $comment->content['lingotek_link']['#markup'] = lingotek_workbench_icon('comment', $comment->cid, Lingotek::convertDrupal2Lingotek($language->language));
   }
 }
+
 /**
  * Implements hook_entity_info_alter().
  */
@@ -2567,39 +2567,6 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
     }
   }
   return $phases;
-}
-
-/**
- * Implements hook_menu_link_insert().
- *
- * @see lingotek_menu_link_update()
- */
-function lingotek_menu_link_insert($link) {
-  lingotek_menu_link_update($link);
-}
-
-/**
- * Implements hook_menu_link_update().
- *
- * Update the menu link's language to be language neutral, if desired,
- * otherwise set it to be the same as it's node.
- */
-function lingotek_menu_link_update($link) {
-  if (lingotek_translate_menu_link($link)) {
-    lingotek_set_menu_link_language($link['mlid'], LANGUAGE_NONE);
-  }
-  else {
-    if (!strstr($link['link_path'], '/')) {
-      // No link language to set!
-      return;
-    }
-    list($path, $node_id) = explode('/', $link['link_path']);
-    if ($node_id && (int) $node_id) {
-      // Get the node's language.
-      $node = node_load($node_id);
-      lingotek_set_menu_link_language($link['mlid'], $node->language);
-    }
-  }
 }
 
 /**

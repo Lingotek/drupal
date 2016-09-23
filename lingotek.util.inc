@@ -271,6 +271,7 @@ function lingotek_get_translatable_fields_by_content_type($entity_type, $type) {
       $desired_fields[$field_name] = $field_name;
     }
   }
+
   return $desired_fields;
 }
 
@@ -301,14 +302,17 @@ function lingotek_entity_xml_body($entity_type, $entity) {
 
   $translate = variable_get('lingotek_enabled_fields', array());
   list($id, $vid, $bundle) = lingotek_entity_extract_ids($entity_type, $entity);
+
   $fields_desired = isset($translate[$entity_type][$bundle]) ? $translate[$entity_type][$bundle] : array();
+
   if (empty($fields_desired)) {
     $fields_desired = lingotek_get_translatable_fields_by_content_type($entity_type, $bundle);
   }
 
   foreach ($fields_desired as $value) {
     $field = field_info_field($value);
-    if (isset($field)) {
+    // Enable menu links title and description to masquerade as fields
+    if (isset($field) || $entity_type == 'menu_link') {
       array_push($translatable, $value);
     }
   }
@@ -366,24 +370,28 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
   $has_invalid_xml = FALSE;
 
   foreach ($translatable_fields as $field_name) {
-    $field_columns = $all_field_info[$field_name]['columns'];
-    $field_content = & $entity->$field_name;
-    $field_language = is_array($field_content) && array_key_exists($language, $field_content) ? $language : LANGUAGE_NONE;
+    if ($entity_type == 'menu_link') {
+      $field_language = $entity->language;
+      $field_content = lingotek_get_menu_link_field_content($field_name, $entity);
+      $field_columns = lingotek_get_menu_link_field_columns();
+    }
+    else {
+      $field_columns = $all_field_info[$field_name]['columns'];
+      $field_content = & $entity->$field_name;
+      $field_language = is_array($field_content) && array_key_exists($language, $field_content) ? $language : LANGUAGE_NONE;
+    }
 
     // Deal with not being initialized right, such as pre-existing titles.
     if (!isset($field_content[$field_language])) {
       continue;
     }
 
-
     // Create fields from all target keys.
     foreach ($field_content[$field_language] as $delta) {
-
       // Initialize a tag the field for each delta of the field in source language.
       $field_obj = $content_obj->addChild($field_name);
 
       foreach ($field_columns as $column_name => $column_attributes) {
-
         if (empty($delta[$column_name])) {
           continue;
         }
@@ -420,6 +428,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
         }
 
         $delta_column_content = lingotek_filter_placeholders($delta[$column_name]);
+
         if (lingotek_element_contains_invalid_xml($delta_column_content)) {
           $has_invalid_xml = TRUE;
           break;
@@ -667,7 +676,7 @@ function lingotek_get_source_language() {
 function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
 
-  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane', 'menu_link'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
@@ -710,6 +719,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   }
   if (isset($enabled_types['group'])) {
     $enabled_types['group']['label'] = 'Groups';
+  }
+  if (isset($enabled_types['menu_link'])) {
+    $enabled_types['menu_link']['label'] = 'Menu Links';
   }
 
   // Allow other modules to add/remove entity types to the list supported.
@@ -2398,4 +2410,78 @@ function lingotek_get_group_source($entity_id) {
     ->fetch(PDO::FETCH_ASSOC);
 
     return $row['language'];
+}
+
+/**
+ * Builds an array that masquerades as fields for Menu Links for upload
+ */
+function lingotek_get_menu_link_fields() {
+  $menu_link_fields = array();
+
+  $menu_link_fields['link_title'] = array(
+    'label' => 'Title',
+    'field_name' => 'title',
+  );
+
+  $menu_link_fields['link_description'] = array(
+    'label' => 'Description',
+    'field_name' => 'description',
+  );
+
+  return $menu_link_fields;
+}
+
+/**
+ * Builds an array that masquerades as field_content for Menu Links for upload
+ */
+function lingotek_get_menu_link_field_content($field_name, $entity) {
+  $field_content = array();
+  $field_language = $entity->language;
+
+  if ($field_name == 'title') {
+    $field_array = array(
+      'value' => $entity->link_title,
+    );
+  }
+  elseif ($field_name == 'description') {
+    $field_array = array(
+      'value' => $entity->options['attributes']['title'],
+    );
+  }
+
+  $field_content[$field_language][] = $field_array;
+
+  return $field_content;
+}
+
+/**
+ * Builds an array that masquerades as field_columns for Menu Links for upload
+ */
+function lingotek_get_menu_link_field_columns() {
+  $field_columns = array();
+  $field_columns['value'] = array();
+
+  return $field_columns;
+}
+/**
+ * Retrieves a translation set for menu links
+ */
+function lingotek_get_translation_set($mlid, $menu_name) {
+  $source_menu_link = menu_link_load($mlid);
+  $source_tsid = $source_menu_link['i18n_tsid'];
+
+  // Create new translation set
+  if ($source_tsid == 0) {
+    $translation_set = i18n_translation_set_build('menu_link');
+    $translations = array(
+      $source_menu_link->language => $source_menu_link,
+    );
+    $translation_set->add_translations($translations);
+  }
+  // Load existing translation set
+  else {
+    $translation_set = i18n_translation_set_load($source_tsid, 'menu_link');
+  }
+
+  return $translation_set;
 }
