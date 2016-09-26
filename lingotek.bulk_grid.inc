@@ -1825,7 +1825,6 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     if ($entity_type == 'menu_link') {
       $query->condition('n.language', LANGUAGE_NONE, '!=');
       $query->groupBy('i18n_tsid');
-      $query->addExpression('MIN(i18n_tsid)');
     }
   }
 }

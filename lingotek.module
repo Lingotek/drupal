@@ -1083,6 +1083,15 @@ function lingotek_entity_save($entity, $entity_type) {
 
   // Always store the entity's profile, in case the profile of the same content
   // type changes in the future to something else.
+
+  if ($entity_type == 'menu_link') {
+    $is_source_menu_link = lingotek_is_menu_link_source($id);
+    // Don't put target menu links in the lingotek entity metadata table
+    if (!$is_source_menu_link) {
+      return;
+    }
+  }
+
   lingotek_keystore($entity_type, $id, 'profile', $entity->lingotek['profile']);
 
   // If the hash changed, handle upload status and target statuses

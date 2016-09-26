@@ -2525,3 +2525,27 @@ function lingotek_get_translation_set($mlid, $menu_name) {
 
   return $translation_set;
 }
+
+/**
+ * Returns whether a menu link is the source menu link from a i18n translation set
+ */
+function lingotek_is_menu_link_source($mlid) {
+  $menu_link = menu_link_load($mlid);
+  $tsid = $menu_link['i18n_tsid'];
+
+  if ($tsid == 0) {
+    return TRUE;
+  }
+
+  $query = db_select('menu_links', 'ml')
+    ->condition('ml.i18n_tsid', $tsid);
+  $query->addExpression('MIN(mlid)', 'source');
+  $source = $query->execute()->fetch(PDO::FETCH_ASSOC);
+  $source_menu_link = $source['source'];
+
+  if ($source_menu_link == $mlid) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
