@@ -1142,6 +1142,36 @@ class LingotekSync {
     return $success;
   }
 
+  public static function getMenuLinkTargetStatus($mlid, $lingotek_locale) {
+    $key = 'target_sync_status_' . $lingotek_locale;
+    $status = lingotek_keystore('menu_link', $mlid, $key);
+
+    if ($status) {
+      return $status;
+    }
+    else {
+      LingotekLog::error('Did not find any targets for menu link "@id"', array('@id' => $mlid));
+      return FALSE;
+    }
+  }
+
+  public static function getDocumentId($entity_type, $entity_id) {
+    $doc_id = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('value'))
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_id', $entity_id)
+      ->condition('lem.entity_key', 'document_id')
+      ->execute()
+      ->fetch(PDO::FETCH_ASSOC);
+
+    if ($doc_id) {
+      return $doc_id;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
 }
 
 ?>

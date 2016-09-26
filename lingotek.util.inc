@@ -2256,9 +2256,19 @@ function lingotek_current_xml_format($xml) {
  * Find the languages for a given entity in Drupal (searches node-based and field-based translations)
  */
 function lingotek_get_languages($entity_type, $entity_id) {
-  $entity = lingotek_entity_load_single($entity_type, $entity_id);
+  if ($entity_type == 'menu_link') {
+    $entity = menu_link_load($entity_id);
+    $tsid = $entity['i18n_tsid'];
+    $translation_set = i18n_translation_set_load($tsid, 'menu_link');
+    $translations = $translation_set->get_translations();
+
+    return array_keys($translations);
+  }
+
   $existing_translations = array();
   $drupal_langcodes = language_list();
+  $entity = lingotek_entity_load_single($entity_type, $entity_id);
+
   // check for node-based translations
   if ($entity_type == 'node' && module_exists('translation')) {
     $target_nodes = lingotek_node_get_translations($entity_id);
@@ -2266,6 +2276,7 @@ function lingotek_get_languages($entity_type, $entity_id) {
       $existing_translations[$langcode] = TRUE;
     }
   }
+
   // check for field-based translations
   foreach ($entity as $k => $v) {
     if (is_array($v) && !empty($v)) {
@@ -2355,6 +2366,35 @@ function lingotek_delete_field_translations($entity_type, $entity) {
     }
   }
   entity_save($entity_type, $entity);
+}
+
+function lingotek_delete_menu_link_translations($mlids) {
+  foreach ($mlids as $mlid) {
+      $menu_link = menu_link_load($mlid);
+      $tsid = $menu_link['i18n_tsid'];
+      $translation_set = i18n_translation_set_load($tsid, 'menu_link');
+      $translations = $translation_set->get_translations();
+      $has_doc_id = LingotekSync::getDocumentId('menu_link', $mlid);
+
+      foreach($translations as $langcode => $menu_link) {
+        $translation_mlid = $menu_link['mlid'];
+        if ($translation_mlid != $mlid) {
+          $count += 1;
+          menu_link_delete($translation_mlid);
+
+          $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
+          $status = LingotekSync::getMenuLinkTargetStatus($mlid, $lingotek_locale);
+
+          if ($status == LingotekSync::STATUS_CURRENT && $has_doc_id) {
+            $target_status = LingotekSync::STATUS_READY;
+            LingotekSync::setTargetStatus('menu_link', $mlid, $lingotek_locale, $target_status);
+          }
+          else {
+            LingotekSync::deleteTargetStatus('menu_link', $mlid, $lingotek_locale);
+          }
+        }
+      }
+    }
 }
 
 /**

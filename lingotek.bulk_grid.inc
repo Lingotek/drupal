@@ -2413,6 +2413,9 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
       break;
     case 'message_type':
       return '';
+    case 'menu_link':
+      $edit_link = 'admin/structure/menu/item/' . $entity_id;
+      break;
     default:
       $edit_link = $entity_type . '/' . $entity_id . '/edit';
       break;
@@ -2427,7 +2430,6 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
   }
 
   $icons = array();
-
   $legend = array(
     LingotekSync::STATUS_PENDING => t('In progress'),
     LingotekSync::STATUS_READY => t('Ready to download'),
@@ -2767,19 +2769,24 @@ function lingotek_entity_delete_translations_form_submit($form, &$form_state) {
     $entity_ids[] = $id;
   }
 
-  // Deletes translations based on whether it is node based translation or field based translation
-  if (!empty($entity_ids)) {
-    $entities = entity_load($entity_type, $entity_ids);
-    $count = 0;
-    foreach ($entities as $entity) {
-      $entity->lingotek_upload_override = FALSE;
-      if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
-        $count += 1;
-        lingotek_delete_node_translations($entity->nid);
-      }
-      if ($entity->tnid == 0) {
-        $count += 1;
-        lingotek_delete_field_translations($entity_type, $entity);
+  if ($entity_type == 'menu_link') {
+    lingotek_delete_menu_link_translations($entity_ids);
+  }
+  else {
+    // Deletes translations based on whether it is node based translation or field based translation
+    if (!empty($entity_ids)) {
+      $entities = entity_load($entity_type, $entity_ids);
+      $count = 0;
+      foreach ($entities as $entity) {
+        $entity->lingotek_upload_override = FALSE;
+        if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
+          $count += 1;
+          lingotek_delete_node_translations($entity->nid);
+        }
+        if ($entity->tnid == 0) {
+          $count += 1;
+          lingotek_delete_field_translations($entity_type, $entity);
+        }
       }
     }
   }
