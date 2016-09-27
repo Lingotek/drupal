@@ -2370,31 +2370,50 @@ function lingotek_delete_field_translations($entity_type, $entity) {
 
 function lingotek_delete_menu_link_translations($mlids) {
   foreach ($mlids as $mlid) {
-      $menu_link = menu_link_load($mlid);
-      $tsid = $menu_link['i18n_tsid'];
-      $translation_set = i18n_translation_set_load($tsid, 'menu_link');
-      $translations = $translation_set->get_translations();
-      $has_doc_id = LingotekSync::getDocumentId('menu_link', $mlid);
+    $menu_link = menu_link_load($mlid);
+    $tsid = $menu_link['i18n_tsid'];
+    $translation_set = i18n_translation_set_load($tsid, 'menu_link');
+    $translations = $translation_set->get_translations();
+    $has_doc_id = LingotekSync::getDocumentId('menu_link', $mlid);
 
-      foreach($translations as $langcode => $menu_link) {
-        $translation_mlid = $menu_link['mlid'];
-        if ($translation_mlid != $mlid) {
-          $count += 1;
-          menu_link_delete($translation_mlid);
+    foreach($translations as $langcode => $menu_link) {
+      $translation_mlid = $menu_link['mlid'];
+      if ($translation_mlid != $mlid) {
+        $count += 1;
+        menu_link_delete($translation_mlid);
+        $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
+        $status = LingotekSync::getMenuLinkTargetStatus($mlid, $lingotek_locale);
 
-          $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
-          $status = LingotekSync::getMenuLinkTargetStatus($mlid, $lingotek_locale);
-
-          if ($status == LingotekSync::STATUS_CURRENT && $has_doc_id) {
-            $target_status = LingotekSync::STATUS_READY;
-            LingotekSync::setTargetStatus('menu_link', $mlid, $lingotek_locale, $target_status);
-          }
-          else {
-            LingotekSync::deleteTargetStatus('menu_link', $mlid, $lingotek_locale);
-          }
+        if ($status == LingotekSync::STATUS_CURRENT && $has_doc_id) {
+          $target_status = LingotekSync::STATUS_READY;
+          LingotekSync::setTargetStatus('menu_link', $mlid, $lingotek_locale, $target_status);
+        }
+        else {
+          LingotekSync::deleteTargetStatus('menu_link', $mlid, $lingotek_locale);
         }
       }
     }
+  }
+}
+
+function lingotek_delete_menu_links($mlids) {
+  foreach ($mlids as $mlid) {
+    $menu_link = menu_link_load($mlid);
+    $tsid = $menu_link['i18n_tsid'];
+    $translation_set = i18n_translation_set_load($tsid, 'menu_link');
+
+    if ($translation_set) {
+      $translations = $translation_set->get_translations();
+
+      foreach($translations as $langcode => $menu_link) {
+        $translation_mlid = $menu_link['mlid'];
+        menu_link_delete($translation_mlid);
+      }
+    }
+    else {
+      menu_link_delete($mlid);
+    }
+  }
 }
 
 /**

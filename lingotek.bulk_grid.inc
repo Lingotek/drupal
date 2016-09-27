@@ -2750,7 +2750,12 @@ function lingotek_entity_delete_form_submit($form, &$form_state) {
   }
 
   if (!empty($entity_ids)) {
-    entity_delete_multiple($entity_type, $entity_ids);
+    if ($entity_type == 'menu_link') {
+      lingotek_delete_menu_links($entity_ids);
+    }
+    else {
+      entity_delete_multiple($entity_type, $entity_ids);
+    }
     $count = count($entity_ids);
     watchdog('content', format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     drupal_set_message(format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
