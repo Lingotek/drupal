@@ -1823,8 +1823,17 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
       $query->addField('n', 'label');
     }
     if ($entity_type == 'menu_link') {
+      $min_query = db_select('menu_links', 'ml')
+        ->condition('ml.i18n_tsid', 0, '!=')
+        ->groupBy('i18n_tsid');
+      $min_query->addExpression('MIN(mlid)', 'minimum');
+
+      $ml_or = db_or();
+      $ml_or->condition('n.i18n_tsid', 0);
+      $ml_or->condition('n.mlid', $min_query, 'IN');
+
       $query->condition('n.language', LANGUAGE_NONE, '!=');
-      $query->groupBy('i18n_tsid');
+      $query->condition($ml_or);
     }
   }
 }
