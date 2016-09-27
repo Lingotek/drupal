@@ -409,6 +409,21 @@ class LingotekSync {
         $query->condition($tnid_query);
       }
 
+      // Exclude translation sets for menu_links
+      if ($entity_base_table == 'menu_links') {
+        $min_query = db_select('menu_links', 'ml')
+          ->condition('ml.i18n_tsid', 0, '!=')
+          ->groupBy('i18n_tsid');
+        $min_query->addExpression('MIN(mlid)', 'minimum');
+
+        $ml_or = db_or();
+        $ml_or->condition('t.i18n_tsid', 0);
+        $ml_or->condition('t.mlid', $min_query, 'IN');
+
+        $query->condition('t.language', LANGUAGE_NONE, '!=');
+        $query->condition($ml_or);
+      }
+
       // exclude disabled entities (including those that have disabled bundles)
       $disabled_profile = LingotekProfile::loadById(LingotekSync::PROFILE_DISABLED);
       $disabled_entities = $disabled_profile->getEntities($entity_type);

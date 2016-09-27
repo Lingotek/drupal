@@ -2320,7 +2320,9 @@ function lingotek_entity_delete($entity, $type) {
 
   // Set a flag for the deleted entity so it's not re-uploaded if it
   // has nested entities within fields, such as field collections.
-  LingotekSync::setUploadStatus($type, $id, LingotekSync::STATUS_DELETED);
+  if ($type != 'i18n_translation') {
+    LingotekSync::setUploadStatus($type, $id, LingotekSync::STATUS_DELETED);
+  }
 }
 
 /*

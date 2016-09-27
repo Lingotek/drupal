@@ -2257,10 +2257,18 @@ function lingotek_current_xml_format($xml) {
  */
 function lingotek_get_languages($entity_type, $entity_id) {
   if ($entity_type == 'menu_link') {
+    $translations = array();
     $entity = menu_link_load($entity_id);
+    $menu_langcode = $entity['language'];
     $tsid = $entity['i18n_tsid'];
     $translation_set = i18n_translation_set_load($tsid, 'menu_link');
-    $translations = $translation_set->get_translations();
+
+    if ($translation_set) {
+      $translations = $translation_set->get_translations();
+    }
+    else {
+      $translations[$menu_langcode] = TRUE;
+    }
 
     return array_keys($translations);
   }
