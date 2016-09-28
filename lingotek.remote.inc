@@ -248,7 +248,6 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
  * Inserts newly downloaded menu link data into the menu_links table
  */
 function lingotek_process_menu_link_xml($xml, &$entity, $entity_type, $langcode, $translation_set) {
-
   $item = array(
     'link_title' => '',
     'mlid' => 0,

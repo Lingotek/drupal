@@ -2503,6 +2503,7 @@ function lingotek_get_menu_link_fields() {
  */
 function lingotek_get_menu_link_field_content($field_name, $entity) {
   $field_content = array();
+  $field_array = array();
   $field_language = $entity->language;
 
   if ($field_name == 'title') {
@@ -2511,9 +2512,11 @@ function lingotek_get_menu_link_field_content($field_name, $entity) {
     );
   }
   elseif ($field_name == 'description') {
-    $field_array = array(
-      'value' => $entity->options['attributes']['title'],
-    );
+    if (isset($entity->options['attributes'])) {
+      $field_array = array(
+        'value' => $entity->options['attributes']['title'],
+      );
+    }
   }
 
   $field_content[$field_language][] = $field_array;
