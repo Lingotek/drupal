@@ -2512,7 +2512,7 @@ function lingotek_get_menu_link_field_content($field_name, $entity) {
     );
   }
   elseif ($field_name == 'description') {
-    if (isset($entity->options['attributes'])) {
+    if (isset($entity->options['attributes']['title'])) {
       $field_array = array(
         'value' => $entity->options['attributes']['title'],
       );

@@ -965,6 +965,17 @@ class LingotekSync {
     return $query->execute()->fetchCol();
   }
 
+  public static function getWorkflowIdFromEntityId($id) {
+    $query = db_select('lingotek_entity_metadata', 'lem');
+    $query->addField('lem', 'value');
+    $query->condition('entity_key', 'workflow_id', '=');
+    $query->condition('entity_id', $id, '=');
+
+    $result = $query->execute()->fetchCol();
+
+    return $result[0];
+  }
+
   public static function getChunkIdsByStatus($status) {
     $query = db_select('lingotek_config_metadata', 'meta');
     $query->fields('meta', array('id'));

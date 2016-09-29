@@ -1716,7 +1716,6 @@ function lingotek_admin_profile_manage($profile_id) {
  * Content defaults Form
  */
 function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE) {
-
   $account = LingotekAccount::instance();
   $api = LingotekApi::instance();
   $site = variable_get('site_name', 'Drupal Site');

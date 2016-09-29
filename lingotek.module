@@ -1035,9 +1035,6 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     );
   }
 
-  // include additional form components
-  $form = lingotek_add_menu_link_form($form, $form_state, $node);
-
   return $form;
 }
 
@@ -1170,7 +1167,6 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
     else {
       $prefill_phase = NULL;
     }
-
     $entity_type = $form_state['entity_type'];
     // SUBMIT THE WORKFLOW CHANGES TO TMS
     lingotek_entity_change_workflow($entity_type, $nids, $workflow_id, $prefill_phase);
@@ -1349,14 +1345,6 @@ function lingotek_node_presave($node) {
   if (module_exists('title') && array_key_exists('title_field', $node)) {
     if (isset($node->title_field[$node->language][0]['value'])) {
       $node->title = $node->title_field[$node->language][0]['value'];
-    }
-  }
-
-  // Setting node menu language to neutral, so that it can be localized.
-  if (isset($node->menu)) {
-    $link = $node->menu;
-    if (lingotek_translate_menu_link($link)) {
-      $node->menu['language'] = LANGUAGE_NONE;
     }
   }
 }
@@ -2418,6 +2406,9 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       if($entity_type === 'config'){
         $curr_workflow_id = LingotekSync::getWorkflowIdFromConfigSet($nids[0]);
       }
+      elseif ($entity_type == 'menu_link') {
+        $curr_workflow_id = LingotekSync::getWorkflowIdFromEntityId($nids[0]);
+      }
       else {
         $node = lingotek_node_load_default(reset($nids));
         $curr_workflow_id = $node->lingotek['workflow_id'];
@@ -2425,7 +2416,12 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
     }
     else {
       if (!$second_run) {
-        drupal_set_message(t('You will be changing the workflow for @number comments.', array('@number' => count($nids))), 'warning');
+        if ($entity_type == 'menu_link') {
+          drupal_set_message(t('You will be changing the workflow for @number menu links.', array('@number' => count($nids))), 'warning');
+        }
+        else {
+          drupal_set_message(t('You will be changing the workflow for @number comments.', array('@number' => count($nids))), 'warning');
+        }
       }
       $node = new stdClass();
       $node->lingotek = lingotek_get_global_profile();
@@ -2631,33 +2627,6 @@ function lingotek_field_attach_create_bundle($entity_type, $bundle) {
   $profiles = variable_get('lingotek_entity_profiles');
   $profiles[$entity_type][$bundle] = LingotekSync::PROFILE_DISABLED;
   variable_set('lingotek_entity_profiles', $profiles);
-}
-
-function lingotek_add_menu_link_form($form, $form_state, $node) {
-  if (isset($form['menu']['link'])) {
-    // if menu translation is enabled, if the default language is english,
-    // and if either 'english' or 'language neutral' is selected for the node
-    // being created, then show the option to set the menu item as 'und' for
-    // i18n_string translation.
-    $i18n_language = 'en';
-
-    $form['menu']['link']['lingotek_translate'] = array(
-      '#type' => 'select',
-      '#title' => 'Menu translation through Lingotek',
-      '#description' => t('Select whether to allow this link to be translated into all enabled languages.'),
-      '#default_value' => isset($form_state['node']->menu['language']) ? $form_state['node']->menu['language'] : LANGUAGE_NONE,
-      '#options' => array(LANGUAGE_NONE => 'Allow link to be translated', 'en' => 'Show link only in English'),
-      '#prefix' => '<div id="edit-menu-english">',
-      '#suffix' => '</div>',
-    );
-    $form['menu']['link']['nonenglish_info'] = array(
-      '#markup' => t('<div id="edit-menu-non-english">Note: This menu item will be visible only in this node\'s currently selected language.  If you want this menu link to be available for all languages, you must add it directly through the Menus administration tool as an English string and then save the menu item as "Language Neutral".</div>'),
-      '#prefix' => '<div id="edit-menu-non-english">',
-      '#suffix' => '</div>',
-    );
-  }
-
-  return $form;
 }
 
 function lingotek_field_attach_delete_bundle($entity_type, $bundle, $instances) {
