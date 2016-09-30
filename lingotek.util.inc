@@ -676,7 +676,7 @@ function lingotek_get_source_language() {
 function lingotek_managed_entity_types($include_all = FALSE) {
   $type_info = entity_get_info();
 
-  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane', 'menu_link'); // supported types
+  $whitelist = array('node', 'comment', 'message_type', 'fieldable_panels_pane'); // supported types
   if ($include_all) {
     // include the entities that should not normally be managed separately
     if (module_exists('field_collection')) {
@@ -691,6 +691,9 @@ function lingotek_managed_entity_types($include_all = FALSE) {
   }
   if (module_exists('group') && variable_get('lingotek_translate_groups', FALSE)) {
     $whitelist[] = 'group';
+  }
+  if (module_exists('entity_menu_links') && variable_get('lingotek_advanced_menu_links', FALSE)) {
+    $whitelist[] = 'menu_link';
   }
   $whitelist = array_flip($whitelist);
   $enabled_types = array_intersect_key($type_info, $whitelist);

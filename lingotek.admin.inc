@@ -1162,17 +1162,20 @@ function lingotek_admin_prepare_menus() {
 
   // find all menu links that are not language-neutral and not part of a
   // translation set and update them to be language-neutral (so they will
-  // be added to the locales_source table as a string to be translated)
-  $result = db_update('menu_links')
-      ->fields(array('language' => LANGUAGE_NONE))
-      ->condition('language', LANGUAGE_NONE, '!=')
-      ->condition('i18n_tsid', 0)
-      ->execute();
-  if ($result) {
-    drupal_set_message(format_plural($result, t('Set 1 menu link to <i>language neutral</i>.'), t('Set @num menu links to <i>Language neutral</i>.', array('@num' => (int) $result))));
-  }
-  else {
-    drupal_set_message(t('All menu links already set to <i>language neutral</i>.'));
+  // be added to the locales_source table as a string to be translated),
+  // only if advanced handling of menu items is off
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    $result = db_update('menu_links')
+        ->fields(array('language' => LANGUAGE_NONE))
+        ->condition('language', LANGUAGE_NONE, '!=')
+        ->condition('i18n_tsid', 0)
+        ->execute();
+    if ($result) {
+      drupal_set_message(format_plural($result, t('Set 1 menu link to <i>language neutral</i>.'), t('Set @num menu links to <i>Language neutral</i>.', array('@num' => (int) $result))));
+    }
+    else {
+      drupal_set_message(t('All menu links already set to <i>language neutral</i>.'));
+    }
   }
 
   // make sure all menu links have the "alter" attribute, so that
@@ -1360,6 +1363,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#default_value' => variable_get('lingotek_advanced_taxonomy_terms', FALSE),
   );
 
+  $form['prefs']['lingotek_advanced_menu_links'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable advanced handling of menu links'),
+    '#description' => t('This option is used to handle translation of menu links as entities. Requires <i>Entity Menu Links</i> module.'),
+    '#default_value' => variable_get('lingotek_advanced_menu_links', FALSE),
+  );
+
   if (module_exists('bean')) {
     $form[$fkey]['lingotek_translate_beans'] = array(
       '#type' => 'checkbox',
@@ -1477,8 +1487,11 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
     }
 
     if (!db_table_exists('entity_translation')) {
-      drupal_set_message(t('For Group translation, make sure you\'ve installed the Entity Translation module.'), 'warning', FALSE);
+      drupal_set_message(t('For Group translation, make sure you\'ve installed the <i>Entity Translation</i> module.'), 'warning', FALSE);
     }
+  }
+  if (!module_exists('entity_menu_links')) {
+    drupal_set_message(t('For advanced menu link translation, make sure you\'ve installed the <i>Entity Menu Links</i> module.'), 'warning', FALSE);
   }
   menu_rebuild();
 }
@@ -2568,7 +2581,7 @@ function lingotek_admin_cleanup_form($form, &$form_state, $show_fieldset = FALSE
 
   $cleanup_functions['lingotek_admin_prepare_menus'] = array(
     'title' => t('Prepare menus'),
-    'desc' => t('Update all menus to use <i>Translate and Localize</i> in the Multilingual Options, and update all menu links to be <i>Language neutral</i>.'),
+    'desc' => t('Update all menus to use <i>Translate and Localize</i> in the Multilingual Options, and update all menu links to be <i>Language neutral</i> only if advanced handling of menu links is off.'),
   );
 
   if (module_exists('field_collection')) {

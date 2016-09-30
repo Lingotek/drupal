@@ -1035,6 +1035,11 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
     );
   }
 
+  // include additional form components
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    $form = lingotek_add_menu_link_form($form, $form_state, $node);
+  }
+
   return $form;
 }
 
@@ -1345,6 +1350,16 @@ function lingotek_node_presave($node) {
   if (module_exists('title') && array_key_exists('title_field', $node)) {
     if (isset($node->title_field[$node->language][0]['value'])) {
       $node->title = $node->title_field[$node->language][0]['value'];
+    }
+  }
+  // Setting node menu language to neutral, so that it can be localized, if advanced handling
+  // of menu links is off.
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    if (isset($node->menu)) {
+      $link = $node->menu;
+      if (lingotek_translate_menu_link($link)) {
+        $node->menu['language'] = LANGUAGE_NONE;
+      }
     }
   }
 }
@@ -2577,6 +2592,43 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
 }
 
 /**
+* Implements hook_menu_link_insert().
+*
+* @see lingotek_menu_link_update()
+*/
+function lingotek_menu_link_insert($link) {
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    lingotek_menu_link_update($link);
+  }
+}
+
+/**
+* Implements hook_menu_link_update().
+*
+* Update the menu link's language to be language neutral, if desired,
+* otherwise set it to be the same as it's node.
+*/
+function lingotek_menu_link_update($link) {
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    if (lingotek_translate_menu_link($link)) {
+      lingotek_set_menu_link_language($link['mlid'], LANGUAGE_NONE);
+    }
+    else {
+      if (!strstr($link['link_path'], '/')) {
+        // No link language to set!
+        return;
+      }
+      list($path, $node_id) = explode('/', $link['link_path']);
+      if ($node_id && (int) $node_id) {
+        // Get the node's language.
+        $node = node_load($node_id);
+        lingotek_set_menu_link_language($link['mlid'], $node->language);
+      }
+    }
+  }
+}
+
+/**
  * Determine whether the menu link should be translated.
  *
  * @param object $link
@@ -2627,6 +2679,32 @@ function lingotek_field_attach_create_bundle($entity_type, $bundle) {
   $profiles = variable_get('lingotek_entity_profiles');
   $profiles[$entity_type][$bundle] = LingotekSync::PROFILE_DISABLED;
   variable_set('lingotek_entity_profiles', $profiles);
+}
+
+function lingotek_add_menu_link_form($form, $form_state, $node) {
+  if (isset($form['menu']['link'])) {
+  // if menu translation is enabled, if the default language is english,
+  // and if either 'english' or 'language neutral' is selected for the node
+  // being created, then show the option to set the menu item as 'und' for
+  // i18n_string translation.
+    $i18n_language = 'en';
+    $form['menu']['link']['lingotek_translate'] = array(
+      '#type' => 'select',
+      '#title' => 'Menu translation through Lingotek',
+      '#description' => t('Select whether to allow this link to be translated into all enabled languages.'),
+      '#default_value' => isset($form_state['node']->menu['language']) ? $form_state['node']->menu['language'] : LANGUAGE_NONE,
+      '#options' => array(LANGUAGE_NONE => 'Allow link to be translated', 'en' => 'Show link only in English'),
+      '#prefix' => '<div id="edit-menu-english">',
+      '#suffix' => '</div>',
+    );
+    $form['menu']['link']['nonenglish_info'] = array(
+      '#markup' => t('<div id="edit-menu-non-english">Note: This menu item will be visible only in this node\'s currently selected language.  If you want this menu link to be available for all languages, you must add it directly through the Menus administration tool as an English string and then save the menu item as "Language Neutral".</div>'),
+      '#prefix' => '<div id="edit-menu-non-english">',
+      '#suffix' => '</div>',
+    );
+  }
+
+  return $form;
 }
 
 function lingotek_field_attach_delete_bundle($entity_type, $bundle, $instances) {
