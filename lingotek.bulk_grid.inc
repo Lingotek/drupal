@@ -1646,11 +1646,15 @@ function lingotek_grid_get_rows($entity_type, $form, &$form_state, $count_only =
   $info = entity_get_info($entity_type);
   $entity_id_key = $info['entity keys']['id'];
   $eid = 'n.' . $entity_id_key;
-
   $entity_properties = array_flip($info['schema_fields_sql']['base table']);
-
   $label_col  = isset($info['entity keys']['label']) && $info['entity keys']['label'] ? $info['entity keys']['label'] : NULL;
+
+  if ($entity_type == 'menu_link') {
+    $label_col = 'link_title';
+  }
+
   $bundle_col = isset($info['entity keys']['bundle']) && $info['entity keys']['bundle'] && isset($entity_properties[$info['entity keys']['bundle']]) ? $info['entity keys']['bundle'] : NULL;
+
   // All managed entity types should have a language column.
   // Field collection entities have one, but it is called 'langcode'.
   // Message type entities have one, and it is called 'language'; but currently it does not appear in their entity keys.
@@ -1818,6 +1822,19 @@ function lingotek_bulk_grid_query_add_entity_specifics($query, $entity_type, $bu
     // beans have the $bundle_col, and also need the label
     if ($entity_type == 'bean'){
       $query->addField('n', 'label');
+    }
+    if ($entity_type == 'menu_link') {
+      $min_query = db_select('menu_links', 'ml')
+        ->condition('ml.i18n_tsid', 0, '!=')
+        ->groupBy('i18n_tsid');
+      $min_query->addExpression('MIN(mlid)', 'minimum');
+
+      $ml_or = db_or();
+      $ml_or->condition('n.i18n_tsid', 0);
+      $ml_or->condition('n.mlid', $min_query, 'IN');
+
+      $query->condition('n.language', LANGUAGE_NONE, '!=');
+      $query->condition($ml_or);
     }
   }
 }
@@ -2131,6 +2148,7 @@ function lingotek_bulk_grid_parse_table_data($table_data_raw, $entity_properties
 
   $table_data = array();
   $node_based_translations = array();
+
   foreach ($table_data_raw as $row) {
     if($row->language !== $language->language){
       $node_based_translations[] = $row->$entity_id_key;
@@ -2323,6 +2341,9 @@ function lingotek_render_source($entity_type, $row, $icon, $languages, $language
     $language = lingotek_get_group_source($row->gid);
     $row->language = $language;
   }
+  elseif ($entity_type == 'menu_link') {
+    $id = $row->mlid;
+  }
   elseif (!empty($row->id)) {
     $id = $row->id;
   }
@@ -2401,6 +2422,9 @@ function lingotek_get_entity_edit_link($entity_type, $entity_id, $url_only = FAL
       break;
     case 'message_type':
       return '';
+    case 'menu_link':
+      $edit_link = 'admin/structure/menu/item/' . $entity_id;
+      break;
     default:
       $edit_link = $entity_type . '/' . $entity_id . '/edit';
       break;
@@ -2415,7 +2439,6 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
   }
 
   $icons = array();
-
   $legend = array(
     LingotekSync::STATUS_PENDING => t('In progress'),
     LingotekSync::STATUS_READY => t('Ready to download'),
@@ -2728,7 +2751,12 @@ function lingotek_entity_delete_form_submit($form, &$form_state) {
   }
 
   if (!empty($entity_ids)) {
-    entity_delete_multiple($entity_type, $entity_ids);
+    if ($entity_type == 'menu_link') {
+      lingotek_delete_menu_links($entity_ids);
+    }
+    else {
+      entity_delete_multiple($entity_type, $entity_ids);
+    }
     $count = count($entity_ids);
     watchdog('content', format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
     drupal_set_message(format_plural($count, 'Deleted 1 entity.', 'Deleted @count entities.'));
@@ -2755,19 +2783,24 @@ function lingotek_entity_delete_translations_form_submit($form, &$form_state) {
     $entity_ids[] = $id;
   }
 
-  // Deletes translations based on whether it is node based translation or field based translation
-  if (!empty($entity_ids)) {
-    $entities = entity_load($entity_type, $entity_ids);
-    $count = 0;
-    foreach ($entities as $entity) {
-      $entity->lingotek_upload_override = FALSE;
-      if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
-        $count += 1;
-        lingotek_delete_node_translations($entity->nid);
-      }
-      if ($entity->tnid == 0) {
-        $count += 1;
-        lingotek_delete_field_translations($entity_type, $entity);
+  if ($entity_type == 'menu_link') {
+    lingotek_delete_menu_link_translations($entity_ids);
+  }
+  else {
+    // Deletes translations based on whether it is node based translation or field based translation
+    if (!empty($entity_ids)) {
+      $entities = entity_load($entity_type, $entity_ids);
+      $count = 0;
+      foreach ($entities as $entity) {
+        $entity->lingotek_upload_override = FALSE;
+        if ($entity_type == 'node' && lingotek_uses_node_translation($entity)) {
+          $count += 1;
+          lingotek_delete_node_translations($entity->nid);
+        }
+        if ($entity->tnid == 0) {
+          $count += 1;
+          lingotek_delete_field_translations($entity_type, $entity);
+        }
       }
     }
   }

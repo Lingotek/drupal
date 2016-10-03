@@ -1036,7 +1036,9 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
   }
 
   // include additional form components
-  $form = lingotek_add_menu_link_form($form, $form_state, $node);
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    $form = lingotek_add_menu_link_form($form, $form_state, $node);
+  }
 
   return $form;
 }
@@ -1083,6 +1085,15 @@ function lingotek_entity_save($entity, $entity_type) {
 
   // Always store the entity's profile, in case the profile of the same content
   // type changes in the future to something else.
+
+  if ($entity_type == 'menu_link') {
+    $is_source_menu_link = lingotek_is_menu_link_source($id);
+    // Don't put target menu links in the lingotek entity metadata table
+    if (!$is_source_menu_link) {
+      return;
+    }
+  }
+
   lingotek_keystore($entity_type, $id, 'profile', $entity->lingotek['profile']);
 
   // If the hash changed, handle upload status and target statuses
@@ -1161,7 +1172,6 @@ function lingotek_get_change_workflow_form_submit($form, $form_state) {
     else {
       $prefill_phase = NULL;
     }
-
     $entity_type = $form_state['entity_type'];
     // SUBMIT THE WORKFLOW CHANGES TO TMS
     lingotek_entity_change_workflow($entity_type, $nids, $workflow_id, $prefill_phase);
@@ -1342,12 +1352,14 @@ function lingotek_node_presave($node) {
       $node->title = $node->title_field[$node->language][0]['value'];
     }
   }
-
-  // Setting node menu language to neutral, so that it can be localized.
-  if (isset($node->menu)) {
-    $link = $node->menu;
-    if (lingotek_translate_menu_link($link)) {
-      $node->menu['language'] = LANGUAGE_NONE;
+  // Setting node menu language to neutral, so that it can be localized, if advanced handling
+  // of menu links is off.
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    if (isset($node->menu)) {
+      $link = $node->menu;
+      if (lingotek_translate_menu_link($link)) {
+        $node->menu['language'] = LANGUAGE_NONE;
+      }
     }
   }
 }
@@ -1474,7 +1486,6 @@ function lingotek_entity_load($entities, $entity_type) {
   if ($is_anonymous === TRUE && $is_cron === FALSE && $is_lingotek === FALSE && $is_admin_url === FALSE && $is_cron_var === FALSE && $has_permissions === FALSE && $is_drush === FALSE) {
     return;
   }
-
 
   $query = db_select('lingotek_entity_metadata', 'l')
       ->fields('l', array('entity_id', 'entity_key', 'value'))
@@ -2019,6 +2030,7 @@ function lingotek_comment_view($comment, $view_mode, $langcode) {
     $comment->content['lingotek_link']['#markup'] = lingotek_workbench_icon('comment', $comment->cid, Lingotek::convertDrupal2Lingotek($language->language));
   }
 }
+
 /**
  * Implements hook_entity_info_alter().
  */
@@ -2311,7 +2323,9 @@ function lingotek_entity_delete($entity, $type) {
 
   // Set a flag for the deleted entity so it's not re-uploaded if it
   // has nested entities within fields, such as field collections.
-  LingotekSync::setUploadStatus($type, $id, LingotekSync::STATUS_DELETED);
+  if ($type != 'i18n_translation') {
+    LingotekSync::setUploadStatus($type, $id, LingotekSync::STATUS_DELETED);
+  }
 }
 
 /*
@@ -2407,6 +2421,9 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
       if($entity_type === 'config'){
         $curr_workflow_id = LingotekSync::getWorkflowIdFromConfigSet($nids[0]);
       }
+      elseif ($entity_type == 'menu_link') {
+        $curr_workflow_id = LingotekSync::getWorkflowIdFromEntityId($nids[0]);
+      }
       else {
         $node = lingotek_node_load_default(reset($nids));
         $curr_workflow_id = $node->lingotek['workflow_id'];
@@ -2414,7 +2431,12 @@ function lingotek_get_change_workflow_form($form, &$form_state, $node = NULL) {
     }
     else {
       if (!$second_run) {
-        drupal_set_message(t('You will be changing the workflow for @number comments.', array('@number' => count($nids))), 'warning');
+        if ($entity_type == 'menu_link') {
+          drupal_set_message(t('You will be changing the workflow for @number menu links.', array('@number' => count($nids))), 'warning');
+        }
+        else {
+          drupal_set_message(t('You will be changing the workflow for @number comments.', array('@number' => count($nids))), 'warning');
+        }
       }
       $node = new stdClass();
       $node->lingotek = lingotek_get_global_profile();
@@ -2570,34 +2592,38 @@ function lingotek_get_phases_by_workflow_id($workflow_id) {
 }
 
 /**
- * Implements hook_menu_link_insert().
- *
- * @see lingotek_menu_link_update()
- */
+* Implements hook_menu_link_insert().
+*
+* @see lingotek_menu_link_update()
+*/
 function lingotek_menu_link_insert($link) {
-  lingotek_menu_link_update($link);
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    lingotek_menu_link_update($link);
+  }
 }
 
 /**
- * Implements hook_menu_link_update().
- *
- * Update the menu link's language to be language neutral, if desired,
- * otherwise set it to be the same as it's node.
- */
+* Implements hook_menu_link_update().
+*
+* Update the menu link's language to be language neutral, if desired,
+* otherwise set it to be the same as it's node.
+*/
 function lingotek_menu_link_update($link) {
-  if (lingotek_translate_menu_link($link)) {
-    lingotek_set_menu_link_language($link['mlid'], LANGUAGE_NONE);
-  }
-  else {
-    if (!strstr($link['link_path'], '/')) {
-      // No link language to set!
-      return;
+  if (!variable_get('lingotek_advanced_menu_links', FALSE)) {
+    if (lingotek_translate_menu_link($link)) {
+      lingotek_set_menu_link_language($link['mlid'], LANGUAGE_NONE);
     }
-    list($path, $node_id) = explode('/', $link['link_path']);
-    if ($node_id && (int) $node_id) {
-      // Get the node's language.
-      $node = node_load($node_id);
-      lingotek_set_menu_link_language($link['mlid'], $node->language);
+    else {
+      if (!strstr($link['link_path'], '/')) {
+        // No link language to set!
+        return;
+      }
+      list($path, $node_id) = explode('/', $link['link_path']);
+      if ($node_id && (int) $node_id) {
+        // Get the node's language.
+        $node = node_load($node_id);
+        lingotek_set_menu_link_language($link['mlid'], $node->language);
+      }
     }
   }
 }
@@ -2657,12 +2683,11 @@ function lingotek_field_attach_create_bundle($entity_type, $bundle) {
 
 function lingotek_add_menu_link_form($form, $form_state, $node) {
   if (isset($form['menu']['link'])) {
-    // if menu translation is enabled, if the default language is english,
-    // and if either 'english' or 'language neutral' is selected for the node
-    // being created, then show the option to set the menu item as 'und' for
-    // i18n_string translation.
+  // if menu translation is enabled, if the default language is english,
+  // and if either 'english' or 'language neutral' is selected for the node
+  // being created, then show the option to set the menu item as 'und' for
+  // i18n_string translation.
     $i18n_language = 'en';
-
     $form['menu']['link']['lingotek_translate'] = array(
       '#type' => 'select',
       '#title' => 'Menu translation through Lingotek',

@@ -125,6 +125,13 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
   // First allow other modules to manipulate the downloaded content.
   drupal_alter('lingotek_entity_download', $hook_params);
 
+  // Special handling of menu links
+  if ($entity_type == 'menu_link') {
+    $translation_set = lingotek_get_translation_set($entity->mlid, $entity->menu_name);
+    lingotek_process_menu_link_xml($xml, $entity, $entity_type, $langcode, $translation_set);
+    return;
+  }
+
   // Set $node_based_translation only if the entity type is a node, inherit otherwise.
   // (The entity could be a field collection or other entity type, underneath)
   if ($entity_type == 'node') {
@@ -235,6 +242,48 @@ function lingotek_process_entity_xml($xml, &$entity, $entity_type, $langcode, $n
     }
     $last_field_name = $field_name;
   }
+}
+
+/*
+ * Inserts newly downloaded menu link data into the menu_links table
+ */
+function lingotek_process_menu_link_xml($xml, &$entity, $entity_type, $langcode, $translation_set) {
+  $item = array(
+    'link_title' => '',
+    'mlid' => 0,
+    'plid' => 0,
+    'menu_name' => $entity->menu_name,
+    'weight' => 0,
+    'link_path' => $entity->link_path,
+    'options' => array(),
+    'customized' => 1,
+    'module' => 'menu',
+    'expanded' => 0,
+    'hidden' => 0,
+    'has_children' => 0,
+    'language' => $langcode,
+  );
+
+  foreach ($xml as $field_name => $content) {
+    foreach ($content as $column_name => $text) {
+      $value = lingotek_unfilter_placeholders(decode_entities((string) $text->element));
+
+      if ($field_name == 'title') {
+        $item['link_title'] = $value;
+      }
+      elseif ($field_name == 'description') {
+        $item['options']['attributes']['title'] = $value;
+      }
+    }
+  }
+
+  $translations = array(
+    $langcode => $item,
+  );
+
+  $translation_set->add_translations($translations);
+  $item['translation_set'] = $translation_set;
+  menu_link_save($item);
 }
 
 /*

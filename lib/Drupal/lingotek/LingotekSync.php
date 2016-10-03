@@ -409,6 +409,21 @@ class LingotekSync {
         $query->condition($tnid_query);
       }
 
+      // Exclude translation sets for menu_links
+      if ($entity_base_table == 'menu_links') {
+        $min_query = db_select('menu_links', 'ml')
+          ->condition('ml.i18n_tsid', 0, '!=')
+          ->groupBy('i18n_tsid');
+        $min_query->addExpression('MIN(mlid)', 'minimum');
+
+        $ml_or = db_or();
+        $ml_or->condition('t.i18n_tsid', 0);
+        $ml_or->condition('t.mlid', $min_query, 'IN');
+
+        $query->condition('t.language', LANGUAGE_NONE, '!=');
+        $query->condition($ml_or);
+      }
+
       // exclude disabled entities (including those that have disabled bundles)
       $disabled_profile = LingotekProfile::loadById(LingotekSync::PROFILE_DISABLED);
       $disabled_entities = $disabled_profile->getEntities($entity_type);
@@ -950,6 +965,17 @@ class LingotekSync {
     return $query->execute()->fetchCol();
   }
 
+  public static function getWorkflowIdFromEntityId($id) {
+    $query = db_select('lingotek_entity_metadata', 'lem');
+    $query->addField('lem', 'value');
+    $query->condition('entity_key', 'workflow_id', '=');
+    $query->condition('entity_id', $id, '=');
+
+    $result = $query->execute()->fetchCol();
+
+    return $result[0];
+  }
+
   public static function getChunkIdsByStatus($status) {
     $query = db_select('lingotek_config_metadata', 'meta');
     $query->fields('meta', array('id'));
@@ -1140,6 +1166,36 @@ class LingotekSync {
       }
     }
     return $success;
+  }
+
+  public static function getMenuLinkTargetStatus($mlid, $lingotek_locale) {
+    $key = 'target_sync_status_' . $lingotek_locale;
+    $status = lingotek_keystore('menu_link', $mlid, $key);
+
+    if ($status) {
+      return $status;
+    }
+    else {
+      LingotekLog::error('Did not find any targets for menu link "@id"', array('@id' => $mlid));
+      return FALSE;
+    }
+  }
+
+  public static function getDocumentId($entity_type, $entity_id) {
+    $doc_id = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('value'))
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_id', $entity_id)
+      ->condition('lem.entity_key', 'document_id')
+      ->execute()
+      ->fetch(PDO::FETCH_ASSOC);
+
+    if ($doc_id) {
+      return $doc_id;
+    }
+    else {
+      return FALSE;
+    }
   }
 
 }
