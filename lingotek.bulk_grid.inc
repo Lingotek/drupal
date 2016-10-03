@@ -1163,9 +1163,10 @@ function config_download_ready($force_download, $comma_separated_ids = NULL, $en
   if($force_download != NULL){
     $ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_READY);
     $current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_CURRENT);
-    $interim_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_INTERIM);
+    $interim_current_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_INTERIM_CURRENT);
+    $interim_ready_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_INTERIM_READY);
     $edited_lids = LingotekConfigSet::getSetIdsByStatus(LingotekSync::STATUS_EDITED);
-    $set_ids = array_merge($ready_lids, $current_lids,$edited_lids);
+    $set_ids = array_merge($ready_lids, $current_lids, $edited_lids, $interim_current_lids, $interim_ready_lids);
   }
   elseif(isset($_SESSION['grid_filters'][$entity_type]) || $comma_separated_ids !== NULL){
     if(isset($_SESSION['grid_filters'][$entity_type])){
