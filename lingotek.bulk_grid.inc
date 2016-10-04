@@ -201,7 +201,7 @@ function lingotek_bulk_grid_form($form, $form_state) {
     '#size' => 30,
     '#attributes' => array('placeholder' => t('Search'))
   );
-  $search_options = $entity_type == 'config' ? lingotek_config_search_options() : lingotek_grid_search_options();
+  $search_options = $entity_type == 'config' ? lingotek_config_search_options() : lingotek_grid_search_options($entity_type);
 
   $grid_term = isset($_SESSION['grid_filters'][$entity_type]['search_type']) ? $_SESSION['grid_filters'][$entity_type]['search_type'] : 'all';
   $config_term = isset($_SESSION['grid_filters'][$entity_type]['textgroup']) ? $_SESSION['grid_filters'][$entity_type]['textgroup'] : 'all';
@@ -410,12 +410,15 @@ function lingotek_grid_action_options($entity_type) {
   return $action_options;
 }
 
-function lingotek_grid_search_options() {
+function lingotek_grid_search_options($entity_type) {
   $search_options = array(
-    'all' => t('All'),
     'title' => t('Title'),
-    'body' => t('Body'),
   );
+
+  if ($entity_type != 'fieldable_panels_pane') {
+    $search_options['all'] = t('All');
+    $search_options['body'] = t('Body');
+  }
 
   return $search_options;
 }
