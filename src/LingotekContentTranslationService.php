@@ -418,6 +418,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
     }
+    // Embed entity metadata if there is any.
+    if ($entity->id()) {
+      $data['_lingotek_metadata'] =
+        [
+          '_entity_type_id' => $entity->getEntityTypeId(),
+          '_entity_id' => $entity->id(),
+          '_entity_revision' => $entity->getRevisionId(),
+        ];
+    }
     return $data;
   }
 
@@ -759,7 +768,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // check the date of the uploaded document.
       
       /** @var ContentEntityInterface $entity */
-      $revision = isset($data['_revision']) ? $data['_revision'] : NULL;
+      $revision = isset($data['_lingotek_metadata']) ? $data['_lingotek_metadata']['_entity_revision'] : NULL;
       $revision = $this->loadUploadedRevision($entity, $revision);
 
       // Initialize the translation on the Drupal side, if necessary.
@@ -770,6 +779,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $translation = $entity->getTranslation($langcode);
 
       foreach ($data as $name => $field_data) {
+        if (strpos($name, '_') === 0 ) {
+          // Skip special fields underscored.
+          break;
+        }
         $field_definition = $entity->getFieldDefinition($name);
         if (($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions')
           && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {

@@ -32,20 +32,11 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
       'type' => 'article',
       'name' => 'Article'
     ));
-  }
 
-  public function testFieldsAreNotExtractedIfNotTranslatableEvenIfStorageIsTranslatable() {
     // Enable translation for the current entity type and ensure the change is
     // picked up.
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
-
-    drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
-    // Rebuild the container so that the new languages are picked up by services
-    // that hold a list of languages.
-    $this->rebuildContainer();
 
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
 
@@ -56,6 +47,17 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
       'node[article][fields][body]' => 1,
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+  }
+
+  public function testFieldsAreNotExtractedIfNotTranslatableEvenIfStorageIsTranslatable() {
 
     // Ensure field storage is translatable.
     $field_storage = FieldStorageConfig::loadByName('node', 'body');
@@ -72,11 +74,9 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
     $this->assertTrue($field->isTranslatable(), 'Field instance is translatable.');
 
     // Create a node.
-    $this->createNode([
+    $node = $this->createNode([
         'type' => 'article',
       ]);
-
-    $node = Node::load(1);
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
@@ -92,6 +92,31 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $serialized_node = $translation_service->getSourceData($node);
     $this->assertFalse(isset($serialized_node['body']), 'The body is not included in the extracted data.');
+  }
+
+  public function testContentEntityMetadataIsIncluded() {
+    // Create a node.
+    $node = $this->createNode([
+      'type' => 'article',
+    ]);
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $serialized_node = $translation_service->getSourceData($node);
+    $this->assertTrue(isset($serialized_node['_lingotek_metadata']), 'The Lingotek metadata is included in the extracted data.');
+    $this->assertEqual('node', $serialized_node['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata.');
+    $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata.');
+    $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata.');
+
+    $node->setNewRevision();
+    $node->setTitle($this->randomString(10));
+    $node->save();
+
+    $serialized_node = $translation_service->getSourceData($node);
+    $this->assertTrue(isset($serialized_node['_lingotek_metadata']), 'The Lingotek metadata is included in the extracted data.');
+    $this->assertEqual('node', $serialized_node['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata.');
+    $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata.');
+    $this->assertEqual(2, $serialized_node['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata, and has changed.');
   }
 
 }

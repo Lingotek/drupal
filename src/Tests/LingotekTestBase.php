@@ -112,4 +112,20 @@ abstract class LingotekTestBase extends WebTestBase {
     }
   }
 
+  /**
+   * Asserts if the uploaded data contains the expected number of fields.
+   *
+   * @param array $data
+   *   The uploaded data.
+   * @param $count
+   *   The expected number of items.
+   *
+   * @return bool
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertUploadedDataFieldCount(array $data, $count) {
+    // We have to add one item because of the metadata we include.
+    return $this->assertEqual($count + 1, count($data));
+  }
+
 }

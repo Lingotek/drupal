@@ -92,7 +92,6 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     $test_image = current($this->drupalGetTestFiles('image'));
 
-
     // Add paragraphed content.
     $this->drupalGet('node/add/paragraphed_content_demo');
 
@@ -110,7 +109,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded, including metatags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
     $this->verbose(var_export($data, TRUE));
-    $this->assertEqual(2, count($data));
+    $this->assertUploadedDataFieldCount($data, 2);
     $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
     $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool');
 
@@ -151,6 +150,51 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
+  }
+
+  /**
+   * Tests that the metadata of the node and the embedded paragraphs is included.
+   */
+  public function testContentEntityMetadataIsIncluded() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a second time';
+
+    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+
+    $this->node = Node::load(1);
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $serialized_node = $translation_service->getSourceData($this->node);
+    $this->verbose(var_export($serialized_node, TRUE));
+    // Main node metadata is there.
+    $this->assertTrue(isset($serialized_node['_lingotek_metadata']), 'The Lingotek metadata is included in the extracted data.');
+    $this->assertEqual('node', $serialized_node['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata.');
+    $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata.');
+    $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata.');
+
+    // And paragraphs metadata is there too.
+    $this->assertTrue(isset($serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']), 'The Lingotek metadata is included in the first paragraph.');
+    $this->assertEqual('paragraph', $serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata in the first paragraph.');
+    $this->assertEqual(1, $serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata in the first paragraph.');
+    $this->assertEqual(1, $serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata in the first paragraph.');
+
+    $this->assertTrue(isset($serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']), 'The Lingotek metadata is included in the second paragraph.');
+    $this->assertEqual('paragraph', $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata in the second paragraph.');
+    $this->assertEqual(2, $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata in the second paragraph.');
+    $this->assertEqual(2, $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata in the second paragraph.');
   }
 
 }

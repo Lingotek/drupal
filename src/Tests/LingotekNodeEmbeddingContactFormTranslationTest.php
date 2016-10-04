@@ -129,7 +129,7 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
 
     // Check that only the configured fields have been uploaded, including tags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
-    $this->assertEqual(3, count($data));
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
@@ -211,7 +211,7 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
 
     // Check that only the configured fields have been uploaded, including tags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
-    $this->assertEqual(2, count($data));
+    $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));

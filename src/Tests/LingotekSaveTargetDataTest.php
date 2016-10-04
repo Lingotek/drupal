@@ -7,6 +7,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 
 /**
  * Tests the Lingotek content service saves data to entities correctly.
@@ -35,11 +36,13 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     ));
 
     // Add languages.
-    ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_ES')->save();
-    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
-  }
+    ConfigurableLanguage::createFromLangcode('es')
+      ->setThirdPartySetting('lingotek', 'locale', 'es_ES')
+      ->save();
+    ConfigurableLanguage::createFromLangcode('de')
+      ->setThirdPartySetting('lingotek', 'locale', 'de_DE')
+      ->save();
 
-  public function testFieldsAreNotExtractedIfNotTranslatableEvenIfStorageIsTranslatable() {
     // Enable translation for the current entity type and ensure the change is
     // picked up.
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
@@ -52,8 +55,6 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    \Drupal::service('entity.definition_update_manager')->applyUpdates();
-
     $edit = [
       'node[article][enabled]' => 1,
       'node[article][profiles]' => 'automatic',
@@ -62,6 +63,49 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
+  }
+
+  public function testRightRevisionsAreSavedIfThereIsMetadata() {
+    // Create a node.
+    /** @var NodeInterface $node */
+    $node = $this->createNode([
+      'type' => 'article',
+      'title' => 'Revision 1'
+    ]);
+
+    // Create a new revision.
+    $node->setTitle('Revision 2');
+    $node->setNewRevision();
+    $node->save();
+
+    // Create a third one.
+    $node->setTitle('Revision 3');
+    $node->setNewRevision();
+    $node->save();
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $es_data = [
+      'title' => [0 => ['value' => 'Revision 2 ES']],
+      'body' => [0 => ['value' => 'es body']],
+      '_lingotek_metadata' => [
+        '_entity_type_id' => 'node',
+        '_entity_id' => 1,
+        '_entity_revision' => 2,
+      ]
+    ];
+    $translation_service->saveTargetData($node, 'es', $es_data);
+
+    $node = \Drupal::entityManager()->getStorage('node')->load(1);
+    $node = $node->getTranslation('es');
+
+    $this->assertEqual('es body', $node->body->value, 'The body is translated correctly.');
+    $this->assertEqual('Revision 2 ES', $node->getTitle(), 'The title in the revision translation is the one given.');
+    $this->assertEqual(3, $node->getRevisionId(), 'The translation is saved in the newest revision.');
+  }
+
+  public function testFieldsAreNotExtractedIfNotTranslatableEvenIfStorageIsTranslatable() {
     // Ensure field storage is translatable.
     $field_storage = FieldStorageConfig::loadByName('node', 'body');
     $field_storage->setTranslatable(TRUE)->save();
