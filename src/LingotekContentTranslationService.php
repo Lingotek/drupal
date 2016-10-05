@@ -793,9 +793,19 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               ->getSetting('target_type');
             $index = 0;
             foreach ($field_data as $field_item) {
-              $embedded_entity_id = $revision->{$name}->get($index)
-                ->get('target_id')
-                ->getValue();
+              if (isset($field_item['_lingotek_metadata'])) {
+                $target_entity_type_id = $field_item['_lingotek_metadata']['_entity_type_id'];
+                $embedded_entity_id = $field_item['_lingotek_metadata']['_entity_id'];
+                $embedded_entity_revision_id = $field_item['_lingotek_metadata']['_entity_revision'];
+              }
+              else {
+                // Try to get it from the revision itself. It may have been
+                // modified, so this can be a source of errors, but we need this
+                // because we didn't have metadata before.
+                $embedded_entity_id = $revision->{$name}->get($index)
+                  ->get('target_id')
+                  ->getValue();
+              }
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
               // We may have orphan references, so ensure that they exist before

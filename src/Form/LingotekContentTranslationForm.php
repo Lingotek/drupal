@@ -99,7 +99,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
           '#disabled' => TRUE,
         );
         // Check-Progress button if the source upload status is PENDING.
-        if ($source_status === Lingotek::STATUS_IMPORTING && !empty($document_id)) {
+        if (($source_status === Lingotek::STATUS_IMPORTING || $source_status === Lingotek::STATUS_EDITED) && !empty($document_id)) {
           $path = '/admin/lingotek/entity/check_upload/' . $document_id;
           $this->addOperationLink($entity, $option, 'Check Upload Status', $path, $language);
         }

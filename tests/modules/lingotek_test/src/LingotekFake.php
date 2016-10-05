@@ -243,6 +243,10 @@ class LingotekFake implements LingotekInterface {
         return json_decode($input, TRUE);
       case 'node+taxonomy_term':
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_tags":[{"name":[{"value":"Camélido"}]},{"name":[{"value":"Hervíboro"}]}]}', TRUE);
+      case 'node+taxonomy_term+metadata':
+        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+        $input = file_get_contents($path);
+        return json_decode($input, TRUE);
       case 'node+contact_form':
         return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_contact_form":[{"label":"Formulario de Contacto", "reply":""}]}', TRUE);
       case 'node+path':
