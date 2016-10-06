@@ -1610,7 +1610,7 @@ function lingotek_filter_placeholders($segment_text, $protect_vars = FALSE) {
   // of an HTML tag).  It also protects everything inside square brackets
   // that do not fall inside angle brackets.
   $patterns = array(
-    '/(\[[!@%\w:=\/\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
+    '/(\[[!@%\w:=\/\&\;\s_-]+\]\s*)(?![^<]*\>)/', // wrap everything in square brackets
   );
   if ($protect_vars) {
     $patterns[] = '/([!@%][\w_-]+\s*)(?![^<]*\>)/'; // wrap everything beginning with !,@,%
