@@ -1490,7 +1490,7 @@ function lingotek_admin_prefs_form_submit($form, &$form_state) {
       drupal_set_message(t('For Group translation, make sure you\'ve installed the <i>Entity Translation</i> module.'), 'warning', FALSE);
     }
   }
-  if (!module_exists('entity_menu_links')) {
+  if (!module_exists('entity_menu_links') && $form_state['values']['lingotek_advanced_menu_links'] == TRUE) {
     drupal_set_message(t('For advanced menu link translation, make sure you\'ve installed the <i>Entity Menu Links</i> module.'), 'warning', FALSE);
   }
   menu_rebuild();
