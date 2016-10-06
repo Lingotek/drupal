@@ -217,49 +217,10 @@ class LingotekFake implements LingotekInterface {
   public function downloadDocument($doc_id, $locale) {
     \Drupal::state()->set('lingotek.downloaded_locale', $locale);
     $type = \Drupal::state()->get('lingotek.uploaded_content_type', 'node');
-    switch ($type) {
-      case 'node':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"uid":[{"target_id":"1"}],"status":[{"value":1}],"created":[{"value":1438095034}],"changed":[{"value":1438095483}],"promote":[{"value":1}],"sticky":[{"value":0}],"revision_log":[{"value":""}],"revision_translation_affected":[{"value":"1"}],"content_translation_source":[{"value":"und"}],"content_translation_outdated":[{"value":"0"}],"body":[{"value":"Las llamas son muy chulas","format":"plain_text","summary":""}]}', TRUE);
-      case 'taxonomy_term':
-        return json_decode('{"name":[{"value":"Las llamas son chulas"}],"description":[{"value":"Las llamas son muy chulas"}]}', TRUE);
-      case 'taxonomy_term_long_title':
-        $value = str_repeat("Las llamas son chulas", 100);
-        return json_decode('{"name":[{"value":"' . $value . '"}],"description":[{"value":"Las llamas son muy chulas"}]}', TRUE);
-      case 'system.site':
-        return json_decode('{"system.site":{"name":"Drupal","slogan":"Las llamas son muy chulas"}}', TRUE);
-      case 'content_type':
-        return json_decode('{"name":"Artículo","description":"Uso de <em>artículos<\/em> sensibles al tiempo contenidos como noticias, comunicados de prensa o entradas en el blog.","help":""}', TRUE);
-      case 'body':
-        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
-        $input = file_get_contents($path);
-        return json_decode($input, TRUE);
-      case 'contact_message_field':
-        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
-        $input = file_get_contents($path);
-        return json_decode($input, TRUE);
-      case 'options':
-        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
-        $input = file_get_contents($path);
-        return json_decode($input, TRUE);
-      case 'node+taxonomy_term':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_tags":[{"name":[{"value":"Camélido"}]},{"name":[{"value":"Hervíboro"}]}]}', TRUE);
-      case 'node+taxonomy_term+metadata':
-        $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
-        $input = file_get_contents($path);
-        return json_decode($input, TRUE);
-      case 'node+contact_form':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_contact_form":[{"label":"Formulario de Contacto", "reply":""}]}', TRUE);
-      case 'node+path':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"path":[{"alias":"/las-llamas-son-chulas"}]}', TRUE);
-      case 'node+nullpath':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"path":[{"alias":null}]}', TRUE);
-      case 'node+link':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_link":[{"title":"Enlace con fotos de llamas"}]}', TRUE);
-      case 'node+metatag':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"body":[{"value":"Las llamas son muy chulas"}],"field_metatag":[{"description":"Este texto ayudará al SEO a encontrar mis llamas."}]}', TRUE);
-      case 'node+paragraphs':
-        return json_decode('{"title":[{"value":"Las llamas son chulas"}],"field_paragraphs_demo":[{"field_text_demo":[{"value":"Las llamas son muy chulas"}]}]}', TRUE);
-    }
+
+    $path = drupal_get_path('module', 'lingotek') . '/tests/modules/lingotek_test/document_responses/' . $type . '.json';
+    $input = file_get_contents($path);
+    return json_decode($input, TRUE);
   }
 
   /**

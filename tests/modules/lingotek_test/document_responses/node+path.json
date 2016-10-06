@@ -1,0 +1,17 @@
+{
+  "title": [
+    {
+      "value": "Las llamas son chulas"
+    }
+  ],
+  "body": [
+    {
+      "value": "Las llamas son muy chulas"
+    }
+  ],
+  "path": [
+    {
+      "alias": "/las-llamas-son-chulas"
+    }
+  ]
+}
