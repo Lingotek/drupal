@@ -449,6 +449,10 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // We need a node with translations first.
     $this->testNodeTranslationUsingLinks();
 
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
     // Edit the node.
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
@@ -459,13 +463,65 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
 
-    // Check the status is edited.
+    // Check the status is edited for Spanish.
     $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
     $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
+    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
     // Reupload the content.
     $this->clickLink('English');
     $this->assertText('Node Llamas are cool EDITED has been updated.');
+
+    // Recheck status.
+    $this->clickLink('English');
+    $this->assertText('The import for node Llamas are cool EDITED is complete.');
+
+    // Check the translation after having been edited.
+    $this->clickLink('ES');
+    $this->assertText("The es_MX translation for node Llamas are cool EDITED is ready for download.");
+
+    // Download the translation.
+    $this->clickLink('ES');
+    $this->assertText('The translation of node Llamas are cool EDITED into es_MX has been downloaded.');
+  }
+
+  /**
+   * Tests that a node can be translated using the links on the management page.
+   */
+  public function testEditedNodeTranslationUsingLinksInAutomaticUploadsMode() {
+    // We need a node with translations first.
+    $this->testNodeTranslationUsingLinks();
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $edit['body[0][value]'] = 'Llamas are very cool EDITED';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
+
+    $this->goToContentBulkManagementForm();
+
+    // Check the status is edited for Spanish.
+    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
+    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
     // Recheck status.
     $this->clickLink('English');

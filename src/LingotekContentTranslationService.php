@@ -235,9 +235,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $target_languages = $this->languageManager->getLanguages();
     $entity_langcode = $entity->getUntranslated()->language()->getId();
 
+    // These statuses indicate that content has been uploaded to the API, so
+    // we need to flag them as out of date.
+    $to_change = [
+      Lingotek::STATUS_CURRENT,
+      Lingotek::STATUS_PENDING,
+      Lingotek::STATUS_INTERMEDIATE,
+      Lingotek::STATUS_READY,
+    ];
+
     foreach($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
-        if ($current_status == Lingotek::STATUS_CURRENT) {
+        if (in_array($current_status, $to_change)) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
         }
       }
@@ -472,7 +481,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
       $source_status = $this->getSourceStatus($entity);
       $current_status = $this->getTargetStatus($entity, $drupal_language->id());
-      if ($current_status !== Lingotek::STATUS_PENDING && $current_status !== Lingotek::STATUS_CURRENT  && $current_status !== Lingotek::STATUS_READY) {
+
+      // When a translation is in one of these states, we know that it hasn't yet been sent up to the Lingotek API,
+      // which means that we'll have to call addTarget() on it.
+      //
+      // TODO: should we consider STATUS_NONE as a "pristine" status?
+      $pristine_statuses = [
+        Lingotek::STATUS_REQUEST,
+        Lingotek::STATUS_UNTRACKED,
+      ];
+
+      if (in_array($current_status, $pristine_statuses)) {
         if ($this->lingotek->addTarget($document_id, $locale, $this->lingotekConfiguration->getEntityProfile($entity))) {
           $this->setTargetStatus($entity, $drupal_language->id(), Lingotek::STATUS_PENDING);
           // If the status was "Importing", and the target was added

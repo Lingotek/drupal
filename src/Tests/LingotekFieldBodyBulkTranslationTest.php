@@ -224,27 +224,96 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testEditedConfigTranslationUsingLinks() {
-    // ToDo: Add a test for this.
-    $this->pass('Test not implemented yet.'); return;
-
     // We need a node with translations first.
     $this->testFieldBodyTranslationUsingLinks();
+
+    // Set upload as manual.
+    $edit = [
+      'table[node_fields][enabled]' => 1,
+      'table[node_fields][profile]' => 'manual',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the object
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', ['label' => 'Body EDITED'], t('Save settings'));
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_fields');
 
+    // Check the status is edited for Spanish.
+    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
+    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
+
     // Reupload the content.
-    // ToDo: We need to edit and upload again.
     $this->clickLink('English');
-    $this->assertText('Article has been updated.');
+    $this->assertText('Body EDITED has been updated.');
 
     // Recheck status.
     $this->clickLink('English');
-    $this->assertText('Body status checked successfully');
+    $this->assertText('Body EDITED status checked successfully');
 
-    // Request the translation after having been edited.
+    // Check the translation after having been edited.
     $this->clickLink('ES');
-    $this->assertText("Translation to es_MX requested successfully");
+    $this->assertText("Translation to es_MX status checked successfully");
+
+    // Download the translation.
+    $this->clickLink('ES');
+    $this->assertText('Translation to es_MX downloaded successfully');
+  }
+
+  /**
+   * Tests that a config can be translated using the links on the management page.
+   */
+  public function testEditedConfigTranslationUsingLinksInAutomaticUploadMode() {
+    // We need a node with translations first.
+    $this->testFieldBodyTranslationUsingLinks();
+
+    // Set upload as manual.
+    $edit = [
+      'table[node_fields][enabled]' => 1,
+      'table[node_fields][profile]' => 'automatic',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the object
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', ['label' => 'Body EDITED'], t('Save settings'));
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_fields');
+
+    // Check the status is edited for Spanish.
+    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
+    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
+
+    // Recheck status.
+    $this->clickLink('English');
+    $this->assertText('Body EDITED status checked successfully');
+
+    // Check the translation after having been edited.
+    $this->clickLink('ES');
+    $this->assertText("Translation to es_MX status checked successfully");
 
     // Download the translation.
     $this->clickLink('ES');

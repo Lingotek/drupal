@@ -160,11 +160,26 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     // We need a config object with translations first.
     $this->testSystemSiteTranslationUsingLinks();
 
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
     // Edit the object
     $this->drupalPostForm('/admin/config/system/site-information', ['site_name' => 'My site'], t('Save configuration'));
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
+
+    // Check the status is edited for Spanish.
+    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
+    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
+    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
     // Reupload the content.
     $this->clickLink('English', 1);
