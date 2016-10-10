@@ -2860,12 +2860,19 @@ function lingotek_entity_disassociate_form($form, $form_state, $entity_ids = arr
     '#collapsed' => $collapse_fieldset,
   );
 
-  $form['disassociate_translations']['confirm'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Also remove all document(s) from Lingotek TMS'),
-    '#default_value' => FALSE,
-  );
-
+  if (variable_get('lingotek_disassociate_delete_tms', FALSE)) {
+    $form['disassociate_translations']['confirm'] = array(
+      '#type' => 'item',
+      '#markup' => t('Documents(s) will also be deleted from Lingotek TMS.'),
+    );
+  }
+  else {
+    $form['disassociate_translations']['confirm'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Also remove all document(s) from Lingotek TMS'),
+      '#default_value' => FALSE,
+    );
+  }
   $submit_function = ($entity_type === 'config') ? 'lingotek_config_disassociate_form_submit' : 'lingotek_entity_disassociate_form_submit';
 
   $form['disassociate_translations']['submit'] = array(
@@ -2902,7 +2909,8 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
 
   $api = LingotekApi::instance();
   $remove_from_tms = $form_state['values']['confirm'];
-  if ($remove_from_tms) { //disassociate on TMS
+  $global_remove_from_tms = variable_get('lingotek_disassociate_delete_tms', FALSE);
+  if ($remove_from_tms || $global_remove_from_tms) { //disassociate on TMS
     $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
     if (!$result) {
       drupal_set_message(t('Failed to remove documents from Lingotek TMS.'), 'warning', FALSE);
@@ -3001,10 +3009,11 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
 
   $api = LingotekApi::instance();
   $remove_from_tms = $form_state['values']['confirm'];
+  $global_remove_from_tms = variable_get('lingotek_disassociate_delete_tms', FALSE);
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
 
-  if ($remove_from_tms && !empty($doc_ids)) { //disassociate on TMS
+  if (($remove_from_tms || $global_remove_from_tms) && !empty($doc_ids)) { //disassociate on TMS
     $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);
     //Deletes document data from lingotek_config_metadata table
     $query1 = db_delete('lingotek_config_metadata')

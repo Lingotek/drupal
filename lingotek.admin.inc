@@ -1370,6 +1370,13 @@ function lingotek_admin_prefs_form($form, &$form_state, $show_fieldset = FALSE) 
     '#default_value' => variable_get('lingotek_advanced_menu_links', FALSE),
   );
 
+  $form['prefs']['lingotek_disassociate_delete_tms'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Delete documents from Lingotek TMS when disassociating'),
+    '#description' => t('Your documents will remain in your Drupal site but will be deleted from the Lingotek TMS if this option is checked.'),
+    '#default_value' => variable_get('lingotek_disassociate_delete_tms', FALSE),
+  );
+
   if (module_exists('bean')) {
     $form[$fkey]['lingotek_translate_beans'] = array(
       '#type' => 'checkbox',
