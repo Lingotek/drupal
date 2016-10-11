@@ -2045,12 +2045,19 @@ function lingotek_admin_profile_form($form, &$form_state, $show_fieldset = FALSE
   else {
     $markup = $is_custom_profile_id ? t('You can only delete this profile when there are no entities or bundles using it.') : t('This profile cannot be deleted.');
     $form['delete'] = array(
-      '#markup' => '<span class="ltk-muted" style="font-style: italic;">' . $markup . '</span>',
+      '#markup' => '<span class="ltk-muted" style="font-style: italic; margin-right:10px;">' . $markup . '</span>',
     );
   }
-  $form['defaults']['cancel'] = array(
-    '#type' => 'submit',
-    '#value' => t('Cancel'),
+
+  $form['actions']['cancel'] = array(
+    '#markup' => l(t('Cancel'), '#',
+      array(
+        'attributes' => array(
+          'class' => 'ctools-close-modal'
+        ),
+        'external' => TRUE
+      )
+    )
   );
 
   return $form;
@@ -2150,9 +2157,6 @@ function lingotek_admin_profile_form_submit($form, &$form_state) {
   }
   elseif ($form_state['values']['op'] == 'Delete') {
     $profile_obj->delete();
-  }
-  elseif ($form_state['values']['op'] == 'Cancel') {
-    //do nothing
   }
 }
 
