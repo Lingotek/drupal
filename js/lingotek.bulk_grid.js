@@ -278,6 +278,8 @@ function lingotek_perform_action(nid, action) {
           case "PENDING":
             title = 'In progress';
             break;
+          case "DELETED":
+            continue;
         }
         //create the link
         var status_link = $('<a></a>');
