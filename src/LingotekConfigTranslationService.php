@@ -258,6 +258,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
     foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
+        if ($current_status === Lingotek::STATUS_PENDING && $status === Lingotek::STATUS_REQUEST) {
+          // Don't allow to pass from pending to request. We have been already
+          // requested this one.
+          continue;
+        }
         if ($current_status != Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_CURRENT) {
           $this->setTargetStatus($entity, $langcode, $status);
         }
@@ -680,6 +685,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
     foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getConfigTargetStatus($mapper, $langcode)) {
+        if ($current_status === Lingotek::STATUS_PENDING && $status === Lingotek::STATUS_REQUEST) {
+          // Don't allow to pass from pending to request. We have been already
+          // requested this one.
+          continue;
+        }
         if ($current_status != Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_CURRENT) {
           $this->setConfigTargetStatus($mapper, $langcode, $status);
         }

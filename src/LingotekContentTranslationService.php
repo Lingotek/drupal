@@ -138,15 +138,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $current_status = $value->value;
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
       $document_id = $this->getDocumentId($entity);
-      if ($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) {
-        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) ||
+      if ($langcode !== $entity->getUntranslated()->language()->getId()) {
+        if ($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) {
+          if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) ||
             // We may not be ready, but some phases must be complete. Let's try to
             // download data, and if there is anything, we can assume a phase is
             // completed.
             // ToDo: Instead of downloading would be nice if we could check phases.
             $this->lingotek->downloadDocument($document_id, $locale)) {
-          $current_status = Lingotek::STATUS_READY;
-          $this->setTargetStatus($entity, $langcode, $current_status);
+            $current_status = Lingotek::STATUS_READY;
+            $this->setTargetStatus($entity, $langcode, $current_status);
+          }
         }
       }
     }
@@ -216,8 +218,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $target_languages = $this->languageManager->getLanguages();
     $entity_langcode = $entity->getUntranslated()->language()->getId();
 
-    foreach($target_languages as $langcode => $language) {
+    foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
+        if ($current_status === Lingotek::STATUS_PENDING && $status === Lingotek::STATUS_REQUEST) {
+          // Don't allow to pass from pending to request. We have been already
+          // requested this one.
+          continue;
+        }
         if ($current_status != Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_CURRENT) {
           $this->setTargetStatus($entity, $langcode, $status);
         }

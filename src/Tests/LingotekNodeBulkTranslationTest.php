@@ -453,6 +453,10 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // no translations.
     ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
 
+    // Add a language so we can check that it's not marked as for requesting if
+    // it was already requested.
+    ConfigurableLanguage::createFromLangcode('ko')->setThirdPartySetting('lingotek', 'locale', 'ko_KR')->save();
+
     // Edit the node.
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
@@ -474,13 +478,25 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
     $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
+    // Request korean, with outdated content available.
+    $this->clickLink('KO');
+    $this->assertText("Locale 'ko_KR' was added as a translation target for node Llamas are cool EDITED.");
+
     // Reupload the content.
     $this->clickLink('English');
     $this->assertText('Node Llamas are cool EDITED has been updated.');
 
+    // Korean should be marked as requested, so we can check target.
+    $status = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'KO')]");
+    $this->assertEqual(count($status), 1, 'Korean is requested, so we can still check the progress status of the translation');
+
     // Recheck status.
     $this->clickLink('English');
     $this->assertText('The import for node Llamas are cool EDITED is complete.');
+
+    // Korean should still be marked as requested, so we can check target.
+    $status = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'KO')]");
+    $this->assertEqual(count($status), 1, 'Korean is still requested, so we can still check the progress status of the translation');
 
     // Check the translation after having been edited.
     $this->clickLink('ES');

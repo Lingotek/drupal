@@ -164,6 +164,10 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     // no translations.
     ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
 
+    // Add a language so we can check that it's not marked as for requesting if
+    // it was already requested.
+    ConfigurableLanguage::createFromLangcode('ko')->setThirdPartySetting('lingotek', 'locale', 'ko_KR')->save();
+
     // Edit the object
     $this->drupalPostForm('/admin/config/system/site-information', ['site_name' => 'My site'], t('Save configuration'));
 
@@ -181,9 +185,17 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
     $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
+    // Request korean, with outdated content available.
+    $this->clickLink('KO');
+    $this->assertText("Translation to ko_KR requested successfully");
+
     // Reupload the content.
     $this->clickLink('English', 1);
     $this->assertText('System information has been updated.');
+
+    // Korean should be marked as requested, so we can check target.
+    $status = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'KO')]");
+    $this->assertEqual(count($status), 1, 'Korean is requested, so we can still check the progress status of the translation');
 
     // Recheck status.
     $this->clickLink('English', 1);
