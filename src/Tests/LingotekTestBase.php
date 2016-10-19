@@ -128,4 +128,29 @@ abstract class LingotekTestBase extends WebTestBase {
     return $this->assertEqual($count + 1, count($data));
   }
 
+  /**
+   * Asserts if there are a number of documents with a given status and language
+   * label as source.
+   *
+   * @param string $status
+   *   The status we are looking for. Use Lingotek constants.
+   * @param string $languageLabel
+   *   The language label of the source.
+   * @param int $count
+   *   The expected number of items.
+   * @param string $message
+   *   (optional) A message to display with the assertion. Do not translate
+   *   messages: use \Drupal\Component\Utility\SafeMarkup::format() to embed
+   *   variables in the message text, not t(). If left blank, a default message
+   *   will be displayed.
+   *
+   * @return bool
+   *   TRUE if the assertion succeeded, FALSE otherwise.
+   */
+  protected function assertSourceStatusStateCount($status, $languageLabel, $count, $message = '') {
+    $statusCssClass = 'source-' . strtolower($status);
+    $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass')]/a[contains(text(), '$languageLabel')]");
+    return $this->assertEqual(count($statusCount), $count, $message);
+  }
+
 }

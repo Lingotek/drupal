@@ -688,11 +688,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function getAllLocalDocumentIds() {
-    $metadata = \Drupal::database()->select('lingotek_content_metadata','lcm')
+    return $metadata = \Drupal::database()->select('lingotek_content_metadata','lcm')
       ->fields('lcm', ['document_id'])
       ->execute()
-      ->fetchAssoc();
-    return array_values($metadata);
+      ->fetchCol(0);
   }
 
   /**

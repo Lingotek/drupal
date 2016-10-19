@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\lingotek\Entity;
+use Drupal\config_translation\ConfigMapperInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\lingotek\LingotekConfigMetadataInterface;
@@ -173,6 +174,55 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
       $value = $this->config_name;
     }
     return $value;
+  }
+
+  /**
+   * Gets the config mapper for this metadata.
+   *
+   * @return ConfigMapperInterface
+   *   The config mapper this metadata is related to.
+   */
+  public function getConfigMapper() {
+    $mapper = NULL;
+    /** @var ConfigMapperInterface[] $mappers */
+    $mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
+    $name = $this->getDependencyName();
+    $config_mapper_id = $this->getMapperIdForName($name);
+    if (isset($mappers[$config_mapper_id])) {
+      $mapper = $mappers[$config_mapper_id];
+    }
+    else {
+      list($entity_type, $entity_id) = explode('.', $this->config_name, 2);
+      if (isset($mappers[$entity_type])) {
+        $storage = $this->entityManager()->getStorage($entity_type);
+        $entity = $storage->load($entity_id);
+        $mapper = clone $mappers[$entity_type];
+        $mapper->setEntity($entity);
+      }
+    }
+    return $mapper;
+  }
+
+  /**
+   * Gets the mapper plugin id for a given configuration name.
+   *
+   * @param $name
+   *   Configuration name.
+   * @return string|null
+   *   Plugin id of the mapper.
+   */
+  protected function getMapperIdForName($name) {
+    $mapper_id = NULL;
+    /** @var ConfigMapperInterface[] $config_mappers */
+    $config_mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
+    foreach ($config_mappers as $config_mapper_id => $config_mapper) {
+      $names = $config_mapper->getConfigNames();
+      if (in_array($name, $names)) {
+        $mapper_id = $config_mapper_id;
+        break;
+      }
+    }
+    return $mapper_id;
   }
 
 }
