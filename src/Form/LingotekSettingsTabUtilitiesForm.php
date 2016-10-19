@@ -216,12 +216,21 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $doc_ids = $translation_service->getAllLocalDocumentIds();
     foreach ($doc_ids as $doc_id) {
       $entity = $translation_service->loadByDocumentId($doc_id);
-      try {
-        $translation_service->deleteMetadata($entity);
+      if ($entity === NULL) {
+        // This entity is somehow orphaned. We can remove the metadata safely.
+        \Drupal::database()->delete('lingotek_content_metadata')
+          ->condition('document_id', $doc_id)
+          ->execute();
+        drupal_set_message(t('There is no entity in Drupal corresponding to the Lingotek document @doc_id. The record for this document has been removed from Drupal.', ['@doc_id' => $doc_id]), 'warning');
       }
-      catch (LingotekApiException $exception) {
-        $error = TRUE;
-        drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      else {
+        try {
+          $translation_service->deleteMetadata($entity);
+        }
+        catch (LingotekApiException $exception) {
+          $error = TRUE;
+          drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+        }
       }
     }
     if ($error) {

@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Tests;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\VocabularyInterface;
@@ -219,6 +220,28 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
 
     $this->goToConfigBulkManagementForm('node_type');
     $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'English', 1, 'The article type shows as untracked');
+  }
+
+  /**
+   * Tests that we can disassociate orphan content.
+   *
+   * This should never be an allowed status, but let's ensure that we fail
+   * gracefully. If a corresponding node doesn't exist anymore, we should just
+   * remove the existing metadata.
+   */
+  public function testDisassociateOrphanContent() {
+    // We create manually the given data for setting up an incorrect status.
+    \Drupal::database()->insert('lingotek_content_metadata')
+      ->fields(['document_id', 'entity_type', 'entity_id'])
+      ->values([
+        'document_id' => 'a_document_id',
+        'entity_type' => 'node',
+        'entity_id' => 1,
+      ])->execute();
+
+    // Let's try to disassociate then.
+    $this->drupalGet('/admin/lingotek/settings');
+    $this->drupalPostForm('admin/lingotek/settings', [], 'Disassociate');
   }
 
 }
