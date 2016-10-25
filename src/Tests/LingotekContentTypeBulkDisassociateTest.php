@@ -40,9 +40,8 @@ class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
 
   }
 
-
   /**
-   * Tests that a config can be translated using the links on the management page.
+   * Tests that a config entity can be disassociated using the bulk operations on the management page.
    */
   public function testContentTypeDisassociate() {
     // This is a hack for avoiding writing different lingotek endpoint mocks.
@@ -64,12 +63,54 @@ class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
     $config_translation_service = \Drupal::service('lingotek.config_translation');
     \Drupal::entityManager()->getStorage('node_type')->resetCache();
     $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+
+    // Assert that no document has been deleted remotely.
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $this->assertEqual(0, count($deleted_docs), 'No document has been deleted remotely because the module is not configured to perform the operation.');
+
     $this->assertNull($config_translation_service->getDocumentId($entity));
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $config_translation_service->getSourceStatus($entity));
 
     // We can request again.
     $this->createAndTranslateContentTypeWithLinks();
+  }
 
+  /**
+   * Tests that a config entity can be disassociated using the bulk operations on the management page.
+   */
+  public function testContentTypeDisassociateWithRemovalOfRemoteDocument() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
+
+    // Enable remote delete while disassociating.
+    $edit = [
+      'delete_tms_documents_upon_disassociation' => TRUE,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-preferences-form');
+
+    $this->createAndTranslateContentTypeWithLinks();
+
+    // Mark the first for disassociation.
+    $edit = [
+      'table[article]' => 'article',  // Article.
+      'operation' => 'disassociate',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+    \Drupal::entityManager()->getStorage('node_type')->resetCache();
+    $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+
+    // Assert that the document has been deleted remotely.
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $this->assertEqual(1, count($deleted_docs), 'The document has been deleted remotely.');
+
+    $this->assertNull($config_translation_service->getDocumentId($entity));
+    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $config_translation_service->getSourceStatus($entity));
+
+    // We can request again.
+    $this->createAndTranslateContentTypeWithLinks();
   }
 
   protected function createAndTranslateContentTypeWithLinks() {

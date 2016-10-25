@@ -26,6 +26,13 @@ lingotek.settings:
           type: boolean
         delete_tms_documents_upon_disassociation:
           type: boolean
+        show_language_labels:
+          type: boolean
+        allow_local_editing:
+          type: boolean
+        language_specific_profiles:
+          type: boolean
+
     account:
       type: mapping
       label: 'Account'

@@ -231,4 +231,15 @@ class LingotekFake implements LingotekInterface {
     $timestamp = isset($timestamps[$doc_id]) ? $timestamps[$doc_id] : NULL;
     return $timestamp;
   }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function deleteDocument($doc_id) {
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $deleted_docs[] = $doc_id;
+    \Drupal::state()->set('lingotek.deleted_docs', $deleted_docs);
+    return TRUE;
+  }
+
 }

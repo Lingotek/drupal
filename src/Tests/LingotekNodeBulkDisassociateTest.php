@@ -91,12 +91,61 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     /** @var LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
 
+    // Assert that no document has been deleted remotely.
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $this->assertEqual(0, count($deleted_docs), 'No document has been deleted remotely because the module is not configured to perform the operation.');
+
     $this->assertNull($content_translation_service->getDocumentId($node));
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
 
     // We can request again.
     $this->createAndTranslateNodeWithLinks();
+  }
 
+  /**
+   * Tests that a node can be disassociated and the remote document will be removed.
+   */
+  public function testNodeDisassociateWithRemovalOfRemoteDocument() {
+    // Enable remote delete while disassociating.
+    $edit = [
+      'delete_tms_documents_upon_disassociation' => TRUE,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-preferences-form');
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    $this->createAndTranslateNodeWithLinks();
+
+    $this->goToContentBulkManagementForm();
+
+    // Mark the first two for disassociation.
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'disassociate'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $node = Node::load(1);
+
+    // Assert that the document has been deleted remotely.
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $this->assertEqual(1, count($deleted_docs), 'The document has been deleted remotely.');
+
+
+    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    $this->assertNull($content_translation_service->getDocumentId($node));
+    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
+
+    // We can request again.
+    $this->createAndTranslateNodeWithLinks();
   }
 
   protected function createAndTranslateNodeWithLinks() {

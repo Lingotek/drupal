@@ -27,9 +27,8 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('es')->save();
   }
 
-
   /**
-   * Tests that a config can be translated using the links on the management page.
+   * Tests that a config entity can be disassociated using the bulk operations on the management page.
    */
   public function testSystemSiteDisassociate() {
     // This is a hack for avoiding writing different lingotek endpoint mocks.
@@ -55,12 +54,58 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
 
     $mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
     $mapper = $mappers['system.site_information_settings'];
+
+    // Assert that no document has been deleted remotely.
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $this->assertEqual(0, count($deleted_docs), 'No document has been deleted remotely because the module is not configured to perform the operation.');
+
     $this->assertNull($config_translation_service->getConfigDocumentId($mapper));
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $config_translation_service->getConfigSourceStatus($mapper));
 
     // We can request again.
     $this->createAndTranslateSystemSiteWithLinks();
+  }
 
+  /**
+   * Tests that a config entity can be disassociated using the bulk operations on the management page.
+   */
+  public function testSystemSiteDisassociateWithRemovalOfRemoteDocument() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
+
+    // Enable remote delete while disassociating.
+    $edit = [
+      'delete_tms_documents_upon_disassociation' => TRUE,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-preferences-form');
+
+    $this->createAndTranslateSystemSiteWithLinks();
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm();
+
+    // Mark the first two for disassociation.
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'disassociate'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    /** @var LingotekConfigTranslationServiceInterface $config_translation_service */
+    $config_translation_service = \Drupal::service('lingotek.config_translation');
+
+    $mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
+    $mapper = $mappers['system.site_information_settings'];
+
+    // Assert that the document has been deleted remotely.
+    $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
+    $this->assertEqual(1, count($deleted_docs), 'The document has been deleted remotely.');
+
+    $this->assertNull($config_translation_service->getConfigDocumentId($mapper));
+    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $config_translation_service->getConfigSourceStatus($mapper));
+
+    // We can request again.
+    $this->createAndTranslateSystemSiteWithLinks();
   }
 
   protected function createAndTranslateSystemSiteWithLinks() {

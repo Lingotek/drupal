@@ -3,6 +3,7 @@
 namespace Drupal\Tests\lingotek\Unit;
 
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
@@ -432,6 +433,10 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('getStatusCode')
       ->willReturn(Response::HTTP_INTERNAL_SERVER_ERROR);
 
+    $response->expects($this->at(3))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_NOT_FOUND);
+
     $this->api->expects($this->any())
       ->method('deleteDocument')
       ->with('my_doc_id')
@@ -439,6 +444,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     $this->assertTrue($this->lingotek->deleteDocument('my_doc_id'));
     $this->assertTrue($this->lingotek->deleteDocument('my_doc_id'));
+    $this->assertFalse($this->lingotek->deleteDocument('my_doc_id'));
     $this->assertFalse($this->lingotek->deleteDocument('my_doc_id'));
   }
 

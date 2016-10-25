@@ -3,11 +3,13 @@
 namespace Drupal\Tests\lingotek\Unit\Remote;
 
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Remote\LingotekApi;
 use Drupal\lingotek\Remote\LingotekHttp;
 use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @coversDefaultClass \Drupal\lingotek\Remote\LingotekApi
@@ -76,6 +78,39 @@ class LingotekApiUnitTest extends UnitTestCase {
 
     $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow');
     $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', NULL);
+  }
+
+  /**
+   * @covers ::deleteDocument
+   */
+  public function testDeleteDocument() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->at(0))
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+
+    $this->client->expects($this->at(0))
+      ->method('delete')
+      ->with('/api/document/fancy-document-id')
+      ->will($this->returnValue($response));
+
+    $response = $this->lingotek_api->deleteDocument('fancy-document-id');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_ACCEPTED);
+  }
+
+  /**
+   * @covers ::deleteDocument
+   */
+  public function testDeleteDocumentThatDoesntExist() {
+    $this->client->expects($this->at(0))
+      ->method('delete')
+      ->with('/api/document/fancy-document-id')
+      ->will($this->throwException(new \Exception('', Response::HTTP_NOT_FOUND)));
+
+    $response = $this->lingotek_api->deleteDocument('fancy-document-id');
+    $this->assertEquals($response->getStatusCode(), Response::HTTP_NOT_FOUND);
   }
 
   /**

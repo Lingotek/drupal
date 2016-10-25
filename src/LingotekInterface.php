@@ -7,17 +7,27 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 interface LingotekInterface {
 
   public function get($key);
+
   public function set($key, $value);
+
   public static function create(ContainerInterface $container);
 
   public function getAccountInfo();
+
   public function getResources($force = FALSE);
+
   public function getWorkflows($force = FALSE);
+
   public function getVaults($force = FALSE);
+
   public function getCommunities($force = FALSE);
+
   public function getProjects($force = FALSE);
+
   public function getDefaults();
+
   public function getProject($project_id);
+
   public function setProjectCallBackUrl($project_id, $callback_url);
 
   /**
@@ -91,5 +101,15 @@ interface LingotekInterface {
   public function getDocumentTranslationStatus($doc_id, $locale);
 
   public function downloadDocument($doc_id, $locale);
+
+  /**
+   * Deletes the document with this document id from the Lingotek service.
+   *
+   * @param string $doc_id
+   *   The document id in Lingotek.
+   * @return bool
+   *   TRUE if the document was successfully deleted. FALSE if not.
+   */
+  public function deleteDocument($doc_id);
 
 }

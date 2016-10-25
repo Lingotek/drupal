@@ -206,6 +206,9 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function deleteDocument($doc_id) {
     $response = $this->api->deleteDocument($doc_id);
     $status_code = $response->getStatusCode();

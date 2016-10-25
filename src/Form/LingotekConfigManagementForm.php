@@ -928,8 +928,7 @@ class LingotekConfigManagementForm extends FormBase {
         }
       }
     }
-
-    if ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
+    elseif ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
       try {
         $this->translationService->deleteConfigMetadata($mapper->getPluginId());
       }

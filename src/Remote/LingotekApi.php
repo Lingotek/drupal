@@ -92,7 +92,11 @@ class LingotekApi implements LingotekApiInterface {
       $response = $this->lingotekClient->delete('/api/document' . '/' . $id);
     }
     catch (\Exception $e) {
-      throw new LingotekApiException('Failed to delete document: ' . $e->getMessage());
+      $http_status_code = $e->getCode();
+      if ($http_status_code === Response::HTTP_NOT_FOUND) {
+        return new Response($e->getMessage(), Response::HTTP_NOT_FOUND);
+      }
+      throw new LingotekApiException('Failed to delete document: ' . $e->getMessage(), $http_status_code, $e);
     }
     return $response;
   }

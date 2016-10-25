@@ -574,6 +574,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function getConfigDocumentId(ConfigNamesMapper $mapper) {
     $document_id = NULL;
+    $metadata = NULL;
     foreach ($mapper->getConfigNames() as $config_name) {
       $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
       break;
