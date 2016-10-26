@@ -622,12 +622,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
+    $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
 
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
-    if ($this->lingotek->updateDocument($document_id, $encoded_data, $url)){
+    if ($this->lingotek->updateDocument($document_id, $encoded_data, $url, $document_name)){
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       return $document_id;

@@ -190,13 +190,16 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateDocument($doc_id, $content, $url = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL) {
     $args = array(
       'format' => 'JSON',
       'content' => $content,
     );
     if ($url !== NULL) {
       $args['external_url'] = $url;
+    }
+    if ($title !== NULL) {
+      $args['title'] = $title;
     }
 
     $response = $this->api->patchDocument($doc_id, $args);

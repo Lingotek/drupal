@@ -56,11 +56,13 @@ interface LingotekInterface {
    * @param $content
    *   The content of the document
    * @param string $url
-   *   The document url in the site if any. This allows support for in-context review.
+   *   (optional) The document url in the site if any. This allows support for in-context review.
+   * @param string $title
+   *   (optional) The title of the document as it will be seen in the TMS.
    *
    * @return boolean
    */
-  public function updateDocument($doc_id, $content, $url = NULL);
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL);
 
   /**
    * @param $doc_id

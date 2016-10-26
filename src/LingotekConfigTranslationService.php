@@ -384,8 +384,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function updateDocument(ConfigEntityInterface &$entity) {
     $source_data = json_encode($this->getSourceData($entity));
     $document_id = $this->getDocumentId($entity);
+    $document_name = $entity->id() . ' (config): ' . $entity->label();
+
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url)) {
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       return $document_id;
@@ -911,7 +913,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_id = $this->getConfigDocumentId($mapper);
-    if ($this->lingotek->updateDocument($document_id, $source_data)) {
+    $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
+
+    if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_REQUEST);
       return $document_id;

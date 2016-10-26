@@ -328,6 +328,58 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::uploadDocument
+   */
+  public function testUpdateDocument() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.project', 'default_project'],['default.vault', 'default_vault']]));
+
+    // Simplest update.
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content'])
+      ->will($this->returnValue($response));
+
+    // If there is an url, it should be included.
+    $this->api->expects($this->at(1))
+      ->method('patchDocument')
+      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1'])
+      ->will($this->returnValue($response));
+
+    // If there is a title, it should be included.
+    $this->api->expects($this->at(2))
+      ->method('patchDocument')
+      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content', 'title' => 'title'])
+      ->will($this->returnValue($response));
+
+    // If there is an url and a title, they should be included.
+    $this->api->expects($this->at(3))
+      ->method('patchDocument')
+      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1', 'title' => 'title'])
+      ->will($this->returnValue($response));
+
+    // Simplest update.
+    $this->lingotek->updateDocument('my_doc_id', 'content');
+
+    // If there is an url, it should be included.
+    $this->lingotek->updateDocument('my_doc_id', 'content', 'http://example.com/node/1');
+
+    // If there is a title, it should be included.
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title');
+
+    // If there is an url and a title, they should be included.
+    $this->lingotek->updateDocument('my_doc_id', 'content', 'http://example.com/node/1', 'title');
+  }
+
+  /**
    * @covers ::addTarget
    */
   public function testAddTarget() {

@@ -178,9 +178,10 @@ class LingotekFake implements LingotekInterface {
     return $doc_id;
   }
 
-  public function updateDocument($doc_id, $content, $url = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL) {
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_content_url', $url);
+    \Drupal::state()->set('lingotek.uploaded_content_title', $title);
 
     // Save the timestamp of the upload.
     $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);
