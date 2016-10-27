@@ -201,7 +201,7 @@ class LingotekApi implements LingotekApiInterface {
   public function getProject($project_id) {
     try {
       $this->logger->debug('Lingotek::getProject called with id ' . $project_id);
-      $response = $this->lingotekClient->get('/api/project/' . $project_id); 
+      $response = $this->lingotekClient->get('/api/project/' . $project_id);
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get project: ' . $e->getMessage());
@@ -212,7 +212,7 @@ class LingotekApi implements LingotekApiInterface {
   public function getProjects($community_id) {
     try {
       $this->logger->debug('Lingotek::getProjects called with id ' . $community_id);
-      $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id, 'limit' => 100));
+      $response = $this->lingotekClient->get('/api/project', array('community_id' => $community_id, 'limit' => 1000));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get projects: ' . $e->getMessage());
@@ -247,7 +247,7 @@ class LingotekApi implements LingotekApiInterface {
   public function getWorkflows($community_id) {
     try {
       $this->logger->debug('Lingotek::getWorkflows called with id ' . $community_id);
-      $response = $this->lingotekClient->get('/api/workflow', array('community_id' => $community_id, 'limit' => 100));
+      $response = $this->lingotekClient->get('/api/workflow', array('community_id' => $community_id, 'limit' => 1000));
     }
     catch (\Exception $e) {
       throw new LingotekApiException('Failed to get workflows: ' . $e->getMessage());
