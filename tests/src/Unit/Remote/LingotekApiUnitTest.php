@@ -139,7 +139,7 @@ class LingotekApiUnitTest extends UnitTestCase {
       ->getMock();
     $this->client->expects($this->once())
       ->method('get')
-      ->with('/api/project', ['limit' => 100, 'community_id' => 'my_community_id'])
+      ->with('/api/project', ['community_id' => 'my_community_id', 'limit' => 1000])
       ->will($this->returnValue($response));
 
     $this->lingotek_api->getProjects('my_community_id');
@@ -172,7 +172,7 @@ class LingotekApiUnitTest extends UnitTestCase {
       ->getMock();
     $this->client->expects($this->once())
       ->method('get')
-      ->with('/api/workflow', ['limit' => 100, 'community_id' => $community_id])
+      ->with('/api/workflow', ['community_id' => $community_id, 'limit' => 1000])
       ->will($this->returnValue($response));
 
     $this->lingotek_api->getWorkflows($community_id);
