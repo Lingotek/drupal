@@ -63,7 +63,7 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath .'/admin/lingotek/config/manage');
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR?destination=' . $basepath .'/admin/lingotek/config/manage');
     // System information will be the second link.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -72,7 +72,7 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_ES?destination=' . $basepath .'/admin/lingotek/config/manage');
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Request the German (AT) translation.
@@ -121,7 +121,7 @@ class LingotekSystemSiteBulkLocaleTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Upload it
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
 
     // There is a link for checking status.

@@ -62,7 +62,7 @@ class LingotekSystemSiteExistingBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -74,7 +74,7 @@ class LingotekSystemSiteExistingBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Request the Spanish translation.

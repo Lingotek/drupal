@@ -99,14 +99,14 @@ class LingotekNodeBulkLocaleTranslationTest extends LingotekTestBase {
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
 
     // There is a link for checking status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_AR?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the German (AT) translation.

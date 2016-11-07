@@ -68,7 +68,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
 
     // Upload article content type for translation.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('article uploaded successfully');
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($content_type));
 
@@ -77,7 +77,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_fields');
 
     // Upload article body field type for translation.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Body uploaded successfully');
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($field));
 

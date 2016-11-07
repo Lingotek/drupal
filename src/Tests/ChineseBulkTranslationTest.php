@@ -87,13 +87,13 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/zh_CN?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
 
     // There is a link for checking status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/zh_CN?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the German (AT) translation.
@@ -139,7 +139,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath .'/admin/lingotek/config/manage');
 
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -147,7 +147,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/zh_CN?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Request the Chinese translation.
@@ -194,7 +194,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -202,7 +202,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/zh_CN?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
     // Request the Spanish translation.

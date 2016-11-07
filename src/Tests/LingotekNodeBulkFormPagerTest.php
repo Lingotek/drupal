@@ -101,7 +101,7 @@ class LingotekNodeBulkFormPagerTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool 11 is complete.');
 
     // The current page is kept.

@@ -154,11 +154,11 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Node Llamas are cool has been uploaded.');
 
     // There is a link for checking status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the Spanish translation.

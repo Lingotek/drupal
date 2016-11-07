@@ -60,7 +60,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -68,7 +68,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
     // Request the Spanish translation.
@@ -283,11 +283,11 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertText("Translation to ko_KR requested successfully");
 
     // Reupload the content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Article EDITED has been updated.');
 
     // Recheck status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Article EDITED status checked successfully');
 
     // Korean should still be marked as requested, so we can check target.
@@ -339,7 +339,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
     // Recheck status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Article EDITED status checked successfully');
 
     // Check the translation after having been edited.

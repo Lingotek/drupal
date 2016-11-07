@@ -43,6 +43,9 @@ class Lingotek implements LingotekInterface {
   const STATUS_INTERMEDIATE = 'INTERMEDIATE';
   const STATUS_CURRENT = 'CURRENT';
   const STATUS_READY = 'READY';
+  const STATUS_DISABLED = 'DISABLED';
+  const STATUS_ERROR = 'ERROR';
+
   /**
    * Status untracked means the target has not been added yet.
    */

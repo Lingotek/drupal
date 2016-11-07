@@ -255,7 +255,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/taxonomy_term/1?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Taxonomy_term Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -263,7 +263,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for taxonomy_term Llamas are cool is complete.');
 
     // Request the Spanish translation.

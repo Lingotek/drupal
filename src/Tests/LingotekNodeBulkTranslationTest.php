@@ -81,7 +81,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Node Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -89,7 +89,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the Spanish translation.
@@ -277,9 +277,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Let's upload the edited content so it's updated and downloadable.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // Check the source status is current.
-    $this->clickLink('English');
+    $this->clickLink('EN');
 
     // Check all statuses, after being edited.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
@@ -318,9 +318,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Let's upload the edited content so it's updated and downloadable.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // Check the source status is current.
-    $this->clickLink('English');
+    $this->clickLink('EN');
 
     // Ensure we won't get a completed document because there are phases pending.
     \Drupal::state()->set('lingotek.document_completion', FALSE);
@@ -483,7 +483,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertText("Locale 'ko_KR' was added as a translation target for node Llamas are cool EDITED.");
 
     // Reupload the content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Node Llamas are cool EDITED has been updated.');
 
     // Korean should be marked as requested, so we can check target.
@@ -491,7 +491,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($status), 1, 'Korean is requested, so we can still check the progress status of the translation');
 
     // Recheck status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool EDITED is complete.');
 
     // Korean should still be marked as requested, so we can check target.
@@ -540,7 +540,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
     // Recheck status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool EDITED is complete.');
 
     // Check the translation after having been edited.
@@ -612,7 +612,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/en_US?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->clickLink('Spanish');
+    $this->clickLink('ES');
     $this->assertText('Node Llamas are cool es-MX has been uploaded.');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.uploaded_locale'));
   }

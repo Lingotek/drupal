@@ -113,11 +113,11 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
 
     // There is a link for checking status.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Request the Spanish translation.

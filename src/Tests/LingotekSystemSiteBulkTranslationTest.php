@@ -53,7 +53,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText(t('System information uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -61,7 +61,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Request the Spanish translation.
@@ -190,7 +190,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText("Translation to ko_KR requested successfully");
 
     // Reupload the content.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information has been updated.');
 
     // Korean should be marked as requested, so we can check target.
@@ -198,7 +198,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($status), 1, 'Korean is requested, so we can still check the progress status of the translation');
 
     // Recheck status.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     $this->assertText('System information status checked successfully');
 
     // Check the translation after having been edited.

@@ -232,7 +232,7 @@ class LingotekConfigManagementForm extends FormBase {
 
     $headers = [
       'title' => $this->t('Entity'),
-      'source' => $this->t('Language source'),
+      'source' => $this->t('Source'),
       'translations' => $this->t('Translations'),
       'profile' => $this->t('Profile'),
     ];
@@ -971,7 +971,7 @@ class LingotekConfigManagementForm extends FormBase {
         '#type' => 'inline_template',
         '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{% if url %}<a href="{{url}}">{%endif%}{{language}}{%if url %}</a>{%endif%}</span>',
         '#context' => array(
-          'language' => $language_source->getName(),
+          'language' => strtoupper($language_source->id()),
           'status' => strtolower($source_status),
           'status_title' => $this->getSourceStatusText($mapper, $source_status),
           'url' => $this->getSourceActionUrl($mapper, $source_status),
@@ -986,15 +986,20 @@ class LingotekConfigManagementForm extends FormBase {
 
   protected function getSourceStatusText(ConfigMapperInterface $mapper, $status) {
     switch ($status) {
-      case Lingotek::STATUS_CURRENT:
-        return $this->t('Source uploaded');
       case Lingotek::STATUS_UNTRACKED:
-        return $this->t('Never uploaded');
+      case Lingotek::STATUS_REQUEST:
+        return $this->t('Upload');
+      case Lingotek::STATUS_DISABLED:
+        return $this->t('Disabled, cannot request translation');
       case Lingotek::STATUS_EDITED:
         return ($this->translationService->getConfigDocumentId($mapper)) ?
-         $this->t('Upload') : $this->t('Never uploaded');
+          $this->t('Re-upload (content has changed since last upload)') : $this->t('Upload');
       case Lingotek::STATUS_IMPORTING:
         return $this->t('Source importing');
+      case Lingotek::STATUS_CURRENT:
+        return $this->t('Source uploaded');
+      case Lingotek::STATUS_ERROR:
+        return $this->t('Error');
       default:
         return ucfirst(strtolower($status));
     }
@@ -1003,10 +1008,9 @@ class LingotekConfigManagementForm extends FormBase {
   protected function getTargetStatusText(ConfigMapperInterface $mapper, $status, $langcode) {
     $language = ConfigurableLanguage::load($langcode);
     if ($language) {
-
       switch ($status) {
         case Lingotek::STATUS_UNTRACKED:
-          return $language->label() . ' - ' . $this->t('Untracked translation');
+          return $language->label() . ' - ' . $this->t('Translation exists, but it is not being tracked by Lingotek');
         case Lingotek::STATUS_REQUEST:
           return $language->label() . ' - ' . $this->t('Request translation');
         case Lingotek::STATUS_PENDING:
@@ -1121,7 +1125,7 @@ class LingotekConfigManagementForm extends FormBase {
     return array(
       'data' => array(
         '#type' => 'inline_template',
-        '#template' => '{% for language in languages %}{% if language.url %} <a href="{{ language.url }}" {%if language.new_window%}target="_blank"{%endif%}{%else%} <span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.url%}</a>{%else%}</span>{%endif%} {% endfor %}',
+        '#template' => '{% for language in languages %}{% if language.url %}<a href="{{ language.url }}" {%if language.new_window%}target="_blank"{%endif%}{%else%}<span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.url%}</a>{%else%}</span>{%endif%}{% endfor %}',
         '#context' => array(
           'languages' => $languages,
         ),

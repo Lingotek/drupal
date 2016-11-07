@@ -118,11 +118,11 @@ class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
 
     // There is a link for checking status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
     // Request the Spanish translation.

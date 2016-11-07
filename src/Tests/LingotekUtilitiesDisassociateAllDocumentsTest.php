@@ -99,9 +99,9 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // There is a link for checking status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // Request the Spanish translation.
     $this->clickLink('ES');
     // Check status of the Spanish translation.
@@ -127,9 +127,9 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm('taxonomy_term');
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // There is a link for checking status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // Request the Spanish translation.
     $this->clickLink('ES');
     // Check status of the Spanish translation.
@@ -146,9 +146,9 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
     // Clicking English must init the upload of content.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     // There is a link for checking status.
-    $this->clickLink('English', 1);
+    $this->clickLink('EN', 1);
     // Request the Spanish translation.
     $this->clickLink('ES');
     // Check status of the Spanish translation.
@@ -165,9 +165,9 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // There is a link for checking status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     // Request the Spanish translation.
     $this->clickLink('ES');
     // Check status of the Spanish translation.
@@ -209,17 +209,17 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
 
     // Ensure the UIs show the right statuses.
     $this->goToContentBulkManagementForm('node');
-    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'English', 1, 'The node shows as untracked');
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 1, 'The node shows as untracked');
 
     $this->goToContentBulkManagementForm('taxonomy_term');
-    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'English', 1, 'The taxonomy term shows as untracked');
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 1, 'The taxonomy term shows as untracked');
 
     $this->goToConfigBulkManagementForm('config');
     // We have 4 configuration objects.
-    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'English', 4, 'The configuration shows as untracked');
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 4, 'The configuration shows as untracked');
 
     $this->goToConfigBulkManagementForm('node_type');
-    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'English', 1, 'The article type shows as untracked');
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_UNTRACKED, 'EN', 1, 'The article type shows as untracked');
   }
 
   /**

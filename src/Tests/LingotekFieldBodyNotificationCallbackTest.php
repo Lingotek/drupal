@@ -160,7 +160,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_fields');
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
 
     // Simulate the notification of content successfully uploaded.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [

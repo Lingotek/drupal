@@ -57,7 +57,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText(t('Body uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
@@ -65,7 +65,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/field_config/node.article.body/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Body status checked successfully');
 
     // Request the Spanish translation.
@@ -264,11 +264,11 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertText("Translation to ko_KR requested successfully");
 
     // Reupload the content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Body EDITED has been updated.');
 
     // Recheck status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Body EDITED status checked successfully');
 
     // Korean should still be marked as requested, so we can check target.
@@ -320,7 +320,7 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
 
     // Recheck status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Body EDITED status checked successfully');
 
     // Check the translation after having been edited.

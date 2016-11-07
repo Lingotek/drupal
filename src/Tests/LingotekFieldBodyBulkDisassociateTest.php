@@ -118,11 +118,11 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_fields');
 
     // Clicking English must init the upload of content.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText(t('Body uploaded successfully'));
 
     // There is a link for checking status.
-    $this->clickLink('English');
+    $this->clickLink('EN');
     $this->assertText('Body status checked successfully');
 
     // Request the Spanish translation.
