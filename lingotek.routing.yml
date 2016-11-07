@@ -127,7 +127,7 @@ lingotek.entity.check_target:
   requirements:
     _permission: 'administer lingotek'
 
-lingotek.entity.add_target:
+lingotek.entity.request_translation:
   path: '/admin/lingotek/entity/add_target/{doc_id}/{locale}'
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekEntityController::addTarget'

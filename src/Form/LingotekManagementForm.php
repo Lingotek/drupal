@@ -1182,7 +1182,7 @@ class LingotekManagementForm extends FormBase {
     $document_id = $this->translationService->getDocumentId($entity);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($target_status == Lingotek::STATUS_REQUEST) {
-        $url = Url::fromRoute('lingotek.entity.add_target',
+        $url = Url::fromRoute('lingotek.entity.request_translation',
           [
             'doc_id' => $document_id,
             'locale' => $locale,
@@ -1214,7 +1214,7 @@ class LingotekManagementForm extends FormBase {
       ]);
     }
     if ($target_status == Lingotek::STATUS_UNTRACKED) {
-      $url = Url::fromRoute('lingotek.entity.add_target',
+      $url = Url::fromRoute('lingotek.entity.request_translation',
         [
           'doc_id' => $document_id,
           'locale' => $locale,

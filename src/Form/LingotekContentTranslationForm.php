@@ -215,7 +215,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     elseif (strpos($path, '/admin/lingotek/entity/add_target/') === 0) {
        $path = str_replace('/admin/lingotek/entity/add_target/', '', $path);
        list($doc_id, $locale) = explode('/', $path);
-       $url = Url::fromRoute('lingotek.entity.add_target', array('doc_id' => $doc_id, 'locale' => $locale));
+       $url = Url::fromRoute('lingotek.entity.request_translation', array('doc_id' => $doc_id, 'locale' => $locale));
     }
     elseif (strpos($path, '/admin/lingotek/entity/check_target/') === 0) {
        $path = str_replace('/admin/lingotek/entity/check_target/', '', $path);

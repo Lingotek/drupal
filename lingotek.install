@@ -168,3 +168,11 @@ function lingotek_update_8002() {
   $entity_type->set('id', 'lingotek_profile');
   $manager->installEntityType($entity_type);
 }
+
+/**
+ * Clear route names cache.
+ */
+function lingotek_update_8003() {
+  // We changed a route name, so we need to ensure that the routing caches are
+  // cleared.
+}
