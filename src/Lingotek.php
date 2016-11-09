@@ -165,7 +165,6 @@ class Lingotek implements LingotekInterface {
     $defaults = array(
       'format' => 'JSON',
       'project_id' => $this->get('default.project'),
-      'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',// 'okf_json@TMS Default.fprm',
       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
     );
 
@@ -199,7 +198,6 @@ class Lingotek implements LingotekInterface {
     $args = array(
       'format' => 'JSON',
       'content' => $content,
-      'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',// 'okf_json@TMS Default.fprm',
       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
     );
     if ($url !== NULL) {

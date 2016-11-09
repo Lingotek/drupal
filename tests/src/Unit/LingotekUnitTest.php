@@ -277,7 +277,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'my_test_project',
-              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'vault_id' => 'my_test_vault']);
 
@@ -286,7 +285,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'another_test_project',
-              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'vault_id' => 'another_test_vault']);
 
@@ -295,7 +293,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'default_project',
-              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'vault_id' => 'default_vault']);
 
@@ -303,7 +300,6 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(3))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'format' => 'JSON', 'project_id' => 'default_project',
              ]);
@@ -312,7 +308,6 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(4))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
-        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1'
       ]);
@@ -357,7 +352,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('patchDocument')
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content',
-        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
       ])
       ->will($this->returnValue($response));
@@ -367,7 +361,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('patchDocument')
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1',
-        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
       ])
       ->will($this->returnValue($response));
@@ -377,7 +370,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('patchDocument')
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content', 'title' => 'title',
-        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
       ])
       ->will($this->returnValue($response));
@@ -387,7 +379,6 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('patchDocument')
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1', 'title' => 'title',
-        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
       ])
       ->will($this->returnValue($response));
