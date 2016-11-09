@@ -277,6 +277,8 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'my_test_project',
+              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+              'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'vault_id' => 'my_test_vault']);
 
     // Vault id has changed.
@@ -284,6 +286,8 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'another_test_project',
+              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+              'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'vault_id' => 'another_test_vault']);
 
     // If there is a profile with default vault, it must be replaced.
@@ -291,12 +295,16 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'default_project',
+              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+              'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'vault_id' => 'default_vault']);
 
     // If there is no profile, vault should not be included.
     $this->api->expects($this->at(3))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+              'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+              'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'format' => 'JSON', 'project_id' => 'default_project',
              ]);
 
@@ -304,6 +312,8 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(4))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1'
       ]);
 
@@ -328,7 +338,7 @@ class LingotekUnitTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::uploadDocument
+   * @covers ::updateDocument
    */
   public function testUpdateDocument() {
     $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
@@ -345,25 +355,41 @@ class LingotekUnitTest extends UnitTestCase {
     // Simplest update.
     $this->api->expects($this->at(0))
       ->method('patchDocument')
-      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content'])
+      ->with('my_doc_id', [
+        'format' => 'JSON', 'content' => 'content',
+        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+      ])
       ->will($this->returnValue($response));
 
     // If there is an url, it should be included.
     $this->api->expects($this->at(1))
       ->method('patchDocument')
-      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1'])
+      ->with('my_doc_id', [
+        'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1',
+        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+      ])
       ->will($this->returnValue($response));
 
     // If there is a title, it should be included.
     $this->api->expects($this->at(2))
       ->method('patchDocument')
-      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content', 'title' => 'title'])
+      ->with('my_doc_id', [
+        'format' => 'JSON', 'content' => 'content', 'title' => 'title',
+        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+      ])
       ->will($this->returnValue($response));
 
     // If there is an url and a title, they should be included.
     $this->api->expects($this->at(3))
       ->method('patchDocument')
-      ->with('my_doc_id', [ 'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1', 'title' => 'title'])
+      ->with('my_doc_id', [
+        'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1', 'title' => 'title',
+        'fprm_id' => 'c7ceb8e9-76cd-40e7-8cbd-58e4ae47d4d2',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+      ])
       ->will($this->returnValue($response));
 
     // Simplest update.
