@@ -1047,7 +1047,6 @@ function lingotek_get_node_settings_form($form, &$form_state, $node = NULL) {
  * This is not a hook. This is a helper function to save all lingotek related data.
  */
 function lingotek_entity_save($entity, $entity_type) {
-
   if (!variable_get('lingotek_login_id')) {
     // Lingotek is installed but has not been setup yet
     // (could use function lingotek_is_config_missing() but did not want
@@ -1106,15 +1105,23 @@ function lingotek_entity_save($entity, $entity_type) {
       LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_UNTRACKED);
     }
     else {
-      // if this is a node-based translation target and target localization is enabled, set to TARGET_EDITED
-      // TODO:
-
-      // if this is a source node and target localization is enabled, set all targets to TARGET_LOCALIZE
-      // TODO:
-
-      if (empty($entity->lingotek['upload_status']) || (!in_array($entity->lingotek['upload_status'], array(LingotekSync::STATUS_TARGET, LingotekSync::STATUS_DELETED)))) {
+      // Create the target entries in lingotek_entity_metadata
+      if (empty($entity->lingotek['upload_status']) || (!in_array($entity->lingotek['upload_status'], array(LingotekSync::STATUS_NONE ,LingotekSync::STATUS_TARGET, LingotekSync::STATUS_DELETED)))) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
       }
+    }
+  }
+
+  $existing_targets = LingotekSync::getAllTargetStatusForEntity($entity_type, $id);
+
+  if (count($existing_targets) == 0) {
+    // Get the source language and available target languages.
+    $source = isset($entity->language) ? $entity->language : language_default()->language;
+    $source = Lingotek::convertDrupal2Lingotek($source);
+    $target_locales = Lingotek::getLanguagesWithoutSource($source);
+
+    foreach (array_keys($target_locales) as $locale) {
+      lingotek_keystore($entity_type, $id, 'target_sync_status_' . $locale, LingotekSync::STATUS_NONE);
     }
   }
 
@@ -1572,8 +1579,12 @@ function lingotek_entity_upload_triggered($entity, $entity_type, $changed = TRUE
   if (!$changed && isset($entity->lingotek['upload_status']) && $entity->lingotek['upload_status'] == 'CURRENT') {
     return; //entity has no changes.
   }
-
-  LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
+  if ($changed && isset($entity->lingotek['document_id'])) {
+    LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
+  }
+  if (!isset($entity->lingotek['document_id']) && isset($entity->lingotek['upload_status']) && $entity->lingotek['upload_status'] !== LingotekSync::STATUS_ERROR) {
+    LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_NONE);
+  }
 
   if (isset($entity->lingotek['auto_upload']) && $entity->lingotek['auto_upload']) {
     lingotek_entity_upload($entity, $entity_type, $context);
@@ -1833,8 +1844,8 @@ function lingotek_entity_download($entity, $entity_type, $lingotek_locale, &$con
   if ($status == LingotekSync::STATUS_READY) {
     lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_CURRENT);
   }
-  else if ($status == LingotekSync::STATUS_INTERIM_READY) {
-    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_INTERIM_CURRENT);
+  else if ($status == LingotekSync::STATUS_READY_INTERIM) {
+    lingotek_keystore($entity_type, $id , 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_INTERIM);
   }
   // If local translations have been deleted than status will be DELETED. Just make the status CURRENT because you are downloading existing translations from Lingotek
   if ($status == LingotekSync::STATUS_DELETED) {
@@ -2259,7 +2270,6 @@ function lingotek_form_comment_form_alter(&$form, $form_state) {
  * Implements hook_field_language_alter().
  */
 function lingotek_field_language_alter(&$display_language, $context) {
-
   $entity = $context['entity'];
   $entity_type = $context['entity_type'];
   // If no language is set on the entity itself, do nothing.

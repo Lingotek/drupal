@@ -444,7 +444,7 @@ function lingotek_xml_fields($entity_type, $entity, $translatable_fields, $langu
   if ($has_invalid_xml) {
     lingotek_keystore($entity_type, $id, 'invalid_xml', LingotekSync::INVALID_XML_PRESENT);
     lingotek_keystore($entity_type, $id, 'last_sync_error', 'Entity contains invalid XML characters');
-    LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_FAILED);
+    LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_ERROR);
   }
   else {
     lingotek_keystore_delete($entity_type, $id, 'invalid_xml');
@@ -2354,9 +2354,9 @@ function lingotek_delete_node_translations($nid) {
  * @param $entity
  */
 function lingotek_delete_field_translations($entity_type, $entity) {
-  $target_status = LingotekSync::STATUS_DELETED;
+  $target_status = LingotekSync::STATUS_NONE;
   $entity_data = entity_extract_ids($entity_type, $entity);
-  $fields = field_info_instances($entity_type, $extracted_data[2]);
+  $fields = field_info_instances($entity_type);
   $source_langcode[] = lingotek_entity_langcode($entity_type, $entity);
   $langcodes = array_diff(lingotek_get_languages($entity_type, $entity_data[0]), $source_langcode); // removes source language code from array so source content isn't deleted
 
@@ -2365,10 +2365,16 @@ function lingotek_delete_field_translations($entity_type, $entity) {
     $field_name = $field['field_name'];
     foreach($langcodes as $langcode) {
       $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
-      $status = LingotekSync::getTargetStatus($entity->lingotek['document_id'], $lingotek_locale);
-      // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
-      if ($status == LingotekSync::STATUS_CURRENT && isset($entity->lingotek['document_id'])) {
-        $target_status = LingotekSync::STATUS_READY;
+      $has_doc_id = (isset($entity->lingotek['document_id'])) ? TRUE : FALSE;
+      if ($has_doc_id) {
+        $status = LingotekSync::getTargetStatus($entity->lingotek['document_id'], $lingotek_locale);
+        // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
+        if ($status == LingotekSync::STATUS_CURRENT) {
+          $target_status = LingotekSync::STATUS_READY;
+        }
+        elseif ($status == LingotekSync::STATUS_INTERIM) {
+          $target_status = LingotekSync::STATUS_READY_INTERIM;
+        }
       }
       if ($langcode && !empty($entity->$field_name)) {
         $entity->{$field_name}[$langcode] = array();

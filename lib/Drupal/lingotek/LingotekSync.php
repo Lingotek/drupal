@@ -10,13 +10,14 @@
  */
 class LingotekSync {
 
-  const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
+  const STATUS_NONE = 'NONE';
   const STATUS_EDITED = 'EDITED';    // The node has been edited, but has not been uploaded to Lingotek
-  const STATUS_FAILED = 'FAILED';    // The node or target translation has failed during processing
+  const STATUS_CURRENT = 'CURRENT';  // The node or target translation is current
+  const STATUS_ERROR = 'ERROR';
   const STATUS_PENDING = 'PENDING';  // The target translation is awaiting to receive updated content from Lingotek
   const STATUS_READY = 'READY';      // The target translation is complete and ready for download
-  const STATUS_INTERIM_CURRENT = 'INTERIM_CURRENT'; // Part of the target translation is done and ready for download what has been done
-  const STATUS_INTERIM_READY = 'INTERIM_READY';
+  const STATUS_INTERIM = 'INTERIM'; // Part of the target translation is done and ready for download what has been done
+  const STATUS_READY_INTERIM = 'READY_INTERIM';
   const STATUS_TARGET = 'TARGET';    // A target node is being used to store a translation (ignored for upload by Lingotek)
   const STATUS_UNTRACKED = 'UNTRACKED'; // A translation was discovered that is not currently managed by Lingotek
   const STATUS_TARGET_LOCALIZE = 'TARGET_LOCALIZE'; // A localization must be made of the source before uploading to Lingotek
@@ -72,13 +73,14 @@ class LingotekSync {
 
   public static function getTargetStatusOptions() {
     return array(
+      'STATUS_NONE' => self::STATUS_NONE,
       'STATUS_CURRENT' => self::STATUS_CURRENT,
       'STATUS_EDITED' => self::STATUS_EDITED,
-      'STATUS_FAILED' => self::STATUS_FAILED,
+      'STATUS_ERROR' => self::STATUS_ERROR,
       'STATUS_PENDING' => self::STATUS_PENDING,
       'STATUS_READY' => self::STATUS_READY,
-      'STATUS_INTERIM_READY' => self::STATUS_INTERIM_READY,
-      'STATUS_INTERIM_CURRENT' => self::STATUS_INTERIM_CURRENT,
+      'STATUS_READY_INTERIM' => self::STATUS_READY_INTERIM,
+      'STATUS_INTERIM' => self::STATUS_INTERIM,
       'STATUS_TARGET' => self::STATUS_TARGET,
       'STATUS_UNTRACKED' => self::STATUS_UNTRACKED,
       'STATUS_TARGET_LOCALIZE' => self::STATUS_TARGET_LOCALIZE,
@@ -142,6 +144,23 @@ class LingotekSync {
 
   public static function setUploadStatus($entity_type, $entity_id, $status) {
     return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);
+  }
+
+  public static function setUploadStatuses($entity_type, $entity_ids, $status) {
+    foreach($entity_ids as $entity_id) {
+      return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);
+    }
+  }
+
+  public static function getUploadStatus($entity_type, $entity_id) {
+    $query = db_select('lingotek_entity_metadata', 'lem')
+    ->fields('lem', array('value'))
+    ->condition('lem.entity_id', $entity_id)
+    ->condition('lem.entity_type', $entity_type)
+    ->condition('lem.entity_key', 'upload_status');
+    $upload_status = $query->execute()->fetchField();
+
+    return $upload_status;
   }
 
   public static function getSyncProjects() {
@@ -894,6 +913,17 @@ class LingotekSync {
     return $result;
   }
 
+  public static function getProfileByEntityId($entity_type, $entity_id) {
+    $query = db_select('lingotek_entity_metadata', 'lem')
+      ->fields('lem', array('value'))
+      ->condition('lem.entity_id', $entity_id)
+      ->condition('lem.entity_type', $entity_type)
+      ->condition('lem.entity_key', 'profile');
+    $profile = $query->execute()->fetchField();
+
+    return $profile;
+  }
+
   public static function getConfigDocIdsByStatus($status) {
     $doc_ids = array();
 
@@ -1196,6 +1226,26 @@ class LingotekSync {
     else {
       return FALSE;
     }
+  }
+
+  public static function setLastSyncError($entity_type, $entity_id, $error) {
+    lingotek_keystore($entity_type, $entity_id, 'last_sync_error', $error);
+  }
+
+  public static function getLastSyncError($entity_type, $entity_id) {
+    $error = '';
+    $query = db_select('lingotek_entity_metadata', 'lem')
+    ->fields('lem', array('value'))
+    ->condition('lem.entity_id', $entity_id)
+    ->condition('lem.entity_type', $entity_type)
+    ->condition('lem.entity_key', 'last_sync_error');
+    $last_sync_error = $query->execute()->fetchField();
+
+    return $last_sync_error;
+  }
+
+  public static function deleteLastSyncError($entity_type, $entity_id) {
+    lingotek_keystore_delete($entity_type, $entity_id, 'last_sync_error');
   }
 
 }

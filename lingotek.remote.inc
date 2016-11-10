@@ -336,7 +336,12 @@ function lingotek_save_pathauto_alias($entity_type, $entity, $langcode) {
 function lingotek_save_field_record($fname, $params) {
   // using drupal_write_record to avoid node_save - node_save overwrites publications unless called on both revised and published versions of the node (i.e. workbench_moderation)
   // UPDATE: This could perhaps be rewritten now that workbench_moderation is supported through the rules module
+  $entity_type = $params['entity_type'];
+  $entity_id = $params['entity_id'];
+  $langcode = $params['language'];
+  $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
   try {
+    LingotekSync::deleteLastSyncError($entity_type, $entity_id);
     drupal_write_record($fname, $params);
   } catch (PDOException $e) {
 
@@ -362,7 +367,11 @@ function lingotek_save_field_record($fname, $params) {
       }
       $message = t('Entity @entity_id had the translation @errorDetail', array('@entity_id' => $str_args[3], '@errorDetail' => $e->errorInfo[2]));
       drupal_set_message($message, 'error');
+
+      LingotekSync::setTargetStatus($entity_type, $entity_id, $lingotek_locale, LingotekSync::STATUS_ERROR);
+      LingotekSync::setLastSyncError($entity_type, $entity_id, $e->errorInfo[2]);
     }
+
     $primary_keys = array(
       'entity_type',
       'entity_id',

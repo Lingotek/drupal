@@ -249,7 +249,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
             break;
           case 'NOT_FOUND':
           default:
-            LingotekSync::setUploadStatus($entity_type, $entity_id, LingotekSync::STATUS_FAILED);
+            LingotekSync::setUploadStatus($entity_type, $entity_id, LingotekSync::STATUS_ERROR);
             lingotek_keystore($entity_type, $entity_id, 'last_sync_error', substr($error, 0, 255));
             LingotekLog::error('Received unexpected error status (@status) from Lingotek for @entity_type #@id: <pre>@error</pre>', array('@status' => $error->status, '@entity_type' => $entity_type, '@id' => $entity_id, '@error' => $error));
         }
@@ -290,7 +290,7 @@ function lingotek_get_and_update_target_progress($entity_type, $document_ids, $c
       }
       // update source status when necessary
       $entity_source_status = lingotek_keystore($entity_type, $entity_id, 'upload_status');
-      if ($entity_source_status == LingotekSync::STATUS_FAILED || $entity_source_status == LingotekSync::STATUS_PENDING) {
+      if ($entity_source_status == LingotekSync::STATUS_ERROR || $entity_source_status == LingotekSync::STATUS_PENDING) {
         LingotekSync::setUploadStatus($entity_type, $entity_id, LingotekSync::STATUS_CURRENT);
       }
     }
@@ -361,7 +361,7 @@ function lingotek_update_config_progress($document_ids) {
             break;
           case 'NOT_FOUND':
           default:
-            $set->setMetadataValue('upload_status', LingotekSync::STATUS_FAILED);
+            $set->setMetadataValue('upload_status', LingotekSync::STATUS_ERROR);
             LingotekLog::error('Received unexpected error status (@status) from Lingotek for config chunk #@id: <pre>@error</pre>', array('@status' => $error->status, '@id' => $chunk, '@error' => $error));
         }
       }

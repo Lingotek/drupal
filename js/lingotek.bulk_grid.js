@@ -146,8 +146,8 @@ function lingotek_perform_action(nid, action) {
 
   function clarifyButtonsForFilter() {
     $('.notify-checked-action').hide();
-    $('#upload-edited').attr('title', 'Upload all pending source content');
-    $('#download-ready').attr('title', 'Download complete translations');
+    $('#upload-edited').attr('title', 'Re-upload all edited source content');
+    $('#download-ready').attr('title', 'Download Ready translations');
     var text = $('#clear-filters').text();
 
     if (text === undefined || text === "") {
@@ -267,16 +267,19 @@ function lingotek_perform_action(nid, action) {
           case "CURRENT":
             title = 'Current';
             break;
-          case "INTERIM_READY":
+          case "READY_INTERIM":
             title = 'Ready to Download Interim Translations';
             break;
-          case "INTERIM_CURRENT":
+          case "INTERIM":
             title = 'Interim translation downloaded';
           case "EDITED":
             title = 'Needs to be Uploaded';
             break;
           case "PENDING":
             title = 'In progress';
+            break;
+          case "ERROR":
+            title = 'Error';
             break;
           case "DELETED":
             continue;
@@ -332,7 +335,41 @@ function lingotek_perform_action(nid, action) {
       $('.fa-check-square', row).removeClass().addClass('fa fa-square-o').attr('title', 'Needs to be Uploaded');
       return;
     }
-    //iterate through each indicator and replace it with updated status
+
+    // Find and update the source icon
+    var source_status = data[entity_id]['source_status'];
+    var source_icon = $(row).find('.ltk-source-icon');
+    var entity_profile = data[entity_id]['profile'];
+
+    switch (source_status) {
+      case "NONE" :
+        source_icon.removeClass().addClass('ltk-source-icon source-none');
+        source_icon.removeAttr('title').attr('title', 'Upload');
+        break;
+      case "EDITED":
+        source_icon.removeClass().addClass('ltk-source-icon source-edited');
+        source_icon.removeAttr('title').attr('title', 'Re-upload (content has changed since last upload');
+        source_icon.removeAttr('href').attr('href', '#');
+        source_icon.addEventListener("click", function(e) {
+          lingotek_perform_action(entity_id,'upload');
+        }, false);
+        break;
+      case "CURRENT":
+        source_icon.removeClass().addClass('ltk-source-icon source-current');
+        source_icon.removeAttr('title').attr('title', 'Source Uploaded');
+        break;
+      case "ERROR":
+        source_icon.removeClass().addClass('ltk-source-icon source-error');
+        error_title = data[entity_id]['last_upload_error'];
+        source_icon.removeAttr('title').attr('title', error_title);
+        break;
+    }
+    if (entity_profile === 'DISABLED') {
+      source_icon.removeClass().addClass('ltk-source-icon source-disabled');
+      source_icon.attr('title', 'Disabled, cannot request translation');
+    }
+
+    //iterate through each target icon and update them
     $(row).find('a.language-icon').each(function () {
       var icon_href = $(this).attr('href');
       //retrieve the language code from the href
@@ -345,63 +382,62 @@ function lingotek_perform_action(nid, action) {
       var title = $(this).attr('title');
       var cutoff = title.indexOf('-');
       title = title.substring(0, cutoff + 1);
-      var status = entity_type !== 'config' ? data[entity_id][language_code].status
+      var target_status = entity_type !== 'config' ? data[entity_id][language_code]
         : data[entity_id][language_code].toUpperCase();
-      switch (status) {
+      switch (target_status) {
+        case "NONE":
+          var attrs = {
+                        class:'ltk-target-none',
+                        title:'No Translation',
+                      };
+          $(this).replaceWith(function () {
+            var new_element = $("<span></span>", attrs).append($(this).contents());
+            return new_element;
+          });
         case "READY":
-          //take out the empty checkbox in Source Uploaded and replace with
-          //checked, using this here solves a problem where uploading from
-          //out side the manager sometimes jumps to READY
-          $('.ltk-upload-checkbox', row).removeClass('fa fa-square-o').addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
-          $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-ready');
-          $(this).attr('title', title + ' Ready to download');
+          $(this).attr('title', 'Ready for Download');
           break;
         case "CURRENT":
           $(this).removeClass().addClass('language-icon target-current');
-          $(this).attr('title', title + ' Current');
+          $(this).attr('title', 'Current');
           break;
-        case "INTERIM_READY":
-          $('.ltk-upload-checkbox', row).removeClass('fa fa-square-o').addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
-          $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
-          $(this).removeClass().addClass('language-icon target-interim_ready');
-          $(this).attr('title', title + ' Ready to download interim translation');
+        case "READY_INTERIM":
+          $(this).removeClass().addClass('language-icon target-ready_interim');
+          $(this).attr('title', 'Ready for Interim Download');
           break;
-        case "INTERIM_CURRENT":
-            $(this).removeClass().addClass('language-icon target-interim_current');
-            $(this).attr('title', title + ' Interim Current');
-            break;
+        case "INTERIM":
+          $(this).removeClass().addClass('language-icon target-interim');
+          $(this).attr('title', 'In-progress (interim translation downloaded)');
+          break;
         case "EDITED":
-          //remove check box in Source Uploaded and replace with upload link and empty checkbox
-          if($('.target-edited',row).length === 0){
-            $('.lingotek-language-source', row)
-                    .addClass('ltk-upload-button')
-                    .attr('title', 'Upload Now')
-                    .click(function(){
-                            lingotek_perform_action(entity_id,'upload');
-                    });
-            $('.ltk-upload-checkbox', row).removeClass('fa-check-square').addClass('fa fa-square-o').attr('title', 'Needs to be Uploaded');
-          }
           $(this).removeClass().addClass('language-icon target-edited');
-          $(this).attr('title', title + ' Not current');
+          $(this).attr('title', 'Not Current');
           break;
         case "PENDING":
-          //take out the empty checkbox and replace with checked
-          $('.ltk-upload-checkbox', row).removeClass('fa fa-square-o').addClass('fa fa-check-square').attr('title', 'Uploaded to Lingotek');
-          $('.ltk-upload-button', row).removeAttr('onclick').removeClass().addClass('lingotek-language-source');
           $(this).removeClass().addClass('language-icon target-pending');
-          $(this).attr('title', title + ' In progress');
+          $(this).attr('title', 'In-Progress');
           break;
         case "UNTRACKED":
-          $('.ltk-upload-checkbox', row).removeClass('fa-check-square').addClass('fa fa-square-o').attr('title', 'Needs to be Uploaded');
-          $('.ltk-upload-button', row).click(function() {
-            lingotek_perform_action(entity_id, 'upload');
-          });
-          $(this).removeClass().addClass('language-icon target-untracked').attr('title', title + ' Untracked');
+          $(this).removeClass().addClass('language-icon target-untracked')
+          $(this).attr('title', 'Translation exists, but it is not being tracked by Lingotek');
+          break;
+        case "ERROR":
+          $(this).removeClass().addClass('language-icon target-error');
+          $(this).attr('title', 'Error');
           break;
       }
+      if (entity_profile === 'DISABLED') {
+        var attrs = {
+                      class:'ltk-target-disabled',
+                      title:'Disabled, cannot request translation',
+                    };
+        $(this).replaceWith(function () {
+          var new_element = $("<span></span>", attrs).append($(this).contents());
+            return new_element;
+          });
+      }
     });
-
   }
 
   function updateStatusIndicators(data) {
@@ -418,6 +454,13 @@ function lingotek_perform_action(nid, action) {
   }
 
   function pollTranslationStatus(){
+    // Prevent jumping to top of page when source icons are clicked.
+    $('.ltk-source-icon.source-none').click(function(e) {
+      e.preventDefault();
+    });
+    $('.ltk-source-icon.source-edited').click(function(e){
+      e.preventDefault();
+    });
     //makes it easy to find empty cells, the only empty ones will be in the status
     //column if the row hasn't been uploaded yet.
     $('td:empty').addClass('emptyTD');

@@ -383,7 +383,7 @@ class LingotekEntity implements LingotekTranslatableEntity {
       lingotek_keystore($this->getEntityType(), $this->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_READY);
     }
     else{
-      lingotek_keystore($this->getEntityType(), $this->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_INTERIM_READY);
+      lingotek_keystore($this->getEntityType(), $this->getId(), 'target_sync_status_' . $lingotek_locale, LingotekSync::STATUS_READY_INTERIM);
     }
   }
 

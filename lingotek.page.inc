@@ -356,7 +356,8 @@ function lingotek_pm($node) {
     );
     return $output;
   }
-  if(!isset($node->lingotek['upload_status'])){
+
+  if($node->lingotek['upload_status'] === LingotekSync::STATUS_NONE){
     $content_push_form = drupal_get_form('lingotek_push_form', $node);
     $output['content_push'] = array(
       '#markup' => drupal_render($content_push_form),

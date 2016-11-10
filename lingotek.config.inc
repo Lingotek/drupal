@@ -55,6 +55,7 @@ function lingotek_row_status_query() {
       ->limit($limit)
       ->execute()
       ->fetchAllAssoc('lid');
+
   return lingotek_bulk_grid_parse_config_data($table_data_raw, null, TRUE);
 }
 function lingotek_config_get_rows($entity_type, $form, &$form_state, $count_only = FALSE) {
@@ -147,10 +148,12 @@ function lingotek_config_start_query($form_state, $union_part_desc) {
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='PENDING')", 'pending');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='READY')", 'ready');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='CURRENT')", 'current');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'interim_ready');
-  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'interim_current');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'ready_interim');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'interim');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='EDITED')", 'edited');
   $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='UNTRACKED')", 'untracked');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='ERROR')", 'error');
+  $query->addExpression("(SELECT GROUP_CONCAT(SUBSTRING(config_key, 20, 10)) FROM {lingotek_config_metadata} WHERE id = (SELECT set_id FROM {lingotek_config_map} WHERE lid = s.lid) AND config_key LIKE 'target_sync_status_%' AND value='NONE')", 'none');
   $query->addExpression("(SELECT GROUP_CONCAT(language) FROM {locales_target} WHERE lid = s.lid AND i18n_status = 1)", 'source_edited');
   $query->addExpression("(SELECT set_id FROM {lingotek_config_map} lcm WHERE lcm.lid = s.lid)", 'set_id');
 
@@ -354,6 +357,9 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type, $st
     }
     if($status_query === TRUE) {
       $row_status[$lid] = $locale_statuses;
+      if (isset($row->status)) {
+        $row_status[$lid]['source_status'] = $row->upload_status;
+      }
       continue;
     }
 
@@ -362,8 +368,7 @@ function lingotek_bulk_grid_parse_config_data($table_data_raw, $entity_type, $st
 
     $translation_icons = lingotek_lang_icons($entity_type, $languages, $lid, $locale_statuses, FALSE, $row->language, FALSE, FALSE, $non_lingotek_config_translations); // show translation statuses
     $target_icons_str = implode('', array_values($translation_icons));
-    $icon = lingotek_source_uploaded_icon($row);
-    $source_uploaded = lingotek_render_source($entity_type, $row, $icon, $languages, 'language');
+    $source_uploaded = lingotek_render_source($entity_type, $row, $languages, 'language');
     $set_id = LingotekConfigSet::getSetId($lid, FALSE);
     $set_name = $set_id !== FALSE ? LingotekConfigSet::getTitleBySetId($set_id) : t('N/A');
     $config_profile = LingotekProfile::loadById(LingotekSync::PROFILE_CONFIG);
