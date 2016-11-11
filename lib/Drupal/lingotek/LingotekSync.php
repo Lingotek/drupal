@@ -146,6 +146,17 @@ class LingotekSync {
     return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);
   }
 
+  public static function setAllUploadStatuses($entity_type, $entity_ids, $status) {
+    foreach ($entity_ids as $entity_id) {
+      $query = db_update('lingotek_entity_metadata')
+        ->condition('entity_id', $entity_id)
+        ->condition('entity_type', $entity_type)
+        ->condition('entity_key', 'upload_status')
+        ->fields(array('value' => $status, 'modified' => time()))
+        ->execute();
+    }
+  }
+
   public static function setUploadStatuses($entity_type, $entity_ids, $status) {
     foreach($entity_ids as $entity_id) {
       return lingotek_keystore($entity_type, $entity_id, 'upload_status', $status);

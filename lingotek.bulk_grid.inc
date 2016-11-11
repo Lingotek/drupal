@@ -2966,7 +2966,6 @@ function lingotek_entity_disassociate_form($form, $form_state, $entity_ids = arr
  * Submit handler for the lingotek_entity_disassociate form.
  */
 function lingotek_entity_disassociate_form_submit($form, $form_state) {
-
   if (isset($form_state['values']['entity_ids'])) {
     $drupal_entity_ids_json = json_decode($form_state['values']['entity_ids']);
   }
@@ -2991,7 +2990,7 @@ function lingotek_entity_disassociate_form_submit($form, $form_state) {
     }
   }
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'document_id');
-  LingotekSync::setUploadStatuses($entity_type, $entity_ids, LingotekSync::STATUS_NONE);
+  LingotekSync::setAllUploadStatuses($entity_type, $entity_ids, LingotekSync::STATUS_NONE);
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'original_language');
   lingotek_keystore_delete_multiple($entity_type, $entity_ids, 'source_language_%', 'LIKE');
   foreach ($entity_ids as $entity_id) {

@@ -2365,8 +2365,7 @@ function lingotek_delete_field_translations($entity_type, $entity) {
     $field_name = $field['field_name'];
     foreach($langcodes as $langcode) {
       $lingotek_locale = Lingotek::convertDrupal2Lingotek($langcode);
-      $has_doc_id = (isset($entity->lingotek['document_id'])) ? TRUE : FALSE;
-      if ($has_doc_id) {
+      if (isset($entity->lingotek['document_id'])) {
         $status = LingotekSync::getTargetStatus($entity->lingotek['document_id'], $lingotek_locale);
         // If the status is current and the translations haven't been disassociated, set status to READY see INT-563
         if ($status == LingotekSync::STATUS_CURRENT) {
