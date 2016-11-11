@@ -347,7 +347,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             if (isset($storage_definitions[$k])) {
               $property_definition = $storage_definitions[$k]->getPropertyDefinition($property_name);
               $data_type = $property_definition->getDataType();
-              if (($data_type === 'string') && !$property_definition->isComputed()) {
+              if (($data_type === 'string' || $data_type === 'uri') && !$property_definition->isComputed()) {
                 if (isset($fval->$property_name) && !empty($fval->$property_name)) {
                   $data[$k][$fkey][$property_name] = $fval->get($property_name)
                     ->getValue();

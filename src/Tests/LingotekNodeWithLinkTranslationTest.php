@@ -145,8 +145,9 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
-    $this->assertEqual(1, count($data[$this->field_name][0]));
+    $this->assertEqual(2, count($data[$this->field_name][0]));
     $this->assertEqual($data[$this->field_name][0]['title'], 'My field link title');
+    $this->assertEqual($data[$this->field_name][0]['uri'], 'http://drupal.org');
     $this->verbose(var_export($data, TRUE));
 
     // Check that the url used was the right one.
@@ -187,6 +188,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Enlace con fotos de llamas');
+    $this->assertLinkByHref('http://drupal.org/es');
   }
 
 }
