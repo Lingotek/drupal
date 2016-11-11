@@ -1105,6 +1105,7 @@ function lingotek_entity_save($entity, $entity_type) {
       LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_UNTRACKED);
     }
     else {
+      LingotekSync::setUploadStatus($entity_type, $id, LingotekSync::STATUS_NONE);
       // Create the target entries in lingotek_entity_metadata
       if (empty($entity->lingotek['upload_status']) || (!in_array($entity->lingotek['upload_status'], array(LingotekSync::STATUS_NONE ,LingotekSync::STATUS_TARGET, LingotekSync::STATUS_DELETED)))) {
         LingotekSync::setAllTargetStatus($entity_type, $id, LingotekSync::STATUS_EDITED);
