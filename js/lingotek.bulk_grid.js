@@ -236,6 +236,9 @@ function lingotek_perform_action(nid, action) {
     }
     var used_keys = {};
     var entity_type = document.getElementById('entity-type').getAttribute('value');
+    if (entity_type === 'config') {
+      return;
+    }
       for(var key in data[entity_id]){
         if(entity_type !== 'config' && !data[entity_id][key].hasOwnProperty('status')){
           continue;

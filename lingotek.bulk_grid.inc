@@ -672,6 +672,11 @@ function lingotek_grid_legend_form($form, $form_state) {
         . '<td>' . t('This content is <i>Disabled, cannot request translation</i>.') . '</td>'
       . "</tr>"
 
+      . "<tr>"
+        . '<td><div><a class="language-icon target-untracked" style="' . $css_style . ' background-color: #999999; border: 1px solid #999999;">lang</a></div></td>'
+        . '<td>' . t('This content has translations, <i>but are not being tracked by Lingotek</i>.') . '</td>'
+      . "</tr>"
+
       . "</table>";
   $form['lingotek_legend_table'] = array(
     '#markup' => $legend_table
@@ -1090,12 +1095,6 @@ function lingotek_grid_update($entity_type) {
 
 function lingotek_grid_query_status($entity_type, $comma_separated_ids){
   $ids = explode(',', $comma_separated_ids);
-
-  if($entity_type === 'config'){
-    echo json_encode(lingotek_row_status_query());
-    return;
-  }
-
   $information = array();
   foreach($ids as $id) {
     $source_status = LingotekSync::getUploadStatus($entity_type, $id);
@@ -2560,8 +2559,8 @@ function lingotek_lang_icons($entity_type, $languages, $entity_id, $locale_statu
         $status = strtoupper($locale_status);
         // styling for the icons based on status and whether the translation is owned by Lingotek or not
         if ($entity_type == 'config' && (array_key_exists($entity_id, $non_lingotek_config_translations) && in_array($lang_code, explode(',', $non_lingotek_config_translations[$entity_id]->language_codes)))) {
-          $css_classes = 'target-non-lingotek';
-          $status = 'NON_LINGOTEK';
+          $css_classes = 'target-untracked';
+          $status = LingotekSync::STATUS_UNTRACKED;
           $tip = $legend[$status];
         }
         else { //styling for all icons except Config/NON_LINGOTEK items
