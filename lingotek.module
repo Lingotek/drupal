@@ -2288,11 +2288,10 @@ function lingotek_field_language_alter(&$display_language, $context) {
   // because Lingotek translation hasn't finished yet, or synchonization with
   // Lingotek hasn't yet occurred. In this case, fall back to displaying
   // the default language for each field.
-  $field_collection_field_types = field_read_fields(array('type' => 'field_collection'));
 
   foreach ($display_language as $field => $display_language_code) {
-    $is_field_collection = isset($field_collection_field_types[$field]);
-    if ($is_field_collection) {
+    $field_data = field_info_field($field);
+    if ($field_data['module'] == 'field_collection') {
       continue;
     }
     // Use the entity language if the field does not have an entry in the display
