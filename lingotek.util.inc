@@ -2086,6 +2086,16 @@ function lingotek_uses_node_translation($node = NULL) {
 }
 
 function lingotek_managed_entity($entity_type, $entity) {
+  if (isset($entity->lingotek['profile'])) {
+    if ($entity->lingotek['profile'] == LingotekSync::PROFILE_DISABLED) {
+      return FALSE;
+    }
+    else {
+      // Profile is present and not set to disabled, so avoid calling
+      // loadByEntity...
+      return TRUE;
+    }
+  }
   $profile = LingotekProfile::loadByEntity($entity_type, $entity);
   if ($profile->getId() == LingotekSync::PROFILE_DISABLED) {
     return FALSE;
