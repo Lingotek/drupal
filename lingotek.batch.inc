@@ -258,10 +258,6 @@ function lingotek_get_sync_download_batch_elements($download_targets = NULL, $sy
     }
     $doc_ids = array_unique($doc_ids);
   }
-  if (count($operations)) {
-    $operations[] = array('drupal_flush_all_caches', array());
-  }
-
   return $operations;
 }
 
