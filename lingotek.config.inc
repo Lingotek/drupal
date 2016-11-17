@@ -470,6 +470,9 @@ function lingotek_config_upload_selected($lid_map) {
     LingotekConfigSet::markLidsNotCurrent($not_current_lids);
   }
 
+  // Update the translation_agent_id in the locales_target table to be owned by Lingotek
+  LingotekSync::updateLingotekTranslationAgentId($lid_map, LingotekSync::TRANSLATION_AGENT_ID_LINGOTEK);
+
   $batch = array(
     'title' => t('Uploading Content To Lingotek'),
     'finished' => 'lingotek_sync_upload_config_finished'

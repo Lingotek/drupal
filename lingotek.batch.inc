@@ -144,7 +144,6 @@ function lingotek_sync_batch_finished($success, $results, $operations) {
  * Sync - Upload Batch Elements:  Creates the batch elements for nodes/documents that need to be uploaded.
  */
 function lingotek_get_sync_upload_batch_elements($entity_type, $upload_nids = array()) {
-
   $operations = array();
 
   if (is_array($upload_nids)) {
@@ -191,8 +190,8 @@ function lingotek_get_unmarked_batch_elements($entity_type, $entity_ids = array(
  * etc.), that need to be uploaded.
  */
 function lingotek_get_sync_upload_config_batch_elements($set_ids = array()) {
-
   $operations = array();
+
   if (is_array($set_ids)) {
     foreach ($set_ids as $sid) {
       $operations[] = array('lingotek_sync_upload_config_set', array($sid));

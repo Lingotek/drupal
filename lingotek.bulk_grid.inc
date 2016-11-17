@@ -3077,12 +3077,14 @@ function lingotek_config_disassociate_form_submit($form, $form_state) {
   elseif (isset($form_state['lids'])) {
     $lids = json_decode($form_state['entity_ids']);
   }
-
   $api = LingotekApi::instance();
   $remove_from_tms = $form_state['values']['confirm'];
   $global_remove_from_tms = variable_get('lingotek_disassociate_delete_tms', FALSE);
   $set_ids = LingotekSync::getSetIdsFromLids($lids);
   $doc_ids = LingotekSync::getConfigDocIdsFromSetIds($set_ids);
+
+  // Update the translation_agent_id in the locales_target table
+  LingotekSync::updateLingotekTranslationAgentId($lids, LingotekSync::TRANSLATION_AGENT_ID_DRUPAL);
 
   if (($remove_from_tms || $global_remove_from_tms) && !empty($doc_ids)) { //disassociate on TMS
     $result = lingotek_batch_disassociate_content_worker($api, $doc_ids);

@@ -35,6 +35,9 @@ class LingotekSync {
   const MARKED = 1;
   const NOT_MARKED = 0;
   const INVALID_XML_PRESENT = 1;
+  const TRANSLATION_AGENT_ID_UNKNOWN = 1;
+  const TRANSLATION_AGENT_ID_DRUPAL = 2;
+  const TRANSLATION_AGENT_ID_LINGOTEK = 3;
 
   public static function getTargetStatus($doc_id, $lingotek_locale) {
     $key = 'target_sync_status_' . $lingotek_locale;
@@ -1257,6 +1260,13 @@ class LingotekSync {
 
   public static function deleteLastSyncError($entity_type, $entity_id) {
     lingotek_keystore_delete($entity_type, $entity_id, 'last_sync_error');
+  }
+
+  public static function updateLingotekTranslationAgentId($lids, $agent_id) {
+    $query = db_update('locales_target')
+      ->condition('lid', $lids, "IN")
+      ->fields(array('translation_agent_id' => $agent_id))
+      ->execute();
   }
 
 }
