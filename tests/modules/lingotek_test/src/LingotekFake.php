@@ -243,4 +243,11 @@ class LingotekFake implements LingotekInterface {
     return TRUE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getLocales() {
+    return ['es-ES', 'de-AT', 'de-DE'];
+  }
+
 }

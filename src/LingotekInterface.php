@@ -12,6 +12,14 @@ interface LingotekInterface {
 
   public static function create(ContainerInterface $container);
 
+  /**
+   * Get the available locales on Lingotek.
+   *
+   * @return array
+   *   Array of locales (as in de-DE, es-ES). Empty array if there is an error.
+   */
+  public function getLocales();
+
   public function getAccountInfo();
 
   public function getResources($force = FALSE);

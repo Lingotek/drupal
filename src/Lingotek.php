@@ -253,6 +253,17 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  public function getLocales() {
+    $data = $this->api->getLocales();
+    $locales = [];
+    if ($data) {
+      foreach ($data['entities'] as $locale) {
+        $locales[] = $locale['properties']['code'];
+      }
+    }
+    return $locales;
+  }
+
   protected function getResource($resources_key, $func, $force = FALSE) {
     $data = $this->get($resources_key);
     if (empty($data) || $force) {

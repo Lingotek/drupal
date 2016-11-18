@@ -11,6 +11,9 @@ services:
   lingotek.language_locale_mapper:
     class: Drupal\lingotek\LanguageLocaleMapper
     arguments: ['@entity.query']
+  lingotek.language_form:
+    class: Drupal\lingotek\Form\LingotekLanguageForm
+    arguments: ['@lingotek', '@lingotek.language_locale_mapper']
   lingotek.configuration:
     class: Drupal\lingotek\LingotekConfigurationService
   lingotek.content_translation:

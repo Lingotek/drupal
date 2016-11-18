@@ -14,7 +14,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Lingotek;
-use Drupal\node\Form;
 
 /**
  * Implements hook_toolbar().
@@ -429,4 +428,18 @@ function lingotek_entity_translation_insert(ContentEntityInterface $translation)
       $translation = $translation_service->setTargetStatus($translation, $translation->language()->getId(), Lingotek::STATUS_UNTRACKED, FALSE);
     }
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function lingotek_form_language_admin_add_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  \Drupal::service('lingotek.language_form')->form($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function lingotek_form_language_admin_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  \Drupal::service('lingotek.language_form')->form($form, $form_state);
 }

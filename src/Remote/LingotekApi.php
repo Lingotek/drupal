@@ -45,6 +45,17 @@ class LingotekApi implements LingotekApiInterface {
     );
   }
 
+  public function getLocales() {
+    $this->logger->notice('Locales requested to Lingotek.');
+    $response = $this->lingotekClient->get('/api/locale', ['limit' => 1000]);
+    if ($response->getStatusCode() == Response::HTTP_OK) {
+      $data = json_decode($response->getBody(), TRUE);
+      return $data;
+    }
+    // TODO: log warning
+    return FALSE;
+  }
+
   public function getAccountInfo() {
     try {
       $access_token = $this->lingotekClient->getCurrentToken();

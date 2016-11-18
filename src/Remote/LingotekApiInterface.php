@@ -13,6 +13,15 @@ interface LingotekApiInterface {
   
   public static function create(ContainerInterface $container);
   public function getAccountInfo();
+
+  /**
+   * Get the available locales on Lingotek.
+   *
+   * @return array|bool
+   *   Array of locales (as in de-DE, es-ES). FALSE if there is an error.
+   */
+  public function getLocales();
+
   public function addDocument($args);
 
   public function patchDocument($id, $args);
@@ -29,4 +38,5 @@ interface LingotekApiInterface {
   public function getProjects($community_id);
   public function getVaults($community_id);
   public function getWorkflows($community_id);
-};
+
+}
