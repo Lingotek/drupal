@@ -87,7 +87,7 @@ class LingotekApiUnitTest extends UnitTestCase {
     $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
       ->disableOriginalConstructor()
       ->getMock();
-    $response->expects($this->at(0))
+    $response->expects($this->any())
       ->method('getStatusCode')
       ->willReturn(Response::HTTP_ACCEPTED);
 
