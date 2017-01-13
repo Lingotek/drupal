@@ -1,0 +1,27 @@
+{
+  "title": [
+    {
+      "value": "Las llamas son chulas"
+    }
+  ],
+  "uid": [
+    {
+      "target_id": 1,
+      "_lingotek_metadata": {
+        "_entity_type_id": "user",
+        "_entity_id": "1",
+        "_entity_revision": null
+      }
+    }
+  ],
+  "body": [
+    {
+      "value": "Las llamas son muy chulas"
+    }
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_id": "1",
+    "_entity_revision": "1"
+  }
+}

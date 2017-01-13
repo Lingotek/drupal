@@ -16,6 +16,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
@@ -26,6 +27,8 @@ use Drupal\lingotek\Exception\LingotekException;
  * Service for managing Lingotek content translations.
  */
 class LingotekContentTranslationService implements LingotekContentTranslationServiceInterface {
+
+  use StringTranslationTrait;
 
   /**
    * @var \Drupal\lingotek\LingotekInterface
@@ -606,7 +609,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
           }
         }
-        catch (Exception $e) {
+        catch (LingotekContentEntityStorageException $storageException) {
+          throw $storageException;
+        }
+        catch (\Exception $exception) {
           $transaction->rollback();
         }
         return TRUE;
@@ -839,7 +845,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               if ($embedded_entity !== NULL) {
                 // ToDo: It can be a content entity, or a config entity.
                 if ($embedded_entity instanceof ContentEntityInterface) {
-                  $this->saveTargetData($embedded_entity, $langcode, $field_item);
+                  if ($this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                    $this->saveTargetData($embedded_entity, $langcode, $field_item);
+                  }
+                  else {
+                    \Drupal::logger('lingotek')->warning($this->t('Field %field not saved as it\'s referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                  }
                 }
                 elseif ($embedded_entity instanceof ConfigEntityInterface) {
                   $this->lingotekConfigTranslation->saveTargetData($embedded_entity, $langcode, $field_item);
