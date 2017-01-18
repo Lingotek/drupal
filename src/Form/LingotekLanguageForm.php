@@ -69,15 +69,12 @@ class LingotekLanguageForm {
     // Buttons are different if adding or editing a language. We need validation
     // on both cases.
     if ($langcode) {
-      $form['actions']['submit']['#validate'][] = [$this, 'validateLocale'];
+      $form['actions']['submit']['#validate'][] = LingotekLanguageForm::class . '::validateLocale';
     }
     else {
-      $form['custom_language']['submit']['#validate'][] = [
-        $this,
-        'validateLocale'
-      ];
+      $form['custom_language']['submit']['#validate'][] = LingotekLanguageForm::class . '::validateLocale';
     }
-    $form['#entity_builders'][] = [$this, 'languageEntityBuilder'];
+    $form['#entity_builders'][] = LingotekLanguageForm::class . '::languageEntityBuilder';
   }
 
   /**
@@ -95,7 +92,7 @@ class LingotekLanguageForm {
    * @see lingotek_form_language_admin_add_form_alter()
    * @see lingotek_form_language_admin_edit_form_alter()
    */
-  public function languageEntityBuilder($entity_type, ConfigurableLanguageInterface $language, array &$form, FormStateInterface $form_state) {
+  public static function languageEntityBuilder($entity_type, ConfigurableLanguageInterface $language, array &$form, FormStateInterface $form_state) {
     $form_key = ['lingotek_locale'];
     if ($value = $form_state->getValue($form_key)) {
       $language->setThirdPartySetting('lingotek', 'locale', str_replace("-", "_", $value));
@@ -113,12 +110,12 @@ class LingotekLanguageForm {
    * @see lingotek_form_language_admin_add_form_alter()
    * @see lingotek_form_language_admin_edit_form_alter()
    */
-  public function validateLocale(&$form, FormStateInterface $form_state) {
+  public static function validateLocale(&$form, FormStateInterface $form_state) {
     $form_key = ['lingotek_locale'];
     if (!$form_state->isValueEmpty($form_key)) {
       $value = $form_state->getValue($form_key);
-      if (!$this->isValidLocale($value)) {
-        $form_state->setErrorByName('lingotek_locale', $this->t('The Lingotek locale %locale does not exist.', ['%locale' => $value]));
+      if (!self::isValidLocale($value)) {
+        $form_state->setErrorByName('lingotek_locale', t('The Lingotek locale %locale does not exist.', ['%locale' => $value]));
       }
     }
   }
@@ -131,8 +128,8 @@ class LingotekLanguageForm {
    * @return bool
    *   TRUE if it's a valid locale in Lingotek. FALSE if not.
    */
-  public function isValidLocale($locale) {
-    $locales = $this->lingotek->getLocales();
+  public static function isValidLocale($locale) {
+    $locales = \Drupal::service('lingotek')->getLocales();
     return in_array($locale, $locales);
   }
 

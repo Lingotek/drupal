@@ -29,6 +29,30 @@ class LanguageFormTest extends WebTestBase {
   }
 
   /**
+   * Tests adding a defined language has the right locale.
+   */
+  public function testAddingLanguage() {
+    // Enable import of translations. By default this is disabled for automated
+    // tests.
+    $this->config('locale.settings')
+      ->set('translation.import_enabled', TRUE)
+      ->save();
+
+    $this->drupalGet('admin/config/regional/language/add');
+
+    $edit = [
+      'predefined_langcode' => 'de',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Add language');
+
+    // Click on edit for German.
+    $this->clickLink('Edit', 1);
+
+    // Assert that the locale is correct.
+    $this->assertFieldByName('lingotek_locale', 'de-DE', 'The Lingotek locale is set correctly.');
+  }
+
+  /**
    * Tests editing a defined language has the right locale.
    */
   public function testEditingLanguage() {
