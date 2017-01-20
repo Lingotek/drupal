@@ -7,6 +7,7 @@ preference:
   advanced_parsing: true
   advanced_taxonomy_terms: true
   always_show_translate_tabs: false
+  target_download_status: same-as-source
 account:
   use_production: false
   sandbox_host: 'https://cms.lingotek.com'

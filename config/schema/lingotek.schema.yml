@@ -32,6 +32,9 @@ lingotek.settings:
           type: boolean
         language_specific_profiles:
           type: boolean
+        target_download_status:
+          label: 'Published status for content translation downloads'
+          type: string
 
     account:
       type: mapping

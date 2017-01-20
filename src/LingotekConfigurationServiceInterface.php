@@ -256,4 +256,23 @@ interface LingotekConfigurationServiceInterface {
    */
   public function setDeleteRemoteAfterDisassociation($delete);
 
+  /**
+   * Gets the value from the preferences configuration.
+   *
+   * @param string $preference_id
+   *   The preference ID.
+   * @return mixed
+   */
+  public function getPreference($preference_id);
+
+  /**
+   * Sets the value for the preferences configuration.
+   *
+   * @param string $preference_id
+   *   The preference ID.
+   * @param mixed $value
+   *   The preference value.
+   */
+  public function setPreference($preference_id, $value);
+
 }

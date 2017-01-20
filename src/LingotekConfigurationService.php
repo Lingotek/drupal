@@ -258,5 +258,20 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config->set('preference.delete_tms_documents_upon_disassociation', $delete)->save();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getPreference($preference_id) {
+    $config = \Drupal::config('lingotek.settings');
+    return $config->get('preference.' . $preference_id);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function setPreference($preference_id, $value) {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('preference.' . $preference_id, $value)->save();
+  }
 
 }

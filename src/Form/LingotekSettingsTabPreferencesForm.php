@@ -126,6 +126,20 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $this->lingotek->get('preference.advanced_parsing'),
     );
     
+    $states = array(
+      'published' => t('Published'),
+      'unpublished' => t('Unpublished'),
+      'same-as-source' => t('Same as source content'),
+    );
+
+    $form['prefs']['target_download_status'] = array(
+      '#type' => 'select',
+      '#title' => t('Translations download publication status'),
+      '#description' => t('Translations download publication status: specify which published status the translations downloads must be saved with.'),
+      '#options' => $states,
+      '#default_value' => $lingotek_config->getPreference('target_download_status') ?: 'same-as-source',
+    );
+
     $form['prefs']['actions']['#type'] = 'actions';
     $form['prefs']['actions']['submit'] = array(
       '#type' => 'submit',
@@ -152,6 +166,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->lingotek->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
     $this->lingotek->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
     $this->lingotek->set('preference.advanced_parsing', $form_values['advanced_parsing']);
+    $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
     $lingotek_config->setDeleteRemoteAfterDisassociation($form_values['delete_tms_documents_upon_disassociation']);
     parent::submitForm($form, $form_state);
   }
