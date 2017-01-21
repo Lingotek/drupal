@@ -17,12 +17,13 @@ use Drupal\Core\Form\FormStateInterface;
 class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected $lang_switcher_value = 0;
   protected $top_level_value = 0;
+  protected $show_import_tab = 0;
   protected $lang_switcher;
   protected $lang_switcher_region;
   protected $lang_regions;
   protected $lang_region_selected;
   protected $default_region = 'sidebar_first';
-  
+
   /**
    * {@inheritdoc}
    */
@@ -30,16 +31,17 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     return 'lingotek.settings_tab_preferences_form';
   }
 
-  /** 
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
 
+    $this->retrieveImportSetting();
     $this->retrieveLanguageSwitcher();
     $this->retrieveAdminMenu();
-    
+
     $form['prefs'] = array(
       '#type' => 'details',
       '#title' => t('Preferences'),
@@ -125,7 +127,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#description' => t('Some features may not be available without an ' . \Drupal::l(t('Enterprise License'), Url::fromUri('http://www.lingotek.com')) . ' for the Lingotek TMS. Call 801.331.7777 for details.'),
       '#default_value' => $this->lingotek->get('preference.advanced_parsing'),
     );
-    
+
     $states = array(
       'published' => t('Published'),
       'unpublished' => t('Unpublished'),
@@ -138,6 +140,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#description' => t('Translations download publication status: specify which published status the translations downloads must be saved with.'),
       '#options' => $states,
       '#default_value' => $lingotek_config->getPreference('target_download_status') ?: 'same-as-source',
+    );
+
+    $form['prefs']['enable_content_cloud'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable importing from Lingotek Content Cloud (beta)'),
+      '#description' => t('Allows the importing of documents that are in your TMS. An \'Import\' tab will appear next to the \'Settings\' tab. <br> Note: The settings could take longer to save if this setting is changed.'),
+      '#default_value' => $this->lingotek->get('preference.enable_content_cloud', FALSE),
     );
 
     $form['prefs']['actions']['#type'] = 'actions';
@@ -158,7 +167,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $lingotek_config = \Drupal::service('lingotek.configuration');
 
     $form_values = $form_state->getValues();
-  
+
     $this->saveAdminMenu($form_values);
     $this->saveLanguageSwitcherSettings($form_values);
     $this->saveShowLanguageFields($form_values);
@@ -169,6 +178,10 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
     $lingotek_config->setDeleteRemoteAfterDisassociation($form_values['delete_tms_documents_upon_disassociation']);
     parent::submitForm($form, $form_state);
+  }
+
+  protected function retrieveImportSetting(){
+    $this->show_import_tab = $this->lingotek->get('preference.enable_content_cloud');
   }
 
   protected function retrieveLanguageSwitcher() {
@@ -238,6 +251,15 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     /** @var MenuLinkManager $menu_link_manager */
     $menu_link_manager = $menu_tree->menuLinkManager;
 
+    if ($this->show_import_tab != $form_values['enable_content_cloud']) {
+        $this->lingotek->set('preference.enable_content_cloud', $form_values['enable_content_cloud']);
+        $should_reset_cache = TRUE;
+    }
+
+    if ($should_reset_cache){
+      drupal_flush_all_caches();
+    }
+
     // Only run if there's been a change to avoid clearing the cache if we don't have to
     if ($this->top_level_value != $form_values['hide_top_level']) {
       if ($form_values['hide_top_level']) {
@@ -279,20 +301,20 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     // Only save if there's a change to the show_language_labels choice
     if ($this->lingotek->get('preference.show_language_labels') != $form_values['show_language_labels']) {
       $bundles = \Drupal::entityManager()->getBundleInfo('node');
-    
+
       foreach($bundles as $bundle_id => $bundle) {
         if ($bundle['translatable']) {
           $field_definitions = \Drupal::entityManager()->getFieldDefinitions('node', $bundle_id);
           $langcode = $field_definitions['langcode'];
           $display = entity_get_display('node', $bundle_id, 'default');
-              
+
           if($form_values['show_language_labels']) {
             $component_values = array(
               'type' => 'language',
               'weight' => 0,
               'settings' => array(),
               'third_party_settings' => array(),
-              'label' => 'above', // Can be above, inline, hidden, or visually_hidden (These are hard coded in core) 
+              'label' => 'above', // Can be above, inline, hidden, or visually_hidden (These are hard coded in core)
             );
             $display->setComponent('langcode', $component_values);
           }

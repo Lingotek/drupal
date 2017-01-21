@@ -145,6 +145,29 @@ class LingotekApi implements LingotekApiInterface {
     throw new Exception('Not implemented');
   }
 
+
+  public function getDocuments($args = array()){
+    try {
+      $this->logger->debug('Lingotek::getDocuments called');
+      $response = $this->lingotekClient->get('/api/document/', $args);
+    }
+    catch (\Exception $e){
+      throw new LingotekApiException('Failed to get documents: ' . $e->getMessage());
+    }
+    return $response->getBody();
+  }
+
+  public function getDocumentContent($doc_id){
+    try {
+      $this->logger->debug('Lingotek::getDocumentContent called with id ' . $doc_id);
+      $response = $this->lingotekClient->get('/api/document/' . $doc_id . '/content');
+    }
+    catch (\Exception $e){
+      throw new LingotekApiException('Failed to get document: ' . $e->getMessage());
+    }
+    return $response->getBody()->getContents();
+  }
+
   public function getDocumentInfo($id) {
     try {
       $this->logger->debug('Lingotek::getDocumentInfo called with id ' . $id);

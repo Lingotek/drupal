@@ -103,6 +103,14 @@ lingotek.manage_config:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.import:
+  path: '/admin/lingotek/import'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekImportController::content'
+    _title: 'Content Cloud Import'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.batch:
   path: '/admin/lingotek/batch/{action}/{entity_type}/{entity_id}'
   defaults:
@@ -238,6 +246,3 @@ entity.lingotek_profile.delete_form:
     _title: 'Delete Profile'
   requirements:
     _permission: 'administer lingotek'
-
-
-

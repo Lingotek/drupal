@@ -8,6 +8,9 @@ preference:
   advanced_taxonomy_terms: true
   always_show_translate_tabs: false
   target_download_status: same-as-source
+  enable_content_cloud: false
+  content_cloud_import_format: 'article'
+  content_cloud_import_status: 0
 account:
   use_production: false
   sandbox_host: 'https://cms.lingotek.com'

@@ -180,7 +180,7 @@ class Lingotek implements LingotekInterface {
       }
       $defaults['vault_id'] = $vault;
     }
-    
+
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
     if ($url !== NULL) {
       $args['external_url'] = $url;
@@ -358,6 +358,41 @@ class Lingotek implements LingotekInterface {
       return json_decode($response->getBody(), TRUE);
     }
     return FALSE;
+  }
+
+  public function downloadDocumentContent($doc_id){
+    $response = $this->api->getDocumentContent($doc_id);
+    return $response;
+  }
+
+  // Added for importing all documents
+  /*
+   * get all documents
+   *
+   * @since 0.1
+   */
+  public function downloadDocuments($args = array()) {
+    $response = $this->api->getDocuments($args);
+    return $response;
+  }
+
+  // Added for importing all documents
+  /*
+   * get specific document content
+   *
+   * @since 0.1
+   *
+   * @param string $id document id
+   * @return string
+   */
+  public function getDocumentContent($doc_id) {
+    $response = $this->get($this->api_url . '/document/' . $doc_id . '/content');
+
+    if (!is_wp_error($response) && 200 == wp_remote_retrieve_response_code($response)) {
+      $content = wp_remote_retrieve_body( $response );
+    }
+
+    return $content;
   }
 
   /**

@@ -642,6 +642,28 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return FALSE;
   }
 
+  public function downloadDocuments(){
+    try {
+      $data = $this->lingotek->downloadDocuments();
+    }
+    catch (LingotekApiException $exception) {
+      return FALSE;
+    }
+
+    return $data;
+  }
+
+  public function downloadDocumentContent($document_id){
+      try {
+        $data = $this->lingotek->downloadDocumentContent($document_id);
+      }
+      catch (LingotekApiException $exception) {
+        // TODO: log issue
+        return FALSE;
+      }
+      return $data;
+    }
+
   /**
    * {@inheritdoc}
    */
@@ -798,7 +820,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // We need to load the revision that was uploaded for consistency. For that,
       // we check if we have a valid revision in the response, and if not, we
       // check the date of the uploaded document.
-      
+
       /** @var ContentEntityInterface $entity */
       $revision = isset($data['_lingotek_metadata']) ? $data['_lingotek_metadata']['_entity_revision'] : NULL;
       $revision = $this->loadUploadedRevision($entity, $revision);

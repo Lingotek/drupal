@@ -35,6 +35,12 @@ lingotek.settings:
         target_download_status:
           label: 'Published status for content translation downloads'
           type: string
+        enable_content_cloud:
+          type: boolean
+        content_cloud_import_format:
+          type: string
+        content_cloud_import_status:
+          type: integer
 
     account:
       type: mapping

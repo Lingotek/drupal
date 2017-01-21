@@ -23,6 +23,10 @@ lingotek.manage_config:
   title: 'Config'
   weight: -8
 
+lingotek.import:
+  deriver: 'Drupal\lingotek\Plugin\Derivative\DynamicLocalTasks'
+  weight: -4
+
 lingotek.manage.content:
   deriver: 'Drupal\lingotek\Plugin\Derivative\ContentTranslationLocalTasks'
   weight: 100
