@@ -614,6 +614,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
         catch (\Exception $exception) {
           $transaction->rollback();
+          return FALSE;
         }
         return TRUE;
       }
@@ -793,6 +794,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // TODO: log warning that downloaded translation's langcode is not enabled.
       return FALSE;
     }
+    $storage_definitions = $this->entityManager->getFieldStorageDefinitions($entity->getEntityTypeId());
 
     $lock = \Drupal::lock();
     $lock_name = __FUNCTION__ . ':' . $entity->getEntityTypeId() . ':' . $entity->id();
@@ -910,11 +912,21 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           else if ($field_type === 'path') {
             $pid = NULL;
             $source = '/' . $entity->toUrl()->getInternalPath();
-            $path = \Drupal::service('path.alias_storage')->load(['source' => $source, 'langcode' => $langcode]);
+            /** @var \Drupal\Core\Path\AliasStorageInterface $aliasStorage */
+            $alias_storage = \Drupal::service('path.alias_storage');
+            $path = $alias_storage->load(['source' => $source, 'langcode' => $langcode]);
+            $original_path = $alias_storage->load(['source' => $source, 'langcode' => $entity->getUntranslated()->language()->getId()]);
             if ($path) {
               $pid = $path['pid'];
             }
             $alias = $field_data[0]['alias'];
+            // Validate the alias before saving.
+            if (!\Drupal::pathValidator()->isValid($alias)) {
+              \Drupal::logger('lingotek')->warning($this->t('Alias for %type %label in language %langcode not saved, invalid uri "%uri"',
+                ['%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $alias]));
+              // Default to the original path.
+              $alias = $original_path ? $original_path['alias'] : $source;
+            }
             if ($alias !== NULL) {
               \Drupal::service('path.alias_storage')->save($source, $alias, $langcode, $pid);
             }
@@ -931,11 +943,19 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             // Save regular fields.
             foreach ($field_data as $delta => $delta_data) {
               foreach ($delta_data as $property => $property_data) {
-                if (method_exists($translation->get($name)
-                  ->offsetGet($delta), "set")) {
-                  $translation->get($name)
-                    ->offsetGet($delta)
-                    ->set($property, $property_data);
+                $property_definition = $storage_definitions[$name]->getPropertyDefinition($property);
+                $data_type = $property_definition->getDataType();
+                if ($data_type === 'uri') {
+                  // Validate an uri.
+                  if (!\Drupal::pathValidator()->isValid($property_data)) {
+                    \Drupal::logger('lingotek')->warning($this->t('Field %field for %type %label in language %langcode not saved, invalid uri "%uri"',
+                      ['%field' => $name, '%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $property_data]));
+                    // Let's default to the original value given that there was a problem.
+                    $property_data = $revision->get($name)->offsetGet($delta)->{$property};
+                  }
+                }
+                if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
+                  $translation->get($name)->offsetGet($delta)->set($property, $property_data);
                 }
               }
             }
