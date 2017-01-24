@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsPreferencesForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Menu\MenuLinkManager;
@@ -55,7 +50,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
 
     $form['prefs']['lang_switcher_select'] = array(
       '#type' => 'select',
-      '#description' => t('The region where the switcher will be displayed. <p> <p> Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <i>URL</i> or <i>Session</i>. Go to ') . \Drupal::l(t('Language detection and selection'), Url::fromRoute('language.negotiation')) . t(' to change this.'),
+      '#description' => $this->t('The region where the switcher will be displayed') . '<br>' . $this->t('Note: The default language switcher block is only shown if at least two languages are enabled and language negotiation is set to <em>URL</em> or <em>Session</em>. Go to <a href=":url">%language_detection</a> to change this.',
+          ['%language_detection' => $this->t('Language detection and selection'), ':url' => Url::fromRoute('language.negotiation')->toString()]),
       '#options' => $this->lang_regions,
       '#default_value' => $this->lang_region_selected == 'none' ? $this->default_region : $this->lang_region_selected,
       '#states' => array(
@@ -124,7 +120,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $form['prefs']['advanced_parsing'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable advanced features'),
-      '#description' => t('Some features may not be available without an ' . \Drupal::l(t('Enterprise License'), Url::fromUri('http://www.lingotek.com')) . ' for the Lingotek TMS. Call 801.331.7777 for details.'),
+      '#description' => t('Some features may not be available without an <a href=":url">Enterprise License</a> for the Lingotek TMS. Call <a href=":phone_link">%phone</a> for details.',
+        [':url' => 'http://www.lingotek.com', ':phone_link' => 'tel:1-801-331-7777', '%phone' => '+1 (801) 331-7777']),
       '#default_value' => $this->lingotek->get('preference.advanced_parsing'),
     );
 
@@ -237,7 +234,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $admin_menu = $menu_link_manager->getDefinition('lingotek.dashboard');
 
     // Will be opposite from enabled value since we're hiding the menu item
-    if($admin_menu['enabled']) {
+    if ($admin_menu['enabled']) {
       $this->top_level_value = 0;
     }
     else {
@@ -246,18 +243,15 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function saveAdminMenu($form_values) {
-    $updated_values;
-    $menu_tree = \Drupal::menuTree();
+    $updated_values = [];
+    $should_reset_cache = FALSE;
+
     /** @var MenuLinkManager $menu_link_manager */
-    $menu_link_manager = $menu_tree->menuLinkManager;
+    $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
 
     if ($this->show_import_tab != $form_values['enable_content_cloud']) {
-        $this->lingotek->set('preference.enable_content_cloud', $form_values['enable_content_cloud']);
-        $should_reset_cache = TRUE;
-    }
-
-    if ($should_reset_cache){
-      drupal_flush_all_caches();
+      $this->lingotek->set('preference.enable_content_cloud', $form_values['enable_content_cloud']);
+      $should_reset_cache = TRUE;
     }
 
     // Only run if there's been a change to avoid clearing the cache if we don't have to
@@ -283,7 +277,10 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       if ($updated_values['enabled']) {
         $menu_link_manager->resetLink('lingotek.dashboard');
       }
-    drupal_flush_all_caches();
+      $should_reset_cache = TRUE;
+    }
+    if ($should_reset_cache) {
+      drupal_flush_all_caches();
     }
   }
 
@@ -302,13 +299,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     if ($this->lingotek->get('preference.show_language_labels') != $form_values['show_language_labels']) {
       $bundles = \Drupal::entityManager()->getBundleInfo('node');
 
-      foreach($bundles as $bundle_id => $bundle) {
+      foreach ($bundles as $bundle_id => $bundle) {
         if ($bundle['translatable']) {
           $field_definitions = \Drupal::entityManager()->getFieldDefinitions('node', $bundle_id);
           $langcode = $field_definitions['langcode'];
           $display = entity_get_display('node', $bundle_id, 'default');
 
-          if($form_values['show_language_labels']) {
+          if ($form_values['show_language_labels']) {
             $component_values = array(
               'type' => 'language',
               'weight' => 0,
@@ -318,7 +315,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
             );
             $display->setComponent('langcode', $component_values);
           }
-          else{
+          else {
             $display->removeComponent('langcode');
           }
           $display->save();
