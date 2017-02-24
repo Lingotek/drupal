@@ -128,18 +128,27 @@ a.language-icon {
     background-color: #1e88e5;
   }
 
-.language-icon.target-current ,
 .language-icon.target-edited {
+  background-color:#ffc107;
+  border: 1px solid #575757;
+  color: #575757;
+}
+  .language-icon.target-edited a {
+    color: #575757;
+  }
+  .language-icon.target-edited:hover {
+    background-color: #ffb300;
+  }
+
+.language-icon.target-current {
   background-color:#5fdc64;
   border: 1px solid #5fdc64;
   color: #ffffff;
 }
-  .language-icon.target-current a ,
-  .language-icon.target-edited a {
+  .language-icon.target-current a {
     color: #ffffff;
   }
-  .language-icon.target-current:hover ,
-  .language-icon.target-edited:hover {
+  .language-icon.target-current:hover {
     background-color: #43a047;
   }
 
