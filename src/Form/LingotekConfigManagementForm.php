@@ -1238,9 +1238,7 @@ class LingotekConfigManagementForm extends FormBase {
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);
       }
-      if ($target_status == Lingotek::STATUS_PENDING ||
-        $target_status == Lingotek::STATUS_EDITED
-      ) {
+      if ($target_status == Lingotek::STATUS_PENDING) {
         $url = Url::fromRoute('lingotek.config.check_download',
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);
@@ -1251,7 +1249,8 @@ class LingotekConfigManagementForm extends FormBase {
           ['query' => $this->getDestinationArray()]);
       }
       if ($target_status == Lingotek::STATUS_CURRENT ||
-        $target_status == Lingotek::STATUS_INTERMEDIATE) {
+          $target_status == Lingotek::STATUS_INTERMEDIATE ||
+          $target_status == Lingotek::STATUS_EDITED) {
         $url = Url::fromRoute('lingotek.workbench', [
           'doc_id' => $document_id,
           'locale' => $locale

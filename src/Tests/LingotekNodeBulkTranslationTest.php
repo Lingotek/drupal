@@ -282,8 +282,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('EN');
 
     // Check all statuses, after being edited.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
     $edit = [
       'table[1]' => TRUE,  // Node 1.
       'operation' => 'check_translations'
@@ -326,8 +326,8 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.document_completion', FALSE);
 
     // Check all statuses, after being edited.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
     $edit = [
       'table[1]' => TRUE,  // Node 1.
       'operation' => 'check_translations'
@@ -499,8 +499,12 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($status), 1, 'Korean is still requested, so we can still check the progress status of the translation');
 
     // Check the translation after having been edited.
-    $this->clickLink('ES');
-    $this->assertText("The es_MX translation for node Llamas are cool EDITED is ready for download.");
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
 
     // Download the translation.
     $this->clickLink('ES');
@@ -544,8 +548,12 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool EDITED is complete.');
 
     // Check the translation after having been edited.
-    $this->clickLink('ES');
-    $this->assertText("The es_MX translation for node Llamas are cool EDITED is ready for download.");
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
 
     // Download the translation.
     $this->clickLink('ES');

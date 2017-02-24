@@ -1193,8 +1193,7 @@ class LingotekManagementForm extends FormBase {
           ],
           ['query' => $this->getDestinationWithQueryArray()]);
     }
-    if ($target_status == Lingotek::STATUS_PENDING ||
-        $target_status == Lingotek::STATUS_EDITED) {
+    if ($target_status == Lingotek::STATUS_PENDING) {
       $url = Url::fromRoute('lingotek.entity.check_target',
         [
           'doc_id' => $document_id,
@@ -1211,7 +1210,8 @@ class LingotekManagementForm extends FormBase {
         ['query' => $this->getDestinationWithQueryArray()]);
     }
     if ($target_status == Lingotek::STATUS_CURRENT ||
-        $target_status == Lingotek::STATUS_INTERMEDIATE) {
+        $target_status == Lingotek::STATUS_INTERMEDIATE ||
+        $target_status == Lingotek::STATUS_EDITED) {
       $url = Url::fromRoute('lingotek.workbench', [
         'doc_id' => $document_id,
         'locale' => $locale

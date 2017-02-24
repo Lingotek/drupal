@@ -202,8 +202,13 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertText('System information status checked successfully');
 
     // Check the translation after having been edited.
-    $this->clickLink('ES');
-    $this->assertText("Translation to es_MX checked successfully");
+    // Check status of the Spanish translation.
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'check_translation:es'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
 
     // Download the translation.
     $this->clickLink('ES');

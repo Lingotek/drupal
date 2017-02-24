@@ -276,8 +276,12 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertEqual(count($status), 1, 'Korean is still requested, so we can still check the progress status of the translation');
 
     // Check the translation after having been edited.
-    $this->clickLink('ES');
-    $this->assertText("Translation to es_MX status checked successfully");
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
 
     // Download the translation.
     $this->clickLink('ES');
@@ -324,8 +328,12 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Body EDITED status checked successfully');
 
     // Check the translation after having been edited.
-    $this->clickLink('ES');
-    $this->assertText("Translation to es_MX status checked successfully");
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
 
     // Download the translation.
     $this->clickLink('ES');
