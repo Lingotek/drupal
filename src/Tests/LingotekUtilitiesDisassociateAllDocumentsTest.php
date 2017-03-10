@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
@@ -231,13 +232,11 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
    */
   public function testDisassociateOrphanContent() {
     // We create manually the given data for setting up an incorrect status.
-    \Drupal::database()->insert('lingotek_content_metadata')
-      ->fields(['document_id', 'entity_type', 'entity_id'])
-      ->values([
-        'document_id' => 'a_document_id',
-        'entity_type' => 'node',
-        'entity_id' => 1,
-      ])->execute();
+    $metadata = LingotekContentMetadata::create();
+    $metadata->setDocumentId('a_document_id');
+    $metadata->setContentEntityTypeId('node');
+    $metadata->setContentEntityId(1);
+    $metadata->save();
 
     // Let's try to disassociate then.
     $this->drupalGet('/admin/lingotek/settings');

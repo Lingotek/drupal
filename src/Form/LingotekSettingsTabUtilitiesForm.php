@@ -217,10 +217,6 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     foreach ($doc_ids as $doc_id) {
       $entity = $translation_service->loadByDocumentId($doc_id);
       if ($entity === NULL) {
-        // This entity is somehow orphaned. We can remove the metadata safely.
-        \Drupal::database()->delete('lingotek_content_metadata')
-          ->condition('document_id', $doc_id)
-          ->execute();
         drupal_set_message(t('There is no entity in Drupal corresponding to the Lingotek document @doc_id. The record for this document has been removed from Drupal.', ['@doc_id' => $doc_id]), 'warning');
       }
       else {

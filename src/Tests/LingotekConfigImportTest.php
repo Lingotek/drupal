@@ -128,7 +128,10 @@ class LingotekConfigImportTest extends KernelTestBase {
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $this->assertIdentical($lingotek_config->isEnabled($entity_type_id), TRUE);
 
-    // Verify that updates were performed.
+    // Used to verify that updates were performed.
+    // We don't need this anymore. The lingotek_document_id is not
+    // a field now, but a entity reference that is calculated on demand.
+    // TODO: Remove when resolving https://www.drupal.org/node/2859665.
     $entity_type = $this->container->get('entity.manager')->getDefinition($entity_type_id);
     $table = $entity_type->getDataTable();
     $db_schema = $this->container->get('database')->schema();

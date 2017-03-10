@@ -160,13 +160,6 @@ class LingotekMetadataEditForm extends ContentEntityForm {
     $lingotek_document_id = $input['lingotek_document_id'];
     $source_status = $input['lingotek_source_status'];
 
-    // We need to delete the key before inserting it in the table.
-    \Drupal::database()->delete('lingotek_content_metadata')
-      ->condition('document_id', $lingotek_document_id)
-      ->condition('entity_type', $entity->getEntityTypeId())
-      ->condition('entity_id',  $entity->id())
-      ->execute();
-
     $this->translationService->setDocumentId($entity, $lingotek_document_id);
     $this->translationService->setSourceStatus($entity, $source_status);
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {

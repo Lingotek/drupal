@@ -10,6 +10,7 @@ namespace Drupal\lingotek;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
@@ -142,8 +143,8 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    */
   public function getEntityProfile(ContentEntityInterface $entity, $provide_default = TRUE) {
     $profile_id = $this->getDefaultProfileId($entity->getEntityTypeId(), $entity->bundle(), $provide_default);
-    if ($entity->lingotek_profile && $entity->lingotek_profile->target_id) {
-      $profile_id = $entity->lingotek_profile->target_id;
+    if ($entity->lingotek_metadata->entity !== NULL && $entity->lingotek_metadata->entity->getProfile() !== NULL) {
+      $profile_id = $entity->lingotek_metadata->entity->getProfile();
     }
     return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
@@ -152,10 +153,14 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function setProfile(ContentEntityInterface &$entity, $profile_id, $save = TRUE) {
-    $entity->lingotek_profile->target_id = $profile_id;
-    if ($save) {
-      $entity->save();
+    // ToDo: deprecate second argument?
+    // If it's the first save of this content, we don't have an ID yet. Wait for
+    // saving yet.
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::create();
     }
+    $entity->lingotek_metadata->entity->setProfile($profile_id);
+    $entity->lingotek_metadata->entity->save();
   }
 
   /**

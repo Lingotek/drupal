@@ -51,16 +51,10 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
    * {@inheritdoc}
    */
   public function isUsedByContent(LingotekProfileInterface $profile) {
-    $entity_types = $this->lingotekConfiguration->getEnabledEntityTypes();
-
-    $used = LingotekProfileUsageInterface::UNUSED;
-    foreach ($entity_types as $entity_type => $entity_type_definition) {
-      $entity_query = $this->entityQuery->get($entity_type);
-      $entity_query->condition('lingotek_profile', $profile->id());
-      $result = $entity_query->count()->execute();
-      $used |= ($result > 0) ? LingotekProfileUsageInterface::USED_BY_CONTENT : LingotekProfileUsageInterface::UNUSED;
-    }
-
+    $entity_query = $this->entityQuery->get('lingotek_content_metadata');
+    $entity_query->condition('profile', $profile->id());
+    $result = $entity_query->count()->execute();
+    $used = ($result > 0) ? LingotekProfileUsageInterface::USED_BY_CONTENT : LingotekProfileUsageInterface::UNUSED;
     return $used;
   }
 

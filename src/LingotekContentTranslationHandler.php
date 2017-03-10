@@ -11,14 +11,11 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityHandlerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\TypedData\EntityDataDefinition;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Render\Element;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\TypedData\DataReferenceDefinition;
+use Drupal\lingotek\Plugin\Field\LingotekContentMetadataFieldItemList;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LingotekContentTranslationHandler implements LingotekContentTranslationHandlerInterface, EntityHandlerInterface {
@@ -84,6 +81,9 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
   public function getFieldDefinitions() {
     $definitions = array();
 
+    // ToDo: Remove these when possible. See https://www.drupal.org/node/2859665
+    // We need to keep these until we can purge data.
+    // See https://www.drupal.org/node/2282119.
     $definitions['lingotek_document_id'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Lingotek document id'))
       ->setDescription(t('The Lingotek document id.'));
@@ -122,6 +122,17 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
         ->setTranslatable(TRUE);
     }
 
+    // This is the only field that is used. Removal of the others at
+    // https://www.drupal.org/node/2859665
+    $definitions['lingotek_metadata'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Lingotek metadata'))
+      ->setComputed(TRUE)
+      ->setClass(LingotekContentMetadataFieldItemList::class)
+      ->setDescription(t('The Lingotek profile defining this translation.'))
+      ->setSetting('target_type', 'lingotek_content_metadata')
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', FALSE)
+      ->setReadOnly(FALSE);
     return $definitions;
   }
 

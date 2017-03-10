@@ -187,7 +187,9 @@ class LingotekManagementForm extends FormBase {
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
     $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
 
-    $query = $this->entityQuery->get($this->entityTypeId)->pager($items_per_page);
+    $query = \Drupal::database()->select($entity_type->getBaseTable(), 'entity_table')->extend('\Drupal\Core\Database\Query\PagerSelectExtender');
+    $query->fields('entity_table', [$entity_type->getKey('id')]);
+
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
     // Filter results.
@@ -196,29 +198,31 @@ class LingotekManagementForm extends FormBase {
     $profileFilter = $temp_store->get('profile');
     $sourceLanguageFilter = $temp_store->get('source_language');
     if ($has_bundles && $bundleFilter) {
-      $query->condition($entity_type->getKey('bundle'), $bundleFilter);
+      $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter);
     }
     if ($labelFilter) {
-      if ($has_bundles) {
-        $query->condition($entity_type->getKey('label'), '%' . $labelFilter . '%', 'LIKE');
-      }
-      else {
-        $query->condition('name', '%' . $labelFilter . '%', 'LIKE');
-      }
-    }
-    if ($profileFilter) {
-      $query->condition('lingotek_profile', $profileFilter);
+      $query->innerJoin($entity_type->getDataTable(), 'entity_data',
+        'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+      $query->condition('entity_data.' . $entity_type->getKey('label'), '%' . $labelFilter . '%', 'LIKE');
     }
     if ($sourceLanguageFilter) {
-      $query->condition($entity_type->getKey('langcode'), $sourceLanguageFilter);
-      $query->condition('default_langcode', 1);
-
+      $query->innerJoin($entity_type->getDataTable(), 'entity_data',
+        'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+      $query->condition('entity_table.' . $entity_type->getKey('langcode'), $sourceLanguageFilter);
+      $query->condition('entity_data.default_langcode', 1);
     }
 
     // We don't want items with language undefined.
-    $query->condition($entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
+    $query->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
 
-    $ids = $query->execute();
+    if ($profileFilter) {
+      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() .'\'');
+      $query->condition('metadata.profile', $profileFilter);
+    }
+
+    $ids = $query->limit($items_per_page)->execute()->fetchCol(0);
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
     $rows = [];
@@ -1006,8 +1010,9 @@ class LingotekManagementForm extends FormBase {
     $translations = [];
     $languages = $this->languageManager->getLanguages();
     $document_id = $this->translationService->getDocumentId($entity);
-    if ($entity->lingotek_translation_status && $document_id) {
-      foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
+    $metadata = $entity->lingotek_metadata->entity;
+    if ($metadata !== NULL && $metadata->translation_status && $document_id) {
+      foreach ($metadata->translation_status->getIterator() as $delta => $field_value) {
         if ($field_value->language !== $entity->language()->getId()) {
           // We may have an existing translation already.
           if ($entity->hasTranslation($field_value->language) && $field_value->value == Lingotek::STATUS_REQUEST) {

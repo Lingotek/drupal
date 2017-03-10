@@ -5,6 +5,11 @@
  * Install, update and uninstall functions for the Lingotek module.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 /*
  * Implements hook_schema().
  */
@@ -175,4 +180,260 @@ function lingotek_update_8002() {
 function lingotek_update_8003() {
   // We changed a route name, so we need to ensure that the routing caches are
   // cleared.
+}
+
+/**
+ * Migrate Lingotek content metadata from fields to its own entity.
+ */
+function lingotek_update_8011(&$sandbox) {
+  // We need a temporary table for storing this data.
+  $temp_schema['lingotek_temporary_content_metadata'] = array(
+    'fields' => array(
+      'entity_type' => array(
+        'description' => 'The entity type (node, comment, etc.).',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'entity_id' => array(
+        'description' => 'The primary identifier for the entity.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'document_id' => array(
+        'description' => 'The Lingotek document identifier.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'hash' => array(
+        'description' => 'The Lingotek hash.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'profile' => array(
+        'description' => 'The Lingotek profile being used.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'translation_source' => array(
+        'description' => 'The Lingotek translation source.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'translation_status' => array(
+        'description' => 'The Lingotek translation status.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array(
+      'entity_type',
+      'entity_id',
+    ),
+  );
+
+  if (!isset($sandbox['step'])) {
+    // We need the temporary table.
+    if (!\Drupal::database()->schema()->tableExists('lingotek_temporary_content_metadata')) {
+      \Drupal::database()->schema()->createTable('lingotek_temporary_content_metadata', $temp_schema['lingotek_temporary_content_metadata']);
+    }
+    // We fetch all the entities we have info about.
+    $entities = \Drupal::database()->select('lingotek_content_metadata', 'lcm')
+      ->fields('lcm', ['entity_id', 'entity_type'])
+      ->execute()
+      ->fetchAll();
+
+    \Drupal::logger('lingotek')->debug('Entities to update: %count', ['%count' => count($entities)]);
+
+    // We start collecting data.
+    $sandbox['step'] = 'collect';
+
+    // Initialize the sandbox.
+    $sandbox['entities'] = $entities;
+    $sandbox['progress'] = 0;
+  }
+
+  // We need to collect all the data.
+  if (isset($sandbox['step']) && $sandbox['step'] === 'collect') {
+    $entities = $sandbox['entities'];
+    $max = count($entities);
+
+    for ($i = $sandbox['progress']; $i <= 10 && $i < $max; $i++) {
+      $entity_data = (array) $entities[$i];
+      $entity_type_id = $entity_data['entity_type'];
+      /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
+      $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+
+      $entity = $storage->load($entity_data['entity_id']);
+      if ($entity && isset($entity->lingotek_document_id)) {
+        $lingotek_document_id = $entity->lingotek_document_id->value;
+        $lingotek_hash = $entity->lingotek_hash->value;
+        $lingotek_profile = $entity->lingotek_profile->entity->id();
+        $lingotek_translation_source = $entity->lingotek_translation_source->value;
+        $lingotek_translation_status = lingotek_legacy_get_translation_status($entity->lingotek_translation_status);
+
+        \Drupal::logger('lingotek')->debug('Storing temporary data for entity %entity_type %entity_id with document id %document_id', ['%entity_type' => $entity->getEntityTypeId(), '%entity_id' => $entity->id(), '%document_id' => $lingotek_document_id]);
+
+        \Drupal::database()->merge('lingotek_temporary_content_metadata')
+          ->fields(array(
+            'entity_type' => $entity->getEntityTypeId(),
+            'entity_id' => $entity->id(),
+            'document_id' => $lingotek_document_id,
+            'hash' => $lingotek_hash,
+            'profile' => $lingotek_profile,
+            'translation_source' => $lingotek_translation_source,
+            'translation_status' => json_encode($lingotek_translation_status),
+          ))
+          ->keys(['entity_type', 'entity_id'], [$entity->getEntityTypeId(),$entity->id()])
+          ->execute();
+      }
+      $sandbox['progress'] = $i;
+      $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
+    }
+    if (empty($entities) || $sandbox['#finished'] === 1) {
+      // If we are finished, we must store everything now after installing our entity.
+      $sandbox['#finished'] = 0;
+      $sandbox['progress'] = 0;
+      $sandbox['step'] = 'store';
+      unset($sandbox['entities']);
+      unset($sandbox['max']);
+    }
+  }
+
+  // We need to store all the data.
+  if (isset($sandbox['step']) && $sandbox['step'] === 'store') {
+    // First we install the entity.
+    if ($sandbox['progress'] === 0 && !isset($sandbox['max'])) {
+      /** @var \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface $entity_definition_update_manager */
+      $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+      $entity_definition_update_manager->installEntityType(new \Drupal\Core\Entity\ContentEntityType([
+        'id' => 'lingotek_content_metadata',
+        'label' => new \Drupal\Core\StringTranslation\TranslatableMarkup("Lingotek Content Metadata"),
+        'base_table' => 'lingotek_metadata',
+        'data_table' => 'lingotek_metadata_field_data',
+        'entity_keys' => ['id' => 'id'],
+      ]));
+
+      $fields['id'] = BaseFieldDefinition::create('integer')
+        ->setLabel(new TranslatableMarkup('ID'))
+        ->setReadOnly(TRUE)
+        ->setSetting('unsigned', TRUE);
+      $fields['content_entity_type_id'] = BaseFieldDefinition::create('string')
+        ->setLabel(new TranslatableMarkup('Content entity type ID'))
+        ->setDescription(new TranslatableMarkup('The ID of the content entity type this Lingotek status is for.'))
+        ->setRequired(TRUE);
+      $fields['content_entity_id'] = BaseFieldDefinition::create('integer')
+        ->setLabel(new TranslatableMarkup('Content entity ID'))
+        ->setDescription(new TranslatableMarkup('The ID of the content entity this Lingotek status is for.'))
+        ->setRequired(TRUE);
+      $fields['document_id'] = BaseFieldDefinition::create('string')
+        ->setLabel(new TranslatableMarkup('Lingotek document id'))
+        ->setDescription(new TranslatableMarkup('The Lingotek document id.'));
+      $fields['hash'] = BaseFieldDefinition::create('string')
+        ->setLabel(new TranslatableMarkup('Lingotek hash'))
+        ->setDescription(new TranslatableMarkup('A hash of the Lingotek saved entity data, required for checking for changes.'));
+      $fields['profile'] = BaseFieldDefinition::create('entity_reference')
+        ->setLabel(new TranslatableMarkup('Lingotek profile'))
+        ->setDescription(new TranslatableMarkup('The Lingotek profile defining this translation.'))
+        ->setSetting('target_type', 'lingotek_profile');
+      $fields['translation_source'] = BaseFieldDefinition::create('language')
+        ->setLabel(new TranslatableMarkup('Lingotek translation source'))
+        ->setDescription(new TranslatableMarkup('The source language from which this translation was created.'))
+        ->setDefaultValue(LanguageInterface::LANGCODE_NOT_SPECIFIED)
+        ->setTranslatable(TRUE);
+      $fields['translation_status'] = BaseFieldDefinition::create('lingotek_language_key_value')
+        ->setLabel(new TranslatableMarkup('Lingotek translation status'))
+        ->setDescription(new TranslatableMarkup('The status of the source in case of being the source translation, or the status of the translation.'))
+        ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+
+      foreach ($fields as $name => $storage_definition) {
+        $entity_definition_update_manager->installFieldStorageDefinition($name, 'lingotek_content_metadata', 'lingotek', $storage_definition);
+      }
+      // ToDo: Remove the fields when possible. See https://www.drupal.org/node/2859665
+      // We need to keep these until we can purge data.
+      // See https://www.drupal.org/node/2282119.
+    }
+
+    if (!isset($sandbox['entities'])) {
+      // We fetch all the entities we have info about.
+      $entities = \Drupal::database()->select('lingotek_temporary_content_metadata', 'lcm')
+        ->fields('lcm', [
+          'entity_id',
+          'entity_type',
+          'hash',
+          'document_id',
+          'profile',
+          'translation_source',
+          'translation_status'
+        ])
+        ->execute()
+        ->fetchAll();
+      if (!$entities) {
+        // There are no entity metadata stored. We must be done.
+        $sandbox['#finished'] = 1;
+        return;
+      }
+      $sandbox['entities'] = $entities;
+      $sandbox['max'] = count($entities);
+      $sandbox['progress'] = 0;
+    }
+
+    $count = 0;
+    for ($i = $sandbox['progress']; $count < 10 && $i < $sandbox['max']; $i++, $count++) {
+      $entity_data = (array) $sandbox['entities'][$i];
+      $entity = \Drupal::entityTypeManager()
+        ->getStorage($entity_data['entity_type'])
+        ->load($entity_data['entity_id']);
+      if ($entity) {
+        $metadata = \Drupal\lingotek\Entity\LingotekContentMetadata::create([
+          'content_entity_type_id' => $entity_data['entity_type'],
+          'content_entity_id' => $entity_data['entity_id'],
+          'document_id' => $entity_data['document_id'],
+          'hash' => $entity_data['hash'],
+          'profile' => $entity_data['profile'],
+          'translation_source' => $entity_data['translation_source'],
+        ]);
+        lingotek_legacy_set_translation_status($metadata, $entity_data['translation_status']);
+        $metadata->save();
+      }
+      $sandbox['progress']++;
+      $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
+      if ($sandbox['#finished'] === 1) {
+        // If we are finished, we must clear the temporary table.
+        \Drupal::database()->schema()->dropTable('lingotek_temporary_content_metadata');
+        unset($sandbox['step']);
+      }
+    }
+  }
+}
+
+function lingotek_legacy_get_translation_status($field) {
+  $status = [];
+  foreach ($field->getIterator() as $delta => $value) {
+    $status[$value->language] = $value->value;
+  }
+  return $status;
+}
+
+function lingotek_legacy_set_translation_status(&$metadata, $value) {
+  $statuses = json_decode($value);
+  foreach ($statuses as $langcode => $status) {
+    $metadata->translation_status->appendItem([
+      'language' => $langcode,
+      'value' => $status
+    ]);
+  }
 }

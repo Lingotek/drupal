@@ -19,6 +19,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Exception\LingotekException;
@@ -112,8 +113,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getSourceStatus(ContentEntityInterface &$entity) {
     $source_language = LanguageInterface::LANGCODE_NOT_SPECIFIED;
-    if ($entity->lingotek_translation_source && $entity->lingotek_translation_source->value !== NULL) {
-      $source_language = $entity->lingotek_translation_source->value;
+    $metadata = $entity->lingotek_metadata ? $entity->lingotek_metadata->entity : NULL;
+    if ($metadata !== NULL && $metadata->translation_source && $metadata->translation_source->value !== NULL) {
+      $source_language = $metadata->translation_source->value;
     }
     if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED) {
       $source_language = $entity->getUntranslated()->language()->getId();
@@ -125,7 +127,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function setSourceStatus(ContentEntityInterface &$entity, $status) {
-    $source_language = $entity->lingotek_translation_source->value;
+    $metadata = $entity->lingotek_metadata->entity;
+    $source_language = $metadata->translation_source->value;
     if ($source_language == LanguageInterface::LANGCODE_NOT_SPECIFIED || $source_language == NULL) {
       $source_language = $entity->getUntranslated()->language()->getId();
     }
@@ -136,7 +139,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
-    foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
+    $metadata = $entity->lingotek_metadata->entity;
+    foreach ($metadata->translation_status->getIterator() as $delta => $value) {
       $langcode = $value->language;
       $current_status = $value->value;
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
@@ -175,9 +179,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getTargetStatus(ContentEntityInterface &$entity, $langcode) {
     $status = Lingotek::STATUS_UNTRACKED;
-
-    if (count($entity->lingotek_translation_status) > 0) {
-      foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
+    $metadata = $entity->lingotek_metadata ? $entity->lingotek_metadata->entity : NULL;
+    if ($metadata !== NULL && count($metadata->translation_status) > 0) {
+      foreach ($metadata->translation_status->getIterator() as $delta => $value) {
         if ($value->language == $langcode) {
           $status = $value->value;
         }
@@ -191,25 +195,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setTargetStatus(ContentEntityInterface &$entity, $langcode, $status, $save = TRUE) {
     $set = FALSE;
-    if ($entity->hasField('lingotek_translation_status') && count($entity->lingotek_translation_status) > 0) {
-      foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
+    if ($entity->lingotek_metadata === NULL) {
+      $entity->lingotek_metadata = LingotekContentMetadata::create();
+    }
+    $metadata = &$entity->lingotek_metadata->entity;
+    if ($metadata->hasField('translation_status') && count($metadata->translation_status) > 0) {
+      foreach ($metadata->translation_status->getIterator() as $delta => $value) {
         if ($value->language == $langcode) {
           $value->value = $status;
           $set = true;
         }
       }
     }
-    if (!$set && $entity->hasField('lingotek_translation_status')) {
-      $entity->lingotek_translation_status->appendItem(['language' => $langcode, 'value' => $status]);
+    if (!$set && $metadata->hasField('translation_status')) {
+      $metadata->translation_status->appendItem(['language' => $langcode, 'value' => $status]);
       $set = TRUE;
     }
-    if ($set && $save) {
-      // If the entity supports revisions, ensure we don't create a new one.
-      if ($entity->getEntityType()->hasKey('revision')) {
-        $entity->setNewRevision(FALSE);
-      }
+    if ($set) {
       $entity->lingotek_processed = TRUE;
-      $entity->save();
+      $metadata->save();
     }
     return $entity;
   }
@@ -268,8 +272,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getDocumentId(ContentEntityInterface &$entity) {
     $doc_id = NULL;
-    if ($entity->lingotek_document_id) {
-      $doc_id = $entity->lingotek_document_id->value;
+    $metadata = $entity->hasField('lingotek_metadata') ? $entity->lingotek_metadata->entity : NULL;
+    if ($metadata !== NULL && $metadata->document_id) {
+      $doc_id = $metadata->document_id->value;
     }
     return $doc_id;
   }
@@ -278,21 +283,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function setDocumentId(ContentEntityInterface &$entity, $doc_id) {
-    $entity->lingotek_document_id = $doc_id;
-    // If the entity supports revisions, ensure we don't create a new one.
-    if ($entity->getEntityType()->hasKey('revision')) {
-      $entity->setNewRevision(FALSE);
+    if ($entity->lingotek_metadata->entity === NULL) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::create();
     }
     $entity->lingotek_processed = TRUE;
-    $entity->save();
-
-    \Drupal::database()->insert('lingotek_content_metadata')
-      ->fields(['document_id', 'entity_type', 'entity_id'])
-      ->values([
-        'document_id' => $doc_id,
-        'entity_type' => $entity->getEntityTypeId(),
-        'entity_id' => $entity->id(),
-      ])->execute();
+    $entity->lingotek_metadata->entity->setDocumentId($doc_id);
+    $entity->lingotek_metadata->entity->save();
 
     return $entity;
   }
@@ -454,7 +450,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function updateEntityHash(ContentEntityInterface $entity) {
     $source_data = json_encode($this->getSourceData($entity));
-    $entity->lingotek_hash->value = md5($source_data);
+    if ($entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity->lingotek_hash = md5($source_data);
+      $entity->lingotek_metadata->entity->save();
+    }
   }
 
   /**
@@ -463,11 +462,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function hasEntityChanged(ContentEntityInterface &$entity) {
     // Perform the cheapest checks first.
     if (isset($entity->original)) {
-      return $entity->lingotek_hash->value !== $entity->original->lingotek_hash->value;
+      $new_hash = $entity->lingotek_metadata->entity->hash->value;
+      $old_hash = $entity->original->lingotek_metadata->entity->hash->value;
+      return ($new_hash !== $old_hash) || ($new_hash === NULL && $old_hash === NULL);
     }
 
     // The following code should not be called very often, if at all.
-    $old_hash = $entity->lingotek_hash->value;
+    $old_hash = $entity->lingotek_metadata->entity->hash->value;
     if (!$old_hash) {
       return TRUE;
     }
@@ -551,7 +552,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function uploadDocument(ContentEntityInterface $entity) {
-    if (!empty($entity->lingotek_document_id->value)) {
+    if ($document_id = $this->getDocumentId($entity)) {
       return $this->updateDocument($entity);
     }
     $source_data = $this->getSourceData($entity);
@@ -681,21 +682,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
 
     $doc_id = $this->getDocumentId($entity);
-    $entity->lingotek_translation_status = NULL;
-    $entity->lingotek_document_id = NULL;
-
-    \Drupal::database()->delete('lingotek_content_metadata')
-      ->condition('document_id', $doc_id)
-      ->condition('entity_type', $entity->getEntityTypeId())
-      ->condition('entity_id', $entity->id())
-      ->execute();
-
-    // If the entity supports revisions, ensure we don't create a new one.
-    if ($entity->getEntityType()->hasKey('revision')) {
-      $entity->setNewRevision(FALSE);
-    }
-    $entity->lingotek_processed = TRUE;
-    $entity->save();
+    $metadata = $entity->lingotek_metadata->entity;
+    $metadata->delete();
   }
 
   /**
@@ -703,13 +691,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function loadByDocumentId($document_id) {
     $entity = NULL;
-    $metadata = \Drupal::database()->select('lingotek_content_metadata','lcm')
-      ->fields('lcm', ['document_id', 'entity_type', 'entity_id'])
-      ->condition('document_id', $document_id)
-      ->execute()
-      ->fetchAssoc();
+    $metadata = LingotekContentMetadata::loadByDocumentID($document_id);
     if ($metadata) {
-      $entity = $this->entityManager->getStorage($metadata['entity_type'])->load($metadata['entity_id']);
+      $entity = $this->entityManager->getStorage($metadata->getContentEntityTypeId())->load($metadata->getContentEntityId());
     }
     return $entity;
   }
@@ -718,10 +702,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function getAllLocalDocumentIds() {
-    return $metadata = \Drupal::database()->select('lingotek_content_metadata','lcm')
-      ->fields('lcm', ['document_id'])
-      ->execute()
-      ->fetchCol(0);
+    return LingotekContentMetadata::getAllLocalDocumentIds();
   }
 
   /**
