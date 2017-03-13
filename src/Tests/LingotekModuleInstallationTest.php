@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Tests\LingotekModuleInstallationTest.
- */
-
 namespace Drupal\lingotek\Tests;
 
 use Drupal\simpletest\WebTestBase;
@@ -27,10 +22,10 @@ class LingotekModuleInstallationTest extends WebTestBase {
     $this->drupalGet('/admin/modules');
 
     // Ensure the module is not enabled yet.
-    $this->assertNoFieldChecked('edit-modules-multilingual-lingotek-enable');
+    $this->assertNoFieldChecked('edit-modules-lingotek-enable');
 
     // Post the form enabling the lingotek module.
-    $edit = ['modules[Multilingual][lingotek][enable]' => '1'];
+    $edit = ['modules[lingotek][enable]' => '1'];
     $this->drupalPostForm(NULL, $edit, 'Install');
 
     // Dependencies installation is requested.
