@@ -1,14 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Tests\LingotekDashboardTest.
- */
-
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
@@ -19,9 +12,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 class LingotekDashboardTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritDoc}
    */
   public static $modules = ['node', 'comment'];
 
@@ -39,10 +30,10 @@ class LingotekDashboardTest extends LingotekTestBase {
       'direction' => '',
     ];
     $request = $this->drupalPost('/admin/lingotek/dashboard_endpoint', 'application/json', $post);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
 
     $italian_language = ConfigurableLanguage::load('it');
-    /** @var $italian_language ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $italian_language */
     $this->assertNotNull($italian_language, 'Italian language has been added.');
     $this->assertIdentical('Italian', $italian_language->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_LTR, $italian_language->getDirection());
@@ -72,10 +63,10 @@ class LingotekDashboardTest extends LingotekTestBase {
       'direction' => 'RTL',
     ];
     $request = $this->drupalPost('/admin/lingotek/dashboard_endpoint', 'application/json', $post);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
 
     $arabic_language = ConfigurableLanguage::load('ar');
-    /** @var $italian_language ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $italian_language */
     $this->assertNotNull($arabic_language, 'Arabic language has been added.');
     $this->assertIdentical('Arabic', $arabic_language->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_RTL, $arabic_language->getDirection());
@@ -100,7 +91,7 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
 
     $arabic_language = ConfigurableLanguage::load('ar');
-    /** @var $italian_language ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $italian_language */
     $this->assertNotNull($arabic_language, 'Arabic language has been added.');
     $this->assertIdentical('Arabic', $arabic_language->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_RTL, $arabic_language->getDirection());
@@ -126,7 +117,7 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
 
     $esEsLanguage = ConfigurableLanguage::load('es');
-    /** @var $esEsLanguage ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $esEsLanguage */
     $this->assertNotNull($esEsLanguage, 'Spanish (Spain) language has been added.');
     $this->assertIdentical('Spanish (Spain)', $esEsLanguage->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_LTR, $esEsLanguage->getDirection());
@@ -147,7 +138,7 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
 
     $esArLanguage = ConfigurableLanguage::load('es-ar');
-    /** @var $esArLanguage ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $esArLanguage */
     $this->assertNotNull($esArLanguage, 'Spanish (Argentina) language has been added.');
     $this->assertIdentical('Spanish (Argentina)', $esArLanguage->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_LTR, $esArLanguage->getDirection());
@@ -177,7 +168,7 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
 
     $esArLanguage = ConfigurableLanguage::load('es');
-    /** @var $esArLanguage ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $esArLanguage */
     $this->assertNotNull($esArLanguage, 'Spanish (Argentina) language has been added.');
     $this->assertIdentical('Spanish (Argentina)', $esArLanguage->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_LTR, $esArLanguage->getDirection());
@@ -199,7 +190,7 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
 
     $esEsLanguage = ConfigurableLanguage::load('es-es');
-    /** @var $esEsLanguage ConfigurableLanguageInterface */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $esEsLanguage */
     $this->assertNotNull($esEsLanguage, 'Spanish (Spain) language has been added.');
     $this->assertIdentical('Spanish (Spain)', $esEsLanguage->getName());
     $this->assertIdentical(ConfigurableLanguage::DIRECTION_LTR, $esEsLanguage->getDirection());
@@ -219,20 +210,20 @@ class LingotekDashboardTest extends LingotekTestBase {
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->save();
 
-    /** @var LanguageManagerInterface $language_manager */
+    /** @var \Drupal\Core\Language\LanguageManagerInterface $language_manager */
     $language_manager = \Drupal::service('language_manager');
     $languages = $language_manager->getLanguages();
     $this->assertIdentical(2, count($languages));
 
-    $response = $this->curlExec(array(
-      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+    $response = $this->curlExec([
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
       CURLOPT_CUSTOMREQUEST => 'DELETE',
       CURLOPT_POSTFIELDS => 'code=es_ES',
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($response, TRUE);
     $this->assertIdentical('DELETE', $response['method']);
     $this->assertIdentical('es', $response['language']);
@@ -254,21 +245,21 @@ class LingotekDashboardTest extends LingotekTestBase {
     $status = locale_translation_get_status();
     $status['drupal']['es'] = new \stdClass();
     $status['drupal']['es']->type = 'current';
-    \Drupal::state()->set('locale.translation_status', $status);
+    \Drupal::keyValue('locale.translation_status')->set('drupal', $status['drupal']);
 
     // One language added, there are missing translations.
     $this->drupalGet('admin/lingotek');
-    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', array('@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status'))), 'Missing translations message');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'Missing translations message');
 
     // Set lingotek module to have a local translation available.
     $status = locale_translation_get_status();
     $status['lingotek']['es'] = new \stdClass();
     $status['lingotek']['es']->type = 'local';
-    \Drupal::state()->set('locale.translation_status', $status);
+    \Drupal::keyValue('locale.translation_status')->set('lingotek', $status['lingotek']);
 
     // There are missing translations.
     $this->drupalGet('admin/lingotek');
-    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', array('@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status'))), 'Translations message visible');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'Translations message visible');
   }
 
 }
