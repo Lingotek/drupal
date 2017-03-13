@@ -267,7 +267,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that the bulk management profile filtering works correctly.
+   * Tests that the bulk management language filtering works correctly.
    */
   public function testLanguageFilter() {
     // Add a language.
@@ -298,8 +298,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // Assert there is a pager.
     $this->assertLinkByHref('?page=1');
 
-    // After we filter by automatic profile, there is no pager and the rows
-    // selected are the ones expected.
+    // After we filter by Spanish source language, there is no pager and the
+    // rows selected are the ones expected.
     $edit = [
       'filters[wrapper][source_language]' => 'es',
     ];
@@ -310,8 +310,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Llamas are cool IT 2');
 
-    // After we filter by manual profile, there is no pager and the rows
-    // selected are the ones expected.
+    // After we filter by Italian source language, there is no pager and the
+    // rows selected are the ones expected.
     $edit = [
       'filters[wrapper][source_language]' => 'it',
     ];
@@ -322,8 +322,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLink('Page 2');
     $this->assertNoLink('Llamas are cool ES 1');
 
-    // After we filter by disabled profile, there is no pager and the rows
-    // selected are the ones expected.
+    // After we filter by English source language, there is no pager and the
+    // rows selected are the ones expected.
     $edit = [
       'filters[wrapper][source_language]' => 'en',
     ];
@@ -344,6 +344,90 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
     foreach ([3, 9] as $j) {
       $this->assertLink('Llamas are cool EN ' . $j);
+    }
+    $this->assertLinkByHref('?page=1');
+  }
+
+  /**
+   * Tests that the bulk management bundle filtering works correctly.
+   */
+  public function testBundleFilter() {
+    // Create Page node types.
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    $edit = [
+      'node[page][enabled]' => 1,
+      'node[page][profiles]' => 'automatic',
+      'node[page][fields][title]' => 1,
+      'node[page][fields][body]' => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i < 15; $i++) {
+      $bundle = 'page';
+      if ($i % 3 == 0) {
+        $bundle = 'article';
+      }
+
+      $edit = [];
+      $edit['title[0][value]'] = new FormattableMarkup('Llamas are cool @bundle @i', ['@bundle' => $bundle, '@i' => $i]);
+      $edit['body[0][value]'] = $edit['title[0][value]'];
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->drupalPostForm("node/add/$bundle", $edit, t('Save and publish'));
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    // After we filter by article, there is no pager and the rows selected are
+    // the ones expected.
+    $edit = [
+      'filters[wrapper][bundle]' => 'page',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Filter');
+    foreach ([1, 2, 4, 5, 7, 8, 10, 11, 13, 14] as $j) {
+      $this->assertLink('Llamas are cool page ' . $j);
+    }
+    $this->assertNoLinkByHref('?page=1');
+    $this->assertNoLink('Llamas are cool article 3');
+
+    // After we filter by page, there is no pager and the rows selected are the
+    // ones expected.
+    $edit = [
+      'filters[wrapper][bundle]' => 'article',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Filter');
+    foreach ([3, 6, 9, 12] as $j) {
+      $this->assertLink('Llamas are cool article ' . $j);
+    }
+    $this->assertNoLink('Page 2');
+    $this->assertNoLink('Llamas are cool page 1');
+
+    // After we reset, we get back to having a pager and all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    foreach ([1, 2, 4, 5, 7, 8, 10] as $j) {
+      $this->assertLink('Llamas are cool page ' . $j);
+    }
+    foreach ([3, 6, 9] as $j) {
+      $this->assertLink('Llamas are cool article ' . $j);
     }
     $this->assertLinkByHref('?page=1');
   }
