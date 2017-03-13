@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Tests\LingotekTestBase;
@@ -262,6 +263,88 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->assertLink('Cats are cool ' . $j);
     }
 
+    $this->assertLinkByHref('?page=1');
+  }
+
+  /**
+   * Tests that the bulk management profile filtering works correctly.
+   */
+  public function testLanguageFilter() {
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('it')->setThirdPartySetting('lingotek', 'locale', 'it_IT')->save();
+
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i < 15; $i++) {
+      $langcode = 'es';
+      if ($i % 2 == 0) {
+        $langcode = 'it';
+      }
+      elseif ($i % 3 == 0) {
+        $langcode = 'en';
+      }
+
+      $edit = [];
+      $edit['title[0][value]'] = new FormattableMarkup('Llamas are cool @langcode @i', ['@langcode' => strtoupper($langcode), '@i' => $i]);
+      $edit['body[0][value]'] = $edit['title[0][value]'];
+      $edit['langcode[0][value]'] = $langcode;
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    // After we filter by automatic profile, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[wrapper][source_language]' => 'es',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Filter');
+    foreach ([1, 5, 7, 11, 13] as $j) {
+      $this->assertLink('Llamas are cool ES ' . $j);
+    }
+    $this->assertNoLinkByHref('?page=1');
+    $this->assertNoLink('Llamas are cool IT 2');
+
+    // After we filter by manual profile, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[wrapper][source_language]' => 'it',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Filter');
+    foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
+      $this->assertLink('Llamas are cool IT ' . $j);
+    }
+    $this->assertNoLink('Page 2');
+    $this->assertNoLink('Llamas are cool ES 1');
+
+    // After we filter by disabled profile, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[wrapper][source_language]' => 'en',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Filter');
+    foreach ([3, 9] as $j) {
+      $this->assertLink('Llamas are cool EN ' . $j);
+    }
+    $this->assertNoLinkByHref('?page=1');
+    $this->assertNoLink('Llamas are cool ES 5');
+
+    // After we reset, we get back to having a pager and all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    foreach ([1, 5, 7] as $j) {
+      $this->assertLink('Llamas are cool ES ' . $j);
+    }
+    foreach ([2, 4, 6, 8, 10] as $j) {
+      $this->assertLink('Llamas are cool IT ' . $j);
+    }
+    foreach ([3, 9] as $j) {
+      $this->assertLink('Llamas are cool EN ' . $j);
+    }
     $this->assertLinkByHref('?page=1');
   }
 
