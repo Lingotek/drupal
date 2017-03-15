@@ -179,6 +179,11 @@ class Lingotek implements LingotekInterface {
         $vault = $this->get('default.vault');
       }
       $defaults['vault_id'] = $vault;
+      // If we use the project workflow template default vault, we omit the
+      // vault parameter and the TMS will decide.
+      if ($vault === 'project_workflow_vault') {
+        unset($defaults['vault_id']);
+      }
     }
 
     $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);

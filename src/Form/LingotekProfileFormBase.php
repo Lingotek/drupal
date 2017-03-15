@@ -74,10 +74,15 @@ class LingotekProfileFormBase extends EntityForm {
     $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
     $default_vault = $this->config('lingotek.settings')->get('default.vault');
 
+    // We have two defaults: default vault, or the Project Workflow Template
+    // Default vault.
     $form['vault'] = array(
       '#type' => 'select',
       '#title' => $this->t('Default Vault'),
-      '#options' => ['default' => 'Default ('. $vaults[$default_vault] . ')'] + $vaults,
+      '#options' => [
+        'default' => 'Default ('. $vaults[$default_vault] . ')',
+        'project_workflow_vault' => 'Use Project Workflow Template Default',
+        ] + $vaults,
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
       '#default_value' => $profile->getVault(),
     );

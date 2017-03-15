@@ -312,6 +312,16 @@ class LingotekUnitTest extends UnitTestCase {
         'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1'
       ]);
 
+    // If there is a profile using the project default workflow template vault,
+    // vault should not be specified.
+    $this->api->expects($this->at(5))
+      ->method('addDocument')
+      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'format' => 'JSON', 'project_id' => 'default_project',
+      ]);
+
+
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
@@ -330,6 +340,12 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload without a profile, but with url.
     $this->lingotek->uploadDocument('title', 'content', 'es', 'http://example.com/node/1', NULL);
+
+    // We upload with a profile that has marked to use the project default
+    // workflow template vault, so must be omitted.
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_workflow_vault'], 'lingotek_profile');
+    $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
+
   }
 
   /**
