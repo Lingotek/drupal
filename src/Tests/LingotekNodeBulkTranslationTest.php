@@ -334,19 +334,23 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
-    // Download all translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
-    $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'operation' => 'download'
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
-    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
-
-    // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
+    // Ensure that the statuses are set to PENDING since the source has been
+    // reuploaded and the targets are being translated. It is possible that
+    // some of the translation is finished and could be downloaded, but that
+    // should be marked as STATUS_READY_INTERIM but that has not been
+    // implemented yet.
+    // TODO: update test to check that status is STATUS_READY_INTERIM and then
+    // they can be downloaded and then the status is set to STATUS_INTERMEDIATE
+    // see ticket: https://www.drupal.org/node/2850548
+    // Check the status is EDITED for Spanish and German
+    // TODO: Once ticket https://www.drupal.org/node/2850534 has been committed
+    // 'target-edited' needs to be replaced with 'target-pending' when a source
+    // is updated right now it sets the target statuses to REQUEST but it should
+    // set it to PENDING. The ticket mentioned fixes this.
+    $de_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-edited')  and contains(text(), 'DE')]");
+    $this->assertEqual(count($de_edited), 1, 'German is marked as edited.');
+    $es_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-edited')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($es_edited), 1, 'Spanish is marked as edited.');
   }
 
   /**

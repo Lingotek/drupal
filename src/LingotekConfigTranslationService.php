@@ -458,10 +458,23 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function checkTargetStatus(ConfigEntityInterface &$entity, $locale) {
     $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getTargetStatus($entity, $langcode);
-
-    if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentTranslationStatus($this->getDocumentId($entity), $locale)) {
-      $current_status = Lingotek::STATUS_READY;
-      $this->setTargetStatus($entity, $langcode, $current_status);
+    $document_id = $this->getDocumentId($entity);
+    $source_status = $this->getSourceStatus($entity);
+    if (($current_status == Lingotek::STATUS_PENDING ||
+    $current_status == Lingotek::STATUS_EDITED) &&
+    $source_status !== Lingotek::STATUS_EDITED) {
+      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale)) {
+        $current_status = Lingotek::STATUS_READY;
+        $this->setTargetStatus($entity, $langcode, $current_status);
+      }
+      // We may not be ready, but some phases must be complete. Let's try to
+      // download data, and if there is anything, we can assume a phase is
+      // completed.
+      // ToDo: Instead of downloading would be nice if we could check phases.
+      elseif ($this->lingotek->downloadDocument($entity, $locale)) {
+        // TODO: Set Status to STATUS_READY_INTERIM when that status is
+        // available. See ticket https://www.drupal.org/node/2850548
+      }
     }
     return $current_status;
   }
@@ -474,18 +487,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $translation_status = $metadata->getTargetStatus();
     foreach ($translation_status as $language => $current_status) {
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($language);
-      $document_id = $this->getDocumentId($entity);
-      if ($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) {
-        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) ||
-            // We may not be ready, but some phases must be complete. Let's try to
-            // download data, and if there is anything, we can assume a phase is
-            // completed.
-          // ToDo: Instead of downloading would be nice if we could check phases.
-            $this->lingotek->downloadDocument($entity, $locale)) {
-          $current_status = Lingotek::STATUS_READY;
-          $this->setTargetStatus($entity, $language, $current_status);
-        }
-      }
+      $this->checkTargetStatus($entity, $locale);
     }
   }
 
@@ -817,9 +819,23 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
     $current_status = $this->getConfigTargetStatus($mapper, $langcode);
-    if (($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) && $this->lingotek->getDocumentTranslationStatus($this->getConfigDocumentId($mapper), $locale)) {
-      $current_status = Lingotek::STATUS_READY;
-      $this->setConfigTargetStatus($mapper, $langcode, $current_status);
+    $source_status = $this->getConfigSourceStatus($mapper);
+    $document_id = $this->getConfigDocumentId($mapper);
+    if (($current_status == Lingotek::STATUS_PENDING ||
+    $current_status == Lingotek::STATUS_EDITED) &&
+    $source_status !== Lingotek::STATUS_EDITED) {
+      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale)) {
+        $current_status = Lingotek::STATUS_READY;
+        $this->setConfigTargetStatus($mapper, $langcode, $current_status);
+      }
+      // We may not be ready, but some phases must be complete. Let's try to
+      // download data, and if there is anything, we can assume a phase is
+      // completed.
+      // ToDo: Instead of downloading would be nice if we could check phases.
+      elseif ($this->lingotek->downloadDocument($document_id, $locale)) {
+        // TODO: Set Status to STATUS_READY_INTERIM when that status is
+        // available. See ticket https://www.drupal.org/node/2850548
+      }
     }
     return $current_status;
   }
@@ -836,18 +852,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $translation_status = $metadata->getTargetStatus();
       foreach ($translation_status as $language => $current_status) {
         $locale = $this->languageLocaleMapper->getLocaleForLangcode($language);
-        $document_id = $this->getConfigDocumentId($mapper);
-        if ($current_status == Lingotek::STATUS_PENDING || $current_status == Lingotek::STATUS_EDITED) {
-          if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) ||
-              // We may not be ready, but some phases must be complete. Let's try to
-              // download data, and if there is anything, we can assume a phase is
-              // completed.
-              // ToDo: Instead of downloading would be nice if we could check phases.
-              $this->lingotek->downloadDocument($document_id, $locale)) {
-            $current_status = Lingotek::STATUS_READY;
-            $this->setConfigTargetStatus($mapper, $language, $current_status);
-          }
-        }
+        $this->checkConfigTargetStatus($mapper_id, $locale);
       }
     }
   }
