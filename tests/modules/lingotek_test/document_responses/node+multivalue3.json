@@ -1,0 +1,37 @@
+{
+  "title": [
+    {
+      "value": "Las llamas son chulas"
+    }
+  ],
+  "body": [
+    {
+      "value": "Las llamas son muy chulas"
+    }
+  ],
+  "foo": [
+    {
+      "value": "Las llamas son muy chulas campo 1"
+    },
+    {
+      "value": "Las llamas son muy chulas con distinto campo 2"
+    },
+    {
+      "value": "Las llamas son muy chulas con distinto campo 3"
+    },
+    {
+      "value": "Las llamas son muy chulas con distinto campo 4"
+    },
+    {
+      "value": "Las llamas son muy chulas con distinto campo 5"
+    },
+    {
+      "value": "Las llamas son muy chulas con distinto campo 6"
+    }
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_id": "1",
+    "_entity_revision": "4"
+  }
+}

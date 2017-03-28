@@ -940,6 +940,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
           }
           else {
+            // Initialize delta in case there are no items in $field_data.
+            $delta = -1;
             // Save regular fields.
             foreach ($field_data as $delta => $delta_data) {
               foreach ($delta_data as $property => $property_data) {
@@ -957,6 +959,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
                   $translation->get($name)->offsetGet($delta)->set($property, $property_data);
                 }
+                elseif ($translation->get($name)) {
+                  $translation->get($name)->appendItem()->set($property, $property_data);
+                }
+              }
+            }
+
+            // Remove the rest of deltas that were no longer found in the document downloaded from lingotek.
+            $continue = TRUE;
+            while ($continue) {
+              if ($translation->get($name)->offsetExists($delta + 1)) {
+                $translation->get($name)->removeItem($delta + 1);
+              }
+              else {
+                $continue = FALSE;
               }
             }
           }
