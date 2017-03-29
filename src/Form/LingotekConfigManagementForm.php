@@ -144,6 +144,7 @@ class LingotekConfigManagementForm extends FormBase {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
+    $showingFields = FALSE;
 
     $this->filter = $this->getFilter();
 
@@ -157,6 +158,7 @@ class LingotekConfigManagementForm extends FormBase {
       });
     }
     elseif (substr($this->filter, -7) == '_fields') {
+      $showingFields = TRUE;
       $mapper = $this->mappers[$this->filter];
       $base_entity_type = $mapper->getPluginDefinition()['base_entity_type'];
       $ids = \Drupal::entityQuery('field_config')
@@ -200,6 +202,18 @@ class LingotekConfigManagementForm extends FormBase {
         'translations' => $translations,
         'profile' => $profile ? $profile->label() : '',
       ];
+
+      if ($showingFields) {
+        $entity_type_id = $mapper->getEntity()->get('entity_type');
+        $bundle = $mapper->getEntity()->get('bundle');
+        $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type_id);
+        if (isset($bundle_info[$bundle])) {
+          $rows[$mapper_id]['bundle'] = $bundle_info[$bundle]['label'];
+        }
+        else {
+          $rows[$mapper_id]['bundle'] = $bundle;
+        }
+      }
     }
     // Add filters.
     $form['filters'] = array(
@@ -230,7 +244,10 @@ class LingotekConfigManagementForm extends FormBase {
       '#submit' => array('::filterForm'),
     );
 
-    $headers = [
+    // If we are showing field config instances, we need to show bundles for
+    // a better UX.
+    $headers = $showingFields ? ['bundle' => $this->t('Bundle')] : [];
+    $headers += [
       'title' => $this->t('Entity'),
       'source' => $this->t('Source'),
       'translations' => $this->t('Translations'),
