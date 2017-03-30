@@ -263,10 +263,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
           // requested this one.
           continue;
         }
+        if (in_array($current_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED]) && $status === Lingotek::STATUS_PENDING) {
+          continue;
+        }
+        if ($current_status == $status) {
+          continue;
+        }
         if ($current_status != Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_CURRENT) {
           $this->setTargetStatus($entity, $langcode, $status);
         }
-        elseif ($current_status == Lingotek::STATUS_EDITED && $status == Lingotek::STATUS_CURRENT) {
+        elseif ($current_status == Lingotek::STATUS_EDITED && in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_PENDING])) {
           $this->setTargetStatus($entity, $langcode, $status);
         }
       }
@@ -389,7 +395,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
     if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
-      $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
+      $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       return $document_id;
     }
     return FALSE;
@@ -690,15 +696,22 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
     foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getConfigTargetStatus($mapper, $langcode)) {
-        if ($current_status === Lingotek::STATUS_PENDING && $status === Lingotek::STATUS_REQUEST) {
+        if ($current_status === Lingotek::STATUS_PENDING &&
+        $status === Lingotek::STATUS_REQUEST) {
           // Don't allow to pass from pending to request. We have been already
           // requested this one.
+          continue;
+        }
+        if (in_array($current_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED]) && $status === Lingotek::STATUS_PENDING) {
+          continue;
+        }
+        if ($current_status == $status) {
           continue;
         }
         if ($current_status != Lingotek::STATUS_EDITED && $current_status !== Lingotek::STATUS_CURRENT) {
           $this->setConfigTargetStatus($mapper, $langcode, $status);
         }
-        elseif ($current_status == Lingotek::STATUS_EDITED && $status == Lingotek::STATUS_CURRENT) {
+        elseif ($current_status == Lingotek::STATUS_EDITED && in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_PENDING])) {
           $this->setConfigTargetStatus($mapper, $langcode, $status);
         }
       }
@@ -922,7 +935,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
     if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
-      $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_REQUEST);
+      $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_PENDING);
       return $document_id;
     }
     return FALSE;

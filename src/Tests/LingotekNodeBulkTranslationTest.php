@@ -281,9 +281,10 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Check the source status is current.
     $this->clickLink('EN');
 
-    // Check all statuses, after being edited.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+    // Check all statuses, after being edited and the source re-uploaded
+    // Should be in STATUS_PENDING
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $edit = [
       'table[1]' => TRUE,  // Node 1.
       'operation' => 'check_translations'
@@ -325,9 +326,10 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Ensure we won't get a completed document because there are phases pending.
     \Drupal::state()->set('lingotek.document_completion', FALSE);
 
-    // Check all statuses, after being edited.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+    // Check all statuses, after being edited and the source re-uploaded
+    // Should be in STATUS_PENDING
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
     $edit = [
       'table[1]' => TRUE,  // Node 1.
       'operation' => 'check_translations'
@@ -342,15 +344,11 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // TODO: update test to check that status is STATUS_READY_INTERIM and then
     // they can be downloaded and then the status is set to STATUS_INTERMEDIATE
     // see ticket: https://www.drupal.org/node/2850548
-    // Check the status is EDITED for Spanish and German
-    // TODO: Once ticket https://www.drupal.org/node/2850534 has been committed
-    // 'target-edited' needs to be replaced with 'target-pending' when a source
-    // is updated right now it sets the target statuses to REQUEST but it should
-    // set it to PENDING. The ticket mentioned fixes this.
-    $de_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-edited')  and contains(text(), 'DE')]");
-    $this->assertEqual(count($de_edited), 1, 'German is marked as edited.');
-    $es_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($es_edited), 1, 'Spanish is marked as edited.');
+    // Check the status is PENDING for Spanish and German.
+    $de_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-pending')  and contains(text(), 'DE')]");
+    $this->assertEqual(count($de_edited), 1, 'German is marked as pending.');
+    $es_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-pending')  and contains(text(), 'ES')]");
+    $this->assertEqual(count($es_edited), 1, 'Spanish is marked as pending.');
   }
 
   /**
