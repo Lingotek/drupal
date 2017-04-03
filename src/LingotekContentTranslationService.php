@@ -226,13 +226,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
-        if ($current_status === Lingotek::STATUS_PENDING &&
-        $status === Lingotek::STATUS_REQUEST) {
+        if ($current_status === Lingotek::STATUS_PENDING && $status === Lingotek::STATUS_REQUEST) {
           // Don't allow to pass from pending to request. We have been already
           // requested this one.
           continue;
         }
-        if (in_array($current_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED]) && $status === Lingotek::STATUS_PENDING) {
+        if (in_array($current_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_DISABLED, NULL]) && $status === Lingotek::STATUS_PENDING) {
           continue;
         }
         if ($current_status == $status) {
