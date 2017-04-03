@@ -35,6 +35,7 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
@@ -81,6 +82,7 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('EN');
     $this->assertText('Node Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -89,6 +91,7 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
@@ -121,6 +124,10 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
     $es_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
     $this->assertEqual(count($es_edited), 1, 'Spanish is marked as not current.');
 
+    // Check the status is marked REQUEST for German
+    $de_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'DE')]");
+    $this->assertEqual(count($de_request), 1, 'German is marked as request.');
+
     // Clicking English must init the upload of content.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/update/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
     $this->clickLink('EN');
@@ -134,6 +141,9 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
 
     $es_pending = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'ES')]");
     $this->assertEqual(count($es_pending), 1, 'Spanish is marked as pending.');
+    // Check the status is still request for German.
+    $de_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request') and contains(text(), 'DE')]");
+    $this->assertEqual(count($de_request), 1, 'German is still marked as request.');
 
   }
 }

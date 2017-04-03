@@ -30,6 +30,7 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     $edit = [
       'table[node_fields][enabled]' => 1,
@@ -57,6 +58,7 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,  // Article.
       'operation' => 'upload'
@@ -68,6 +70,7 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     // And we can already request a translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,  // Article.
       'operation' => 'check_upload'
@@ -105,6 +108,10 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     $edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
     $this->assertEqual(count($edited), 1, 'Edited translation is shown.');
 
+    // Check the status is marked REQUEST for German
+    $de_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'DE')]");
+    $this->assertEqual(count($de_request), 1, 'German is marked as request.');
+
     // Clicking English must init the upload of content.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/update/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
     $edit = [
@@ -125,5 +132,8 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     // Check the status is edited for Spanish.
     $es_pending = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'ES')]");
     $this->assertEqual(count($es_pending), 1, 'Pending Spanish translation is shown.');
+    // Check the status is still request for German.
+    $de_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request') and contains(text(), 'DE')]");
+    $this->assertEqual(count($de_request), 1, 'German is still marked as request.');
   }
 }
