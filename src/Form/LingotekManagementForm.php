@@ -464,6 +464,11 @@ class LingotekManagementForm extends FormBase {
         $this->createLanguageDownloadBatch($values, $language);
         $processed = TRUE;
       }
+      if (0 === strpos($operation, 'change_profile:')) {
+        list($operation, $profile_id) = explode(':', $operation);
+        $this->createChangeProfileBatch($values, $profile_id);
+        $processed = TRUE;
+      }
     }
   }
 
@@ -639,6 +644,16 @@ class LingotekManagementForm extends FormBase {
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a profile change batch.
+   *
+   * @param array $values
+   *   Array of ids to change the Profile.
+   */
+  protected function createChangeProfileBatch($values, $profile_id) {
+    $this->createBatch('changeProfile', $values, $this->t('Updating Translation Profile'), $profile_id);
   }
 
   /**
@@ -924,6 +939,30 @@ class LingotekManagementForm extends FormBase {
   }
 
   /**
+   * Change Translation Profile.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   */
+  public function changeProfile(ContentEntityInterface $entity, $profile_id = NULL, &$context) {
+    $context['message'] = $this->t('Changing Translation Profile for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE) && $profile_id) {
+      try {
+        $this->lingotekConfiguration->setProfile($entity, $profile_id, TRUE);
+      }
+      catch (LingotekApiException $exception) {
+        drupal_set_message(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      }
+
+    }
+    else {
+      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
+        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    }
+  }
+
+  /**
    * Gets the source status of an entity in a format ready to display.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -1135,6 +1174,9 @@ class LingotekManagementForm extends FormBase {
     $operations[(string)$this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string)$this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string)$this->t('Download')]['download'] = $this->t('Download all translations');
+    foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
+      $operations[(string)$this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
+    }
     $operations['disassociate'] = $this->t('Disassociate translations');
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
       $operations[(string)$this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() .')']);
