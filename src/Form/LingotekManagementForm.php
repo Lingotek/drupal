@@ -10,6 +10,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\InvokeCommand;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -45,6 +46,13 @@ class LingotekManagementForm extends FormBase {
   use LingotekSetupTrait;
 
   use LingotekManagementFormHelperTrait;
+
+  /**
+   * The connection object on which to run queries.
+   *
+   * @var \Drupal\Core\Database\Connection
+   */
+  protected $connection;
 
   /**
    * The language-locale mapper.
@@ -112,6 +120,8 @@ class LingotekManagementForm extends FormBase {
   /**
    * Constructs a new LingotekManagementForm object.
    *
+   * @param \Drupal\Core\Database\Connection $connection
+   *   The current database connection.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
@@ -131,7 +141,8 @@ class LingotekManagementForm extends FormBase {
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, $entity_type_id) {
+  public function __construct(Connection $connection, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, $entity_type_id) {
+    $this->connection = $connection;
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
@@ -151,6 +162,7 @@ class LingotekManagementForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('database'),
       $container->get('entity.manager'),
       $container->get('language_manager'),
       $container->get('entity.query'),
@@ -187,7 +199,7 @@ class LingotekManagementForm extends FormBase {
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
     $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
 
-    $query = \Drupal::database()->select($entity_type->getBaseTable(), 'entity_table')->extend('\Drupal\Core\Database\Query\PagerSelectExtender');
+    $query = $this->connection->select($entity_type->getBaseTable(), 'entity_table')->extend('\Drupal\Core\Database\Query\PagerSelectExtender');
     $query->fields('entity_table', [$entity_type->getKey('id')]);
 
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';

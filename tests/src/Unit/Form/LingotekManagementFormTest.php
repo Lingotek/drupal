@@ -3,11 +3,12 @@
 namespace Drupal\Tests\lingotek\Unit\Form {
 
 use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\PagerSelectExtender;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
-use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
@@ -33,6 +34,13 @@ class LingotekManagementFormTest extends UnitTestCase {
    * @var LingotekManagementForm
    */
   protected $form;
+
+  /**
+   * The connection object on which to run queries.
+   *
+   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $connection;
 
   /**
    * The language-locale mapper.
@@ -106,6 +114,7 @@ class LingotekManagementFormTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
+    $this->connection = $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock();
     $this->entityManager = $this->getMock(EntityManagerInterface::class);
     $this->languageManager = $this->getMock(LanguageManagerInterface::class);
     $this->entityQuery = $this->getMockBuilder(QueryFactory::class)->disableOriginalConstructor()->getMock();
@@ -118,6 +127,7 @@ class LingotekManagementFormTest extends UnitTestCase {
     $this->state = $this->getMock(StateInterface::class);
 
     $this->form = new LingotekManagementForm(
+      $this->connection,
       $this->entityManager,
       $this->languageManager,
       $this->entityQuery,
@@ -148,21 +158,39 @@ class LingotekManagementFormTest extends UnitTestCase {
    * @covers ::buildForm
    */
   public function testQueryExcludesUndefinedLanguageContent() {
-    $query = $this->getMock(QueryInterface::class);
-    $this->entityQuery->expects($this->once())
-      ->method('get')
-      ->with('node')
-      ->willReturn($query);
-    $query->expects($this->once())
-      ->method('pager')
-      ->with(10, NULL)
-      ->willReturn($query);
+    $select = $this->getMockBuilder(PagerSelectExtender::class)->disableOriginalConstructor()->getMock();
+    $select->expects(($this->any()))
+      ->method('extend')
+      ->with('\Drupal\Core\Database\Query\PagerSelectExtender')
+      ->willReturnSelf();
+    $select->expects(($this->any()))
+      ->method('fields')
+      ->with('entity_table', ['id'])
+      ->willReturnSelf();
+
+    $statement = $this->getMock('Drupal\Core\Database\StatementInterface');
 
     // Assert that condition is called filtering by the undefined language.
-    $query->expects($this->once())
+    $select->expects($this->any())
       ->method('condition')
-      ->with('langcode', 'und', '!=', NULL)
-      ->willReturn($query);
+      ->with('entity_table.langcode', 'und', '!=')
+      ->willReturnSelf();
+    $select->expects($this->once())
+      ->method('limit')
+      ->with(10)
+      ->willReturnSelf();
+    $select->expects($this->once())
+      ->method('execute')
+      ->willReturn($statement);
+
+    $statement->expects($this->once())
+      ->method('fetchCol')
+      ->with(0)
+      ->willReturn([]);
+
+    $this->connection->expects($this->once())
+      ->method('select')
+      ->willReturn($select);
 
     $tempStore = $this->getMockBuilder(PrivateTempStore::class)->disableOriginalConstructor()->getMock();
     $this->tempStoreFactory->expects($this->at(0))
@@ -173,18 +201,48 @@ class LingotekManagementFormTest extends UnitTestCase {
       ->method('get')
       ->with('lingotek.management.filter.node')
       ->willReturn($tempStore);
+    $tempStore->expects($this->at(0))
+      ->method('get')
+      ->with('limit')
+      ->willReturn(NULL);
+    $tempStore->expects($this->at(1))
+      ->method('get')
+      ->with('label')
+      ->willReturn(NULL);
+    $tempStore->expects($this->at(2))
+      ->method('get')
+      ->with('bundle')
+      ->willReturn(NULL);
+    $tempStore->expects($this->at(3))
+      ->method('get')
+      ->with('profile')
+      ->willReturn(NULL);
+    $tempStore->expects($this->at(4))
+      ->method('get')
+      ->with('source_language')
+      ->willReturn(NULL);
 
     $entityType = $this->getMock(EntityTypeInterface::class);
+    $entityType->expects($this->any())
+      ->method('get')
+      ->with('bundle_entity_type')
+      ->willReturn('node');
     $this->entityManager->expects($this->once())
       ->method('getDefinition')
       ->with('node')
       ->willReturn($entityType);
-    $entityType->expects($this->once())
+
+    $entityType->expects($this->at(1))
+      ->method('getKey')
+      ->with('id')
+      ->willReturn('id');
+    $entityType->expects($this->at(3))
       ->method('getKey')
       ->with('langcode')
       ->willReturn('langcode');
 
     $storage = $this->getMock(EntityStorageInterface::class);
+
     $this->entityManager->expects($this->once())
       ->method('getStorage')
       ->with('node')
