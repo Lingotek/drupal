@@ -8,6 +8,7 @@
 namespace Drupal\lingotek;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
@@ -274,5 +275,33 @@ interface LingotekConfigurationServiceInterface {
    *   The preference value.
    */
   public function setPreference($preference_id, $value);
+
+
+  /**
+   * Checks if a language is enabled in the Lingotek interface.
+   *
+   * @param \Drupal\language\ConfigurableLanguageInterface $language
+   *   The language to check.
+   *
+   * @return bool
+   *   TRUE if the language is enabled. FALSE if it is disabled.
+   */
+  public function isLanguageEnabled(ConfigurableLanguageInterface $language);
+
+  /**
+   * Enables a language from the Lingotek interface.
+   *
+   * @param \Drupal\language\ConfigurableLanguageInterface $language
+   *   The language to be enabled.
+   */
+  public function enableLanguage(ConfigurableLanguageInterface $language);
+
+  /**
+   * Disables a language from the Lingotek interface.
+   *
+   * @param \Drupal\language\ConfigurableLanguageInterface $language
+   *   The language to be disabled.
+   */
+  public function disableLanguage(ConfigurableLanguageInterface $language);
 
 }

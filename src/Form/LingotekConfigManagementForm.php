@@ -16,6 +16,7 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\Entity;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
@@ -1059,6 +1060,10 @@ class LingotekConfigManagementForm extends FormBase {
     $is_config_entity = $mapper instanceof ConfigEntityMapper;
     $translations = [];
     $languages = $this->languageManager->getLanguages();
+    $languages = array_filter($languages, function(LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+    });
 
     $document_id = $is_config_entity ?
       $this->translationService->getDocumentId($mapper->getEntity()) :
@@ -1071,7 +1076,7 @@ class LingotekConfigManagementForm extends FormBase {
         $this->translationService->getConfigTargetStatuses($mapper);
 
       foreach ($translations_statuses as $langcode => $status) {
-        if (isset($languages[$langcode]) && $langcode !== $mapper->getLangcode()) {
+        if (isset($languages[$langcode]) && $langcode !== $mapper->getLangcode() && key_exists($langcode, $languages)) {
           if ($mapper->hasTranslation($languages[$langcode]) && $status == Lingotek::STATUS_REQUEST) {
             $translations[$langcode] = [
               'status' => Lingotek::STATUS_UNTRACKED,

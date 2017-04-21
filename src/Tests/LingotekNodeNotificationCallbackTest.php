@@ -7,6 +7,8 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
 
 /**
@@ -401,6 +403,70 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that there are no automatic requests for disabled languages.
+   */
+  public function testDisabledLanguagesAreNotRequested() {
+    // Add a language.
+    $italian = ConfigurableLanguage::createFromLangcode('it');
+    $italian->save();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    /** @var NodeInterface $node */
+    $node = Node::load(1);
+    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    // Assert the content is importing.
+    $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+
+    $this->goToContentBulkManagementForm();
+
+    // Simulate the notification of content successfully uploaded.
+    $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
+      'project_id' => 'test_project',
+      'document_id' => 'dummy-document-hash-id',
+      'complete' => 'false',
+      'type' => 'document_uploaded',
+      'progress' => '0',
+    ]]), 'application/json', []);
+    $response = json_decode($request, true);
+    $this->assertIdentical(['it', 'es'], $response['result']['request_translations'], 'Spanish and Italian languages have been requested after notification automatically.');
+
+    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+    $lingotek_config->disableLanguage($italian);
+
+    // Test with another content.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool 2';
+    $edit['body[0][value]'] = 'Llamas are very cool 2';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    // Simulate the notification of content successfully uploaded.
+    $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
+      'project_id' => 'test_project',
+      'document_id' => 'dummy-document-hash-id-1',
+      'complete' => 'false',
+      'type' => 'document_uploaded',
+      'progress' => '0',
+    ]]), 'application/json', []);
+    $response = json_decode($request, true);
+    $this->assertIdentical(['es'], $response['result']['request_translations'], 'Italian language has not been requested after notification automatically because it is disabled.');
+  }
+
+  /**
    * Resets node and metadata storage caches and reloads the node.
    *
    * @return NodeInterface
@@ -410,7 +476,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity.manager')->getStorage('node');
     /** @var \Drupal\Core\Entity\EntityStorageInterface; $metadata_storage */
-    $metadata_storage = $this->container->get('entity.manager')->getStorage('lingotek_content_metadata');
+    $metadata_storage = $this->container->get('entity.manager')
+      ->getStorage('lingotek_content_metadata');
 
     // The node and the metadata caches need to be reset before reload.
     $metadata_storage->resetCache(array(1));

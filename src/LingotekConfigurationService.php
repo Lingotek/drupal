@@ -10,6 +10,7 @@ namespace Drupal\lingotek;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Entity\LingotekProfile;
 
@@ -277,6 +278,27 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   public function setPreference($preference_id, $value) {
     $config = \Drupal::configFactory()->getEditable('lingotek.settings');
     $config->set('preference.' . $preference_id, $value)->save();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function isLanguageEnabled(ConfigurableLanguageInterface $language) {
+    return !$language->getThirdPartySetting('lingotek', 'disabled', FALSE);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function enableLanguage(ConfigurableLanguageInterface $language) {
+    $language->setThirdPartySetting('lingotek', 'disabled', FALSE)->save();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function disableLanguage(ConfigurableLanguageInterface $language) {
+    $language->setThirdPartySetting('lingotek', 'disabled', TRUE)->save();
   }
 
 }

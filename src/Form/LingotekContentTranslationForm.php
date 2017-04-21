@@ -9,8 +9,10 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -27,17 +29,27 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   protected $languageLocaleMapper;
 
   /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
    * Constructs a \Drupal\lingotek\Form\LingotekContentTranslationForm object.
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
    *  The language-locale mapper.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   The factory for configuration objects.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, ConfigFactoryInterface $config) {
     parent::__construct($lingotek, $config);
     $this->languageLocaleMapper = $language_locale_mapper;
+    $this->lingotekConfiguration = $lingotek_configuration;
   }
 
   /**
@@ -47,6 +59,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     return new static (
       $container->get('lingotek'),
       $container->get('lingotek.language_locale_mapper'),
+      $container->get('lingotek.configuration'),
       $container->get('config.factory')
     );
   }
@@ -85,31 +98,35 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     );
 
     $languages = \Drupal::languageManager()->getLanguages();
-    $entity_langcode = $entity->language()->getId();
 
     foreach ($languages as $langcode => $language) {
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
 
       $option = array_shift($overview['#rows']);
+
+      $configLanguage = ConfigurableLanguage::load($langcode);
+      $enabled = $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+
+      // Buttons for the ENTITY SOURCE LANGUAGE
+      // We disable the checkbox for this row.
+      $form['languages'][$langcode] = array(
+        '#type' => 'checkbox',
+        '#disabled' => $source_language == $locale || !$enabled,
+      );
+
       if ($source_language == $locale) {
-        // Buttons for the ENTITY SOURCE LANGUAGE
-        // We disable the checkbox for this row.
-        $form['languages'][$langcode] = array(
-          '#type' => 'checkbox',
-          '#disabled' => TRUE,
-        );
         // Check-Progress button if the source upload status is PENDING.
-        if (($source_status === Lingotek::STATUS_IMPORTING || $source_status === Lingotek::STATUS_EDITED) && !empty($document_id)) {
+        if ($enabled && ($source_status === Lingotek::STATUS_IMPORTING || $source_status === Lingotek::STATUS_EDITED) && !empty($document_id)) {
           $path = '/admin/lingotek/entity/check_upload/' . $document_id;
           $this->addOperationLink($entity, $option, 'Check Upload Status', $path, $language);
         }
         // Upload button if the status is EDITED or non-existent.
-        elseif ($source_status === Lingotek::STATUS_EDITED || $source_status === NULL) {
+        elseif ($enabled && ($source_status === Lingotek::STATUS_EDITED || $source_status === NULL)) {
           $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
           $this->addOperationLink($entity, $option, 'Upload', $path, $language);
         }
       }
-      else {
+      if ($source_language !== $locale && $enabled) {
         // Buttons for the ENTITY TARGET LANGUAGE
         $target_status = $translation_service->getTargetStatus($entity, $langcode);
         // Add-Targets button if languages haven't been added, or if target status is UNTRACKED.

@@ -204,34 +204,226 @@ class LingotekDashboardTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that we can delete languages in the dashboard.
+   * Tests that we can disable languages in the dashboard.
    */
-  public function testDeleteLanguage() {
+  public function testDisableLanguage() {
     // Add a language.
-    ConfigurableLanguage::createFromLangcode('es')->save();
+    $post = [
+      'code' => 'es_ES',
+      'language' => 'Spanish (Spain)',
+      'native' => 'Español (España)',
+      'direction' => '',
+    ];
+    // We use curlExec in this test because drupalGet and drupalPost are not
+    // reliable after doing DELETE requests, as the curl connection is reused
+    // but not properly cleared. See https://www.drupal.org/node/2868666.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => $this->buildUrl('/admin/lingotek/dashboard_endpoint', []),
+      CURLOPT_POST => TRUE,
+      CURLOPT_POSTFIELDS => $this->serializePostValues($post),
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+        'Content-Type: application/x-www-form-urlencoded',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->verbose(var_export($response, TRUE));
 
     /** @var \Drupal\Core\Language\LanguageManagerInterface $language_manager */
     $language_manager = \Drupal::service('language_manager');
     $languages = $language_manager->getLanguages();
     $this->assertIdentical(2, count($languages));
 
-    $response = $this->curlExec([
-      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
+    // Check the properties of the language.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', ['code' => 'es_ES'], ['absolute' => TRUE]),
+      CURLOPT_HTTPGET => TRUE,
+      CURLOPT_CUSTOMREQUEST => NULL,
+      CURLOPT_NOBODY => FALSE,
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->assertIdentical('GET', $response['method']);
+    $this->assertIdentical('es', $response['xcode']);
+    $this->assertIdentical('es_ES', $response['locale']);
+    $this->assertIdentical(1, $response['active']);
+    $this->assertIdentical(1, $response['enabled']);
+
+    $language = ConfigurableLanguage::load('es');
+    $this->assertIdentical($language->getThirdPartySetting('lingotek', 'disabled', NULL), FALSE, 'The Spanish language is enabled');
+
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+      CURLOPT_HTTPGET => FALSE,
       CURLOPT_CUSTOMREQUEST => 'DELETE',
-      CURLOPT_POSTFIELDS => 'code=es_ES',
-      CURLOPT_HTTPHEADER => [
+      CURLOPT_POSTFIELDS => $this->serializePostValues(['code' => 'es_ES']),
+      CURLOPT_HTTPHEADER => array(
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ],
-    ]);
-    $response = json_decode($response, TRUE);
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->verbose(var_export($response, TRUE));
     $this->assertIdentical('DELETE', $response['method']);
     $this->assertIdentical('es', $response['language']);
-    $this->assertIdentical('Language removed: es_ES', $response['message']);
+    $this->assertIdentical('Language disabled: es_ES', $response['message']);
 
-    $language_manager->reset();
     $languages = $language_manager->getLanguages();
-    $this->assertIdentical(1, count($languages));
+    $this->assertIdentical(2, count($languages), 'Spanish language is disabled, but not deleted.');
+
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    $language = ConfigurableLanguage::load('es');
+    $this->assertIdentical($language->getThirdPartySetting('lingotek', 'disabled', NULL), TRUE, 'The Spanish language is disabled');
+
+    // Check the properties of the language.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', ['code' => 'es_ES'], ['absolute' => TRUE]),
+      CURLOPT_HTTPGET => TRUE,
+      CURLOPT_CUSTOMREQUEST => NULL,
+      CURLOPT_NOBODY => FALSE,
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->assertIdentical('GET', $response['method']);
+    $this->assertIdentical('es', $response['xcode']);
+    $this->assertIdentical('es_ES', $response['locale']);
+    $this->assertIdentical(0, $response['active']);
+    $this->assertIdentical(1, $response['enabled']);
+
+    $post = [
+      'code' => 'es_ES',
+      'language' => 'Spanish (Spain)',
+      'native' => 'Español',
+      'direction' => '',
+    ];
+    $response = $this->drupalPost('/admin/lingotek/dashboard_endpoint', 'application/json', $post);
+    $response = json_decode($response, TRUE);
+    $this->verbose(var_export($response, TRUE));
+
+    // Check the properties of the language.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', ['code' => 'es_ES'], ['absolute' => TRUE]),
+      CURLOPT_HTTPGET => TRUE,
+      CURLOPT_CUSTOMREQUEST => NULL,
+      CURLOPT_NOBODY => FALSE,
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->assertIdentical('GET', $response['method']);
+    $this->assertIdentical('es', $response['xcode']);
+    $this->assertIdentical('es_ES', $response['locale']);
+    $this->assertIdentical(1, $response['active']);
+    $this->assertIdentical(1, $response['enabled']);
+
+    $languages = $language_manager->getLanguages();
+    $this->assertIdentical(2, count($languages), 'Spanish language is enabled again, no new languages added.');
+
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    $language = ConfigurableLanguage::load('es');
+    $this->assertIdentical($language->getThirdPartySetting('lingotek', 'disabled', NULL), FALSE, 'The Spanish language is enabled');
+  }
+
+  /**
+   * Tests that disabled language appear as disabled in stats.
+   */
+  public function testDisabledLanguageInStats() {
+    // Add a language.
+    $post = [
+      'code' => 'es_ES',
+      'language' => 'Spanish (Spain)',
+      'native' => 'Español (España)',
+      'direction' => '',
+    ];
+    // We use curlExec in this test because drupalGet and drupalPost are not
+    // reliable after doing DELETE requests, as the curl connection is reused
+    // but not properly cleared. See https://www.drupal.org/node/2868666.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => $this->buildUrl('/admin/lingotek/dashboard_endpoint', []),
+      CURLOPT_POST => TRUE,
+      CURLOPT_POSTFIELDS => $this->serializePostValues($post),
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+        'Content-Type: application/x-www-form-urlencoded',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->verbose(var_export($response, TRUE));
+
+    /** @var LanguageManagerInterface $language_manager */
+    $language_manager = \Drupal::service('language_manager');
+    $languages = $language_manager->getLanguages();
+    $this->assertIdentical(2, count($languages));
+
+    // Check the stats.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
+      CURLOPT_HTTPGET => TRUE,
+      CURLOPT_CUSTOMREQUEST => NULL,
+      CURLOPT_NOBODY => FALSE,
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->verbose(var_export($response, TRUE));
+    $this->assertIdentical('GET', $response['method']);
+    $this->assertIdentical(2, $response['count']);
+    $this->assertIdentical('en', $response['languages']['en_US']['xcode']);
+    $this->assertIdentical(1, $response['languages']['en_US']['active']);
+    $this->assertIdentical(1, $response['languages']['en_US']['enabled']);
+    $this->assertIdentical('es', $response['languages']['es_ES']['xcode']);
+    $this->assertIdentical(1, $response['languages']['es_ES']['active']);
+    $this->assertIdentical(1, $response['languages']['es_ES']['enabled']);
+
+    // Disable Spanish.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+      CURLOPT_HTTPGET => FALSE,
+      CURLOPT_CUSTOMREQUEST => 'DELETE',
+      CURLOPT_POSTFIELDS => $this->serializePostValues(['code' => 'es_ES']),
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+        'Content-Type: application/x-www-form-urlencoded',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->verbose(var_export($response, TRUE));
+    $this->assertIdentical('DELETE', $response['method']);
+    $this->assertIdentical('es', $response['language']);
+    $this->assertIdentical('Language disabled: es_ES', $response['message']);
+
+    // Check the stats.
+    $request = $this->curlExec(array(
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
+      CURLOPT_HTTPGET => TRUE,
+      CURLOPT_CUSTOMREQUEST => NULL,
+      CURLOPT_NOBODY => FALSE,
+      CURLOPT_HTTPHEADER => array(
+        'Accept: application/json',
+      ),
+    ));
+    $response = json_decode($request, TRUE);
+    $this->verbose(var_export($response, TRUE));
+    $this->assertIdentical('GET', $response['method']);
+    $this->assertIdentical(2, $response['count']);
+    $this->assertIdentical('en', $response['languages']['en_US']['xcode']);
+    $this->assertIdentical(1, $response['languages']['en_US']['active']);
+    $this->assertIdentical(1, $response['languages']['en_US']['enabled']);
+    $this->assertIdentical('es', $response['languages']['es_ES']['xcode']);
+    $this->assertIdentical(0, $response['languages']['es_ES']['active']);
+    $this->assertIdentical(1, $response['languages']['es_ES']['enabled']);
   }
 
   /**

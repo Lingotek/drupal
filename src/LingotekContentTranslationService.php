@@ -533,6 +533,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $languages = [];
     if ($document_id = $this->getDocumentId($entity)) {
       $target_languages = $this->languageManager->getLanguages();
+      $target_languages = array_filter($target_languages, function(LanguageInterface $language) {
+        $configLanguage = ConfigurableLanguage::load($language->getId());
+        return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+      });
+
       $entity_langcode = $entity->getUntranslated()->language()->getId();
 
       foreach ($target_languages as $langcode => $language) {

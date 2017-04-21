@@ -29,6 +29,13 @@ class LingotekDashboardControllerTest extends UnitTestCase {
   protected $configFactory;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $entityTypeManager;
+
+  /**
    * The mock entity query factory.
    *
    * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
@@ -92,6 +99,9 @@ class LingotekDashboardControllerTest extends UnitTestCase {
 
     $this->request = $this->getMock('Symfony\Component\HttpFoundation\Request');
     $this->configFactory = $this->getConfigFactoryStub(['lingotek.settings' => ['account' => ['access_token' => 'at', 'login_id' => 'login']]]);
+    $this->entityTypeManager = $this->getMockBuilder('Drupal\Core\Entity\EntityTypeManager')
+      ->disableOriginalConstructor()
+      ->getMock();
     $this->entityQueryFactory = $this->getMockBuilder('Drupal\Core\Entity\Query\QueryFactory')
       ->disableOriginalConstructor()
       ->getMock();
@@ -105,6 +115,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
     $this->controller = new LingotekDashboardController(
       $this->request,
       $this->configFactory,
+      $this->entityTypeManager,
       $this->entityQueryFactory,
       $this->languageManager,
       $this->lingotek,
@@ -123,6 +134,8 @@ class LingotekDashboardControllerTest extends UnitTestCase {
    * @covers ::endpoint
    */
   public function testNoTypesEnabledForLingotekTranslation() {
+    $this->setUpConfigurableLanguageMock();
+
     $this->request->expects($this->any())
       ->method('getMethod')
       ->willReturn('GET');
@@ -160,6 +173,8 @@ class LingotekDashboardControllerTest extends UnitTestCase {
    * @covers ::endpoint
    */
   public function testNodeTypesEnabledForLingotekTranslation() {
+    $this->setUpConfigurableLanguageMock();
+
     $this->request->expects($this->any())
       ->method('getMethod')
       ->willReturn('GET');
@@ -215,7 +230,21 @@ class LingotekDashboardControllerTest extends UnitTestCase {
     $this->assertEquals(6, $content['target']['types']['node']);
     $this->assertEquals(6, $content['source']['total']);
     $this->assertEquals(6, $content['target']['total']);
+  }
 
+  /**
+   * Setup the entity type manager for returning configurable language storage
+   * and its mocks.
+   */
+  protected function setUpConfigurableLanguageMock() {
+    $language = $this->getMock('Drupal\language\ConfigurableLanguageInterface');
+    $storage = $this->getMock('Drupal\Core\Entity\EntityStorageInterface');
+    $storage->expects($this->any())
+      ->method('load')
+      ->willReturn($language);
+    $this->entityTypeManager->expects($this->any())
+      ->method('getStorage')
+      ->willReturn($storage);
   }
 
 }
