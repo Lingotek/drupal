@@ -6,6 +6,7 @@ use Drupal\config_translation\ConfigEntityMapper;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\Controller\ConfigTranslationController;
 use Drupal\Core\Access\AccessManagerInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\PathProcessor\InboundPathProcessorInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -13,10 +14,12 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,6 +35,13 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
   protected $languageLocaleMapper;
 
   /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
    * The Lingotek config translation service.
    *
    * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translationService
@@ -45,6 +55,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    *  The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service
    *   The Lingotek config translation service.
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
    * @param \Drupal\config_translation\ConfigMapperManagerInterface $config_mapper_manager
    *   The configuration mapper manager.
    * @param \Drupal\Core\Access\AccessManagerInterface $access_manager
@@ -60,9 +72,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    */
-  public function __construct(LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager, RendererInterface $renderer) {
+  public function __construct(LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigTranslationServiceInterface $translation_service, LingotekConfigurationServiceInterface $lingotek_configuration, ConfigMapperManagerInterface $config_mapper_manager, AccessManagerInterface $access_manager, RequestMatcherInterface $router, InboundPathProcessorInterface $path_processor, AccountInterface $account, LanguageManagerInterface $language_manager, RendererInterface $renderer) {
     parent::__construct($config_mapper_manager, $access_manager, $router, $path_processor, $account, $language_manager, $renderer);
     $this->languageLocaleMapper = $language_locale_mapper;
+    $this->lingotekConfiguration = $lingotek_configuration;
     $this->translationService = $translation_service;
   }
 
@@ -73,6 +86,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     return new static(
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.config_translation'),
+      $container->get('lingotek.configuration'),
       $container->get('plugin.manager.config_translation.mapper'),
       $container->get('access_manager'),
       $container->get('router'),
@@ -92,6 +106,11 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     $mapper->populateFromRouteMatch($route_match);
 
     $languages = $this->languageManager->getLanguages();
+    $languages = array_filter($languages, function(LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+    });
+
     $original_langcode = $mapper->getLangcode();
     if (!isset($languages[$original_langcode])) {
       // If the language is not configured on the site, create a dummy language

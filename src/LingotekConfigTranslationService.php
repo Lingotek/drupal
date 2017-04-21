@@ -17,6 +17,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
 
 /**
@@ -434,6 +435,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $languages = [];
     if ($document_id = $this->getDocumentId($entity)) {
       $target_languages = $this->languageManager->getLanguages();
+      $target_languages = array_filter($target_languages, function(LanguageInterface $language) {
+        $configLanguage = ConfigurableLanguage::load($language->getId());
+        return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+      });
+
       $entity_langcode = $entity->language()->getId();
 
       foreach ($target_languages as $langcode => $language) {

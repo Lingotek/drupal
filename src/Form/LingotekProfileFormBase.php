@@ -8,12 +8,43 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekProfileInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a common base class for Profile forms.
  */
 class LingotekProfileFormBase extends EntityForm {
+
+  /**
+   * The Lingotek configuration service.
+   *
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
+   */
+  protected $lingotekConfiguration;
+
+  /**
+   * Constructs a LingotekProfileFormBase object.
+   *
+   * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
+   *   The Lingotek configuration service.
+   */
+  public function __construct(LingotekConfigurationServiceInterface $lingotek_configuration) {
+    $this->lingotekConfiguration = $lingotek_configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('lingotek.configuration')
+    );
+  }
+
 
   /**
    * {@inheritdoc}
@@ -115,6 +146,12 @@ class LingotekProfileFormBase extends EntityForm {
       '#tree' => TRUE,
     );
     $languages = \Drupal::languageManager()->getLanguages();
+    // Filter the disabled languages.
+    $languages = array_filter($languages, function(LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+    });
+
     // We want to have them alphabetically.
     ksort($languages);
     foreach ($languages as $langcode => $language) {

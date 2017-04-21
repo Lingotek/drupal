@@ -192,6 +192,9 @@ language.entity.*.third_party.lingotek:
   type: mapping
   label: 'Lingotek locale mapping'
   mapping:
+    disabled:
+      type: boolean
+      label: 'Flag for disabling a locale from the Lingotek interface'
     locale:
       type: string
       label: 'Lingotek locale code'

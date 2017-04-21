@@ -6,6 +6,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
@@ -347,6 +348,50 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertEqual(count($selects), 2*3, 'There are options for all the potential language overrides.');
     // And the first one must be German alphabetically.
     $this->assertEqual((string)$selects[0]['id'], 'edit-language-overrides-de-overrides', 'Languages are ordered alphabetically.');
+  }
+
+  /**
+   * Tests that disabled languages are not shown in the profile form for
+   * defining overrides.
+   */
+  public function testLanguageDisabled() {
+    /** @var LingotekConfigurationServiceInterface $configLingotek */
+    $configLingotek = \Drupal::service('lingotek.configuration');
+
+    // Add a language.
+    $es = ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX');
+    $de = ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE');
+    $es->save();
+    $de->save();
+
+    /** @var LingotekProfileInterface $profile */
+    $profile = LingotekProfile::create([
+      'id' => strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ]);
+    $profile->save();
+    $profile_id = $profile->id();
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+    $this->assertFieldByName('language_overrides[es][overrides]');
+    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+
+    // We disable a language.
+    $configLingotek->disableLanguage($es);
+
+    // The form shouldn't have the field.
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+    $this->assertNoFieldByName('language_overrides[es][overrides]');
+    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+
+    // We enable the language back.
+    $configLingotek->enableLanguage($es);
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+    $this->assertFieldByName('language_overrides[es][overrides]');
+    $this->assertOptionSelected('edit-language-overrides-es-overrides', 'default');
+    $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
   }
 
   /**

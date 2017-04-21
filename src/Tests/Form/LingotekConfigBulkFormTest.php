@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Tests\Form;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**
@@ -95,6 +96,44 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     $this->assertUniqueText('Page');
     $this->assertText('Body');
     $this->assertNoUniqueText('Body');
+  }
+
+  /**
+   * Tests that the config bulk form doesn't show a language if it's disabled.
+   */
+  public function testDisabledLanguage() {
+    // Go and upload a field.
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Clicking English must init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // And we cannot request yet a translation.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->clickLink('EN');
+
+    // There is a link for checking status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    // And we can already request a translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // Then we disable the Spanish language.
+    /** @var LingotekConfigurationServiceInterface $lingotekConfig */
+    $lingotekConfig = \Drupal::service('lingotek.configuration');
+    $language = ConfigurableLanguage::load('es');
+    $lingotekConfig->disableLanguage($language);
+
+    // And we check that Spanish is not there anymore.
+    $this->goToConfigBulkManagementForm();
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // We re-enable Spanish.
+    $lingotekConfig->enableLanguage($language);
+
+    // And Spanish should be back in the management form.
+    $this->goToConfigBulkManagementForm();
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
   }
 
 }

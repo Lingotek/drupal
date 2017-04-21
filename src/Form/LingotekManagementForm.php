@@ -1044,10 +1044,14 @@ class LingotekManagementForm extends FormBase {
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
     $translations = [];
     $languages = $this->languageManager->getLanguages();
+    $languages = array_filter($languages, function(LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+    });
     $document_id = $this->translationService->getDocumentId($entity);
     if ($entity->lingotek_translation_status && $document_id) {
       foreach ($entity->lingotek_translation_status->getIterator() as $delta => $field_value) {
-        if ($field_value->language !== $entity->language()->getId()) {
+        if ($field_value->language !== $entity->language()->getId() && key_exists($field_value->language, $languages)) {
           // We may have an existing translation already.
           if ($entity->hasTranslation($field_value->language) && $field_value->value == Lingotek::STATUS_REQUEST) {
             $translations[$field_value->language] = [
