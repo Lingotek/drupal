@@ -8,12 +8,12 @@ lingotek.dashboard:
 
 lingotek.dashboard_endpoint:
   path: '/admin/lingotek/dashboard_endpoint'
+  methods: [GET,POST,DELETE]
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::endpoint'
     _title: 'Lingotek Dashboard Endpoint'
   requirements:
     _permission: 'administer lingotek'
-    _method: 'GET|POST|DELETE'
 
 lingotek.notify:
   path: '/lingotek/notify'
