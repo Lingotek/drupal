@@ -350,9 +350,31 @@ class Lingotek implements LingotekInterface {
       }
       if ($progress === self::PROGRESS_COMPLETE) {
         return TRUE;
+      } else {
+        return $progress;
       }
     }
     return FALSE;
+  }
+
+  public function getDocumentTranslationStatuses($doc_id) {
+    $statuses = array();
+    try {
+      $response = $this->api->getDocumentTranslationStatuses($doc_id);
+    } catch (LingotekApiException $e) {
+      // No targets found for this doc
+      return $statuses;
+    }
+    if ($response->getStatusCode() == Response::HTTP_OK) {
+      $progress_json = json_decode($response->getBody(), TRUE);
+      if (!empty($progress_json['entities'])) {
+        foreach ($progress_json['entities'] as $index => $data) {
+          $lingotek_locale = $data['properties']['locale_code'];
+          $statuses[$lingotek_locale] = $data['properties']['percent_complete'];
+        }
+      }
+    }
+    return $statuses;
   }
 
   public function downloadDocument($doc_id, $locale) {
