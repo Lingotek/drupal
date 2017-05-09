@@ -168,7 +168,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
     else if ($this->entityManager()->hasDefinition($entity_type)) {
       $storage = $this->entityManager()->getStorage($entity_type);
       $entity = $storage->load($entity_id);
-      $value = $entity->getConfigDependencyName();
+      $value = ($entity) ? $entity->getConfigDependencyName() : $this->config_name;
     }
     else {
       $value = $this->config_name;
