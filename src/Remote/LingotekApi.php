@@ -194,6 +194,20 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
+  public function getDocumentTranslationStatuses($id) {
+    try {
+      $this->logger->debug('Lingotek::getDocumentTranslationStatuses called with %id', ['%id' => $id]);
+      $response = $this->lingotekClient->get('/api/document/' . $id . '/translation');
+    }
+    catch (\Exception $e) {
+      $this->logger->error('Error getting document translation status (%id): %message.',
+        ['%id' => $id, '%message' =>  $e->getMessage()]);
+      throw new LingotekApiException('Failed to get document translation status: ' . $e->getMessage());
+    }
+    $this->logger->debug('getDocumentTranslationStatuses response received, code %code and body %body', ['%code' => $response->getStatusCode(), '%body' => (string) $response->getBody(TRUE)]);
+    return $response;
+  }
+
   public function getDocumentTranslationStatus($id, $locale) {
     try {
       $this->logger->debug('Lingotek::getDocumentTranslationStatus called with %id and %locale', ['%id' => $id, '%locale' => $locale]);

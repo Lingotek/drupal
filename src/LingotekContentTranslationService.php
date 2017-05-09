@@ -136,10 +136,22 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
-    foreach ($entity->lingotek_translation_status->getIterator() as $delta => $value) {
-      $langcode = $value->language;
-      $this->checkTargetStatus($entity, $langcode);
-
+    $document_id = $this->getDocumentId($entity);
+    $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+    foreach($translation_statuses as $lingotek_locale => $progress) {
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
+      if($drupal_language == NULL) {
+        continue;// languages existing in TMS, but not configured on Drupal
+      }
+      $langcode = $drupal_language->id();
+      $current_target_status = $this->getTargetStatus($entity, $langcode);
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_PENDING, NULL])) {
+        if($progress === Lingotek::PROGRESS_COMPLETE) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+        } else {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+        }
+      }
     }
   }
 
@@ -148,9 +160,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkTargetStatus(ContentEntityInterface &$entity, $langcode) {
     $current_status = $this->getTargetStatus($entity, $langcode);
+    dpm($langcode." ".$current_status);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     $source_status = $this->getSourceStatus($entity);
     $document_id = $this->getDocumentId($entity);
+    dpm($entity->getUntranslated()->language()->getId());
     if ($langcode !== $entity->getUntranslated()->language()->getId()) {
       if (($current_status == Lingotek::STATUS_PENDING ||
       $current_status == Lingotek::STATUS_EDITED) &&
@@ -168,6 +182,19 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           // TODO: Set Status to STATUS_READY_INTERIM when that status is
           // available. See ticket: https://www.drupal.org/node/2850548
         }
+      }
+      elseif ($current_status == Lingotek::STATUS_REQUEST || $current_status == Lingotek::STATUS_UNTRACKED) {
+        $translation_status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
+        if ($translation_status === TRUE) {
+          $current_status = Lingotek::STATUS_READY;
+          $this->setTargetStatus($entity, $langcode, $current_status);
+        } elseif ($translation_status !== FALSE) {
+          $current_status = Lingotek::STATUS_PENDING;
+          $this->setTargetStatus($entity, $langcode, $current_status);
+        } //elseif ($this->lingotek->downloadDocument($document_id, $locale)) {
+        //   // TODO: Set Status to STATUS_READY_INTERIM when that status is
+        //   // available. See ticket: https://www.drupal.org/node/2850548
+        // }
       }
     }
     return $current_status;

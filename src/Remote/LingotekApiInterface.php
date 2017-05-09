@@ -28,6 +28,7 @@ interface LingotekApiInterface {
   public function deleteDocument($id);
   public function getDocument($id);
   public function documentExists($id);
+  public function getDocumentTranslationStatuses($id);
   public function getDocumentTranslationStatus($id, $locale);
   public function getDocumentInfo($id);
   public function getDocumentStatus($id);

@@ -109,7 +109,7 @@ interface LingotekInterface {
   public function getUploadedTimestamp($doc_id);
 
   public function getDocumentTranslationStatus($doc_id, $locale);
-
+  public function getDocumentTranslationStatuses($doc_id);
   public function downloadDocument($doc_id, $locale);
 
   /**
