@@ -100,9 +100,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkSourceStatus(ContentEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
-    if ($document_id && $this->lingotek->getDocumentStatus($document_id)) {
-      $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-      return TRUE;
+    $MAX_IMPORT_TIME = 3600;// 1 hour (in seconds)
+    $source_status = $this->getSourceStatus($entity);
+    if ($document_id) {
+      if($this->lingotek->getDocumentStatus($document_id)) { // document has successfully imported
+        if($source_status != Lingotek::STATUS_EDITED){
+          $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        }
+        return TRUE;
+      } else {
+        $last_uploaded_time = $entity->changed->value;//TO-DO:  change to actual last_uploaded timestamp rather than surrogate
+        // If document has not successfully imported after MAX_IMPORT_TIME then move to ERROR state.
+        if(REQUEST_TIME - $last_uploaded_time > $MAX_IMPORT_TIME) {
+          // Document failed to import before the max importing time
+          $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+        } else {
+          // Document still may be importing
+        }
+        return FALSE;
+      }
     }
     return FALSE;
   }
@@ -160,11 +176,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkTargetStatus(ContentEntityInterface &$entity, $langcode) {
     $current_status = $this->getTargetStatus($entity, $langcode);
-    dpm($langcode." ".$current_status);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     $source_status = $this->getSourceStatus($entity);
     $document_id = $this->getDocumentId($entity);
-    dpm($entity->getUntranslated()->language()->getId());
     if ($langcode !== $entity->getUntranslated()->language()->getId()) {
       if (($current_status == Lingotek::STATUS_PENDING ||
       $current_status == Lingotek::STATUS_EDITED) &&

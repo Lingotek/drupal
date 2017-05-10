@@ -1180,7 +1180,7 @@ class LingotekConfigManagementForm extends FormBase {
   public function generateBulkOptions() {
     $operations = [];
     $operations['upload'] = $this->t('Upload source for translation');
-    $operations['check_upload'] = $this->t('Check upload progress');
+    $operations['check_upload'] = $this->t('Check source import progress');
     $operations[(string)$this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string)$this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string)$this->t('Download')]['download'] = $this->t('Download all translations');

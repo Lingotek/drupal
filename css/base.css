@@ -1,4 +1,4 @@
-/**
+C/**
  * @file
  * Lingotek base styles.
  */
@@ -26,6 +26,18 @@
   border: 1px solid #fff;
   border-spacing: 0;
   width: 50px;
+}
+
+.language-icon.source-error,
+.language-icon.target-error {
+  background-color: #B71C1C;
+  border: 1px solid #B71C1C;
+  color: #FFFFFF;
+}
+
+.language-icon.source-error a,
+.language-icon.target-error a {
+  color: #FFFFFF;
 }
 
 span.language-icon ,

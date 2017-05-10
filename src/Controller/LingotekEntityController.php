@@ -90,6 +90,7 @@ class LingotekEntityController extends LingotekControllerBase {
         drupal_set_message(t('@entity_type %title has been uploaded.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
       }
     } catch (LingotekApiException $exception) {
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
     }
     return $this->translationsPageRedirect($entity);
@@ -104,6 +105,7 @@ class LingotekEntityController extends LingotekControllerBase {
         drupal_set_message(t('@entity_type %title has been updated.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));
       }
     } catch (LingotekApiException $exception) {
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       drupal_set_message(t('The update for @entity_type failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
     }
     return $this->translationsPageRedirect($entity);
