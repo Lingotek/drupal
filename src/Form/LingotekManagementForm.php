@@ -1186,20 +1186,20 @@ class LingotekManagementForm extends FormBase {
   public function generateBulkOptions() {
     $operations = [];
     $operations['upload'] = $this->t('Upload source for translation');
-    $operations['check_upload'] = $this->t('Check upload progress');
+    $operations['check_upload'] = $this->t('Check source import progress');
     $operations[(string)$this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string)$this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string)$this->t('Download')]['download'] = $this->t('Download all translations');
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
       $operations[(string)$this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
-    $operations['disassociate'] = $this->t('Disassociate translations');
+    $operations['disassociate'] = $this->t('Disassociate from Lingotek');
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
       $operations[(string)$this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() .')']);
       $operations[(string)$this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() .')']);
       $operations[(string)$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
     }
-
+  
     // We add the delete operation in nodes and comments, as we have those
     // operations in core.
     if ($this->entityTypeId === 'node') {
