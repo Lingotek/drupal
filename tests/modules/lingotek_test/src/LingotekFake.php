@@ -250,4 +250,7 @@ class LingotekFake implements LingotekInterface {
     return ['es-ES', 'de-AT', 'de-DE'];
   }
 
+  public function getDocumentTranslationStatuses($doc_id) {
+    // TODO: Implement getDocumentTranslationStatuses() method.
+  }
 }
