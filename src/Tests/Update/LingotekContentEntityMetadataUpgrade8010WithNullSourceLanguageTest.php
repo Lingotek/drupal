@@ -11,7 +11,7 @@ use Drupal\system\Tests\Update\UpdatePathTestBase;
  *
  * @group lingotek
  */
-class LingotekContentEntityMetadataUpgrade8010Test extends UpdatePathTestBase {
+class LingotekContentEntityMetadataUpgrade8010WithNullSourceLanguageTest extends UpdatePathTestBase {
 
   /**
    * {@inheritdoc}
@@ -19,6 +19,7 @@ class LingotekContentEntityMetadataUpgrade8010Test extends UpdatePathTestBase {
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
       __DIR__ . '/../../../tests/fixtures/update/drupal-8.lingotek.standard.pre8010.php.gz',
+      __DIR__ . '/../../../tests/fixtures/update/null-source-language-8010.php',
     ];
   }
 

@@ -228,7 +228,7 @@ function lingotek_update_8011(&$sandbox) {
         'description' => 'The Lingotek translation source.',
         'type' => 'varchar',
         'length' => 255,
-        'not null' => TRUE,
+        'not null' => FALSE,
         'default' => '',
       ),
       'translation_status' => array(
