@@ -42,6 +42,7 @@ class LingotekFake implements LingotekInterface {
             'default_client_id' => $this->get('account.default_client_id'),
             'access_token' => 'test_token',
             'login_id' => 'testUser@example.com',
+            'use_production' => TRUE,
           ];
         }
       case 'account.login_id':
@@ -251,6 +252,10 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentTranslationStatuses($doc_id) {
-    // TODO: Implement getDocumentTranslationStatuses() method.
+    if (\Drupal::state()->get('lingotek.document_completion', TRUE)) {
+      return ['es-MX' => 100, 'es-ES' => 100, 'de-AT' => 100, 'de-DE' => 100];
+    }
+    return ['es-MX' => 80, 'es-ES' => 80, 'de-AT' => 80, 'de-DE' => 80];
   }
+
 }

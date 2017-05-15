@@ -100,22 +100,24 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function checkSourceStatus(ContentEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
-    $MAX_IMPORT_TIME = 3600;// 1 hour (in seconds)
+    // We set a max time of 1 hour for the import (in seconds)
+    $MAX_IMPORT_TIME = 3600;
     $source_status = $this->getSourceStatus($entity);
     if ($document_id) {
-      if($this->lingotek->getDocumentStatus($document_id)) { // document has successfully imported
-        if($source_status != Lingotek::STATUS_EDITED){
-          $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
-        }
+      // Document has successfully imported.
+      if ($this->lingotek->getDocumentStatus($document_id)) {
+        $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
         return TRUE;
       } else {
-        $last_uploaded_time = $entity->changed->value;//TO-DO:  change to actual last_uploaded timestamp rather than surrogate
-        // If document has not successfully imported after MAX_IMPORT_TIME then move to ERROR state.
-        if(REQUEST_TIME - $last_uploaded_time > $MAX_IMPORT_TIME) {
-          // Document failed to import before the max importing time
+        //TODO: change to actual last_uploaded timestamp rather than surrogate.
+        $last_uploaded_time = $entity->changed->value;
+        // If document has not successfully imported after MAX_IMPORT_TIME then
+        // move to ERROR state.
+        if (REQUEST_TIME - $last_uploaded_time > $MAX_IMPORT_TIME) {
           $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
         } else {
-          // Document still may be importing
+          // Document still may be importing and the MAX import time didn't
+          // complete yet, so we do nothing.
         }
         return FALSE;
       }
@@ -154,14 +156,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
     $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
-    foreach($translation_statuses as $lingotek_locale => $progress) {
+    foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
-      if($drupal_language == NULL) {
+      if ($drupal_language == NULL) {
         continue;// languages existing in TMS, but not configured on Drupal
       }
       $langcode = $drupal_language->id();
       $current_target_status = $this->getTargetStatus($entity, $langcode);
-      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_PENDING, NULL])) {
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_PENDING, NULL])) {
         if($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
         } else {
