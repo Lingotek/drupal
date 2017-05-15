@@ -350,8 +350,6 @@ class Lingotek implements LingotekInterface {
       }
       if ($progress === self::PROGRESS_COMPLETE) {
         return TRUE;
-      } else {
-        return $progress;
       }
     }
     return FALSE;
