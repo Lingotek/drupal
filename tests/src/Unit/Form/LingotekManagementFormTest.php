@@ -179,10 +179,9 @@ class LingotekManagementFormTest extends UnitTestCase {
       ->method('getDefinition')
       ->with('node')
       ->willReturn($entityType);
-    $entityType->expects($this->once())
+    $entityType->expects($this->any())
       ->method('getKey')
-      ->with('langcode')
-      ->willReturn('langcode');
+      ->will($this->returnArgument(0));
 
     $storage = $this->getMock(EntityStorageInterface::class);
     $this->entityManager->expects($this->once())

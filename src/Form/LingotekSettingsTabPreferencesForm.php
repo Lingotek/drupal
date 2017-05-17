@@ -229,8 +229,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveAdminMenu() {
-    $menu_tree = \Drupal::menuTree();
-    $menu_link_manager = $menu_tree->menuLinkManager;
+    $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
     $admin_menu = $menu_link_manager->getDefinition('lingotek.dashboard');
 
     // Will be opposite from enabled value since we're hiding the menu item
