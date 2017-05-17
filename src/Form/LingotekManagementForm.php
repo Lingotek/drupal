@@ -213,9 +213,12 @@ class LingotekManagementForm extends FormBase {
       $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter);
     }
     if ($labelFilter) {
-      $query->innerJoin($entity_type->getDataTable(), 'entity_data',
-        'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
-      $query->condition('entity_data.' . $entity_type->getKey('label'), '%' . $labelFilter . '%', 'LIKE');
+      $labelKey = $entity_type->getKey('label');
+      if ($labelKey) {
+        $query->innerJoin($entity_type->getDataTable(), 'entity_data',
+          'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+        $query->condition('entity_data.' . $labelKey, '%' . $labelFilter . '%', 'LIKE');
+      }
     }
     if ($sourceLanguageFilter) {
       $query->innerJoin($entity_type->getDataTable(), 'entity_data',
@@ -285,13 +288,15 @@ class LingotekManagementForm extends FormBase {
       '#type' => 'container',
       '#attributes' => array('class' => array('form--inline', 'clearfix')),
     );
-    $form['filters']['wrapper']['label'] = array(
-      '#type' => 'textfield',
-      '#title' => $has_bundles && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
-      '#placeholder' => $this->t('Filter by @title', ['@title' => $entity_type->getBundleLabel()]),
-      '#default_value' => $labelFilter,
-      '#attributes' => array('class' => array('form-item')),
-    );
+    if ($entity_type->getKey('label')) {
+      $form['filters']['wrapper']['label'] = array(
+        '#type' => 'textfield',
+        '#title' => $has_bundles && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
+        '#placeholder' => $this->t('Filter by @title', ['@title' => $entity_type->getBundleLabel()]),
+        '#default_value' => $labelFilter,
+        '#attributes' => array('class' => array('form-item')),
+      );
+    }
     if ($has_bundles) {
       $form['filters']['wrapper']['bundle'] = array(
         '#type' => 'select',

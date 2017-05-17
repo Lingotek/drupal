@@ -8,6 +8,8 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\user\PrivateTempStore;
+
 /**
  * Tests translating a node with multiple locales including paragraphs.
  *
@@ -195,6 +197,63 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertEqual('paragraph', $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata in the second paragraph.');
     $this->assertEqual(2, $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata in the second paragraph.');
     $this->assertEqual(2, $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata in the second paragraph.');
+  }
+
+  /**
+   * Paragraphs don't have a title, so we should disallow filtering by it.
+   */
+  public function testBulkManagementParagraphsDontAllowFilteringByLabel() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a second time';
+
+    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+
+    $this->goToContentBulkManagementForm('paragraph');
+    $this->assertNoField('filters[wrapper][label]', 'There is no filter by label as paragraphs have no label.');
+  }
+
+  /**
+   * Paragraphs don't have a title, so we ignore a label filter if it exists.
+   */
+  public function testBulkManagementParagraphsIgnoreFilterByLabel() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a second time';
+
+    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+
+    $this->goToContentBulkManagementForm('paragraph');
+    // Assert there is at least one paragraph in the list.
+    $this->assertText('Image + Text');
+
+    // Set a filter, and there should still be paragraphs.
+    /** @var PrivateTempStore $tempStore */
+    $tempStore = \Drupal::service('user.private_tempstore')->get('lingotek.management.filter.paragraph');
+    $tempStore->set('label', 'Llamas');
+
+    $this->goToContentBulkManagementForm('paragraph');
+    $this->assertText('Image + Text');
   }
 
 }
