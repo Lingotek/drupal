@@ -144,8 +144,15 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    */
   public function getEntityProfile(ContentEntityInterface $entity, $provide_default = TRUE) {
     $profile_id = $this->getDefaultProfileId($entity->getEntityTypeId(), $entity->bundle(), $provide_default);
-    if ($entity->lingotek_metadata->entity !== NULL && $entity->lingotek_metadata->entity->getProfile() !== NULL) {
-      $profile_id = $entity->lingotek_metadata->entity->getProfile();
+    if ($entity->lingotek_metadata->entity !== NULL) {
+      if ($entity->lingotek_metadata->entity->getProfile() !== NULL) {
+        $profile_id = $entity->lingotek_metadata->entity->getProfile();
+      }
+      else {
+        // If we have a NULL profile set on the entity and we don't want to
+        // provide a default, let's respect that.
+        $profile_id = $provide_default ? $profile_id : NULL;
+      }
     }
     return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }

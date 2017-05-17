@@ -221,8 +221,8 @@ function lingotek_update_8011(&$sandbox) {
         'description' => 'The Lingotek profile being used.',
         'type' => 'varchar',
         'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
+        'not null' => FALSE,
+        'default' => NULL,
       ),
       'translation_source' => array(
         'description' => 'The Lingotek translation source.',
@@ -281,7 +281,8 @@ function lingotek_update_8011(&$sandbox) {
       if ($entity && isset($entity->lingotek_document_id)) {
         $lingotek_document_id = $entity->lingotek_document_id->value;
         $lingotek_hash = $entity->lingotek_hash->value;
-        $lingotek_profile = $entity->lingotek_profile->entity->id();
+        $lingotek_profile = $entity->lingotek_profile->entity;
+        $lingotek_profile_id = $lingotek_profile !== NULL ? $lingotek_profile->id() : NULL;
         $lingotek_translation_source = $entity->lingotek_translation_source->value;
         $lingotek_translation_status = lingotek_legacy_get_translation_status($entity->lingotek_translation_status);
 
@@ -293,7 +294,7 @@ function lingotek_update_8011(&$sandbox) {
             'entity_id' => $entity->id(),
             'document_id' => $lingotek_document_id,
             'hash' => $lingotek_hash,
-            'profile' => $lingotek_profile,
+            'profile' => $lingotek_profile_id,
             'translation_source' => $lingotek_translation_source,
             'translation_status' => json_encode($lingotek_translation_status),
           ))
