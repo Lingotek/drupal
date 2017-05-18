@@ -9,6 +9,7 @@ use Drupal\lingotek\Remote\LingotekApi;
 use Drupal\lingotek\Remote\LingotekHttp;
 use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
+use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -78,6 +79,37 @@ class LingotekApiUnitTest extends UnitTestCase {
 
     $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow');
     $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', NULL);
+  }
+
+  /**
+   * @covers ::addTranslation
+   */
+  public function testAddTranslationWithException() {
+    // Ensure that the workflow is set when it's need to be.
+    $request = $this->getMockBuilder('\Psr\Http\Message\RequestInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_BAD_REQUEST);
+    $response->expects($this->any())
+      ->method('getBody')
+      ->willReturn(json_encode(['messages' => ['Translation (es_ES) already exists.']]));
+    $this->client->expects($this->at(0))
+      ->method('post')
+      ->with('/api/document/fancy-document-id/translation', ['locale_code' => 'es_ES', 'workflow_id' => 'my_workflow'])
+      ->will($this->throwException(new ClientException(
+        'Client error: `POST https://cms.lingotek.com/api/document/700e102b-b0ad-4ddf-9da1-73c62d587abc/translation` resulted in a `400 Bad Request` response:
+{"messages":["Translation (es_ES) already exists."]}',
+        $request,
+        $response
+      )));
+
+    $response = $this->lingotek_api->addTranslation('fancy-document-id', 'es_ES', 'my_workflow');
+    $this->assertEquals($response->getStatusCode(), REsponse::HTTP_CREATED, 'If the translation existed, we succeed instead of failing.');
   }
 
   /**
