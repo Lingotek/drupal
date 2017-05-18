@@ -232,6 +232,15 @@ class LingotekApi implements LingotekApiInterface {
       $response = $this->lingotekClient->post('/api/document/' . $id . '/translation', $args);
     }
     catch (\Exception $e) {
+      // If the problem is that the translation already exist, don't fail.
+      if ($e->getCode() === Response::HTTP_BAD_REQUEST) {
+        $responseBody = json_decode($e->getResponse()->getBody(), TRUE);
+        if ($responseBody['messages'][0] === 'Translation (' . $locale . ') already exists.') {
+          $this->logger->info('Added an existing target for %id with %args.',
+            ['%id' => $id, '%args' => var_export($args, TRUE)]);
+        }
+        return new \GuzzleHttp\Psr7\Response(Response::HTTP_CREATED);
+      }
       $this->logger->error('Error requesting translation (%id, %args): %message.',
         ['%id' => $id, '%args' => var_export($args, TRUE), '%message' =>  $e->getMessage()]);
       throw new LingotekApiException('Failed to add translation: ' . $e->getMessage());
