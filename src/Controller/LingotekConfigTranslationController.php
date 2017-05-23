@@ -197,6 +197,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           }
         }
         catch (LingotekApiException $e) {
+          // Mark the document as failed.
+          $this->translationService->setConfigSourceStatus($mappers[$entity_type], Lingotek::STATUS_ERROR);
           drupal_set_message($this->t('%label update failed. Please try again.',
             ['%label' => $mappers[$entity_type]->getTitle()]), 'error');
         }
@@ -208,6 +210,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           }
         }
         catch (LingotekApiException $e) {
+          // Mark the document as failed.
+          $this->translationService->setConfigSourceStatus($mappers[$entity_type], Lingotek::STATUS_ERROR);
           drupal_set_message($this->t('%label upload failed. Please try again.',
             ['%label' => $mappers[$entity_type]->getTitle()]), 'error');
         }
@@ -227,6 +231,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekApiException $e) {
+        // Mark the document as failed.
+        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
         drupal_set_message($this->t('%label update failed. Please try again.',
           ['%label' => $entity->label()]), 'error');
       }
@@ -238,6 +244,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekApiException $e) {
+        // Mark the document as failed.
+        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
         drupal_set_message($this->t('%label upload failed. Please try again.',
           ['%label' => $entity->label()]), 'error');
       }
@@ -249,12 +257,16 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($entity_type === $entity_id) {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
+      $mappers =  $this->configMapperManager->getMappers();
+
       try {
         if ($this->translationService->updateConfig($entity_type)) {
           drupal_set_message($this->t('%label has been updated.', ['%label' => $definition['title']]));
         }
       }
       catch (LingotekApiException $e) {
+        // Mark the document as failed.
+        $this->translationService->setConfigSourceStatus($mappers[$entity_type], Lingotek::STATUS_ERROR);
         drupal_set_message($this->t('%label update failed. Please try again.',
           ['%label' => $definition['title']]), 'error');
       }
@@ -272,6 +284,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
     }
     catch (LingotekApiException $e) {
+      // Mark the document as failed.
+      $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       drupal_set_message($this->t('%label update failed. Please try again.',
         ['%label' => $entity->label()]), 'error');
     }

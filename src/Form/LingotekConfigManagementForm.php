@@ -612,6 +612,9 @@ class LingotekConfigManagementForm extends FormBase {
     $profile = $mapper instanceof ConfigEntityMapper ?
       $this->lingotekConfiguration->getConfigEntityProfile($entity, FALSE) :
       $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE);
+    $document_id = $mapper instanceof ConfigEntityMapper ?
+      $this->translationService->getDocumentId($entity) :
+      $this->translationService->getConfigDocumentId($mapper);
 
     // If there is no entity, it's a config object and we don't abort based on
     // the profile.
@@ -621,8 +624,15 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->uploadDocument($entity);
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label upload failed. Please try again.',
-            ['%label' => $entity->label()]), 'error');
+          $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+          if ($document_id) {
+            drupal_set_message($this->t('%label update failed. Please try again.',
+              ['%label' => $entity->label()]), 'error');
+          }
+          else {
+            drupal_set_message($this->t('%label upload failed. Please try again.',
+              ['%label' => $entity->label()]), 'error');
+          }
         }
       }
       else {
@@ -630,8 +640,15 @@ class LingotekConfigManagementForm extends FormBase {
           $this->translationService->uploadConfig($mapper->getPluginId());
         }
         catch (LingotekApiException $e) {
-          drupal_set_message($this->t('%label upload failed. Please try again.',
-            ['%label' => $mapper->getTitle()]), 'error');
+          $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
+          if ($document_id) {
+            drupal_set_message($this->t('%label update failed. Please try again.',
+              ['%label' => $mapper->getTitle()]), 'error');
+          }
+          else {
+            drupal_set_message($this->t('%label upload failed. Please try again.',
+              ['%label' => $mapper->getTitle()]), 'error');
+          }
         }
       }
     }
@@ -1003,6 +1020,9 @@ class LingotekConfigManagementForm extends FormBase {
   }
 
   protected function getSourceStatusText(ConfigMapperInterface $mapper, $status) {
+    $is_config_entity = $mapper instanceof ConfigEntityMapper;
+    $entity = $is_config_entity ? $mapper->getEntity() : NULL;
+
     switch ($status) {
       case Lingotek::STATUS_UNTRACKED:
       case Lingotek::STATUS_REQUEST:
@@ -1010,7 +1030,7 @@ class LingotekConfigManagementForm extends FormBase {
       case Lingotek::STATUS_DISABLED:
         return $this->t('Disabled, cannot request translation');
       case Lingotek::STATUS_EDITED:
-        return ($this->translationService->getConfigDocumentId($mapper)) ?
+        return ($is_config_entity ? $this->translationService->getDocumentId($entity) : $this->translationService->getConfigDocumentId($mapper)) ?
           $this->t('Re-upload (content has changed since last upload)') : $this->t('Upload');
       case Lingotek::STATUS_IMPORTING:
         return $this->t('Source importing');
@@ -1225,13 +1245,17 @@ class LingotekConfigManagementForm extends FormBase {
   protected function getSourceActionUrl(ConfigMapperInterface &$mapper, $source_status) {
     $url = NULL;
     $args = $this->getActionUrlArguments($mapper);
+    $document_id = $mapper instanceof ConfigEntityMapper ?
+      $this->translationService->getDocumentId($mapper->getEntity()) :
+      $this->translationService->getConfigDocumentId($mapper);
+
     if ($source_status == Lingotek::STATUS_IMPORTING) {
       $url = Url::fromRoute('lingotek.config.check_upload',
         $args,
         ['query' => $this->getDestinationArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED) {
-      if ($doc_id = $this->translationService->getConfigDocumentId($mapper)) {
+    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR) {
+      if ($document_id) {
         $url = Url::fromRoute('lingotek.config.update',
           $args,
           ['query' => $this->getDestinationArray()]);

@@ -3,8 +3,11 @@
 namespace Drupal\lingotek\Tests;
 
 use Drupal\Core\Url;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
@@ -154,6 +157,106 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/es_MX');
     $this->assertLinkByHref('/admin/structure/types/manage/article/fields/node.article.body/translate/it/add');
     $this->assertLinkByHref('/admin/structure/types/manage/article/fields/node.article.body/translate/es/add');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must fail.
+    $this->clickLink('Upload');
+    $this->assertText('Body upload failed. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->assertText('Body uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAnError() {
+    // Check that the translate tab is in the field.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->assertText('Body uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Body status checked successfully');
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_fields');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->assertText('Contents update failed. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.body');
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->assertText('Contents has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnErrorViaAPI() {
+    $edit = [
+      'table[node_fields][enabled]' => 1,
+      'table[node_fields][profile]' => 'automatic',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    // Create a field.
+    $edit  = ['label' => 'Excerpt', 'new_storage_type' => 'text', 'field_name' => 'excerpt'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/add-field', $edit, 'Save and continue');
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('The upload for field_config Excerpt failed. Please try again.');
+
+    // The field has been marked with the error status.
+    $fieldConfig = FieldConfig::load('node.article.field_excerpt');
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($fieldConfig);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
   }
 
 }

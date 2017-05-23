@@ -106,7 +106,7 @@ class LingotekEntityController extends LingotekControllerBase {
       }
     } catch (LingotekApiException $exception) {
       $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-      drupal_set_message(t('The update for @entity_type failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      drupal_set_message(t('The update for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
     }
     return $this->translationsPageRedirect($entity);
   }

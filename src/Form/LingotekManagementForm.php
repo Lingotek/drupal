@@ -740,7 +740,13 @@ class LingotekManagementForm extends FormBase {
         $this->translationService->uploadDocument($entity);
       }
       catch (LingotekApiException $exception) {
-        drupal_set_message(t('The upload for @entity_type %title translation failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+        if ($this->translationService->getDocumentId($entity)) {
+          drupal_set_message(t('The update for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+        }
+        else {
+          drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+        }
       }
     }
     else {
@@ -1231,7 +1237,7 @@ class LingotekManagementForm extends FormBase {
         ['doc_id' => $this->translationService->getDocumentId($entity)],
         ['query' => $this->getDestinationWithQueryArray()]);
     }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED) {
+    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR) {
       if ($doc_id = $this->translationService->getDocumentId($entity)) {
         $url = Url::fromRoute('lingotek.entity.update',
           ['doc_id' => $doc_id],
