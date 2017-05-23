@@ -2,31 +2,21 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
+use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
+use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 
 /**
- * Tests translating a node using the bulk management form.
+ * Tests translating a config object using the bulk management form.
  *
  * @group lingotek
  */
 class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  public static $modules = ['block', 'node'];
-
-  /**
-   * @var NodeInterface
-   */
-  protected $node;
-
   protected function setUp() {
     parent::setUp();
 
@@ -275,7 +265,7 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testAddingLanguageAllowsRequesting() {
-    // We need a node with translations first.
+    // We need a config object with translations first.
     $this->testSystemSiteTranslationUsingLinks();
 
     // Add a language.
@@ -298,6 +288,171 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   // ToDo: Add a test for this.
   public function testAddingConfigInDifferentLocale() {
     $this->pass('Test not implemented yet.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must fail.
+    $this->clickLink('EN', 1);
+    $this->assertText('System information upload failed. Please try again.');
+
+    // Check the right class is added.
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 1, 'The system information has been marked as error.');
+
+    // The config mapper has been marked with the error status.
+    /** @var ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAnError() {
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    // Edit the system site information.
+    $edit = ['site_name' => 'Llamas are cool'];
+    $this->drupalPostForm('/admin/config/system/site-information', $edit, t('Save configuration'));
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // Update the document, which must fail.
+    $this->clickLink('EN', 1);
+    $this->assertText('System information update failed. Please try again.');
+
+    // Check the right class is added.
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 1, 'The system information has been marked as error.');
+
+    // The config mapper has been marked with the error status.
+    /** @var ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN', 1);
+    $this->assertText('System information has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnErrorUsingActions() {
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must fail.
+    $basepath = \Drupal::request()->getBasePath();
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('System information upload failed. Please try again.');
+
+    // Check the right class is added.
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 1, 'The system information has been marked as error.');
+
+    // The config mapper has been marked with the error status.
+    /** @var ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN', 1);
+    $this->assertText(t('System information uploaded successfully'));
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAnErrorUsingActions() {
+    $this->goToConfigBulkManagementForm();
+
+    // Upload the document, which must succeed.
+    $basepath = \Drupal::request()->getBasePath();
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertText('Operations completed.');
+
+    // Check upload.
+    $this->clickLink('EN', 1);
+
+    // Edit the system site information.
+    $edit = ['site_name' => 'Llamas are cool'];
+    $this->drupalPostForm('/admin/config/system/site-information', $edit, t('Save configuration'));
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    $this->goToConfigBulkManagementForm();
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,  // System information.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $this->assertText('System information update failed. Please try again.');
+
+    // Check the right class is added.
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 1, 'The system information has been marked as error.');
+
+    // The config mapper has been marked with the error status.
+    /** @var ConfigMapperManagerInterface $mapperManager */
+    $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mapper = $mapperManager->getMappers()['system.site_information_settings'];
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getConfigSourceStatus($mapper);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('EN', 1);
+    $this->assertText('System information has been updated.');
   }
 
 }

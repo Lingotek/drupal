@@ -117,11 +117,18 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       if ($source_language == $locale) {
         // Check-Progress button if the source upload status is PENDING.
         if ($enabled && ($source_status === Lingotek::STATUS_IMPORTING || $source_status === Lingotek::STATUS_EDITED) && !empty($document_id)) {
-          $path = '/admin/lingotek/entity/check_upload/' . $document_id;
-          $this->addOperationLink($entity, $option, 'Check Upload Status', $path, $language);
+          $checkPath = '/admin/lingotek/entity/check_upload/' . $document_id;
+          $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
+          $this->addOperationLink($entity, $option, 'Check Upload Status', $checkPath, $language);
+          $this->addOperationLink($entity, $option, 'Upload', $path, $language);
         }
         // Upload button if the status is EDITED or non-existent.
-        elseif ($enabled && ($source_status === Lingotek::STATUS_EDITED || $source_status === NULL)) {
+        elseif ($enabled && ($source_status === Lingotek::STATUS_EDITED || $source_status === Lingotek::STATUS_ERROR ||$source_status === NULL)) {
+          $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
+          $this->addOperationLink($entity, $option, 'Upload', $path, $language);
+        }
+        elseif ($enabled && ($source_status === Lingotek::STATUS_CURRENT)) {
+          // Allow to re-upload if the status is current.
           $path = '/admin/lingotek/batch/uploadSingle/' . $entity_type . '/' . $entity->id();
           $this->addOperationLink($entity, $option, 'Upload', $path, $language);
         }

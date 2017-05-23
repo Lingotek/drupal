@@ -5,8 +5,11 @@ namespace Drupal\lingotek\Tests;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\node\Entity\Node;
+use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 
 /**
@@ -149,6 +152,107 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref('/admin/lingotek/config/request/node_type/article/es_MX');
     $this->assertLinkByHref('/admin/structure/types/manage/article/translate/it/add');
     $this->assertLinkByHref('/admin/structure/types/manage/article/translate/es/add');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnError() {
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must fail.
+    $this->clickLink('Upload');
+    $this->assertText('Article upload failed. Please try again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->assertText('Article uploaded successfully');
+  }
+
+  /**
+   * Test that we handle errors in update.
+   */
+  public function testUpdatingWithAnError() {
+    // Check that the translate tab is in the node type.
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    // Upload the document, which must succeed.
+    $this->clickLink('Upload');
+    $this->assertText('Article uploaded successfully');
+
+    // Check that the upload succeeded.
+    $this->clickLink('Check upload status');
+    $this->assertText('Article status checked successfully');
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    // Go back to the form.
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink(t('Translate'));
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    // Re-upload. Must fail now.
+    $this->clickLink('Upload');
+    $this->assertText('Blogpost update failed. Please try again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('article');
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
+
+    // I can still re-try the upload.
+    \Drupal::state()->set('lingotek.must_error_in_upload', FALSE);
+    $this->clickLink('Upload');
+    $this->assertText('Blogpost has been updated.');
+  }
+
+  /**
+   * Test that we handle errors in upload.
+   */
+  public function testUploadingWithAnErrorViaAPI() {
+    $edit = [
+      'table[node_type][enabled]' => 1,
+      'table[node_type][profile]' => 'automatic',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
+
+    $this->drupalGet('admin/lingotek/settings');
+
+    // Create a content type.
+    $edit  = ['name' => 'Landing Page', 'type' => 'landing_page'];
+    $this->drupalPostForm('admin/structure/types/add', $edit, 'Save content type');
+
+    // The document was uploaded automatically and failed.
+    $this->assertText('The upload for node_type Landing Page failed. Please try again.');
+
+    // The node type has been marked with the error status.
+    $nodeType = NodeType::load('landing_page');
+    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $source_status = $translation_service->getSourceStatus($nodeType);
+    $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
   }
 
 }

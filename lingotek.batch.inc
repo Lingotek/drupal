@@ -28,20 +28,21 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
       $document_id = $translation_service->uploadDocument($entity);
     }
     catch (LingotekApiException $exception) {
-      // We do nothing, we'll show the message later and it's been already logged.
+      // Mark the document as failed.
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
     }
     if ($document_id) {
       $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
     }
     else {
+      // Mark the document as failed.
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       $context['results']['error'][] = t('The upload for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()));
     }
   }
   
   // Use update with existing entities that have been edited. 
-  elseif ($translation_service->hasEntityChanged($entity)) {
-    // Update the hash on the entity. (Is this really necessary here?)
-    $entity->save();
+  else {
     try {
       if ($translation_service->updateDocument($entity)) {
         $context['results']['uploads'] = !empty($context['results']['uploads']) ? $context['results']['uploads'] + 1 : 1;
@@ -51,6 +52,8 @@ function lingotek_operation_content_upload($entity_type, $entity_id, &$context) 
       }
     }
     catch (LingotekApiException $exception) {
+      // Mark the document as failed.
+      $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
       $context['results']['error'][] = t('The update for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()));
     }
   }

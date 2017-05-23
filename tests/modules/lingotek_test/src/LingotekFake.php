@@ -2,6 +2,7 @@
 namespace Drupal\lingotek_test;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekProfileInterface;
@@ -155,6 +156,9 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL) {
+    if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
+      throw new LingotekApiException();
+    }
     // If the upload is successful, we must return a valid hash.
     \Drupal::state()->set('lingotek.uploaded_title', $title);
     \Drupal::state()->set('lingotek.uploaded_content', $content);
@@ -180,6 +184,10 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL) {
+    if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
+      throw new LingotekApiException();
+    }
+
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_content_url', $url);
     \Drupal::state()->set('lingotek.uploaded_content_title', $title);
