@@ -817,4 +817,69 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Node Llamas are cool EDITED has been updated.');
   }
 
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckTranslationsAction() {
+    // Add a language.
+    ConfigurableLanguage::create(['id' => 'de_AT', 'label' => 'German (Austria)'])->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Assert that I could request translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // Check statuses, that may been requested externally.
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Now Drupal knows that there are translations ready.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // Even if I just add a new language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_DE?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // Ensure locales are handled correctly by setting manual values.
+    \Drupal::state()->set('lingotek.document_completion_statuses', ['de-AT' => 50, 'de-DE' => 100, 'es-MX' => 10]);
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Now Drupal knows which translations are ready.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_DE?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+  }
+
 }

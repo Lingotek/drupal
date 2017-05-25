@@ -166,7 +166,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
       $langcode = $drupal_language->id();
       $current_target_status = $this->getTargetStatus($entity, $langcode);
-      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_PENDING, NULL])) {
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
         if($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
         } else {

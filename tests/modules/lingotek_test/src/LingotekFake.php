@@ -260,6 +260,10 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentTranslationStatuses($doc_id) {
+    $statuses = \Drupal::state()->get('lingotek.document_completion_statuses', []);
+    if (!empty($statuses)) {
+      return $statuses;
+    }
     if (\Drupal::state()->get('lingotek.document_completion', TRUE)) {
       return ['es-MX' => 100, 'es-ES' => 100, 'de-AT' => 100, 'de-DE' => 100];
     }

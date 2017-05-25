@@ -585,4 +585,61 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Blogpost has been updated.');
   }
 
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckTranslationsAction() {
+    // Add a language.
+    ConfigurableLanguage::create(['id' => 'de_AT', 'label' => 'German (Austria)'])->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[article]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $edit = [
+      'table[article]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Assert that I could request translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // Check statuses, that may been requested externally.
+    $edit = [
+      'table[article]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Now Drupal knows that there are translations ready.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // Even if I just add a new language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+
+    // Ensure locales are handled correctly by setting manual values.
+    \Drupal::state()->set('lingotek.document_completion_statuses', ['de-AT' => 50, 'de-DE' => 100, 'es-MX' => 10]);
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Now Drupal knows which translations are ready.
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_DE?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+  }
+
 }
