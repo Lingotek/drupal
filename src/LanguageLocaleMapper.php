@@ -32,6 +32,7 @@ class LanguageLocaleMapper implements LanguageLocaleMapperInterface {
    */
   public function getConfigurableLanguageForLocale($locale) {
     $drupal_language = NULL;
+    $locale = str_replace("-", "_", $locale);
     $id = $this->entityQuery->get('configurable_language')
       ->condition('third_party_settings.lingotek.locale', $locale)
       ->execute();

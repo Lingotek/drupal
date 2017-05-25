@@ -495,11 +495,22 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function checkTargetStatuses(ConfigEntityInterface &$entity) {
-    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
-    $translation_status = $metadata->getTargetStatus();
-    foreach ($translation_status as $language => $current_status) {
-      $locale = $this->languageLocaleMapper->getLocaleForLangcode($language);
-      $this->checkTargetStatus($entity, $locale);
+    $document_id = $this->getDocumentId($entity);
+    $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+    foreach ($translation_statuses as $lingotek_locale => $progress) {
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
+      if ($drupal_language == NULL) {
+        continue;// languages existing in TMS, but not configured on Drupal
+      }
+      $langcode = $drupal_language->id();
+      $current_target_status = $this->getTargetStatus($entity, $langcode);
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
+        if($progress === Lingotek::PROGRESS_COMPLETE) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+        } else {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+        }
+      }
     }
   }
 
@@ -863,14 +874,21 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function checkConfigTargetStatuses($mapper_id) {
     $mapper = $this->mappers[$mapper_id];
-    $config_names = $mapper->getConfigNames();
-    if (!empty($config_names)) {
-      $config_name = reset($config_names);
-      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
-      $translation_status = $metadata->getTargetStatus();
-      foreach ($translation_status as $language => $current_status) {
-        $locale = $this->languageLocaleMapper->getLocaleForLangcode($language);
-        $this->checkConfigTargetStatus($mapper_id, $locale);
+    $document_id = $this->getConfigDocumentId($mapper);
+    $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+    foreach ($translation_statuses as $lingotek_locale => $progress) {
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
+      if ($drupal_language == NULL) {
+        continue;// languages existing in TMS, but not configured on Drupal
+      }
+      $langcode = $drupal_language->id();
+      $current_target_status = $this->getConfigTargetStatus($mapper, $langcode);
+      if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
+        if($progress === Lingotek::PROGRESS_COMPLETE) {
+          $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_READY);
+        } else {
+          $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_PENDING);
+        }
       }
     }
   }
