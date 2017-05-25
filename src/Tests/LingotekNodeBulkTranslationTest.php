@@ -882,4 +882,102 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
   }
 
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusNotCompleted() {
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // The document has not been imported yet.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // I can check current status, because it wasn't imported but it's not marked
+    // as an error.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // Check again, it succeeds.
+    \Drupal::state()->set('lingotek.document_status_completion', TRUE);
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Assert that targets can be requested.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+  }
+
+  /**
+   * Tests that all the statuses are set when using the Check Translations action.
+   */
+  public function testCheckSourceStatusNotCompletedAndUploadedLongAgo() {
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+
+    // The document has not been imported yet, and it was uploaded long ago.
+    \Drupal::state()->set('lingotek.document_status_completion', FALSE);
+    Node::load(1)->setChangedTime(REQUEST_TIME - 100000)->save();
+
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // It was marked as error and I can try the update.
+    // Check the right class is added.
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-error')  and ./a[contains(text(), 'EN')]]");
+    $this->assertEqual(count($source_error), 1, 'The node has been marked as error.');
+
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/update/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+  }
+
 }

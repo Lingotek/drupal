@@ -12,6 +12,7 @@ use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Language\LanguageInterface;
@@ -111,14 +112,17 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         return TRUE;
       } else {
         //TODO: change to actual last_uploaded timestamp rather than surrogate.
-        $last_uploaded_time = $entity->changed->value;
-        // If document has not successfully imported after MAX_IMPORT_TIME then
-        // move to ERROR state.
-        if (REQUEST_TIME - $last_uploaded_time > $MAX_IMPORT_TIME) {
-          $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-        } else {
-          // Document still may be importing and the MAX import time didn't
-          // complete yet, so we do nothing.
+        if ($entity->getEntityType()->isSubclassOf(EntityChangedInterface::class)) {
+          $last_uploaded_time = $entity->getChangedTime();
+          // If document has not successfully imported after MAX_IMPORT_TIME then
+          // move to ERROR state.
+          if (REQUEST_TIME - $last_uploaded_time > $MAX_IMPORT_TIME) {
+            $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+          }
+          else {
+            // Document still may be importing and the MAX import time didn't
+            // complete yet, so we do nothing.
+          }
         }
         return FALSE;
       }

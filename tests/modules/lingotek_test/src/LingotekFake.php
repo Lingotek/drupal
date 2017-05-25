@@ -214,8 +214,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentStatus($doc_id) {
-    // Translation is done.
-    return TRUE;
+    return \Drupal::state()->get('lingotek.document_status_completion', TRUE);
   }
 
   public function getDocumentTranslationStatus($doc_id, $locale) {
