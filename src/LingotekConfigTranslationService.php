@@ -360,10 +360,15 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (!empty($this->getDocumentId($entity))) {
       return $this->updateDocument($entity);
     }
-    $source_data = json_encode($this->getSourceData($entity));
+    $source_data = $this->getSourceData($entity);
     $document_name = $entity->id() . ' (config): ' . $entity->label();
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity));
+
+    // Allow other modules to alter the data before is uploaded.
+    \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
+    $encoded_data = json_encode($source_data);
+
+    $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity));
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
@@ -389,12 +394,17 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function updateDocument(ConfigEntityInterface &$entity) {
-    $source_data = json_encode($this->getSourceData($entity));
+    $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $document_name = $entity->id() . ' (config): ' . $entity->label();
 
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name)) {
+
+    // Allow other modules to alter the data before is uploaded.
+    \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
+    $encoded_data = json_encode($source_data);
+
+    if ($this->lingotek->updateDocument($document_id, $encoded_data, $url, $document_name)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       return $document_id;
@@ -483,7 +493,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       // download data, and if there is anything, we can assume a phase is
       // completed.
       // ToDo: Instead of downloading would be nice if we could check phases.
-      elseif ($this->lingotek->downloadDocument($entity, $locale)) {
+      elseif ($this->lingotek->downloadDocument($document_id, $locale)) {
         // TODO: Set Status to STATUS_READY_INTERIM when that status is
         // available. See ticket https://www.drupal.org/node/2850548
       }
@@ -575,6 +585,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function saveTargetData(ConfigEntityInterface $entity, $langcode, $data) {
+    // Allow other modules to alter the translation before it is saved.
+    \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_translation_presave', [&$entity, $langcode, &$data]);
+
     if ($entity->getEntityTypeId() == 'field_config') {
       $id = $entity->getTargetEntityTypeId();
       $mapper = clone ($this->mappers[$id . '_fields']);
