@@ -269,9 +269,10 @@ function lingotek_update_8011(&$sandbox) {
   // We need to collect all the data.
   if (isset($sandbox['step']) && $sandbox['step'] === 'collect') {
     $entities = $sandbox['entities'];
-    $max = count($entities);
+    $sandbox['max'] = count($entities);
 
-    for ($i = $sandbox['progress']; $i <= 10 && $i < $max; $i++) {
+    $count = 0;
+    for ($i = $sandbox['progress']; $count < 10 && $i < $sandbox['max']; $i++, $count++) {
       $entity_data = (array) $entities[$i];
       $entity_type_id = $entity_data['entity_type'];
       /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
@@ -301,7 +302,7 @@ function lingotek_update_8011(&$sandbox) {
           ->keys(['entity_type', 'entity_id'], [$entity->getEntityTypeId(),$entity->id()])
           ->execute();
       }
-      $sandbox['progress'] = $i;
+      $sandbox['progress']++;
       $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
     }
     if (empty($entities) || $sandbox['#finished'] === 1) {

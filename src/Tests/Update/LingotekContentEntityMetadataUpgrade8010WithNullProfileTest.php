@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Tests\Update;
 
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
 use Drupal\node\Entity\Node;
 use Drupal\system\Tests\Update\UpdatePathTestBase;
@@ -11,7 +12,7 @@ use Drupal\system\Tests\Update\UpdatePathTestBase;
  *
  * @group lingotek
  */
-class LingotekContentEntityMetadataUpgrade8010WithNullProfileLanguageTest extends UpdatePathTestBase {
+class LingotekContentEntityMetadataUpgrade8010WithNullProfileTest extends UpdatePathTestBase {
 
   /**
    * {@inheritdoc}
@@ -19,7 +20,7 @@ class LingotekContentEntityMetadataUpgrade8010WithNullProfileLanguageTest extend
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
       __DIR__ . '/../../../tests/fixtures/update/drupal-8.lingotek.standard.pre8010.php.gz',
-      __DIR__ . '/../../../tests/fixtures/update/null-profile-language-8010.php',
+      __DIR__ . '/../../../tests/fixtures/update/null-profile-8010.php',
     ];
   }
 
@@ -28,6 +29,10 @@ class LingotekContentEntityMetadataUpgrade8010WithNullProfileLanguageTest extend
    */
   public function testContentEntityMetadataUpgrade() {
     $this->runUpdates();
+
+    /** @var LingotekContentMetadata[] $metadatas */
+    $metadatas = LingotekContentMetadata::loadMultiple();
+    $this->assertEqual(count($metadatas), 15, 'All metadatas were migrated.');
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation */
     $content_translation = \Drupal::service('lingotek.content_translation');
@@ -68,14 +73,14 @@ class LingotekContentEntityMetadataUpgrade8010WithNullProfileLanguageTest extend
     $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getSourceStatus($node));
     $this->assertEqual(Lingotek::STATUS_PENDING, $content_translation->getTargetStatus($node, 'es'));
     $this->assertEqual(Lingotek::STATUS_UNTRACKED, $content_translation->getTargetStatus($node, 'de'));
-    $this->assertEqual('custom', $lingotek_config->getEntityProfile($node, FALSE)->id());
+    $this->assertEqual('customized', $lingotek_config->getEntityProfile($node, FALSE)->id());
 
     $node = Node::load(5);
     $this->assertEqual('document_id_4', $content_translation->getDocumentId($node));
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $content_translation->getSourceStatus($node));
     $this->assertEqual(Lingotek::STATUS_READY, $content_translation->getTargetStatus($node, 'es'));
     $this->assertEqual(Lingotek::STATUS_UNTRACKED, $content_translation->getTargetStatus($node, 'de'));
-    $this->assertEqual('custom', $lingotek_config->getEntityProfile($node, FALSE)->id());
+    $this->assertEqual('customized', $lingotek_config->getEntityProfile($node, FALSE)->id());
 
 
     $node = Node::load(6);
@@ -93,6 +98,27 @@ class LingotekContentEntityMetadataUpgrade8010WithNullProfileLanguageTest extend
       $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getTargetStatus($node, 'de'));
       $this->assertEqual('automatic', $lingotek_config->getEntityProfile($node, FALSE)->id());
     }
+
+    $node = Node::load(13);
+    $this->assertEqual('document_id_12', $content_translation->getDocumentId($node));
+    $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getSourceStatus($node));
+    $this->assertEqual(Lingotek::STATUS_NONE, $content_translation->getTargetStatus($node, 'es'));
+    $this->assertEqual(Lingotek::STATUS_NONE, $content_translation->getTargetStatus($node, 'de'));
+    $this->assertEqual('automatic', $lingotek_config->getEntityProfile($node, FALSE)->id());
+
+    $node = Node::load(14);
+    $this->assertEqual('document_id_13', $content_translation->getDocumentId($node));
+    $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getSourceStatus($node));
+    $this->assertEqual(Lingotek::STATUS_NONE, $content_translation->getTargetStatus($node, 'es'));
+    $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getTargetStatus($node, 'de'));
+    $this->assertEqual('manual', $lingotek_config->getEntityProfile($node, FALSE)->id());
+
+    $node = Node::load(15);
+    $this->assertEqual('document_id_14', $content_translation->getDocumentId($node));
+    $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getSourceStatus($node));
+    $this->assertEqual(Lingotek::STATUS_CURRENT, $content_translation->getTargetStatus($node, 'es'));
+    $this->assertEqual(Lingotek::STATUS_NONE, $content_translation->getTargetStatus($node, 'de'));
+    $this->assertEqual('manual', $lingotek_config->getEntityProfile($node, FALSE)->id());
 
     $this->drupalLogin($this->rootUser);
     /** @var \Drupal\Core\Extension\ModuleInstallerInterface $module_installer */
