@@ -126,14 +126,15 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $entity = $mapper->getEntity();
       $entity_id = $entity->id();
     }
+    if ($entity_id === NULL) {
+      $entity_id = $plugin_id;
+    }
 
     foreach ($languages as $language) {
       $langcode = $language->getId();
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
+
       if ($locale && $langcode === $original_langcode) {
-        if ($entity_id === NULL) {
-          $entity_id = $plugin_id;
-        }
         $page['languages'][$langcode]['operations']['#links']['upload'] = array(
           'title' => $this->t('Upload'),
           'url' => Url::fromRoute('lingotek.config.upload',
@@ -170,6 +171,17 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         if (isset($page['languages'][$langcode]['operations']['#links']['add'])) {
           // If we have a config entity and it has a document id, we want to show
           // the ability of requesting translations.
+          if ($entity && $document_id = $this->translationService->getDocumentId($entity)) {
+            $target_status = $this->translationService->getTargetStatus($entity, $langcode);
+            $this->generateOperationsLinks($page, $plugin_id, $entity_id, $target_status, $langcode, $locale);
+          }
+          // If it is a ConfigNamesMapper object, we need to call another method.
+          elseif ($entity_id === $plugin_id && $document_id = $this->translationService->getConfigDocumentId($mapper)) {
+            $target_status = $this->translationService->getConfigTargetStatus($mapper, $langcode);
+            $this->generateOperationsLinks($page, $plugin_id, $entity_id, $target_status, $langcode, $locale);
+          }
+        }
+        if (isset($page['languages'][$langcode]['operations']['#links']['edit'])) {
           if ($entity && $document_id = $this->translationService->getDocumentId($entity)) {
             $target_status = $this->translationService->getTargetStatus($entity, $langcode);
             $this->generateOperationsLinks($page, $plugin_id, $entity_id, $target_status, $langcode, $locale);
@@ -503,7 +515,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       'entity_id' => $entity_id,
       'locale' => $locale,
     ];
-    if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_UNTRACKED) {
+
+    if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_EDITED || $target_status == Lingotek::STATUS_UNTRACKED) {
       $page['languages'][$langcode]['operations']['#links']['request'] = array(
         'title' => $this->t('Request translation'),
         'url' => Url::fromRoute('lingotek.config.request', $route_params),

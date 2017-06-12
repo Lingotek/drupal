@@ -35,14 +35,19 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     parent::setUp();
 
     // Place the actions and title block.
-    $this->drupalPlaceBlock('local_tasks_block');
-    $this->drupalPlaceBlock('page_title_block');
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'header', 'weight' => -5]);
+    $this->drupalPlaceBlock('local_tasks_block', ['region' => 'header', 'weight' => -10]);
 
     // Create Article node types.
     $this->drupalCreateContentType(array(
       'type' => 'article',
       'name' => 'Article'
     ));
+    $edit = [
+      'table[node_type][enabled]' => 1,
+      'table[node_type][profile]' => 'automatic',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -93,6 +98,41 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
     $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/translate/es/edit');
+  }
+
+  /**
+   * Tests that a config can be translated after edited.
+   */
+  public function testEditedContentTypeTranslation() {
+    // We need a config with translations first.
+    $this->testContentTypeTranslation();
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the content type.
+    $edit['name'] = 'Blogpost';
+    $this->drupalPostForm('/admin/structure/types/manage/article', $edit, t('Save content type'));
+    $this->assertText('The content type Blogpost has been updated.');
+
+    $this->clickLink(t('Translate'));
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $this->assertLinkByHref('admin/lingotek/config/request/node_type/article/eu_ES');
+
+    $this->clickLink(t('Request translation'), 1);
+    $this->assertText(t('Translation to es_MX requested successfully'));
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Recheck status.
+    $this->clickLink('Check Download');
+    $this->assertText('Translation to es_MX status checked successfully');
+
+    // Download the translation.
+    $this->clickLink('Download');
+    $this->assertText('Translation to es_MX downloaded successfully');
   }
 
   /**

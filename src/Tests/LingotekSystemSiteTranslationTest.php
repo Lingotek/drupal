@@ -96,6 +96,39 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a config can be translated after edited.
+   */
+  public function testEditedSystemConfigTranslation() {
+    // We need a config with translations first.
+    $this->testSystemSiteTranslation();
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the config.
+    $edit = ['site_name' => 'The Llamas site'];
+    $this->drupalPostForm('admin/config/system/site-information', $edit, 'Save configuration');
+
+    $this->clickLink('Translate system information');
+
+    // We need to reupload again. It's manual for configuration.
+    $this->clickLink('Upload');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $this->assertLinkByHref('admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/eu_ES');
+
+    // Recheck status.
+    $this->clickLink('Check Download');
+    $this->assertText('Translation to es_AR checked successfully');
+
+    // Download the translation.
+    $this->clickLink('Download');
+    $this->assertText('Translation to es_AR downloaded successfully');
+  }
+
+  /**
    * Tests that no translation can be requested if the language is disabled.
    */
   public function testLanguageDisabled() {

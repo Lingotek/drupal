@@ -159,6 +159,42 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that a node can be translated after edited.
+   */
+  public function testEditedNodeTranslation() {
+    // We need a node with translations first.
+    $this->testNodeTranslation();
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $edit['body[0][value]'] = 'Llamas are very cool EDITED';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
+
+    $this->clickLink('Translate');
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $this->assertLinkByHref('admin/lingotek/entity/add_target/dummy-document-hash-id/eu_ES');
+    $this->clickLink('Request translation', 1);
+    $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool EDITED.");
+
+    // Recheck status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_MX translation for node Llamas are cool EDITED is ready for download.');
+
+    // Download the translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool EDITED into es_MX has been downloaded.');
+  }
+
+  /**
    * Test that when a node is uploaded in a different locale that locale is used.
    */
   public function testAddingContentInDifferentLocale() {

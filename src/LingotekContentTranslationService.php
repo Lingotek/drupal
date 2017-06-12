@@ -555,6 +555,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $pristine_statuses = [
         Lingotek::STATUS_REQUEST,
         Lingotek::STATUS_UNTRACKED,
+        Lingotek::STATUS_EDITED,
       ];
 
       if (in_array($current_status, $pristine_statuses)) {
