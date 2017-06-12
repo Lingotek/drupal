@@ -937,15 +937,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               $embedded_entity_id = $revision->{$name}->get($index)
                 ->get('target_id')
                 ->getValue();
-              $embedded_entity_revision_id = $revision->{$name}->get($index)
-                ->get('target_revision_id')
-                ->getValue();
+              /** @var \Drupal\Core\Entity\RevisionableInterface $embedded_entity */
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
-                ->loadRevision($embedded_entity_revision_id);
+                ->load($embedded_entity_id);
               $this->saveTargetData($embedded_entity, $langcode, $field_item);
               // Now the embedded entity is saved, but we need to ensure
-              // the reference will be saved too.
-              $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity_revision_id]);
+              // the reference will be saved too. Ensure it's the same revision.
+              $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()]);
               ++$index;
             }
           }

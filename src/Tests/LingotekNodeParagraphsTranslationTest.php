@@ -33,8 +33,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     parent::setUp();
 
     // Place the actions and title block.
-    $this->drupalPlaceBlock('local_tasks_block');
-    $this->drupalPlaceBlock('page_title_block');
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'content', 'weight' => -5]);
+    $this->drupalPlaceBlock('local_tasks_block', ['region' => 'content', 'weight' => -10]);
 
     // Add locales.
     $post = [
@@ -74,6 +74,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
       'node[paragraphed_content_demo][fields][title]' => 1,
       'node[paragraphed_content_demo][fields][field_paragraphs_demo]' => 1,
       'paragraph[image_text][enabled]' => 1,
+      'paragraph[image_text][profiles]' => 'manual',
       'paragraph[image_text][fields][field_image_demo]' => 1,
       'paragraph[image_text][fields][field_image_demo:properties][title]' => 'title',
       'paragraph[image_text][fields][field_image_demo:properties][alt]' => 'alt',
@@ -91,8 +92,6 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
   public function testNodeWithParagraphsTranslation() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
-
-    $test_image = current($this->drupalGetTestFiles('image'));
 
     // Add paragraphed content.
     $this->drupalGet('node/add/paragraphed_content_demo');
@@ -141,8 +140,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id-1/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id-1', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
+    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
     $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -169,8 +168,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a first time';
-    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a second time';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
 
     $this->drupalPostForm(NULL, $edit, t('Save and publish'));
 
@@ -214,8 +213,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a first time';
-    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a second time';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
 
     $this->drupalPostForm(NULL, $edit, t('Save and publish'));
 
@@ -238,8 +237,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a first time';
-    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for a second time';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
 
     $this->drupalPostForm(NULL, $edit, t('Save and publish'));
 
@@ -254,6 +253,210 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm('paragraph');
     $this->assertText('Image + Text');
+  }
+
+  public function testParagraphEditsAreKeptWhenTranslating() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs_multiple');
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
+    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+
+    $this->node = Node::load(1);
+
+    // Check that only the configured fields have been uploaded, including metatags.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $this->verbose(var_export($data, TRUE));
+    $this->assertUploadedDataFieldCount($data, 2 );
+    $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
+    $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool for the first time');
+    $this->assertEqual($data['field_paragraphs_demo'][1]['field_text_demo'][0]['value'], 'Llamas are very cool for the second time');
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
+    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+
+    // Edit the original node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Edit');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
+    $this->drupalPostForm(NULL, $edit, t('Save and keep published'));
+
+    $this->assertText('Paragraphed article Dogs are cool has been updated.');
+    $this->assertText('Dogs are very cool for the first time');
+    $this->assertText('Dogs are very cool for the second time');
+
+    // Go back to translations.
+    $this->clickLink('Translate');
+
+    // Request translation.
+    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Dogs are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Dogs are cool is ready for download.');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Dogs are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas por primera vez');
+    $this->assertText('Las llamas son muy chulas por segunda vez');
+
+    // The saved revision is kept.
+    $this->clickLink('Translate');
+    $this->clickLink('Dogs are cool');
+    $this->assertText('Dogs are very cool for the first time');
+    $this->assertText('Dogs are very cool for the second time');
+  }
+
+  public function testParagraphRevisionsAreKeptWhenTranslating() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs_multiple');
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
+    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+
+    $this->node = Node::load(1);
+
+    // Check that only the configured fields have been uploaded, including metatags.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $this->verbose(var_export($data, TRUE));
+    $this->assertUploadedDataFieldCount($data, 2 );
+    $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
+    $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool for the first time');
+    $this->assertEqual($data['field_paragraphs_demo'][1]['field_text_demo'][0]['value'], 'Llamas are very cool for the second time');
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
+    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+
+    // Edit the original node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Edit');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
+    $edit['revision'] = 1;
+    $this->drupalPostForm(NULL, $edit, t('Save and unpublish'));
+
+    $this->assertText('Paragraphed article Dogs are cool has been updated.');
+    $this->assertText('Dogs are very cool for the first time');
+    $this->assertText('Dogs are very cool for the second time');
+
+    // Go back to translations.
+    $this->clickLink('Translate');
+
+    // Request translation.
+    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Dogs are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Dogs are cool is ready for download.');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Dogs are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas por primera vez');
+    $this->assertText('Las llamas son muy chulas por segunda vez');
+
+    // The latest revision is kept.
+    $this->clickLink('Translate');
+    $this->clickLink('Dogs are cool');
+    $this->assertText('Dogs are very cool for the first time');
+    $this->assertText('Dogs are very cool for the second time');
+
+    // The published revision is not updated.
+    $this->drupalGet('node/1/revisions/1/view');
+    $this->assertText('Llamas are very cool for the first time');
+    $this->assertText('Llamas are very cool for the second time');
   }
 
 }
