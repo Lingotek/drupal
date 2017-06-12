@@ -47,6 +47,12 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
+    $edit = [
+      'table[node_fields][enabled]' => 1,
+      'table[node_fields][profile]' => 'automatic',
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
   }
@@ -98,6 +104,42 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->assertFieldByName('translation[config_names][field.field.node.article.body][label]', 'Cuerpo');
     $this->assertFieldByName('translation[config_names][field.field.node.article.body][description]', 'Cuerpo del contenido');
   }
+
+  /**
+   * Tests that a config can be translated after edited.
+   */
+  public function testEditedFieldBodyTranslation() {
+    // We need a config with translations first.
+    $this->testFieldTranslation();
+
+    // Add a language so we can check that it's not marked as dirty if there are
+    // no translations.
+    ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
+
+    // Edit the field.
+    $edit = ['label' => 'Contents'];
+    $this->drupalPostForm('/admin/structure/types/manage/article/fields/node.article.body', $edit, t('Save settings'));
+    $this->assertText('Saved Contents configuration.');
+
+    $this->clickLink(t('Translate'));
+
+    // Check the status is not edited for Vasque, but available to request
+    // translation.
+    $this->assertLinkByHref('/admin/lingotek/config/request/node_fields/node.article.body/eu_ES');
+
+    $this->clickLink(t('Request translation'), 1);
+    $this->assertText(t('Translation to es_MX requested successfully'));
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Recheck status.
+    $this->clickLink('Check Download');
+    $this->assertText('Translation to es_MX status checked successfully');
+
+    // Download the translation.
+    $this->clickLink('Download');
+    $this->assertText('Translation to es_MX downloaded successfully');
+  }
+
 
   /**
    * Tests that no translation can be requested if the language is disabled.
