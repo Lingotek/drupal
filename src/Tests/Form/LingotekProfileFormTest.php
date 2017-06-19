@@ -185,7 +185,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = $profile_id;
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
     $this->assertUrl('/node/1', [], 'Node has been created.');
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");

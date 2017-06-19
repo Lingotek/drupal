@@ -67,7 +67,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
     $this->assertUrl('/node/1', [], 'Node has been created.');
 
     // The metadata local task should not be visible.
@@ -87,7 +87,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
     $this->assertUrl('/node/1', [], 'Node has been created.');
 
     // The metadata local task should be visible.
@@ -108,7 +108,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // The metadata local task should be visible.
     $this->drupalGet('/node/1');

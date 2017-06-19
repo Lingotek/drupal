@@ -43,7 +43,7 @@ class LingotekNodeExistingBulkTranslationTest extends LingotekTestBase {
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
 
     // Add a language.

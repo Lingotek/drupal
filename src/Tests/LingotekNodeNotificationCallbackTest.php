@@ -74,7 +74,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = Node::load(1);
@@ -147,7 +147,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = Node::load(1);
@@ -231,7 +231,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     /** @var NodeInterface $node */
     $node = Node::load(1);
@@ -321,7 +321,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'profile2';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     /** @var NodeInterface $node */
     $node = Node::load(1);
@@ -419,7 +419,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     /** @var NodeInterface $node */
     $node = Node::load(1);
@@ -452,7 +452,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool 2';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // Simulate the notification of content successfully uploaded.
     $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [

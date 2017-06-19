@@ -99,7 +99,7 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['field_metatag[0][basic][description]'] = 'This text will help SEO find my llamas.';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 

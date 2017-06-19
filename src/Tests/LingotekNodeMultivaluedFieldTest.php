@@ -114,7 +114,7 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     $this->drupalPostAjaxForm(NULL, [], ['foo_add_more' => t('Add another item')], NULL, [], [], 'node-article-form');
     $this->drupalPostAjaxForm(NULL, [], ['foo_add_more' => t('Add another item')], NULL, [], [], 'node-article-form');
 
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 

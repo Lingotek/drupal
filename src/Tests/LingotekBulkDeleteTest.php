@@ -75,19 +75,19 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Llamas are cool 2';
     $edit['body[0][value]'] = 'Llamas are very cool 2';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $edit['title[0][value]'] = 'Llamas should stay';
     $edit['body[0][value]'] = 'Llamas should stay';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
 

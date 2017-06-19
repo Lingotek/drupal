@@ -131,7 +131,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $edit["$this->field_name[0][title]"] = 'My field link title';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 
@@ -205,7 +205,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $edit["$this->field_name[0][title]"] = 'My field link title';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 

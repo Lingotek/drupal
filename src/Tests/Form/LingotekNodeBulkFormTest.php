@@ -76,7 +76,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
       $edit['lingotek_translation_profile'] = 'manual';
-      $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+      $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
 
@@ -133,7 +133,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
       $edit['lingotek_translation_profile'] = $profile;
-      $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+      $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
 
@@ -206,7 +206,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['body[0][value]'] = $animal . ' are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
       $edit['lingotek_translation_profile'] = 'manual';
-      $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+      $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
 
@@ -290,7 +290,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['body[0][value]'] = $edit['title[0][value]'];
       $edit['langcode[0][value]'] = $langcode;
       $edit['lingotek_translation_profile'] = 'manual';
-      $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+      $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
 
@@ -389,7 +389,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $edit['body[0][value]'] = $edit['title[0][value]'];
       $edit['langcode[0][value]'] = 'en';
       $edit['lingotek_translation_profile'] = 'manual';
-      $this->drupalPostForm("node/add/$bundle", $edit, t('Save and publish'));
+      $this->saveAndPublishNodeForm($edit, $bundle);
       $nodes[$i] = $edit;
     }
 
@@ -443,7 +443,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // Go and upload this node.
     $this->goToContentBulkManagementForm();

@@ -98,7 +98,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     unset($edit['files[field_image_0]']);
     $edit['field_image[0][alt]'] = 'Llamas are cool';
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
@@ -175,7 +175,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool EDITED';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published (this translation)'));
+    $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
 
     $this->clickLink('Translate');
 
@@ -206,7 +206,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool es-MX';
     $edit['body[0][value]'] = 'Llamas are very cool es-MX';
     $edit['langcode[0][value]'] = 'es';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->assertText('Llamas are cool es-MX sent to Lingotek successfully.');
     $this->assertIdentical('es_MX', \Drupal::state()
@@ -255,7 +255,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 
@@ -315,7 +315,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
     $this->drupalGet('node/1');
@@ -348,7 +348,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
     $this->drupalGet('node/1');
@@ -364,7 +364,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Edit the node.
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
-    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published'));
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     // Go back to the form.
     $this->drupalGet('node/1');
@@ -401,7 +401,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // The document was uploaded automatically and failed.
     $this->assertText('The upload for node Llamas are cool failed. Please try again.');
@@ -424,13 +424,13 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 
     // Edit the node.
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
-    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published'));
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     // The document was updated automatically and failed.
     $this->assertText('The update for node Llamas are cool EDITED failed. Please try again.');

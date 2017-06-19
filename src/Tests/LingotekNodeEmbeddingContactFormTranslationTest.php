@@ -123,7 +123,7 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['field_contact_form[0][target_id]'] = $this->contactForm->label() . ' (' . $this->contactForm ->id() . ')';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 
@@ -194,7 +194,7 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
       $this->contactForm->label() . ' (' . $this->contactForm ->id() . ')';
     $edit['lingotek_translation_profile'] = 'manual';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 

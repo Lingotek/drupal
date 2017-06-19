@@ -103,7 +103,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
 //    $edit['field_metatag[0][basic][description]'] = 'This text will help SEO find my llamas.';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
@@ -171,7 +171,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
 
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
@@ -216,7 +216,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
 
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->goToContentBulkManagementForm('paragraph');
     $this->assertNoField('filters[wrapper][label]', 'There is no filter by label as paragraphs have no label.');
@@ -240,7 +240,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
 
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->goToContentBulkManagementForm('paragraph');
     // Assert there is at least one paragraph in the list.
@@ -270,7 +270,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
@@ -320,7 +320,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Dogs are cool';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
-    $this->drupalPostForm(NULL, $edit, t('Save and keep published'));
+
+    $this->saveAndKeepPublishedNodeForm($edit, NULL);
 
     $this->assertText('Paragraphed article Dogs are cool has been updated.');
     $this->assertText('Dogs are very cool for the first time');
@@ -369,7 +370,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
@@ -420,7 +421,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the first time';
     $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Dogs are very cool for the second time';
     $edit['revision'] = 1;
-    $this->drupalPostForm(NULL, $edit, t('Save and unpublish'));
+    $this->saveAndUnpublishNodeForm($edit, NULL);
 
     $this->assertText('Paragraphed article Dogs are cool has been updated.');
     $this->assertText('Dogs are very cool for the first time');

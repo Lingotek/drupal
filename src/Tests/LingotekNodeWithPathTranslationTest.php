@@ -100,7 +100,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     $edit['path[0][alias]'] = '/llamas-are-cool';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 
@@ -171,7 +171,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     $edit['path[0][alias]'] = '';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 
@@ -239,7 +239,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     $edit['path[0][alias]'] = '/llamas-are-cool';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 

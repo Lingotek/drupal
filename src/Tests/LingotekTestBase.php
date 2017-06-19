@@ -153,4 +153,60 @@ abstract class LingotekTestBase extends WebTestBase {
     return $this->assertEqual(count($statusCount), $count, $message);
   }
 
+  protected function saveAndPublishNodeForm(array $edit, $bundle = 'article') {
+    $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['status[value]'] = TRUE;
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and publish'));
+    }
+  }
+
+  protected function saveAndUnpublishNodeForm(array $edit, $nid) {
+    $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['status[value]'] = FALSE;
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and unpublish'));
+    }
+  }
+
+  protected function saveAsUnpublishedNodeForm(array $edit, $bundle = 'article') {
+    $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['status[value]'] = FALSE;
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save as unpublished'));
+    }
+  }
+
+
+  protected function saveAndKeepPublishedNodeForm(array $edit, $nid) {
+    $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['status[value]'] = TRUE;
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and keep published'));
+    }
+  }
+
+  protected function saveAndKeepPublishedThisTranslationNodeForm(array $edit, $nid) {
+    $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['status[value]'] = TRUE;
+      $this->drupalPostForm($path, $edit, t('Save (this translation)'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and keep published (this translation)'));
+    }
+  }
+
 }

@@ -104,7 +104,7 @@ class LingotekNodeLocaleTranslationTest extends LingotekTestBase {
 
     unset($edit['files[field_image_0]']);
     $edit['field_image[0][alt]'] = 'Llamas are cool';
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 

@@ -159,7 +159,12 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, $status);
+    if ($status === self::PUBLISHED) {
+      $this->saveAndPublishNodeForm($edit);
+    }
+    else {
+      $this->saveAsUnpublishedNodeForm($edit);
+    }
 
     $this->node = Node::load(1);
 

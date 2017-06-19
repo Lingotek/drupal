@@ -74,7 +74,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
       $edit['lingotek_translation_profile'] = 'manual';
-      $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+      $this->saveAndPublishNodeForm($edit);
       $nodes[$i] = $edit;
     }
 

@@ -85,7 +85,7 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $node2 = $this->createNode([
       'title' => 'Node 2',

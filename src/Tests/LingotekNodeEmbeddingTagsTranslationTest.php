@@ -145,7 +145,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     unset($edit['files[field_image_0]']);
     $edit['field_image[0][alt]'] = 'Llamas are cool';
-    $this->drupalPostForm(NULL, $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
@@ -218,7 +218,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
     $edit['lingotek_translation_profile'] = 'manual';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->node = Node::load(1);
 
@@ -302,7 +302,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
     $edit['lingotek_translation_profile'] = 'manual';
 
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     // Check that the translate tab is in the node.
     $this->drupalGet('node/1');
