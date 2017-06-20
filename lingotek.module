@@ -474,3 +474,10 @@ function lingotek_form_language_admin_add_form_alter(&$form, FormStateInterface 
 function lingotek_form_language_admin_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   \Drupal::service('lingotek.language_form')->form($form, $form_state);
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function lingotek_form_language_content_settings_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  \Drupal::service('lingotek.language_content_settings_form')->form($form, $form_state);
+}
