@@ -9,7 +9,7 @@ use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
 /**
- * Tests translating a node using the bulk management form.
+ * Tests changing a profile using the bulk management form.
  *
  * @group lingotek
  */
@@ -59,7 +59,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
   }
 
   /**
-   * Tests that the tranlsation profiles can be updated with the bulk acitons.
+   * Tests that the translation profiles can be updated with the bulk actions.
    */
   public function testChangeTranslationProfileBulk() {
     // Login as admin.
@@ -145,5 +145,67 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     // Check that there are three nodes with the Disabled Profile
     $disabled_profile = $this->xpath("//td[contains(text(), 'Disabled')]");
     $this->assertEqual(count($disabled_profile), 3, 'There are three nodes with the Disabled Profile set.');
+
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'table[3]' => TRUE,  // Node 3.
+      'operation' => 'change_profile:automatic'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check that there are three nodes with the Automatic Profile
+    $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
+    $this->assertEqual(count($automatic_profile), 3, 'There are three nodes with the Automatic Profile set.');
   }
+
+  /**
+   * Tests that the translation profiles can be updated with the bulk actions after
+   * disassociating.
+   */
+  public function testChangeTranslationProfileBulkAfterDisassociating() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Create three nodes.
+    $nodes = [];
+    for ($i = 1; $i < 4; $i++) {
+      $edit = array();
+      $edit['title[0][value]'] = 'Llamas are cool ' . $i;
+      $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->saveAndPublishNodeForm($edit);
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/2?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/3?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'table[3]' => TRUE,  // Node 3.
+      'operation' => 'disassociate'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $edit = [
+      'table[1]' => TRUE,  // Node 1.
+      'table[2]' => TRUE,  // Node 2.
+      'table[3]' => TRUE,  // Node 3.
+      'operation' => 'change_profile:automatic'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check that there are three nodes with the Automatic Profile
+    $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
+    $this->assertEqual(count($automatic_profile), 3, 'There are three nodes with the Automatic Profile set.');
+  }
+
 }

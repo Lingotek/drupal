@@ -969,19 +969,11 @@ class LingotekManagementForm extends FormBase {
    */
   public function changeProfile(ContentEntityInterface $entity, $profile_id = NULL, &$context) {
     $context['message'] = $this->t('Changing Translation Profile for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE) && $profile_id) {
-      try {
-        $this->lingotekConfiguration->setProfile($entity, $profile_id, TRUE);
-      }
-      catch (LingotekApiException $exception) {
-        drupal_set_message(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
-      }
-
+    try {
+      $this->lingotekConfiguration->setProfile($entity, $profile_id, TRUE);
     }
-    else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
-      drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
-        ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
+    catch (LingotekApiException $exception) {
+      drupal_set_message(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
     }
   }
 
