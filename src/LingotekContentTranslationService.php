@@ -858,28 +858,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $storage_definitions = $this->entityManager->getFieldStorageDefinitions($entity->getEntityTypeId());
 
-    $lock = \Drupal::lock();
-    $lock_name = __FUNCTION__ . ':' . $entity->getEntityTypeId() . ':' . $entity->id();
-
-    $held = $lock->acquire($lock_name);
-
-    // It is critical that we acquire a lock on this entity since we want to ensure
-    // that our translation is saved.
-    if (!$held) {
-      if ($lock->wait($lock_name) === FALSE) {
-        $held = $lock->acquire($lock_name);
-      }
-    }
-
-    if (!$held) {
-      // We were unable to acquire the lock even after waiting, so we have to bail.
-      // (We don't have to call release() here since we never succeeded at acquiring it)
-      throw new \Exception(new FormattableMarkup('Unable to acquire lock for entity @id of type @type.', [
-        '@id' => $entity->id(),
-        '@type' => $entity->getEntityTypeId(),
-      ]));
-    }
-
     try {
       // We need to load the revision that was uploaded for consistency. For that,
       // we check if we have a valid revision in the response, and if not, we
@@ -1061,10 +1039,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
       return $entity;
     } catch (EntityStorageException $storage_exception) {
-      throw new LingotekContentEntityStorageException($entity, $storage_exception);
-    } finally {
-      // Ensure the lock is released, even if we crash.
-      $lock->release($lock_name);
+      throw new LingotekContentEntityStorageException($entity, $storage_exception, $storage_exception->getMessage());
     }
   }
 

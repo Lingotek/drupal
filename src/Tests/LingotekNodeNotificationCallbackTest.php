@@ -2,6 +2,8 @@
 
 namespace Drupal\lingotek\Tests;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
@@ -10,6 +12,9 @@ use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
+use GuzzleHttp\Exception\ServerException;
+use GuzzleHttp\Promise\PromiseInterface;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests translating a node using the notification callback.
@@ -32,6 +37,10 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
   protected function setUp() {
     parent::setUp();
+
+    // Place the actions and title block.
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'header', 'weight' => -5]);
+    $this->drupalPlaceBlock('local_tasks_block', ['region' => 'header', 'weight' => -10]);
 
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
@@ -465,6 +474,187 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $response = json_decode($request, true);
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Italian language has not been requested after notification automatically because it is disabled.');
   }
+
+  /**
+   * Testing handling several notifications in a row.
+   */
+  public function testNotificationsInARow() {
+    $this->pass('Test not implemented yet.');
+    return;
+
+    ConfigurableLanguage::createFromLangcode('it')->save();
+    ConfigurableLanguage::createFromLangcode('ca')->save();
+    ConfigurableLanguage::createFromLangcode('hu')->save();
+    ConfigurableLanguage::createFromLangcode('de')->save();
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+
+    $this->goToContentBulkManagementForm();
+
+    // Upload the node.
+    $this->clickLink('EN');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request languages.
+    $languages = [
+      'DE' => 'de_DE',
+      'ES' => 'es_ES',
+      'HU' => 'hu_HU',
+      'IT' => 'it_IT',
+      'CA' => 'ca_ES',
+    ];
+    foreach ($languages as $langcode => $locale) {
+      $this->clickLink($langcode);
+      $this->assertText(new FormattableMarkup("Locale '@locale' was added as a translation target for node Llamas are cool.", ['@locale' => $locale]));
+    }
+
+    /** @var PromiseInterface[] $requests */
+    $requests = [];
+    foreach ($languages as $langcode => $locale) {
+      $url = Url::fromRoute('lingotek.notify', [], [
+        'query' => [
+          'project_id' => 'test_project',
+          'document_id' => 'dummy-document-hash-id',
+          'locale_code' => str_replace('_', '-', $locale),
+          'locale' => $locale,
+          'complete' => 'true',
+          'type' => 'target',
+          'progress' => '100',
+        ]
+      ])->setAbsolute()->toString();
+      $requests[] = \Drupal::httpClient()->postAsync($url);
+    }
+    $count = 0;
+    // We wait for the requests to finish.
+    foreach ($requests as $request) {
+      try {
+        $request->then(function ($response) use ($request) {
+          $message = new TranslatableMarkup(
+            'FULFILLED. Got a response with status %status and body: %body',
+            ['%status' => $response->getStatusCode(),
+              '%body' => (string) $response->getBody(TRUE)]
+          );
+          $this->verbose($message); },
+          function ($response) use ($request) {
+            $message = new TranslatableMarkup(
+              'REJECTED. Got a response with status %status and body: %body',
+              ['%status' => $response->getStatusCode(),
+                '%body' => (string) $response->getBody(TRUE)]
+            );
+            $this->verbose($message); });
+      }
+      catch (\Exception $error) {
+        $count++;
+      }
+    }
+    foreach ($requests as $request) {
+      $request->wait(TRUE);
+    }
+
+    // Go to the bulk node management page.
+    $this->goToContentBulkManagementForm();
+
+    // All the links are current.
+    $current_links = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-current')]");
+    $this->assertEqual(count($current_links), count($languages) - $count, new FormattableMarkup('Various languages (%var) are current.', ['%var' => count($languages) - $count]));
+    $this->assertTrue(TRUE, new FormattableMarkup('%count target languages failed, but error where given back so the TMS can retry.', ['%count' => $count]));
+
+    $this->clickLink('Llamas are cool');
+    $this->clickLink('Translate');
+  }
+
+  /**
+   * Test that a notification with a failure in download responded with an error.
+   */
+  public function testAutomatedNotificationNodeTranslationWithError() {
+    // Add an additional language.
+    ConfigurableLanguage::createFromLangcode('it')->save();
+
+    // Create a node.
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Simulate the notification of content successfully translated.
+    $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
+      'project_id' => 'test_project',
+      'document_id' => 'dummy-document-hash-id',
+      'locale_code' => 'es-ES',
+      'locale' => 'es_ES',
+      'complete' => 'true',
+      'type' => 'target',
+      'progress' => '100',
+    ]]), 'application/json', []);
+    $response = json_decode($request, TRUE);
+    $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
+    $this->assertEqual('Document downloaded.', $response['messages'][0]);
+
+    // Go to the bulk node management page.
+    $this->goToContentBulkManagementForm();
+
+    // All the links are current.
+    $current_links = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-current')]");
+    $this->assertEqual(count($current_links), 1, 'Translation "es_ES" is current.');
+
+    // We ensure it fails.
+    \Drupal::state()->set('lingotek.must_error_in_download', TRUE);
+
+    // Simulate the notification of content successfully translated.
+    $request = $this->drupalPost(Url::fromRoute('lingotek.notify', [], ['query' => [
+      'project_id' => 'test_project',
+      'document_id' => 'dummy-document-hash-id',
+      'locale_code' => 'it-IT',
+      'locale' => 'it_IT',
+      'complete' => 'true',
+      'type' => 'target',
+      'progress' => '100',
+    ]]), 'application/json', []);
+    $response = json_decode($request, TRUE);
+    $this->verbose($request);
+    $this->assertFalse($response['result']['download'], 'Italian language has been downloaded after notification automatically.');
+    $this->assertEqual('No download for target it_IT happened in document dummy-document-hash-id.', $response['messages'][0]);
+
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'it-IT',
+        'locale' => 'it_IT',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ]
+    ])->setAbsolute()->toString();
+    $request = \Drupal::httpClient()->postAsync($url);
+
+    try {
+      $response = $request->wait();
+      $this->fail('The request didn\'t fail as expected.');
+    }
+    catch (ServerException $exception) {
+      if ($exception->getCode() === Response::HTTP_SERVICE_UNAVAILABLE) {
+        $this->pass('The request returned a 503 status code.');
+      }
+      else {
+        $this->fail('The request didn\'t fail with the expected status code.');
+      }
+    }
+    $this->verbose(var_export($response, TRUE));
+
+    // Go to the bulk node management page.
+    $this->goToContentBulkManagementForm();
+  }
+
 
   /**
    * Resets node and metadata storage caches and reloads the node.

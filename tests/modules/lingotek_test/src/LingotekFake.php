@@ -224,6 +224,10 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function downloadDocument($doc_id, $locale) {
+    if (\Drupal::state()->get('lingotek.must_error_in_download', FALSE)) {
+      throw new LingotekApiException();
+    }
+
     \Drupal::state()->set('lingotek.downloaded_locale', $locale);
     $type = \Drupal::state()->get('lingotek.uploaded_content_type', 'node');
 

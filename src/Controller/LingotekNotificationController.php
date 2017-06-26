@@ -2,10 +2,12 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
@@ -68,22 +70,64 @@ class LingotekNotificationController extends LingotekControllerBase {
       case 'target': // translation (i.e., chinese) has been completed for a document
         //TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         //ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
-        $entity = $this->getEntity($request->get('document_id'));
-        /** @var LingotekProfile $profile */
-        $profile = $this->getProfile($entity);
-        if ($entity) {
-          if ($entity instanceof ConfigEntityInterface) {
-            $translation_service = $config_translation_service;
+        $document_id = $request->get('document_id');
+
+        $lock = \Drupal::lock();
+        $lock_name = __FUNCTION__ . ':' . $document_id;
+
+        do {
+          if ($lock->lockMayBeAvailable($lock_name)) {
+            if ($held = $lock->acquire($lock_name)) {
+              break;
+            }
           }
-          $http_status_code = Response::HTTP_OK;
-          $locale = $request->get('locale');
-          $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->id();
-          $result['set_target_status'] = $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-          $result['download'] = $profile->hasAutomaticDownloadForTarget($langcode) ?
-            $translation_service->downloadDocument($entity, $locale) : FALSE;
-        } else {
-          $http_status_code = Response::HTTP_NOT_FOUND;
-          $messages[] = "Document not found.";
+        } while ($lock->wait($lock_name));
+
+        try {
+          $entity = $this->getEntity($document_id);
+          /** @var LingotekProfile $profile */
+          $profile = $this->getProfile($entity);
+          if ($entity) {
+            if ($entity instanceof ConfigEntityInterface) {
+              $translation_service = $config_translation_service;
+            }
+            $locale = $request->get('locale');
+            $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
+              ->id();
+            $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+            $result['download'] = $profile->hasAutomaticDownloadForTarget($langcode) ?
+              $translation_service->downloadDocument($entity, $locale) : FALSE;
+            if ($result['download']) {
+              $messages[] = "Document downloaded.";
+              $http_status_code = Response::HTTP_OK;
+            }
+            else {
+              $messages[] = new FormattableMarkup('No download for target @locale happened in document @document.', [
+                '@locale' => $locale,
+                '@document' => $document_id
+              ]);
+              if (!$profile->hasAutomaticDownloadForTarget($langcode)) {
+                $http_status_code = Response::HTTP_OK;
+              }
+              else {
+                $http_status_code = Response::HTTP_SERVICE_UNAVAILABLE;
+              }
+            }
+          }
+          else {
+            $http_status_code = Response::HTTP_NOT_FOUND;
+            $messages[] = "Document not found.";
+          }
+        }
+        catch (\Exception $exception) {
+          $http_status_code = Response::HTTP_SERVICE_UNAVAILABLE;
+          $messages[] = new FormattableMarkup('Download of target @locale for document @document failed', [
+            '@locale' => $locale,
+            '@document' => $document_id
+          ]);
+        }
+        finally {
+          $lock->release($lock_name);
         }
         break;
       default: //ignore
