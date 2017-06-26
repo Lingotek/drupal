@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
+use Drupal\lingotek\Lingotek;
 use Drupal\node\Entity\Node;
 use Drupal\simpletest\WebTestBase;
 
@@ -149,7 +150,13 @@ abstract class LingotekTestBase extends WebTestBase {
    */
   protected function assertSourceStatusStateCount($status, $languageLabel, $count, $message = '') {
     $statusCssClass = 'source-' . strtolower($status);
-    $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass')]/a[contains(text(), '$languageLabel')]");
+    if ($status === Lingotek::STATUS_CURRENT) {
+      // There is no link or anchor when the status is current.
+      $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass') and contains(text(), '$languageLabel')]");
+    }
+    else {
+      $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass')]/a[contains(text(), '$languageLabel')]");
+    }
     return $this->assertEqual(count($statusCount), $count, $message);
   }
 

@@ -502,11 +502,27 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   }
 
   /**
+   * Clear the target statuses.
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   */
+  protected function clearTargetStatuses(ConfigEntityInterface &$entity) {
+    // Clear the target statuses. As we save the source status with the target,
+    // we need to keep that one.
+    $source_status = $this->getSourceStatus($entity);
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    $metadata->setTargetStatus([])->save();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function checkTargetStatuses(ConfigEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
     $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+
+    // Let's reset all statuses, but keep the source one.
+    $this->clearTargetStatuses($entity);
+
     foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
       if ($drupal_language == NULL) {
@@ -882,6 +898,19 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     return $current_status;
   }
 
+
+  /**
+   * Clear the target statuses.
+   * @param string $mapper_id
+   */
+  protected function clearConfigTargetStatuses($mapper_id) {
+    $mapper = $this->mappers[$mapper_id];
+    foreach ($mapper->getConfigNames() as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setTargetStatus([])->save();
+    }
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -889,6 +918,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     $document_id = $this->getConfigDocumentId($mapper);
     $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+
+    // Let's reset all statuses, but keep the source one.
+    $this->clearConfigTargetStatuses($mapper_id);
+
     foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
       if ($drupal_language == NULL) {

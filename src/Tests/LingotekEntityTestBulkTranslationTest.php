@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Tests translating the entity test using the bulk management form.
@@ -177,8 +178,10 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
    * Tests that all the statuses are set when using the Check Translations action.
    */
   public function testCheckTranslationsAction() {
-    // Add a language.
+    // Add a couple of languages.
     ConfigurableLanguage::create(['id' => 'de_AT', 'label' => 'German (Austria)'])->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+    ConfigurableLanguage::createFromLangcode('ca')->setThirdPartySetting('lingotek', 'locale', 'ca_ES')->save();
+    ConfigurableLanguage::createFromLangcode('it')->setThirdPartySetting('lingotek', 'locale', 'it_IT')->save();
 
     // Create a entity_test_mul.
     $edit = [];
@@ -236,6 +239,23 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_DE?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/it_IT?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+
+    \Drupal::state()->set('lingotek.document_completion_statuses', ['it-IT' => 100, 'de-DE' => 50, 'es-MX' => 10]);
+    // Check all statuses again.
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // All translations must be updated according exclusively with the
+    // information from the TMS.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_DE?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/it_IT?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+
+    // Source status must be kept too.
+    $this->assertSourceStatusStateCount(Lingotek::STATUS_CURRENT, 'EN', 1);
   }
 
   /**

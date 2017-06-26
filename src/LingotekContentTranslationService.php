@@ -158,11 +158,31 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   }
 
   /**
+   * Clear the target statuses.
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   */
+  protected function clearTargetStatuses(ContentEntityInterface &$entity) {
+    // Clear the target statuses. As we save the source status with the target,
+    // we need to keep that one.
+    $source_status = $this->getSourceStatus($entity);
+
+    $metadata = &$entity->lingotek_metadata->entity;
+    if ($metadata->hasField('translation_status') && count($metadata->translation_status) > 0) {
+      $metadata->translation_status = NULL;
+    }
+    $this->setTargetStatus($entity, $entity->getUntranslated()->language()->getId(), $source_status);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
     $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+
+    // Let's reset all statuses, but keep the source one.
+    $this->clearTargetStatuses($entity);
+
     foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
       if ($drupal_language == NULL) {
