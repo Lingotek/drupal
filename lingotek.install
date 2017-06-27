@@ -233,10 +233,8 @@ function lingotek_update_8011(&$sandbox) {
       ),
       'translation_status' => array(
         'description' => 'The Lingotek translation status.',
-        'type' => 'varchar',
-        'length' => 255,
+        'type' => 'blob',
         'not null' => TRUE,
-        'default' => '',
       ),
     ),
     'primary key' => array(
