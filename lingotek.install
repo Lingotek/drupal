@@ -214,8 +214,8 @@ function lingotek_update_8011(&$sandbox) {
         'description' => 'The Lingotek hash.',
         'type' => 'varchar',
         'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
+        'not null' => FALSE,
+        'default' => NULL,
       ),
       'profile' => array(
         'description' => 'The Lingotek profile being used.',
