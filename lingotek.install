@@ -10,9 +10,18 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
-/*
- * Implements hook_schema().
+/**
+ * Implements hook_install().
  */
+function lingotek_install() {
+  // Assign a fairly low weight to ensure our implementation of
+  // hook_module_implements_alter() is run after content_translation.
+  module_set_weight('lingotek', 15);
+}
+
+  /*
+   * Implements hook_schema().
+   */
 function lingotek_schema() {
   $schema['lingotek_content_metadata'] = array(
     'description' => 'Stores Lingotek-related metadata about Drupal entities.',
@@ -418,6 +427,13 @@ function lingotek_update_8011(&$sandbox) {
       }
     }
   }
+}
+
+function lingotek_update_8201() {
+  // Assign a fairly low weight to ensure our implementation of
+  // hook_module_implements_alter() is run after content_translation.
+  // It changed in https://www.drupal.org/node/2679008
+  module_set_weight('lingotek', 15);
 }
 
 function lingotek_legacy_get_translation_status($field) {

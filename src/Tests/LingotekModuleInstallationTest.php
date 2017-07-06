@@ -36,4 +36,16 @@ class LingotekModuleInstallationTest extends WebTestBase {
     $this->assertText('modules have been enabled: Lingotek Translation');
   }
 
+  /**
+   * Tests that the weight of the module is higher than content_translation.
+   */
+  public function testModuleWeightAgainstContentTranslation() {
+    $this->testEnableModule();
+    $extension_config = $this->config('core.extension');
+    $content_translation_weight = $extension_config->get('module.content_translation');
+    $lingotek_weight = $extension_config->get('module.lingotek');
+
+    $this->assertTrue($lingotek_weight > $content_translation_weight, 'Lingotek weight is higher than content_translation.');
+  }
+
 }
