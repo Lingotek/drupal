@@ -6,6 +6,7 @@ use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests translating a config object using the bulk management form.
@@ -20,6 +21,13 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
   protected function setUp() {
     parent::setUp();
 
+    // Login as translations manager, but including the 'translate configuration'
+    // permission.
+    $roles = $this->translationManagerUser->getRoles(TRUE);
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = Role::load($roles[0]);
+    $role->grantPermission('translate configuration')->save();
+
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
@@ -31,8 +39,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the links on the management page.
    */
   public function testSystemSiteTranslationUsingLinks() {
-    // Login as admin.
-    $this->drupalLogin($this->rootUser);
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -82,8 +90,8 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
    * Tests that a config can be translated using the actions on the management page.
    */
   public function testSystemSiteTranslationUsingActions() {
-    // Login as admin.
-    $this->drupalLogin($this->rootUser);
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
@@ -150,6 +158,9 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     // We need a config object with translations first.
     $this->testSystemSiteTranslationUsingLinks();
 
+    // Login as translation manager.
+    $this->drupalLogin($this->rootUser);
+
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.
     ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
@@ -160,6 +171,9 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
 
     // Edit the object
     $this->drupalPostForm('/admin/config/system/site-information', ['site_name' => 'My site'], t('Save configuration'));
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -209,11 +223,11 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
    * Tests that a config object can be translated using the actions on the management page.
    */
   public function testSystemSiteMultipleLanguageTranslationUsingActions() {
-    // Login as admin.
-    $this->drupalLogin($this->rootUser);
-
     // Add a language.
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
@@ -463,6 +477,9 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::create(['id' => 'de_AT', 'label' => 'German (Austria)'])->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
     ConfigurableLanguage::createFromLangcode('ca')->setThirdPartySetting('lingotek', 'locale', 'ca_ES')->save();
     ConfigurableLanguage::createFromLangcode('it')->setThirdPartySetting('lingotek', 'locale', 'it_IT')->save();
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     $this->goToConfigBulkManagementForm();
 

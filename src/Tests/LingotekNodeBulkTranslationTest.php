@@ -74,6 +74,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
+
     $this->goToContentBulkManagementForm();
 
     $basepath = \Drupal::request()->getBasePath();
@@ -134,6 +137,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     $this->goToContentBulkManagementForm();
 
@@ -452,6 +458,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // We need a node with translations first.
     $this->testNodeTranslationUsingLinks();
 
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.
     ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
@@ -467,6 +476,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     $this->goToContentBulkManagementForm();
 
@@ -521,6 +533,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // We need a node with translations first.
     $this->testNodeTranslationUsingLinks();
 
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.
     ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
@@ -532,6 +547,9 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
     $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
+
+    // Login as translation manager.
+    $this->drupalLogin($this->translationManagerUser);
 
     $this->goToContentBulkManagementForm();
 

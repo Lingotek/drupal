@@ -67,7 +67,7 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
             '_form' => 'Drupal\lingotek\Form\LingotekManagementForm',
             '_title' => 'Manage Translations',
           ) + $defaults,
-          array('_permission' => 'administer lingotek'),
+          array('_permission' => 'manage lingotek translations'),
           $options
         );
         $collection->add("lingotek.manage.{$entity_type_id}", $route);
@@ -91,7 +91,7 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
               '_form' => 'Drupal\lingotek\Form\LingotekMetadataEditForm',
               '_title' => 'Edit translation metadata',
             ] + $defaults,
-            ['_permission' => 'administer lingotek'],
+            ['_permission' => 'manage lingotek translations'],
             $options
           );
           $collection->add("lingotek.metadata.{$entity_type_id}", $route);

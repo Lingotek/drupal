@@ -99,6 +99,12 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
 
   public function itemPage(Request $request, RouteMatchInterface $route_match, $plugin_id) {
     $page = parent::itemPage($request, $route_match, $plugin_id);
+
+    // If the user cannot manage translations, we don't add any actions.
+    if (!\Drupal::currentUser()->hasPermission('manage lingotek translations')) {
+      return $page;
+    }
+
     $entity = NULL;
     $entity_id = NULL;
     /** @var \Drupal\config_translation\ConfigMapperInterface $mapper */

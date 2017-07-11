@@ -5,3 +5,6 @@ administer lingotek:
 assign lingotek translation profiles:
   title: 'Assign Lingotek translation profiles to content'
   description: 'Assign Lingotek translation profiles to content. Defaults will be used if users cannot select a profile.'
+manage lingotek translations:
+  title: 'Manage Lingotek translations'
+  description: 'Allow users to send content for translations and download translations when they are ready.'

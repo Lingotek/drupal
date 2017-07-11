@@ -105,7 +105,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       $option = array_shift($overview['#rows']);
 
       $configLanguage = ConfigurableLanguage::load($langcode);
-      $enabled = $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+      $enabled = $this->lingotekConfiguration->isLanguageEnabled($configLanguage) && \Drupal::currentUser()->hasPermission('manage lingotek translations');
 
       // Buttons for the ENTITY SOURCE LANGUAGE
       // We disable the checkbox for this row.
@@ -163,23 +163,26 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
       $form['languages']['#options'][$langcode] = $option;
     }
-    $form['actions']['#type'] = 'actions';
 
-    if ($status_check_needed) {
-      $form['actions']['request'] = array(
-        '#type' => 'submit',
-        '#value' => $this->t('Check Progress'),
-        '#submit' => array('::submitForm'),
-        '#button_type' => 'primary',
-      );
-    }
-    elseif ($targets_ready) {
-      $form['actions']['request'] = array(
-        '#type' => 'submit',
-        '#value' => $this->t('Download selected translations'),
-        '#submit' => array('::submitForm'),
-        '#button_type' => 'primary',
-      );
+    if (\Drupal::currentUser()->hasPermission('manage lingotek translations')) {
+      $form['actions']['#type'] = 'actions';
+
+      if ($status_check_needed) {
+        $form['actions']['request'] = array(
+          '#type' => 'submit',
+          '#value' => $this->t('Check Progress'),
+          '#submit' => array('::submitForm'),
+          '#button_type' => 'primary',
+        );
+      }
+      elseif ($targets_ready) {
+        $form['actions']['request'] = array(
+          '#type' => 'submit',
+          '#value' => $this->t('Download selected translations'),
+          '#submit' => array('::submitForm'),
+          '#button_type' => 'primary',
+        );
+      }
     }
     $form['fieldset']['entity'] = array(
       '#type' => 'value',

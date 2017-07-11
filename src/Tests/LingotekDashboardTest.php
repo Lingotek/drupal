@@ -229,6 +229,10 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
 
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
     /** @var \Drupal\Core\Language\LanguageManagerInterface $language_manager */
     $language_manager = \Drupal::service('language_manager');
     $languages = $language_manager->getLanguages();
@@ -270,12 +274,12 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical('es', $response['language']);
     $this->assertIdentical('Language disabled: es_ES', $response['message']);
 
-    $languages = $language_manager->getLanguages();
-    $this->assertIdentical(2, count($languages), 'Spanish language is disabled, but not deleted.');
-
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
+
+    $languages = $language_manager->getLanguages();
+    $this->assertIdentical(2, count($languages), 'Spanish language is disabled, but not deleted.');
 
     $language = ConfigurableLanguage::load('es');
     $this->assertIdentical($language->getThirdPartySetting('lingotek', 'disabled', NULL), TRUE, 'The Spanish language is disabled');
@@ -361,6 +365,10 @@ class LingotekDashboardTest extends LingotekTestBase {
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
 
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
     /** @var LanguageManagerInterface $language_manager */
     $language_manager = \Drupal::service('language_manager');
     $languages = $language_manager->getLanguages();
@@ -403,6 +411,10 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical('DELETE', $response['method']);
     $this->assertIdentical('es', $response['language']);
     $this->assertIdentical('Language disabled: es_ES', $response['message']);
+
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
 
     // Check the stats.
     $request = $this->curlExec(array(

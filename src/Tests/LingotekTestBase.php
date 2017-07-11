@@ -18,12 +18,32 @@ abstract class LingotekTestBase extends WebTestBase {
    */
   public static $modules = ['lingotek', 'lingotek_test'];
 
+  /**
+   * @var \Drupal\Core\Session\AccountInterface
+   *   Minimal Lingotek translation manager user.
+   */
+  protected $translationManagerUser;
+
   protected function setUp() {
     parent::setUp();
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
     $this->connectToLingotek();
+
+    $this->createTranslationManagerUser();
+  }
+
+  /**
+   * Creates a translation manager role and a user with the minimal
+   * Lingotek translation management permissions.
+   */
+  protected function createTranslationManagerUser() {
+    $this->translationManagerUser = $this->drupalCreateUser([
+      'assign lingotek translation profiles',
+      'manage lingotek translations',
+      'access administration pages',
+    ]);
   }
 
   /**
