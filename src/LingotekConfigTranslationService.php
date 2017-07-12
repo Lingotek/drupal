@@ -561,10 +561,13 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         // If the status was "Importing", and the target was added
         // successfully, we can ensure that the content is current now.
         $source_status = $this->getSourceStatus($entity);
-        if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
+        if ($source_status == Lingotek::STATUS_IMPORTING) {
           $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
         }
-        if ($status) {
+        if ($source_status == Lingotek::STATUS_EDITED) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+        }
+        elseif ($status) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
         }
         else {
@@ -953,15 +956,26 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         return FALSE;
       }
       if ($data) {
+        // Check the real status, because it may still need review or anything.
+        $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
         $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
         $this->saveConfigTargetData($mapper, $langcode, $data);
+
         // If the status was "Importing", and the target was added
         // successfully, we can ensure that the content is current now.
         $source_status = $this->getConfigSourceStatus($mapper);
-        if ($source_status == Lingotek::STATUS_IMPORTING || $source_status == Lingotek::STATUS_EDITED) {
+        if ($source_status == Lingotek::STATUS_IMPORTING) {
           $this->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
         }
-        $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CURRENT);
+        if ($source_status == Lingotek::STATUS_EDITED) {
+          $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_EDITED);
+        }
+        elseif ($status) {
+          $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CURRENT);
+        }
+        else {
+          $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_INTERMEDIATE);
+        }
         return TRUE;
       }
 
