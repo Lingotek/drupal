@@ -179,6 +179,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function checkTargetStatuses(ContentEntityInterface &$entity) {
     $document_id = $this->getDocumentId($entity);
     $translation_statuses = $this->lingotek->getDocumentTranslationStatuses($document_id);
+    $source_status = $this->getSourceStatus($entity);
+
+    $statuses = [];
+    $languages = $this->languageManager->getLanguages();
+    foreach ($languages as $language) {
+      $statuses[$language->getId()] = $this->getTargetStatus($entity, $language->getId());
+    }
 
     // Let's reset all statuses, but keep the source one.
     $this->clearTargetStatuses($entity);
@@ -189,13 +196,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         continue;// languages existing in TMS, but not configured on Drupal
       }
       $langcode = $drupal_language->id();
-      $current_target_status = $this->getTargetStatus($entity, $langcode);
+      $current_target_status = $statuses[$langcode];
       if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
         if($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
         } else {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
         }
+      }
+      if ($source_status !== Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_EDITED && $langcode !== $entity->getUntranslated()->language()->getId()) {
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
       }
     }
   }
