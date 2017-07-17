@@ -71,7 +71,7 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
 
@@ -107,7 +107,7 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     // Edit the Source
     $edit = array();
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
-    $this->drupalPostForm('node/1/edit', $edit, t('Save and keep published'));
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
 
     $this->goToContentBulkManagementForm();
 
