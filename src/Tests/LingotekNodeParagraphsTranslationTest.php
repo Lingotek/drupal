@@ -242,6 +242,9 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     $this->saveAndPublishNodeForm($edit, NULL);
 
+    // Ensure paragraphs tab is enabled.
+    $this->drupalPostForm('admin/lingotek/settings', ['contrib[paragraphs][enable_bulk_management]' => 1], 'Save settings', [], [], 'lingoteksettings-integrations-form');
+
     $this->goToContentBulkManagementForm('paragraph');
     // Assert there is at least one paragraph in the list.
     $this->assertText('Image + Text');

@@ -41,7 +41,17 @@ lingotek.settings:
           type: string
         content_cloud_import_status:
           type: integer
-
+        contrib:
+          label: 'Contributed modules integrations settings'
+          type: mapping
+          mapping:
+            paragraphs:
+              label: 'Paragraphs module integration settings'
+              type: mapping
+              mapping:
+                enable_bulk_management:
+                  type: boolean
+                  label: 'Enable bulk management for paragraphs'
     account:
       type: mapping
       label: 'Account'

@@ -1,13 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Plugin\Derivative\ContentTranslationLocalTasks.
- */
-
 namespace Drupal\lingotek\Plugin\Derivative;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -66,10 +60,23 @@ class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriv
 
     // Create tabs for all possible entity types.
     foreach ($this->lingotekConfiguration->getEnabledEntityTypes() as $entity_type_id => $entity_type) {
+      $translation_route_name = "lingotek.manage.$entity_type_id";
+      // If it's a paragraph, we depend on the preference.
+      if ($entity_type_id === 'paragraph') {
+        $config = \Drupal::config('lingotek.settings');
+        $enable_bulk_management = $config->get('preference.contrib.paragraphs.enable_bulk_management', FALSE);
+        if (!$enable_bulk_management) {
+          // If already existed remove it.
+          if (isset($this->derivatives[$translation_route_name])) {
+            unset($this->derivatives[$translation_route_name]);
+          }
+          break;
+        }
+      }
+
       $has_canonical_path = $entity_type->hasLinkTemplate('canonical');
 
       // Create the entries for the tabs in the bulk manage pages.
-      $translation_route_name = "lingotek.manage.$entity_type_id";
       $base_route_name = "lingotek.manage";
       $this->derivatives[$translation_route_name] = array(
           'entity_type_id' => $entity_type_id,

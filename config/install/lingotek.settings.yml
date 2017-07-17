@@ -11,6 +11,9 @@ preference:
   enable_content_cloud: false
   content_cloud_import_format: 'article'
   content_cloud_import_status: 0
+  contrib:
+    paragraphs:
+      enable_bulk_management: false
 account:
   use_production: false
   sandbox_host: 'https://cms.lingotek.com'

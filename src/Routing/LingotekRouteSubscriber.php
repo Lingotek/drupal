@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Routing\LingotekRouteSubscriber.
- */
-
 namespace Drupal\lingotek\Routing;
 
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -54,6 +49,14 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
     foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
       if ($entity_type->isTranslatable()
           && \Drupal::config('lingotek.settings')->get('translate.entity.' . $entity_type_id)) {
+
+        if ($entity_type_id === 'paragraph') {
+          $config = \Drupal::config('lingotek.settings');
+          $enable_bulk_management = $config->get('preference.contrib.paragraphs.enable_bulk_management', FALSE);
+          if (!$enable_bulk_management) {
+            break;
+          }
+        }
 
         // Add a route for bulk translation management.
         $path = "admin/lingotek/manage/{$entity_type_id}";

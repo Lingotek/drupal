@@ -5,10 +5,7 @@ namespace Drupal\lingotek\Controller;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Url;
-use Drupal\lingotek\Controller\LingotekControllerBase;
-use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekAccount;
-use Drupal\lingotek\Remote\LingotekApi;
+use Drupal\lingotek\Form\LingotekSettingsTabIntegrationsForm;
 
 class LingotekSettingsController extends LingotekControllerBase {
 
@@ -23,7 +20,7 @@ class LingotekSettingsController extends LingotekControllerBase {
       $this->getLingotekForm('LingotekSettingsTabConfigurationForm'),
       $this->getProfileListForm(),
       $this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
-      $this->getLingotekForm('LingotekSettingsTabLoggingForm'),
+      $this->getIntegrationsSettingsForm(),
       $this->getLingotekForm('LingotekSettingsTabUtilitiesForm'),
     );
 
@@ -64,6 +61,23 @@ class LingotekSettingsController extends LingotekControllerBase {
     ];
 
     return $form;
+  }
+
+  public function getIntegrationsSettingsForm() {
+    $form_builder = \Drupal::formBuilder();
+    $original_form = $form_builder->getForm(LingotekSettingsTabIntegrationsForm::class);
+
+    if (isset($original_form['contrib'])) {
+      $form['integrations_wrapper'] = array(
+        '#type' => 'details',
+        '#title' => $this->t('Integrations Settings'),
+      );
+      $form['integrations_wrapper']['form'] = $original_form;
+      return $form;
+    }
+    else {
+      return NULL;
+    }
   }
 
   public function profileForm() {
