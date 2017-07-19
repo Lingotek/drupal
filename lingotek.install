@@ -216,8 +216,8 @@ function lingotek_update_8011(&$sandbox) {
         'description' => 'The Lingotek document identifier.',
         'type' => 'varchar',
         'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
+        'not null' => FALSE,
+        'default' => NULL,
       ),
       'hash' => array(
         'description' => 'The Lingotek hash.',
@@ -286,7 +286,7 @@ function lingotek_update_8011(&$sandbox) {
       $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
 
       $entity = $storage->load($entity_data['entity_id']);
-      if ($entity && isset($entity->lingotek_document_id)) {
+      if ($entity) {
         $lingotek_document_id = $entity->lingotek_document_id->value;
         $lingotek_hash = $entity->lingotek_hash->value;
         $lingotek_profile = $entity->lingotek_profile->entity;

@@ -6,6 +6,7 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 use Drupal\user\PrivateTempStore;
@@ -461,6 +462,28 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->drupalGet('node/1/revisions/1/view');
     $this->assertText('Llamas are very cool for the first time');
     $this->assertText('Llamas are very cool for the second time');
+  }
+
+  /**
+   * Tests that metadata is created when a paragraph is added.
+   */
+  public function testParagraphContentMetadataIsSavedWhenContentAdded() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = array();
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    $metadata = LingotekContentMetadata::loadMultiple();
+    $this->assertEqual(2, count($metadata), 'There is metadata saved for the parent entity and the child entity.');
   }
 
 }
