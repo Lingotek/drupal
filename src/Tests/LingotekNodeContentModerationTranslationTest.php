@@ -60,7 +60,7 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Enable content moderation for articles.
-    $this->drupalPostForm('/admin/structure/types/manage/article/moderation', ['workflow' => 'editorial'], t('Save'));
+    $this->configureContentModeration('editorial', ['node' => ['article']]);
 
     // Create a node.
     $edit = [];
@@ -68,7 +68,7 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'manual';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and Publish'));
+    $this->saveAndPublishNodeForm($edit);
 
     $this->goToContentBulkManagementForm();
 

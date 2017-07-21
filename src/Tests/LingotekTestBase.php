@@ -180,14 +180,27 @@ abstract class LingotekTestBase extends WebTestBase {
     return $this->assertEqual(count($statusCount), $count, $message);
   }
 
+  /**
+   * Create and publish a node.
+   *
+   * @param array $edit
+   *   Field data in an associative array.
+   * @param string $bundle
+   *   The bundle of the node to be created.
+   */
   protected function saveAndPublishNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
-    if (floatval(\Drupal::VERSION) >= 8.4) {
-      $edit['status[value]'] = TRUE;
-      $this->drupalPostForm($path, $edit, t('Save'));
+    if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
+      $this->drupalPostForm($path, $edit, t('Save and Publish'));
     }
     else {
-      $this->drupalPostForm($path, $edit, t('Save and publish'));
+      if (floatval(\Drupal::VERSION) >= 8.4) {
+        $edit['status[value]'] = TRUE;
+        $this->drupalPostForm($path, $edit, t('Save'));
+      }
+      else {
+        $this->drupalPostForm($path, $edit, t('Save and publish'));
+      }
     }
   }
 
@@ -233,6 +246,34 @@ abstract class LingotekTestBase extends WebTestBase {
     }
     else {
       $this->drupalPostForm($path, $edit, t('Save and keep published (this translation)'));
+    }
+  }
+
+  /**
+   * Configure content moderation.
+   *
+   * @param string $workflow_id
+   *   The workflow id to be configured.
+   * @param array $entities_map
+   *   The entities and bundles map that wants to be enabled for a given workflow.
+   *   Array in the form: [entity_type => [bundle1, bundle2]].
+   */
+  protected function configureContentModeration($workflow_id, $entities_map) {
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      foreach ($entities_map as $entity_type_id => $bundles) {
+        $edit = [];
+        foreach ($bundles as $bundle) {
+          $edit["bundles[$bundle]"] = $bundle;
+        }
+        $this->drupalPostForm("admin/config/workflow/workflows/manage/$workflow_id/type/$entity_type_id", $edit, 'Save');
+      }
+    }
+    else {
+      if (isset($entities_map['node'])) {
+        foreach ($entities_map['node'] as $bundle) {
+          $this->drupalPostForm("/admin/structure/types/manage/$bundle/moderation", ['workflow' => $workflow_id], t('Save'));
+        }
+      }
     }
   }
 
