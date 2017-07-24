@@ -1,13 +1,22 @@
 <?php
 
-$connection = Drupal\Core\Database\Database::getConnection();
+/**
+ * @file
+ * Fixture for \Drupal\lingotek\Tests\Update\ConfigEntityMetadataUpdate8001Test.
+ */
+
+use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Database\Database;
+
+
+$connection = Database::getConnection();
 
 $connection->insert('config')
-  ->fields(array(
+  ->fields([
     'collection' => '',
     'name' => 'node.type.basic_page',
-    'data' => serialize(\Drupal\Component\Serialization\Yaml::decode(file_get_contents(__DIR__ . '/node.type.basic_page.yml'))),
-  ))
+    'data' => serialize(Yaml::decode(file_get_contents(__DIR__ . '/node.type.basic_page.yml'))),
+  ])
   ->execute();
 
 // Enable lingotek_test theme.

@@ -2,12 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Unit\Remote;
 
-use Drupal\lingotek\Entity\LingotekProfile;
-use Drupal\lingotek\Exception\LingotekApiException;
-use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\Remote\LingotekApi;
-use Drupal\lingotek\Remote\LingotekHttp;
-use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\Exception\ClientException;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
  * @group lingotek
  * @preserveGlobalState disabled
  */
-
 class LingotekApiUnitTest extends UnitTestCase {
 
   /**

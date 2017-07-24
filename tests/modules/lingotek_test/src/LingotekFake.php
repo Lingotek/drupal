@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\lingotek_test;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -29,7 +30,7 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function get($key) {
-    switch ($key){
+    switch ($key) {
       case 'account':
         if (\Drupal::state()->get('lingotek_fake.logged_in', FALSE) === FALSE ||
           \Drupal::state()->get('lingotek_fake.setup_completed', FALSE) === FALSE) {
@@ -59,7 +60,7 @@ class LingotekFake implements LingotekInterface {
       case 'account.default_client_id':
         return 'test_default_client_id';
       case 'default.community':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key): 'test_community';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_community';
       case 'default.project':
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_project';
       case 'default.vault':
@@ -71,7 +72,7 @@ class LingotekFake implements LingotekInterface {
             ['id' => 1,
               'name' => 'automatic',
               'auto_upload' => TRUE,
-              'auto_download'=> TRUE,
+              'auto_download' => TRUE,
             ],
           ];
     }

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Sets a document id to NULL in the database.
+ * Fixture for \Drupal\lingotek\Tests\Update\LingotekContentEntityMetadataUpgrade8010WithNullDocumentIdTest.
  */
 
 use Drupal\Core\Database\Database;

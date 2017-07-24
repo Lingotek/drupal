@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Sets a node hash to NULL in the database.
+ * Fixture for \Drupal\lingotek\Tests\Update\LingotekContentEntityMetadataUpgrade8010WithNullHashTest.
  */
 
 use Drupal\Core\Database\Database;

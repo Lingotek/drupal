@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Sets a node profile to NULL in the database.
+ * Fixture for \Drupal\lingotek\Tests\Update\LingotekContentEntityMetadataUpgrade8010WithNullProfileTest.
  */
 
 use Drupal\Core\Database\Database;

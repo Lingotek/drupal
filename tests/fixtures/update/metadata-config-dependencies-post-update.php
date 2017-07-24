@@ -1,22 +1,31 @@
 <?php
 
-$connection = Drupal\Core\Database\Database::getConnection();
+/**
+ * @file
+ * Fixture for \Drupal\lingotek\Tests\Update\LingotekConfigDependenciesPostUpdateTest.
+ */
+
+use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Database\Database;
+
+
+$connection = Database::getConnection();
 
 $connection->insert('config')
-  ->fields(array(
+  ->fields([
     'collection' => '',
     'name' => 'lingotek.lingotek_config_metadata.node_type.article',
-    'data' => serialize(\Drupal\Component\Serialization\Yaml::decode(file_get_contents(
+    'data' => serialize(Yaml::decode(file_get_contents(
       __DIR__ . '/config-dependencies-post-update' . '/lingotek.lingotek_config_metadata.node_type.article.yml'))),
-  ))
+  ])
   ->execute();
 $connection->insert('config')
-  ->fields(array(
+  ->fields([
     'collection' => '',
     'name' => 'lingotek.lingotek_config_metadata.field_config.node.article.body',
-    'data' => serialize(\Drupal\Component\Serialization\Yaml::decode(file_get_contents(
+    'data' => serialize(Yaml::decode(file_get_contents(
       __DIR__ . '/config-dependencies-post-update' . '/lingotek.lingotek_config_metadata.field_config.node.article.body.yml'))),
-  ))
+  ])
   ->execute();
 
 
@@ -36,4 +45,3 @@ $connection->update('config')
   ])
   ->condition('name', 'core.extension')
   ->execute();
-

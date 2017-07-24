@@ -5,7 +5,6 @@ namespace Drupal\Tests\lingotek\Unit\Controller;
 use Drupal\Core\Language\Language;
 use Drupal\lingotek\Controller\LingotekDashboardController;
 use Drupal\Tests\UnitTestCase;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * @coversDefaultClass \Drupal\lingotek\Controller\LingotekDashboardController
@@ -156,7 +155,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       ->method('getLocaleForLangcode')
       ->will($this->returnValueMap([['en', 'en_US'], ['fr', 'fr_CA']]));
 
-    /** @var JsonResponse $value */
+    /** @var \Symfony\Component\HttpFoundation\JsonResponse $value */
     $response = $this->controller->endpoint($this->request);
     $content = json_decode($response->getContent(), TRUE);
 
@@ -208,7 +207,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       ->method('getLocaleForLangcode')
       ->will($this->returnValueMap([['en', 'en_US'], ['fr', 'fr_CA']]));
 
-    /** @var JsonResponse $value */
+    /** @var \Symfony\Component\HttpFoundation\JsonResponse $value */
     $response = $this->controller->endpoint($this->request);
     $content = json_decode($response->getContent(), TRUE);
 

@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains Drupal\lingotek_test\LingotekServiceProvider
- */
 
 namespace Drupal\lingotek_test;
 

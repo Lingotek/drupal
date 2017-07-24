@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Provides a fake Lingotek API endpoint and other help for testing purposes.
+ */
+
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Serialization\Yaml;

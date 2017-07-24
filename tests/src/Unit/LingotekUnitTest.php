@@ -3,9 +3,7 @@
 namespace Drupal\Tests\lingotek\Unit;
 
 use Drupal\lingotek\Entity\LingotekProfile;
-use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\Remote\LingotekHttpInterface;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,7 +12,6 @@ use Symfony\Component\HttpFoundation\Response;
  * @group lingotek
  * @preserveGlobalState disabled
  */
-
 class LingotekUnitTest extends UnitTestCase {
 
   /**
@@ -31,7 +28,7 @@ class LingotekUnitTest extends UnitTestCase {
   protected $languageLocaleMapper;
 
   /**
-   * @var LingotekHttpInterface
+   * @var \Drupal\lingotek\Remote\LingotekHttpInterface
    */
   protected $api;
 
@@ -45,7 +42,7 @@ class LingotekUnitTest extends UnitTestCase {
    */
   protected function setUp() {
     $this->api = $this->getMock('\Drupal\lingotek\Remote\LingotekApiInterface');
-    $this->languageLocaleMapper =  $this->getMock('Drupal\lingotek\LanguageLocaleMapperInterface');
+    $this->languageLocaleMapper = $this->getMock('Drupal\lingotek\LanguageLocaleMapperInterface');
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
       ->disableOriginalConstructor()
       ->getMock();
@@ -270,7 +267,7 @@ class LingotekUnitTest extends UnitTestCase {
   public function testUploadDocument() {
     $this->config->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['default.project', 'default_project'],['default.vault', 'default_vault']]));
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
 
     // Vault id has the original value.
     $this->api->expects($this->at(0))
@@ -361,7 +358,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     $this->config->expects($this->any())
       ->method('get')
-      ->will($this->returnValueMap([['default.project', 'default_project'],['default.vault', 'default_vault']]));
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
 
     // Simplest update.
     $this->api->expects($this->at(0))
