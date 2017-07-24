@@ -1061,6 +1061,8 @@ class LingotekConfigManagementForm extends FormBase {
           return $language->label() . ' - ' . $this->t('Not current');
         case Lingotek::STATUS_INTERMEDIATE:
           return $language->label() . ' - ' . $this->t('In-progress (interim translation downloaded)');
+        case Lingotek::STATUS_ERROR:
+          return $language->label() . ' - '.$this->t('Error');
         default:
           return $language->label() . ' - ' . ucfirst(strtolower($status));
       }
@@ -1289,7 +1291,7 @@ class LingotekConfigManagementForm extends FormBase {
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);
       }
-      if ($target_status == Lingotek::STATUS_READY) {
+      if ($target_status == Lingotek::STATUS_READY || $target_status == Lingotek::STATUS_ERROR) {
         $url = Url::fromRoute('lingotek.config.download',
           $args + ['locale' => $locale],
           ['query' => $this->getDestinationArray()]);

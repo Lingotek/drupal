@@ -653,6 +653,20 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     // Go to the bulk node management page.
     $this->goToContentBulkManagementForm();
+
+    // Download the Italian translation.
+    $basepath = \Drupal::request()->getBasePath();
+    $this->clickLink('IT');
+    $this->assertText('The translation of node Llamas are cool into it_IT failed to download.');
+
+    // Check the right class is added.
+    $target_error = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-error')  and contains(text(), 'IT')]");
+    $this->assertEqual(count($target_error), 1, 'The target node has been marked as error.');
+
+    // Check that the Target Status is Error
+    $node = Node::load(1);
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+    $this->assertIdentical(Lingotek::STATUS_ERROR, $content_translation_service->getTargetStatus($node, 'it'));
   }
 
 

@@ -671,11 +671,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function downloadDocument(ContentEntityInterface &$entity, $locale) {
     if ($document_id = $this->getDocumentId($entity)) {
       $source_status = $this->getSourceStatus($entity);
+      $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+      $langcode = $drupal_language->id();
       try {
         $data = $this->lingotek->downloadDocument($document_id, $locale);
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
         return FALSE;
       }
 
@@ -684,8 +687,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
         $transaction = db_transaction();
         try {
-          $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
-          $langcode = $drupal_language->id();
           $saved = $this->saveTargetData($entity, $langcode, $data);
           if ($saved) {
             // If the status was "Importing", and the target was added
@@ -705,9 +706,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           }
         }
         catch (LingotekContentEntityStorageException $storageException) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
           throw $storageException;
         }
         catch (\Exception $exception) {
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
           $transaction->rollback();
           return FALSE;
         }
@@ -1052,6 +1055,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
       return $entity;
     } catch (EntityStorageException $storage_exception) {
+      $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
       throw new LingotekContentEntityStorageException($entity, $storage_exception, $storage_exception->getMessage());
     }
   }

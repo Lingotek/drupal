@@ -1046,6 +1046,8 @@ class LingotekManagementForm extends FormBase {
         return $language->label() . ' - ' . $this->t('Current');
       case Lingotek::STATUS_EDITED:
         return $language->label() . ' - ' . $this->t('Not current');
+      case Lingotek::STATUS_ERROR:
+        return $language->label() . ' - '.$this->t('Error');
       default:
         return $language->label() . ' - ' . ucfirst(strtolower($status));
     }
@@ -1267,7 +1269,7 @@ class LingotekManagementForm extends FormBase {
         ],
         ['query' => $this->getDestinationWithQueryArray()]);
     }
-    if ($target_status == Lingotek::STATUS_READY) {
+    if ($target_status == Lingotek::STATUS_READY || $target_status == Lingotek::STATUS_ERROR) {
       $url = Url::fromRoute('lingotek.entity.download',
         [
           'doc_id' => $document_id,

@@ -415,6 +415,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
 
 
   public function download($entity_type, $entity_id,  $locale, Request $request) {
+    $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
+    $langcode = $drupal_language->id();
     if ($entity_type === $entity_id) {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
@@ -424,6 +426,8 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
         }
       }
       catch (LingotekApiException $e) {
+        $mappers =  $this->configMapperManager->getMappers();
+        $this->translationService->setConfigTargetStatus($mappers[$entity_type], $langcode, Lingotek::STATUS_ERROR);
         drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
           ['%label' => $definition['title'], '@locale' => $locale]), 'error');
       }
@@ -441,6 +445,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       }
     }
     catch (LingotekApiException $e) {
+      $this->translationService->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
       drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
         ['%label' => $entity->label(), '@locale' => $locale]), 'error');
     }

@@ -555,18 +555,19 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    */
   public function downloadDocument(ConfigEntityInterface $entity, $locale) {
     if ($document_id = $this->getDocumentId($entity)) {
+      $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
       try {
         $data = $this->lingotek->downloadDocument($document_id, $locale);
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
         return FALSE;
       }
       if ($data) {
         // Check the real status, because it may still need review or anything.
         $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
 
-        $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
         $this->saveTargetData($entity, $langcode, $data);
         // If the status was "Importing", and the target was added
         // successfully, we can ensure that the content is current now.
@@ -968,17 +969,18 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function downloadConfig($mapper_id, $locale) {
     $mapper = $this->mappers[$mapper_id];
     if ($document_id = $this->getConfigDocumentId($mapper)) {
+      $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
       try {
         $data = $this->lingotek->downloadDocument($document_id, $locale);
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
+        $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_ERROR);
         return FALSE;
       }
       if ($data) {
         // Check the real status, because it may still need review or anything.
         $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
-        $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
         $this->saveConfigTargetData($mapper, $langcode, $data);
 
         // If the status was "Importing", and the target was added
