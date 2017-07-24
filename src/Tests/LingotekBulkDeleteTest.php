@@ -4,7 +4,6 @@ namespace Drupal\lingotek\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Tests\TaxonomyTestTrait;
 
 /**
@@ -24,14 +23,14 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
   public static $modules = ['taxonomy', 'block', 'node'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
   protected function setUp() {
     parent::setUp();
 
-    $this->drupalPlaceBlock('page_title_block',['region' => 'header']);
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'header']);
 
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
@@ -69,7 +68,7 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create three node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -102,9 +101,9 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
 
     // Mark the first two for deletion.
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => FALSE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => FALSE, // Node 3.
       'operation' => 'delete_nodes'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));

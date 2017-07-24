@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Tests;
 
 use Drupal\lingotek\Lingotek;
-use Drupal\node\Entity\Node;
 use Drupal\simpletest\WebTestBase;
 
 /**
@@ -62,30 +61,30 @@ abstract class LingotekTestBase extends WebTestBase {
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    */
-  function createImageField($name, $type_name, $entity_type_id = 'node', $storage_settings = array(), $field_settings = array(), $widget_settings = array()) {
-    entity_create('field_storage_config', array(
+  public function createImageField($name, $type_name, $entity_type_id = 'node', $storage_settings = [], $field_settings = [], $widget_settings = []) {
+    entity_create('field_storage_config', [
       'field_name' => $name,
       'entity_type' => $entity_type_id,
       'type' => 'image',
       'settings' => $storage_settings,
       'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
-    ))->save();
+    ])->save();
 
-    $field_config = entity_create('field_config', array(
+    $field_config = entity_create('field_config', [
       'field_name' => $name,
       'label' => $name,
       'entity_type' => $entity_type_id,
       'bundle' => $type_name,
       'required' => !empty($field_settings['required']),
       'settings' => $field_settings,
-    ));
+    ]);
     $field_config->save();
 
     entity_get_form_display($entity_type_id, $type_name, 'default')
-      ->setComponent($name, array(
+      ->setComponent($name, [
         'type' => 'image_image',
         'settings' => $widget_settings,
-      ))
+      ])
       ->save();
 
     entity_get_display($entity_type_id, $type_name, 'default')

@@ -2,11 +2,8 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests changing a profile using the bulk management form.
@@ -23,7 +20,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
   public static $modules = ['block', 'node'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\Entity\NodeInterface
    */
   protected $node;
 
@@ -69,7 +66,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $nodes = [];
     // Create a node.
     for ($i = 1; $i < 4; $i++) {
-      $edit = array();
+      $edit = [];
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
@@ -87,20 +84,20 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/2?destination=' . $basepath . '/admin/lingotek/manage/node');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/3?destination=' . $basepath . '/admin/lingotek/manage/node');
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'upload'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'check_upload'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -110,9 +107,9 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $this->assertEqual(count($manual_profile), 3, 'There are three nodes with the Manual Profile set.');
 
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'change_profile:automatic'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -122,7 +119,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $this->assertEqual(count($automatic_profile), 3, 'There are three nodes with the Automatic Profile set.');
 
     $edit = [
-      'table[2]' => TRUE,  // Node 2.
+      'table[2]' => TRUE,
       'operation' => 'change_profile:manual'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -135,9 +132,9 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $this->assertEqual(count($automatic_profile), 2, 'There are two nodes with the Automatic Profile set.');
 
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'change_profile:disabled'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -147,9 +144,9 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $this->assertEqual(count($disabled_profile), 3, 'There are three nodes with the Disabled Profile set.');
 
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'change_profile:automatic'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -170,7 +167,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     // Create three nodes.
     $nodes = [];
     for ($i = 1; $i < 4; $i++) {
-      $edit = array();
+      $edit = [];
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
@@ -188,17 +185,17 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/2?destination=' . $basepath . '/admin/lingotek/manage/node');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/3?destination=' . $basepath . '/admin/lingotek/manage/node');
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'disassociate'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
-      'table[2]' => TRUE,  // Node 2.
-      'table[3]' => TRUE,  // Node 3.
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
       'operation' => 'change_profile:automatic'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));

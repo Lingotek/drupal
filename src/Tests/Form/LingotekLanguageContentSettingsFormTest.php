@@ -57,4 +57,5 @@ class LingotekLanguageContentSettingsFormTest extends LingotekTestBase {
     $this->assertNoText('Lingotek translation source');
     $this->assertNoText('Lingotek metadata');
   }
+
 }

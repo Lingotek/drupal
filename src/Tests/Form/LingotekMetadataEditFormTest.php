@@ -5,7 +5,6 @@ namespace Drupal\lingotek\Tests\Form;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 use Drupal\node\Entity\Node;
 
@@ -62,7 +61,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
    */
   public function testMetadataLocalTaskNotAvailable() {
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -82,7 +81,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', [], 'Enable debug operations');
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -103,7 +102,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', [], 'Enable debug operations');
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -137,7 +136,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
     $this->assertOptionSelected('edit-es', Lingotek::STATUS_READY);
     
-    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
     $node = Node::load(1);
     // Assert that the values are correct in the service.

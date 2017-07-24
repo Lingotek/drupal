@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Tests\Update\ConfigEntityMetadataUpdate8001Test.
- */
-
 namespace Drupal\lingotek\Tests\Update;
 
 use Drupal\lingotek\Entity\LingotekConfigMetadata;

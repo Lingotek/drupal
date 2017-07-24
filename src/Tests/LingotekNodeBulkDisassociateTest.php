@@ -2,14 +2,10 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a node using the bulk management form.
@@ -68,7 +64,7 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -81,14 +77,14 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first two for disassociation.
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
+      'table[1]' => TRUE,
       'operation' => 'disassociate'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     $node = Node::load(1);
 
-    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
 
     // Assert that no document has been deleted remotely.
@@ -113,7 +109,7 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-preferences-form');
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -126,7 +122,7 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first two for disassociation.
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
+      'table[1]' => TRUE,
       'operation' => 'disassociate'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -138,7 +134,7 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     $this->assertEqual(1, count($deleted_docs), 'The document has been deleted remotely.');
 
 
-    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
 
     $this->assertNull($content_translation_service->getDocumentId($node));

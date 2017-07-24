@@ -5,7 +5,6 @@ namespace Drupal\lingotek\Tests;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
 
 /**
  * Tests the Lingotek content service extract data from entities correctly.
@@ -28,10 +27,10 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create Article node type.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.

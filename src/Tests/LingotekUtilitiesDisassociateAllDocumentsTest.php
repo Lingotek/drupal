@@ -6,10 +6,8 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
-use Drupal\taxonomy\Entity\VocabularyInterface;
 use Drupal\taxonomy\Tests\TaxonomyTestTrait;
 
 /**
@@ -39,10 +37,10 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     parent::setUp();
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     $this->vocabulary = $this->createVocabulary();
     $vocabulary_id = $this->vocabulary->id();
@@ -90,7 +88,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
 
   public function translateNodeWithLinks() {
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -118,7 +116,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $bundle = $this->vocabulary->id();
 
     // Create a term.
-    $edit = array();
+    $edit = [];
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['description[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -184,7 +182,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $node = Node::load(1);
     $term = Term::load(1);
 
-    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');

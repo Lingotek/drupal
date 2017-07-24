@@ -2,14 +2,9 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
-use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a config entity using the bulk management form.
@@ -29,10 +24,10 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     parent::setUp();
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -60,34 +55,34 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText(t('Article uploaded successfully'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('EN');
     $this->assertText('Article status checked successfully');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText("Translation to es_MX requested successfully");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText("Translation to es_MX status checked successfully");
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX downloaded successfully');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -114,44 +109,44 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
-      'table[article]' => TRUE,  // Article.
+      'table[article]' => TRUE,
       'operation' => 'upload'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
-      'table[article]' => TRUE,  // Article.
+      'table[article]' => TRUE,
       'operation' => 'check_upload'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Request the German (AT) translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
-      'table[article]' => TRUE,  // Article.
+      'table[article]' => TRUE,
       'operation' => 'request_translation:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
-      'table[article]' => TRUE,  // Article.
+      'table[article]' => TRUE,
       'operation' => 'check_translation:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
     // Download the German translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
-      'table[article]' => TRUE,  // Article.
+      'table[article]' => TRUE,
       'operation' => 'download:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -181,10 +176,10 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     // Create another node type
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'page',
       'name' => 'Page'
-    ));
+    ]);
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_type');
@@ -192,8 +187,8 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
@@ -202,8 +197,8 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/page?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
@@ -212,8 +207,8 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Request all the translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/page/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/page/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
@@ -222,8 +217,8 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Check status of all the translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/page/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/page/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
@@ -232,8 +227,8 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Download all the translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/page/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/page/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
@@ -379,7 +374,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // There is a link for requesting the Catalan translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
     $this->clickLink('CA');
     $this->assertText("Translation to ca_ES requested successfully");
   }
@@ -405,7 +400,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
   /**
    * Test that when a config is uploaded in a different locale that locale is used.
    */
-  // ToDo: Add a test for this.
+  /**
+ * ToDo: Add a test for this.
+ */
   public function testAddingConfigInDifferentLocale() {
     $this->pass('Test not implemented yet.');
   }
@@ -428,7 +425,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
@@ -476,7 +473,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
@@ -503,7 +500,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // Upload the document, which must fail.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'operation' => 'upload'
@@ -517,7 +514,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
@@ -542,7 +539,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // Upload the document, which must succeed.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'operation' => 'upload'
@@ -574,7 +571,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
@@ -599,7 +596,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'operation' => 'upload'
@@ -608,7 +605,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
       'operation' => 'check_upload'
@@ -616,7 +613,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Assert that I could request translations.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Check statuses, that may been requested externally.
     $edit = [
@@ -626,24 +623,24 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Now Drupal knows that there are translations ready.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Even if I just add a new language.
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
     $this->drupalPostForm(NULL, $edit, t('Execute'));
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Ensure locales are handled correctly by setting manual values.
     \Drupal::state()->set('lingotek.document_completion_statuses', ['de-AT' => 50, 'de-DE' => 100, 'es-MX' => 10]);
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Now Drupal knows which translations are ready.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_DE?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/it_IT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_DE?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/it_IT?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     \Drupal::state()->set('lingotek.document_completion_statuses', ['it-IT' => 100, 'de-DE' => 50, 'es-MX' => 10]);
     // Check all statuses again.
@@ -651,11 +648,11 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // All translations must be updated according exclusively with the
     // information from the TMS.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_DE?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/es_MX?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath .'/admin/lingotek/config/manage');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/it_IT?destination=' . $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_DE?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/ca_ES?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/it_IT?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Source status must be kept too.
     $this->assertSourceStatusStateCount(Lingotek::STATUS_CURRENT, 'EN', 1);

@@ -6,7 +6,6 @@ use Drupal\contact\Entity\ContactForm;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a field in a contact message.
@@ -23,7 +22,7 @@ class LingotekContactMessageBodyTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'field_ui', 'contact'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -39,11 +38,11 @@ class LingotekContactMessageBodyTranslationTest extends LingotekTestBase {
       'label' => 'Test contact form',
     ])->save();
 
-    $fieldStorage = FieldStorageConfig::create(array(
+    $fieldStorage = FieldStorageConfig::create([
       'field_name' => 'field_test',
       'entity_type' => 'contact_message',
       'type' => 'text'
-    ));
+    ]);
     $fieldStorage->save();
 
     FieldConfig::create([
@@ -97,7 +96,7 @@ class LingotekContactMessageBodyTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath. '/admin/structure/contact/manage/contact_message/fields/contact_message.contact_message.field_test/translate/es/edit');
+    $this->assertLinkByHref($basepath . '/admin/structure/contact/manage/contact_message/fields/contact_message.contact_message.field_test/translate/es/edit');
   }
 
 }

@@ -7,7 +7,6 @@ use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a node.
@@ -26,7 +25,7 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -38,10 +37,10 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     $this->createEntityReferenceField('node', 'article', 'field_reference', 'Reference', 'node');
 
@@ -80,7 +79,7 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
 
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -107,7 +106,7 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
 
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
     $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
@@ -136,8 +135,8 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_MX'), array('language' => ConfigurableLanguage::load('es')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_MX'], ['language' => ConfigurableLanguage::load('es')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');

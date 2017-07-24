@@ -2,11 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests debugging a field using the bulk management form.
@@ -26,10 +22,10 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     parent::setUp();
 
     // Create Article node types.
-    $type = $this->drupalCreateContentType(array(
+    $type = $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     node_add_body_field($type);
 
     // Add a language.
@@ -54,7 +50,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // There is no 'debug' option group.
-    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is no debug group.');
+    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is no debug group.');
 
     // Enable the debug operations.
     $this->drupalGet('admin/lingotek/settings');
@@ -64,8 +60,8 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // There should be a 'debug' option group with the right operation.
-    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is a debug group.');
-    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', array(':id' => 'edit-operation', ':value' => 'debug.export')), 'There is a debug export option.');
+    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is a debug group.');
+    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', [':id' => 'edit-operation', ':value' => 'debug.export']), 'There is a debug export option.');
   }
 
   public function testDebugExport() {
@@ -89,7 +85,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     // Download the file.
     $this->clickLink('config.node.article.body.json');
 
-    $response = json_decode($this->content, true);
+    $response = json_decode($this->content, TRUE);
     $this->assertIdentical('Body', $response['field.field.node.article.body']['label']);
     $this->assertIdentical('', $response['field.field.node.article.body']['description']);
     $this->assertIdentical('node.article.body (config): Body', $response['_debug']['title']);

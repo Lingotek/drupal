@@ -2,11 +2,8 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests debugging a node using the bulk management form.
@@ -23,7 +20,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
   public static $modules = ['block', 'node'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\Entity\NodeInterface
    */
   protected $node;
 
@@ -68,7 +65,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // There is no 'debug' option group.
-    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is no debug group.');
+    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is no debug group.');
 
     // Enable the debug operations.
     $this->drupalGet('admin/lingotek/settings');
@@ -77,8 +74,8 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     // Back to the bulk node management page.
     $this->goToContentBulkManagementForm();
     // There should be a 'debug' option group with the right operation.
-    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is a debug group.');
-    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', array(':id' => 'edit-operation', ':value' => 'debug.export')), 'There is a debug export option.');
+    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is a debug group.');
+    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', [':id' => 'edit-operation', ':value' => 'debug.export']), 'There is a debug export option.');
   }
 
   public function testDebugExport() {
@@ -86,7 +83,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -100,7 +97,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     $edit = [
-      'table[1]' => TRUE,  // Node 1.
+      'table[1]' => TRUE,
       'operation' => 'debug.export'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -109,7 +106,7 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
     // Download the file.
     $this->clickLink('node.article.1.json');
 
-    $response = json_decode($this->content, true);
+    $response = json_decode($this->content, TRUE);
     $this->assertIdentical('Llamas are cool', $response['title'][0]['value']);
     $this->assertIdentical('Llamas are very cool', $response['body'][0]['value']);
     $this->assertIdentical('article (node): Llamas are cool', $response['_debug']['title']);

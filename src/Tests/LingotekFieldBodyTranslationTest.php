@@ -2,14 +2,9 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a field.
@@ -26,7 +21,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'field_ui'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\Entity\NodeInterface
    */
   protected $node;
 
@@ -38,10 +33,10 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $type = $this->drupalCreateContentType(array(
+    $type = $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     node_add_body_field($type);
 
     // Add a language.
@@ -97,7 +92,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/fields/node.article.body/translate/es/edit');
+    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/fields/node.article.body/translate/es/edit');
 
     // Check that the values are correct.
     $this->clickLink('Edit', 1);
@@ -217,7 +212,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.body');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
@@ -261,7 +256,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.body');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');
@@ -295,7 +290,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
     // The field has been marked with the error status.
     $fieldConfig = FieldConfig::load('node.article.field_excerpt');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($fieldConfig);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The field has been marked as error.');

@@ -5,7 +5,6 @@ namespace Drupal\lingotek\Tests\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**
@@ -71,7 +70,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $nodes = [];
     // Create a node.
     for ($i = 1; $i < 15; $i++) {
-      $edit = array();
+      $edit = [];
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
@@ -128,7 +127,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
         $profile = 'disabled';
       }
 
-      $edit = array();
+      $edit = [];
       $edit['title[0][value]'] = 'Llamas are cool ' . $i;
       $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
@@ -201,7 +200,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
         $animal = 'Cats';
       }
 
-      $edit = array();
+      $edit = [];
       $edit['title[0][value]'] = $animal . ' are cool ' . $i;
       $edit['body[0][value]'] = $animal . ' are very cool ' . $i;
       $edit['langcode[0][value]'] = 'en';
@@ -438,7 +437,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    */
   public function testDisabledLanguage() {
     // Create an article.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -451,43 +450,43 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
     $this->clickLink('EN');
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
     // And we can already request a translation for Spanish.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
 
     // Then we disable the Spanish language.
-    $request = $this->curlExec(array(
-      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+    $request = $this->curlExec([
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => FALSE,
       CURLOPT_CUSTOMREQUEST => 'DELETE',
       CURLOPT_POSTFIELDS => $this->serializePostValues(['code' => 'es_MX']),
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
 
     // And we check that Spanish is not there anymore.
     $this->goToContentBulkManagementForm();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
 
     // We re-enable Spanish.
-    /** @var LingotekConfigurationServiceInterface $lingotekConfig */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotekConfig */
     $lingotekConfig = \Drupal::service('lingotek.configuration');
     $language = ConfigurableLanguage::load('es');
     $lingotekConfig->enableLanguage($language);
 
     // And Spanish should be back in the management form.
     $this->goToContentBulkManagementForm();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
   }
 
 }

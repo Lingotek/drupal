@@ -7,7 +7,6 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests the Lingotek content service saves data to entities correctly.
@@ -30,10 +29,10 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create Article node type.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Add languages.
     ConfigurableLanguage::createFromLangcode('es')
@@ -67,7 +66,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
 
   public function testRightRevisionsAreSavedIfThereIsMetadata() {
     // Create a node.
-    /** @var NodeInterface $node */
+    /** @var \Drupal\node\NodeInterface $node */
     $node = $this->createNode([
       'type' => 'article',
       'title' => 'Revision 1'

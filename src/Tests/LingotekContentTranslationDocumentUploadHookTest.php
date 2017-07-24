@@ -2,11 +2,9 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests the hooks a node.
@@ -23,7 +21,7 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
   public static $modules = ['block', 'node', 'image'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -35,10 +33,10 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
     $this->drupalPlaceBlock('page_title_block');
 
     // Create node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'animal',
       'name' => 'Animal'
-    ));
+    ]);
     $this->createImageField('field_image', 'animal');
 
     // Add a language.
@@ -78,7 +76,7 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
     $test_image = current($this->drupalGetTestFiles('image'));
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -94,7 +92,7 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
 
     // Check that the configured fields have been uploaded, but also the one
     // added via the hook.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 4);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));

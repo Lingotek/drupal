@@ -2,7 +2,6 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**
@@ -30,7 +29,7 @@ class LingotekSettingsTabConfigurationFormTest extends LingotekTestBase {
     $this->assertFieldChecked('edit-table-configurable-language-enabled');
     $this->assertFieldByName('table[configurable_language][profile]', 'manual');
 
-    /** @var LingotekConfigTranslationServiceInterface $config_translation */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation */
     $config_translation = \Drupal::service('lingotek.config_translation');
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');

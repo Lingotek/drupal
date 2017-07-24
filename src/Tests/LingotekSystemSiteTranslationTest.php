@@ -2,11 +2,8 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
 
 /**
  * Tests translating a config object.
@@ -70,7 +67,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->assertText(t('System information status checked successfully'));
 
     // Ensure that we request the es_AR translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.added_target_locale'));
     $this->assertText(t('Translation to es_AR requested successfully'));
 
@@ -169,7 +166,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/it_IT');
     $this->assertLinkByHref('/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_AR');
 
-    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $lingotek_config->disableLanguage($italian);
 
@@ -198,10 +195,10 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->assertText('System information upload failed. Please try again.');
 
     // The config mapper has been marked with the error status.
-    /** @var ConfigMapperManagerInterface $mapperManager */
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
     $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
     $mapper = $mapperManager->getMappers()['system.site_information_settings'];
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getConfigSourceStatus($mapper);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');
@@ -243,10 +240,10 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
     $this->assertText('System information update failed. Please try again.');
 
     // The config mapper has been marked with the error status.
-    /** @var ConfigMapperManagerInterface $mapperManager */
+    /** @var \Drupal\config_translation\ConfigMapperManagerInterface $mapperManager */
     $mapperManager = \Drupal::service('plugin.manager.config_translation.mapper');
     $mapper = $mapperManager->getMappers()['system.site_information_settings'];
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getConfigSourceStatus($mapper);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The system information has been marked as error.');

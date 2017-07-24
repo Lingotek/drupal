@@ -38,10 +38,10 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
 
     // Create Article node types.
     if ($this->profile != 'standard') {
-      $this->drupalCreateContentType(array(
+      $this->drupalCreateContentType([
         'type' => 'article',
         'name' => 'Article'
-      ));
+      ]);
     }
 
     // Add a language.
@@ -154,7 +154,7 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
    */
   protected function createAndDownloadANodeTranslation($status) {
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -205,10 +205,10 @@ class LingotekNodeTranslationDownloadStatusTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array(
+    $url = Url::fromRoute('lingotek.workbench', [
       'doc_id' => 'dummy-document-hash-id',
       'locale' => 'es_MX'
-    ), array('language' => ConfigurableLanguage::load('es')))->toString();
+    ], ['language' => ConfigurableLanguage::load('es')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');

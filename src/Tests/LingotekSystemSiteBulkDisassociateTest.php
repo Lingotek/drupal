@@ -4,7 +4,6 @@ namespace Drupal\lingotek\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 
 /**
  * Tests translating config using the bulk management form.
@@ -44,12 +43,12 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first two for disassociation.
     $edit = [
-      'table[system.site_information_settings]' => TRUE,  // System information.
+      'table[system.site_information_settings]' => TRUE,
       'operation' => 'disassociate'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
-    /** @var LingotekConfigTranslationServiceInterface $config_translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
     $mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
@@ -86,12 +85,12 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first two for disassociation.
     $edit = [
-      'table[system.site_information_settings]' => TRUE,  // System information.
+      'table[system.site_information_settings]' => TRUE,
       'operation' => 'disassociate'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
-    /** @var LingotekConfigTranslationServiceInterface $config_translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
     $mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();

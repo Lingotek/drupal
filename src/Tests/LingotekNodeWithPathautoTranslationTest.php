@@ -39,10 +39,10 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Add locales.
     $post = [
@@ -97,7 +97,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -142,7 +142,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -166,7 +166,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['path[0][pathauto]'] = FALSE;
@@ -213,7 +213,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -237,7 +237,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -284,7 +284,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -309,7 +309,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -354,7 +354,7 @@ class LingotekNodeWithPathautoTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');

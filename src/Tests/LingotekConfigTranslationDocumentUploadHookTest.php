@@ -38,13 +38,13 @@ class LingotekConfigTranslationDocumentUploadHookTest extends LingotekTestBase {
    */
   public function testBlockTranslation() {
     // Place the block with title that contains a token.
-    $this->drupalPlaceBlock('system_powered_by_block', array(
+    $this->drupalPlaceBlock('system_powered_by_block', [
       'label' => t('Title with [site:name]'),
-    ));
+    ]);
 
     // Check that [token] is encoded via hook_lingotek_config_entity_document_upload().
     // @see lingotek_test_lingotek_config_entity_document_upload()
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertEqual($data['settings.label'], 'Title with [***c2l0ZTpuYW1l***]');
   }
 

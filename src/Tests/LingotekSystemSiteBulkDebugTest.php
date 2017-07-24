@@ -2,11 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests debugging a config object using the bulk management form.
@@ -23,7 +19,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
   public static $modules = ['block', 'node'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\Entity\NodeInterface
    */
   protected $node;
 
@@ -45,7 +41,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // There is no 'debug' option group.
-    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is no debug group.');
+    $this->assertFalse($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is no debug group.');
 
     // Enable the debug operations.
     $this->drupalGet('admin/lingotek/settings');
@@ -55,8 +51,8 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // There should be a 'debug' option group with the right operation.
-    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', array(':id' => 'edit-operation', ':label' => 'debug')), 'There is a debug group.');
-    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', array(':id' => 'edit-operation', ':value' => 'debug.export')), 'There is a debug export option.');
+    $this->assertTrue($this->xpath('//select[@id=:id]//optgroup[@label=:label]', [':id' => 'edit-operation', ':label' => 'debug']), 'There is a debug group.');
+    $this->assertTrue($this->xpath('//select[@id=:id]//option[@value=:value]', [':id' => 'edit-operation', ':value' => 'debug.export']), 'There is a debug export option.');
   }
 
   public function testDebugExport() {
@@ -71,7 +67,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     $edit = [
-      'table[system.site_information_settings]' => TRUE,  // System information.
+      'table[system.site_information_settings]' => TRUE,
       'operation' => 'debug.export'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -80,7 +76,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
     // Download the file.
     $this->clickLink('config.system.site_information_settings.json');
 
-    $response = json_decode($this->content, true);
+    $response = json_decode($this->content, TRUE);
     $this->assertIdentical('Drupal', $response['system.site']['name']);
     $this->assertIdentical('', $response['system.site']['slogan']);
     $this->assertIdentical('system.site_information_settings (config): System information', $response['_debug']['title']);

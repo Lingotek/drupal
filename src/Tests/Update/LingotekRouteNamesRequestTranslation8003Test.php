@@ -34,7 +34,7 @@ class LingotekRouteNamesRequestTranslation8003Test extends UpdatePathTestBase {
         'locale' => $locale,
       ]);
 
-    try{
+    try {
       $url->getInternalPath();
       $this->fail('The route did not exist');
     }
@@ -51,7 +51,7 @@ class LingotekRouteNamesRequestTranslation8003Test extends UpdatePathTestBase {
         'locale' => $locale,
       ]);
 
-    try{
+    try {
       $url->getInternalPath();
       // We are good.
       $this->assertTrue(TRUE, 'The route was found after the update.');

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Tests\LingotekDashboardTest.
- */
-
 namespace Drupal\lingotek\Tests;
 
 use Drupal\simpletest\WebTestBase;
@@ -69,7 +64,7 @@ class LingotekAccountTest extends WebTestBase {
     // Try to navigate to the Dashboard page, and assert we are redirected.
     $this->drupalGet('admin/lingotek/setup/account');
 
-      // Fake the connection to an account in Lingotek.
+    // Fake the connection to an account in Lingotek.
     $this->clickLink('Connect Lingotek Account');
     // Our fake backend generates a token, returns to the site and waits for the
     // redirect.

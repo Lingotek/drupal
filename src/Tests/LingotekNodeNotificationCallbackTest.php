@@ -9,11 +9,8 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
 use GuzzleHttp\Exception\ServerException;
-use GuzzleHttp\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -78,7 +75,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -151,7 +148,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -235,7 +232,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -325,7 +322,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -423,7 +420,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -432,7 +429,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     /** @var NodeInterface $node */
     $node = Node::load(1);
-    /** @var LingotekContentTranslationServiceInterface $content_translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
 
     // Assert the content is importing.
@@ -448,15 +445,15 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->assertIdentical(['it', 'es'], $response['result']['request_translations'], 'Spanish and Italian languages have been requested after notification automatically.');
 
-    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $lingotek_config->disableLanguage($italian);
 
     // Test with another content.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool 2';
     $edit['body[0][value]'] = 'Llamas are very cool 2';
     $edit['langcode[0][value]'] = 'en';
@@ -471,7 +468,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Italian language has not been requested after notification automatically because it is disabled.');
   }
 
@@ -488,7 +485,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->save();
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -514,7 +511,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       $this->assertText(new FormattableMarkup("Locale '@locale' was added as a translation target for node Llamas are cool.", ['@locale' => $locale]));
     }
 
-    /** @var PromiseInterface[] $requests */
+    /** @var \GuzzleHttp\Promise\PromiseInterface[] $requests */
     $requests = [];
     foreach ($languages as $langcode => $locale) {
       $url = Url::fromRoute('lingotek.notify', [], [
@@ -577,7 +574,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('it')->save();
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -684,8 +681,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
       ->getStorage('lingotek_content_metadata');
 
     // The node and the metadata caches need to be reset before reload.
-    $metadata_storage->resetCache(array(1));
-    $node_storage->resetCache(array(1));
+    $metadata_storage->resetCache([1]);
+    $node_storage->resetCache([1]);
 
     /** @var \Drupal\node\NodeInterface $node */
     $node = $node_storage->load(1);

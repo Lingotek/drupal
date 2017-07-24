@@ -4,7 +4,6 @@ namespace Drupal\lingotek\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 
 /**
  * Tests translating config using the bulk management form.
@@ -24,10 +23,10 @@ class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
     parent::setUp();
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->save();
@@ -54,7 +53,7 @@ class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first for disassociation.
     $edit = [
-      'table[article]' => 'article',  // Article.
+      'table[article]' => 'article',
       'operation' => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -92,7 +91,7 @@ class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first for disassociation.
     $edit = [
-      'table[article]' => 'article',  // Article.
+      'table[article]' => 'article',
       'operation' => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));

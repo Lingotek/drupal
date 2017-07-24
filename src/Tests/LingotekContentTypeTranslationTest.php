@@ -2,15 +2,9 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a content type.
@@ -27,7 +21,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\Entity\NodeInterface
    */
   protected $node;
 
@@ -39,10 +33,10 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'header', 'weight' => -10]);
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     $edit = [
       'table[node_type][enabled]' => 1,
       'table[node_type][profile]' => 'automatic',
@@ -97,7 +91,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/translate/es/edit');
+    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/translate/es/edit');
   }
 
   /**
@@ -180,7 +174,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref('/admin/structure/types/manage/article/translate/it/add');
     $this->assertLinkByHref('/admin/structure/types/manage/article/translate/es/add');
 
-    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $lingotek_config->disableLanguage($italian);
 
@@ -210,7 +204,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
@@ -255,7 +249,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('article');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
@@ -289,7 +283,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
     // The node type has been marked with the error status.
     $nodeType = NodeType::load('landing_page');
-    /** @var LingotekConfigTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $source_status = $translation_service->getSourceStatus($nodeType);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');

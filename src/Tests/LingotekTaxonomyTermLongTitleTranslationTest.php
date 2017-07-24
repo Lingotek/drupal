@@ -83,7 +83,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $bundle = $this->vocabulary->id();
 
     // Create a term.
-    $edit = array();
+    $edit = [];
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['description[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -93,7 +93,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->term = Term::load(1);
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['name'][0]['value']));
     $this->assertEqual(1, count($data['description'][0]));
@@ -152,7 +152,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->term->save();
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['name'][0]['value']));
     $this->assertEqual(1, count($data['description'][0]));
@@ -228,7 +228,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertText('Uploaded 1 document to Lingotek.');
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['name'][0]['value']));
     $this->assertEqual(1, count($data['description'][0]));
@@ -283,7 +283,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
     // Create a term.
-    $edit = array();
+    $edit = [];
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['description[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -295,34 +295,34 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/taxonomy_term/1?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/taxonomy_term/1?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $this->clickLink('EN');
     $this->assertText('Taxonomy_term Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $this->clickLink('EN');
     $this->assertText('The import for taxonomy_term Llamas are cool is complete.');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_ES?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $this->clickLink('ES');
     $this->assertText("Locale 'es_ES' was added as a translation target for taxonomy_term Llamas are cool.");
     $this->assertIdentical('es_ES', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_ES?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $this->clickLink('ES');
     $this->assertIdentical('es_ES', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('The es_ES translation for taxonomy_term Llamas are cool is ready for download.');
 
     // Download translation. It must fail with a useful error message.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_ES?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_ES?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $this->clickLink('ES');
     $this->assertText('The download for taxonomy_term Llamas are cool failed because of the length of one field translation value: name.');
 
@@ -361,7 +361,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
     // Create a term.
-    $edit = array();
+    $edit = [];
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['description[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -373,44 +373,44 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/taxonomy_term/1?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/taxonomy_term/1?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
-      'table[1]' => TRUE,  // Taxonomy_term 1.
+      'table[1]' => TRUE,
       'operation' => 'upload'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
-      'table[1]' => TRUE,  // Taxonomy_term 1.
+      'table[1]' => TRUE,
       'operation' => 'check_upload'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     // Request the German (AT) translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
-      'table[1]' => TRUE,  // Taxonomy_term 1.
+      'table[1]' => TRUE,
       'operation' => 'request_translation:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
-      'table[1]' => TRUE,  // Taxonomy_term 1.
+      'table[1]' => TRUE,
       'operation' => 'check_translation:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/taxonomy_term');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
-      'table[1]' => TRUE,  // Taxonomy_term 1.
+      'table[1]' => TRUE,
       'operation' => 'download:de'
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));

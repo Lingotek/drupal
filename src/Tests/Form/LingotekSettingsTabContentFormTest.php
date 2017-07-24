@@ -5,7 +5,6 @@ namespace Drupal\lingotek\Tests\Form;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**
@@ -30,10 +29,10 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     // Create Article node types.
     if ($this->profile != 'standard') {
-      $this->drupalCreateContentType(array(
+      $this->drupalCreateContentType([
         'type' => 'article',
         'name' => 'Article'
-      ));
+      ]);
 
       $this->createImageField('field_image', 'article');
       $this->createImageField('user_picture', 'user', 'user');
@@ -202,14 +201,14 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
 
     // Go to the content language settings, and disable the body field.
     // It should result that the field is disabled in Lingotek too.
-    $edit = array(
+    $edit = [
       'entity_types[node]' => TRUE,
       'settings[node][article][settings][language][language_alterable]' => TRUE,
       'settings[node][article][translatable]' => TRUE,
       'settings[node][article][fields][title]' => TRUE,
       'settings[node][article][fields][body]' => FALSE,
       'settings[node][article][fields][field_image]' => FALSE,
-    );
+    ];
     $this->drupalPostForm('admin/config/regional/content-language', $edit, t('Save configuration'));
 
     // Get the form and check the fields are not available, because they cannot be translated.
@@ -220,7 +219,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     $this->assertNoFieldById('edit-node-article-fields-field-imageproperties-alt', 'The image alt property is not present after image was disabled for content translation');
 
     // But also check that the fields are not enabled.
-    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $this->assertFalse($lingotek_config->isFieldLingotekEnabled('node', 'article', 'body'), 'The body field is disabled after being disabled for content translation');
     $this->assertFalse($lingotek_config->isFieldLingotekEnabled('node', 'article', 'image'), 'The image field is disabled after being disabled for content translation');

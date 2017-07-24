@@ -4,7 +4,6 @@ namespace Drupal\lingotek\Tests;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 
 /**
  * Tests disassociating a field using the bulk management form.
@@ -24,10 +23,10 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     parent::setUp();
 
     // Create Article node types.
-    $type = $this->drupalCreateContentType(array(
+    $type = $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     node_add_body_field($type);
 
     // Add a language.
@@ -55,7 +54,7 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first for disassociation.
     $edit = [
-      'table[node.article.body]' => 'node.article.body',  // Article.
+      'table[node.article.body]' => 'node.article.body',
       'operation' => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
@@ -91,7 +90,7 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
 
     // Mark the first for disassociation.
     $edit = [
-      'table[node.article.body]' => 'node.article.body',  // Article.
+      'table[node.article.body]' => 'node.article.body',
       'operation' => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));

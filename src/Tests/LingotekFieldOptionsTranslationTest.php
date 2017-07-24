@@ -2,13 +2,9 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\language\Entity\ContentLanguageSettings;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a options field.
@@ -25,7 +21,7 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'options', 'field_ui'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\Entity\NodeInterface
    */
   protected $node;
 
@@ -37,10 +33,10 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $type = $this->drupalCreateContentType(array(
+    $type = $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     $this->createOptionsField('list_string', 'article', 'field_options', 'Options');
 
     // Add a language.
@@ -95,7 +91,7 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/fields/node.article.field_options/translate/es/edit');
+    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/fields/node.article.field_options/translate/es/edit');
 
     // Check that the values are correct.
     $this->clickLink('Edit', 1);
@@ -113,11 +109,11 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
    */
   protected function createOptionsField($type, $bundle, $field_name, $label) {
     // Create a field.
-    FieldStorageConfig::create(array(
+    FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'node',
       'type' => $type,
-    ))->save();
+    ])->save();
     FieldConfig::create([
       'field_name' => $field_name,
       'label' => $label,
@@ -130,7 +126,7 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
     $adminPath = 'admin/structure/types/manage/' . $bundle . '/fields/node.' . $bundle . '.' . $field_name . '/storage';
     $input_string = "zero|Zero\none|One";
 
-    $edit = array('settings[allowed_values]' => $input_string);
+    $edit = ['settings[allowed_values]' => $input_string];
     $this->drupalPostForm($adminPath, $edit, t('Save field settings'));
   }
 

@@ -6,10 +6,7 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a node.
@@ -26,7 +23,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -39,10 +36,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Create Article node types.
     if ($this->profile != 'standard') {
-      $this->drupalCreateContentType(array(
+      $this->drupalCreateContentType([
         'type' => 'article',
         'name' => 'Article'
-      ));
+      ]);
     }
     $this->createImageField('field_image', 'article');
 
@@ -88,7 +85,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $test_image = current($this->drupalGetTestFiles('image'));
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -141,10 +138,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array(
+    $url = Url::fromRoute('lingotek.workbench', [
       'doc_id' => 'dummy-document-hash-id',
       'locale' => 'es_MX'
-    ), array('language' => ConfigurableLanguage::load('es')))->toString();
+    ], ['language' => ConfigurableLanguage::load('es')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -170,7 +167,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('eu')->setThirdPartySetting('lingotek', 'locale', 'eu_ES')->save();
 
     // Edit the node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool EDITED';
     $edit['body[0][value]'] = 'Llamas are very cool EDITED';
     $edit['langcode[0][value]'] = 'en';
@@ -202,7 +199,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool es-MX';
     $edit['body[0][value]'] = 'Llamas are very cool es-MX';
     $edit['langcode[0][value]'] = 'es';
@@ -250,7 +247,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -289,7 +286,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref('/node/1/translations/add/en/it');
     $this->assertLinkByHref('/node/1/translations/add/en/es');
 
-    /** @var LingotekConfigurationServiceInterface $lingotek_config */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $lingotek_config->disableLanguage($italian);
 
@@ -310,7 +307,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -327,7 +324,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
-    /** @var LingotekContentTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
@@ -343,7 +340,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    */
   public function testUpdatingWithAnError() {
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -378,7 +375,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
-    /** @var LingotekContentTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
@@ -396,7 +393,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -408,7 +405,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
-    /** @var LingotekContentTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
@@ -419,7 +416,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    */
   public function testUpdatingWithAnErrorViaAPI() {
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -437,7 +434,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // The node has been marked with the error status.
     $this->node = Node::load(1);
-    /** @var LingotekContentTranslationServiceInterface $translation_service */
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');

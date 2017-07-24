@@ -3,13 +3,10 @@
 namespace Drupal\lingotek\Tests;
 
 use Drupal\Core\Url;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
-use Drupal\user\PrivateTempStore;
 
 /**
  * Tests translating a node with multiple locales including paragraphs.
@@ -26,7 +23,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image', 'comment', 'paragraphs', 'lingotek_paragraphs_test'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -99,17 +96,17 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
-//    $edit['field_metatag[0][basic][description]'] = 'This text will help SEO find my llamas.';
+    //    $edit['field_metatag[0][basic][description]'] = 'This text will help SEO find my llamas.';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
     $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded, including metatags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
@@ -133,7 +130,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -142,8 +139,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
@@ -166,7 +163,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
@@ -211,7 +208,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
@@ -235,7 +232,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
@@ -251,7 +248,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('Image + Text');
 
     // Set a filter, and there should still be paragraphs.
-    /** @var PrivateTempStore $tempStore */
+    /** @var \Drupal\user\PrivateTempStore $tempStore */
     $tempStore = \Drupal::service('user.private_tempstore')->get('lingotek.management.filter.paragraph');
     $tempStore->set('label', 'Llamas');
 
@@ -269,7 +266,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
@@ -279,7 +276,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded, including metatags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
     $this->assertUploadedDataFieldCount($data, 2 );
     $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
@@ -304,7 +301,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -313,8 +310,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
 
     // Edit the original node.
     $this->drupalGet('node/1');
@@ -335,7 +332,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->clickLink('Translate');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Dogs are cool.");
 
     // Check translation status.
@@ -369,7 +366,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
@@ -379,7 +376,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded, including metatags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
     $this->assertUploadedDataFieldCount($data, 2 );
     $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
@@ -404,7 +401,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -413,8 +410,8 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
 
     // Edit the original node.
     $this->drupalGet('node/1');
@@ -435,7 +432,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->clickLink('Translate');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Dogs are cool.");
 
     // Check translation status.
@@ -476,7 +473,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
 
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';

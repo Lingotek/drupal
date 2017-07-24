@@ -2,7 +2,6 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**

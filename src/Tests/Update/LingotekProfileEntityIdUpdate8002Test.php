@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Tests\Update;
 
 use Drupal\lingotek\Entity\LingotekProfile;
-use Drupal\lingotek\Lingotek;
 use Drupal\system\Tests\Update\UpdatePathTestBase;
 
 /**

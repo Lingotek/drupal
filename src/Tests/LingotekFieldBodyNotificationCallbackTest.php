@@ -2,13 +2,10 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekContentTranslationServiceInterface;
-use Drupal\node\Entity\NodeType;
 
 /**
  * Tests translating a content type using the notification callback.
@@ -50,10 +47,10 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
 
     // Create Article node types.
-    $type = $this->drupalCreateContentType(array(
+    $type = $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     node_add_body_field($type);
 
     // Go to the bulk config management page.
@@ -75,14 +72,14 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->verbose($request);
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Spanish language has been requested after notification automatically.');
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
 
-    /** @var ConfigEntityStorageInterface $field_storage */
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -105,7 +102,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'target',
       'progress' => '100',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->verbose($request);
     $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
 
@@ -170,7 +167,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
 
     // Translations are not requested.
     $this->assertIdentical([], $response['result']['request_translations'], 'No translations has been requested after notification automatically.');
@@ -178,7 +175,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm();
 
-    /** @var ConfigEntityStorageInterface $field_storage */
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -205,7 +202,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'target',
       'progress' => '100',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->verbose($request);
     $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
@@ -237,7 +234,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
    * Tests that a node can be translated using the links on the management page.
    */
   public function testProfileTargetOverridesNotificationContentTypeTranslation() {
-    $profile = LingotekProfile::create(['id' => 'profile2', 'label' => 'Profile with overrides', 'auto_upload' => TRUE,'auto_download' => TRUE,
+    $profile = LingotekProfile::create(['id' => 'profile2', 'label' => 'Profile with overrides', 'auto_upload' => TRUE, 'auto_download' => TRUE,
       'language_overrides' => ['es' => ['overrides' => 'custom', 'custom' => ['auto_download' => FALSE]]]]);
     $profile->save();
 
@@ -265,7 +262,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     \Drupal::service('router.builder')->rebuild();
 
-    /** @var ConfigEntityStorageInterface $field_storage */
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
 
     /** @var LingotekConfigTranslationServiceInterface $config_translation_service */
@@ -287,7 +284,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->assertIdentical(['de', 'es'], $response['result']['request_translations'], 'Spanish and German language has been requested after notification automatically.');
 
     // Go to the bulk config management page.
@@ -316,7 +313,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'target',
       'progress' => '100',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->verbose($request);
     $this->assertFalse($response['result']['download'], 'No translations has been downloaded after notification automatically.');
 
@@ -329,7 +326,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'target',
       'progress' => '100',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->verbose($request);
     $this->assertTrue($response['result']['download'], 'German language has been downloaded after notification automatically.');
 
@@ -387,7 +384,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
     // Assert the content is importing.
-    /** @var ConfigEntityStorageInterface $field_storage */
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -405,7 +402,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->assertIdentical(['it', 'es'], $response['result']['request_translations'], 'Spanish and Italian languages have been requested after notification automatically.');
 
     /** @var LingotekConfigurationServiceInterface $lingotek_config */
@@ -413,7 +410,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $lingotek_config->disableLanguage($italian);
 
     // Test with another content.
-    /** @var ConfigEntityStorageInterface $field_storage */
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
     $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
@@ -427,7 +424,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'type' => 'document_uploaded',
       'progress' => '0',
     ]]), 'application/json', []);
-    $response = json_decode($request, true);
+    $response = json_decode($request, TRUE);
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Italian language has not been requested after notification automatically because it is disabled.');
   }
 

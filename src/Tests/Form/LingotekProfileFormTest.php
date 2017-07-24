@@ -2,12 +2,9 @@
 
 namespace Drupal\lingotek\Tests\Form;
 
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekProfile;
-use Drupal\lingotek\LingotekConfigurationServiceInterface;
-use Drupal\lingotek\LingotekProfileInterface;
 use Drupal\lingotek\Tests\LingotekTestBase;
 
 /**
@@ -78,7 +75,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertFieldEnabled("edit-profile-$profile_id-auto-upload");
     $this->assertFieldEnabled("edit-profile-$profile_id-auto-download");
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertTrue($profile->hasAutomaticUpload());
     $this->assertTrue($profile->hasAutomaticDownload());
@@ -91,7 +88,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test editing profiles.
    */
   public function testEditingProfile() {
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -110,7 +107,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertFalse($profile->hasAutomaticUpload());
     $this->assertTrue($profile->hasAutomaticDownload());
@@ -130,7 +127,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test deleting profile.
    */
   public function testDeletingProfile() {
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -147,7 +144,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     // Profile was deleted.
     $this->assertRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertNull($profile);
   }
@@ -156,7 +153,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test deleting profile being used in content is not deleted.
    */
   public function testDeletingProfileBeingUsedInContent() {
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -180,7 +177,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -197,7 +194,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertNoRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
     $this->assertRaw(t('The Lingotek profile %profile is being used so cannot be deleted.', ['%profile' => $profile->label()]));
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertNotNull($profile);
   }
@@ -206,7 +203,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test deleting profile being used in content is not deleted.
    */
   public function testDeletingProfileBeingUsedInConfigSettings() {
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -233,7 +230,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertNoRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
     $this->assertRaw(t('The Lingotek profile %profile is being used so cannot be deleted.', ['%profile' => $profile->label()]));
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertNotNull($profile);
   }
@@ -242,7 +239,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * Test deleting profile being configured for usage in content is not deleted.
    */
   public function testDeletingProfileBeingUsedInContentSettings() {
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -274,7 +271,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertNoRaw(t('The lingotek profile %profile has been deleted.', ['%profile' => $profile->label()]));
     $this->assertRaw(t('The Lingotek profile %profile is being used so cannot be deleted.', ['%profile' => $profile->label()]));
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertNotNull($profile);
   }
@@ -287,7 +284,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -314,7 +311,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::load($profile_id);
     $this->assertFalse($profile->hasAutomaticUpload());
     $this->assertTrue($profile->hasAutomaticDownload());
@@ -345,7 +342,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     // Assert that the override languages are present and ordered alphabetically.
     $selects = $this->xpath('//details[@id="edit-language-overrides"]/*/*//select');
     // There must be 2 select options for each of the 3 languages.
-    $this->assertEqual(count($selects), 2*3, 'There are options for all the potential language overrides.');
+    $this->assertEqual(count($selects), 2 * 3, 'There are options for all the potential language overrides.');
     // And the first one must be German alphabetically.
     $this->assertEqual((string)$selects[0]['id'], 'edit-language-overrides-de-overrides', 'Languages are ordered alphabetically.');
   }
@@ -355,7 +352,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
    * defining overrides.
    */
   public function testLanguageDisabled() {
-    /** @var LingotekConfigurationServiceInterface $configLingotek */
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configLingotek */
     $configLingotek = \Drupal::service('lingotek.configuration');
 
     // Add a language.
@@ -364,7 +361,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $es->save();
     $de->save();
 
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = LingotekProfile::create([
       'id' => strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
@@ -405,9 +402,9 @@ class LingotekProfileFormTest extends LingotekTestBase {
    *   TRUE on pass, FALSE on fail.
    */
   protected function assertFieldDisabled($id, $message = '') {
-    $elements = $this->xpath('//input[@id=:id]', array(':id' => $id));
+    $elements = $this->xpath('//input[@id=:id]', [':id' => $id]);
     return $this->assertTrue(isset($elements[0]) && !empty($elements[0]['disabled']),
-      $message ? $message : t('Field @id is disabled.', array('@id' => $id)), t('Browser'));
+      $message ? $message : t('Field @id is disabled.', ['@id' => $id]), t('Browser'));
   }
 
   /**
@@ -421,9 +418,9 @@ class LingotekProfileFormTest extends LingotekTestBase {
    *   TRUE on pass, FALSE on fail.
    */
   protected function assertFieldEnabled($id, $message = '') {
-    $elements = $this->xpath('//input[@id=:id]', array(':id' => $id));
+    $elements = $this->xpath('//input[@id=:id]', [':id' => $id]);
     return $this->assertTrue(isset($elements[0]) && empty($elements[0]['disabled']),
-      $message ? $message : t('Field @id is enabled.', array('@id' => $id)), t('Browser'));
+      $message ? $message : t('Field @id is enabled.', ['@id' => $id]), t('Browser'));
   }
 
 }

@@ -37,37 +37,37 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
 
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Create a link field.
     // Create a field with settings to validate.
-    $fieldStorage = entity_create('field_storage_config', array(
+    $fieldStorage = entity_create('field_storage_config', [
       'field_name' => $this->field_name,
       'entity_type' => 'node',
       'type' => 'link',
-    ));
+    ]);
     $fieldStorage->save();
-    $field = entity_create('field_config', array(
+    $field = entity_create('field_config', [
       'field_storage' => $fieldStorage,
       'bundle' => 'article',
-      'settings' => array(
+      'settings' => [
         'title' => DRUPAL_OPTIONAL,
         'link_type' => LinkItemInterface::LINK_GENERIC,
-      ),
-    ));
+      ],
+    ]);
     $field->save();
     entity_get_form_display('node', 'article', 'default')
-      ->setComponent($this->field_name, array(
+      ->setComponent($this->field_name, [
         'type' => 'link_default',
-      ))
+      ])
       ->save();
     entity_get_display('node', 'article', 'default')
-      ->setComponent($this->field_name, array(
+      ->setComponent($this->field_name, [
         'type' => 'link',
-      ))
+      ])
       ->save();
 
     // Place the actions and title block.
@@ -124,7 +124,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit["$this->field_name[0][uri]"] = 'http://drupal.org';
@@ -173,7 +173,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -198,7 +198,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit["$this->field_name[0][uri]"] = 'http://drupal.org';
@@ -247,7 +247,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
     $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');

@@ -5,7 +5,6 @@ namespace Drupal\lingotek\Tests;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
-use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 
 /**
  * Class LingotekConfigDependenciesTest
@@ -22,7 +21,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
 
   public function testExportingConfigDependencies() {
 
-    /** @var LingotekConfigTranslationServiceInterface $config_translation_service */
+    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
     // Place the actions and title block.

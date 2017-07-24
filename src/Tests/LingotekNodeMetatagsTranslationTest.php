@@ -6,7 +6,6 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 /**
  * Tests translating a node with multiple locales including metatags.
  *
@@ -22,7 +21,7 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image', 'comment', 'metatag'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -34,10 +33,10 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     $this->createMetatagField('field_metatag', 'node', 'article');
 
     // Add locales.
@@ -93,7 +92,7 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
     $test_image = current($this->drupalGetTestFiles('image'));
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -104,7 +103,7 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded, including metatags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
     $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
@@ -131,7 +130,7 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -140,8 +139,8 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
@@ -166,26 +165,26 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
    */
   protected function createMetatagField($field_name, $entity_type, $bundle) {
     // Create a field with settings to validate.
-    $fieldStorage = entity_create('field_storage_config', array(
+    $fieldStorage = entity_create('field_storage_config', [
       'field_name' => $field_name,
       'entity_type' => $entity_type,
       'type' => 'metatag',
-    ));
+    ]);
     $fieldStorage->save();
-    $field = entity_create('field_config', array(
+    $field = entity_create('field_config', [
       'field_storage' => $fieldStorage,
       'bundle' => $bundle,
-    ));
+    ]);
     $field->save();
     entity_get_form_display($entity_type, $bundle, 'default')
-      ->setComponent($field_name, array(
+      ->setComponent($field_name, [
         'type' => 'metatag_firehose',
-      ))
+      ])
       ->save();
     entity_get_display($entity_type, $bundle, 'default')
-      ->setComponent($field_name, array(
+      ->setComponent($field_name, [
         'type' => 'metatag_empty_formatter',
-      ))
+      ])
       ->save();
   }
 

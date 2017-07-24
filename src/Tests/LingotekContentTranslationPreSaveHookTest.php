@@ -6,7 +6,6 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 
 /**
  * Tests the hooks a node.
@@ -23,7 +22,7 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -36,10 +35,10 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
 
     // Create Article node types.
     if ($this->profile != 'standard') {
-      $this->drupalCreateContentType(array(
+      $this->drupalCreateContentType([
         'type' => 'press_release',
         'name' => 'Press Release'
-      ));
+      ]);
     }
     $this->createImageField('field_image', 'press_release');
 
@@ -80,7 +79,7 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
     $test_image = current($this->drupalGetTestFiles('image'));
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -95,7 +94,7 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
@@ -132,8 +131,8 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_MX'), array('language' => ConfigurableLanguage::load('es')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_MX'], ['language' => ConfigurableLanguage::load('es')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');

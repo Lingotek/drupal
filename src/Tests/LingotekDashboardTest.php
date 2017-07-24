@@ -217,15 +217,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     // We use curlExec in this test because drupalGet and drupalPost are not
     // reliable after doing DELETE requests, as the curl connection is reused
     // but not properly cleared. See https://www.drupal.org/node/2868666.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => $this->buildUrl('/admin/lingotek/dashboard_endpoint', []),
       CURLOPT_POST => TRUE,
       CURLOPT_POSTFIELDS => $this->serializePostValues($post),
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
 
@@ -239,15 +239,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical(2, count($languages));
 
     // Check the properties of the language.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', ['code' => 'es_ES'], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => TRUE,
       CURLOPT_CUSTOMREQUEST => NULL,
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->assertIdentical('GET', $response['method']);
     $this->assertIdentical('es', $response['xcode']);
@@ -258,16 +258,16 @@ class LingotekDashboardTest extends LingotekTestBase {
     $language = ConfigurableLanguage::load('es');
     $this->assertIdentical($language->getThirdPartySetting('lingotek', 'disabled', NULL), FALSE, 'The Spanish language is enabled');
 
-    $request = $this->curlExec(array(
-      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+    $request = $this->curlExec([
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => FALSE,
       CURLOPT_CUSTOMREQUEST => 'DELETE',
       CURLOPT_POSTFIELDS => $this->serializePostValues(['code' => 'es_ES']),
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
     $this->assertIdentical('DELETE', $response['method']);
@@ -285,15 +285,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical($language->getThirdPartySetting('lingotek', 'disabled', NULL), TRUE, 'The Spanish language is disabled');
 
     // Check the properties of the language.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', ['code' => 'es_ES'], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => TRUE,
       CURLOPT_CUSTOMREQUEST => NULL,
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->assertIdentical('GET', $response['method']);
     $this->assertIdentical('es', $response['xcode']);
@@ -312,15 +312,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->verbose(var_export($response, TRUE));
 
     // Check the properties of the language.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', ['code' => 'es_ES'], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => TRUE,
       CURLOPT_CUSTOMREQUEST => NULL,
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->assertIdentical('GET', $response['method']);
     $this->assertIdentical('es', $response['xcode']);
@@ -353,15 +353,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     // We use curlExec in this test because drupalGet and drupalPost are not
     // reliable after doing DELETE requests, as the curl connection is reused
     // but not properly cleared. See https://www.drupal.org/node/2868666.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => $this->buildUrl('/admin/lingotek/dashboard_endpoint', []),
       CURLOPT_POST => TRUE,
       CURLOPT_POSTFIELDS => $this->serializePostValues($post),
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
 
@@ -375,15 +375,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical(2, count($languages));
 
     // Check the stats.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => TRUE,
       CURLOPT_CUSTOMREQUEST => NULL,
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
     $this->assertIdentical('GET', $response['method']);
@@ -396,16 +396,16 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->assertIdentical(1, $response['languages']['es_ES']['enabled']);
 
     // Disable Spanish.
-    $request = $this->curlExec(array(
-      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', array(), array('absolute' => TRUE)),
+    $request = $this->curlExec([
+      CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => FALSE,
       CURLOPT_CUSTOMREQUEST => 'DELETE',
       CURLOPT_POSTFIELDS => $this->serializePostValues(['code' => 'es_ES']),
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
         'Content-Type: application/x-www-form-urlencoded',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
     $this->assertIdentical('DELETE', $response['method']);
@@ -417,15 +417,15 @@ class LingotekDashboardTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     // Check the stats.
-    $request = $this->curlExec(array(
+    $request = $this->curlExec([
       CURLOPT_URL => \Drupal::url('lingotek.dashboard_endpoint', [], ['absolute' => TRUE]),
       CURLOPT_HTTPGET => TRUE,
       CURLOPT_CUSTOMREQUEST => NULL,
       CURLOPT_NOBODY => FALSE,
-      CURLOPT_HTTPHEADER => array(
+      CURLOPT_HTTPHEADER => [
         'Accept: application/json',
-      ),
-    ));
+      ],
+    ]);
     $response = json_decode($request, TRUE);
     $this->verbose(var_export($response, TRUE));
     $this->assertIdentical('GET', $response['method']);

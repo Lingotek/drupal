@@ -239,8 +239,8 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_DE?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/it_IT?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/it_IT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
 
     \Drupal::state()->set('lingotek.document_completion_statuses', ['it-IT' => 100, 'de-DE' => 50, 'es-MX' => 10]);
     // Check all statuses again.
@@ -248,11 +248,11 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
 
     // All translations must be updated according exclusively with the
     // information from the TMS.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_DE?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/it_IT?destination=' . $basepath .'/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_DE?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/ca_ES?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/it_IT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
 
     // Source status must be kept too.
     $this->assertSourceStatusStateCount(Lingotek::STATUS_CURRENT, 'EN', 1);

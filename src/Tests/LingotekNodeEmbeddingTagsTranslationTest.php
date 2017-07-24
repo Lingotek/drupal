@@ -8,10 +8,8 @@ use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Tests\TaxonomyTestTrait;
-use Drupal\taxonomy\VocabularyInterface;
 
 /**
  * Tests translating a node with multiple locales embedding another entity.
@@ -31,12 +29,12 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image', 'comment', 'taxonomy'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
   /**
-   * @var VocabularyInterface
+   * @var \Drupal\taxonomy\VocabularyInterface
    */
   protected $vocabulary;
 
@@ -48,27 +46,27 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
     $this->createImageField('field_image', 'article');
     $this->vocabulary = $this->createVocabulary();
 
-    $handler_settings = array(
-      'target_bundles' => array(
+    $handler_settings = [
+      'target_bundles' => [
         $this->vocabulary->id() => $this->vocabulary->id(),
-      ),
+      ],
       'auto_create' => TRUE,
-    );
+    ];
     $this->createEntityReferenceField('node', 'article',
       'field_tags', 'Tags', 'taxonomy_term', 'default',
       $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     entity_get_form_display('node', 'article', 'default')
-      ->setComponent('field_tags', array(
+      ->setComponent('field_tags', [
         'type' => 'entity_reference_autocomplete_tags',
-      ))->save();
+      ])->save();
     entity_get_display('node', 'article', 'default')
       ->setComponent('field_tags')->save();
 
@@ -134,7 +132,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $test_image = current($this->drupalGetTestFiles('image'));
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -150,7 +148,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->node = Node::load(1);
 
     // Check that only the configured fields have been uploaded, including tags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 4);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
@@ -179,7 +177,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -188,8 +186,8 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
@@ -211,7 +209,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -236,7 +234,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('Uploaded 1 document to Lingotek.');
 
     // Check that only the configured fields have been uploaded, including tags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
@@ -259,7 +257,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -268,8 +266,8 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
@@ -295,7 +293,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Create a node.
-    $edit = array();
+    $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -314,7 +312,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('Uploaded 1 document to Lingotek.');
 
     // Check that only the configured fields have been uploaded, including tags.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
@@ -352,7 +350,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
 
     // Check translation status.
@@ -361,8 +359,8 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
     $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', array('doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'), array('language' => ConfigurableLanguage::load('es-ar')))->toString();
-    $this->assertRaw('<a href="' . $url .'" target="_blank" hreflang="es-ar">');
+    $url = Url::fromRoute('lingotek.workbench', ['doc_id' => 'dummy-document-hash-id', 'locale' => 'es_AR'], ['language' => ConfigurableLanguage::load('es-ar')])->toString();
+    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es-ar">');
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');

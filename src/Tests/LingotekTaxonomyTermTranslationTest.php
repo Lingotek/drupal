@@ -82,7 +82,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $bundle = $this->vocabulary->id();
 
     // Create a term.
-    $edit = array();
+    $edit = [];
     $edit['name[0][value]'] = 'Llamas are cool';
     $edit['description[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
@@ -92,7 +92,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $this->term = Term::load(1);
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['name'][0]['value']));
     $this->assertEqual(1, count($data['description'][0]));
@@ -142,7 +142,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $this->term->save();
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['name'][0]['value']));
     $this->assertEqual(1, count($data['description'][0]));
@@ -209,7 +209,7 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $this->assertText('Uploaded 1 document to Lingotek.');
 
     // Check that only the configured fields have been uploaded.
-    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), true);
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->assertUploadedDataFieldCount($data, 2);
     $this->assertTrue(isset($data['name'][0]['value']));
     $this->assertEqual(1, count($data['description'][0]));

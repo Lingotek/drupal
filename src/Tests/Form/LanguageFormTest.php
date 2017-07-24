@@ -24,7 +24,7 @@ class LanguageFormTest extends WebTestBase {
     parent::setUp();
 
     // User to add and remove language.
-    $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages'));
+    $admin_user = $this->drupalCreateUser(['administer languages', 'access administration pages']);
     $this->drupalLogin($admin_user);
   }
 

@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Tests;
 
 
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a node with multiple locales.
@@ -20,7 +19,7 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image', 'comment'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -32,10 +31,10 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     $this->drupalPlaceBlock('page_title_block');
 
     // Create Article node types.
-    $this->drupalCreateContentType(array(
+    $this->drupalCreateContentType([
       'type' => 'article',
       'name' => 'Article'
-    ));
+    ]);
 
     // Add locales.
     $post = [
@@ -97,7 +96,7 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     $this->clickLink(t('Check upload status'));
     $this->assertText(t('Article status checked successfully'));
 
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText(t('Translation to es_AR requested successfully'));
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.added_target_locale'));
 
@@ -109,7 +108,7 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
 
     // Check that the edit link is there.
     $basepath = \Drupal::request()->getBasePath();
-    $this->assertLinkByHref($basepath. '/admin/structure/types/manage/article/translate/es-ar/edit');
+    $this->assertLinkByHref($basepath . '/admin/structure/types/manage/article/translate/es-ar/edit');
   }
 
 }

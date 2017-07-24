@@ -3,7 +3,6 @@
 namespace Drupal\lingotek\Tests;
 
 
-use Drupal\node\NodeInterface;
 
 /**
  * Tests translating a node with multiple locales.
@@ -20,7 +19,7 @@ class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
   public static $modules = ['block', 'node', 'image', 'comment'];
 
   /**
-   * @var NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $node;
 
@@ -93,7 +92,7 @@ class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
     $this->assertText(t('System information status checked successfully'));
 
     // Ensure that we request the es_AR translation.
-    $this->clickLinkHelper(t('Request translation'), 0,  '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
+    $this->clickLinkHelper(t('Request translation'), 0, '//a[normalize-space()=:label and contains(@href,\'es_AR\')]');
     $this->assertText(t('Translation to es_AR requested successfully'));
     $this->assertIdentical('es_AR', \Drupal::state()
       ->get('lingotek.added_target_locale'));
