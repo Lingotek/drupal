@@ -120,8 +120,10 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     $disassociate_row['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => $this->t('Disassociate'),
-      '#button_type' => 'primary',
       '#submit' => array('::disassociateAllTranslations'),
+      '#attributes' => array(
+          'class' => array('button', 'button--danger'),
+      ),
     );
 
     $debug_enabled = $this->state->get('lingotek.enable_debug_utilities', FALSE);
