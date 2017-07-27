@@ -14,7 +14,7 @@ class LingotekDashboardTest extends LingotekTestBase {
   /**
    * {@inheritDoc}
    */
-  public static $modules = ['node', 'comment'];
+  public static $modules = ['block', 'node', 'comment'];
 
   /**
    * Test that a language can be added.
@@ -445,15 +445,19 @@ class LingotekDashboardTest extends LingotekTestBase {
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
+    // One language added, there are missing translations.
+    $this->drupalGet('admin/lingotek');
+    $this->assertRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'Missing translations message');
+
     // Override Drupal core translation status as 'up-to-date'.
     $status = locale_translation_get_status();
     $status['drupal']['es'] = new \stdClass();
     $status['drupal']['es']->type = 'current';
     \Drupal::keyValue('locale.translation_status')->set('drupal', $status['drupal']);
 
-    // One language added, there are missing translations.
+    // There are no missing translations, translations are current.
     $this->drupalGet('admin/lingotek');
-    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'Missing translations message');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'No missing translations message with current translations');
 
     // Set lingotek module to have a local translation available.
     $status = locale_translation_get_status();
@@ -461,9 +465,9 @@ class LingotekDashboardTest extends LingotekTestBase {
     $status['lingotek']['es']->type = 'local';
     \Drupal::keyValue('locale.translation_status')->set('lingotek', $status['lingotek']);
 
-    // There are missing translations.
+    // There are no missing translations, translations are local.
     $this->drupalGet('admin/lingotek');
-    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'Translations message visible');
+    $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'No missing translations message with local translations');
   }
 
 }
