@@ -218,7 +218,7 @@ lingotek.config.download:
 lingotek.workbench:
   path: '/admin/lingotek/workbench/{doc_id}/{locale}'
   defaults:
-    _controller: '\Drupal\lingotek\Controller\LingotekWorkbenchController::loadDocument'
+    _controller: '\Drupal\lingotek\Controller\LingotekWorkbenchRedirectController::redirectToWorkbench'
     _title: 'Use Lingotek Workbench'
   requirements:
     _permission: 'manage lingotek translations'
