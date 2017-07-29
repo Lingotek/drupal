@@ -92,7 +92,7 @@ class LingotekWorkbenchRedirectController extends LingotekControllerBase {
   protected function generateWorkbenchUri($document_id, $locale, $account) {
     $base_url = $account['use_production'] ? $account['host'] : $account['sandbox_host'];
     // Default expiration is 30 minutes.
-    $expiration = $this->time->getRequestTime() + (60 * 30);
+    $expiration = $this->time->getCurrentTime() + (60 * 30);
     $data = [
       'document_id' => $document_id,
       'locale_code' => $locale,
