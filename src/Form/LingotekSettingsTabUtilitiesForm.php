@@ -16,6 +16,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\LingotekInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\lingotek\Exception\LingotekApiException;
 
 /**
  * Tab for running Lingotek utilities in the settings page.
@@ -161,83 +162,8 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     drupal_set_message($this->t('Project, workflow, and vault information have been refreshed.'));
   }
 
-  /**
-   * Disassociate all content and config translations.
-   */
-  public function disassociateAllTranslations() {
-    $error = FALSE;
-
-    $error &= $this->disassociateAllContentTranslations();
-    $error &= $this->disassociateAllConfigTranslations();
-
-    if ($error) {
-      drupal_set_message($this->t('Some translations may have been disassociated, but some failed.'), 'warning');
-    }
-    else {
-      drupal_set_message($this->t('All translations have been disassociated.'));
-    }
-  }
-
-  /**
-   * Disassociate all config translations.
-   */
-  protected function disassociateAllConfigTranslations() {
-    $error = FALSE;
-    /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.config_translation');
-
-    /** @var LingotekConfigMetadata[] $all_config_metadata */
-    $all_config_metadata = LingotekConfigMetadata::loadMultiple();
-    foreach ($all_config_metadata as $config_metadata) {
-      try {
-        $mapper = $config_metadata->getConfigMapper();
-        if ($mapper instanceof ConfigEntityMapper) {
-          $entity = $mapper->getEntity();
-          $translation_service->deleteMetadata($entity);
-        }
-        else {
-          $translation_service->deleteConfigMetadata($mapper->getPluginId());
-        }
-      }
-      catch (LingotekApiException $exception) {
-        $error = TRUE;
-        drupal_set_message(t('The deletion of %title failed. Please try again.', array('%title' => $dependency_name)), 'error');
-      }
-    }
-    return $error;
-  }
-
-  /**
-   * Disassociate all content translations.
-   */
-  protected function disassociateAllContentTranslations() {
-    $error = FALSE;
-    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
-    $translation_service = \Drupal::service('lingotek.content_translation');
-
-    $doc_ids = $translation_service->getAllLocalDocumentIds();
-    foreach ($doc_ids as $doc_id) {
-      $entity = $translation_service->loadByDocumentId($doc_id);
-      if ($entity === NULL) {
-        drupal_set_message(t('There is no entity in Drupal corresponding to the Lingotek document @doc_id. The record for this document has been removed from Drupal.', ['@doc_id' => $doc_id]), 'warning');
-      }
-      else {
-        try {
-          $translation_service->deleteMetadata($entity);
-        }
-        catch (LingotekApiException $exception) {
-          $error = TRUE;
-          drupal_set_message(t('The deletion of @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
-        }
-      }
-    }
-    if ($error) {
-      drupal_set_message($this->t('Some translations may have been disassociated, but some failed.'), 'warning');
-    }
-    else {
-      drupal_set_message($this->t('All translations have been disassociated.'));
-    }
-    return $error;
+  public function disassociateAllTranslations(array &$form, FormStateInterface $form_state) {
+    $form_state->setRedirect('lingotek.confirm_disassociate');
   }
 
   public function updateCallbackUrl() {

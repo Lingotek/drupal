@@ -177,7 +177,10 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
 
   public function testDisassociateAllDocuments() {
     $this->drupalGet('/admin/lingotek/settings');
-    $this->drupalPostForm('admin/lingotek/settings', [], 'Disassociate');
+    $this->drupalPostForm(NULL, [], 'Disassociate');
+    $this->assertRaw("Are you sure you want to disassociate everything from Lingotek?");
+    $this->drupalPostForm(NULL, [], 'Disassociate');
+    $this->assertText('All translations have been disassociated.');
 
     $node = Node::load(1);
     $term = Term::load(1);
@@ -239,6 +242,9 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     // Let's try to disassociate then.
     $this->drupalGet('/admin/lingotek/settings');
     $this->drupalPostForm('admin/lingotek/settings', [], 'Disassociate');
+    $this->assertRaw("Are you sure you want to disassociate everything from Lingotek?");
+    $this->drupalPostForm(NULL, [], 'Disassociate');
+    $this->assertText('All translations have been disassociated.');
   }
 
 }

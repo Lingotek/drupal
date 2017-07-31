@@ -111,6 +111,14 @@ lingotek.import:
   requirements:
     _permission: 'administer lingotek'
 
+lingotek.confirm_disassociate:
+  path: '/admin/lingotek/confirm_disassociate'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekDisassociateAllConfirmForm'
+    _title: 'Confirm Disassociate'
+  requirements:
+    _permission: 'administer lingotek'
+
 lingotek.batch:
   path: '/admin/lingotek/batch/{action}/{entity_type}/{entity_id}'
   defaults:
