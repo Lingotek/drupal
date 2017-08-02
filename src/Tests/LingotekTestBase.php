@@ -189,13 +189,19 @@ abstract class LingotekTestBase extends WebTestBase {
    */
   protected function saveAndPublishNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
-    if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
-      $this->drupalPostForm($path, $edit, t('Save and Publish'));
-    }
-    else {
-      if (floatval(\Drupal::VERSION) >= 8.4) {
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
+        $edit['moderation_state[0][state]'] = 'published';
+        $this->drupalPostForm($path, $edit, t('Save'));
+      }
+      else {
         $edit['status[value]'] = TRUE;
         $this->drupalPostForm($path, $edit, t('Save'));
+      }
+    }
+    else {
+      if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
+        $this->drupalPostForm($path, $edit, t('Save and Publish'));
       }
       else {
         $this->drupalPostForm($path, $edit, t('Save and publish'));
