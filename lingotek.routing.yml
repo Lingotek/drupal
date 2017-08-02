@@ -6,6 +6,14 @@ lingotek.dashboard:
   requirements:
     _permission: 'administer lingotek+manage lingotek translations'
 
+lingotek.config.dashboard:
+  path: '/admin/lingotek'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekDashboardController::dashboardPage'
+    _title: 'Lingotek Translation Dashboard'
+  requirements:
+    _permission: 'administer lingotek+manage lingotek translations'
+
 lingotek.dashboard_endpoint:
   path: '/admin/lingotek/dashboard_endpoint'
   methods: [GET,POST,DELETE]

@@ -1,5 +1,5 @@
 lingotek.dashboard:
-  route_name: 'lingotek.dashboard'
+  route_name: 'lingotek.config.dashboard'
   title: 'Translation'
   description: 'Convenient cloud-based localization and translation by Lingotek'
   parent: 'system.admin'
@@ -32,3 +32,7 @@ lingotek.config.dashboard:
   description: 'Convenient cloud-based localization and translation by Lingotek'
   parent: 'system.admin_config_regional'
   weight: 5
+
+lingotek.manage.content:
+  deriver: 'Drupal\lingotek\Plugin\Derivative\ContentTranslationMenuLinks'
+  weight: 100

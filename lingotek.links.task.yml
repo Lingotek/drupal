@@ -1,6 +1,5 @@
-# put in all of our local tasks here
 lingotek.dashboard:
-  route_name: lingotek.dashboard
+  route_name: 'lingotek.config.dashboard'
   base_route: lingotek.dashboard
   title: 'Dashboard'
   weight: -10
