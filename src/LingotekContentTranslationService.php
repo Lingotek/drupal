@@ -789,7 +789,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   public function loadByDocumentId($document_id) {
     $entity = NULL;
     $metadata = LingotekContentMetadata::loadByDocumentID($document_id);
-    if ($metadata) {
+    if ($metadata && $metadata->getContentEntityTypeId() && $metadata->getContentEntityId()) {
       $entity = $this->entityManager->getStorage($metadata->getContentEntityTypeId())->load($metadata->getContentEntityId());
     }
     return $entity;

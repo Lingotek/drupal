@@ -156,7 +156,7 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
     foreach ($doc_ids as $doc_id) {
       $entity = $this->contentTranslationService->loadByDocumentId($doc_id);
       if ($entity === NULL) {
-        drupal_set_message(t('There is no entity in Drupal corresponding to the Lingotek document @doc_id. The record for this document has been removed from Drupal.', ['@doc_id' => $doc_id]), 'warning');
+        \Drupal::logger('lingotek')->warning(t('There is no entity in Drupal corresponding to the Lingotek document @doc_id. The record for this document has been removed from Drupal.', ['@doc_id' => $doc_id]));
       }
       else {
         try {

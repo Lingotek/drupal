@@ -245,6 +245,20 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $this->assertRaw("Are you sure you want to disassociate everything from Lingotek?");
     $this->drupalPostForm(NULL, [], 'Disassociate');
     $this->assertText('All translations have been disassociated.');
+
+    // We create manually the given data for setting up an incorrect status.
+    $metadata = LingotekContentMetadata::create();
+    $metadata->setDocumentId('a_document_id');
+    $metadata->setContentEntityTypeId(NULL);
+    $metadata->setContentEntityId(NULL);
+    $metadata->save();
+
+    // Let's try to disassociate then.
+    $this->drupalGet('/admin/lingotek/settings');
+    $this->drupalPostForm('admin/lingotek/settings', [], 'Disassociate');
+    $this->assertRaw("Are you sure you want to disassociate everything from Lingotek?");
+    $this->drupalPostForm(NULL, [], 'Disassociate');
+    $this->assertText('All translations have been disassociated.');
   }
 
 }
