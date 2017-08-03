@@ -1,0 +1,6 @@
+name: Frozen in time
+type: module
+package: Testing
+version: VERSION
+core: 8.x
+description: 'Ensures time is frozen by overriding "datetime.time" service.'

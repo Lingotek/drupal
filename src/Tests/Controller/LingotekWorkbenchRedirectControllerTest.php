@@ -17,7 +17,7 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'node'];
+  public static $modules = ['block', 'node', 'frozenintime'];
 
   /**
    * {@inheritdoc}
@@ -104,9 +104,10 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_AR' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
 
-    // This needs to be calculated just before we click the link, "ensuring" we
-    // get the sime timestamp.
-    $expiration = time() + (60 * 30);
+    /** @var \Drupal\Component\Datetime\TimeInterface $time */
+    $time = \Drupal::service('datetime.time');
+    $expiration = $time->getCurrentTime() + (60 * 30);
+
     // Click the workbench tab.
     $this->clickLink('ES');
 
