@@ -16,4 +16,4 @@ test_dependencies:
   - metatag:metatag
   - paragraphs:paragraphs
   - pathauto:pathauto
-  - workbench_moderation:workbench_moderation (>=8.x-1.x)
+  - workbench_moderation:workbench_moderation (>=8.x-1.x-dev)
