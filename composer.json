@@ -5,6 +5,12 @@
   "homepage": "http://drupal.org/project/lingotek",
   "authors": [
     {
+      "name": "Christian López Espínola",
+      "email": "clopez@lingotek.com",
+      "homepage": "https://drupal.org/u/penyaskito",
+      "role": "Maintainer"
+    },
+    {
       "name": "Rob Bailey",
       "email": "rbailey@lingotek.com",
       "homepage": "https://github.com/robertdbailey",
@@ -15,6 +21,10 @@
       "email": "msmith@lingotek.com",
       "homepage": "https://github.com/smithworx",
       "role": "Maintainer"
+    },
+    {
+      "name": "See other contributors",
+      "homepage":"https://www.drupal.org/node/1118924/committers"
     }
   ],
   "support": {
@@ -23,5 +33,16 @@
     "source": "http://cgit.drupalcode.org/lingotek"
   },
   "minimum-stability": "dev",
-  "require": { }
+  "require-dev": {
+    "drupal/metatag": "*",
+    "drupal/paragraphs": "*",
+    "drupal/pathauto": "*",
+    "drupal/workbench_moderation": "dev-1.x"
+  },
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
+  }
 }
