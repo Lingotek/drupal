@@ -1052,6 +1052,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         }
       }
 
+      // If there is any content moderation module is enabled, we may need to
+      // perform a transition in their workflow.
+      /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderation_factory */
+      $moderation_factory = \Drupal::service('lingotek.moderation_factory');
+      $moderation_handler = $moderation_factory->getModerationHandler();
+      $moderation_handler->performModerationTransitionIfNeeded($entity);
+
       $translation->save();
 
       return $entity;

@@ -19,6 +19,13 @@ services:
     arguments: ['@entity_type.bundle.info']
   lingotek.configuration:
     class: Drupal\lingotek\LingotekConfigurationService
+  lingotek.moderation_factory:
+    class: Drupal\lingotek\Moderation\LingotekModerationFactory
+    arguments: ['@config.factory']
+    tags:
+      - { name: service_collector, tag: lingotek_moderation_configuration, call: addModerationConfiguration }
+      - { name: service_collector, tag: lingotek_moderation_form, call: addModerationForm }
+      - { name: service_collector, tag: lingotek_moderation_handler, call: addModerationHandler }
   lingotek.content_translation:
     class: Drupal\lingotek\LingotekContentTranslationService
     arguments: ['@lingotek', '@lingotek.language_locale_mapper', '@lingotek.configuration', '@lingotek.config_translation', '@entity.manager', '@language_manager']
@@ -41,3 +48,35 @@ services:
     arguments: ['@lingotek.config_translation', '@plugin.manager.config_translation.mapper']
     tags:
       - { name: event_subscriber }
+
+  lingotek.no_moderation_configuration:
+    class: Drupal\lingotek\Moderation\LingotekNoModerationConfigurationService
+    arguments: ['@module_handler']
+    tags:
+      - { name: lingotek_moderation_configuration, priority: 0 }
+  lingotek.no_moderation_form:
+    class: Drupal\lingotek\Moderation\LingotekNoModerationSettingsForm
+    arguments: ['@module_handler']
+    tags:
+      - { name: lingotek_moderation_form, priority: 0 }
+  lingotek.no_moderation_handler:
+    class: Drupal\lingotek\Moderation\LingotekNoModerationHandler
+    arguments: ['@module_handler']
+    tags:
+      - { name: lingotek_moderation_handler, priority: 0 }
+
+  lingotek.workbench_moderation_configuration:
+    class: Drupal\lingotek\Moderation\LingotekWorkbenchModerationConfigurationService
+    arguments: ['@module_handler', '@config.factory']
+    tags:
+      - { name: lingotek_moderation_configuration, priority: 10 }
+  lingotek.workbench_moderation_form:
+    class: Drupal\lingotek\Moderation\LingotekWorkbenchModerationSettingsForm
+    arguments: ['@module_handler', '@entity_type.manager', '@lingotek.workbench_moderation_configuration', '@service_container']
+    tags:
+      - { name: lingotek_moderation_form, priority: 10 }
+  lingotek.workbench_moderation_handler:
+    class: Drupal\lingotek\Moderation\LingotekWorkbenchModerationHandler
+    arguments: ['@module_handler', '@entity_type.manager', '@lingotek.workbench_moderation_configuration', '@service_container']
+    tags:
+      - { name: lingotek_moderation_handler, priority: 10 }

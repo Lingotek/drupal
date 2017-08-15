@@ -69,13 +69,23 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         'content' => array(),
       );
 
+      /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderationFactory */
+      $moderationFactory = \Drupal::service('lingotek.moderation_factory');
+      /** @var \Drupal\lingotek\Moderation\LingotekModerationSettingsFormInterface $moderationForm */
+      $moderationForm = $moderationFactory->getModerationSettingsForm();
+
       $bundle_label = $entity_type_definitions[$entity_id]->getBundleLabel();
       $header = array(
         $this->t('Enable'),
         $bundle_label,
         $this->t('Translation Profile'),
+        'moderation' => $moderationForm->getColumnHeader(),
         $this->t('Fields'),
       );
+
+      if (!$moderationForm->needsColumn($entity_id)) {
+        unset($header['moderation']);
+      }
 
       $table = array(
         '#type' => 'table',
@@ -95,6 +105,12 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
           '#markup' => $bundle['label'],
         );
         $row['profiles'] = $this->retrieveProfiles($entity_id, $bundle_id);
+
+        $moderation = $moderationForm->form($entity_id, $bundle_id);
+        if (!empty($moderation)) {
+          $row['moderation'] = $moderation;
+        }
+
         $row['fields'] = $this->retrieveFields($entity_id, $bundle_id);
         $table[$bundle_id] = $row;
       }
@@ -129,11 +145,10 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $lingotek_config = \Drupal::service('lingotek.configuration');
 
     $form_values = $form_state->getValues();
-    $data = array();
 
     // For every content type, save the profile and fields in the Lingotek object
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
-      foreach($form_values[$entity_id] as $bundle_id => $bundle) {
+      foreach ($form_values[$entity_id] as $bundle_id => $bundle) {
         // Only process if we have marked the checkbox.
         if ($bundle['enabled']) {
           if (!$lingotek_config->isEnabled($entity_id, $bundle_id)) {
@@ -156,6 +171,12 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
             }
           }
           $lingotek_config->setDefaultProfileId($entity_id, $bundle_id, $form_values[$entity_id][$bundle_id]['profiles']);
+
+          /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderationFactory */
+          $moderationFactory = \Drupal::service('lingotek.moderation_factory');
+          /** @var \Drupal\lingotek\Moderation\LingotekModerationSettingsFormInterface $moderationForm */
+          $moderationForm = $moderationFactory->getModerationSettingsForm();
+          $moderationForm->submitHandler($entity_id, $bundle_id, $bundle);
         }
         else {
           // If we removed it, unable it.

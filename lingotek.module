@@ -123,6 +123,16 @@ function lingotek_entity_insert(EntityInterface $entity) {
         }
       }
 
+      // If workbench moderation is enabled, we need to prevent that content is
+      // processed if not the right state.
+      /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderation_factory */
+      $moderation_factory = \Drupal::service('lingotek.moderation_factory');
+      $moderation_handler = $moderation_factory->getModerationHandler();
+      $prevent = $moderation_handler->shouldModerationPreventUpload($entity);
+      if ($prevent) {
+        return;
+      }
+
       $profile = $configuration_service->getEntityProfile($entity);
 
       $has_autoupload = $profile->hasAutomaticUpload();
@@ -235,6 +245,16 @@ function lingotek_entity_update(EntityInterface $entity) {
             $entity->lingotek_metadata->entity->save();
           }
         }
+      }
+
+      // If workbench moderation is enabled, we need to prevent that content is
+      // processed if not the right state.
+      /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderation_factory */
+      $moderation_factory = \Drupal::service('lingotek.moderation_factory');
+      $moderation_handler = $moderation_factory->getModerationHandler();
+      $prevent = $moderation_handler->shouldModerationPreventUpload($entity);
+      if ($prevent) {
+        return;
       }
 
       $profile = $configuration_service->getEntityProfile($entity);
