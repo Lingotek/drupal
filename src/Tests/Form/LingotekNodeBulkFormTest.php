@@ -489,4 +489,83 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
   }
 
+  /**
+   * Tests default profile is shown in the content management page.
+   */
+  public function testDefaultProfile() {
+    // Create Page node types.
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Page']);
+
+    // Enable translation for the page entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i <= 3; $i++) {
+      $bundle = 'page';
+      $edit = [];
+      $edit['title[0][value]'] = new FormattableMarkup('Llamas are cool @bundle @i', ['@bundle' => $bundle, '@i' => $i]);
+      $edit['body[0][value]'] = $edit['title[0][value]'];
+      $edit['langcode[0][value]'] = 'en';
+      $this->saveAndPublishNodeForm($edit, $bundle);
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+    // Ensure there is no profile shown.
+    for ($i = 1; $i <= 3; $i++) {
+      $this->assertManagementFormProfile($i, 'Not enabled');
+    }
+
+    // Enable automatic profile for pages.
+    $edit = [
+      'node[page][enabled]' => 1,
+      'node[page][profiles]' => 'automatic',
+      'node[page][fields][title]' => 1,
+      'node[page][fields][body]' => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    // Now we should see the automatic profile.
+    $this->goToContentBulkManagementForm();
+    // Ensure there is Automatic profile shown.
+    for ($i = 1; $i <= 3; $i++) {
+      $this->assertManagementFormProfile($i, 'Automatic');
+    }
+
+    // Let's upload one node. The profile should be stored.
+    $this->clickLink('EN');
+    // Ensure there is Automatic profile shown.
+    for ($i = 1; $i <= 3; $i++) {
+      $this->assertManagementFormProfile($i, 'Automatic');
+    }
+
+    // Now we change the default profile. Should still be the same for the node
+    // we uploaded.
+    $edit = [
+      'node[page][enabled]' => 1,
+      'node[page][profiles]' => 'manual',
+      'node[page][fields][title]' => 1,
+      'node[page][fields][body]' => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    $this->goToContentBulkManagementForm();
+    // Ensure there is Automatic profile for node 1, but Manual profile for
+    // nodes 2 and 3.
+    $this->assertManagementFormProfile(1, 'Automatic');
+    for ($i = 2; $i <= 3; $i++) {
+      $this->assertManagementFormProfile($i, 'Manual');
+    }
+  }
+
 }

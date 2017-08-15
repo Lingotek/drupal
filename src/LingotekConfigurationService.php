@@ -104,7 +104,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
   public function getDefaultProfileId($entity_type_id, $bundle, $provide_default = TRUE) {
     $config = \Drupal::config('lingotek.settings');
     $profile_id = $config->get('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile');
-    if ($provide_default && $profile_id === NULL) {
+    if ($provide_default && $profile_id === NULL && $this->isEnabled($entity_type_id, $bundle)) {
       $profile_id = Lingotek::PROFILE_AUTOMATIC;
     }
     return $profile_id;

@@ -245,7 +245,7 @@ class LingotekManagementForm extends FormBase {
       foreach ($entities as $entity_id => $entity) {
         $source = $this->getSourceStatus($entity);
         $translations = $this->getTranslationsStatuses($entity);
-        $profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE);
+        $profile = $this->lingotekConfiguration->getEntityProfile($entity, TRUE);
         $form['table'][$entity_id] = [
           '#type' => 'checkbox',
           '#value' => $entity->id()
@@ -263,6 +263,9 @@ class LingotekManagementForm extends FormBase {
           'translations' => $translations,
           'profile' => $profile ? $profile->label() : '',
         ];
+        if (!$this->lingotekConfiguration->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+          $rows[$entity_id]['profile'] = 'Not enabled';
+        }
       }
     }
     $headers = [];

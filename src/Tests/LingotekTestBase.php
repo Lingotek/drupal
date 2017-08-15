@@ -180,6 +180,26 @@ abstract class LingotekTestBase extends WebTestBase {
   }
 
   /**
+   * Asserts a given index of the management table shows a given profile.
+   *
+   * @param int $index
+   *   The index of the table to check.
+   * @param string|null $profile
+   *   The profile to verify.
+   */
+  protected function assertManagementFormProfile($index, $profile) {
+    $elements = $this->xpath("//*[@id='edit-table']/tbody/tr[$index]/td[6]");
+    if ($profile === NULL) {
+      $shown_profile = ((array) $elements[0]);
+      $this->assertEqual(0, count($shown_profile), "Profile for $index is shown as empty");
+    }
+    else {
+      $shown_profile = ((array) $elements[0])[0];
+      $this->assertEqual($profile, $shown_profile, "Profile for $index is shown as $profile");
+    }
+  }
+
+  /**
    * Create and publish a node.
    *
    * @param array $edit

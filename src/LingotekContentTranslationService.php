@@ -657,6 +657,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $profile);
     if ($document_id) {
+      $this->lingotekConfiguration->setProfile($entity, $profile->id());
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
