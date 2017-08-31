@@ -19,13 +19,6 @@ class LingotekWorkbenchModerationSettingsForm implements LingotekModerationSetti
   use LingotekWorkbenchModerationCheckTrait;
 
   /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface

@@ -194,7 +194,8 @@ abstract class LingotekTestBase extends WebTestBase {
       $this->assertEqual(0, count($shown_profile), "Profile for $index is shown as empty");
     }
     else {
-      $shown_profile = ((array) $elements[0])[0];
+      $element = ((array) $elements[0]);
+      $shown_profile = $element[0];
       $this->assertEqual($profile, $shown_profile, "Profile for $index is shown as $profile");
     }
   }
