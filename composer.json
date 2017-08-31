@@ -35,7 +35,7 @@
   "minimum-stability": "dev",
   "require-dev": {
     "drupal/metatag": "*",
-    "drupal/paragraphs": "*",
+    "drupal/paragraphs": "dev-1.x",
     "drupal/pathauto": "*",
     "drupal/workbench_moderation": "dev-1.x"
   },
