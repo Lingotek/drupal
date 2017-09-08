@@ -166,6 +166,7 @@ class Lingotek implements LingotekInterface {
       'format' => 'JSON',
       'project_id' => $this->get('default.project'),
       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
+      'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',// 'okf_json@with-html-subfilter.fprm',
     );
 
     if ($profile !== NULL && $project = $profile->getProject()) {
@@ -204,6 +205,7 @@ class Lingotek implements LingotekInterface {
       'format' => 'JSON',
       'content' => $content,
       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
+      'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',// 'okf_json@with-html-subfilter.fprm',
     );
     if ($url !== NULL) {
       $args['external_url'] = $url;

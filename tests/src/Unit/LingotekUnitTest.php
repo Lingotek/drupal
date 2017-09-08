@@ -275,6 +275,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'my_test_project',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+              'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
               'vault_id' => 'my_test_vault']);
 
     // Vault id has changed.
@@ -283,6 +284,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'another_test_project',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+              'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
               'vault_id' => 'another_test_vault']);
 
     // If there is a profile with default vault, it must be replaced.
@@ -291,6 +293,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'default_project',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+              'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
               'vault_id' => 'default_vault']);
 
     // If there is no profile, vault should not be included.
@@ -298,6 +301,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+              'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
               'format' => 'JSON', 'project_id' => 'default_project',
              ]);
 
@@ -306,6 +310,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1'
       ]);
 
@@ -315,6 +320,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'format' => 'JSON', 'project_id' => 'default_project',
       ]);
 
@@ -366,6 +372,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
       ])
       ->will($this->returnValue($response));
 
@@ -375,6 +382,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
       ])
       ->will($this->returnValue($response));
 
@@ -384,6 +392,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content', 'title' => 'title',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
       ])
       ->will($this->returnValue($response));
 
@@ -393,6 +402,7 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('my_doc_id', [
         'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1', 'title' => 'title',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
       ])
       ->will($this->returnValue($response));
 
