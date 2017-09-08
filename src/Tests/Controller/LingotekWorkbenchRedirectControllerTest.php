@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Tests\Controller;
 
 use Drupal\Core\Url;
+use Drupal\frozenintime\FrozenTime;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Tests\LingotekTestBase;
@@ -104,9 +105,7 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
     $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_AR' and @target='_blank']");
     $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
 
-    /** @var \Drupal\Component\Datetime\TimeInterface $time */
-    $time = \Drupal::service('datetime.time');
-    $expiration = $time->getCurrentTime() + (60 * 30);
+    $expiration = FrozenTime::MY_BIRTHDAY + (60 * 30);
 
     // Click the workbench tab.
     $this->clickLink('ES');

@@ -8,7 +8,7 @@ use Drupal\Core\DependencyInjection\ServiceProviderBase;
 /**
  * Modifies the time service.
  */
-class FrozenInTimeServiceProvider extends ServiceProviderBase {
+class FrozenintimeServiceProvider extends ServiceProviderBase {
 
   /**
    * {@inheritdoc}
