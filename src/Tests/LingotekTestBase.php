@@ -252,6 +252,47 @@ abstract class LingotekTestBase extends WebTestBase {
     }
   }
 
+  protected function saveAsRequestReviewNodeForm(array $edit, $bundle = 'article') {
+    $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['moderation_state[0][state]'] = 'needs_review';
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and Request Review'));
+    }
+  }
+
+  protected function editAsRequestReviewNodeForm($path, array $edit) {
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['moderation_state[0][state]'] = 'needs_review';
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and Request Review (this translation)'));
+    }
+  }
+
+  protected function saveAsNewDraftNodeForm(array $edit, $bundle = 'article') {
+    $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['moderation_state[0][state]'] = 'draft';
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and Create New Draft'));
+    }
+  }
+
+  protected function editAsNewDraftNodeForm($path, array $edit) {
+    if (floatval(\Drupal::VERSION) >= 8.4) {
+      $edit['moderation_state[0][state]'] = 'draft';
+      $this->drupalPostForm($path, $edit, t('Save'));
+    }
+    else {
+      $this->drupalPostForm($path, $edit, t('Save and Create New Draft (this translation)'));
+    }
+  }
 
   protected function saveAndKeepPublishedNodeForm(array $edit, $nid) {
     $path = ($nid !== NULL) ? "node/$nid/edit" : NULL;

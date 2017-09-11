@@ -42,6 +42,9 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
+    // Enable content moderation for articles.
+    $this->configureContentModeration('editorial', ['node' => ['article']]);
+
     $edit = [
       'node[article][enabled]' => 1,
       'node[article][profiles]' => 'automatic',
@@ -58,9 +61,6 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
   public function testNoExtraRevisionsCreatedWhenProcessing() {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
-
-    // Enable content moderation for articles.
-    $this->configureContentModeration('editorial', ['node' => ['article']]);
 
     // Create a node.
     $edit = [];

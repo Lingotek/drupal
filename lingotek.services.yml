@@ -80,3 +80,19 @@ services:
     arguments: ['@module_handler', '@entity_type.manager', '@lingotek.workbench_moderation_configuration', '@service_container']
     tags:
       - { name: lingotek_moderation_handler, priority: 10 }
+
+  lingotek.content_moderation_configuration:
+    class: Drupal\lingotek\Moderation\LingotekContentModerationConfigurationService
+    arguments: ['@module_handler', '@config.factory']
+    tags:
+      - { name: lingotek_moderation_configuration, priority: 20 }
+  lingotek.content_moderation_form:
+    class: Drupal\lingotek\Moderation\LingotekContentModerationSettingsForm
+    arguments: ['@module_handler', '@entity_type.manager', '@lingotek.content_moderation_configuration', '@entity_type.bundle.info', '@service_container']
+    tags:
+      - { name: lingotek_moderation_form, priority: 20 }
+  lingotek.content_moderation_handler:
+    class: Drupal\lingotek\Moderation\LingotekContentModerationHandler
+    arguments: ['@module_handler', '@entity_type.manager', '@lingotek.content_moderation_configuration', '@entity_type.bundle.info', '@service_container']
+    tags:
+      - { name: lingotek_moderation_handler, priority: 20 }
