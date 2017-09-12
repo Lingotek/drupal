@@ -48,6 +48,11 @@ services:
     arguments: ['@lingotek.config_translation', '@plugin.manager.config_translation.mapper']
     tags:
       - { name: event_subscriber }
+  lingotek.field_deleted_subscriber:
+    class: Drupal\lingotek\EventSubscriber\LingotekFieldDeletedConfigSubscriber
+    arguments: ['@lingotek.configuration']
+    tags:
+      - { name: event_subscriber }
 
   lingotek.no_moderation_configuration:
     class: Drupal\lingotek\Moderation\LingotekNoModerationConfigurationService

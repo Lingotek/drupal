@@ -897,7 +897,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           break;
         }
         $field_definition = $entity->getFieldDefinition($name);
-        if (($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions')
+        if ($field_definition && ($field_definition->isTranslatable() || $field_definition->getType() === 'entity_reference_revisions')
           && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
           // First we check if this is a entity reference, and save the translated entity.
           $field_type = $field_definition->getType();
