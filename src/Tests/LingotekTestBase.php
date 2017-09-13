@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
+use Drupal\Core\Url;
 use Drupal\lingotek\Lingotek;
 use Drupal\simpletest\WebTestBase;
 
@@ -342,6 +343,26 @@ abstract class LingotekTestBase extends WebTestBase {
         }
       }
     }
+  }
+
+  /**
+   * Assert that there is a link to the workbench in a new tab.
+   *
+   * @param string $document_id
+   *   The document id.
+   * @param $langcode
+   *   The language code.
+   * @param $locale
+   *   The Lingotek locale.
+   */
+  protected function assertLinkToWorkbenchInNewTabInSinglePage($document_id, $langcode, $locale) {
+    $this->assertLinkByHref("/admin/lingotek/workbench/$document_id/$langcode");
+    $url = Url::fromRoute('lingotek.workbench', [
+      'doc_id' => $document_id,
+      'locale' => $locale
+    ])->toString();
+
+    $this->assertRaw('<a href="' . $url . '" target="_blank">', 'The workbench link opens in a new tab.');
   }
 
 }

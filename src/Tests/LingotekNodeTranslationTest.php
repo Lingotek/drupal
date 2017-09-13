@@ -2,7 +2,6 @@
 
 namespace Drupal\lingotek\Tests;
 
-use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
@@ -124,6 +123,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->clickLink('Check Upload Status');
     $this->assertText('The import for node Llamas are cool is complete.');
 
+    // Assert the link keeps the language.
+    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertNoLinkByHref('/es/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+
     // Request translation.
     $this->clickLink('Request translation');
     $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
@@ -137,12 +140,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es');
-    $url = Url::fromRoute('lingotek.workbench', [
-      'doc_id' => 'dummy-document-hash-id',
-      'locale' => 'es_MX'
-    ], ['language' => ConfigurableLanguage::load('es')])->toString();
-    $this->assertRaw('<a href="' . $url . '" target="_blank" hreflang="es">');
+    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_MX');
+
     // Download translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');

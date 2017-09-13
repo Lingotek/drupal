@@ -266,7 +266,6 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     }
     $option[$operation_col]['data']['#links'][strtolower($name)] = array(
       'title' => $name,
-      'language' => $language,
       'url' => $url,
     );
     if ($open_in_window) {
