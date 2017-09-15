@@ -37,6 +37,8 @@ lingotek.settings:
           type: string
         enable_content_cloud:
           type: boolean
+        enable_download_source:
+          type: boolean
         content_cloud_import_format:
           type: string
         content_cloud_import_status:

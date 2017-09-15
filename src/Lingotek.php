@@ -380,7 +380,7 @@ class Lingotek implements LingotekInterface {
   public function downloadDocument($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
-    $response = $this->api->getTranslation($doc_id, $locale);
+    $response = $this->api->getTranslation($doc_id, $locale, $this->config->get('preference.enable_download_source'));
     if ($response->getStatusCode() == Response::HTTP_OK) {
       return json_decode($response->getBody(), TRUE);
     }

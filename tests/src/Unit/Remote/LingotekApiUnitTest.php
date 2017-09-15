@@ -52,7 +52,6 @@ class LingotekApiUnitTest extends UnitTestCase {
     $this->lingotek_api->getDocument('fancy-document-id');
   }
 
-
   /**
    * @covers ::addTranslation
    */
@@ -202,6 +201,32 @@ class LingotekApiUnitTest extends UnitTestCase {
       ->will($this->returnValue($response));
 
     $this->lingotek_api->getWorkflows($community_id);
+  }
+
+  public function testGetTranslation() {
+    // Ensure that the useSource is set when it needs to be.
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $this->client->expects($this->at(0))
+      ->method('get')
+      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => FALSE])
+      ->will($this->returnValue($response));
+
+    $this->client->expects($this->at(1))
+      ->method('get')
+      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => FALSE])
+      ->will($this->returnValue($response));
+
+    $this->client->expects($this->at(2))
+      ->method('get')
+      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => TRUE])
+      ->will($this->returnValue($response));
+
+    $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES');
+    $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES', FALSE);
+    $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES', TRUE);
   }
 
 }

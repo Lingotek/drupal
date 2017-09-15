@@ -146,6 +146,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#default_value' => $this->lingotek->get('preference.enable_content_cloud', FALSE),
     );
 
+    $form['prefs']['enable_download_source'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Download source if content is missing'),
+      '#description' => t('If some content is not shown, the original words will be.'),
+      '#default_value' => $lingotek_config->getPreference('enable_download_source') ?: FALSE,
+    );
+
     $form['prefs']['actions']['#type'] = 'actions';
     $form['prefs']['actions']['submit'] = array(
       '#type' => 'submit',
@@ -174,10 +181,11 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->lingotek->set('preference.advanced_parsing', $form_values['advanced_parsing']);
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
     $lingotek_config->setDeleteRemoteAfterDisassociation($form_values['delete_tms_documents_upon_disassociation']);
+    $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source']);
     parent::submitForm($form, $form_state);
   }
 
-  protected function retrieveImportSetting(){
+  protected function retrieveImportSetting() {
     $this->show_import_tab = $this->lingotek->get('preference.enable_content_cloud');
   }
 
@@ -229,7 +237,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveAdminMenu() {
-    $menu_link_manager =  \Drupal::service('plugin.manager.menu.link');
+    $menu_link_manager = \Drupal::service('plugin.manager.menu.link');
     $admin_menu = $menu_link_manager->getDefinition('lingotek.dashboard');
 
     // Will be opposite from enabled value since we're hiding the menu item
@@ -271,8 +279,6 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       foreach ($ids as $child_link) {
         $menu_link_manager->updateDefinition($child_link, $updated_values);
       }
-
-
       if ($updated_values['enabled']) {
         $menu_link_manager->resetLink('lingotek.dashboard');
       }

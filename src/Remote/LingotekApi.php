@@ -12,6 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Response;
+use \Drupal\lingotek\LingotekConfigurationService;
 
 /*
  * a simple connector to the Lingotek Translation API
@@ -249,10 +250,10 @@ class LingotekApi implements LingotekApiInterface {
     return $response;
   }
 
-  public function getTranslation($id, $locale) {
+  public function getTranslation($id, $locale, $useSource = FALSE) {
     try {
       $this->logger->debug('Lingotek::getTranslation called with id ' . $id . ' and locale ' . $locale);
-      $response = $this->lingotekClient->get('/api/document/' . $id . '/content', array('locale_code' => $locale));
+      $response = $this->lingotekClient->get('/api/document/' . $id . '/content', array('locale_code' => $locale, 'use_source' => $useSource));
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting translation (%id, %locale): %message.',
