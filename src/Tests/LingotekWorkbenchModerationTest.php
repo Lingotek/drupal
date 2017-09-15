@@ -174,10 +174,30 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
 
     $this->assertText('Article Llamas are cool has been created.');
+    $edit['title[0][value]'] = 'Llamas are cool!';
+    $this->drupalPostForm('/node/1/edit', $edit, t('Save and Create New Draft (this translation)'));
+
+    $this->assertText('Article Llamas are cool! has been updated.');
+    $this->assertText('Llamas are cool! was updated and sent to Lingotek successfully.');
+  }
+
+  /**
+   * Entity update with automatic profile in upload state does not trigger the
+   * upload because there is not content change.
+   */
+  public function testUpdateEntityWithAutomaticProfileAndInUploadStateNoStatusChange() {
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->drupalPostForm('/node/add/article', $edit, t('Save and Create New Draft'));
+
+    $this->assertText('Article Llamas are cool has been created.');
     $this->drupalPostForm('/node/1/edit', $edit, t('Save and Create New Draft (this translation)'));
 
     $this->assertText('Article Llamas are cool has been updated.');
-    $this->assertText('Llamas are cool was updated and sent to Lingotek successfully.');
+    $this->assertNoText('Llamas are cool was updated and sent to Lingotek successfully.');
   }
 
   /**

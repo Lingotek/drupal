@@ -175,10 +175,30 @@ class LingotekContentModerationTest extends LingotekTestBase {
     $this->saveAsNewDraftNodeForm($edit, 'article');
 
     $this->assertText('Article Llamas are cool has been created.');
+    $edit['body[0][value]'] = 'Llamas are very cool!';
     $this->editAsNewDraftNodeForm('/node/1/edit', $edit);
 
     $this->assertText('Article Llamas are cool has been updated.');
     $this->assertText('Llamas are cool was updated and sent to Lingotek successfully.');
+  }
+
+  /**
+   * Tests updating an entity with automatic profile and in upload state is
+   * uploaded but no content actually changes.
+   */
+  public function testUpdateEntityWithAutomaticProfileAndInUploadStateButNoStatusChange() {
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAsNewDraftNodeForm($edit, 'article');
+
+    $this->assertText('Article Llamas are cool has been created.');
+    $this->editAsNewDraftNodeForm('/node/1/edit', $edit);
+
+    $this->assertText('Article Llamas are cool has been updated.');
+    $this->assertNoText('Llamas are cool was updated and sent to Lingotek successfully.');
   }
 
   /**
