@@ -70,7 +70,7 @@ class ContentTranslationLocalTasks extends DeriverBase implements ContainerDeriv
           if (isset($this->derivatives[$translation_route_name])) {
             unset($this->derivatives[$translation_route_name]);
           }
-          break;
+          continue;
         }
       }
 

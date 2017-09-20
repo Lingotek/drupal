@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Tests\Form;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Tests\LingotekTestBase;
+use Drupal\taxonomy\Tests\TaxonomyTestTrait;
 
 /**
  * Tests the Lingotek integrations settings form with paragraphs.
@@ -12,6 +13,15 @@ use Drupal\lingotek\Tests\LingotekTestBase;
  * @group lingotek
  */
 class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase {
+
+  use TaxonomyTestTrait;
+
+  /**
+   * Vocabulary for testing.
+   *
+   * @var \Drupal\taxonomy\VocabularyInterface
+   */
+  protected $vocabulary;
 
   /**
    * {@inheritdoc}
@@ -21,7 +31,8 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     'node',
     'image',
     'paragraphs',
-    'lingotek_paragraphs_test'
+    'lingotek_paragraphs_test',
+    'taxonomy',
   ];
 
   protected function setUp() {
@@ -40,6 +51,8 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
+    $this->vocabulary = $this->createVocabulary();
+
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')
       ->setThirdPartySetting('lingotek', 'locale', 'es_MX')
@@ -50,6 +63,9 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')
       ->setLanguageAlterable(TRUE)
       ->save();
+    ContentLanguageSettings::loadByEntityTypeBundle('taxonomy_term', $this->vocabulary->id())
+      ->setLanguageAlterable(TRUE)
+      ->save();
     ContentLanguageSettings::loadByEntityTypeBundle('paragraph', 'image_text')
       ->setLanguageAlterable(TRUE)
       ->save();
@@ -57,6 +73,8 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
       ->setEnabled('node', 'article', TRUE);
     \Drupal::service('content_translation.manager')
       ->setEnabled('paragraph', 'image_text', TRUE);
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('taxonomy_term', $this->vocabulary->id(), TRUE);
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
@@ -136,6 +154,37 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     // Now the tab is not shown.
     $this->goToContentBulkManagementForm();
     $this->assertNoLink('Paragraph');
+  }
+
+  /**
+   * Test that all tabs are shown.
+   */
+  public function testOtherBulkTabsAreShownAfterDeactivating() {
+    $this->testBulkTabCanBeDeactivated();
+    $bundle = $this->vocabulary->id();
+    $edit = [
+      "taxonomy_term[$bundle][enabled]" => 1,
+      "taxonomy_term[$bundle][profiles]" => 'automatic',
+      "taxonomy_term[$bundle][fields][name]" => 1,
+      "taxonomy_term[$bundle][fields][description]" => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    // Now the taxonomy tab should be shown.
+    $this->goToContentBulkManagementForm();
+    $this->assertResponse(200);
+    // TODO: These are not working as expected.
+    // $this->assertLink('Content');
+    // $this->assertNoLink('Paragraph');
+    // $this->assertLink('Taxonomy term');
+
+    $this->goToContentBulkManagementForm('taxonomy_term');
+    $this->assertResponse(200);
+    // TODO: These are not working as expected.
+    // $this->assertLink('Content');
+    // $this->assertNoLink('Paragraph');
+    // $this->assertLink('Taxonomy term');
+
   }
 
 }

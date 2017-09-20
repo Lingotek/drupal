@@ -54,7 +54,7 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
           $config = \Drupal::config('lingotek.settings');
           $enable_bulk_management = $config->get('preference.contrib.paragraphs.enable_bulk_management', FALSE);
           if (!$enable_bulk_management) {
-            break;
+            continue;
           }
         }
 
