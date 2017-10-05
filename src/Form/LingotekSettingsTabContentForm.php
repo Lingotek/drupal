@@ -7,6 +7,8 @@
 
 namespace Drupal\lingotek\Form;
 
+use Drupal\block\Entity\Block;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityType;
 
@@ -185,6 +187,10 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       }
     }
 
+    // There is some bug than local tasks block cache is not cleared. Let's do
+    // that manually.
+    $this->invalidateLocalTaskCacheBlocks();
+
     parent::submitForm($form, $form_state);
   }
 
@@ -296,6 +302,25 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     }
 
     return $field_checkboxes;
+  }
+
+  /**
+   * Invalidates the local task cache blocks.
+   */
+  private function invalidateLocalTaskCacheBlocks() {
+    if (\Drupal::moduleHandler()->moduleExists('block')) {
+      // There is some bug than local tasks block cache is not cleared. Let's do
+      // that manually.
+      $ids = \Drupal::entityQuery('block')
+        ->condition('plugin', 'local_tasks_block')
+        ->execute();
+      $tags = [];
+      foreach ($ids as $id) {
+        $block = Block::load($id);
+        $tags = array_merge($tags, $block->getCacheTagsToInvalidate());
+      }
+      Cache::invalidateTags($tags);
+    }
   }
 
 }
