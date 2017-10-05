@@ -429,6 +429,9 @@ function lingotek_update_8011(&$sandbox) {
   }
 }
 
+/**
+ * Change module weight to ensure lingotek hooks run after content_translation.
+ */
 function lingotek_update_8201() {
   // Assign a fairly low weight to ensure our implementation of
   // hook_module_implements_alter() is run after content_translation.
