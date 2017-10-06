@@ -30,8 +30,14 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     parent::setUp();
 
     // Place the actions and title block.
-    $this->drupalPlaceBlock('local_tasks_block');
-    $this->drupalPlaceBlock('page_title_block');
+    $this->drupalPlaceBlock('page_title_block', [
+      'region' => 'content',
+      'weight' => -5
+    ]);
+    $this->drupalPlaceBlock('local_tasks_block', [
+      'region' => 'content',
+      'weight' => -10
+    ]);
 
     // Create Article node types.
     if ($this->profile != 'standard') {
@@ -98,6 +104,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     $this->node = Node::load(1);
 
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
@@ -114,11 +124,102 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
     $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
 
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_IMPORTING, $source_status, 'The node has been marked as importing.');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Assert the link keeps the language.
+    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertNoLinkByHref('/es/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+
+    // Request translation.
+    $this->clickLink('Request translation');
+    $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
+    $this->assertIdentical('es_MX', \Drupal::state()
+      ->get('lingotek.added_target_locale'));
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertIdentical('es_MX', \Drupal::state()
+      ->get('lingotek.checked_target_locale'));
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_MX');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
+    $this->assertIdentical('es_MX', \Drupal::state()
+      ->get('lingotek.downloaded_locale'));
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas');
+  }
+
+  /**
+   * Tests that a node can be translated.
+   */
+  public function testNodeWithManualTranslation() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $test_image = current($this->drupalGetTestFiles('image'));
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['files[field_image_0]'] = drupal_realpath($test_image->uri);
+    $edit['lingotek_translation_profile'] = 'manual';
+
+    $this->drupalPostForm('node/add/article', $edit, t('Preview'));
+
+    unset($edit['files[field_image_0]']);
+    $edit['field_image[0][alt]'] = 'Llamas are cool';
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    $this->node = Node::load(1);
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $source_status = $translation_service->getSourceStatus($this->node);
+    $this->assertEqual(Lingotek::STATUS_UNTRACKED, $source_status, 'The node has been marked as untracked.');
+
     // Check that the translate tab is in the node.
     $this->drupalGet('node/1');
     $this->clickLink('Translate');
 
-    // The document should have been automatically uploaded, so let's check
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // Check that only the configured fields have been uploaded.
+    $data = json_decode(\Drupal::state()
+      ->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 3);
+    $this->assertTrue(isset($data['title'][0]['value']));
+    $this->assertEqual(1, count($data['body'][0]));
+    $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertEqual(1, count($data['field_image'][0]));
+    $this->assertTrue(isset($data['field_image'][0]['alt']));
+    $this->assertIdentical('en_US', \Drupal::state()
+      ->get('lingotek.uploaded_locale'));
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('manual', $used_profile, 'The automatic profile was used.');
+
+    // The document should have been uploaded, so let's check
     // the upload status.
     $this->clickLink('Check Upload Status');
     $this->assertText('The import for node Llamas are cool is complete.');

@@ -245,7 +245,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $content_translation_service = \Drupal::service('lingotek.content_translation');
 
     // Assert the content is edited, but not auto-uploaded.
-    $this->assertIdentical(Lingotek::STATUS_EDITED, $content_translation_service->getSourceStatus($node));
+    $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
 
     $this->goToContentBulkManagementForm();
     // Clicking English must init the upload of content.
