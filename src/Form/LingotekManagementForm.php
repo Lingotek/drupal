@@ -15,6 +15,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -23,6 +24,9 @@ use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
+use Drupal\group\Entity\Group;
+use Drupal\group\Entity\GroupInterface;
+use Drupal\group\Plugin\GroupContentEnablerManagerInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
@@ -111,6 +115,13 @@ class LingotekManagementForm extends FormBase {
   protected $state;
 
   /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The entity type id.
    *
    * @var string
@@ -138,10 +149,12 @@ class LingotekManagementForm extends FormBase {
    *   The content translation manager.
    * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(Connection $connection, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, $entity_type_id) {
+  public function __construct(Connection $connection, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id) {
     $this->connection = $connection;
     $this->entityManager = $entity_manager;
     $this->languageManager = $language_manager;
@@ -155,6 +168,7 @@ class LingotekManagementForm extends FormBase {
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->state = $state;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -173,6 +187,7 @@ class LingotekManagementForm extends FormBase {
       $container->get('lingotek.content_translation'),
       $container->get('user.private_tempstore'),
       $container->get('state'),
+      $container->get('module_handler'),
       \Drupal::routeMatch()->getParameter('entity_type_id')
     );
   }
@@ -204,11 +219,15 @@ class LingotekManagementForm extends FormBase {
 
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
+    $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
+
     // Filter results.
     $labelFilter = $temp_store->get('label');
     $bundleFilter = $temp_store->get('bundle');
     $profileFilter = $temp_store->get('profile');
     $sourceLanguageFilter = $temp_store->get('source_language');
+    $groupFilter = $groupsExists ? $temp_store->get('group') : NULL;
+
     if ($has_bundles && $bundleFilter) {
       $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter);
     }
@@ -235,6 +254,25 @@ class LingotekManagementForm extends FormBase {
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() .'\'');
       $query->condition('metadata.profile', $profileFilter);
+    }
+
+    if ($groupFilter) {
+      /** @var GroupContentEnablerManagerInterface $groupContentEnablers */
+      $groupType = Group::load($groupFilter)->getGroupType();
+      $groupContentEnablers = \Drupal::service('plugin.manager.group_content_enabler');
+      $definitions = $groupContentEnablers->getDefinitions();
+      $definitions = array_filter($definitions, function($definition) {
+        return ($definition['entity_type_id'] === 'node');
+      });
+      $valid_values = [];
+      foreach ($definitions as $node_definition) {
+        $valid_values[] = $groupType->id() . '-' . $node_definition['id'] . '-' . $node_definition['entity_bundle'];
+      }
+
+      $query->innerJoin('group_content_field_data', 'group_content',
+        'entity_table.' . $entity_type->getKey('id') . '= group_content.entity_id');
+      $query->condition('group_content.gid', $groupFilter);
+      $query->condition('group_content.type', $valid_values, 'IN');
     }
 
     $ids = $query->limit($items_per_page)->execute()->fetchCol(0);
@@ -306,6 +344,15 @@ class LingotekManagementForm extends FormBase {
         '#title' => $entity_type->getBundleLabel(),
         '#options' => ['' => $this->t('All')] + $this->getAllBundles(),
         '#default_value' => $bundleFilter,
+        '#attributes' => array('class' => array('form-item')),
+      );
+    }
+    if ($groupsExists) {
+      $form['filters']['wrapper']['group'] = array(
+        '#type' => 'select',
+        '#title' => $this->t('Group'),
+        '#options' => ['' => $this->t('All')] + $this->getAllGroups(),
+        '#default_value' => $groupFilter,
         '#attributes' => array('class' => array('form-item')),
       );
     }
@@ -406,6 +453,10 @@ class LingotekManagementForm extends FormBase {
     $temp_store->delete('profile');
     $temp_store->delete('source_language');
     $temp_store->delete('bundle');
+
+    if ($this->entityTypeId === 'node') {
+      $temp_store->delete('group');
+    }
   }
 
   /**
@@ -423,6 +474,10 @@ class LingotekManagementForm extends FormBase {
     $temp_store->set('profile', $form_state->getValue(['filters', 'wrapper', 'profile']));
     $temp_store->set('source_language', $form_state->getValue(['filters', 'wrapper', 'source_language']));
     $temp_store->set('bundle', $form_state->getValue(['filters', 'wrapper', 'bundle']));
+
+    if ($this->entityTypeId === 'node') {
+      $temp_store->set('group', $form_state->getValue(['filters', 'wrapper', 'group']));
+    }
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');
   }
@@ -1181,6 +1236,24 @@ class LingotekManagementForm extends FormBase {
     $options = [];
     foreach ($languages as $id => $language) {
       $options[$id] = $language->getName();
+    }
+    return $options;
+  }
+
+  /**
+   * Gets all the groups as options.
+   *
+   * @return array
+   *   The groups as a valid options array.
+   */
+  protected function getAllGroups() {
+    $options = [];
+    if ($this->entityTypeId === 'node') {
+      /** @var GroupInterface[] $groups */
+      $groups = $this->entityManager->getStorage('group')->loadMultiple();
+      foreach ($groups as $id => $group) {
+        $options[$id] = $group->label();
+      }
     }
     return $options;
   }

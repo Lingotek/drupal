@@ -17,3 +17,4 @@ test_dependencies:
   - paragraphs:paragraphs
   - pathauto:pathauto
   - workbench_moderation:workbench_moderation
+  - group:group

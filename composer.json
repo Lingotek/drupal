@@ -37,7 +37,8 @@
     "drupal/metatag": "*",
     "drupal/paragraphs": "dev-1.x",
     "drupal/pathauto": "*",
-    "drupal/workbench_moderation": "dev-1.x"
+    "drupal/workbench_moderation": "dev-1.x",
+    "drupal/group": "dev-1.x"
   },
   "repositories": {
     "drupal": {

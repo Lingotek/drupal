@@ -9,6 +9,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Entity\EntityStorageInterface;
   use Drupal\Core\Entity\EntityTypeInterface;
   use Drupal\Core\Entity\Query\QueryFactory;
+  use Drupal\Core\Extension\ModuleHandlerInterface;
   use Drupal\Core\Form\FormState;
   use Drupal\Core\Language\LanguageManagerInterface;
   use Drupal\Core\State\StateInterface;
@@ -104,6 +105,13 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     protected $tempStoreFactory;
 
     /**
+     * The module handler.
+     *
+     * @var \Drupal\Core\Extension\ModuleHandlerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $moduleHandler;
+
+    /**
    * The state key value store.
    *
    * @var \Drupal\Core\State\StateInterface|\PHPUnit_Framework_MockObject_MockObject
@@ -124,6 +132,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->contentTranslationService = $this->getMock(LingotekContentTranslationServiceInterface::class);
       $this->tempStoreFactory = $this->getMockBuilder(PrivateTempStoreFactory::class)->disableOriginalConstructor()->getMock();
       $this->state = $this->getMock(StateInterface::class);
+      $this->moduleHandler = $this->getMock(ModuleHandlerInterface::class);
 
       $this->form = new LingotekManagementForm(
       $this->connection,
@@ -137,6 +146,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->contentTranslationService,
       $this->tempStoreFactory,
       $this->state,
+      $this->moduleHandler,
       'node'
       );
       $this->form->setConfigFactory($this->getConfigFactoryStub(
@@ -261,6 +271,11 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->state->expects($this->once())
         ->method('get')
         ->with('lingotek.enable_debug_utilities')
+        ->willReturn(FALSE);
+
+      $this->moduleHandler->expects($this->at(0))
+        ->method('moduleExists')
+        ->with('group')
         ->willReturn(FALSE);
 
       $this->form->buildForm([], new FormState());
