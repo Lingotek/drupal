@@ -15,6 +15,35 @@ preference:
   contrib:
     paragraphs:
       enable_bulk_management: false
+intelligence:
+  business_unit: null
+  business_division: null
+  campaign_id: null
+  campaign_rating: 0
+  channel: null
+  contact_name: null
+  contact_email: null
+  content_description: null
+  external_style_id: null
+  purchase_order: null
+  region: null
+  use_author: true
+  default_author_email: null
+  use_author_email: true
+  use_contact_email_for_author: false
+  use_business_unit: true
+  use_business_division: true
+  use_campaign_id: true
+  use_campaign_rating: true
+  use_channel: true
+  use_contact_name: true
+  use_contact_email: true
+  use_content_description: true
+  use_external_style_id: true
+  use_purchase_order: true
+  use_region: true
+  use_base_domain: true
+  use_reference_url: true
 account:
   use_production: false
   sandbox_host: 'https://cms.lingotek.com'

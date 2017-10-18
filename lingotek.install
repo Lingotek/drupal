@@ -439,6 +439,45 @@ function lingotek_update_8201() {
   module_set_weight('lingotek', 15);
 }
 
+/**
+ * Set the new default intelligence configuration
+ */
+function lingotek_update_8204() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('lingotek.settings');
+  $config->set('intelligence', [
+    'business_unit' => NULL,
+    'business_division' => NULL,
+    'campaign_id' => NULL,
+    'campaign_rating' => 0,
+    'channel' => NULL,
+    'contact_name' => NULL,
+    'contact_email' => NULL,
+    'content_description' => NULL,
+    'external_style_id' => NULL,
+    'purchase_order' => NULL,
+    'region' => NULL,
+    'use_author' => TRUE,
+    'default_author_email' => NULL,
+    'use_author_email' => TRUE,
+    'use_contact_email_for_author' => FALSE,
+    'use_business_unit' => TRUE,
+    'use_business_division' => TRUE,
+    'use_campaign_id' => TRUE,
+    'use_campaign_rating' => TRUE,
+    'use_channel' => TRUE,
+    'use_contact_name' => TRUE,
+    'use_contact_email' => TRUE,
+    'use_content_description' => TRUE,
+    'use_external_style_id' => TRUE,
+    'use_purchase_order' => TRUE,
+    'use_region' => TRUE,
+    'use_base_domain' => TRUE,
+    'use_reference_url' => TRUE
+  ]);
+  $config->save();
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

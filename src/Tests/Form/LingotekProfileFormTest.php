@@ -14,6 +14,8 @@ use Drupal\lingotek\Tests\LingotekTestBase;
  */
 class LingotekProfileFormTest extends LingotekTestBase {
 
+  use IntelligenceMetadataFormTestTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -82,6 +84,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('default', $profile->getProject());
     $this->assertIdentical('default', $profile->getVault());
     $this->assertIdentical('default', $profile->getWorkflow());
+    $this->assertFalse($profile->hasIntelligenceMetadataOverrides());
   }
 
   /**
@@ -389,6 +392,131 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertFieldByName('language_overrides[es][overrides]');
     $this->assertOptionSelected('edit-language-overrides-es-overrides', 'default');
     $this->assertOptionSelected('edit-language-overrides-de-overrides', 'default');
+  }
+
+  /**
+   * Tests that by default intelligence overrides are disabled.
+   */
+  public function testIntelligenceOverrideDefaults() {
+    $this->drupalGet('admin/lingotek/settings');
+    $this->clickLink(t('Add new Translation Profile'));
+    $this->assertNoFieldChecked('edit-intelligence-metadata-overrides-override');
+    $this->assertIntelligenceFieldDefaults();
+  }
+
+  /**
+   * Tests that we can enable intelligence metadata overrides.
+   */
+  public function testEnableIntelligenceOverride() {
+    $this->drupalGet('admin/lingotek/settings');
+    $this->clickLink(t('Add new Translation Profile'));
+
+    $profile_id = strtolower($this->randomMachineName());
+    $profile_name = $this->randomString();
+    $edit = [
+      'id' => $profile_id,
+      'label' => $profile_name,
+      'auto_upload' => 1,
+      'auto_download' => 1,
+      'intelligence_metadata_overrides[override]' => 1,
+      'intelligence_metadata[use_author]' => 1,
+      'intelligence_metadata[use_author_email]' => 1,
+      'intelligence_metadata[use_contact_email_for_author]' => FALSE,
+      'intelligence_metadata[use_business_unit]' => 1,
+      'intelligence_metadata[use_business_division]' => 1,
+      'intelligence_metadata[use_campaign_id]' => 1,
+      'intelligence_metadata[use_campaign_rating]' => 1,
+      'intelligence_metadata[use_channel]' => 1,
+      'intelligence_metadata[use_contact_name]' => 1,
+      'intelligence_metadata[use_contact_email]' => 1,
+      'intelligence_metadata[use_content_description]' => 1,
+      'intelligence_metadata[use_external_style_id]' => 1,
+      'intelligence_metadata[use_purchase_order]' => 1,
+      'intelligence_metadata[use_region]' => 1,
+      'intelligence_metadata[use_base_domain]' => 1,
+      'intelligence_metadata[use_reference_url]' => 1,
+      'intelligence_metadata[default_author_email]' => 'test@example.com',
+      'intelligence_metadata[business_unit]' => 'Test Business Unit',
+      'intelligence_metadata[business_division]' => 'Test Business Division',
+      'intelligence_metadata[campaign_id]' => 'Campaign ID',
+      'intelligence_metadata[campaign_rating]' => 5,
+      'intelligence_metadata[channel]' => 'Channel Test',
+      'intelligence_metadata[contact_name]' => 'Test Contact Name',
+      'intelligence_metadata[contact_email]' => 'contact@example.com',
+      'intelligence_metadata[content_description]' => 'Content description',
+      'intelligence_metadata[external_style_id]' => 'my-style-id',
+      'intelligence_metadata[purchase_order]' => 'PO32',
+      'intelligence_metadata[region]' => 'region2',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+
+    $this->assertText(t('The Lingotek profile has been successfully saved.'));
+
+    // We can edit them.
+    $this->assertLinkByHref("/admin/lingotek/settings/profile/$profile_id/edit");
+
+    $this->assertFieldChecked("edit-profile-$profile_id-auto-upload");
+    $this->assertFieldChecked("edit-profile-$profile_id-auto-download");
+    $this->assertFieldEnabled("edit-profile-$profile_id-auto-upload");
+    $this->assertFieldEnabled("edit-profile-$profile_id-auto-download");
+
+    $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
+
+    // Assert the intelligence metadata values.
+    $this->assertFieldChecked('edit-intelligence-metadata-overrides-override');
+    $this->assertNoFieldChecked('edit-intelligence-metadata-use-contact-email-for-author');
+    $this->assertFieldByName('intelligence_metadata[default_author_email]', 'test@example.com');
+    $this->assertFieldByName('intelligence_metadata[business_unit]', 'Test Business Unit');
+    $this->assertFieldByName('intelligence_metadata[business_division]', 'Test Business Division');
+    $this->assertFieldByName('intelligence_metadata[campaign_id]', 'Campaign ID');
+    $this->assertFieldByName('intelligence_metadata[campaign_rating]', 5);
+    $this->assertFieldByName('intelligence_metadata[channel]', 'Channel Test');
+    $this->assertFieldByName('intelligence_metadata[contact_name]', 'Test Contact Name');
+    $this->assertFieldByName('intelligence_metadata[contact_email]', 'contact@example.com');
+    $this->assertFieldByName('intelligence_metadata[content_description]', 'Content description');
+    $this->assertFieldByName('intelligence_metadata[external_style_id]', 'my-style-id');
+    $this->assertFieldByName('intelligence_metadata[purchase_order]', 'PO32');
+    $this->assertFieldByName('intelligence_metadata[region]', 'region2');
+
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
+    $profile = LingotekProfile::load($profile_id);
+    $this->assertTrue($profile->hasAutomaticUpload());
+    $this->assertTrue($profile->hasAutomaticDownload());
+    $this->assertIdentical('default', $profile->getProject());
+    $this->assertIdentical('default', $profile->getVault());
+    $this->assertIdentical('default', $profile->getWorkflow());
+
+    // Assert the intelligence metadata values.
+    $this->assertTrue($profile->hasIntelligenceMetadataOverrides());
+    $this->assertTrue($profile->getAuthorPermission());
+    $this->assertTrue($profile->getAuthorEmailPermission());
+    $this->assertFalse($profile->getContactEmailForAuthorPermission());
+    $this->assertTrue($profile->getBusinessUnitPermission());
+    $this->assertTrue($profile->getBusinessDivisionPermission());
+    $this->assertTrue($profile->getCampaignIdPermission());
+    $this->assertTrue($profile->getCampaignRatingPermission());
+    $this->assertTrue($profile->getChannelPermission());
+    $this->assertTrue($profile->getContactNamePermission());
+    $this->assertTrue($profile->getContactEmailPermission());
+    $this->assertTrue($profile->getContentDescriptionPermission());
+    $this->assertTrue($profile->getExternalStyleIdPermission());
+    $this->assertTrue($profile->getPurchaseOrderPermission());
+    $this->assertTrue($profile->getRegionPermission());
+    $this->assertTrue($profile->getBaseDomainPermission());
+    $this->assertTrue($profile->getReferenceUrlPermission());
+
+    $this->assertIdentical($profile->getDefaultAuthorEmail(), 'test@example.com');
+    $this->assertIdentical($profile->getBusinessUnit(), 'Test Business Unit');
+    $this->assertIdentical($profile->getBusinessDivision(), 'Test Business Division');
+    $this->assertIdentical($profile->getCampaignId(), 'Campaign ID');
+    $this->assertIdentical($profile->getCampaignRating(), 5);
+    $this->assertIdentical($profile->getChannel(), 'Channel Test');
+    $this->assertIdentical($profile->getContactName(), 'Test Contact Name');
+    $this->assertIdentical($profile->getContactEmail(), 'contact@example.com');
+    $this->assertIdentical($profile->getContentDescription(), 'Content description');
+    $this->assertIdentical($profile->getExternalStyleId(), 'my-style-id');
+    $this->assertIdentical($profile->getPurchaseOrder(), 'PO32');
+    $this->assertIdentical($profile->getRegion(), 'region2');
   }
 
   /**

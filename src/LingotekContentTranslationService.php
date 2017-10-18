@@ -21,6 +21,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
+use Drupal\user\UserInterface;
 
 /**
  * Service for managing Lingotek content translations.
@@ -32,6 +33,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * The Lingotek interface
    *
+   * @var \Drupal\lingotek\LingotekInterface
    * @var \Drupal\lingotek\LingotekInterface
    */
   protected $lingotek;
@@ -521,14 +523,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
     }
     // Embed entity metadata if there is any.
-    if ($entity->id()) {
-      $data['_lingotek_metadata'] =
-        [
-          '_entity_type_id' => $entity->getEntityTypeId(),
-          '_entity_id' => $entity->id(),
-          '_entity_revision' => $entity->getRevisionId(),
-        ];
-    }
+    $this->includeMetadata($entity, $data);
     return $data;
   }
 
@@ -658,9 +653,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
-    $encoded_data = json_encode($source_data);
 
-    $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $profile);
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile);
     if ($document_id) {
       $this->lingotekConfiguration->setProfile($entity, $profile->id());
       $this->setDocumentId($entity, $document_id);
@@ -737,9 +731,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
-    $encoded_data = json_encode($source_data);
 
-    if ($this->lingotek->updateDocument($document_id, $encoded_data, $url, $document_name)){
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name)){
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       return $document_id;
@@ -1070,6 +1063,98 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     } catch (EntityStorageException $storage_exception) {
       $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
       throw new LingotekContentEntityStorageException($entity, $storage_exception, $storage_exception->getMessage());
+    }
+  }
+
+  /**
+   * Embeds the metadata for being uploaded.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   * @param $data
+   *   The array of data.
+   */
+  protected function includeMetadata(ContentEntityInterface &$entity, &$data) {
+    /** @var \Drupal\lingotek\LingotekIntelligenceMetadataInterface $intelligenceService */
+    $intelligenceService = \Drupal::service('lingotek.intelligence');
+
+    if ($entity->id()) {
+      if ($entity->lingotek_metadata && $entity->lingotek_metadata->entity) {
+        $profile = $this->lingotekConfiguration->getEntityProfile($entity);
+      }
+      else {
+        $profile = NULL;
+      }
+
+      $domain = \Drupal::request()->getSchemeAndHttpHost();
+
+      $author_name = '';
+      $author_email = '';
+      if (method_exists($entity, 'getOwner')) {
+        /** @var \Drupal\user\UserInterface $user */
+        $user = $entity->getOwner();
+        $author_name = $user->getDisplayName();
+        $author_email = $user->getEmail();
+      }
+
+      $intelligenceService->setProfile($profile);
+
+      $data['_lingotek_metadata']['_entity_type_id'] = $entity->getEntityTypeId();
+      $data['_lingotek_metadata']['_entity_id'] = $entity->id();
+      $data['_lingotek_metadata']['_entity_revision'] = $entity->getRevisionId();
+      $data['_lingotek_metadata']['_intelligence']['external_document_id'] = $entity->id();
+      $data['_lingotek_metadata']['_intelligence']['content_type'] = $entity->getEntityTypeId();
+
+      //Check if we have permission to send these
+      if ($intelligenceService->getBaseDomainPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['domain'] = $domain;
+      }
+      if ($intelligenceService->getReferenceUrlPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['reference_url'] = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()
+          ->setAbsolute(TRUE)
+          ->toString() : NULL;
+      }
+      if ($intelligenceService->getAuthorPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['author_name'] = $author_name;
+      }
+      if ($intelligenceService->getAuthorPermission() && $intelligenceService->getAuthorEmailPermission() && $intelligenceService->getContactEmailForAuthorPermission() && $intelligenceService->getContactEmailPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['author_email'] = $intelligenceService->getContactEmail();
+      }
+      if ($intelligenceService->getAuthorPermission() && $intelligenceService->getAuthorEmailPermission() && (!$intelligenceService->getContactEmailForAuthorPermission() || !$intelligenceService->getContactEmailPermission())) {
+        $data['_lingotek_metadata']['_intelligence']['author_email'] = $author_email;
+      }
+      if ($intelligenceService->getBusinessUnitPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['business_unit'] = $intelligenceService->getBusinessUnit();
+      }
+      if ($intelligenceService->getBusinessDivisionPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['business_division'] = $intelligenceService->getBusinessDivision();
+      }
+      if ($intelligenceService->getCampaignIdPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['campaign_id'] = $intelligenceService->getCampaignId();
+      }
+      if ($intelligenceService->getCampaignRatingPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['campaign_rating'] = $intelligenceService->getCampaignRating();
+      }
+      if ($intelligenceService->getChannelPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['channel'] = $intelligenceService->getChannel();
+      }
+      if ($intelligenceService->getContactNamePermission()) {
+        $data['_lingotek_metadata']['_intelligence']['contact_name'] = $intelligenceService->getContactName();
+      }
+      if ($intelligenceService->getContactEmailPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['contact_email'] = $intelligenceService->getContactEmail();
+      }
+      if ($intelligenceService->getContentDescriptionPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['content_description'] = $intelligenceService->getContentDescription();
+      }
+      if ($intelligenceService->getExternalStyleIdPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['external_style_id'] = $intelligenceService->getExternalStyleId();
+      }
+      if ($intelligenceService->getPurchaseOrderPermission()) {
+        $data['_lingotek_metadata']['_intelligence']['purchase_order'] = $intelligenceService->getPurchaseOrder();
+      }
+      if ($intelligenceService->getRegionPermission())
+        $data['_lingotek_metadata']['_intelligence']['region'] = $intelligenceService->getRegion();
     }
   }
 

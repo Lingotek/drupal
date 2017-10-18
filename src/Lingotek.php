@@ -160,6 +160,11 @@ class Lingotek implements LingotekInterface {
    * {@inheritdoc}
    */
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL) {
+    if (!is_array($content)) {
+      $data = json_decode($content, TRUE);
+      // This is the quickest way if $content is not a valid json object.
+      $content = ($data === NULL) ? $content : $data;
+    }
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
     $defaults = array(
@@ -167,7 +172,9 @@ class Lingotek implements LingotekInterface {
       'project_id' => $this->get('default.project'),
       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
       'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',// 'okf_json@with-html-subfilter.fprm',
+      'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     );
+    $metadata = $this->getIntelligenceMetadata($content);
 
     if ($profile !== NULL && $project = $profile->getProject()) {
       if ($project !== 'default') {
@@ -187,7 +194,9 @@ class Lingotek implements LingotekInterface {
       }
     }
 
-    $args = array_merge(array('content' => $content, 'title' => $title, 'locale_code' => $locale), $defaults);
+    $args = array_merge($metadata, $defaults);
+
+    $args = array_merge(['content' => json_encode($content), 'title' => $title, 'locale_code' => $locale], $args);
     if ($url !== NULL) {
       $args['external_url'] = $url;
     }
@@ -201,12 +210,22 @@ class Lingotek implements LingotekInterface {
    * {@inheritdoc}
    */
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL) {
+    if (!is_array($content)) {
+      $data = json_decode($content, TRUE);
+      // This is the quickest way if $content is not a valid json object.
+      $content = ($data === NULL) ? $content : $data;
+    }
+
     $args = array(
       'format' => 'JSON',
-      'content' => $content,
+      'content' => json_encode($content),
       'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
       'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',// 'okf_json@with-html-subfilter.fprm',
+      'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     );
+    $metadata = $this->getIntelligenceMetadata($content);
+    $args = array_merge($metadata, $args);
+
     if ($url !== NULL) {
       $args['external_url'] = $url;
     }
@@ -219,6 +238,23 @@ class Lingotek implements LingotekInterface {
       return TRUE;
     }
     return FALSE;
+  }
+
+  /**
+   * Pulls the Intelligence Metadata from the Lingotek Metadata and returns it.
+   *
+   * @param array $data
+   *    The structure of a document content.
+   *
+   * @return array
+   */
+  public function getIntelligenceMetadata(&$data) {
+    $metadata = [];
+    if (is_array($data) && isset($data['_lingotek_metadata']['_intelligence'])) {
+      $metadata = $data['_lingotek_metadata']['_intelligence'];
+      unset($data['_lingotek_metadata']['_intelligence']);
+    }
+    return $metadata;
   }
 
   /**

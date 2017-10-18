@@ -272,56 +272,62 @@ class LingotekUnitTest extends UnitTestCase {
     // Vault id has the original value.
     $this->api->expects($this->at(0))
       ->method('addDocument')
-      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+      ->with(['title' => 'title', 'content' => '"content"', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'my_test_project',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
-              'vault_id' => 'my_test_vault']);
+              'vault_id' => 'my_test_vault',
+              'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0']);
 
     // Vault id has changed.
     $this->api->expects($this->at(1))
       ->method('addDocument')
-      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+      ->with(['title' => 'title', 'content' => '"content"', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'another_test_project',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
-              'vault_id' => 'another_test_vault']);
+              'vault_id' => 'another_test_vault',
+              'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0']);
 
     // If there is a profile with default vault, it must be replaced.
     $this->api->expects($this->at(2))
       ->method('addDocument')
-      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+      ->with(['title' => 'title', 'content' => '"content"', 'locale_code' => 'es',
               'format' => 'JSON', 'project_id' => 'default_project',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
-              'vault_id' => 'default_vault']);
+              'vault_id' => 'default_vault',
+              'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0']);
 
     // If there is no profile, vault should not be included.
     $this->api->expects($this->at(3))
       ->method('addDocument')
-      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+      ->with(['title' => 'title', 'content' => '"content"', 'locale_code' => 'es',
               'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
               'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
               'format' => 'JSON', 'project_id' => 'default_project',
+              'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
              ]);
 
     // If there is an url, it should be included.
     $this->api->expects($this->at(4))
       ->method('addDocument')
-      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+      ->with(['title' => 'title', 'content' => '"content"', 'locale_code' => 'es',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
-        'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1'
+        'format' => 'JSON', 'project_id' => 'default_project', 'external_url' => 'http://example.com/node/1',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ]);
 
     // If there is a profile using the project default workflow template vault,
     // vault should not be specified.
     $this->api->expects($this->at(5))
       ->method('addDocument')
-      ->with(['title' => 'title', 'content' => 'content', 'locale_code' => 'es',
+      ->with(['title' => 'title', 'content' => '"content"', 'locale_code' => 'es',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
         'format' => 'JSON', 'project_id' => 'default_project',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ]);
 
 
@@ -370,9 +376,10 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(0))
       ->method('patchDocument')
       ->with('my_doc_id', [
-        'format' => 'JSON', 'content' => 'content',
+        'format' => 'JSON', 'content' => '"content"',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ])
       ->will($this->returnValue($response));
 
@@ -380,9 +387,10 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(1))
       ->method('patchDocument')
       ->with('my_doc_id', [
-        'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1',
+        'format' => 'JSON', 'content' => '"content"', 'external_url' => 'http://example.com/node/1',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ])
       ->will($this->returnValue($response));
 
@@ -390,9 +398,10 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(2))
       ->method('patchDocument')
       ->with('my_doc_id', [
-        'format' => 'JSON', 'content' => 'content', 'title' => 'title',
+        'format' => 'JSON', 'content' => '"content"', 'title' => 'title',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ])
       ->will($this->returnValue($response));
 
@@ -400,9 +409,10 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(3))
       ->method('patchDocument')
       ->with('my_doc_id', [
-        'format' => 'JSON', 'content' => 'content', 'external_url' => 'http://example.com/node/1', 'title' => 'title',
+        'format' => 'JSON', 'content' => '"content"', 'external_url' => 'http://example.com/node/1', 'title' => 'title',
         'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
         'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ])
       ->will($this->returnValue($response));
 

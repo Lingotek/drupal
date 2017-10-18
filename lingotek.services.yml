@@ -19,6 +19,12 @@ services:
     arguments: ['@entity_type.bundle.info']
   lingotek.configuration:
     class: Drupal\lingotek\LingotekConfigurationService
+  lingotek.intelligence_config:
+    class: Drupal\lingotek\LingotekIntelligenceServiceConfig
+    arguments: ['@config.factory']
+  lingotek.intelligence:
+    class: Drupal\lingotek\LingotekIntelligenceService
+    arguments: ['@lingotek.intelligence_config']
   lingotek.moderation_factory:
     class: Drupal\lingotek\Moderation\LingotekModerationFactory
     arguments: ['@config.factory']

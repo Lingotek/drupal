@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Controller;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Url;
+use Drupal\lingotek\Form\LingotekIntelligenceMetadataForm;
 use Drupal\lingotek\Form\LingotekSettingsTabIntegrationsForm;
 
 class LingotekSettingsController extends LingotekControllerBase {
@@ -14,15 +15,16 @@ class LingotekSettingsController extends LingotekControllerBase {
       return $redirect;
     }
 
-    $settings_tab = array (
+    $settings_tab = [
       $this->getLingotekForm('LingotekSettingsTabAccountForm'),
       $this->getLingotekForm('LingotekSettingsTabContentForm'),
       $this->getLingotekForm('LingotekSettingsTabConfigurationForm'),
       $this->getProfileListForm(),
+      $this->getIntelligenceMetadataForm(),
       $this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
       $this->getIntegrationsSettingsForm(),
       $this->getLingotekForm('LingotekSettingsTabUtilitiesForm'),
-    );
+    ];
 
     return $settings_tab;
   }
@@ -90,6 +92,11 @@ class LingotekSettingsController extends LingotekControllerBase {
     );
 
     return $profiles_modal;
+  }
+
+  public function getIntelligenceMetadataForm() {
+    $form = $this->formBuilder->getForm(LingotekIntelligenceMetadataForm::class, $this->request, \Drupal::service('lingotek.intelligence_config'));
+    return $form;
   }
 
 }

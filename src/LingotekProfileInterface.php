@@ -188,4 +188,22 @@ interface LingotekProfileInterface extends ConfigEntityInterface {
    */
   public function hasCustomSettingsForTarget($langcode);
 
+  /**
+   * Checks if the profile overrides settings for Intelligence metadata.
+   *
+   * @return bool
+   *   TRUE if there are Lingotek Intelligence customizations, FALSE if not.
+   */
+  public function hasIntelligenceMetadataOverrides();
+
+  /**
+   * Set if the profile overrides settings for Intelligence metadata.
+   *
+   * @param bool $value
+   *   TRUE if there are Lingotek Intelligence customizations, FALSE if not.
+   *
+   * @return $this
+   */
+  public function setIntelligenceMetadataOverrides($value);
+
 }

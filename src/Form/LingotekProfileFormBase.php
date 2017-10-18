@@ -7,6 +7,7 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -140,6 +141,30 @@ class LingotekProfileFormBase extends EntityForm {
       '#default_value' => $profile->getWorkflow(),
     );
 
+    // We add the overrides.
+    $form['intelligence_metadata_overrides'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Lingotek Intelligence Metadata overrides'),
+      '#tree' => TRUE,
+    ];
+
+    // We include the Lingotek Intelligence Metadata form and alter it for
+    // adapting it to profiles. We want to make this optional.
+    $subform = \Drupal::formBuilder()->getForm(LingotekIntelligenceMetadataForm::class, $this->getRequest(), $this->getEntity());
+    $form['intelligence_metadata_overrides']['override'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Override general Lingotek Intelligence metadata when using this profile'),
+      '#description' => $this->t('When enabled, general Lingotek Intelligence metadata will be overriden by the options here when usign this profile.'),
+      '#default_value' => $profile->hasIntelligenceMetadataOverrides(),
+    ];
+    $form['intelligence_metadata_overrides']['form'] = $subform['intelligence_metadata'];
+    $form['intelligence_metadata_overrides']['form']['#states'] = [
+      'visible' => [
+        ':input[name="intelligence_metadata_overrides[override]"]' => ['checked' => TRUE],
+      ],
+    ];
+    unset($form['intelligence_metadata_overrides']['form']['actions']);
+
     $form['language_overrides'] = array(
       '#type' => 'details',
       '#title' => $this->t('Target language specific settings'),
@@ -191,6 +216,29 @@ class LingotekProfileFormBase extends EntityForm {
     }
     $form['#attached']['library'][] = 'lingotek/lingotek.settings';
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\lingotek\Entity\LingotekProfile $profile */
+    $profile = $this->getEntity();
+    /** @var \Drupal\Core\Form\FormInterface $subform */
+    $form_object = new LingotekIntelligenceMetadataForm();
+    $input = $form_state->getUserInput();
+    $inner_form_state = new FormState();
+    $inner_form_state->addBuildInfo('args', [$this->getRequest(), $profile]);
+    $inner_form_state->setFormObject($form_object);
+    $inner_form_state->setUserInput($form_state->getUserInput());
+    $inner_form_state->setValue('intelligence_metadata', $input['intelligence_metadata']);
+
+    $subform = [];
+    $form_object->submitForm($subform, $inner_form_state);
+
+    $profile->setIntelligenceMetadataOverrides($form_state->getValue(['intelligence_metadata_overrides', 'override']));
+
+    parent::save($form, $form_state);
   }
 
 }

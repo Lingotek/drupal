@@ -43,8 +43,9 @@ interface LingotekInterface {
    *
    * @param string $title
    *   The title of the document as it will be seen in the TMS.
-   * @param $content
-   *   The content of the document
+   * @param string|array $content
+   *   The content of the document. It can be a json string or an array that will
+   *   be json encoded.
    * @param string $locale
    *   The Lingotek locale.
    * @param string $url
@@ -61,8 +62,9 @@ interface LingotekInterface {
    *
    * @param string $doc_id
    *   The document id to update.
-   * @param $content
-   *   The content of the document
+   * @param string|array $content
+   *   The content of the document. It can be a json string or an array that will
+   *   be json encoded.
    * @param string $url
    *   (optional) The document url in the site if any. This allows support for in-context review.
    * @param string $title

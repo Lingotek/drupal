@@ -54,6 +54,94 @@ lingotek.settings:
                 enable_bulk_management:
                   type: boolean
                   label: 'Enable bulk management for paragraphs'
+    intelligence:
+      type: mapping
+      label: 'Lingotek Intelligence settings'
+      mapping:
+        use_author:
+          type: boolean
+          label: 'Permission to Include Author'
+        default_author_email:
+          type: string
+          label: 'Default Author Email'
+        use_author_email:
+          type: boolean
+          label: 'Active'
+        use_contact_email_for_author:
+          type: boolean
+          label: 'Same as Contact Email'
+        business_unit:
+          type: string
+          label: 'Business Unit'
+        use_business_unit:
+          type: boolean
+          label: 'Active'
+        business_division:
+          type: string
+          label: 'Business Division'
+        use_business_division:
+          type: boolean
+          label: 'Active'
+        campaign_id:
+          type: string
+          label: 'Campaign Id'
+        use_campaign_id:
+          type: boolean
+          label: 'Active'
+        campaign_rating:
+          type: integer
+          label: 'Campaign Rating'
+        use_campaign_rating:
+          type: boolean
+          label: 'Active'
+        channel:
+          type: string
+          label: 'Channel'
+        use_channel:
+          type: boolean
+          label: 'Active'
+        contact_name:
+          type: string
+          label: 'Contact Name'
+        use_contact_name:
+          type: boolean
+          label: 'Active'
+        contact_email:
+          type: string
+          label: 'Contact Email'
+        use_contact_email:
+          type: boolean
+          label: 'Active'
+        content_description:
+          type: string
+          label: 'Content Description'
+        use_content_description:
+          type: boolean
+          label: 'Active'
+        external_style_id:
+          type: string
+          label: 'External Style ID'
+        use_external_style_id:
+          type: boolean
+          label: 'Active'
+        purchase_order:
+          type: string
+          label: 'Purchase Order'
+        use_purchase_order:
+          type: boolean
+          label: 'Active'
+        region:
+          type: string
+          label: 'Region'
+        use_region:
+          type: boolean
+          label: 'Active'
+        use_base_domain:
+          type: boolean
+          label: 'Active'
+        use_reference_url:
+          type: boolean
+          label: 'Active'
     account:
       type: mapping
       label: 'Account'
@@ -160,6 +248,96 @@ lingotek.profile.*:
     workflow:
       type: string
       label: 'TM Workflow'
+    intelligence_metadata:
+      type: mapping
+      mapping:
+        override:
+          type: boolean
+          label: 'Flag indicating if there active Intelligence Metadata overrides in this profile'
+        use_author:
+          type: boolean
+          label: 'Permission to Include Author'
+        default_author_email:
+          type: string
+          label: 'Default Author Email'
+        use_author_email:
+          type: boolean
+          label: 'Active'
+        use_contact_email_for_author:
+          type: boolean
+          label: 'Same as Contact Email'
+        business_unit:
+          type: string
+          label: 'Business Unit'
+        use_business_unit:
+          type: boolean
+          label: 'Active'
+        business_division:
+          type: string
+          label: 'Business Division'
+        use_business_division:
+          type: boolean
+          label: 'Active'
+        campaign_id:
+          type: string
+          label: 'Campaign Id'
+        use_campaign_id:
+          type: boolean
+          label: 'Active'
+        campaign_rating:
+          type: integer
+          label: 'Campaign Rating'
+        use_campaign_rating:
+          type: boolean
+          label: 'Active'
+        channel:
+          type: string
+          label: 'Channel'
+        use_channel:
+          type: boolean
+          label: 'Active'
+        contact_name:
+          type: string
+          label: 'Contact Name'
+        use_contact_name:
+          type: boolean
+          label: 'Active'
+        contact_email:
+          type: string
+          label: 'Contact Email'
+        use_contact_email:
+          type: boolean
+          label: 'Active'
+        content_description:
+          type: string
+          label: 'Content Description'
+        use_content_description:
+          type: boolean
+          label: 'Active'
+        external_style_id:
+          type: string
+          label: 'External Style ID'
+        use_external_style_id:
+          type: boolean
+          label: 'Active'
+        purchase_order:
+          type: string
+          label: 'Purchase Order'
+        use_purchase_order:
+          type: boolean
+          label: 'Active'
+        region:
+          type: string
+          label: 'Region'
+        use_region:
+          type: boolean
+          label: 'Active'
+        use_base_domain:
+          type: boolean
+          label: 'Active'
+        use_reference_url:
+          type: boolean
+          label: 'Active'
     language_overrides:
       type: sequence
       label: 'Target language settings overrides'
