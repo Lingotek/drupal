@@ -172,7 +172,9 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
               }
             }
           }
-          $lingotek_config->setDefaultProfileId($entity_id, $bundle_id, $form_values[$entity_id][$bundle_id]['profiles']);
+          if (isset($form_values[$entity_id][$bundle_id]['profiles'])) {
+            $lingotek_config->setDefaultProfileId($entity_id, $bundle_id, $form_values[$entity_id][$bundle_id]['profiles']);
+          }
 
           /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderationFactory */
           $moderationFactory = \Drupal::service('lingotek.moderation_factory');
@@ -229,13 +231,19 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   protected function retrieveProfiles($entity_id, $bundle_id) {
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
+    $enable_bulk_management = $lingotek_config->getPreference('contrib.paragraphs.enable_bulk_management');
 
-    $select = array(
-      '#type' => 'select',
-      '#options' => $lingotek_config->getProfileOptions(),
-      '#default_value' => $lingotek_config->getDefaultProfileId($entity_id, $bundle_id),
-    );
-    
+    if ($entity_id !== 'paragraph' || $enable_bulk_management) {
+      $select = [
+        '#type' => 'select',
+        '#options' => $lingotek_config->getProfileOptions(),
+        '#default_value' => $lingotek_config->getDefaultProfileId($entity_id, $bundle_id),
+      ];
+    } else {
+      $select = [
+        '#markup' => $this->t("A profile doesn't apply for paragraphs. Not recommended, but you may want to <a href=':link'>translate paragraphs independently</a>.", [':link' => '#edit-contrib-paragraphs-enable-bulk-management']),
+      ];
+    }
     return $select;
   }
 

@@ -89,7 +89,6 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
       'node[article][fields][title]' => 1,
       'node[article][fields][body]' => 1,
       'paragraph[image_text][enabled]' => 1,
-      'paragraph[image_text][profiles]' => 'manual',
       'paragraph[image_text][fields][field_image_demo]' => 1,
       'paragraph[image_text][fields][field_image_demo:properties][title]' => 'title',
       'paragraph[image_text][fields][field_image_demo:properties][alt]' => 'alt',
@@ -182,7 +181,19 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     $this->assertLink('Content');
     $this->assertNoLink('Paragraph');
     $this->assertLink('Taxonomy term');
+  }
 
+  public function testParagraphsProfileIsNotSelectableUnlessExplicit() {
+    $this->drupalGet('admin/lingotek/settings');
+
+    $this->assertNoFieldByName('paragraph[image_text][profiles]', NULL, 'The profile is not selectable for paragraphs by default.');
+
+    $edit = ['contrib[paragraphs][enable_bulk_management]' => 1];
+    $this->drupalPostForm(NULL, $edit, 'Save settings', [], [], 'lingoteksettings-integrations-form');
+    $this->assertText('The configuration options have been saved.');
+
+    $this->assertFieldByName('paragraph[image_text][profiles]', NULL, 'The profile can be assigned to a paragraph if they are managed individually.');
+    $this->assertFieldByName('paragraph[image_text][profiles]', 'disabled', 'The default profile is disabled for paragraphs if they are managed individually.');
   }
 
 }

@@ -62,15 +62,12 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $this->drupalGet('admin/config/regional/content-language');
-
     $edit = [
       'node[paragraphed_content_demo][enabled]' => 1,
       'node[paragraphed_content_demo][profiles]' => 'automatic',
       'node[paragraphed_content_demo][fields][title]' => 1,
       'node[paragraphed_content_demo][fields][field_paragraphs_demo]' => 1,
       'paragraph[image_text][enabled]' => 1,
-      'paragraph[image_text][profiles]' => 'manual',
       'paragraph[image_text][fields][field_image_demo]' => 1,
       'paragraph[image_text][fields][field_image_demo:properties][title]' => 'title',
       'paragraph[image_text][fields][field_image_demo:properties][alt]' => 'alt',
@@ -275,7 +272,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded, including metatags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
-    $this->assertUploadedDataFieldCount($data, 2 );
+    $this->assertUploadedDataFieldCount($data, 2);
     $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
     $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool for the first time');
     $this->assertEqual($data['field_paragraphs_demo'][1]['field_text_demo'][0]['value'], 'Llamas are very cool for the second time');
@@ -373,7 +370,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded, including metatags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
     $this->verbose(var_export($data, TRUE));
-    $this->assertUploadedDataFieldCount($data, 2 );
+    $this->assertUploadedDataFieldCount($data, 2);
     $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
     $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool for the first time');
     $this->assertEqual($data['field_paragraphs_demo'][1]['field_text_demo'][0]['value'], 'Llamas are very cool for the second time');

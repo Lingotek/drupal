@@ -1,12 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekConfigurationService.
- */
-
 namespace Drupal\lingotek;
-
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -23,7 +17,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function getEnabledEntityTypes() {
-    $enabled = array();
+    $enabled = [];
     foreach (\Drupal::entityManager()->getDefinitions() as $entity_type_id => $entity_type) {
       if ($this->isEnabled($entity_type_id)) {
         $enabled[$entity_type_id] = $entity_type;
@@ -105,7 +99,12 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config = \Drupal::config('lingotek.settings');
     $profile_id = $config->get('translate.entity.' . $entity_type_id . '.' . $bundle . '.profile');
     if ($provide_default && $profile_id === NULL && $this->isEnabled($entity_type_id, $bundle)) {
-      $profile_id = Lingotek::PROFILE_AUTOMATIC;
+      if ($entity_type_id === 'paragraph') {
+        $profile_id = Lingotek::PROFILE_DISABLED;
+      }
+      else {
+        $profile_id = Lingotek::PROFILE_AUTOMATIC;
+      }
     }
     return $profile_id;
   }
@@ -230,7 +229,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
       $config->set($key, $enabled);
       $config->save();
     }
-    else if (!$enabled && $config->get($key)) {
+    elseif (!$enabled && $config->get($key)) {
       $config->clear($key);
       $config->save();
     }
