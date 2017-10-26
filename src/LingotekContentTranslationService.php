@@ -1093,8 +1093,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       if (method_exists($entity, 'getOwner')) {
         /** @var \Drupal\user\UserInterface $user */
         $user = $entity->getOwner();
-        $author_name = $user->getDisplayName();
-        $author_email = $user->getEmail();
+        if ($user !== NULL && $user instanceof  UserInterface) {
+          $author_name = $user->getDisplayName();
+          $author_email = $user->getEmail();
+        }
       }
 
       $intelligenceService->setProfile($profile);

@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Tests;
 
+use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
@@ -308,6 +309,17 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
 
     // Assert that targets can be requested.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
+  }
+
+  /**
+   * Tests that a entity without owner gets uploaded correctly.
+   */
+  public function testUploadingWithoutAuthor() {
+    $entity = EntityTestMul::create(['type' => 'entity_test_mul', 'name' => 'Test article']);
+    $entity->setOwnerId(NULL);
+    $entity->save();
+    $this->assertNull($entity->getOwner());
+    $this->drupalGet('/entity_test_mul/manage/1');
   }
 
 }
