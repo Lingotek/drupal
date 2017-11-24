@@ -11,6 +11,7 @@ use Drupal\workbench_moderation\Entity\ModerationState;
  * Tests setting up the integration with workbench moderation.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
 

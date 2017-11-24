@@ -20,7 +20,7 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block', 'node', 'image', 'comment', 'metatag'];
+  public static $modules = ['block', 'node', 'image', 'comment'];
 
   /**
    * The node.
