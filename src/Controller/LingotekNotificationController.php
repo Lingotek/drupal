@@ -81,7 +81,8 @@ class LingotekNotificationController extends LingotekControllerBase {
               break;
             }
           }
-        } while ($lock->wait($lock_name));
+          $lock->wait($lock_name, rand(1,12));
+        } while (TRUE);
 
         try {
           $entity = $this->getEntity($document_id);

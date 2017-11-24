@@ -599,10 +599,6 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
    * Testing handling several notifications in a row.
    */
   public function testNotificationsInARow() {
-    $this->pass('Test not implemented yet.');
-    // TODO: Test not implemented yet.
-    return;
-
     ConfigurableLanguage::createFromLangcode('it')->save();
     ConfigurableLanguage::createFromLangcode('ca')->save();
     ConfigurableLanguage::createFromLangcode('hu')->save();
@@ -614,8 +610,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
-    $this->drupalPostForm('node/add/article', $edit, t('Save and publish'));
-
+    $this->saveAndPublishNodeForm($edit);
     $this->goToContentBulkManagementForm();
 
     // Upload the node.
@@ -684,8 +679,9 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     // All the links are current.
     $current_links = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-current')]");
-    $this->assertEqual(count($current_links), count($languages) - $count, new FormattableMarkup('Various languages (%var) are current.', ['%var' => count($languages) - $count]));
-    $this->assertTrue(TRUE, new FormattableMarkup('%count target languages failed, but error where given back so the TMS can retry.', ['%count' => $count]));
+    $this->assertEqual(count($current_links), count($languages) - $count, new FormattableMarkup('Various languages (@var) are current.', ['@var' => count($languages) - $count]));
+    $this->assertTrue(TRUE, new FormattableMarkup('@count target languages failed, but error where given back so the TMS can retry.', ['@count' => $count]));
+    $this->assertEqual(5, count($current_links), new FormattableMarkup('All languages (@var) are current.', ['@var' => count($current_links)]));
 
     $this->clickLink('Llamas are cool');
     $this->clickLink('Translate');
