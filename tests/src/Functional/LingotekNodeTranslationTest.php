@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Lingotek;
@@ -18,9 +19,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
   use TestFileCreationTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image'];
 
@@ -29,24 +28,27 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
     // Place the actions and title block.
     $this->drupalPlaceBlock('page_title_block', [
       'region' => 'content',
-      'weight' => -5
+      'weight' => -5,
     ]);
     $this->drupalPlaceBlock('local_tasks_block', [
       'region' => 'content',
-      'weight' => -10
+      'weight' => -10,
     ]);
 
     // Create Article node types.
     if ($this->profile != 'standard') {
       $this->drupalCreateContentType([
         'type' => 'article',
-        'name' => 'Article'
+        'name' => 'Article',
       ]);
     }
     $this->createImageField('field_image', 'article');
@@ -547,6 +549,49 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $translation_service = \Drupal::service('lingotek.content_translation');
     $source_status = $translation_service->getSourceStatus($this->node);
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node has been marked as error.');
+  }
+
+  /**
+   * Tests downloading a translation for an invalid revision.
+   */
+  public function testDownloadingInvalidRevision() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+invalidrevision');
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-MX',
+        'locale' => 'es_MX',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ]
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
+    $this->assertEqual('Document downloaded.', $response['messages'][0]);
+
+    $this->drupalGet('node/1/translations');
+    $this->assertText('Las llamas son chulas');
   }
 
 }

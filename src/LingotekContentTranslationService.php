@@ -836,6 +836,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         // cached.
         $the_revision = entity_revision_load($type, $entity->getRevisionId());
       }
+
+      if ($the_revision === NULL && $entity->hasField('revision_timestamp')) {
+        // Let's find the better revision based on the timestamp.
+        $timestamp = $this->lingotek->getUploadedTimestamp($this->getDocumentId($entity));
+        $revision = $this->getClosestRevisionToTimestamp($entity, $timestamp);
+        $the_revision = entity_revision_load($type, $revision);
+      }
+      else {
+        // We didn't find a better option, but let's reload this one so it's not
+        // cached.
+        $the_revision = entity_revision_load($type, $entity->getRevisionId());
+      }
     }
     else {
       $the_revision = entity_load($type, $entity->id(), TRUE);
