@@ -116,10 +116,14 @@ class LingotekWorkbenchModerationHandler implements LingotekModerationHandlerInt
    * {@inheritdoc}
    */
   public function isModerationEnabled(EntityInterface $entity) {
-    $bundleEntityType = $entity->getEntityType()->getBundleEntityType();
-    $bundleType = $this->entityTypeManager->getStorage($bundleEntityType)
-      ->load($entity->bundle());
-    $moderationEnabled = $bundleType->getThirdPartySetting('workbench_moderation', 'enabled', FALSE);
+    $moderationEnabled = FALSE;
+    $entityType = $entity->getEntityType();
+    $bundleEntityType = $entityType->getBundleEntityType();
+    if ($bundleEntityType !== NULL) {
+      $bundleType = $this->entityTypeManager->getStorage($bundleEntityType)
+        ->load($entity->bundle());
+      $moderationEnabled = $bundleType->getThirdPartySetting('workbench_moderation', 'enabled', FALSE);
+    }
     return $moderationEnabled;
   }
 
