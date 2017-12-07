@@ -829,21 +829,11 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         // Let's find the better revision based on the timestamp.
         $timestamp = $this->lingotek->getUploadedTimestamp($this->getDocumentId($entity));
         $revision = $this->getClosestRevisionToTimestamp($entity, $timestamp);
-        $the_revision = entity_revision_load($type, $revision);
+        if ($revision !== NULL) {
+          $the_revision = entity_revision_load($type, $revision);
+        }
       }
-      else {
-        // We didn't find a better option, but let's reload this one so it's not
-        // cached.
-        $the_revision = entity_revision_load($type, $entity->getRevisionId());
-      }
-
-      if ($the_revision === NULL && $entity->hasField('revision_timestamp')) {
-        // Let's find the better revision based on the timestamp.
-        $timestamp = $this->lingotek->getUploadedTimestamp($this->getDocumentId($entity));
-        $revision = $this->getClosestRevisionToTimestamp($entity, $timestamp);
-        $the_revision = entity_revision_load($type, $revision);
-      }
-      else {
+      if ($the_revision === NULL) {
         // We didn't find a better option, but let's reload this one so it's not
         // cached.
         $the_revision = entity_revision_load($type, $entity->getRevisionId());
@@ -891,7 +881,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // check the date of the uploaded document.
 
       /** @var ContentEntityInterface $entity */
-      $revision = isset($data['_lingotek_metadata']) ? $data['_lingotek_metadata']['_entity_revision'] : NULL;
+      $revision = (isset($data['_lingotek_metadata']) && isset($data['_lingotek_metadata']['_entity_revision'])) ? $data['_lingotek_metadata']['_entity_revision'] : NULL;
       $revision = $this->loadUploadedRevision($entity, $revision);
 
       // Initialize the translation on the Drupal side, if necessary.

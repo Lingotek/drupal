@@ -64,6 +64,41 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
 
   }
 
+  public function testRightNodeIsSavedIfThereIsNoRevisionInMetadata() {
+    // Create a node.
+    /** @var \Drupal\node\NodeInterface $node */
+    $node1 = $this->createNode([
+      'type' => 'article',
+      'title' => 'Node 1'
+    ]);
+    $node1->save();
+
+    $node2 = $this->createNode([
+      'type' => 'article',
+      'title' => 'Node 2'
+    ]);
+    $node2->save();
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+
+    $es_data = [
+      'title' => [0 => ['value' => 'Nodo 2 ES']],
+      'body' => [0 => ['value' => 'es body']],
+      '_lingotek_metadata' => [
+        '_entity_type_id' => 'node',
+        '_entity_id' => 2,
+      ]
+    ];
+    $translation_service->saveTargetData($node2, 'es', $es_data);
+
+    $nodeUntranslated = \Drupal::entityManager()->getStorage('node')->load(1);
+    $this->assertFalse($nodeUntranslated->hasTranslation('es'));
+
+    $nodeTranslated = \Drupal::entityManager()->getStorage('node')->load(2);
+    $this->assertTrue($nodeTranslated->hasTranslation('es'));
+  }
+
   public function testRightRevisionsAreSavedIfThereIsMetadata() {
     // Create a node.
     /** @var \Drupal\node\NodeInterface $node */
