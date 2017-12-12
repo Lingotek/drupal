@@ -404,7 +404,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
-    if ($this->lingotek->updateDocument($document_id, $encoded_data, $url, $document_name)) {
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity))) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       return $document_id;

@@ -359,6 +359,20 @@ class LingotekApi implements LingotekApiInterface {
     return $this->formatResponse($response);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilters() {
+    try {
+      $this->logger->debug('Lingotek::getFilters called.');
+      $response = $this->lingotekClient->get('/api/filter', ['limit' => 1000]);
+    }
+    catch (\Exception $e) {
+      throw new LingotekApiException('Failed to get filters: ' . $e->getMessage());
+    }
+    return $this->formatResponse($response);
+  }
+
   protected function formatResponse($response) {
     $formatted_response = array();
     $json_response = json_decode($response->getBody(), TRUE);

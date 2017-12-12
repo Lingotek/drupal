@@ -14,6 +14,7 @@ function lingotek_test_install() {
   $config->set('account.resources.project', ['test_project' => 'test_project', 'another_project' => 'another_project']);
   $config->set('account.resources.vault', ['test_vault' => 'test_vault', 'another_vault' => 'another_vault']);
   $config->set('account.resources.workflow', ['test_workflow' => 'test_workflow', 'another_workflow' => 'another_workflow']);
+  $config->set('account.resources.filter', ['test_filter' => 'test_filter', 'another_filter' => 'another_filter']);
   $config->set('default.workflow', 'test_workflow');
 
   $config->save();

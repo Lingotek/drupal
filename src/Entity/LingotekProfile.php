@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Entity\LingotekProfile.
- */
-
 namespace Drupal\lingotek\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -43,6 +38,8 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "project",
  *     "workflow",
  *     "intelligence_metadata",
+ *     "filter",
+ *     "subfilter",
  *     "language_overrides",
  *   },
  *   links = {
@@ -102,6 +99,20 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var string
    */
   protected $vault = 'default';
+
+  /**
+   * Entities using this profile will use this FPRM Filter.
+   *
+   * @var string
+   */
+  protected $filter = 'project_default';
+
+  /**
+   * Entities using this profile will use this FPRM Subfilter.
+   *
+   * @var string
+   */
+  protected $subfilter = 'project_default';
 
   /**
    * Entities using this profile will use this project.
@@ -652,6 +663,36 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * {@inheritdoc}
    */
+  public function getFilter() {
+    return $this->filter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFilter($filter) {
+    $this->filter = $filter;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSubfilter() {
+    return $this->subfilter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSubfilter($filter) {
+    $this->subfilter = $filter;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getProject() {
     return $this->project;
   }
@@ -678,6 +719,7 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
     $this->workflow = $workflow;
     return $this;
   }
+
   // ToDo: Avoid deletion if this profile is being used.
 
   /**

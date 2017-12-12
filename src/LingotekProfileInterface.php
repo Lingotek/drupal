@@ -1,17 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekProfileInterface.
- */
-
 namespace Drupal\lingotek;
+
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 
 /**
  * Provides an interface defining a Lingotek profile entity.
  */
-interface LingotekProfileInterface extends ConfigEntityInterface {
+interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilterProviderInterface {
 
   /**
    * The profile is not being used.

@@ -1,7 +1,7 @@
 services:
   lingotek:
     class: Drupal\lingotek\Lingotek
-    arguments: ['@lingotek.api', '@lingotek.language_locale_mapper', '@config.factory']
+    arguments: ['@lingotek.api', '@lingotek.language_locale_mapper', '@config.factory', '@lingotek.filter_manager']
   lingotek.http_client:
     class: Drupal\lingotek\Remote\LingotekHttp
     arguments: ['@http_client', '@config.factory']
@@ -25,6 +25,9 @@ services:
   lingotek.intelligence:
     class: Drupal\lingotek\LingotekIntelligenceService
     arguments: ['@lingotek.intelligence_config']
+  lingotek.filter_manager:
+    class: Drupal\lingotek\LingotekFilterManager
+    arguments: ['@config.factory']
   lingotek.moderation_factory:
     class: Drupal\lingotek\Moderation\LingotekModerationFactory
     arguments: ['@config.factory']

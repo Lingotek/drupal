@@ -9,6 +9,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
  * Implements hook_install().
@@ -476,6 +477,26 @@ function lingotek_update_8204() {
     'use_reference_url' => TRUE
   ]);
   $config->save();
+}
+
+/**
+ * Set the default filter for existing profiles and settings.
+ */
+function lingotek_update_8205() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('lingotek.settings');
+  $config->set('default.filter', 'project_default');
+  $config->set('default.subfilter', 'project_default');
+  $config->set('account.resources.filter', []);
+  $config->save();
+
+  /** @var \Drupal\lingotek\Entity\LingotekProfile $profiles */
+  $profiles = LingotekProfile::loadMultiple();
+  foreach ($profiles as $id => $profile) {
+    $profile->setFilter('project_default');
+    $profile->setSubfilter('project_default');
+    $profile->save();
+  }
 }
 
 function lingotek_legacy_get_translation_status($field) {

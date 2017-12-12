@@ -85,6 +85,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('default', $profile->getVault());
     $this->assertIdentical('default', $profile->getWorkflow());
     $this->assertFalse($profile->hasIntelligenceMetadataOverrides());
+    $this->assertIdentical('project_default', $profile->getFilter());
+    $this->assertIdentical('project_default', $profile->getSubfilter());
   }
 
   /**
@@ -107,6 +109,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'project' => 'test_project',
       'vault' => 'test_vault',
       'workflow' => 'test_workflow',
+      'filter' => 'test_filter',
+      'subfilter' => 'another_filter',
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -117,6 +121,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('test_project', $profile->getProject());
     $this->assertIdentical('test_vault', $profile->getVault());
     $this->assertIdentical('test_workflow', $profile->getWorkflow());
+    $this->assertIdentical('test_filter', $profile->getFilter());
+    $this->assertIdentical('another_filter', $profile->getSubfilter());
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertNoFieldChecked("edit-auto-upload");
@@ -124,6 +130,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-project', 'test_project');
     $this->assertOptionSelected('edit-vault', 'test_vault');
     $this->assertOptionSelected('edit-workflow', 'test_workflow');
+    $this->assertOptionSelected('edit-filter', 'test_filter');
+    $this->assertOptionSelected('edit-subfilter', 'another_filter');
   }
 
   /**
@@ -517,6 +525,38 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical($profile->getExternalStyleId(), 'my-style-id');
     $this->assertIdentical($profile->getPurchaseOrder(), 'PO32');
     $this->assertIdentical($profile->getRegion(), 'region2');
+  }
+
+  /**
+   * Tests that filter is shown in the profile form when there are filters.
+   */
+  public function testFilters() {
+    $this->drupalGet('admin/lingotek/settings');
+    $this->clickLink(t('Add new Translation Profile'));
+
+    $this->assertFieldByName('filter');
+    $this->assertFieldByName('subfilter');
+    $this->assertOption('edit-filter', 'default');
+    $this->assertOption('edit-filter', 'project_default');
+    $this->assertOption('edit-filter', 'test_filter');
+    $this->assertOption('edit-filter', 'another_filter');
+    $this->assertOption('edit-subfilter', 'default');
+    $this->assertOption('edit-subfilter', 'project_default');
+    $this->assertOption('edit-subfilter', 'test_filter');
+    $this->assertOption('edit-subfilter', 'another_filter');
+  }
+
+  /**
+   * Tests that filter is hidden when there are filters.
+   */
+  public function testNoFilters() {
+    \Drupal::configFactory()->getEditable('lingotek.settings')->set('account.resources.filter', [])->save();
+
+    $this->drupalGet('admin/lingotek/settings');
+    $this->clickLink(t('Add new Translation Profile'));
+
+    $this->assertNoFieldByName('filter');
+    $this->assertNoFieldByName('subfilter');
   }
 
   /**

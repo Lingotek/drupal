@@ -7,4 +7,6 @@ auto_download: true
 vault: default
 project: default
 workflow: default
+filter: project_default
+subfilter: project_default
 language_overrides: { }

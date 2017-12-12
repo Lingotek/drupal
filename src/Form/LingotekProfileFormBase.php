@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekProfileFormBase.
- */
 
 namespace Drupal\lingotek\Form;
 
@@ -12,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekFilterManagerInterface;
 use Drupal\lingotek\LingotekProfileInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -28,13 +25,23 @@ class LingotekProfileFormBase extends EntityForm {
   protected $lingotekConfiguration;
 
   /**
+   * The Lingotek Filter manager.
+   *
+   * @var \Drupal\lingotek\LingotekFilterManagerInterface
+   */
+  protected $lingotekFilterManager;
+
+  /**
    * Constructs a LingotekProfileFormBase object.
    *
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
+   * @param \Drupal\lingotek\LingotekFilterManagerInterface $lingotek_filter_manager
+   *   The Lingotek Filter manager.
    */
-  public function __construct(LingotekConfigurationServiceInterface $lingotek_configuration) {
+  public function __construct(LingotekConfigurationServiceInterface $lingotek_configuration, LingotekFilterManagerInterface $lingotek_filter_manager) {
     $this->lingotekConfiguration = $lingotek_configuration;
+    $this->lingotekFilterManager = $lingotek_filter_manager;
   }
 
   /**
@@ -42,10 +49,10 @@ class LingotekProfileFormBase extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('lingotek.configuration')
+      $container->get('lingotek.configuration'),
+      $container->get('lingotek.filter_manager')
     );
   }
-
 
   /**
    * {@inheritdoc}
@@ -103,22 +110,6 @@ class LingotekProfileFormBase extends EntityForm {
       '#markup' => '<h3>' . $this->t('Profile settings impacting only new nodes') . '</h3><hr />',
     );
 
-    $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
-    $default_vault = $this->config('lingotek.settings')->get('default.vault');
-
-    // We have two defaults: default vault, or the Project Workflow Template
-    // Default vault.
-    $form['vault'] = array(
-      '#type' => 'select',
-      '#title' => $this->t('Default Vault'),
-      '#options' => [
-        'default' => 'Default ('. $vaults[$default_vault] . ')',
-        'project_workflow_vault' => 'Use Project Workflow Template Default',
-        ] + $vaults,
-      '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
-      '#default_value' => $profile->getVault(),
-    );
-
     $projects = $this->config('lingotek.settings')->get('account.resources.project');
     $default_project = $this->config('lingotek.settings')->get('default.project');
 
@@ -140,6 +131,49 @@ class LingotekProfileFormBase extends EntityForm {
       '#description' => $this->t('The default Workflow which would be used for translations.'),
       '#default_value' => $profile->getWorkflow(),
     );
+
+    $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
+    $default_vault = $this->config('lingotek.settings')->get('default.vault');
+
+    // We have two defaults: default vault, or the Project Workflow Template
+    // Default vault.
+    $form['vault'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Default Vault'),
+      '#options' => [
+          'default' => 'Default ('. $vaults[$default_vault] . ')',
+          'project_workflow_vault' => 'Use Project Workflow Template Default',
+        ] + $vaults,
+      '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
+      '#default_value' => $profile->getVault(),
+    );
+
+    /** @var \Drupal\lingotek\LingotekFilterManagerInterface $filter_manager */
+    $filters = $this->lingotekFilterManager->getLocallyAvailableFilters();
+    // Locally available filters include always the default project filter.
+    // So we check if there is more than 1.
+    if (count($filters) > 1) {
+      $form['filter'] = array(
+        '#type' => 'select',
+        '#title' => $this->t('Default Filter'),
+        '#options' => [
+            'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultFilterLabel()]),
+            'project_default' => $this->t('Use Project Default'),
+          ] + $filters,
+        '#description' => $this->t('The default FPRM Filter used when uploading or updating a document.'),
+        '#default_value' => $profile->getFilter(),
+      );
+      $form['subfilter'] = array(
+        '#type' => 'select',
+        '#title' => $this->t('Default Subfilter'),
+        '#options' => [
+            'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultSubfilterLabel()]),
+            'project_default' => $this->t('Use Project Default'),
+          ] + $filters,
+        '#description' => $this->t('The default FPRM Subfilter used when uploading or updating a document.'),
+        '#default_value' => $profile->getSubfilter(),
+      );
+    }
 
     // We add the overrides.
     $form['intelligence_metadata_overrides'] = [

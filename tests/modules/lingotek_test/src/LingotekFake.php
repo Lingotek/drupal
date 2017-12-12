@@ -65,6 +65,10 @@ class LingotekFake implements LingotekInterface {
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_project';
       case 'default.vault':
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_vault';
+      case 'default.filter':
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'project_default';
+      case 'default.subfilter':
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'project_default';
       case 'default.workflow':
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_workflow';
       case 'profile':
@@ -122,6 +126,18 @@ class LingotekFake implements LingotekInterface {
     ];
   }
 
+  public function getFilters($force = FALSE) {
+    $default_filters = [
+      'test_filter' => 'Test filter',
+      'test_filter2' => 'Test filter 2',
+      'test_filter3' => 'Test filter 3',
+    ];
+    if (\Drupal::state()->get('lingotek.no_filters', FALSE)) {
+      return [];
+    }
+    return $default_filters;
+  }
+
   public function getProject($project_id) {
     return ['properties' => [
       'creation_date' => 1284940800000,
@@ -144,6 +160,7 @@ class LingotekFake implements LingotekInterface {
       'vault' => $this->getVaults($force),
       'community' => $this->getCommunities($force),
       'workflow' => $this->getWorkflows($force),
+      'filter' => $this->getFilters($force),
     ];
   }
 
@@ -151,6 +168,8 @@ class LingotekFake implements LingotekInterface {
     return [
       'project' => 'test_project',
       'vault' => 'test_vault',
+      'filter' => 'project_default',
+      'subfilter' => 'project_default',
       'community' => 'test_community',
       'workflow' => 'test_workflow',
     ];
@@ -188,7 +207,7 @@ class LingotekFake implements LingotekInterface {
     return $doc_id;
   }
 
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException();
     }

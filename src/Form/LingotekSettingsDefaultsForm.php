@@ -21,6 +21,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   public function init(){
     $this->defaults = $this->lingotek->getDefaults();
     $this->resources = $this->lingotek->getResources();
+    $config = $this->configFactory()->getEditable('lingotek.settings');
 
     // Make visible only those options that have more than one choice
     if (count($this->resources['project']) > 1) {
@@ -35,6 +36,15 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     }
     elseif (count($this->resources['vault']) == 1) {
       $this->lingotek->set('default.vault', current(array_keys($this->resources['vault'])));
+    }
+
+    if (count($this->resources['filter']) > 1) {
+      $this->defaults_labels['filter'] = t('Default Filter');
+      $this->defaults_labels['subfilter'] = t('Default Subfilter');
+    }
+    else {
+      $this->lingotek->set('default.filter', 'project_default');
+      $this->lingotek->set('default.subfilter', 'project_default');
     }
 
     // Set workflow to machine translation every time regardless if there's more than one choice
@@ -57,12 +67,19 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->init();
 
-    foreach($this->defaults_labels as $key => $label){ 
-      asort($this->resources[$key]);
+    foreach($this->defaults_labels as $key => $label){
+      $resources_key = ($key === 'subfilter') ? 'filter' : $key;
+      asort($this->resources[$resources_key]);
+      if ($key === 'filter' || $key === 'subfilter') {
+        $options = ['project_default' => 'Use Project Default'] + $this->resources[$resources_key];
+      }
+      else {
+        $options = $this->resources[$key];
+      }
       $form[$key] = array(
         '#title' => $label,
         '#type' => 'select',
-        '#options' => $this->resources[$key],
+        '#options' => $options,
         '#default_value' => $this->defaults[$key],
         '#required' => TRUE,
       );

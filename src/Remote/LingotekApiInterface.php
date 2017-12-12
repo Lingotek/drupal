@@ -40,4 +40,12 @@ interface LingotekApiInterface {
   public function getVaults($community_id);
   public function getWorkflows($community_id);
 
+  /**
+   * Get the available filters on Lingotek.
+   *
+   * @return
+   *   Array of filters as in (id, label). FALSE if there is an error.
+   */
+  public function getFilters();
+
 }

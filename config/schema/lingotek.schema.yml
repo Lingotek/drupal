@@ -14,6 +14,10 @@ lingotek.settings:
           type: string
         vault:
           type: string
+        filter:
+          type: string
+        subfilter:
+          type: string
     preference:
       type: mapping
       label: 'Preference'
@@ -181,6 +185,10 @@ lingotek.settings:
               type: sequence
               sequence:
                 type: string
+            filter:
+              type: sequence
+              sequence:
+                type: string
         access_token:
           type: string
         login_id:
@@ -338,6 +346,12 @@ lingotek.profile.*:
         use_reference_url:
           type: boolean
           label: 'Active'
+    filter:
+      type: string
+      label: 'TM Filter'
+    subfilter:
+      type: string
+      label: 'TM Subfilter'
     language_overrides:
       type: sequence
       label: 'Target language settings overrides'

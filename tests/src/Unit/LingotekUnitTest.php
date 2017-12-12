@@ -19,7 +19,6 @@ class LingotekUnitTest extends UnitTestCase {
    */
   protected $lingotek;
 
-
   /**
    * The language-locale mapper.
    *
@@ -38,6 +37,13 @@ class LingotekUnitTest extends UnitTestCase {
   protected $config;
 
   /**
+   * The Lingotek Filter manager.
+   *
+   * @var \Drupal\lingotek\LingotekFilterManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $lingotekFilterManager;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
@@ -46,13 +52,14 @@ class LingotekUnitTest extends UnitTestCase {
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
       ->disableOriginalConstructor()
       ->getMock();
+    $this->lingotekFilterManager = $this->getMock('\Drupal\lingotek\LingotekFilterManagerInterface');
     $config_factory = $this->getMock('\Drupal\Core\Config\ConfigFactoryInterface');
     $config_factory->expects($this->once())
       ->method('getEditable')
       ->with('lingotek.settings')
       ->will($this->returnValue($this->config));
 
-    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $config_factory);
+    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $config_factory, $this->lingotekFilterManager);
   }
 
   /**
@@ -156,6 +163,109 @@ class LingotekUnitTest extends UnitTestCase {
       ->method('save');
 
     $this->lingotek->getVaults(TRUE);
+  }
+
+  /**
+   * @covers ::getFilters
+   */
+  public function testGetFiltersWithData() {
+    // No call is performed when getting vaults without forcing.
+    $this->config->expects($this->once())
+      ->method('get')
+      ->with('account.resources.filter')
+      ->will($this->returnValue(['a_filter' => 'A filter']));
+    $this->api->expects($this->never())
+      ->method('getFilters');
+    $this->lingotek->getFilters(FALSE);
+  }
+
+  /**
+   * @covers ::getFilters
+   */
+  public function testGetFiltersWithNoData() {
+    // A call is performed when getting vaults and there are none locally.
+    $this->config->expects($this->at(0))
+      ->method('get')
+      ->with('account.resources.filter')
+      ->will($this->returnValue([]));
+    $this->config->expects($this->at(1))
+      ->method('get')
+      ->with('default.community')
+      ->will($this->returnValue(['my_community']));
+
+    // Ensure the call will be made.
+    $this->api->expects($this->once())
+      ->method('getFilters')
+      ->will($this->returnValue(['a_filter' => 'A filter']));
+
+    // And the results will be stored.
+    $this->config->expects($this->at(2))
+      ->method('set')
+      ->with('account.resources.filter', ['a_filter' => 'A filter'])
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(3))
+      ->method('save');
+
+    $this->config->expects($this->at(4))
+      ->method('get')
+      ->with('default.filter')
+      ->will($this->returnValue(NULL));
+
+    $this->config->expects($this->at(5))
+      ->method('set')
+      ->with('default.filter', 'a_filter')
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(6))
+      ->method('save');
+
+    $this->lingotek->getFilters(FALSE);
+  }
+
+  /**
+   * @covers ::getFilters
+   */
+  public function testGetFiltersWithDataButForcing() {
+    // A call is performed when forced even if there are vaults locally.
+    $this->config->expects($this->at(0))
+      ->method('get')
+      ->with('account.resources.filter')
+      ->will($this->returnValue(['a_filter' => 'A filter']));
+
+    $this->config->expects($this->at(1))
+      ->method('get')
+      ->with('default.community')
+      ->will($this->returnValue(['my_community']));
+
+    // Ensure the call will be made.
+    $this->api->expects($this->once())
+      ->method('getFilters')
+      ->will($this->returnValue(['a_filter' => 'A filter']));
+
+    // And the results will be stored.
+    $this->config->expects($this->at(2))
+      ->method('set')
+      ->with('account.resources.filter', ['a_filter' => 'A filter'])
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(3))
+      ->method('save');
+
+    $this->config->expects($this->at(4))
+      ->method('get')
+      ->with('default.filter')
+      ->will($this->returnValue(NULL));
+
+    $this->config->expects($this->at(5))
+      ->method('set')
+      ->with('default.filter', 'a_filter')
+      ->will($this->returnSelf());
+
+    $this->config->expects($this->at(6))
+      ->method('save');
+
+    $this->lingotek->getFilters(TRUE);
   }
 
   /**
@@ -265,6 +375,14 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::uploadDocument
    */
   public function testUploadDocument() {
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
     $this->config->expects($this->any())
       ->method('get')
       ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
@@ -341,7 +459,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
-    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default'], 'lingotek_profile');
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default', 'filter' => 'project_default'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
     // We upload without a profile.
@@ -352,7 +470,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload with a profile that has marked to use the project default
     // workflow template vault, so must be omitted.
-    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_workflow_vault'], 'lingotek_profile');
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_workflow_vault', 'filter' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
   }
@@ -367,6 +485,14 @@ class LingotekUnitTest extends UnitTestCase {
     $response->expects($this->any())
       ->method('getStatusCode')
       ->willReturn(Response::HTTP_ACCEPTED);
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
 
     $this->config->expects($this->any())
       ->method('get')

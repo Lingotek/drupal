@@ -34,6 +34,13 @@ class Lingotek implements LingotekInterface {
    */
   protected $languageLocaleMapper;
 
+  /**
+   * The Lingotek Filter manager.
+   *
+   * @var \Drupal\lingotek\LingotekFilterManagerInterface
+   */
+  protected $lingotekFilterManager;
+
   // Translation Status.
   const STATUS_EDITED = 'EDITED';
   const STATUS_IMPORTING = 'IMPORTING';
@@ -56,15 +63,28 @@ class Lingotek implements LingotekInterface {
   const PROFILE_MANUAL = 'manual';
   const PROFILE_DISABLED = 'disabled';
 
-  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config) {
+  /**
+   * Constructs a Lingotek object.
+   *
+   * @param \Drupal\lingotek\Remote\LingotekApiInterface $api
+   *   The Lingotek configuration service.
+   * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
+   *   The language-locale mapper.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   The config factory.
+   * @param LingotekFilterManagerInterface $lingotek_filter_manager
+   *   The Lingotek Filter manager.
+   */
+  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config, LingotekFilterManagerInterface $lingotek_filter_manager) {
     $this->api = $api;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->config = $config->getEditable('lingotek.settings');
+    $this->lingotekFilterManager = $lingotek_filter_manager;
   }
 
   public static function create(ContainerInterface $container) {
     if (empty(self::$instance)) {
-      self::$instance = new Lingotek($container->get('lingotek.api'), $container->get('lingotek.language_locale_mapper'), $container->get('config.factory'));
+      self::$instance = new Lingotek($container->get('lingotek.api'), $container->get('lingotek.language_locale_mapper'), $container->get('config.factory'), $container->get('lingotek.filter_manager'));
     }
     return self::$instance;
   }
@@ -89,7 +109,8 @@ class Lingotek implements LingotekInterface {
         'community' => $this->getCommunities($force),
         'project' => $this->getProjects($force),
         'vault' => $this->getVaults($force),
-        'workflow' => $this->getWorkflows($force)
+        'workflow' => $this->getWorkflows($force),
+        'filter' => $this->getFilters($force)
     );
   }
 
@@ -125,6 +146,13 @@ class Lingotek implements LingotekInterface {
 
   public function getProject($project_id) {
     return $this->api->getProject($project_id);
+  }
+
+  /**
+  * {@inheritdoc}
+  */
+  public function getFilters($force = FALSE){
+    return $this->getResource('account.resources.filter', 'getFilters', $force);
   }
 
   public function setProjectCallBackUrl($project_id, $callback_url) {
@@ -170,8 +198,8 @@ class Lingotek implements LingotekInterface {
     $defaults = array(
       'format' => 'JSON',
       'project_id' => $this->get('default.project'),
-      'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
-      'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',// 'okf_json@with-html-subfilter.fprm',
+      'fprm_id' => $this->lingotekFilterManager->getFilterId($profile),
+      'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     );
     $metadata = $this->getIntelligenceMetadata($content);
@@ -209,7 +237,7 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL) {
     if (!is_array($content)) {
       $data = json_decode($content, TRUE);
       // This is the quickest way if $content is not a valid json object.
@@ -219,10 +247,11 @@ class Lingotek implements LingotekInterface {
     $args = array(
       'format' => 'JSON',
       'content' => json_encode($content),
-      'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',// 'okf_html@drupal8-subfilter.fprm',
-      'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',// 'okf_json@with-html-subfilter.fprm',
+      'fprm_id' => $this->lingotekFilterManager->getFilterId($profile),
+      'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     );
+
     $metadata = $this->getIntelligenceMetadata($content);
     $args = array_merge($metadata, $args);
 
@@ -323,6 +352,9 @@ class Lingotek implements LingotekInterface {
   protected function setValidDefaultIfNotSet($default_key, $resources) {
     $default_value = $this->get($default_key);
     $valid_resource_ids = array_keys($resources);
+    if ($default_key === 'default.filter') {
+      $valid_resource_ids[] = 'project_default';
+    }
     if (empty($default_value) || !in_array($default_value, $valid_resource_ids)) {
       $value = current($valid_resource_ids);
       $this->set($default_key, $value);

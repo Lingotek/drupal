@@ -8,14 +8,51 @@
 namespace Drupal\lingotek\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\Exception\LingotekApiException;
+use Drupal\lingotek\LingotekFilterManagerInterface;
+use Drupal\lingotek\LingotekInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Configure Lingotek
  */
 class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
+
+  /**
+   * The Lingotek Filter manager.
+   *
+   * @var \Drupal\lingotek\LingotekFilterManagerInterface
+   */
+  protected $lingotekFilterManager;
+
+  /**
+   * Constructs a LingotekSettingsTabAccountForm object.
+   *
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The Lingotek service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   *   The factory for configuration objects.
+   * @param \Drupal\lingotek\LingotekFilterManagerInterface $lingotek_filter_manager
+   *   The Lingotek Filter manager.
+   */
+  public function __construct(LingotekInterface $lingotek, ConfigFactoryInterface $config, LingotekFilterManagerInterface $lingotek_filter_manager) {
+    parent::__construct($lingotek, $config);
+    $this->lingotekFilterManager = $lingotek_filter_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static (
+      $container->get('lingotek'),
+      $container->get('config.factory'),
+      $container->get('lingotek.filter_manager')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -89,6 +126,25 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
 
+
+    $filters = $this->lingotekFilterManager->getLocallyAvailableFilters();
+    if ($filters > 0) {
+      $default_filter = $this->lingotekFilterManager->getDefaultFilter();
+      $default_filter_label = $this->lingotekFilterManager->getDefaultFilterLabel();
+      $default_subfilter = $this->lingotekFilterManager->getDefaultSubfilter();
+      $default_subfilter_label = $this->lingotekFilterManager->getDefaultSubfilterLabel();
+      $filterRow = [
+        ['#markup' => $this->t('Default Filter:'), '#prefix' => '<b>', '#suffix' => '</b>'],
+        ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_filter_label, '@id' => $default_filter])],
+        ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
+      ];
+      $subfilterRow = [
+        ['#markup' => $this->t('Default Subfilter:'), '#prefix' => '<b>', '#suffix' => '</b>'],
+        ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_subfilter_label, '@id' => $default_subfilter])],
+        ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
+      ];
+    }
+
     $default_vault = $config->get('default.vault');
     $default_vault_name = $config->get('account.resources.vault.' . $default_vault);
 
@@ -122,6 +178,8 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $accountTable['workflow_row'] = $workflowRow;
     $accountTable['project_row'] = $projectRow;
     $accountTable['vault_row'] = $vaultRow;
+    $accountTable['filter_row'] = $filterRow;
+    $accountTable['subfilter_row'] = $subfilterRow;
     $accountTable['tms_row'] = $tmsRow;
     $accountTable['gmc_row'] = $gmcRow;
 

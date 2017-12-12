@@ -36,6 +36,16 @@ interface LingotekInterface {
 
   public function getProject($project_id);
 
+  /**
+   * Get all the available filters.
+   *
+   * @param bool $force
+   *   If we should force a refresh or we can use the local storage.
+   * @return array
+   *   Array of filters as in (id, label).
+   */
+  public function getFilters($force = FALSE);
+
   public function setProjectCallBackUrl($project_id, $callback_url);
 
   /**
@@ -49,11 +59,12 @@ interface LingotekInterface {
    * @param string $locale
    *   The Lingotek locale.
    * @param string $url
-   *   The document url in the site if any. This allows support for in-context review.
+   *   (optional) The document url in the site if any. This allows support for in-context review.
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
-   *   The profile being used.
+   *   (optional) The profile being used.
    *
-   * @return mixed
+   * @return string
+   *   The document ID assigned to the uploaded document.
    */
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL);
 
@@ -69,10 +80,13 @@ interface LingotekInterface {
    *   (optional) The document url in the site if any. This allows support for in-context review.
    * @param string $title
    *   (optional) The title of the document as it will be seen in the TMS.
+   * @param \Drupal\lingotek\LingotekProfileInterface $profile
+   *   (optional) The profile being used.
    *
-   * @return boolean
+   * @return bool
+   *   TRUE if the document was successfully updated. FALSE if not.
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL);
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL);
 
   /**
    * @param $doc_id

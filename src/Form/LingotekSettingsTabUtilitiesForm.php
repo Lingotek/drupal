@@ -90,7 +90,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
     // Refresh resources via API row
     $api_refresh_row = array();
     $api_refresh_row['refresh_description'] = array(
-      '#markup' => '<H5>' . $this->t('Refresh Project, Workflow, and Vault Information') . '</H5>' . '<p>' . $this->t('This module locally caches the available projects, workflows, and vaults. Use this utility whenever you need to pull down names for any newly created projects, workflows, or vaults from the Lingotek Translation Management System.') . '</p>',
+      '#markup' => '<H5>' . $this->t('Refresh Project, Workflow, Vault, and Filter Information') . '</H5>' . '<p>' . $this->t('This module locally caches the available projects, workflows, vaults, and filters. Use this utility whenever you need to pull down names for any newly created projects, workflows, vaults, or filters from the Lingotek Translation Management System.') . '</p>',
     );
     $api_refresh_row['actions']['refresh_button'] = array(
       '#type' => 'submit',
@@ -159,7 +159,7 @@ class LingotekSettingsTabUtilitiesForm extends LingotekConfigFormBase {
   public function refreshResources() {
     $resources = $this->lingotek->getResources(TRUE);
     $this->lingotek->set('account.resources', $resources);
-    drupal_set_message($this->t('Project, workflow, and vault information have been refreshed.'));
+    drupal_set_message($this->t('Project, workflow, vault, and filter information have been refreshed.'));
   }
 
   public function disassociateAllTranslations(array &$form, FormStateInterface $form_state) {
