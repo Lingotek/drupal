@@ -793,7 +793,7 @@ class LingotekManagementForm extends FormBase {
    */
   public function uploadDocument(ContentEntityInterface $entity, $language, &$context) {
     $context['message'] = $this->t('Uploading @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
+    if ($profile = $this->lingotekConfiguration->getEntityProfile($entity)) {
       try {
         $this->translationService->uploadDocument($entity);
       }

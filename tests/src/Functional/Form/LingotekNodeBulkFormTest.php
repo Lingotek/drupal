@@ -559,4 +559,56 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
   }
 
+  /**
+   * Tests that default profile is used after dissasociation.
+   */
+  public function testUploadAfterDisassociating() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'disassociate',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check that there is a node with the Automatic (default) Profile
+    $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
+    $this->assertEqual(count($automatic_profile), 1, 'There is one node with the Automatic Profile set.');
+  }
+
 }
