@@ -660,7 +660,7 @@ class LingotekUnitTest extends UnitTestCase {
     $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 
     // We upload with a profile that has another vault and another project, but
-    // overriden with a default, so must be replaced.
+    // overridden with a default, so must be replaced.
     $profile = new LingotekProfile(['id' => 'profile2', 'workflow' => 'a_different_test_workflow', 'language_overrides' => ['es' => ['overrides' => 'custom', 'custom' => ['workflow' => 'default']]]], 'lingotek_profile');
     $this->assertTrue($this->lingotek->addTarget('my_doc_id', 'es_ES', $profile));
 

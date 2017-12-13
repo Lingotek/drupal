@@ -175,9 +175,9 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     $node = $translation_service->saveTargetData($node, 'es', $es_data);
 
     $this->assertEqual('es body', $node->getTranslation('es')->body->value, 'The body is translated if the field is translatable.');
-    $this->assertEqual($body, $node->getTranslation('en')->body->value, 'The body in the original language is not overriden.');
+    $this->assertEqual($body, $node->getTranslation('en')->body->value, 'The body in the original language is not overridden.');
     $this->assertEqual('es title', $node->getTranslation('es')->getTitle(), 'The title in the translation is the one given.');
-    $this->assertEqual($title, $node->getTranslation('en')->getTitle(), 'The title in the original language is not overriden.');
+    $this->assertEqual($title, $node->getTranslation('en')->getTitle(), 'The title in the original language is not overridden.');
 
     // Make the field as not translatable.
     $field->setTranslatable(FALSE)->save();
@@ -194,7 +194,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     $this->assertEqual($body, $node->getTranslation('de')->body->value, 'The body is not written if the field is not translatable.');
     $this->assertEqual($body, $node->getTranslation('en')->body->value, 'The body is not overridden if the field is not translatable.');
     $this->assertEqual('de title', $node->getTranslation('de')->getTitle(), 'The title in the translation is the one given.');
-    $this->assertEqual($title, $node->getTranslation('en')->getTitle(), 'The title in the original language is not overriden.');
+    $this->assertEqual($title, $node->getTranslation('en')->getTitle(), 'The title in the original language is not overridden.');
   }
 
 }

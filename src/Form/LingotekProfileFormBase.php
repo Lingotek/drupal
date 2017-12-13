@@ -188,7 +188,7 @@ class LingotekProfileFormBase extends EntityForm {
     $form['intelligence_metadata_overrides']['override'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Override general Lingotek Intelligence metadata when using this profile'),
-      '#description' => $this->t('When enabled, general Lingotek Intelligence metadata will be overriden by the options here when usign this profile.'),
+      '#description' => $this->t('When enabled, general Lingotek Intelligence metadata will be overridden by the options here when using this profile.'),
       '#default_value' => $profile->hasIntelligenceMetadataOverrides(),
     ];
     $form['intelligence_metadata_overrides']['form'] = $subform['intelligence_metadata'];
