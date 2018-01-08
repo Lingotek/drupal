@@ -356,9 +356,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
-  public function uploadDocument(ConfigEntityInterface $entity) {
+  public function uploadDocument(ConfigEntityInterface $entity, $job_id = NULL) {
     if (!empty($this->getDocumentId($entity))) {
-      return $this->updateDocument($entity);
+      return $this->updateDocument($entity, $job_id);
     }
     $source_data = $this->getSourceData($entity);
     $document_name = $entity->id() . ' (config): ' . $entity->label();
@@ -368,11 +368,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
-    $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity));
+    $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
+      $this->setJobId($entity, $job_id);
       return $document_id;
     }
     return FALSE;
@@ -393,7 +394,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
-  public function updateDocument(ConfigEntityInterface &$entity) {
+  public function updateDocument(ConfigEntityInterface &$entity, $job_id = NULL) {
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $document_name = $entity->id() . ' (config): ' . $entity->label();
@@ -404,9 +405,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     \Drupal::moduleHandler()->invokeAll('lingotek_config_entity_document_upload', [&$source_data, &$entity, &$url]);
     $encoded_data = json_encode($source_data);
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity))) {
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
+      $this->setJobId($entity, $job_id);
       return $document_id;
     }
     return FALSE;
@@ -691,7 +693,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     return $status;
   }
 
-    /**
+  /**
    * {@inheritdoc}
    */
   public function setConfigSourceStatus(ConfigNamesMapper $mapper, $status) {
@@ -795,18 +797,19 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
-  public function uploadConfig($mapper_id) {
+  public function uploadConfig($mapper_id, $job_id = NULL) {
     $mapper = $this->mappers[$mapper_id];
     if (!empty($this->getConfigDocumentId($mapper))) {
       return $this->updateConfig($mapper_id);
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id));
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id);
     if ($document_id) {
       $this->setConfigDocumentId($mapper, $document_id);
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_REQUEST);
+      $this->setConfigJobId($mapper, $job_id);
       return $document_id;
     }
     return FALSE;
@@ -1032,15 +1035,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
-  public function updateConfig($mapper_id) {
+  public function updateConfig($mapper_id, $job_id = NULL) {
     $mapper = $this->mappers[$mapper_id];
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_id = $this->getConfigDocumentId($mapper);
     $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name)) {
+    if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_PENDING);
+      $this->setConfigJobId($mapper, $job_id);
       return $document_id;
     }
     return FALSE;
@@ -1112,6 +1116,27 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         }
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfigJobId(ConfigNamesMapper $mapper, $job_id) {
+    $config_names = $mapper->getConfigNames();
+    foreach ($config_names as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setJobId($job_id);
+      $metadata->save();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setJobId(ConfigEntityInterface $entity, $job_id) {
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    $metadata->setJobId($job_id);
+    $metadata->save();
   }
 
 }

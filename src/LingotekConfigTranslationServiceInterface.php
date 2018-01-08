@@ -195,11 +195,13 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity being uploaded.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return boolean
    *   TRUE if the document was uploaded successfully, FALSE if not.
    */
-  public function uploadDocument(ConfigEntityInterface $entity);
+  public function uploadDocument(ConfigEntityInterface $entity, $job_id = NULL);
 
   /**
    * Checks the source is uploaded correctly.
@@ -217,11 +219,13 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity being updated.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return boolean
    *   TRUE if the document was updated successfully, FALSE if not.
    */
-  public function updateDocument(ConfigEntityInterface &$entity);
+  public function updateDocument(ConfigEntityInterface &$entity, $job_id = NULL);
 
   /**
    * Request a translation for a given entity in the given locale.
@@ -426,11 +430,13 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param string $mapper_id
    *   The entity being uploaded.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return boolean
    *   TRUE if the document was uploaded successfully, FALSE if not.
    */
-  public function uploadConfig($mapper_id);
+  public function uploadConfig($mapper_id, $job_id = NULL);
 
   /**
    * Checks the source is uploaded correctly.
@@ -521,11 +527,13 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param $mapper_id
    *   The entity being updated.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return boolean
    *   TRUE if the document was updated successfully, FALSE if not.
    */
-  public function updateConfig($mapper_id);
+  public function updateConfig($mapper_id, $job_id = NULL);
 
   /**
    * Marks the translation status as dirty if they exist.

@@ -67,6 +67,10 @@ class LingotekContentMetadata extends ContentEntityBase {
       ->setDescription(new TranslatableMarkup('The status of the source in case of being the source translation, or the status of the translation.'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
+    $fields['job_id'] = BaseFieldDefinition::create('string')
+      ->setLabel(new TranslatableMarkup('Lingotek job id'))
+      ->setDescription(new TranslatableMarkup('The Lingotek job id.'));
+
     return $fields;
   }
 
@@ -201,6 +205,16 @@ class LingotekContentMetadata extends ContentEntityBase {
   }
 
   /**
+   * Gets the Job ID.
+   *
+   * @return string
+   *   The job ID.
+   */
+  public function getJobId() {
+    return $this->job_id->value;
+  }
+
+  /**
    * Sets the content entity type ID.
    *
    * @param string $value
@@ -221,6 +235,18 @@ class LingotekContentMetadata extends ContentEntityBase {
    */
   public function setContentEntityId($value) {
     $this->content_entity_id = $value;
+    return $this;
+  }
+
+  /**
+   * Sets the job ID.
+   *
+   * @param string $value
+   *   The job ID.
+   * @return $this
+   */
+  public function setJobId($value) {
+    $this->job_id = $value;
     return $this;
   }
 

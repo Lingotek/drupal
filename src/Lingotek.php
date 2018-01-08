@@ -187,7 +187,7 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL) {
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (!is_array($content)) {
       $data = json_decode($content, TRUE);
       // This is the quickest way if $content is not a valid json object.
@@ -228,6 +228,9 @@ class Lingotek implements LingotekInterface {
     if ($url !== NULL) {
       $args['external_url'] = $url;
     }
+    if ($job_id !== NULL) {
+      $args['job_id'] = $job_id;
+    }
     $response = $this->api->addDocument($args);
 
     // TODO: Response code should be 202 on success
@@ -237,7 +240,7 @@ class Lingotek implements LingotekInterface {
   /**
    * {@inheritdoc}
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (!is_array($content)) {
       $data = json_decode($content, TRUE);
       // This is the quickest way if $content is not a valid json object.
@@ -260,6 +263,9 @@ class Lingotek implements LingotekInterface {
     }
     if ($title !== NULL) {
       $args['title'] = $title;
+    }
+    if ($job_id !== NULL) {
+      $args['job_id'] = $job_id;
     }
 
     $response = $this->api->patchDocument($doc_id, $args);

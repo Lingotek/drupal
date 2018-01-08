@@ -499,6 +499,21 @@ function lingotek_update_8205() {
   }
 }
 
+/**
+ * Install the job_id field definition in Lingotek content metadata.
+ */
+function lingotek_update_8206() {
+  $fields = [];
+  $fields['job_id'] = BaseFieldDefinition::create('string')
+    ->setLabel(new TranslatableMarkup('Lingotek job id'))
+    ->setDescription(new TranslatableMarkup('The Lingotek job id.'));
+
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  foreach ($fields as $name => $storage_definition) {
+    $entity_definition_update_manager->installFieldStorageDefinition($name, 'lingotek_content_metadata', 'lingotek', $storage_definition);
+  }
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

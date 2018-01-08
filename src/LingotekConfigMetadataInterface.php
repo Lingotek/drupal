@@ -51,7 +51,6 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    */
   public function setTargetStatus(array $target_status);
 
-
   /**
    * Gets the hash of the uploaded document.
    */
@@ -66,5 +65,20 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function setHash($hash);
+
+  /**
+   * Gets the job ID of the uploaded document.
+   */
+  public function getJobId();
+
+  /**
+   * Sets the job ID of the uploaded document.
+   *
+   * @param string $job_id
+   *  The job ID of the uploaded document.
+   *
+   * @return $this
+   */
+  public function setJobId($job_id);
 
 }

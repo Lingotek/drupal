@@ -211,11 +211,13 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity being uploaded.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return boolean
    *   TRUE if the document was uploaded successfully, FALSE if not.
    */
-  public function uploadDocument(ContentEntityInterface $entity);
+  public function uploadDocument(ContentEntityInterface $entity, $job_id = NULL);
 
   /**
    * Downloads a document from the Lingotek service for a given locale.
@@ -235,11 +237,13 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity being updated.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return boolean
    *   TRUE if the document was updated successfully, FALSE if not.
    */
-  public function updateDocument(ContentEntityInterface &$entity);
+  public function updateDocument(ContentEntityInterface &$entity, $job_id = NULL);
 
   /**
    * Deletes a document from the server and all related local data.

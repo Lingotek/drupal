@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional\Form;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 use Drupal\node\Entity\Node;
@@ -119,12 +120,14 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_IMPORTING);
     $this->assertOptionSelected('edit-en', Lingotek::STATUS_IMPORTING);
     $this->assertOptionSelected('edit-es', Lingotek::STATUS_REQUEST);
+    $this->assertFieldById('edit-lingotek-job-id', '');
 
     $edit = [
       'lingotek_document_id' => 'another-id',
       'lingotek_source_status' => Lingotek::STATUS_UNTRACKED,
       'en' => Lingotek::STATUS_UNTRACKED,
       'es' => Lingotek::STATUS_READY,
+      'lingotek_job_id' => 'a new edited job id',
     ];
     $this->drupalPostForm(NULL, $edit, 'Save metadata');
 
@@ -135,6 +138,7 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-lingotek-source-status', Lingotek::STATUS_UNTRACKED);
     $this->assertOptionSelected('edit-en', Lingotek::STATUS_UNTRACKED);
     $this->assertOptionSelected('edit-es', Lingotek::STATUS_READY);
+    $this->assertFieldById('edit-lingotek-job-id', 'a new edited job id');
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
     $content_translation_service = \Drupal::service('lingotek.content_translation');
@@ -146,6 +150,9 @@ class LingotekMetadataEditFormTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'en'));
     $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+
+    $metadata = LingotekContentMetadata::load(1);
+    $this->assertIdentical('a new edited job id', $metadata->getJobId(), 'Lingotek metadata job id was saved correctly.');
   }
 
 }

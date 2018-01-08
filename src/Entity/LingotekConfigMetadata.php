@@ -58,6 +58,13 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
   protected $hash = NULL;
 
   /**
+   * The Lingotek job id.
+   *
+   * @var string
+   */
+  protected $job_id = '';
+
+  /**
    * {@inheritdoc}
    */
   public function getDocumentId() {
@@ -117,6 +124,22 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    */
   public function setHash($hash) {
     $this->hash = $hash;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getJobId() {
+    return $this->job_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setJobId($job_id) {
+    $this->job_id = $job_id;
 
     return $this;
   }

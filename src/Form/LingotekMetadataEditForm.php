@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -106,6 +107,8 @@ class LingotekMetadataEditForm extends ContentEntityForm {
 
     // $form = parent::buildForm($form, $form_state);
     $entity = $this->getEntity();
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata|NULL $metadata */
+    $metadata = $entity->hasField('lingotek_metadata') ? $entity->lingotek_metadata->entity : NULL;
     $lingotek_document_id = $this->translationService->getDocumentId($entity);
     $source_status = $this->translationService->getSourceStatus($entity);
     $form['metadata']['notice'] = [
@@ -133,6 +136,11 @@ class LingotekMetadataEditForm extends ContentEntityForm {
         '#options' => $this->getLingotekStatusesOptions(),
       ];
     }
+    $form['metadata']['lingotek_job_id'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Lingotek Job ID'),
+      '#default_value' => $metadata->getJobId(),
+    ];
 
     $form['actions'] = [];
     $form['actions']['save_metadata'] = array(
@@ -164,6 +172,12 @@ class LingotekMetadataEditForm extends ContentEntityForm {
     $this->translationService->setSourceStatus($entity, $source_status);
     foreach ($this->languageManager->getLanguages() as $langcode => $language) {
       $this->translationService->setTargetStatus($entity, $langcode, $input[$langcode]);
+    }
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata|NULL $metadata */
+    $metadata = $entity->hasField('lingotek_metadata') ? $entity->lingotek_metadata->entity : NULL;
+    if ($metadata !== NULL) {
+      $metadata->setJobId($input['lingotek_job_id']);
+      $metadata->save();
     }
 
     drupal_set_message($this->t('Metadata saved successfully'));

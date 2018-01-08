@@ -175,7 +175,7 @@ class LingotekFake implements LingotekInterface {
     ];
   }
 
-  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL) {
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException();
     }
@@ -188,6 +188,7 @@ class LingotekFake implements LingotekInterface {
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_locale', $locale);
     \Drupal::state()->set('lingotek.uploaded_url', $url);
+    \Drupal::state()->set('lingotek.uploaded_job_id', $job_id);
     \Drupal::state()->set('lingotek.used_profile', $profile ? $profile->id() : NULL);
 
     $count = \Drupal::state()->get('lingotek.uploaded_docs', 0);
@@ -207,7 +208,7 @@ class LingotekFake implements LingotekInterface {
     return $doc_id;
   }
 
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL) {
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
       throw new LingotekApiException();
     }
@@ -218,6 +219,7 @@ class LingotekFake implements LingotekInterface {
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_content_url', $url);
     \Drupal::state()->set('lingotek.uploaded_content_title', $title);
+    \Drupal::state()->set('lingotek.uploaded_job_id', $job_id);
 
     // Save the timestamp of the upload.
     $timestamps = \Drupal::state()->get('lingotek.upload_timestamps', []);

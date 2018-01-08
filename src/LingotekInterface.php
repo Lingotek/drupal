@@ -62,11 +62,13 @@ interface LingotekInterface {
    *   (optional) The document url in the site if any. This allows support for in-context review.
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   (optional) The profile being used.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return string
    *   The document ID assigned to the uploaded document.
    */
-  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL);
+  public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
 
   /**
    * Updates a document in the Lingotek service.
@@ -82,11 +84,13 @@ interface LingotekInterface {
    *   (optional) The title of the document as it will be seen in the TMS.
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   (optional) The profile being used.
+   * @param string $job_id
+   *   (optional) The job ID that will be associated.
    *
    * @return bool
    *   TRUE if the document was successfully updated. FALSE if not.
    */
-  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL);
+  public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL);
 
   /**
    * @param $doc_id

@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional\Form;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
@@ -153,7 +154,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->assertLink('Llamas are cool ' . $indexes[$j]);
     }
     $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool 2');
+    $this->assertNoLink('Llamas are cool ' . $indexes[2]);
 
     // After we filter by manual profile, there is no pager and the rows
     // selected are the ones expected.
@@ -165,7 +166,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->assertLink('Llamas are cool ' . $indexes[$j]);
     }
     $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool 1');
+    $this->assertNoLink('Llamas are cool ' . $indexes[1]);
 
     // After we filter by disabled profile, there is no pager and the rows
     // selected are the ones expected.
@@ -177,7 +178,114 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->assertLink('Llamas are cool ' . $indexes[$j]);
     }
     $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool 5');
+    $this->assertNoLink('Llamas are cool ' . $indexes[5]);
+
+    // After we reset, we get back to having a pager and all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    foreach (range(1, 10) as $j) {
+      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+    }
+    $this->assertLinkByHref('?page=1');
+  }
+
+  /**
+   * Tests that the bulk management job filtering works correctly.
+   */
+  public function testJobIdFilter() {
+    $basepath = \Drupal::request()->getBasePath();
+
+    $nodes = [];
+    // See https://www.drupal.org/project/drupal/issues/2925290.
+    $indexes = "ABCDEFGHIJKLMNOPQ";
+    // Create some nodes.
+    for ($i = 1; $i < 15; $i++) {
+      $edit = [];
+      $edit['title[0][value]'] = 'Llamas are cool ' . $indexes[$i];
+      $edit['body[0][value]'] = 'Llamas are very cool ' . $indexes[$i];
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->saveAndPublishNodeForm($edit);
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    // After we filter by an unexisting job, there is no content and no rows.
+    $edit = [
+      'filters[wrapper][job]' => 'this job does not exist',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertNoLink('Llamas are cool');
+    $this->assertNoLinkByHref('?page=1');
+
+    // After we reset, we get back to having a pager and all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    foreach (range(1, 10) as $j) {
+      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+    }
+    $this->assertLinkByHref('?page=1');
+
+    // Show 50 results.
+    \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 50);
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/11?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $edit = [
+      'table[4]' => TRUE,
+      'table[6]' => TRUE,
+      'table[8]' => TRUE,
+      'table[10]' => TRUE,
+      'table[12]' => TRUE,
+      'table[14]' => TRUE,
+      'operation' => 'upload',
+      'job_id' => 'even numbers',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'table[5]' => TRUE,
+      'table[7]' => TRUE,
+      'table[11]' => TRUE,
+      'table[13]' => TRUE,
+      'operation' => 'upload',
+      'job_id' => 'prime numbers',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Show 10 results.
+    \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 10);
+    $this->goToContentBulkManagementForm();
+
+    // After we filter by prime, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[wrapper][job]' => 'prime',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([1, 2, 3, 5, 7, 11, 13] as $j) {
+      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+    }
+    $this->assertNoLink('Page 2');
+    $this->assertNoLink('Llamas are cool ' . $indexes[4]);
+
+    // After we filter by even, there is no pager and the rows selected are the
+    // ones expected.
+    $edit = [
+      'filters[wrapper][job]' => 'even',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([4, 6, 8, 10, 12, 14] as $j) {
+      $this->assertLink('Llamas are cool ' . $indexes[$j]);
+    }
+    $this->assertNoLinkByHref('?page=1');
+    $this->assertNoLink('Llamas are cool ' . $indexes[5]);
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
@@ -596,6 +704,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+    $this->assertIdentical(NULL, \Drupal::state()->get('lingotek.uploaded_job_id'));
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
@@ -609,6 +718,99 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // Check that there is a node with the Automatic (default) Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
     $this->assertEqual(count($automatic_profile), 1, 'There is one node with the Automatic Profile set.');
+  }
+
+  /**
+   * Tests job id is uploaded on upload.
+   */
+  public function testJobIdOnUpload() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/2?destination=' . $basepath . '/admin/lingotek/manage/node');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'job_id' => 'my_custom_job_id',
+      'operation' => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+    $this->assertIdentical('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata[] $metadatas */
+    $metadatas = LingotekContentMetadata::loadMultiple();
+    foreach ($metadatas as $metadata) {
+      $this->assertEqual('my_custom_job_id', $metadata->getJobId(), 'The job id was saved along with metadata.');
+    }
+  }
+
+  /**
+   * Tests job id is uploaded on update.
+   */
+  public function testJobIdOnUpdate() {
+    // Create a node with automatic. This will trigger upload.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata[] $metadatas */
+    $metadatas = LingotekContentMetadata::loadMultiple();
+    foreach ($metadatas as $metadata) {
+      $this->assertNull($metadata->getJobId(), 'There was no job id to save along with metadata.');
+    }
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can check the status of the upload. So next operation will perform an
+    // update.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id-1?destination=' . $basepath . '/admin/lingotek/manage/node');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'job_id' => 'my_custom_job_id',
+      'operation' => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+    $this->assertIdentical('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata[] $metadatas */
+    $metadatas = LingotekContentMetadata::loadMultiple();
+    foreach ($metadatas as $metadata) {
+      $this->assertEquals('my_custom_job_id', $metadata->getJobId(), 'The job id was saved along with metadata.');
+    }
   }
 
 }

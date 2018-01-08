@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional\Form;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
@@ -45,6 +46,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
+    $this->drupalGet('admin/lingotek/settings');
     $edit = [
       'node[article][enabled]' => 1,
       'node[article][profiles]' => 'automatic',
@@ -55,8 +57,13 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'node[page][fields][title]' => 1,
       'node[page][fields][body]' => 1,
     ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-content-form');
 
+    $edit = [
+      'table[node_type][enabled]' => 1,
+      'table[node_type][profile]' => 'automatic',
+    ];
+    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
   }
 
   /**
@@ -133,6 +140,167 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // And Spanish should be back in the management form.
     $this->goToConfigBulkManagementForm();
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+  }
+
+  /**
+   * Tests job id is uploaded on upload.
+   */
+  public function testJobIdOnUpload() {
+    // Go and upload a field.
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      'job_id' => 'my_custom_job_id',
+      'operation' => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertEquals('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+    $this->assertEquals('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    /** @var \Drupal\lingotek\Entity\LingotekConfigMetadata[] $metadatas */
+    $metadatas = LingotekConfigMetadata::loadMultiple();
+    foreach ($metadatas as $metadata) {
+      $this->assertEquals('my_custom_job_id', $metadata->getJobId(), 'The job id was saved along with metadata.');
+    }
+  }
+
+  /**
+   * Tests job id is uploaded on update.
+   */
+  public function testJobIdOnUpdate() {
+    // Create a node type with automatic. This will trigger upload.
+    $this->drupalCreateContentType(['type' => 'banner', 'name' => 'Banner']);
+    $this->drupalCreateContentType(['type' => 'book', 'name' => 'Book']);
+    $this->drupalCreateContentType(['type' => 'ingredient', 'name' => 'Ingredient']);
+    $this->drupalCreateContentType(['type' => 'recipe', 'name' => 'Recipe']);
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    /** @var \Drupal\lingotek\Entity\LingotekConfigMetadata[] $metadatas */
+    $metadatas = LingotekConfigMetadata::loadMultiple();
+    foreach ($metadatas as $metadata) {
+      $this->assertNull($metadata->getJobId(), 'There was no job id to save along with metadata.');
+    }
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can check the status of the upload. So next operation will perform an
+    // update.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/book?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/recipe?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $edit = [
+      'table[ingredient]' => TRUE,
+      'table[recipe]' => TRUE,
+      'table[book]' => TRUE,
+      'table[banner]' => TRUE,
+      'job_id' => 'my_custom_job_id',
+      'operation' => 'upload',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertEquals('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+    $this->assertEquals('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    /** @var \Drupal\lingotek\Entity\LingotekConfigMetadata[] $metadatas */
+    $metadatas = LingotekConfigMetadata::loadMultiple();
+    foreach ($metadatas as $metadata) {
+      $this->assertEquals('my_custom_job_id', $metadata->getJobId(), 'The job id was saved along with metadata.');
+    }
+  }
+
+  /**
+   * Tests that the bulk management filtering works correctly.
+   */
+  public function testJobIdFilter() {
+    \Drupal::configFactory()->getEditable('lingotek.settings')->set('translate.config.node_type.profile', 'manual')->save();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    $node_types = [];
+    // See https://www.drupal.org/project/drupal/issues/2925290.
+    $indexes = "ABCDEFGHIJKLMNOPQ";
+    // Create some nodes.
+    for ($i = 1; $i < 10; $i++) {
+      $node_types[$i] = $this->drupalCreateContentType(['type' => 'content_type_' . $i, 'name' => 'Content Type ' . $indexes[$i]]);
+    }
+
+    $this->goToConfigBulkManagementForm('node_type');
+    $this->assertNoText('No content available');
+
+    // After we filter by an unexisting job, there is no content and no rows.
+    $edit = [
+      'filters[wrapper][job]' => 'this job does not exist',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertText('No content available');
+
+    // After we reset, we get back to having all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    $this->goToConfigBulkManagementForm('node_type');
+    foreach (range(1, 9) as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $edit = [
+      'table[content_type_2]' => TRUE,
+      'table[content_type_4]' => TRUE,
+      'table[content_type_6]' => TRUE,
+      'table[content_type_8]' => TRUE,
+      'operation' => 'upload',
+      'job_id' => 'even numbers',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $edit = [
+      'table[content_type_1]' => TRUE,
+      'table[content_type_2]' => TRUE,
+      'table[content_type_3]' => TRUE,
+      'table[content_type_5]' => TRUE,
+      'table[content_type_7]' => TRUE,
+      'operation' => 'upload',
+      'job_id' => 'prime numbers',
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // After we filter by prime, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[wrapper][job]' => 'prime',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([1, 2, 3, 5, 7] as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+    $this->assertNoText('Content Type ' . $indexes[4]);
+    $this->assertNoText('Content Type ' . $indexes[6]);
+
+    // After we filter by even, there is no pager and the rows selected are the
+    // ones expected.
+    $edit = [
+      'filters[wrapper][job]' => 'even',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([4, 6, 8] as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+    $this->assertNoText('Content Type ' . $indexes[5]);
+
+    // After we reset, we get back to having all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    $this->goToConfigBulkManagementForm('node_type');
+    foreach (range(1, 9) as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
   }
 
 }

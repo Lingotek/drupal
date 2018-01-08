@@ -23,6 +23,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\file\Entity\File;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
@@ -148,6 +149,8 @@ class LingotekConfigManagementForm extends FormBase {
     $showingFields = FALSE;
 
     $this->filter = $this->getFilter();
+    $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
+    $jobFilter = $temp_store->get('job');
 
     // ToDo: Find a better filter?
     if ($this->filter === 'config') {
@@ -192,6 +195,16 @@ class LingotekConfigManagementForm extends FormBase {
 
       $source = $this->getSourceStatus($mapper);
       $translations = $this->getTranslationsStatuses($mapper);
+
+      // We select those that we want if there is a filter for job ID.
+      if (!empty($jobFilter)) {
+        $job_id = $this->getMetadataJobId($mapper);
+        $found = strpos($job_id, $jobFilter);
+        if ($found === FALSE || $found < 0) {
+          continue;
+        }
+      }
+
       $profile = $is_config_entity ?
         $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity(), FALSE) :
         $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
@@ -235,6 +248,12 @@ class LingotekConfigManagementForm extends FormBase {
       '#default_value' => $this->filter,
       '#attributes' => array('class' => array('form-item')),
     );
+    $form['filters']['wrapper']['job'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Job ID'),
+      '#default_value' => $jobFilter,
+      '#attributes' => ['class' => ['form-item']],
+    ];
     $form['filters']['actions'] = array(
       '#type' => 'container',
       '#attributes' => array('class' => array('clearfix'),),
@@ -243,6 +262,11 @@ class LingotekConfigManagementForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
       '#submit' => array('::filterForm'),
+    );
+    $form['filters']['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Reset'),
+      '#submit' => array('::resetFilterForm'),
     );
 
     // If we are showing field config instances, we need to show bundles for
@@ -273,7 +297,22 @@ class LingotekConfigManagementForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Execute'),
     );
-
+    $form['options']['show_advanced'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show advanced options'),
+      '#title_display' => 'before',
+    ];
+    $form['options']['job_id'] = [
+      '#type' => 'textfield',
+      '#size' => 50,
+      '#title' => $this->t('Job ID'),
+      '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="show_advanced"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
     $form['table'] = [
       '#header' => $headers,
       '#options' => $rows,
@@ -314,12 +353,30 @@ class LingotekConfigManagementForm extends FormBase {
    */
   public function filterForm(array &$form, FormStateInterface $form_state) {
     $value = $form_state->getValue(['filters', 'wrapper', 'bundle']);
+    $job_id = $form_state->getValue(['filters', 'wrapper', 'job']) ?: NULL;
+
     /** @var PrivateTempStore $temp_store */
     $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
     $temp_store->set('bundle', $value);
+    $temp_store->set('job', $job_id);
     $this->filter = $value;
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');
+  }
+
+  /**
+   * Form submission handler for resetting the filters.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public function resetFilterForm(array &$form, FormStateInterface $form_state) {
+    /** @var PrivateTempStore $temp_store */
+    $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
+    $temp_store->delete('bundle');
+    $temp_store->delete('job');
   }
 
   /**
@@ -327,6 +384,7 @@ class LingotekConfigManagementForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $operation = $form_state->getValue('operation');
+    $job_id = $form_state->getValue('job_id') ?: NULL;
     $values = array_keys(array_filter($form_state->getValue(['table'], function($key, $value){ return $value; })));
     $processed = FALSE;
     switch ($operation) {
@@ -335,7 +393,7 @@ class LingotekConfigManagementForm extends FormBase {
         $processed = TRUE;
         break;
       case 'upload':
-        $this->createUploadBatch($values);
+        $this->createUploadBatch($values, $job_id);
         $processed = TRUE;
         break;
       case 'check_upload':
@@ -405,10 +463,12 @@ class LingotekConfigManagementForm extends FormBase {
    * @param string $title
    *   The title for the batch progress.
    * @param string $language
-   *   The language code for the request. NULL if is not applicable.
+   *   (Optional) The language code for the request. NULL if is not applicable.
+   * @param string $job_id
+   *   (Optional) The job ID to be used. NULL if is not applicable.
    */
-  protected function createBatch($operation, $values, $title, $language = NULL) {
-    $operations = $this->generateOperations($operation, $values, $language);
+  protected function createBatch($operation, $values, $title, $language = NULL, $job_id = NULL) {
+    $operations = $this->generateOperations($operation, $values, $language, $job_id);
     $batch = array(
       'title' => $title,
       'operations' => $operations,
@@ -430,8 +490,8 @@ class LingotekConfigManagementForm extends FormBase {
    * @param array $values
    *   Array of ids to upload.
    */
-  protected function createUploadBatch($values) {
-    $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'));
+  protected function createUploadBatch($values, $job_id) {
+    $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'), NULL, $job_id);
   }
 
   /**
@@ -562,7 +622,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function debugExport(ConfigMapperInterface $mapper, $language, &$context) {
+  public function debugExport(ConfigMapperInterface $mapper, $language, $job_id, &$context) {
     $context['message'] = $this->t('Exporting %label.', ['%label' => $mapper->getTitle()]);
     if ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
       $data = $this->translationService->getConfigSourceData($mapper);
@@ -604,7 +664,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function uploadDocument(ConfigMapperInterface $mapper, $language, &$context) {
+  public function uploadDocument(ConfigMapperInterface $mapper, $language, $job_id, &$context) {
     $context['message'] = $this->t('Uploading %label.', ['%label' => $mapper->getTitle()]);
 
     /** @var ConfigEntityInterface $entity */
@@ -621,7 +681,7 @@ class LingotekConfigManagementForm extends FormBase {
     if ($entity === NULL || $profile !== NULL) {
       if ($mapper instanceof ConfigEntityMapper){
         try {
-          $this->translationService->uploadDocument($entity);
+          $this->translationService->uploadDocument($entity, $job_id);
         }
         catch (LingotekApiException $e) {
           $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
@@ -637,7 +697,7 @@ class LingotekConfigManagementForm extends FormBase {
       }
       else {
         try {
-          $this->translationService->uploadConfig($mapper->getPluginId());
+          $this->translationService->uploadConfig($mapper->getPluginId(), $job_id);
         }
         catch (LingotekApiException $e) {
           $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_ERROR);
@@ -664,7 +724,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function checkDocumentUploadStatus(ConfigMapperInterface $mapper, $language, &$context) {
+  public function checkDocumentUploadStatus(ConfigMapperInterface $mapper, $language, $job_id, &$context) {
     $context['message'] = $this->t('Checking status of %label.', ['%label' => $mapper->getTitle()]);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
@@ -705,7 +765,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function requestTranslations(ConfigMapperInterface $mapper, $language, &$context) {
+  public function requestTranslations(ConfigMapperInterface $mapper, $language, $job_id, &$context) {
     $result = NULL;
     $context['message'] = $this->t('Requesting translations for %label.', ['%label' => $mapper->getTitle()]);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
@@ -748,7 +808,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function checkTranslationStatuses(ConfigMapperInterface $mapper, $language, &$context) {
+  public function checkTranslationStatuses(ConfigMapperInterface $mapper, $language, $job_id, &$context) {
     $context['message'] = $this->t('Checking translation status for %label.', ['%label' => $mapper->getTitle()]);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
@@ -791,7 +851,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param string $langcode
    *   The language to check.
    */
-  public function checkTranslationStatus(ConfigMapperInterface $mapper, $langcode, &$context) {
+  public function checkTranslationStatus(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Checking translation status for %label to language @language.', ['%label' => $mapper->getTitle(), '@language' => $langcode]);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
@@ -835,7 +895,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param string $langcode
    *   The language to download.
    */
-  public function requestTranslation(ConfigMapperInterface $mapper, $langcode, &$context) {
+  public function requestTranslation(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Requesting translation for %label to language @language.', ['%label' => $mapper->getTitle(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
@@ -879,7 +939,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param string $langcode
    *   The language to download.
    */
-  public function downloadTranslation(ConfigMapperInterface $mapper, $langcode, &$context) {
+  public function downloadTranslation(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Downloading translation for %label in language @language.', ['%label' => $mapper->getTitle(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
@@ -904,7 +964,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function downloadTranslations(ConfigMapperInterface $mapper, $langcode, &$context) {
+  public function downloadTranslations(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Downloading all translations for %label.', ['%label' => $mapper->getTitle()]);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
@@ -934,7 +994,7 @@ class LingotekConfigManagementForm extends FormBase {
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
    *   The mapper.
    */
-  public function disassociate(ConfigMapperInterface $mapper, $langcode, &$context) {
+  public function disassociate(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Disassociating all translations for %label.', ['%label' => $mapper->getTitle()]);
     $entity =  $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
@@ -1317,10 +1377,12 @@ class LingotekConfigManagementForm extends FormBase {
    *   The mappers this operation will be applied to.
    * @param $language
    *   The language to be passed to that operation.
+   * @param $job_id
+   *   The job ID to be passed to that operation.
    * @return array
    *   An array of operations suitable for a batch.
    */
-  protected function generateOperations($operation, $values, $language) {
+  protected function generateOperations($operation, $values, $language, $job_id = NULL) {
     $operations = [];
 
     $mappers = [];
@@ -1354,7 +1416,7 @@ class LingotekConfigManagementForm extends FormBase {
     }
 
     foreach ($mappers as $mapper) {
-      $operations[] = [[$this, $operation], [$mapper, $language]];
+      $operations[] = [[$this, $operation], [$mapper, $language, $job_id]];
     }
     return $operations;
   }
@@ -1388,6 +1450,26 @@ class LingotekConfigManagementForm extends FormBase {
           ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
       }
     }
+  }
+
+  protected function getMetadataJobId($mapper) {
+    $job_id = NULL;
+    $metadata = NULL;
+    if ($mapper instanceof ConfigEntityMapper) {
+      $entity = $mapper->getEntity();
+      $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    }
+    elseif ($mapper instanceof ConfigMapperInterface) {
+      $config_names = $mapper->getConfigNames();
+      if ($config_names) {
+        $config_name = reset($config_names);
+        $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      }
+    }
+    if ($metadata !== NULL) {
+      $job_id = $metadata->getJobId();
+    }
+    return $job_id;
   }
 
 }

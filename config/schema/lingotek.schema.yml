@@ -391,6 +391,9 @@ lingotek.lingotek_config_metadata.*:
     hash:
       type: string
       label: 'Lingotek hash'
+    job_id:
+      type: string
+      label: 'Lingotek Job ID'
 
 language.entity.*.third_party.lingotek:
   type: mapping

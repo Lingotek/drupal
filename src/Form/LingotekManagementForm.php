@@ -227,6 +227,7 @@ class LingotekManagementForm extends FormBase {
     $profileFilter = $temp_store->get('profile');
     $sourceLanguageFilter = $temp_store->get('source_language');
     $groupFilter = $groupsExists ? $temp_store->get('group') : NULL;
+    $jobFilter = $temp_store->get('job');
 
     if ($has_bundles && $bundleFilter) {
       $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter);
@@ -254,6 +255,12 @@ class LingotekManagementForm extends FormBase {
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() .'\'');
       $query->condition('metadata.profile', $profileFilter);
+    }
+    if ($jobFilter) {
+      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() .'\'');
+      $query->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
     }
 
     if ($groupFilter) {
@@ -370,6 +377,12 @@ class LingotekManagementForm extends FormBase {
       '#default_value' => $profileFilter,
       '#attributes' => array('class' => array('form-item')),
     );
+    $form['filters']['wrapper']['job'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Job ID'),
+      '#default_value' => $jobFilter,
+      '#attributes' => array('class' => array('form-item')),
+    );
     $form['filters']['actions'] = array(
       '#type' => 'container',
       '#attributes' => array('class' => array('clearfix'),),
@@ -403,6 +416,23 @@ class LingotekManagementForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Execute'),
     );
+
+    $form['options']['show_advanced'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show advanced options'),
+      '#title_display' => 'before',
+    ];
+    $form['options']['job_id'] = [
+      '#type' => 'textfield',
+      '#size' => 50,
+      '#title' => $this->t('Job ID'),
+      '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="show_advanced"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
 
     $form['table'] = [
       '#header' => $headers,
@@ -453,6 +483,7 @@ class LingotekManagementForm extends FormBase {
     $temp_store->delete('profile');
     $temp_store->delete('source_language');
     $temp_store->delete('bundle');
+    $temp_store->delete('job');
 
     if ($this->entityTypeId === 'node') {
       $temp_store->delete('group');
@@ -474,6 +505,7 @@ class LingotekManagementForm extends FormBase {
     $temp_store->set('profile', $form_state->getValue(['filters', 'wrapper', 'profile']));
     $temp_store->set('source_language', $form_state->getValue(['filters', 'wrapper', 'source_language']));
     $temp_store->set('bundle', $form_state->getValue(['filters', 'wrapper', 'bundle']));
+    $temp_store->set('job', $form_state->getValue(['filters', 'wrapper', 'job']));
 
     if ($this->entityTypeId === 'node') {
       $temp_store->set('group', $form_state->getValue(['filters', 'wrapper', 'group']));
@@ -487,6 +519,7 @@ class LingotekManagementForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $operation = $form_state->getValue('operation');
+    $job_id = $form_state->getValue('job_id') ?: NULL;
     $values = array_keys(array_filter($form_state->getValue(['table'], function($key, $value){ return $value; })));
     $processed = FALSE;
     switch ($operation) {
@@ -495,7 +528,7 @@ class LingotekManagementForm extends FormBase {
         $processed = TRUE;
         break;
       case 'upload':
-        $this->createUploadBatch($values);
+        $this->createUploadBatch($values, $job_id);
         $processed = TRUE;
         break;
       case 'check_upload':
@@ -557,14 +590,17 @@ class LingotekManagementForm extends FormBase {
    * @param string $title
    *   The title for the batch progress.
    * @param string $language
-   *   The language code for the request. NULL if is not applicable.
+   *   (Optional) The language code for the request. NULL if is not applicable.
+   * @param string $job_id
+   *   (Optional) The job ID to be used. NULL if is not applicable.
    */
-  protected function createBatch($operation, $values, $title, $language = NULL) {
+  protected function createBatch($operation, $values, $title, $language = NULL, $job_id = NULL) {
     $operations = [];
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
 
+    // ToDo: Generate the job_id properly.
     foreach ($entities as $entity) {
-      $operations[] = [[$this, $operation], [$entity, $language]];
+      $operations[] = [[$this, $operation], [$entity, $language, $job_id]];
     }
     $batch = array(
       'title' => $title,
@@ -590,9 +626,11 @@ class LingotekManagementForm extends FormBase {
    *
    * @param array $values
    *   Array of ids to upload.
+   * @param string $job_id
+   *   (Optional) The job ID to be used. NULL if is not applicable.
    */
-  protected function createUploadBatch($values) {
-    $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'));
+  protected function createUploadBatch($values, $job_id = NULL) {
+    $this->createBatch('uploadDocument', $values, $this->t('Uploading content to Lingotek service'), NULL, $job_id);
   }
 
   /**
@@ -791,11 +829,11 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function uploadDocument(ContentEntityInterface $entity, $language, &$context) {
+  public function uploadDocument(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $context['message'] = $this->t('Uploading @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity)) {
       try {
-        $this->translationService->uploadDocument($entity);
+        $this->translationService->uploadDocument($entity, $job_id);
       }
       catch (LingotekApiException $exception) {
         $this->translationService->setSourceStatus($entity, Lingotek::STATUS_ERROR);
@@ -820,7 +858,7 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function checkDocumentUploadStatus(ContentEntityInterface $entity, $language, &$context) {
+  public function checkDocumentUploadStatus(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $context['message'] = $this->t('Checking status of @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
@@ -843,7 +881,7 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function requestTranslations(ContentEntityInterface $entity, $language, &$context) {
+  public function requestTranslations(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $result = NULL;
     $context['message'] = $this->t('Requesting translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
@@ -868,7 +906,7 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function checkTranslationStatuses(ContentEntityInterface $entity, $language, &$context) {
+  public function checkTranslationStatuses(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $context['message'] = $this->t('Checking translation status for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
@@ -893,7 +931,7 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to check.
    */
-  public function checkTranslationStatus(ContentEntityInterface $entity, $language, &$context) {
+  public function checkTranslationStatus(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $context['message'] = $this->t('Checking translation status for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $language]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
@@ -918,7 +956,7 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to download.
    */
-  public function requestTranslation(ContentEntityInterface $entity, $langcode, &$context) {
+  public function requestTranslation(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Requesting translation for @type %label to language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
@@ -944,7 +982,7 @@ class LingotekManagementForm extends FormBase {
    * @param string $language
    *   The language to download.
    */
-  public function downloadTranslation(ContentEntityInterface $entity, $langcode, &$context) {
+  public function downloadTranslation(ContentEntityInterface $entity, $langcode, $job_id, &$context) {
     $context['message'] = $this->t('Downloading translation for @type %label in language @language.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label(), '@language' => $langcode]);
     $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
@@ -972,7 +1010,7 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function downloadTranslations(ContentEntityInterface $entity, $language, &$context) {
+  public function downloadTranslations(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $context['message'] = $this->t('Downloading all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       $languages = $this->languageManager->getLanguages();
@@ -1001,7 +1039,7 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function disassociate(ContentEntityInterface $entity, $language, &$context) {
+  public function disassociate(ContentEntityInterface $entity, $language, $job_id, &$context) {
     $context['message'] = $this->t('Disassociating all translations for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     if ($profile = $this->lingotekConfiguration->getEntityProfile($entity, FALSE)) {
       try {
@@ -1025,7 +1063,7 @@ class LingotekManagementForm extends FormBase {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    */
-  public function changeProfile(ContentEntityInterface $entity, $profile_id = NULL, &$context) {
+  public function changeProfile(ContentEntityInterface $entity, $profile_id = NULL, $job_id, &$context) {
     $context['message'] = $this->t('Changing Translation Profile for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     try {
       $this->lingotekConfiguration->setProfile($entity, $profile_id, TRUE);

@@ -448,7 +448,7 @@ class LingotekUnitTest extends UnitTestCase {
         'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0'
       ]);
 
-      // We upload with array of content
+    // We upload with array of content.
     $this->api->expects($this->at(6))
       ->method('addDocument')
       ->with(['title' => 'title', 'content' => '{"content":"wedgiePlatypus"}', 'locale_code' => 'es',
@@ -457,6 +457,17 @@ class LingotekUnitTest extends UnitTestCase {
               'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
               'vault_id' => 'test_vault',
               'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0']);
+
+    // We upload with a job ID.
+    $this->api->expects($this->at(7))
+      ->method('addDocument')
+      ->with(['title' => 'title', 'content' => '{"content":"wedgiePlatypus"}', 'locale_code' => 'es',
+        'format' => 'JSON', 'project_id' => 'test_project',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'vault_id' => 'test_vault',
+        'job_id' => 'my_job_id',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0']);
 
     // We upload with a profile that has a vault and a project.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault'], 'lingotek_profile');
@@ -482,10 +493,12 @@ class LingotekUnitTest extends UnitTestCase {
     $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'project_workflow_vault', 'filter' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
-        // We upload with content as an array
+    // We upload with content as an array.
     $profile = new LingotekProfile(['id' => 'profile0', 'project' => 'test_project', 'vault' => 'test_vault'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile);
 
+    // We upload with a job ID.
+    $this->lingotek->uploadDocument('title', ['content' => 'wedgiePlatypus'], 'es', NULL, $profile, 'my_job_id');
   }
 
   /**
@@ -566,6 +579,18 @@ class LingotekUnitTest extends UnitTestCase {
       ])
       ->will($this->returnValue($response));
 
+    // The call includes a job_id and a profile.
+    $this->api->expects($this->at(5))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'format' => 'JSON', 'content' => '"content"', 'title' => 'title',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'job_id' => 'my_job_id',
+      ])
+      ->will($this->returnValue($response));
+
     // Simplest update.
     $this->lingotek->updateDocument('my_doc_id', 'content');
 
@@ -580,6 +605,10 @@ class LingotekUnitTest extends UnitTestCase {
 
     // The content is an array.
     $this->lingotek->updateDocument('my_doc_id', ['content' => 'wedgiePlatypus']);
+
+    // We upload with a profile and a job ID.
+    $profile = new LingotekProfile(['id' => 'profile0', 'project' => 'test_project', 'vault' => 'test_vault'], 'lingotek_profile');
+    $this->lingotek->updateDocument('my_doc_id', 'content', NULL, 'title', $profile, 'my_job_id');
   }
 
   /**

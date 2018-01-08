@@ -642,9 +642,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function uploadDocument(ContentEntityInterface $entity) {
+  public function uploadDocument(ContentEntityInterface $entity, $job_id = NULL) {
     if ($document_id = $this->getDocumentId($entity)) {
-      return $this->updateDocument($entity);
+      return $this->updateDocument($entity, $job_id);
     }
     $source_data = $this->getSourceData($entity);
     $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
@@ -654,12 +654,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile);
+    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile, $job_id);
     if ($document_id) {
       $this->lingotekConfiguration->setProfile($entity, $profile->id());
       $this->setDocumentId($entity, $document_id);
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
+      $this->setJobId($entity, $job_id);
       return $document_id;
     }
     return FALSE;
@@ -723,7 +724,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function updateDocument(ContentEntityInterface &$entity) {
+  public function updateDocument(ContentEntityInterface &$entity, $job_id = NULL) {
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
@@ -733,9 +734,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile)) {
+    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id)) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
+      $this->setJobId($entity, $job_id);
       return $document_id;
     }
     return FALSE;
@@ -1067,6 +1069,20 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
       throw new LingotekContentEntityStorageException($entity, $storage_exception, $storage_exception->getMessage());
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setJobId(ContentEntityInterface $entity, $job_id) {
+    if ($entity->lingotek_metadata === NULL) {
+      $entity->lingotek_metadata = LingotekContentMetadata::create();
+    }
+    $metadata = &$entity->lingotek_metadata->entity;
+
+    $metadata->setJobId($job_id);
+    $metadata->save();
+    return $entity;
   }
 
   /**
