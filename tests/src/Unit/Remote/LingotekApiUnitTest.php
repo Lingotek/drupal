@@ -95,7 +95,7 @@ class LingotekApiUnitTest extends UnitTestCase {
       ->method('post')
       ->with('/api/document/fancy-document-id/translation', ['locale_code' => 'es_ES', 'workflow_id' => 'my_workflow'])
       ->will($this->throwException(new ClientException(
-        'Client error: `POST https://cms.lingotek.com/api/document/700e102b-b0ad-4ddf-9da1-73c62d587abc/translation` resulted in a `400 Bad Request` response:
+        'Client error: `POST https://myaccount.lingotek.com/api/document/700e102b-b0ad-4ddf-9da1-73c62d587abc/translation` resulted in a `400 Bad Request` response:
 {"messages":["Translation (es_ES) already exists."]}',
         $request,
         $response

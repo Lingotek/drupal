@@ -155,7 +155,7 @@ lingotek.settings:
           label: 'Use production'
         sandbox_host:
           type: string
-          label: 'Sandbox Host'
+          label: 'Sandbox Host (deprecated)'
         host:
           type: string
           label: 'Lingotek Host'

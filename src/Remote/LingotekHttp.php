@@ -121,10 +121,7 @@ class LingotekHttp implements LingotekHttpInterface {
   }
 
   protected function getBaseUrl() {
-    $base_url = $this->config->get('account.sandbox_host');
-    if ($this->config->get('account.use_production')) {
-      $base_url = $this->config->get('account.host');
-    }
+    $base_url = $this->config->get('account.host');
     return $base_url;
   }
 
