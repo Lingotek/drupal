@@ -31,77 +31,78 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   class LingotekManagementFormTest extends UnitTestCase {
 
     /**
-   * @var LingotekManagementForm
-   */
+     * @var LingotekManagementForm
+     */
     protected $form;
 
     /**
-   * The connection object on which to run queries.
-   *
-   * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The connection object on which to run queries.
+     *
+     * @var \Drupal\Core\Database\Connection|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $connection;
 
     /**
-   * The language-locale mapper.
-   *
-   * @var \Drupal\lingotek\LanguageLocaleMapperInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The language-locale mapper.
+     *
+     * @var \Drupal\lingotek\LanguageLocaleMapperInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $languageLocaleMapper;
 
     /**
-   * The entity manager.
-   *
-   * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The entity manager.
+     *
+     * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $entityManager;
 
     /**
-   * The language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The language manager.
+     *
+     * @var \Drupal\Core\Language\LanguageManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $languageManager;
 
     /**
-   * The entity query factory service.
-   *
-   * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The entity query factory service.
+     *
+     * @var \Drupal\Core\Entity\Query\QueryFactory|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $entityQuery;
 
     /**
-   * The Lingotek configuration service.
-   *
-   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The Lingotek configuration service.
+     *
+     * @var \Drupal\lingotek\LingotekConfigurationServiceInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $lingotekConfiguration;
 
     /**
-   * The Lingotek service
-   *
-   * @var \Drupal\lingotek\LingotekInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The Lingotek service
+     *
+     * @var \Drupal\lingotek\LingotekInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $lingotek;
 
     /**
-   * The content translation manager.
-   *
-   * @var \Drupal\content_translation\ContentTranslationManagerInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The content translation manager.
+     *
+     * @var \Drupal\content_translation\ContentTranslationManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $contentTranslationManager;
+
     /**
-   * The Lingotek content translation service.
-   *
-   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The Lingotek content translation service.
+     *
+     * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $contentTranslationService;
 
     /**
-   * The tempstore factory.
-   *
-   * @var \Drupal\user\PrivateTempStoreFactory|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The tempstore factory.
+     *
+     * @var \Drupal\user\PrivateTempStoreFactory|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $tempStoreFactory;
 
     /**
@@ -112,45 +113,58 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     protected $moduleHandler;
 
     /**
-   * The state key value store.
-   *
-   * @var \Drupal\Core\State\StateInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
+     * The state key value store.
+     *
+     * @var \Drupal\Core\State\StateInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected $state;
 
     protected function setUp() {
       parent::setUp();
 
-      $this->connection = $this->getMockBuilder(Connection::class)->disableOriginalConstructor()->getMock();
+      $this->connection = $this->getMockBuilder(Connection::class)
+        ->disableOriginalConstructor()
+        ->getMock();
       $this->entityManager = $this->getMock(EntityManagerInterface::class);
       $this->languageManager = $this->getMock(LanguageManagerInterface::class);
-      $this->entityQuery = $this->getMockBuilder(QueryFactory::class)->disableOriginalConstructor()->getMock();
+      $this->entityQuery = $this->getMockBuilder(QueryFactory::class)
+        ->disableOriginalConstructor()
+        ->getMock();
       $this->lingotek = $this->getMock(LingotekInterface::class);
       $this->lingotekConfiguration = $this->getMock(LingotekConfigurationServiceInterface::class);
       $this->languageLocaleMapper = $this->getMock(LanguageLocaleMapperInterface::class);
       $this->contentTranslationManager = $this->getMock(ContentTranslationManagerInterface::class);
       $this->contentTranslationService = $this->getMock(LingotekContentTranslationServiceInterface::class);
-      $this->tempStoreFactory = $this->getMockBuilder(PrivateTempStoreFactory::class)->disableOriginalConstructor()->getMock();
+      $this->tempStoreFactory = $this->getMockBuilder(PrivateTempStoreFactory::class)
+        ->disableOriginalConstructor()
+        ->getMock();
       $this->state = $this->getMock(StateInterface::class);
       $this->moduleHandler = $this->getMock(ModuleHandlerInterface::class);
 
       $this->form = new LingotekManagementForm(
-      $this->connection,
-      $this->entityManager,
-      $this->languageManager,
-      $this->entityQuery,
-      $this->lingotek,
-      $this->lingotekConfiguration,
-      $this->languageLocaleMapper,
-      $this->contentTranslationManager,
-      $this->contentTranslationService,
-      $this->tempStoreFactory,
-      $this->state,
-      $this->moduleHandler,
-      'node'
+        $this->connection,
+        $this->entityManager,
+        $this->languageManager,
+        $this->entityQuery,
+        $this->lingotek,
+        $this->lingotekConfiguration,
+        $this->languageLocaleMapper,
+        $this->contentTranslationManager,
+        $this->contentTranslationService,
+        $this->tempStoreFactory,
+        $this->state,
+        $this->moduleHandler,
+        'node'
       );
       $this->form->setConfigFactory($this->getConfigFactoryStub(
-      ['lingotek.settings' => ['account' => ['access_token' => 'token', 'login_id' => 'test@example.com']]]
+        [
+          'lingotek.settings' => [
+            'account' => [
+              'access_token' => 'token',
+              'login_id' => 'test@example.com'
+            ]
+          ]
+        ]
       ));
       $this->form->setStringTranslation($this->getStringTranslationStub());
     }
@@ -204,31 +218,67 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $tempStore = $this->getMockBuilder(PrivateTempStore::class)->disableOriginalConstructor()->getMock();
       $this->tempStoreFactory->expects($this->at(0))
         ->method('get')
-        ->with('lingotek.management.items_per_page')
+        ->with('lingotek.management.filter.node')
         ->willReturn($tempStore);
       $this->tempStoreFactory->expects($this->at(1))
         ->method('get')
+        ->with('lingotek.management.items_per_page')
+        ->willReturn($tempStore);
+      $this->tempStoreFactory->expects($this->at(2))
+        ->method('get')
         ->with('lingotek.management.filter.node')
+        ->willReturn($tempStore);
+      $this->tempStoreFactory->expects($this->at(3))
+        ->method('get')
+        ->with('lingotek.management.items_per_page')
         ->willReturn($tempStore);
       $tempStore->expects($this->at(0))
         ->method('get')
-        ->with('limit')
+        ->with('label')
         ->willReturn(NULL);
       $tempStore->expects($this->at(1))
         ->method('get')
-        ->with('label')
+        ->with('bundle')
         ->willReturn(NULL);
       $tempStore->expects($this->at(2))
         ->method('get')
-        ->with('bundle')
+        ->with('profile')
         ->willReturn(NULL);
       $tempStore->expects($this->at(3))
         ->method('get')
-        ->with('profile')
+        ->with('source_language')
         ->willReturn(NULL);
       $tempStore->expects($this->at(4))
         ->method('get')
+        ->with('job')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(5))
+        ->method('get')
+        ->with('limit')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(6))
+        ->method('get')
+        ->with('label')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(7))
+        ->method('get')
+        ->with('bundle')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(8))
+        ->method('get')
+        ->with('profile')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(9))
+        ->method('get')
         ->with('source_language')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(10))
+        ->method('get')
+        ->with('job')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(11))
+        ->method('get')
+        ->with('limit')
         ->willReturn(NULL);
 
       $entityType = $this->getMock(EntityTypeInterface::class);
@@ -236,7 +286,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('get')
         ->with('bundle_entity_type')
         ->willReturn('node');
-      $this->entityManager->expects($this->once())
+      $this->entityManager->expects($this->exactly(3))
         ->method('getDefinition')
         ->with('node')
         ->willReturn($entityType);
@@ -285,6 +335,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
 }
 
 namespace {
+
   // @todo Delete after https://drupal.org/node/1858196 is in.
   if (!function_exists('drupal_set_message')) {
     function drupal_set_message() {
