@@ -70,6 +70,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
       'node[article][profiles]' => 'automatic',
       'node[article][fields][title]' => 1,
       'node[article][fields][body]' => 1,
+      'node[article][fields][uid]' => 1,
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
 
@@ -80,6 +81,8 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
    */
   public function testUploadNodeWithNoSettings() {
     $this->disableIntelligenceMetadata();
+
+    $this->drupalLogin($this->rootUser);
 
     // Create a node.
     $edit = [];
@@ -98,10 +101,15 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertTrue(isset($data['uid']));
+    $this->assertFalse(isset($data['uid'][0]['_lingotek_metadata']['_intelligence']));
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_id'], '1');
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_type_id'], 'user');
+    $this->assertNull($data['uid'][0]['_lingotek_metadata']['_entity_revision']);
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 
@@ -120,6 +128,8 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
   public function testUploadNodeWithDefaultSettings() {
     $domain = \Drupal::request()->getSchemeAndHttpHost();
 
+    $this->drupalLogin($this->rootUser);
+
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -137,10 +147,15 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertTrue(isset($data['uid']));
+    $this->assertFalse(isset($data['uid'][0]['_lingotek_metadata']['_intelligence']));
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_id'], '1');
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_type_id'], 'user');
+    $this->assertNull($data['uid'][0]['_lingotek_metadata']['_entity_revision']);
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 
@@ -180,6 +195,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     $domain = \Drupal::request()->getSchemeAndHttpHost();
 
     $this->setupGeneralIntelligenceSettings();
+    $this->drupalLogin($this->rootUser);
 
     // Create a node.
     $edit = [];
@@ -198,10 +214,15 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertTrue(isset($data['uid']));
+    $this->assertFalse(isset($data['uid'][0]['_lingotek_metadata']['_intelligence']));
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_id'], '1');
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_type_id'], 'user');
+    $this->assertNull($data['uid'][0]['_lingotek_metadata']['_entity_revision']);
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 
@@ -239,6 +260,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
     $this->setupGeneralIntelligenceSettings();
     $this->setupContactEmailForAuthorIntelligenceSettings();
+    $this->drupalLogin($this->rootUser);
 
     // Create a node.
     $edit = [];
@@ -257,10 +279,15 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertTrue(isset($data['uid']));
+    $this->assertFalse(isset($data['uid'][0]['_lingotek_metadata']['_intelligence']));
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_id'], '1');
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_type_id'], 'user');
+    $this->assertNull($data['uid'][0]['_lingotek_metadata']['_entity_revision']);
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 
@@ -299,6 +326,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
     $this->setupIntelligenceProfileSettings();
     $this->setupGeneralIntelligenceSettings();
+    $this->drupalLogin($this->rootUser);
 
     // Create a node.
     $edit = [];
@@ -318,10 +346,15 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertTrue(isset($data['uid']));
+    $this->assertFalse(isset($data['uid'][0]['_lingotek_metadata']['_intelligence']));
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_id'], '1');
+    $this->assertIdentical($data['uid'][0]['_lingotek_metadata']['_entity_type_id'], 'user');
+    $this->assertNull($data['uid'][0]['_lingotek_metadata']['_entity_revision']);
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 

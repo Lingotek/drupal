@@ -166,17 +166,6 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertEqual('node', $serialized_node['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata.');
     $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata.');
     $this->assertEqual(1, $serialized_node['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata.');
-
-    // And paragraphs metadata is there too.
-    $this->assertTrue(isset($serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']), 'The Lingotek metadata is included in the first paragraph.');
-    $this->assertEqual('paragraph', $serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata in the first paragraph.');
-    $this->assertEqual(1, $serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata in the first paragraph.');
-    $this->assertEqual(1, $serialized_node['field_paragraphs_demo'][0]['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata in the first paragraph.');
-
-    $this->assertTrue(isset($serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']), 'The Lingotek metadata is included in the second paragraph.');
-    $this->assertEqual('paragraph', $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_type_id'], 'Entity type id is included as metadata in the second paragraph.');
-    $this->assertEqual(2, $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_id'], 'Entity id is included as metadata in the second paragraph.');
-    $this->assertEqual(2, $serialized_node['field_paragraphs_demo'][1]['_lingotek_metadata']['_entity_revision'], 'Entity revision id is included as metadata in the second paragraph.');
   }
 
   /**
