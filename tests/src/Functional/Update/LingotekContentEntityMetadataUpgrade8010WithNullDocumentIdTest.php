@@ -28,6 +28,9 @@ class LingotekContentEntityMetadataUpgrade8010WithNullDocumentIdTest extends Upd
    * Tests that content entity metadata is migrated correctly.
    */
   public function testContentEntityMetadataUpgrade() {
+    if ((float) \Drupal::VERSION >= 8.5) {
+      $this->markTestSkipped("We don't test the upgrade with core > 8.5.x. See https://www.drupal.org/node/2891215 and the use of Entity API here.");
+    }
     $this->runUpdates();
 
     /** @var \Drupal\lingotek\Entity\LingotekContentMetadata[] $metadatas */
