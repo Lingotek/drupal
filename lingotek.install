@@ -514,6 +514,13 @@ function lingotek_update_8206() {
   }
 }
 
+/**
+ * Clear route names cache.
+ */
+function lingotek_update_8207() {
+  // We added routes, so we need to ensure that the routing caches are cleared.
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

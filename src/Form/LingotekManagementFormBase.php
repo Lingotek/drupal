@@ -164,7 +164,7 @@ abstract class LingotekManagementFormBase extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     if ($redirect = $this->checkSetup()) {
       return $redirect;
     }
@@ -218,19 +218,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
 
     // Add the headers.
-    $headers = [];
-    $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
-    $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
-    $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
-    if ($has_bundles) {
-      $headers['bundle'] = $entity_type->getBundleLabel();
-    }
-    $headers += [
-      'title' => $has_bundles && $entity_type->hasKey('label') ? $properties[$entity_type->getKey('label')]->getLabel() : $entity_type->getLabel(),
-      'source' => $this->t('Source'),
-      'translations' => $this->t('Translations'),
-      'profile' => $this->t('Profile'),
-    ];
+    $headers = $this->getHeaders();
 
     // Get all the entities that need to be displayed.
     $entities = $this->getFilteredEntities();
@@ -262,6 +250,11 @@ abstract class LingotekManagementFormBase extends FormBase {
     $form['#attached']['library'][] = 'lingotek/lingotek.manage';
     return $form;
   }
+
+  /**
+   * @return string[]
+   */
+  abstract protected function getHeaders();
 
   /**
    * Load the entities corresponding with the given identifiers.
@@ -1102,7 +1095,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
     });
     $document_id = $this->translationService->getDocumentId($entity);
-    $metadata = $entity->lingotek_metadata->entity;
+    $metadata = $entity->lingotek_metadata !== NULL ? $entity->lingotek_metadata->entity : NULL;
     if ($metadata !== NULL && $metadata->translation_status && $document_id) {
       foreach ($metadata->translation_status->getIterator() as $delta => $field_value) {
         if ($field_value->language !== $entity->language()->getId() && array_key_exists($field_value->language, $languages)) {

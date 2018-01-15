@@ -29,3 +29,9 @@ lingotek.import:
 lingotek.manage.content:
   deriver: 'Drupal\lingotek\Plugin\Derivative\ContentTranslationLocalTasks'
   weight: 100
+
+lingotek.entity.manage:
+  route_name: lingotek.entity.manage
+  title: 'Manage Translations'
+  base_route: entity.node.canonical
+  weight: 100

@@ -183,6 +183,14 @@ lingotek.entity.download:
   requirements:
     _permission: 'manage lingotek translations'
 
+lingotek.entity.manage:
+  path: '/node/{node}/manage'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekManagementRelatedEntitiesForm'
+    _title: 'Manage Translations'
+  requirements:
+    _permission: 'manage lingotek translations'
+
 lingotek.config.upload:
   path: '/admin/lingotek/config/upload/{entity_type}/{entity_id}'
   defaults:

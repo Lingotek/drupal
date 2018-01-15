@@ -785,7 +785,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     $doc_id = $this->getDocumentId($entity);
     $metadata = $entity->lingotek_metadata->entity;
-    $metadata->delete();
+    if ($metadata !== NULL){
+      $metadata->delete();
+    }
   }
 
   /**
