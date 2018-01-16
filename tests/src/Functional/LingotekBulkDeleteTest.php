@@ -29,6 +29,9 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
 
   protected function setUp() {
     parent::setUp();
+    if ((float) \Drupal::VERSION >= 8.5) {
+      $this->markTestSkipped("We don't test the delete of content with core > 8.5.x. See https://www.drupal.org/project/lingotek/issues/2936994.");
+    }
 
     $this->drupalPlaceBlock('page_title_block', ['region' => 'header']);
 

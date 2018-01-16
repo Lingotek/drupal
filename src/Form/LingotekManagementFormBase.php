@@ -1250,7 +1250,7 @@ abstract class LingotekManagementFormBase extends FormBase {
 
     // We add the delete operation in nodes and comments, as we have those
     // operations in core.
-    if ($this->entityTypeId === 'node') {
+    if ($this->entityTypeId === 'node' && (float) \Drupal::VERSION < 8.5) {
       $operations['delete_nodes'] = $this->t('Delete content');
     }
 
