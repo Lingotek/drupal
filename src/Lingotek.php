@@ -247,16 +247,15 @@ class Lingotek implements LingotekInterface {
       $content = ($data === NULL) ? $content : $data;
     }
 
-    $args = array(
+    $defaults = array(
       'format' => 'JSON',
-      'content' => json_encode($content),
       'fprm_id' => $this->lingotekFilterManager->getFilterId($profile),
       'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     );
 
     $metadata = $this->getIntelligenceMetadata($content);
-    $args = array_merge($metadata, $args);
+    $args = array_merge($metadata, $defaults);
 
     if ($url !== NULL) {
       $args['external_url'] = $url;
@@ -267,6 +266,7 @@ class Lingotek implements LingotekInterface {
     if ($job_id !== NULL) {
       $args['job_id'] = $job_id;
     }
+    $args = array_merge(['content' => json_encode($content)], $args);
 
     $response = $this->api->patchDocument($doc_id, $args);
     if ($response->getStatusCode() == Response::HTTP_ACCEPTED) {

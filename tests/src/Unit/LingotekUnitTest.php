@@ -792,4 +792,85 @@ class LingotekUnitTest extends UnitTestCase {
     $this->assertEquals(FALSE, $result);
   }
 
+  /**
+   * @covers ::uploadDocument
+   */
+  public function testUploadWithNoMetadataLeaked() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
+
+    // Vault id has the original value.
+    $this->api->expects($this->at(0))
+      ->method('addDocument')
+      ->with(['title' => 'title',
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'locale_code' => 'es',
+        'format' => 'JSON', 'project_id' => 'default_project',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = ['content' => 'My test content', '_lingotek_metadata' => ['_entity_id' => 1, '_intelligence' => ['content_type' => 'node']]];
+    $this->lingotek->uploadDocument('title', $data, 'es');
+  }
+
+  /**
+   * @covers ::updateDocument
+   */
+  public function testUpdateWithNoMetadataLeaked() {
+    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+      ->disableOriginalConstructor()
+      ->getMock();
+    $response->expects($this->any())
+      ->method('getStatusCode')
+      ->willReturn(Response::HTTP_ACCEPTED);
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getFilterId')
+      ->willReturn('4f91482b-5aa1-4a4a-a43f-712af7b39625');
+
+    $this->lingotekFilterManager->expects($this->any())
+      ->method('getSubfilterId')
+      ->willReturn('0e79f34d-f27b-4a0c-880e-cd9181a5d265');
+
+    $this->config->expects($this->any())
+      ->method('get')
+      ->will($this->returnValueMap([['default.project', 'default_project'], ['default.vault', 'default_vault']]));
+
+    // Vault id has the original value.
+    $this->api->expects($this->at(0))
+      ->method('patchDocument')
+      ->with('my_doc_id', [
+        'content' => '{"content":"My test content","_lingotek_metadata":{"_entity_id":1}}',
+        'format' => 'JSON',
+        'fprm_subfilter_id' => '0e79f34d-f27b-4a0c-880e-cd9181a5d265',
+        'fprm_id' => '4f91482b-5aa1-4a4a-a43f-712af7b39625',
+        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
+        'content_type' => 'node',
+      ])
+      ->will($this->returnValue($response));
+
+    $data = ['content' => 'My test content', '_lingotek_metadata' => ['_entity_id' => 1, '_intelligence' => ['content_type' => 'node']]];
+    $this->lingotek->updateDocument('my_doc_id', $data);
+  }
+
 }
