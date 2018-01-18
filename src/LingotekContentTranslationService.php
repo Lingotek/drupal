@@ -226,7 +226,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $current_status == Lingotek::STATUS_EDITED) &&
       $source_status !== Lingotek::STATUS_EDITED) {
         $translation_status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
-        if ($translation_status) {
+        if ($translation_status === TRUE) {
           $current_status = Lingotek::STATUS_READY;
           $this->setTargetStatus($entity, $langcode, $current_status);
         }
@@ -677,8 +677,14 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $source_status = $this->getSourceStatus($entity);
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
       $langcode = $drupal_language->id();
+      $data = [];
       try {
-        $data = $this->lingotek->downloadDocument($document_id, $locale);
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE) {
+          $data = $this->lingotek->downloadDocument($document_id, $locale);
+        }
+        else {
+          return NULL;
+        }
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
@@ -701,7 +707,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             if ($source_status == Lingotek::STATUS_EDITED) {
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
             }
-            elseif ($status) {
+            elseif ($status === TRUE) {
               $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
             }
             else {

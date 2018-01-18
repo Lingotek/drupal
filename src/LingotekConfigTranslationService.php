@@ -19,6 +19,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekConfigMetadata;
+use Drupal\lingotek\Exception\LingotekApiException;
 
 /**
  * Service for managing Lingotek configuration translations.
@@ -487,7 +488,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (($current_status == Lingotek::STATUS_PENDING ||
     $current_status == Lingotek::STATUS_EDITED) &&
     $source_status !== Lingotek::STATUS_EDITED) {
-      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale)) {
+      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) === TRUE) {
         $current_status = Lingotek::STATUS_READY;
         $this->setTargetStatus($entity, $langcode, $current_status);
       }
@@ -558,8 +559,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   public function downloadDocument(ConfigEntityInterface $entity, $locale) {
     if ($document_id = $this->getDocumentId($entity)) {
       $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
+      $data = [];
       try {
-        $data = $this->lingotek->downloadDocument($document_id, $locale);
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE) {
+          $data = $this->lingotek->downloadDocument($document_id, $locale);
+        }
+        else {
+          return NULL;
+        }
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
@@ -580,7 +587,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         if ($source_status == Lingotek::STATUS_EDITED) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
         }
-        elseif ($status) {
+        elseif ($status === TRUE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
         }
         else {
@@ -899,7 +906,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (($current_status == Lingotek::STATUS_PENDING ||
     $current_status == Lingotek::STATUS_EDITED) &&
     $source_status !== Lingotek::STATUS_EDITED) {
-      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale)) {
+      if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) === TRUE) {
         $current_status = Lingotek::STATUS_READY;
         $this->setConfigTargetStatus($mapper, $langcode, $current_status);
       }
@@ -973,8 +980,14 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     if ($document_id = $this->getConfigDocumentId($mapper)) {
       $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)->getId();
+      $data = [];
       try {
-        $data = $this->lingotek->downloadDocument($document_id, $locale);
+        if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) === TRUE) {
+          $data = $this->lingotek->downloadDocument($document_id, $locale);
+        }
+        else {
+          return NULL;
+        }
       }
       catch (LingotekApiException $exception) {
         // TODO: log issue
@@ -995,7 +1008,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         if ($source_status == Lingotek::STATUS_EDITED) {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_EDITED);
         }
-        elseif ($status) {
+        elseif ($status === TRUE) {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CURRENT);
         }
         else {

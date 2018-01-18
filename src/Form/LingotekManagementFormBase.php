@@ -946,11 +946,17 @@ abstract class LingotekManagementFormBase extends FormBase {
       foreach ($languages as $langcode => $language) {
         if ($langcode !== $entity->language()->getId()) {
           $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-          try {
-            $this->translationService->downloadDocument($entity, $locale);
-          }
-          catch (LingotekApiException $exception) {
-            drupal_set_message(t('The download for @entity_type %title @locale translation failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label(), '@locale' => $locale]), 'error');
+          if ($this->translationService->checkTargetStatus($entity, $locale)) {
+            try {
+              $this->translationService->downloadDocument($entity, $locale);
+            }
+            catch (LingotekApiException $exception) {
+              drupal_set_message(t('The download for @entity_type %title @locale translation failed. Please try again.', [
+                '@entity_type' => $entity->getEntityTypeId(),
+                '%title' => $entity->label(),
+                '@locale' => $locale
+              ]), 'error');
+            }
           }
         }
       }

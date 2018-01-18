@@ -566,6 +566,14 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
 
+    // Check that the translate tab is in the node.
+    $this->clickLink('Translate');
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $this->clickLink('Request translation');
+
     // Simulate the notification of content successfully translated.
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [

@@ -407,11 +407,14 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentTranslationStatus($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
     $response = $this->api->getDocumentTranslationStatus($doc_id, $locale);
-    $progress = 0;
+    $progress = FALSE;
     if ($response->getStatusCode() == Response::HTTP_OK) {
       $progress_json = json_decode($response->getBody(), TRUE);
       $lingotek_locale = str_replace("_", "-", $locale);
@@ -428,7 +431,7 @@ class Lingotek implements LingotekInterface {
         return TRUE;
       }
     }
-    return FALSE;
+    return $progress;
   }
 
   public function getDocumentTranslationStatuses($doc_id) {

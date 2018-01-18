@@ -785,7 +785,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     // Assert that an incomplete translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'de_DE');
-    $this->assertEquals(FALSE, $result);
+    $this->assertEquals(50, $result);
 
     // Assert that an unrequested translation is reported as not completed.
     $result = $this->lingotek->getDocumentTranslationStatus('my_doc_id', 'ca_ES');

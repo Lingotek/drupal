@@ -380,6 +380,37 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $this->assertRaw('<a href="' . $url . '" target="_blank">', 'The workbench link opens in a new tab.');
   }
 
+  /**
+   * Assert that a content target has not been marked as error.
+   *
+   * @param string $label
+   *   The label of the row.
+   * @param string $language
+   *   The target language.
+   * @param string $locale
+   *   The target locale.
+   */
+  protected function assertNoTargetError($label, $language, $locale) {
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-error')  and ./a[contains(text(), '" . $language . "')]]");
+    $this->assertEqual(count($source_error), 0, 'The target ' . $language . ' has not been marked as error.');
+    $this->assertNoText($label . ' ' . $locale . ' translation download failed. Please try again.');
+  }
+
+  /**
+   * Assert that a config target has not been marked as error.
+   *
+   * @param string $label
+   *   The label of the row.
+   * @param string $language
+   *   The target language.
+   * @param string $locale
+   *   The target locale.
+   */
+  protected function assertNoConfigTargetError($label, $language, $locale) {
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-error')  and ./a[contains(text(), '" . $language . "')]]");
+    $this->assertEqual(count($source_error), 0, 'The target ' . $language . ' has not been marked as error.');
+    $this->assertNoText($label . ' ' . $locale . ' translation download failed. Please try again.');
+  }
 
   /**
    * Obtain the HTTP client and set the cookies.

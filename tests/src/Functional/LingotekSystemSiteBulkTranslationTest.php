@@ -616,4 +616,60 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertSourceStatusStateCount(Lingotek::STATUS_CURRENT, 'EN', 1);
   }
 
+  /**
+   * Tests that unrequested locales are not marked as error when downloading all.
+   */
+  public function testTranslationDownloadWithUnrequestedLocales() {
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+    ConfigurableLanguage::createFromLangcode('it')->setThirdPartySetting('lingotek', 'locale', 'it_IT')->save();
+
+    $this->goToConfigBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Request the Spanish translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertText("Translation to es_MX requested successfully");
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check status of the Spanish translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertText("Translation to es_MX checked successfully");
+
+    // Download all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $edit = [
+      'table[system.site_information_settings]' => TRUE,
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // The translations not requested shouldn't change its status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/de_DE?destination='. $basepath .'/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/it_IT?destination='. $basepath .'/admin/lingotek/config/manage');
+
+    // They aren't marked as error.
+    $this->assertNoConfigTargetError('System information', 'DE', 'de_DE');
+    $this->assertNoConfigTargetError('System information', 'IT', 'it_IT');
+  }
 }

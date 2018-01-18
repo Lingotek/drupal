@@ -128,7 +128,20 @@ interface LingotekInterface {
    */
   public function getUploadedTimestamp($doc_id);
 
+  /**
+   * Checks the status of the translation.
+   *
+   * @param string $doc_id
+   *   The document ID in Lingotek.
+   * @param $locale
+   *   The locale we want to know the translation status.
+   *
+   * @return bool|int
+   *  Returns TRUE if the document translation is completed. FALSE if it was not
+   *  requested. The percentage if it's still in progress.
+   */
   public function getDocumentTranslationStatus($doc_id, $locale);
+
   public function getDocumentTranslationStatuses($doc_id);
   public function downloadDocument($doc_id, $locale);
 

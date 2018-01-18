@@ -292,11 +292,12 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_type');
+    $this->clickLink('ES');
 
     // Ensure we won't get a completed document because there are phases pending.
-    \Drupal::state()->set('lingotek.document_completion', FALSE);
+    \Drupal::state()->set('lingotek.document_completion', 40);
 
-    // Simulate the notification of content successfully uploaded.
+    // Simulate the notification of content ready to download.
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
         'project_id' => 'test_project',

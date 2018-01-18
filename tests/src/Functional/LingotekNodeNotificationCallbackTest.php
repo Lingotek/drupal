@@ -183,11 +183,12 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
 
     $this->goToContentBulkManagementForm();
+    $this->clickLink('ES');
 
     // Ensure we won't get a completed document because there are phases pending.
-    \Drupal::state()->set('lingotek.document_completion', FALSE);
+    \Drupal::state()->set('lingotek.document_completion', 40);
 
-    // Simulate the notification of content successfully uploaded.
+    // Simulate the notification of content ready to download.
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
         'project_id' => 'test_project',
@@ -701,6 +702,25 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $edit['langcode[0][value]'] = 'en';
     $edit['lingotek_translation_profile'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ]
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
 
     // Simulate the notification of content successfully translated.
     $url = Url::fromRoute('lingotek.notify', [], [

@@ -1434,7 +1434,13 @@ class LingotekConfigManagementForm extends FormBase {
   protected function performTranslationDownload(ConfigMapperInterface $mapper, $entity, $locale) {
     if ($mapper instanceof ConfigEntityMapper) {
       try {
-        $this->translationService->downloadDocument($entity, $locale);
+        if ($this->translationService->checkTargetStatus($entity, $locale)) {
+          $success = $this->translationService->downloadDocument($entity, $locale);
+          if ($success === FALSE) {
+            drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
+              ['%label' => $entity->label(), '@locale' => $locale]), 'error');
+          }
+        }
       }
       catch (LingotekApiException $e) {
         drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
@@ -1443,7 +1449,13 @@ class LingotekConfigManagementForm extends FormBase {
     }
     else {
       try {
-        $this->translationService->downloadConfig($mapper->getPluginId(), $locale);
+        if ($this->translationService->checkConfigTargetStatus($mapper->getPluginId(), $locale)) {
+          $success = $this->translationService->downloadConfig($mapper->getPluginId(), $locale);
+          if ($success === FALSE) {
+            drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
+              ['%label' => $mapper->getTitle(), '@locale' => $locale]), 'error');
+          }
+        }
       }
       catch (LingotekApiException $e) {
         drupal_set_message($this->t('%label @locale translation download failed. Please try again.',

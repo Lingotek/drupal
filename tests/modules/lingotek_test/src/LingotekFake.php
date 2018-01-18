@@ -236,6 +236,10 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
+    $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
+    $requested_locales[$doc_id][] = $locale;
+    \Drupal::state()->set('lingotek.requested_locales', $requested_locales);
+
     \Drupal::state()->set('lingotek.added_target_locale', $locale);
     \Drupal::state()->set('lingotek.used_profile', $profile ? $profile->id() : NULL);
     // Added locale as target.
@@ -246,15 +250,32 @@ class LingotekFake implements LingotekInterface {
     return \Drupal::state()->get('lingotek.document_status_completion', TRUE);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getDocumentTranslationStatus($doc_id, $locale) {
     \Drupal::state()->set('lingotek.checked_target_locale', $locale);
     // Return true if translation is done.
+    if (\Drupal::state()->get('lingotek.document_completion', NULL) === NULL) {
+      $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
+      if (!in_array($locale, $requested_locales[$doc_id])) {
+        return FALSE;
+      }
+    }
     return \Drupal::state()->get('lingotek.document_completion', TRUE);
   }
 
   public function downloadDocument($doc_id, $locale) {
     if (\Drupal::state()->get('lingotek.must_error_in_download', FALSE)) {
-      throw new LingotekApiException();
+      throw new LingotekApiException('Error was forced.');
+    }
+
+    // We need to avoid this in some cases.
+    if (\Drupal::state()->get('lingotek.document_completion', NULL) === NULL) {
+      $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
+      if (!in_array($locale, $requested_locales[$doc_id])) {
+        throw new LingotekApiException('Locale was not requested before.');
+      }
     }
 
     \Drupal::state()->set('lingotek.downloaded_locale', $locale);
