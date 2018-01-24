@@ -1081,4 +1081,96 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertNoTargetError('Llamas are cool', 'IT', 'it_IT');
   }
 
+  /**
+   * Tests that current locales are not cleared when checking statuses.
+   */
+  public function testCheckTranslationsWithDownloadedLocales() {
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+    ConfigurableLanguage::createFromLangcode('it')->setThirdPartySetting('lingotek', 'locale', 'it_IT')->save();
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+
+    // I can check current status.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Request the Spanish translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->clickLink('ES');
+    $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    \Drupal::state()->resetCache();
+
+    // Request italian.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/it_IT?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->clickLink('IT');
+    $this->assertText("Locale 'it_IT' was added as a translation target for node Llamas are cool.");
+    $this->assertIdentical('it_IT', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check status of the Spanish translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
+
+    \Drupal::state()->resetCache();
+
+    // Check status of the Italian translation.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/it_IT?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->clickLink('IT');
+    $this->assertIdentical('it_IT', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertText('The it_IT translation for node Llamas are cool is ready for download.');
+
+    // Download all the translations.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/it_IT?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // They are marked with the right status.
+    $this->assertTargetStatus('ES', 'current');
+    $this->assertTargetStatus('IT', 'current');
+    $this->assertTargetStatus('DE', 'request');
+
+    // We check all translations.
+    \Drupal::state()->set('lingotek.document_completion_statuses', ['es-ES' => 100, 'it-IT' => 100]);
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // And statuses should remain the same.
+    $this->assertTargetStatus('ES', 'current');
+    $this->assertTargetStatus('IT', 'current');
+    $this->assertTargetStatus('DE', 'request');
+  }
+
 }

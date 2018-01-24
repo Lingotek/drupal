@@ -381,6 +381,19 @@ abstract class LingotekTestBase extends BrowserTestBase {
   }
 
   /**
+   * Assert that a content target has the given status.
+   *
+   * @param string $language
+   *   The target language.
+   * @param string $status
+   *   The status.
+   */
+  protected function assertTargetStatus($language, $status) {
+    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . $status . "')  and contains(text(), '" . $language . "')]");
+    $this->assertEqual(count($status_target), 1, 'The target ' . $language . ' has been marked with status ' . $status . '.');
+  }
+
+  /**
    * Assert that a content target has not been marked as error.
    *
    * @param string $label

@@ -550,6 +550,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       if ($source_status !== Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_EDITED && $langcode !== $entity->language()->getId()) {
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
       }
+      if ($source_status === Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_CURRENT && $langcode !== $entity->language()->getId()) {
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+      }
     }
   }
 
@@ -969,6 +972,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       }
       if ($source_status !== Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_EDITED && $langcode !== $mapper->getLangcode()) {
         $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_EDITED);
+      }
+      if ($source_status === Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_CURRENT && $langcode !==  $mapper->getLangcode()) {
+        $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CURRENT);
       }
     }
   }

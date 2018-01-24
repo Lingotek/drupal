@@ -200,7 +200,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
       if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
-        if($progress === Lingotek::PROGRESS_COMPLETE) {
+        if ($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
         }
         else {
@@ -209,6 +209,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       }
       if ($source_status !== Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_EDITED && $langcode !== $entity->getUntranslated()->language()->getId()) {
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+      }
+      if ($source_status === Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_CURRENT && $langcode !== $entity->getUntranslated()->language()->getId()) {
+        $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
       }
     }
   }
