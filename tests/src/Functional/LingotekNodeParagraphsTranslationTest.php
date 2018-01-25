@@ -6,6 +6,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\node\Entity\Node;
+use Drupal\paragraphs\Entity\Paragraph;
 
 /**
  * Tests translating a node with multiple locales including paragraphs.
@@ -453,6 +454,76 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     $metadata = LingotekContentMetadata::loadMultiple();
     $this->assertEqual(2, count($metadata), 'There is metadata saved for the parent entity and the child entity.');
+  }
+
+  /**
+   * Tests that orphan paragraph references don't break the upload or download.
+   */
+  public function testMissingParagraphDoesntBreakUploadOrDownload() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    Paragraph::load(1)->delete();
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+
+    // Check that only the configured fields have been uploaded,
+    // but not the missing one.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->verbose(var_export($data, TRUE));
+    $this->assertUploadedDataFieldCount($data, 1);
+    $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $link = $this->xpath('//a[normalize-space()="Request translation" and contains(@href,"es_AR")]');
+    $link[0]->click();
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_AR');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertNoText('Las llamas son muy chulas');
   }
 
 }

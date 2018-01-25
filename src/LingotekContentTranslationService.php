@@ -501,8 +501,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           $embedded_entity_id = $field_item->get('target_id')->getValue();
           $embedded_entity_revision_id = $field_item->get('target_revision_id')->getValue();
           $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
-          $embedded_data = $this->getSourceData($embedded_entity, $visited);
-          $data[$k][$field_item->getName()] = $embedded_data;
+          // Handle the unlikely case where a paragraph has lost its parent.
+          if (!empty($embedded_entity)) {
+            $embedded_data = $this->getSourceData($embedded_entity, $visited);
+            $data[$k][$field_item->getName()] = $embedded_data;
+          }
+          else {
+            // If the referenced entity doesn't exist, remove the target_id
+            // that may be already set.
+            unset($data[$k]);
+          }
         }
       }
       elseif ($field_type === 'metatag') {
@@ -972,10 +980,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
               /** @var \Drupal\Core\Entity\RevisionableInterface $embedded_entity */
               $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
-              $this->saveTargetData($embedded_entity, $langcode, $field_item);
-              // Now the embedded entity is saved, but we need to ensure
-              // the reference will be saved too. Ensure it's the same revision.
-              $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()]);
+              if ($embedded_entity !== NULL) {
+                $this->saveTargetData($embedded_entity, $langcode, $field_item);
+                // Now the embedded entity is saved, but we need to ensure
+                // the reference will be saved too. Ensure it's the same revision.
+                $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()]);
+              }
               ++$index;
             }
           }
