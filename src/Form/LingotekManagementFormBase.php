@@ -1002,6 +1002,19 @@ abstract class LingotekManagementFormBase extends FormBase {
     $context['message'] = $this->t('Changing Translation Profile for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
     try {
       $this->lingotekConfiguration->setProfile($entity, $profile_id, TRUE);
+      if ($profile_id === Lingotek::PROFILE_DISABLED) {
+        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
+        $this->translationService->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+      }
+      elseif ($this->translationService->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
+        if ($this->translationService->getDocumentId($entity) !== NULL) {
+          $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        }
+        else {
+          $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+        }
+        $this->translationService->checkTargetStatuses($entity);
+      }
     }
     catch (LingotekApiException $exception) {
       drupal_set_message(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');

@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Functional\Form;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
 
@@ -193,7 +194,7 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     $this->assertText('The configuration options have been saved.');
 
     $this->assertFieldByName('paragraph[image_text][profiles]', NULL, 'The profile can be assigned to a paragraph if they are managed individually.');
-    $this->assertFieldByName('paragraph[image_text][profiles]', 'disabled', 'The default profile is disabled for paragraphs if they are managed individually.');
+    $this->assertFieldByName('paragraph[image_text][profiles]', Lingotek::PROFILE_DISABLED, 'The default profile is disabled for paragraphs if they are managed individually.');
   }
 
 }

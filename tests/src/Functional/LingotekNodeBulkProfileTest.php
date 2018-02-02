@@ -4,6 +4,8 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
+use Drupal\node\Entity\Node;
 
 /**
  * Tests changing a profile using the bulk management form.
@@ -143,6 +145,91 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     $disabled_profile = $this->xpath("//td[contains(text(), 'Disabled')]");
     $this->assertEqual(count($disabled_profile), 3, 'There are three nodes with the Disabled Profile set.');
 
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $content_translation_service */
+    $content_translation_service = \Drupal::service('lingotek.content_translation');
+
+    $this->goToContentBulkManagementForm();
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'request_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'download:es'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
     $edit = [
       'table[1]' => TRUE,
       'table[2]' => TRUE,
@@ -154,6 +241,142 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
     $this->assertEqual(count($automatic_profile), 3, 'There are three nodes with the Automatic Profile set.');
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_IMPORTING, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'check_upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'request_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_PENDING, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'check_translations'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      'table[3]' => TRUE,
+      'operation' => 'download'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    // Edit the nodes.
+    for ($i = 1; $i < 4; $i++) {
+      $edit = [];
+      $edit['lingotek_translation_profile'] = Lingotek::PROFILE_DISABLED;
+      $this->saveAndKeepPublishedNodeForm($edit, $i);
+    }
+    $this->goToContentBulkManagementForm();
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_DISABLED, $content_translation_service->getTargetStatus($node, 'es'));
+    }
+
+    // Edit the nodes.
+    for ($i = 1; $i < 4; $i++) {
+      $edit = [];
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->saveAndKeepPublishedNodeForm($edit, $i);
+    }
+    $this->goToContentBulkManagementForm();
+
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    \Drupal::entityTypeManager()->getStorage('lingotek_content_metadata')->resetCache();
+
+    for ($i = 1; $i < 4; $i++) {
+      $node = Node::load($i);
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getSourceStatus($node));
+      $this->assertIdentical(Lingotek::STATUS_CURRENT, $content_translation_service->getTargetStatus($node, 'en'));
+      $this->assertIdentical(Lingotek::STATUS_READY, $content_translation_service->getTargetStatus($node, 'es'));
+    }
   }
 
   /**

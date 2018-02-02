@@ -6,6 +6,7 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
+use Drupal\lingotek\Lingotek;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
@@ -127,7 +128,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
         $profile = 'manual';
       }
       elseif ($i % 3 == 0) {
-        $profile = 'disabled';
+        $profile = Lingotek::PROFILE_DISABLED;
       }
 
       $edit = [];
@@ -171,7 +172,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by disabled profile, there is no pager and the rows
     // selected are the ones expected.
     $edit = [
-      'filters[wrapper][profile]' => 'disabled',
+      'filters[wrapper][profile]' => Lingotek::PROFILE_DISABLED,
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 9] as $j) {

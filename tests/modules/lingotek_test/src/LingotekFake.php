@@ -258,7 +258,7 @@ class LingotekFake implements LingotekInterface {
     // Return true if translation is done.
     if (\Drupal::state()->get('lingotek.document_completion', NULL) === NULL) {
       $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
-      if (!in_array($locale, $requested_locales[$doc_id])) {
+      if (!isset($requested_locales[$doc_id]) || !in_array($locale, $requested_locales[$doc_id])) {
         return FALSE;
       }
     }

@@ -190,3 +190,28 @@ a.language-icon {
   .language-icon.target-untracked:hover {
     background-color: #8c8c8c;
   }
+
+.language-icon.source-disabled,
+.language-icon.target-disabled {
+   background-color:#FFFFFF;
+   border: 1px solid #999999;
+   color: #999999;
+   text-decoration:line-through;
+}
+
+  .language-icon.source-disabled a,
+  .language-icon.target-disabled a {
+     color: #999999;
+  }
+
+.language-icon.source-none,
+.language-icon.target-none {
+   background-color:#FFFFFF;
+   border: 1px solid #999999;
+   color: #999999;
+}
+
+  .language-icon.source-none a,
+  .language-icon.target-none a {
+     color: #999999;
+  }

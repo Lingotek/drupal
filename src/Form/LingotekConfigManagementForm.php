@@ -437,6 +437,11 @@ class LingotekConfigManagementForm extends FormBase {
         $this->createLanguageDownloadBatch($values, $language);
         $processed = TRUE;
       }
+      if (0 === strpos($operation, 'change_profile:')) {
+        list($operation, $profile_id) = explode(':', $operation);
+        $this->createChangeProfileBatch($values, $profile_id);
+        $processed = TRUE;
+      }
     }
   }
 
@@ -614,6 +619,16 @@ class LingotekConfigManagementForm extends FormBase {
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a profile change batch.
+   *
+   * @param array $values
+   *   Array of ids to change the Profile.
+   */
+  protected function createChangeProfileBatch($values, $profile_id) {
+    $this->createBatch('changeProfile', $values, $this->t('Updating Translation Profile'), $profile_id);
   }
 
   /**
@@ -1039,6 +1054,69 @@ class LingotekConfigManagementForm extends FormBase {
   }
 
   /**
+   * Change Translation Profile.
+   *
+   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
+   *   The mapper.
+   */
+  public function changeProfile(ConfigMapperInterface $mapper, $profile_id = NULL, $job_id = NULL, &$context = NULL) {
+    $context['message'] = $this->t('Changing Translation Profile for @type %label.', [
+      '@type' => $mapper->getTypeLabel(),
+      '%label' => $mapper->getTitle()
+    ]);
+    try {
+      /** @var ConfigEntityInterface $entity */
+      $entity = ($mapper instanceof ConfigEntityMapper) ? $mapper->getEntity() : NULL;
+      if ($mapper instanceof ConfigEntityMapper) {
+        $this->lingotekConfiguration->setConfigEntityProfile($entity, $profile_id);
+      }
+      else {
+        $this->lingotekConfiguration->setConfigProfile($mapper->getPluginId(), $profile_id);
+      }
+    }
+    catch (LingotekApiException $exception) {
+      drupal_set_message(t('The Translation Profile change for %title failed. Please try again.', array('%title' => $mapper->getTitle())), 'error');
+    }
+    if ($profile_id === Lingotek::PROFILE_DISABLED) {
+      /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
+      $entity = ($mapper instanceof ConfigEntityMapper) ? $mapper->getEntity() : NULL;
+      if ($mapper instanceof ConfigEntityMapper) {
+        $this->translationService->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
+        $this->translationService->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+      }
+      else {
+        $this->translationService->setConfigTargetStatuses($mapper, Lingotek::STATUS_DISABLED);
+        $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_DISABLED);
+      }
+    }
+    else {
+      if ($mapper instanceof ConfigEntityMapper) {
+        $entity = $mapper->getEntity();
+        if ($this->translationService->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
+          if ($this->translationService->getDocumentId($entity) !== NULL) {
+            $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          }
+          else {
+            $this->translationService->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+          }
+          $this->translationService->checkTargetStatuses($entity);
+        }
+      }
+      else {
+        if ($this->translationService->getConfigSourceStatus($mapper) == Lingotek::STATUS_DISABLED) {
+          if ($this->translationService->getConfigDocumentId($mapper) !== NULL) {
+            $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
+          }
+          else {
+            $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_CURRENT);
+          }
+          $this->translationService->checkConfigTargetStatuses($mapper->getPluginId());
+        }
+      }
+    }
+  }
+
+  /**
    * Gets the source status of an config in a format ready to display.
    *
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
@@ -1271,6 +1349,9 @@ class LingotekConfigManagementForm extends FormBase {
       $operations[(string)$this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() .')']);
       $operations[(string)$this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() .')']);
       $operations[(string)$this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
+    }
+    foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
+      $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
 
     $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);

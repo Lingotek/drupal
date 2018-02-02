@@ -134,7 +134,11 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     if ('field_config' === $entity_type_id) {
       $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
     }
-    $profile_id = $this->getConfigEntityDefaultProfileId($entity_type_id, $provide_default);
+    $config = \Drupal::config('lingotek.settings');
+    $profile_id = $config->get('translate.config.' . $entity_type_id . '.' . $entity->id() . '.profile');
+    if ($profile_id === NULL) {
+      $profile_id = $this->getConfigEntityDefaultProfileId($entity_type_id, $provide_default);
+    }
     return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
 
@@ -168,6 +172,26 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     }
     $entity->lingotek_metadata->entity->setProfile($profile_id);
     $entity->lingotek_metadata->entity->save();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function setConfigEntityProfile(ConfigEntityInterface &$entity, $profile_id, $save = TRUE) {
+    $entity_type_id = $entity->getEntityTypeId();
+    if ('field_config' === $entity_type_id) {
+      $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
+    }
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('translate.config.' . $entity_type_id . '.' . $entity->id() . '.profile', $profile_id)->save();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function setConfigProfile($mapper_id, $profile_id, $save = TRUE) {
+    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
+    $config->set('translate.config.' . $mapper_id . '.profile', $profile_id)->save();
   }
 
   /**
