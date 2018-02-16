@@ -31,6 +31,9 @@ class LingotekConfigTranslationPreSaveHookTest extends LingotekTestBase {
       'table[block][profile]' => 'automatic',
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'block.powered-by');
   }
 
   /**
@@ -42,25 +45,30 @@ class LingotekConfigTranslationPreSaveHookTest extends LingotekTestBase {
 
     // Place the block with title that contains a token.
     $block = $this->drupalPlaceBlock('system_powered_by_block', [
+      'id' => 'powered_by_block',
       'label' => t('Title with [site:name]'),
+      'label_display' => TRUE,
     ]);
     $block_id = $block->id();
 
     // Check that [token] is encoded via hook_lingotek_config_entity_document_upload().
     // @see lingotek_test_lingotek_config_entity_document_upload()
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertEqual($data['settings.label'], 'Title with [***c2l0ZTpuYW1l***]');
+    $this->verbose(var_export($data, TRUE));
+    $this->assertEqual($data['settings.label'], 'Title with [***SITE:NAME***]');
 
     // Translate the block using the Lingotek translate config admin form.
-    $this->drupalGet("admin/lingotek/config/upload/block/$block_id");
-    $this->drupalGet("admin/lingotek/config/request/block/$block_id/es_ES");
-    $this->drupalGet("admin/lingotek/config/check_download/block/$block_id/es_ES");
-    $this->drupalGet("admin/lingotek/config/download/block/$block_id/es_ES");
+    $this->drupalGet("admin/structure/block/manage/$block_id/translate");
+
+    $this->clickLink('Upload');
+    $this->clickLink('Request translation');
+    $this->clickLink('Check Download');
+    $this->clickLink('Download');
 
     // Check that [token] is decoded via hook_lingotek_config_entity_translation_presave().
     // @see lingotek_test_lingotek_config_entity_translation_presave()
     $this->drupalGet("admin/structure/block/manage/$block_id/translate/es/edit");
-    $this->assertFieldByName("translation[config_names][block.block.$block_id][settings][label]", 'Title with [site:name]');
+    $this->assertFieldByName("translation[config_names][block.block.$block_id][settings][label]", 'Título con [site:name]');
   }
 
 }

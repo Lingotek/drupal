@@ -31,6 +31,9 @@ class LingotekConfigTranslationDocumentUploadHookTest extends LingotekTestBase {
       'table[block][profile]' => 'automatic',
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'block.powered-by');
   }
 
   /**
@@ -45,7 +48,7 @@ class LingotekConfigTranslationDocumentUploadHookTest extends LingotekTestBase {
     // Check that [token] is encoded via hook_lingotek_config_entity_document_upload().
     // @see lingotek_test_lingotek_config_entity_document_upload()
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertEqual($data['settings.label'], 'Title with [***c2l0ZTpuYW1l***]');
+    $this->assertEqual($data['settings.label'], 'Title with [***SITE:NAME***]');
   }
 
 }

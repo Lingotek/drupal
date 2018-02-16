@@ -43,10 +43,10 @@ function lingotek_test_lingotek_content_entity_document_upload(array &$source_da
 function lingotek_test_lingotek_config_entity_translation_presave(ConfigEntityInterface &$translation, $langcode, &$data) {
   switch ($translation->getEntityTypeId()) {
     case 'block';
-      // Decode all [tokens].
+      // Lowercase all [tokens] and remove the asterisks prefix.
       $yaml = Yaml::encode($data);
       $yaml = preg_replace_callback(
-        '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {return '[' . base64_decode($matches[1]) . ']';},
+        '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {return '[' . strtolower($matches[1]) . ']';},
         $yaml
       );
       $data = Yaml::decode($yaml);
@@ -60,10 +60,10 @@ function lingotek_test_lingotek_config_entity_translation_presave(ConfigEntityIn
 function lingotek_test_lingotek_config_entity_document_upload(array &$source_data, ConfigEntityInterface &$entity, &$url) {
   switch ($entity->getEntityTypeId()) {
     case 'block';
-      // Encode all [tokens].
+      // Uppercase all [tokens] and prefix with asterisks.
       $yaml = Yaml::encode($source_data);
       $yaml = preg_replace_callback(
-        '/\[([a-z][^]]+)\]/', function ($matches) {return '[***' . base64_encode($matches[1]) . '***]';},
+        '/\[([a-z][^]]+)\]/', function ($matches) {return '[***' . strtoupper($matches[1]) . '***]';},
         $yaml
       );
       $source_data = Yaml::decode($yaml);
