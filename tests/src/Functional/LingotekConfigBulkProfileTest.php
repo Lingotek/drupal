@@ -154,6 +154,8 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
    * disassociating.
    */
   public function testChangeTranslationProfileBulkAfterDisassociating() {
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
+
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 

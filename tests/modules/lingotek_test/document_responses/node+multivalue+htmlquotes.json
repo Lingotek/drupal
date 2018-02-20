@@ -1,0 +1,28 @@
+{
+  "title": [
+    {
+      "value": "&quot;Las llamas son chulas&quot;"
+    }
+  ],
+  "body": [
+    {
+      "value": "&quot;Las llamas son muy chulas&quot;"
+    }
+  ],
+  "foo": [
+    {
+      "value": "&quot;Las llamas son muy chulas campo 1&quot;"
+    },
+    {
+      "value": "&quot;Las llamas son muy chulas campo 2&quot;"
+    },
+    {
+      "value": "&quot;Las llamas son muy chulas campo 3&quot;"
+    }
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_id": "1",
+    "_entity_revision": "2"
+  }
+}

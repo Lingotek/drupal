@@ -69,6 +69,9 @@ class LingotekConfigTranslationPreSaveHookTest extends LingotekTestBase {
     // @see lingotek_test_lingotek_config_entity_translation_presave()
     $this->drupalGet("admin/structure/block/manage/$block_id/translate/es/edit");
     $this->assertFieldByName("translation[config_names][block.block.$block_id][settings][label]", 'Título con [site:name]');
+
+    $this->drupalGet('es/user');
+    $this->assertText('Título con [site:name]');
   }
 
 }

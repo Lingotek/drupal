@@ -1106,10 +1106,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                   }
                 }
                 if (method_exists($translation->get($name)->offsetGet($delta), "set")) {
-                  $translation->get($name)->offsetGet($delta)->set($property, $property_data);
+                  $translation->get($name)->offsetGet($delta)->set($property, html_entity_decode($property_data));
                 }
                 elseif ($translation->get($name)) {
-                  $translation->get($name)->appendItem()->set($property, $property_data);
+                  $translation->get($name)->appendItem()->set($property, html_entity_decode($property_data));
                 }
               }
             }

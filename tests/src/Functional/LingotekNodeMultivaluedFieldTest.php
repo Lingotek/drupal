@@ -223,4 +223,69 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     $this->assertText('Las llamas son muy chulas con distinto campo 6');
   }
 
+  /**
+   * Tests node translation with multivalued fields and quotation marks.
+   */
+  public function testWithEncodedQuotations() {
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+multivalue+htmlquotes');
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->drupalGet('node/add/article');
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = '"Llamas are cool"';
+    $edit['body[0][value]'] = '"Llamas are very cool"';
+    $edit['foo[0][value]'] = '"Llamas are very cool field 1"';
+    $edit['foo[1][value]'] = '"Llamas are very cool field 2"';
+    $edit['foo[2][value]'] = '"Llamas are very cool field 3"';
+    $edit['langcode[0][value]'] = 'en';
+
+    // Ensure we added the two new values in the form.
+    $this->submitForm([], 'Add another item');
+    $this->submitForm([], 'Add another item');
+
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    $this->node = Node::load(1);
+
+    // Check that only the translatable fields have been uploaded.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->verbose(var_export($data, TRUE));
+
+    $this->assertIdentical($data['foo'][0]['value'], '"Llamas are very cool field 1"');
+    $this->assertIdentical($data['foo'][1]['value'], '"Llamas are very cool field 2"');
+    $this->assertIdentical($data['foo'][2]['value'], '"Llamas are very cool field 3"');
+
+    $this->goToContentBulkManagementForm();
+
+    // There is a link for checking status.
+    $this->clickLink('EN');
+    $this->assertSession()->pageTextContains("The import for node \"Llamas are cool\" is complete.");
+
+    // Request the Spanish translation.
+    $this->clickLink('ES');
+    $this->assertSession()->pageTextContains("Locale 'es_MX' was added as a translation target for node \"Llamas are cool\".");
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check status of the Spanish translation.
+    $this->clickLink('ES');
+    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertSession()->pageTextContains('The es_MX translation for node "Llamas are cool" is ready for download.');
+
+    // Download the Spanish translation.
+    $this->clickLink('ES');
+    $this->assertSession()->pageTextContains('The translation of node "Llamas are cool" into es_MX has been downloaded.');
+
+    $this->clickLink('"Llamas are cool"');
+    $this->clickLink('Translate');
+    $this->clickLink('"Las llamas son chulas"');
+
+    $this->assertNoText('"Las llamas son muy chulas campo 1"');
+    $this->assertNoText('"Las llamas son muy chulas campo 2"');
+    $this->assertNoText('"Las llamas son muy chulas campo 3"');
+  }
+
 }

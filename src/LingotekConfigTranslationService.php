@@ -1199,7 +1199,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
 
         foreach ($data as $name => $properties) {
           foreach ($properties as $property => $value) {
-            $config_translation->set($property, $value);
+            $config_translation->set($property, html_entity_decode($value));
           }
           $config_translation->save();
         }
@@ -1277,6 +1277,19 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
     $metadata->setJobId($job_id);
     $metadata->save();
+  }
+
+  protected function getPluginIdFromConfigName($name) {
+    // ToDo: This is inefficient.
+    foreach ($this->mappers as $plugin_id => $mapper) {
+      $names = $mapper->getConfigNames();
+      foreach ($names as $the_name) {
+        if ($the_name === $name) {
+          return $plugin_id;
+        }
+      }
+    }
+    return NULL;
   }
 
 }
