@@ -25,6 +25,10 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
   protected function setUp() {
     parent::setUp();
 
+    if ((float) \Drupal::VERSION >= 8.5) {
+      $this->markTestSkipped("We don't test workbench moderation module with core > 8.5.x. See https://www.drupal.org/project/drupal/issues/2942578.");
+    }
+
     // Place the actions and title block.
     $this->drupalPlaceBlock('page_title_block', ['region' => 'content', 'weight' => -5]);
     $this->drupalPlaceBlock('local_tasks_block', ['region' => 'content', 'weight' => -10]);
