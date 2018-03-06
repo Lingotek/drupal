@@ -336,6 +336,8 @@ class LingotekContentModerationTest extends LingotekTestBase {
   }
 
   public function testDownloadFromNotUploadStateDoesntTriggerATransition() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+revision');
     $this->configureNeedsReviewAsUploadState();
 
     $edit = [];
