@@ -1,18 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Exception\LingotekContentEntityStorageException.
- */
-
 namespace Drupal\lingotek\Exception;
-
-/*
- * The Lingotek Exception class for issues when storing content entity translations.
- */
 
 use Drupal\Core\Entity\ContentEntityInterface;
 
+/**
+ * An exception for issues when storing content entity translations.
+ *
+ * @package Drupal\lingotek\Exception
+ */
 class LingotekContentEntityStorageException extends LingotekException {
 
   /**
@@ -56,7 +52,7 @@ class LingotekContentEntityStorageException extends LingotekException {
       //    "Data too long for column 'name' at row 2"
       $previous_message = $previous->getMessage();
       $strings = explode("'", $previous_message);
-      $table = count($strings > 1) ? $strings[1] : '';
+      $table = count($strings) > 1 ? $strings[1] : '';
     }
     return $table;
   }

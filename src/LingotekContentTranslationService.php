@@ -953,7 +953,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     $value = $query->execute();
     $vids = $value->fetchAssoc();
-    return count($vids) === 1 ? $vids['vid'] : NULL;
+    return ($vids !== FALSE && count($vids) === 1) ? $vids['vid'] : NULL;
   }
 
   /**
