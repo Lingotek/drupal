@@ -195,7 +195,12 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     $row = parent::getRow($entity);
     $bundleInfo = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
 
-    $row['label'] = $entity->toLink();
+    if ($entity->hasLinkTemplate('canonical')) {
+      $row['label'] = $entity->toLink();
+    }
+    else {
+      $row['label'] = $entity->label();
+    }
     $row['entity_type_id'] = $entity->getEntityType()->getLabel();
     $row['bundle'] = $bundleInfo[$entity->bundle()]['label'];
     return $row;
