@@ -54,7 +54,7 @@ services:
     arguments: ['lingotek']
   lingotek.config_subscriber:
     class: Drupal\lingotek\EventSubscriber\LingotekConfigSubscriber
-    arguments: ['@lingotek.config_translation', '@plugin.manager.config_translation.mapper']
+    arguments: ['@lingotek.config_translation', '@plugin.manager.config_translation.mapper', '@lingotek.configuration', '@entity.manager']
     tags:
       - { name: event_subscriber }
   lingotek.field_deleted_subscriber:
