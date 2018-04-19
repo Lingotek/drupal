@@ -107,7 +107,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
           /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
           $lingotek_config = $this->lingotekConfiguration;
           $profile = $lingotek_config->getConfigProfile($mapper->getPluginId());
-          if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+          if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) {
             $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_DISABLED);
             $this->translationService->setConfigTargetStatuses($mapper, Lingotek::STATUS_DISABLED);
           }

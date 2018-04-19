@@ -4,6 +4,7 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
 
   use Drupal\config_translation\ConfigFieldMapper;
   use Drupal\config_translation\ConfigMapperManagerInterface;
+  use Drupal\Core\Config\Config;
   use Drupal\Core\Config\ConfigCrudEvent;
   use Drupal\Core\Entity\EntityManagerInterface;
   use Drupal\field\Entity\FieldConfig;
@@ -94,7 +95,7 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
      * @covers ::onConfigSave
      */
     public function testOnConfigSaveWhenFieldDefinitionDoesntExist() {
-      $id  = 'node.article.myfieldname';
+      $id = 'node.article.myfieldname';
       $field_id = 'field.field.' . $id;
 
       $config = $this->createMock(FieldConfig::class);
@@ -123,6 +124,38 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
         ->method('getFieldDefinitions')
         ->with('node', 'article')
         ->willReturn(['myfieldname' => NULL]);
+
+      $this->configSubscriber->onConfigSave($event);
+    }
+
+    /**
+     * @covers ::onConfigSave
+     */
+    public function testOnConfigSaveWhenProfileIsNull() {
+      $id = 'my.settings';
+
+      $this->mapper->expects($this->once())
+        ->method('getConfigNames')
+        ->willReturn([$id]);
+
+      $config = $this->createMock(Config::class);
+      $config->expects($this->at(0))
+        ->method('getName')
+        ->willReturn($id);
+
+      $event = $this->createMock(ConfigCrudEvent::class);
+      $event->expects($this->any())
+        ->method('getConfig')
+        ->willReturn($config);
+
+      $this->mapper->expects($this->once())
+        ->method('getPluginId')
+        ->willReturn('a_config_plugin_for_config');
+
+      $this->lingotekConfiguration->expects($this->once())
+        ->method('getConfigProfile')
+        ->with('a_config_plugin_for_config')
+        ->willReturn(NULL);
 
       $this->configSubscriber->onConfigSave($event);
     }
