@@ -513,6 +513,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 $embedded_data = $this->getSourceData($embedded_entity, $visited);
                 $data[$k][$field_item->getName()] = $embedded_data;
               }
+              else {
+                // We don't want to embed the data, but still will need the
+                // references, so let's include the metadata.
+                $metadata = [];
+                $this->includeMetadata($embedded_entity, $metadata, FALSE);
+                $data[$k][$field_item->getName()] = $metadata;
+              }
             }
             elseif ($embedded_entity instanceof ConfigEntityInterface) {
               $embedded_data = $this->lingotekConfigTranslation->getSourceData($embedded_entity);

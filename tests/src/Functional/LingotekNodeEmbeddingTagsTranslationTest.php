@@ -366,4 +366,137 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('Hervíboro');
   }
 
+  /**
+   * Tests that a node can be translated.
+   */
+  public function testNodeTranslationWithMultipleReferencesToSameContent() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+taxonomy_term+others');
+
+    // Create another tags field.
+    $handler_settings = [
+      'target_bundles' => [
+        $this->vocabulary->id() => $this->vocabulary->id(),
+      ],
+      'auto_create' => FALSE,
+    ];
+    $this->createEntityReferenceField('node', 'article',
+      'field_other_tags', 'Other Tags', 'taxonomy_term', 'default',
+      $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+
+    entity_get_form_display('node', 'article', 'default')
+      ->setComponent('field_other_tags', [
+        'type' => 'entity_reference_autocomplete',
+      ])->save();
+    entity_get_display('node', 'article', 'default')
+      ->setComponent('field_other_tags')->save();
+
+    $edit = [
+      'node[article][fields][field_other_tags]' => 1,
+    ];
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    // Create the terms.
+    Term::create(['name' => 'Camelid', 'vid' => $this->vocabulary->id()])->save();
+    Term::create(['name' => 'Herbivorous', 'vid' => $this->vocabulary->id()])->save();
+    Term::create(['name' => 'Spitting', 'vid' => $this->vocabulary->id()])->save();
+
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    $this->drupalGet('node/add/article');
+    $this->submitForm([], 'Add another item');
+    $this->submitForm([], 'Add another item');
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
+    $edit['field_other_tags[0][target_id]'] = 'Camelid';
+    $edit['field_other_tags[1][target_id]'] = 'Spitting';
+    $edit['field_other_tags[2][target_id]'] = 'Herbivorous';
+    $edit['lingotek_translation_profile'] = 'manual';
+
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    $this->node = Node::load(1);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // The document should have been automatically uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // Check that only the configured fields have been uploaded, including tags.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 4);
+    $this->assertTrue(isset($data['title'][0]['value']));
+    $this->assertEqual(1, count($data['body'][0]));
+    $this->assertTrue(isset($data['body'][0]['value']));
+    // Two tags exist.
+    $this->assertEqual(2, count($data['field_tags']));
+    $this->assertEqual('Camelid', $data['field_tags'][0]['name'][0]['value']);
+    $this->assertEqual('1', $data['field_tags'][0]['_lingotek_metadata']['_entity_id']);
+    $this->assertEqual('Herbivorous', $data['field_tags'][1]['name'][0]['value']);
+    $this->assertEqual('2', $data['field_tags'][1]['_lingotek_metadata']['_entity_id']);
+
+    // Also in the other field, but in some cases only the metadata.
+    $this->assertEqual(3, count($data['field_other_tags']));
+
+    $this->assertFalse(isset($data['field_other_tags'][0]['name']));
+    $this->assertEqual('1', $data['field_other_tags'][0]['_lingotek_metadata']['_entity_id']);
+
+    $this->assertEqual('Spitting', $data['field_other_tags'][1]['name'][0]['value']);
+    $this->assertEqual('3', $data['field_other_tags'][1]['_lingotek_metadata']['_entity_id']);
+
+    $this->assertFalse(isset($data['field_other_tags'][2]['name']));
+    $this->assertEqual('2', $data['field_other_tags'][2]['_lingotek_metadata']['_entity_id']);
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
+
+    // The document should have been imported, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertText('The import for node Llamas are cool is complete.');
+
+    // Request translation.
+    $link = $this->xpath('//a[normalize-space()="Request translation" and contains(@href,"es_AR")]');
+    $link[0]->click();
+    $this->assertText("Locale 'es_AR' was added as a translation target for node Llamas are cool.");
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Check that the Edit link points to the workbench and it is opened in a new tab.
+    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_AR');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas');
+    $this->assertSession()->pageTextContains('Camélido');
+    $this->assertSession()->pageTextContains('Hervíboro');
+    $this->assertSession()->pageTextContains('Esputo');
+
+    $this->drupalGet('/taxonomy/term/2/translations');
+    $this->drupalGet('/es-ar/taxonomy/term/2');
+  }
+
 }

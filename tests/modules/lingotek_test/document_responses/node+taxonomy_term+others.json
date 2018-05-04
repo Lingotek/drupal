@@ -1,0 +1,71 @@
+{
+  "title": [
+    {
+      "value": "Las llamas son chulas"
+    }
+  ],
+  "body": [
+    {
+      "value": "Las llamas son muy chulas"
+    }
+  ],
+  "field_tags": [
+    {
+      "name": [
+        {
+          "value": "Camélido"
+        }
+      ],
+      "_lingotek_metadata": {
+        "_entity_type_id": "taxonomy_term",
+        "_entity_revision": null,
+        "_entity_id": 1
+      }
+    },
+    {
+      "name": [
+        {
+          "value": "Hervíboro"
+        }
+      ],
+      "_lingotek_metadata": {
+        "_entity_type_id": "taxonomy_term",
+        "_entity_revision": null,
+        "_entity_id": 2
+      }
+    }
+  ],
+  "field_other_tags": [
+    {
+      "_lingotek_metadata": {
+        "_entity_type_id": "taxonomy_term",
+        "_entity_revision": null,
+        "_entity_id": 1
+      }
+    },
+    {
+      "name": [
+        {
+          "value": "Esputo"
+        }
+      ],
+      "_lingotek_metadata": {
+        "_entity_type_id": "taxonomy_term",
+        "_entity_revision": null,
+        "_entity_id": 3
+      }
+    },
+    {
+      "_lingotek_metadata": {
+        "_entity_type_id": "taxonomy_term",
+        "_entity_revision": null,
+        "_entity_id": 2
+      }
+    }
+  ],
+  "_lingotek_metadata": {
+    "_entity_type_id": "node",
+    "_entity_revision": 1,
+    "_entity_id": 1
+  }
+}
