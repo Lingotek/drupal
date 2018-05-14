@@ -145,18 +145,16 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
         }
         // Check-Progress button if the source upload status is PENDING.
         elseif ($target_status === Lingotek::STATUS_PENDING && $source_status === Lingotek::STATUS_CURRENT) {
-          $this->removeOperationLink($entity, $option, 'Add'); //maintain core functionality
           $path = '/admin/lingotek/entity/check_target/' . $document_id . '/' . $locale;
-          $this->addOperationLink($entity, $option, 'Check translation status', $path, $language);
+          $this->addOperationLink($entity, $option, 'Check translation status', $path, $language, TRUE);
           $status_check_needed = TRUE;
         }
         // Download button if translations are READY or CURRENT.
         elseif (($target_status === Lingotek::STATUS_READY || $target_status === Lingotek::STATUS_CURRENT) && $source_status === Lingotek::STATUS_CURRENT) {
-          $this->removeOperationLink($entity, $option, 'Add'); //maintain core functionality
-          $path = '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
-          $this->addOperationLink($entity, $option, 'Download completed translation', $path, $language);
           $path = '/admin/lingotek/workbench/' . $document_id . '/' . $locale;
-          $this->addOperationLink($entity, $option, 'Edit', $path, $language);
+          $this->addOperationLink($entity, $option, 'Edit in Lingotek Workbench', $path, $language, TRUE);
+          $path = '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
+          $this->addOperationLink($entity, $option, 'Download completed translation', $path, $language, TRUE);
           $targets_ready = TRUE;
         }
       }
@@ -223,51 +221,83 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   /*
    * Add an operation to the list of available operations for each language.
    */
-
-  protected function addOperationLink(ContentEntityInterface $entity, array &$option, $name, $path, LanguageInterface $language) {
+  protected function addOperationLink(ContentEntityInterface $entity, array &$option, $name, $path, LanguageInterface $language, $first = FALSE) {
     $operation_col = $this->getOperationColumnId($entity, $option);
     $open_in_window = FALSE;
 
     if (!isset($option[$operation_col]['data']['#links'])) {
       $option[$operation_col]['data']['#links'] = array();
     }
-    if (strpos($path, '/admin/lingotek/batch/') === 0) {
-       $path = str_replace('/admin/lingotek/batch/', '', $path);
-       list($action, $entity_type, $entity_id) = explode('/', $path);
-       $url = Url::fromRoute('lingotek.batch', array('action' => $action, 'entity_type' => $entity_type, 'entity_id' => $entity_id));
-    }
-    elseif (strpos($path, '/admin/lingotek/entity/check_upload/') === 0) {
-       $doc_id = str_replace('/admin/lingotek/entity/check_upload/', '', $path);
-       $url = Url::fromRoute('lingotek.entity.check_upload', array('doc_id' => $doc_id));
-    }
-    elseif (strpos($path, '/admin/lingotek/entity/add_target/') === 0) {
-       $path = str_replace('/admin/lingotek/entity/add_target/', '', $path);
-       list($doc_id, $locale) = explode('/', $path);
-       $url = Url::fromRoute('lingotek.entity.request_translation', array('doc_id' => $doc_id, 'locale' => $locale));
-    }
-    elseif (strpos($path, '/admin/lingotek/entity/check_target/') === 0) {
-       $path = str_replace('/admin/lingotek/entity/check_target/', '', $path);
-       list($doc_id, $locale) = explode('/', $path);
-       $url = Url::fromRoute('lingotek.entity.check_target', array('doc_id' => $doc_id, 'locale' => $locale));
-    }
-    elseif (strpos($path, '/admin/lingotek/entity/download/') === 0) {
-       $path = str_replace('/admin/lingotek/entity/download/', '', $path);
-       list($doc_id, $locale) = explode('/', $path);
-       $url = Url::fromRoute('lingotek.entity.download', array('doc_id' => $doc_id, 'locale' => $locale));
-    }
-    elseif (strpos($path, '/admin/lingotek/workbench/') === 0) {
-       $path = str_replace('/admin/lingotek/workbench/', '', $path);
-       list($doc_id, $locale) = explode('/', $path);
-       $url = Url::fromRoute('lingotek.workbench', array('doc_id' => $doc_id, 'locale' => $locale));
-       $open_in_window = TRUE;
+    if (is_string($path)) {
+      if (strpos($path, '/admin/lingotek/batch/') === 0) {
+        $path = str_replace('/admin/lingotek/batch/', '', $path);
+        list($action, $entity_type, $entity_id) = explode('/', $path);
+        $url = Url::fromRoute('lingotek.batch', array(
+          'action' => $action,
+          'entity_type' => $entity_type,
+          'entity_id' => $entity_id
+        ));
+      }
+      elseif (strpos($path, '/admin/lingotek/entity/check_upload/') === 0) {
+        $doc_id = str_replace('/admin/lingotek/entity/check_upload/', '', $path);
+        $url = Url::fromRoute('lingotek.entity.check_upload', array('doc_id' => $doc_id));
+      }
+      elseif (strpos($path, '/admin/lingotek/entity/add_target/') === 0) {
+        $path = str_replace('/admin/lingotek/entity/add_target/', '', $path);
+        list($doc_id, $locale) = explode('/', $path);
+        $url = Url::fromRoute('lingotek.entity.request_translation', array(
+          'doc_id' => $doc_id,
+          'locale' => $locale
+        ));
+      }
+      elseif (strpos($path, '/admin/lingotek/entity/check_target/') === 0) {
+        $path = str_replace('/admin/lingotek/entity/check_target/', '', $path);
+        list($doc_id, $locale) = explode('/', $path);
+        $url = Url::fromRoute('lingotek.entity.check_target', array(
+          'doc_id' => $doc_id,
+          'locale' => $locale
+        ));
+      }
+      elseif (strpos($path, '/admin/lingotek/entity/download/') === 0) {
+        $path = str_replace('/admin/lingotek/entity/download/', '', $path);
+        list($doc_id, $locale) = explode('/', $path);
+        $url = Url::fromRoute('lingotek.entity.download', array(
+          'doc_id' => $doc_id,
+          'locale' => $locale
+        ));
+      }
+      elseif (strpos($path, '/admin/lingotek/workbench/') === 0) {
+        $path = str_replace('/admin/lingotek/workbench/', '', $path);
+        list($doc_id, $locale) = explode('/', $path);
+        $url = Url::fromRoute('lingotek.workbench', array(
+          'doc_id' => $doc_id,
+          'locale' => $locale
+        ));
+        $open_in_window = TRUE;
+      }
+      else {
+        die("failed to get known operation in addOperationLink: $path");
+      }
     }
     else {
-       die("failed to get known operation in addOperationLink: $path");
+      $url = $path;
     }
-    $option[$operation_col]['data']['#links'][strtolower($name)] = array(
-      'title' => $name,
-      'url' => $url,
-    );
+
+    if ($first) {
+      $previous = $option[$operation_col]['data']['#links'];
+      $option[$operation_col]['data']['#links'] = [];
+      $option[$operation_col]['data']['#links'][strtolower($name)] = [
+        'title' => $name,
+        'url' => $url,
+      ];
+      $option[$operation_col]['data']['#links'] += $previous;
+    }
+    else {
+      $option[$operation_col]['data']['#links'][strtolower($name)] = array(
+        'title' => $name,
+        'url' => $url,
+      );
+    }
     if ($open_in_window) {
       $option[$operation_col]['data']['#links'][strtolower($name)]['attributes']['target'] = '_blank';
     }

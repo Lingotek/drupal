@@ -602,4 +602,85 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son chulas');
   }
 
+  /**
+   * Tests that the node operations are as expected.
+   */
+  public function testContentFormOperations() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Check that the translate tab is in the node.
+    $this->drupalGet('node/1');
+    $this->clickLink('Translate');
+
+    // Check that we can add a translation for Spanish when content is not
+    // uploaded.
+    $this->assertSession()->linkExists('Add');
+    $this->assertSession()->linkByHrefExists('/es/node/1/translations/add/en/es');
+
+    // Upload the document.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertSession()->pageTextContains('Uploaded 1 document to Lingotek.');
+
+    // Check that we can add a translation for Spanish when content is just
+    // uploaded.
+    $this->assertSession()->linkExists('Add');
+    $this->assertSession()->linkByHrefExists('/es/node/1/translations/add/en/es');
+
+    // The document should have been uploaded, so let's check
+    // the upload status.
+    $this->clickLink('Check Upload Status');
+    $this->assertSession()->pageTextContains('The import for node Llamas are cool is complete.');
+
+    // Check that we can add a translation for Spanish when content is correctly
+    // uploaded.
+    $this->assertSession()->linkExists('Add');
+    $this->assertSession()->linkByHrefExists('/es/node/1/translations/add/en/es');
+
+    // Request translation.
+    $this->clickLink('Request translation');
+    $this->assertSession()->pageTextContains("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
+    $this->assertSame('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+
+    // Check that we can add a translation for Spanish when translation is
+    // already requested.
+    $this->assertSession()->linkExists('Add');
+    $this->assertSession()->linkByHrefExists('/es/node/1/translations/add/en/es');
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertSame('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
+    $this->assertSession()->pageTextContains('The es_MX translation for node Llamas are cool is ready for download.');
+
+    // Check that we can add a translation for Spanish when translation is
+    // ready.
+    $this->assertSession()->linkExists('Add');
+    $this->assertSession()->linkByHrefExists('/es/node/1/translations/add/en/es');
+    $this->assertSession()->linkExistsExact('Edit in Lingotek Workbench');
+    $this->assertSession()->linkByHrefExists('/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertSession()->pageTextContains('The translation of node Llamas are cool into es_MX has been downloaded.');
+    $this->assertSame('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    // Check that we can edit a translation for Spanish when translation is
+    // downloaded. Also locally.
+    $this->assertSession()->linkExistsExact('Edit in Lingotek Workbench');
+    $this->assertSession()->linkByHrefExists('/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
+    $this->assertSession()->linkExistsExact('Edit');
+    $this->assertSession()->linkByHrefExists('/es/node/1/edit');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertSession()->pageTextContains('Las llamas son chulas');
+    $this->assertSession()->pageTextContains('Las llamas son muy chulas');
+  }
+
 }
