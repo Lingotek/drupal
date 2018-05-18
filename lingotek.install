@@ -521,6 +521,20 @@ function lingotek_update_8207() {
   // We added routes, so we need to ensure that the routing caches are cleared.
 }
 
+function lingotek_update_8208() {
+  /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $entity_repository */
+  $entity_repository = \Drupal::service('entity.last_installed_schema.repository');
+  $entity_type = $entity_repository->getLastInstalledDefinition('lingotek_content_metadata');
+  $entity_type->set('data_table', NULL);
+  $entity_type->setHandlerClass('views_data', '\Drupal\lingotek\Views\LingotekContentMetadataViewsData');
+  $entity_repository->setLastInstalledDefinition($entity_type);
+
+  $definitions = $entity_repository->getLastInstalledFieldStorageDefinitions('lingotek_content_metadata');
+  if (isset($definitions['translation_source'])) {
+    $entity_repository->deleteLastInstalledFieldStorageDefinition($definitions['translation_source']);
+  }
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

@@ -1,16 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\lingotek\Plugin\Field\FieldType\LanguageKeyValueItem.
- */
-
 namespace Drupal\lingotek\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\StringItem;
-use Drupal\Core\StringTranslation\TranslationWrapper;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
@@ -21,6 +16,7 @@ use Drupal\Core\TypedData\DataDefinition;
  *   label = @Translation("Language Key / Value"),
  *   description = @Translation("This field stores language keyed value pairs."),
  *   category = @Translation("Language Key / Value"),
+ *   default_formatter = "lingotek_translation_status"
  * )
  */
 class LanguageKeyValueItem extends StringItem {
@@ -52,8 +48,8 @@ class LanguageKeyValueItem extends StringItem {
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties = parent::propertyDefinitions($field_definition);
     $properties['language'] = DataDefinition::create('string')
-        ->setLabel(new TranslationWrapper('Language Key'))
-        ->setRequired(TRUE);
+      ->setLabel(new TranslatableMarkup('Language Key'))
+      ->setRequired(TRUE);
     return $properties;
   }
 

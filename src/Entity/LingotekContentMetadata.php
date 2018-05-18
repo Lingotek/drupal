@@ -9,6 +9,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\lingotek\Plugin\Field\FieldType\LingotekTranslationSourceField;
 
 /**
  * Defines the Lingotek content metadata entity.
@@ -19,9 +20,11 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
  *   id = "lingotek_content_metadata",
  *   label = @Translation("Lingotek Content Metadata"),
  *   base_table = "lingotek_metadata",
- *   data_table = "lingotek_metadata_field_data",
  *   entity_keys = {
  *     "id" = "id"
+ *   },
+ *   handlers = {
+ *     "views_data" = "\Drupal\lingotek\Views\LingotekContentMetadataViewsData",
  *   }
  * )
  */
@@ -57,6 +60,8 @@ class LingotekContentMetadata extends ContentEntityBase {
       ->setSetting('target_type', 'lingotek_profile');
 
     $fields['translation_source'] = BaseFieldDefinition::create('language')
+      ->setComputed(TRUE)
+      ->setClass(LingotekTranslationSourceField::class)
       ->setLabel(new TranslatableMarkup('Lingotek translation source'))
       ->setDescription(new TranslatableMarkup('The source language from which this translation was created.'))
       ->setDefaultValue(LanguageInterface::LANGCODE_NOT_SPECIFIED)
@@ -135,7 +140,7 @@ class LingotekContentMetadata extends ContentEntityBase {
    *   Indexed array of all the document ids.
    */
   public static function getAllLocalDocumentIds() {
-    return \Drupal::database()->select('lingotek_metadata','lcm')
+    return \Drupal::database()->select('lingotek_metadata', 'lcm')
       ->fields('lcm', ['document_id'])
       ->execute()
       ->fetchCol(0);

@@ -1,0 +1,9 @@
+name: Lingotek Translation Views Test Helper
+type: module
+package: Testing
+version: VERSION
+core: 8.x
+
+dependencies:
+  - lingotek
+  - views_ui
