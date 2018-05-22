@@ -98,8 +98,8 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
     $this->assertLink('Llamas are cool');
     $this->assertSession()->elementTextContains('css', 'td.views-field-translation-source', 'English');
     $this->assertSession()->elementTextContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
     $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'EN');
+    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
     $this->assertLink('Automatic');
   }
 
@@ -130,8 +130,8 @@ class LingotekViewsFunctionalTests extends LingotekTestBase {
     $this->assertSession()->elementExists('css', '.view-lingotek-metadata');
     $this->assertSession()->elementTextContains('css', 'td.views-field-translation-source', 'English');
     $this->assertSession()->elementTextContains('css', 'td.views-field-document-id', 'dummy-document-hash-id');
-    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
     $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'EN');
+    $this->assertSession()->elementTextContains('css', 'td.views-field-translation-status-value', 'ES');
     $this->assertLink('Automatic');
   }
 
