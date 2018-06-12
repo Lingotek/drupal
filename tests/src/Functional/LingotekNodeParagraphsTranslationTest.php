@@ -12,6 +12,7 @@ use Drupal\paragraphs\Entity\Paragraph;
  * Tests translating a node with multiple locales including paragraphs.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
@@ -524,6 +525,96 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
     $this->assertNoText('Las llamas son muy chulas');
+  }
+
+  /**
+   * Tests that paragraph references aren't removed on download.
+   */
+  public function testParagraphedNodeDownloadDoesntChangeReferencesOnSource() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs_multiple');
+
+    // Add paragraphed content.
+    $this->drupalGet('node/add/paragraphed_content_demo');
+
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['field_paragraphs_demo[0][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the first time';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit, NULL);
+
+    $this->goToContentBulkManagementForm();
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'upload'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    // Check that only the configured fields have been uploaded,
+    // but not the missing one.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->verbose(var_export($data, TRUE));
+    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertEqual($data['title'][0]['value'], 'Llamas are cool');
+    $this->assertEqual($data['field_paragraphs_demo'][0]['field_text_demo'][0]['value'], 'Llamas are very cool for the first time');
+    $this->assertEqual($data['field_paragraphs_demo'][1]['field_text_demo'][0]['value'], 'Llamas are very cool for the second time');
+
+    // Check that the url used was the right one.
+    $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
+    $this->assertIdentical(\Drupal::request()->getUriForPath('/node/1'), $uploaded_url, 'The node url was used.');
+
+    // Check that the profile used was the right one.
+    $used_profile = \Drupal::state()->get('lingotek.used_profile');
+    $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
+
+    // Request translation.
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'request_translation:es-ar'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $this->drupalGet('node/1');
+    $this->clickLink('Edit');
+    $this->drupalPostForm(NULL, NULL, t('Remove'));
+    $this->drupalPostForm(NULL, NULL, t('Add Image + Text'));
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['field_paragraphs_demo[1][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the second time';
+    $edit['field_paragraphs_demo[2][subform][field_text_demo][0][value]'] = 'Llamas are very cool for the third time';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndKeepPublishedNodeForm($edit, NULL);
+
+    // Download translation.
+    $this->goToContentBulkManagementForm();
+    $edit = [
+      'table[1]' => TRUE,
+      'operation' => 'download:es-ar'
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.downloaded_locale'));
+
+    $this->drupalGet('node/1/translations');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas por primera vez');
+    $this->assertText('Las llamas son muy chulas por segunda vez');
+
+    $this->clickLink('Translate');
+    $this->clickLink('Llamas are cool');
+
+    $this->assertText('Llamas are cool');
+    $this->assertNoText('Llamas are very cool for the first time');
+    $this->assertText('Llamas are very cool for the second time');
+    $this->assertText('Llamas are very cool for the third time');
   }
 
 }
