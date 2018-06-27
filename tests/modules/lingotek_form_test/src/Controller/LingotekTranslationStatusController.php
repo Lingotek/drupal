@@ -1,0 +1,44 @@
+<?php
+
+namespace Drupal\lingotek_form_test\Controller;
+
+use Drupal\Core\Controller\ControllerBase;
+use Symfony\Component\HttpFoundation\Request;
+
+/**
+ * Controller for rendering the translation status of an entity for tests.
+ *
+ * @package Drupal\lingotek_form_test\Controller
+ */
+class LingotekTranslationStatusController extends ControllerBase {
+
+  /**
+   * Renders the Lingotek source status of the given entity.
+   *
+   * @param string $entity_type
+   *   The entity type id from the entity which status we want to render.
+   * @param string $entity_id
+   *   The entity id from the entity which status we want to render.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The HTTP request.
+   *
+   * @return array
+   *   A render array including a lingotek_source_status element.
+   */
+  public function render($entity_type, $entity_id, Request $request) {
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $status = $translation_service->getSourceStatus($entity);
+
+    return [
+      '#type' => 'lingotek_source_status',
+      '#entity' => $entity,
+      '#language' => $entity->language(),
+      '#status' => $status,
+    ];
+  }
+
+}

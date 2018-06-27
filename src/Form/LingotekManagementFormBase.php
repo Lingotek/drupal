@@ -1031,46 +1031,21 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   A render array.
    */
   protected function getSourceStatus(ContentEntityInterface $entity) {
-    $language_source = LingotekLocale::convertLingotek2Drupal($this->translationService->getSourceLocale($entity));
-
+    $langcode_source = LingotekLocale::convertLingotek2Drupal($this->translationService->getSourceLocale($entity));
+    $language = $this->languageManager->getLanguage($langcode_source);
     $source_status = $this->translationService->getSourceStatus($entity);
     $data = [
       'data' => [
-        '#type' => 'inline_template',
-        '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{% if url %}<a href="{{url}}">{%endif%}{{language}}{%if url %}</a>{%endif%}</span>',
-        '#context' => [
-          'language' => strtoupper($language_source),
-          'status' => strtolower($source_status),
-          'status_title' => $this->getSourceStatusText($entity, $source_status),
-          'url' => $this->getSourceActionUrl($entity, $source_status),
-        ],
-      ]
+        '#type' => 'lingotek_source_status',
+        '#entity' => $entity,
+        '#language' => $language,
+        '#status' => $source_status,
+      ],
     ];
     if ($source_status == Lingotek::STATUS_EDITED && !$this->translationService->getDocumentId($entity)) {
       $data['data']['#context']['status'] = strtolower(Lingotek::STATUS_REQUEST);
     }
     return $data;
-  }
-
-  protected function getSourceStatusText($entity, $status) {
-    switch ($status) {
-      case Lingotek::STATUS_UNTRACKED:
-      case Lingotek::STATUS_REQUEST:
-        return $this->t('Upload');
-      case Lingotek::STATUS_DISABLED:
-        return $this->t('Disabled, cannot request translation');
-      case Lingotek::STATUS_EDITED:
-        return ($this->translationService->getDocumentId($entity)) ?
-          $this->t('Re-upload (content has changed since last upload)') : $this->t('Upload');
-      case Lingotek::STATUS_IMPORTING:
-        return $this->t('Source importing');
-      case Lingotek::STATUS_CURRENT:
-        return $this->t('Source uploaded');
-      case Lingotek::STATUS_ERROR:
-        return $this->t('Error');
-      default:
-        return ucfirst(strtolower($status));
-    }
   }
 
   protected function getTargetStatusText($entity, $status, $langcode) {
@@ -1279,42 +1254,6 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
 
     return $operations;
-  }
-
-  /**
-   * Get the source action url based on the source status.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   * @param string $source_status
-   *   The source status
-   *
-   * @return \Drupal\Core\Url
-   *   An url object.
-   */
-  protected function getSourceActionUrl(ContentEntityInterface &$entity, $source_status) {
-    $url = NULL;
-    if ($source_status == Lingotek::STATUS_IMPORTING) {
-      $url = Url::fromRoute('lingotek.entity.check_upload',
-        ['doc_id' => $this->translationService->getDocumentId($entity)],
-        ['query' => $this->getDestinationWithQueryArray()]);
-    }
-    if ($source_status == Lingotek::STATUS_EDITED || $source_status == Lingotek::STATUS_UNTRACKED || $source_status == Lingotek::STATUS_ERROR) {
-      if ($doc_id = $this->translationService->getDocumentId($entity)) {
-        $url = Url::fromRoute('lingotek.entity.update',
-          ['doc_id' => $doc_id],
-          ['query' => $this->getDestinationWithQueryArray()]);
-      }
-      else {
-        $url = Url::fromRoute('lingotek.entity.upload',
-          [
-            'entity_type' => $entity->getEntityTypeId(),
-            'entity_id' => $entity->id()
-          ],
-          ['query' => $this->getDestinationWithQueryArray()]);
-      }
-    }
-    return $url;
   }
 
   protected function getTargetActionUrl(ContentEntityInterface &$entity, $target_status, $langcode) {

@@ -1,0 +1,6 @@
+lingotek_form_test.lingotek_translation_status:
+  path: '/lingotek_form_test/lingotek_translation_status/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\lingotek_form_test\Controller\LingotekTranslationStatusController::render'
+  requirements:
+    _access: 'TRUE'

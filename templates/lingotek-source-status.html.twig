@@ -1,0 +1,18 @@
+{#
+/**
+ * @file
+ * Default theme implementation of the Lingotek source status.
+ *
+ * Available variables:
+ * - status: The attributes of the <source> tags for this <picture> tag.
+ * - status_title: The controlling image, with the fallback image in srcset.
+ * - language: The language.
+ * - url: (optional) The url to link to.
+ *
+ * @see template_preprocess()
+ * @see template_preprocess_lingotek_source_status()
+ *
+ * @ingroup themeable
+ */
+#}
+<span class="language-icon source-{{status|lower}}" title="{{status_title}}">{% if url %}<a href="{{url}}">{%endif%}{{language.id|upper}}{%if url %}</a>{%endif%}</span>
