@@ -569,6 +569,13 @@ function lingotek_theme() {
         'url' => NULL,
       ],
     ],
+    'lingotek_target_status' => [
+      'variables' => [
+        'entity' => NULL,
+        'source_langcode' => '',
+        'statuses' => [],
+      ],
+    ],
   ];
 }
 
@@ -586,4 +593,23 @@ function lingotek_theme() {
  *   - url: An optional \Drupal\Core\Url object.
  */
 function template_preprocess_lingotek_source_status(&$variables) {
+}
+
+/**
+ * Prepares variables for lingotek target status formatter templates.
+ *
+ * Default template: lingotek_target_status.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - entity: The entity which status we want to display.
+ *   - source_langcode: The language code.
+ *   - statuses: The source statuses, keyed by language code. The keys are:
+ *     - status: The status for that translation.
+ *     - url: An optional \Drupal\Core\Url object.
+ *     - new_window: A flag indicating if the link should be opened in a new window.
+ *     - status_text: The status text, mainly though for link title.
+ *     - language: The language code.
+ */
+function template_preprocess_lingotek_target_status(&$variables) {
 }

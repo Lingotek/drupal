@@ -26,7 +26,7 @@ class LingotekTranslationStatusController extends ControllerBase {
    * @return array
    *   A render array including a lingotek_source_status element.
    */
-  public function render($entity_type, $entity_id, Request $request) {
+  public function renderSource($entity_type, $entity_id, Request $request) {
     $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
@@ -38,6 +38,35 @@ class LingotekTranslationStatusController extends ControllerBase {
       '#entity' => $entity,
       '#language' => $entity->language(),
       '#status' => $status,
+    ];
+  }
+
+  /**
+   * Renders the Lingotek target statuses of the given entity.
+   *
+   * @param string $entity_type
+   *   The entity type id from the entity which status we want to render.
+   * @param string $entity_id
+   *   The entity id from the entity which status we want to render.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The HTTP request.
+   *
+   * @return array
+   *   A render array including a lingotek_target_status element.
+   */
+  public function renderTarget($entity_type, $entity_id, Request $request) {
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
+
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+    $translation_service = \Drupal::service('lingotek.content_translation');
+    $statuses = $translation_service->getTargetStatuses($entity);
+
+    return [
+      '#type' => 'lingotek_target_status',
+      '#entity' => $entity,
+      '#source_langcode' => $entity->language()->getId(),
+      '#statuses' => $statuses,
     ];
   }
 

@@ -290,15 +290,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function getTargetStatus(ContentEntityInterface &$entity, $langcode) {
     $status = Lingotek::STATUS_UNTRACKED;
+    $statuses = $this->getTargetStatuses($entity);
+    if (isset($statuses[$langcode])) {
+      $status = $statuses[$langcode];
+    }
+    return $status;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetStatuses(ContentEntityInterface &$entity) {
+    $statuses = [];
     $metadata = $entity->lingotek_metadata ? $entity->lingotek_metadata->entity : NULL;
     if ($metadata !== NULL && count($metadata->translation_status) > 0) {
       foreach ($metadata->translation_status->getIterator() as $delta => $value) {
-        if ($value->language == $langcode) {
-          $status = $value->value;
-        }
+        $statuses[$value->language] = $value->value;
       }
     }
-    return $status;
+    return $statuses;
   }
 
   /**

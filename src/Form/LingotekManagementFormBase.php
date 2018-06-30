@@ -10,13 +10,11 @@ use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
@@ -1048,30 +1046,6 @@ abstract class LingotekManagementFormBase extends FormBase {
     return $data;
   }
 
-  protected function getTargetStatusText($entity, $status, $langcode) {
-    $language = ConfigurableLanguage::load($langcode);
-    switch ($status) {
-      case Lingotek::STATUS_UNTRACKED:
-        return $language->label() . ' - ' . $this->t('Translation exists, but it is not being tracked by Lingotek');
-      case Lingotek::STATUS_REQUEST:
-        return $language->label() . ' - ' . $this->t('Request translation');
-      case Lingotek::STATUS_PENDING:
-        return $language->label() . ' - ' . $this->t('In-progress');
-      case Lingotek::STATUS_READY:
-        return $language->label() . ' - ' . $this->t('Ready for Download');
-      case Lingotek::STATUS_INTERMEDIATE:
-        return $language->label() . ' - ' . $this->t('In-progress (interim translation downloaded)');
-      case Lingotek::STATUS_CURRENT:
-        return $language->label() . ' - ' . $this->t('Current');
-      case Lingotek::STATUS_EDITED:
-        return $language->label() . ' - ' . $this->t('Not current');
-      case Lingotek::STATUS_ERROR:
-        return $language->label() . ' - ' . $this->t('Error');
-      default:
-        return $language->label() . ' - ' . ucfirst(strtolower($status));
-    }
-  }
-
   /**
    * Gets the translation status of an entity in a format ready to display.
    *
@@ -1082,94 +1056,17 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   A render array.
    */
   protected function getTranslationsStatuses(ContentEntityInterface &$entity) {
-    $translations = [];
-    $languages = $this->languageManager->getLanguages();
-    $languages = array_filter($languages, function (LanguageInterface $language) {
-      $configLanguage = ConfigurableLanguage::load($language->getId());
-      return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
-    });
-    $document_id = $this->translationService->getDocumentId($entity);
-    $metadata = $entity->lingotek_metadata !== NULL ? $entity->lingotek_metadata->entity : NULL;
-    if ($metadata !== NULL && $metadata->translation_status && $document_id) {
-      foreach ($metadata->translation_status->getIterator() as $delta => $field_value) {
-        if ($field_value->language !== $entity->language()->getId() && array_key_exists($field_value->language, $languages)) {
-          // We may have an existing translation already.
-          if ($entity->hasTranslation($field_value->language) && $field_value->value == Lingotek::STATUS_REQUEST) {
-            $translations[$field_value->language] = [
-              'status' => Lingotek::STATUS_UNTRACKED,
-              'url' => $this->getTargetActionUrl($entity, Lingotek::STATUS_UNTRACKED, $field_value->language),
-              'new_window' => FALSE,
-            ];
-          }
-          else {
-            $translations[$field_value->language] = [
-              'status' => $field_value->value,
-              'url' => $this->getTargetActionUrl($entity, $field_value->value, $field_value->language),
-              'new_window' => $field_value->value == Lingotek::STATUS_CURRENT,
-            ];
-          }
-        }
-      }
-      array_walk($languages, function ($language, $langcode) use ($entity, &$translations) {
-        if (!isset($translations[$langcode]) && $langcode !== $entity->getUntranslated()->language()->getId()) {
-          $translations[$langcode] = [
-            'status' => Lingotek::STATUS_REQUEST,
-            'url' => $this->getTargetActionUrl($entity, Lingotek::STATUS_REQUEST, $langcode),
-            'new_window' => FALSE,
-          ];
-        }
-      });
-    }
-    else {
-      foreach ($languages as $langcode => $language) {
-        // Show the untracked translations in the bulk management form, unless it's the
-        // source one.
-        if ($entity->hasTranslation($langcode) && $entity->getUntranslated()->language()->getId() !== $langcode) {
-          $translations[$langcode] = [
-            'status' => Lingotek::STATUS_UNTRACKED,
-            'url' => NULL,
-            'new_window' => FALSE,
-          ];
-        }
-      }
-    }
-    ksort($translations);
-    return $this->formatTranslations($entity, $translations);
-  }
-
-  /**
-   * Formats the translation statuses for display.
-   *
-   * @param array $translations
-   *   Pairs of language - status.
-   *
-   * @return array
-   *   A render array.
-   */
-  protected function formatTranslations($entity, array $translations) {
-    $languages = [];
-    foreach ($translations as $langcode => $data) {
-      if ($this->languageManager->getLanguage($langcode)) {
-        $languages[] = [
-          'language' => strtoupper($langcode),
-          'status' => strtolower($data['status']),
-          'status_text' => $this->getTargetStatusText($entity, $data['status'], $langcode),
-          'url' => $data['url'],
-          'new_window' => $data['new_window']
-        ];
-      }
-    }
+    $statuses = $this->translationService->getTargetStatuses($entity);
     return [
       'data' => [
-        '#type' => 'inline_template',
-        '#template' => '{% for language in languages %}{% if language.url %}<a href="{{ language.url }}" {%if language.new_window%}target="_blank"{%endif%}{%else%}<span {%endif%} class="language-icon target-{{language.status}}" title="{{language.status_text}}">{{language.language}}{%if language.url%}</a>{%else%}</span>{%endif%}{% endfor %}',
-        '#context' => [
-          'languages' => $languages,
-        ],
+        '#type' => 'lingotek_target_status',
+        '#entity' => $entity,
+        '#source_langcode' => $entity->language()->getId(),
+        '#statuses' => $statuses,
       ]
     ];
-
   }
+
 
   /**
    * Gets all the bundles as options.
@@ -1254,58 +1151,6 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
 
     return $operations;
-  }
-
-  protected function getTargetActionUrl(ContentEntityInterface &$entity, $target_status, $langcode) {
-    $url = NULL;
-    $document_id = $this->translationService->getDocumentId($entity);
-    $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
-    if ($target_status == Lingotek::STATUS_REQUEST) {
-      $url = Url::fromRoute('lingotek.entity.request_translation',
-        [
-          'doc_id' => $document_id,
-          'locale' => $locale,
-        ],
-        ['query' => $this->getDestinationWithQueryArray()]);
-    }
-    if ($target_status == Lingotek::STATUS_PENDING) {
-      $url = Url::fromRoute('lingotek.entity.check_target',
-        [
-          'doc_id' => $document_id,
-          'locale' => $locale,
-        ],
-        ['query' => $this->getDestinationWithQueryArray()]);
-    }
-    if ($target_status == Lingotek::STATUS_READY || $target_status == Lingotek::STATUS_ERROR) {
-      $url = Url::fromRoute('lingotek.entity.download',
-        [
-          'doc_id' => $document_id,
-          'locale' => $locale,
-        ],
-        ['query' => $this->getDestinationWithQueryArray()]);
-    }
-    if ($target_status == Lingotek::STATUS_CURRENT ||
-        $target_status == Lingotek::STATUS_INTERMEDIATE ||
-        $target_status == Lingotek::STATUS_EDITED) {
-      $url = Url::fromRoute('lingotek.workbench', [
-        'doc_id' => $document_id,
-        'locale' => $locale
-      ]);
-    }
-    if ($target_status == Lingotek::STATUS_UNTRACKED) {
-      $url = Url::fromRoute('lingotek.entity.request_translation',
-        [
-          'doc_id' => $document_id,
-          'locale' => $locale,
-        ],
-        ['query' => $this->getDestinationWithQueryArray()]);
-    }
-
-    return $url;
-  }
-
-  protected function getDestinationWithQueryArray() {
-    return ['destination' => \Drupal::request()->getRequestUri()];
   }
 
 }
