@@ -294,4 +294,21 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->assertEqual(Lingotek::STATUS_ERROR, $source_status, 'The node type has been marked as error.');
   }
 
+  /**
+   * Test trying translating a config entity which language doesn't exist.
+   */
+  public function testTranslatingFromUnexistingLocale() {
+    // Create a node type.
+    $this->drupalCreateContentType([
+      'type' => 'aaa_test_content_type',
+      'name' => 'AAA Test Content Type',
+      'langcode' => 'nap',
+    ]);
+    $this->drupalGet('/admin/config/regional/config-translation');
+    $this->drupalGet('/admin/config/regional/config-translation/node_type');
+    $this->clickLink('Translate');
+    $this->assertText('Translations for AAA Test Content Type content type');
+    $this->assertText('Unknown (nap) (original)');
+  }
+
 }
