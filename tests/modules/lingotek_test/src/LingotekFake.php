@@ -38,7 +38,8 @@ class LingotekFake implements LingotekInterface {
         }
         else {
           $host = \Drupal::request()->getSchemeAndHttpHost();
-          return ['host' => $host,
+          return [
+            'host' => $host,
             'sandbox_host' => $host,
             'authorize_path' => $this->get('account.authorize_path'),
             'default_client_id' => $this->get('account.default_client_id'),
@@ -73,7 +74,8 @@ class LingotekFake implements LingotekInterface {
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_workflow';
       case 'profile':
         return [
-            ['id' => 1,
+            [
+              'id' => 1,
               'name' => 'automatic',
               'auto_upload' => TRUE,
               'auto_download' => TRUE,
@@ -139,14 +141,16 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getProject($project_id) {
-    return ['properties' => [
-      'creation_date' => 1284940800000,
-      'workflow_id' => 'test_workflow',
-      'callback_url' => '',
-      'title' => 'Test project',
-      'community_id' => 'test_community',
-      'id' => 'test_project',
-    ]];
+    return [
+      'properties' => [
+        'creation_date' => 1284940800000,
+        'workflow_id' => 'test_workflow',
+        'callback_url' => '',
+        'title' => 'Test project',
+        'community_id' => 'test_community',
+        'id' => 'test_project',
+      ]
+    ];
   }
 
   public function setProjectCallBackUrl($project_id, $callback_url) {
@@ -309,6 +313,9 @@ class LingotekFake implements LingotekInterface {
    * {@inheritDoc}
    */
   public function getLocales() {
+    if (\Drupal::state()->get('lingotek.locales_error', FALSE)) {
+      throw new LingotekApiException('{"messages":["HTTP 401 Unauthorized"]}', 401);
+    }
     return ['es-ES', 'de-AT', 'de-DE'];
   }
 

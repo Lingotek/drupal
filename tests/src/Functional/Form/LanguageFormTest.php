@@ -63,6 +63,27 @@ class LanguageFormTest extends BrowserTestBase {
 
     // Assert that the locale is correct.
     $this->assertFieldByName('lingotek_locale', 'de-DE', 'The Lingotek locale is set correctly.');
+    $this->drupalPostForm(NULL, ['name' => 'German (Germany)'], 'Save language');
+    $this->assertText('German (Germany)');
+  }
+
+  /**
+   * Tests editing a defined language has the right locale.
+   */
+  public function testEditingLanguageWith401() {
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.locales_error', TRUE);
+
+    ConfigurableLanguage::createFromLangcode('de')->save();
+    $this->drupalGet('/admin/config/regional/language');
+    // Click on edit for German.
+    $this->clickLink('Edit', 1);
+
+    // Assert that the locale is correct.
+    $this->assertFieldByName('lingotek_locale', 'de-DE', 'The Lingotek locale is set correctly.');
+    $this->drupalPostForm(NULL, ['name' => 'German (Germany)'], 'Save language');
+    $this->assertText('German (Germany)');
+    $this->assertText("The Lingotek locale has not been validated.");
   }
 
   /**

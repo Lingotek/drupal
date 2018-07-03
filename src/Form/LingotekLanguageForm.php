@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\language\ConfigurableLanguageInterface;
+use Drupal\lingotek\Exception\LingotekApiException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 
@@ -53,7 +54,7 @@ class LingotekLanguageForm {
    *   The current state of the form.
    */
   public function form(array &$form, FormStateInterface $form_state) {
-    /** @var ConfigurableLanguageInterface $language */
+    /** @var \Drupal\language\ConfigurableLanguageInterface $language */
     $language = $form_state->getFormObject()->getEntity();
     $langcode = $language->getId();
 
@@ -64,7 +65,7 @@ class LingotekLanguageForm {
       '#default_value' => $langcode !== NULL ? str_replace("_", "-", $this->languageLocaleMapper->getLocaleForLangcode($langcode)) : '',
       '#weight' => 0,
       '#description' => $this->t('The Lingotek locale this language maps to.') . ' ' .
-        $this->t('Use language codes as <a href=":w3ctags">defined by the W3C</a> for interoperability. <em>Examples: "en", "en-gb" and "zh-hant".</em>', array(':w3ctags' => 'http://www.w3.org/International/articles/language-tags/')),
+        $this->t('Use language codes as <a href=":w3ctags">defined by the W3C</a> for interoperability. <em>Examples: "en", "en-gb" and "zh-hant".</em>', [':w3ctags' => 'http://www.w3.org/International/articles/language-tags/']),
     ];
     // Buttons are different if adding or editing a language. We need validation
     // on both cases.
@@ -114,8 +115,15 @@ class LingotekLanguageForm {
     $form_key = ['lingotek_locale'];
     if (!$form_state->isValueEmpty($form_key)) {
       $value = $form_state->getValue($form_key);
-      if (!self::isValidLocale($value)) {
-        $form_state->setErrorByName('lingotek_locale', t('The Lingotek locale %locale does not exist.', ['%locale' => $value]));
+      try {
+        if (!self::isValidLocale($value)) {
+          $form_state->setErrorByName('lingotek_locale', t('The Lingotek locale %locale does not exist.', ['%locale' => $value]));
+        }
+      }
+      catch (LingotekApiException $lingotekApiException) {
+        if ($lingotekApiException->getCode() === 401) {
+          drupal_set_message("The Lingotek locale has not been validated.", 'warning');
+        }
       }
     }
   }
