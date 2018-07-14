@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * Alters the LingotekContentMetadata entity for making it visitable.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider;
+
+/**
+ * Implements hook_entity_type_alter().
+ *
+ * @param \Drupal\Core\Entity\EntityTypeInterface[] $entity_types
+ */
+function lingotek_visitable_metadata_entity_type_alter(array &$entity_types) {
+  $metadata_entity = $entity_types['lingotek_content_metadata'];
+  $metadata_entity->set('admin_permission', 'manage lingotek translations');
+  $metadata_entity->setLinkTemplate('canonical', '/metadata/{lingotek_content_metadata}');
+  $metadata_entity->setHandlerClass('route_provider', ['html' => DefaultHtmlRouteProvider::class]);
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ *
+ * @param \Drupal\Core\Field\FieldDefinitionInterface[] $fields
+ *   The array of base field definitions for the entity type.
+ * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+ *   The entity type definition.
+ */
+function lingotek_visitable_metadata_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'lingotek_content_metadata' && !empty($fields['translation_source'])) {
+    $fields['translation_source']->setDisplayOptions('view', [
+      'label' => 'above',
+      'type' => 'lingotek_source_status',
+      'weight' => -5,
+    ]);
+  }
+
+}
