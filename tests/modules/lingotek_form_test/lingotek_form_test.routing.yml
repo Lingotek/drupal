@@ -8,6 +8,13 @@ lingotek_form_test.lingotek_source_status:
 lingotek_form_test.lingotek_translation_status:
   path: '/lingotek_form_test/lingotek_translation_status/{entity_type}/{entity_id}'
   defaults:
-    _controller: '\Drupal\lingotek_form_test\Controller\LingotekTranslationStatusController::renderTarget'
+    _controller: '\Drupal\lingotek_form_test\Controller\LingotekTranslationStatusController::renderTargetStatus'
+  requirements:
+    _access: 'TRUE'
+
+lingotek_form_test.lingotek_translation_statuses:
+  path: '/lingotek_form_test/lingotek_translation_statuses/{entity_type}/{entity_id}'
+  defaults:
+    _controller: '\Drupal\lingotek_form_test\Controller\LingotekTranslationStatusController::renderTargetStatuses'
   requirements:
     _access: 'TRUE'

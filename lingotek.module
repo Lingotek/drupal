@@ -572,6 +572,16 @@ function lingotek_theme() {
     'lingotek_target_status' => [
       'variables' => [
         'entity' => NULL,
+        'language' => '',
+        'status' => [],
+        'url' => NULL,
+        'status_text' => '',
+        'new_window' => FALSE,
+      ],
+    ],
+    'lingotek_target_statuses' => [
+      'variables' => [
+        'entity' => NULL,
         'source_langcode' => '',
         'statuses' => [],
       ],
@@ -598,7 +608,7 @@ function template_preprocess_lingotek_source_status(&$variables) {
 /**
  * Prepares variables for lingotek target status formatter templates.
  *
- * Default template: lingotek_target_status.html.twig.
+ * Default template: lingotek_target_statuses.html.twig.
  *
  * @param array $variables
  *   An associative array containing:
@@ -610,6 +620,23 @@ function template_preprocess_lingotek_source_status(&$variables) {
  *     - new_window: A flag indicating if the link should be opened in a new window.
  *     - status_text: The status text, mainly though for link title.
  *     - language: The language code.
+ */
+function template_preprocess_lingotek_target_statuses(&$variables) {
+}
+
+/**
+ * Prepares variables for lingotek target status formatter templates.
+ *
+ * Default template: lingotek_target_status.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - entity: The entity which status we want to display.
+ *   - language: The language code.
+ *   - status: The status for that translation.
+ *   - url: An optional \Drupal\Core\Url object.
+ *   - new_window: A flag indicating if the link should be opened in a new window.
+ *   - status_text: The status text, mainly though for link title.
  */
 function template_preprocess_lingotek_target_status(&$variables) {
 }

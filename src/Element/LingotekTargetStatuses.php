@@ -3,6 +3,7 @@
 namespace Drupal\lingotek\Element;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element\RenderElement;
 use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -11,9 +12,9 @@ use Drupal\lingotek\Lingotek;
 /**
  * Provides a Lingotek target status element.
  *
- * @RenderElement("lingotek_target_status")
+ * @RenderElement("lingotek_target_statuses")
  */
-class LingotekTargetStatus extends RenderElement {
+class LingotekTargetStatuses extends RenderElement {
 
   /**
    * {@inheritdoc}
@@ -23,7 +24,7 @@ class LingotekTargetStatus extends RenderElement {
       '#pre_render' => [
         [$this, 'preRender'],
       ],
-      '#theme' => 'lingotek_target_status',
+      '#theme' => 'lingotek_target_statuses',
       '#attached' => [
         'library' => [
           'lingotek/lingotek',
@@ -45,14 +46,77 @@ class LingotekTargetStatus extends RenderElement {
    *   The element as a render array.
    */
   public function preRender(array $element) {
-    $isSourceLanguage = $element['#entity']->language()->getId() === $element['#language'];
-    if ($isSourceLanguage) {
-      return [];
-    }
-    $element['#url'] = $this->getTargetActionUrl($element['#entity'], $element['#status'], $element['#language']);
-    $element['#new_window'] = !($element['#entity']->hasTranslation($element['#language']) && $element['#status'] == Lingotek::STATUS_REQUEST) && $element['#status'] == Lingotek::STATUS_CURRENT;
-    $element['#status_text'] = $this->getTargetStatusText($element['#entity'], $element['#status'], $element['#language']);
+    $statuses = $this->getTranslationsStatuses($element['#entity'], $element['#source_langcode'], $element['#statuses']);
+    $element['#statuses'] = $statuses;
     return $element;
+  }
+
+  /**
+   * Gets the translation status of an entity in a format ready to display.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity.
+   * @param string $source_langcode
+   *   The source language code.
+   * @param array $statuses
+   *   Array of known statuses keyed by language code.
+   *
+   * @return array
+   *   A render array.
+   */
+  protected function getTranslationsStatuses(ContentEntityInterface &$entity, $source_langcode, array $statuses) {
+    $translations = [];
+    $languages = \Drupal::languageManager()->getLanguages();
+    $languages = array_filter($languages, function (LanguageInterface $language) {
+      $configLanguage = ConfigurableLanguage::load($language->getId());
+      return \Drupal::service('lingotek.configuration')->isLanguageEnabled($configLanguage);
+    });
+    foreach ($statuses as $langcode => $status) {
+      if ($langcode !== $source_langcode && array_key_exists($langcode, $languages)) {
+        // We may have an existing translation already.
+        if ($entity->hasTranslation($langcode) && $status == Lingotek::STATUS_REQUEST) {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_UNTRACKED,
+            'url' => $this->getTargetActionUrl($entity, Lingotek::STATUS_UNTRACKED, $langcode),
+            'new_window' => FALSE,
+          ];
+        }
+        else {
+          $translations[$langcode] = [
+            'status' => $status,
+            'url' => $this->getTargetActionUrl($entity, $status, $langcode),
+            'new_window' => $status == Lingotek::STATUS_CURRENT,
+          ];
+        }
+      }
+      array_walk($languages, function ($language, $langcode) use ($entity, &$translations) {
+        if (!isset($translations[$langcode]) &&
+            $langcode !== $entity->getUntranslated()->language()->getId()) {
+          $translations[$langcode] = [
+            'status' => Lingotek::STATUS_REQUEST,
+            'url' => $this->getTargetActionUrl($entity, Lingotek::STATUS_REQUEST, $langcode),
+            'new_window' => FALSE,
+          ];
+        }
+      });
+    }
+    foreach ($languages as $langcode => $language) {
+      // Show the untracked translations in the bulk management form, unless it's the
+      // source one.
+      if (!isset($translations[$langcode]) && $entity->hasTranslation($langcode) && $source_langcode !== $langcode) {
+        $translations[$langcode] = [
+          'status' => Lingotek::STATUS_UNTRACKED,
+          'url' => NULL,
+          'new_window' => FALSE,
+        ];
+      }
+    }
+    ksort($translations);
+    foreach ($translations as $langcode => &$translation) {
+      $translation['status_text'] = $this->getTargetStatusText($entity, $translation['status'], $langcode);
+      $translation['language'] = $langcode;
+    }
+    return $translations;
   }
 
   /**

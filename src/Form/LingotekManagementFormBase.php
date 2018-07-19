@@ -1059,7 +1059,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     $statuses = $this->translationService->getTargetStatuses($entity);
     return [
       'data' => [
-        '#type' => 'lingotek_target_status',
+        '#type' => 'lingotek_target_statuses',
         '#entity' => $entity,
         '#source_langcode' => $entity->language()->getId(),
         '#statuses' => $statuses,
