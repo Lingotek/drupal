@@ -1,0 +1,9 @@
+name: Lingotek Visitable Metadata Test Helper with statuses
+type: module
+package: Testing
+version: VERSION
+core: 8.x
+
+dependencies:
+  - lingotek
+  - lingotek_visitable_metadata

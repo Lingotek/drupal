@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Alters the Language key/value field so its default formatter is the statuses
+ * formatter.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ *
+ * @param \Drupal\Core\Field\FieldDefinitionInterface[] $fields
+ *   The array of base field definitions for the entity type.
+ * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+ *   The entity type definition.
+ */
+function lingotek_visitable_metadata_statuses_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() == 'lingotek_content_metadata' && !empty($fields['translation_status'])) {
+    $fields['translation_status']->setDisplayOptions('view', [
+      'label' => 'above',
+      'type' => 'lingotek_translation_statuses',
+      'weight' => -5,
+    ]);
+
+  }
+
+}

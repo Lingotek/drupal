@@ -535,6 +535,44 @@ function lingotek_update_8208() {
   }
 }
 
+/**
+ * Change the lingotek_target_status id to lingotek_target_statuses.
+ */
+function lingotek_update_8209() {
+  $config_factory = \Drupal::configFactory();
+  $message = NULL;
+  $ids = [];
+
+  foreach ($config_factory->listAll('views.view.') as $view_config_name) {
+    $changed = FALSE;
+    $view = $config_factory->getEditable($view_config_name);
+
+    $displays = $view->get('display');
+
+    foreach ($displays as $display_name => $display) {
+      if (!empty($display['display_options']['fields'])) {
+        foreach ($display['display_options']['fields'] as $field_name => $field) {
+          if (isset($field['type']) && $field['type'] === 'lingotek_translation_status') {
+            $base = "display.$display_name.display_options.fields.$field_name";
+            $view->set($base . '.type', 'lingotek_translation_statuses');
+            $changed = TRUE;
+          }
+        }
+      }
+    }
+    if ($changed) {
+      $ids[] = $view->get('id');
+      $view->save(TRUE);
+    }
+  }
+
+  if (!empty($ids)) {
+    $message = \Drupal::translation()->translate('Updated field plugins for views: @ids', ['@ids' => implode(', ', array_unique($ids))]);
+  }
+
+  return $message;
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

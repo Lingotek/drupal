@@ -36,5 +36,13 @@ function lingotek_visitable_metadata_entity_base_field_info_alter(&$fields, Enti
       'weight' => -5,
     ]);
   }
+  if ($entity_type->id() == 'lingotek_content_metadata' && !empty($fields['translation_status'])) {
+    $fields['translation_status']->setDisplayOptions('view', [
+      'label' => 'above',
+      'type' => 'lingotek_translation_status',
+      'weight' => -5,
+    ]);
+
+  }
 
 }

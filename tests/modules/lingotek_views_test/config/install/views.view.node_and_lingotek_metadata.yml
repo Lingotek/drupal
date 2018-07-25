@@ -8,7 +8,7 @@ dependencies:
     - lingotek
     - node
     - user
-id: 'node_and_lingotek_metadata'
+id: node_and_lingotek_metadata
 label: 'Node and Lingotek Metadata'
 module: views
 description: ''
@@ -273,7 +273,7 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: lingotek_translation_status
+          type: lingotek_translation_statuses
           settings: {  }
           group_column: value
           group_columns: {  }
@@ -283,7 +283,7 @@ display:
           delta_reversed: false
           delta_first_last: false
           multi_type: separator
-          separator: ', '
+          separator: ''
           field_api_classes: false
           entity_type: lingotek_content_metadata
           entity_field: translation_status
@@ -337,10 +337,7 @@ display:
           empty_zero: false
           hide_alter_empty: true
           click_sort_column: value
-          type: language
-          settings:
-            link_to_entity: false
-            native_language: false
+          type: lingotek_source_status
           group_column: value
           group_columns: {  }
           group_rows: true
@@ -621,7 +618,7 @@ display:
     position: 1
     display_options:
       display_extenders: {  }
-      path: 'lingotek/views/node_and_lingotek_metadata'
+      path: lingotek/views/node_and_lingotek_metadata
       menu:
         type: normal
         title: 'Node and Lingotek Metadata'
