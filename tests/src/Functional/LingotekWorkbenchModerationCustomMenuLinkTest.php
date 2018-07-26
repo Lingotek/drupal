@@ -9,6 +9,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests setting up the integration with workbench moderation.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekWorkbenchModerationCustomMenuLinkTest extends LingotekTestBase {
 
@@ -47,15 +48,18 @@ class LingotekWorkbenchModerationCustomMenuLinkTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'menu_link_content[menu_link_content][enabled]' => 1,
-      'menu_link_content[menu_link_content][profiles]' => 'automatic',
-      'menu_link_content[menu_link_content][fields][title]' => 1,
-      'menu_link_content[menu_link_content][fields][description]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'menu_link_content' => [
+        'menu_link_content' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
   }
-
 
   /**
    * Entity creation with automatic profile in upload state triggers the upload.

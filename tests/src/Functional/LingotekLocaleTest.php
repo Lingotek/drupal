@@ -3,7 +3,7 @@
 namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\lingotek\LingotekLocale;
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests LingotekLocale.
@@ -12,7 +12,7 @@ use Drupal\simpletest\WebTestBase;
  *
  * @group lingotek
  */
-class LingotekLocaleTest extends WebTestBase {
+class LingotekLocaleTest extends BrowserTestBase {
 
   public function testConvertDrupal2Lingotek() {
     // ToDo: Improve testing coverage.

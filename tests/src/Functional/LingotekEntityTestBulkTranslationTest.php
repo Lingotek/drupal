@@ -11,6 +11,7 @@ use Drupal\lingotek\Lingotek;
  * Tests translating the entity test using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
 
@@ -19,6 +20,9 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
    */
   public static $modules = ['entity_test'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -37,13 +41,16 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'entity_test_mul[entity_test_mul][enabled]' => 1,
-      'entity_test_mul[entity_test_mul][profiles]' => 'automatic',
-      'entity_test_mul[entity_test_mul][fields][name]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'entity_test_mul' => [
+        'entity_test_mul' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'name' => 1,
+          ],
+        ],
+      ],
+    ]);
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'entity_test_mul');
   }
@@ -129,7 +136,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/entity_test_mul/1?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -138,7 +145,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -146,7 +153,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'request_translation:de'
+      'operation' => 'request_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -155,7 +162,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_translation:de'
+      'operation' => 'check_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
@@ -164,7 +171,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download:de'
+      'operation' => 'download:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -200,7 +207,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/entity_test_mul/1?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -209,7 +216,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -219,7 +226,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     // Check statuses, that may been requested externally.
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -279,7 +286,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/entity_test_mul/1?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -291,7 +298,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.document_status_completion', FALSE);
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -303,7 +310,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.document_status_completion', TRUE);
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -345,7 +352,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/entity_test_mul/1?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -354,7 +361,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -374,7 +381,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -414,7 +421,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/entity_test_mul/1?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()
@@ -424,7 +431,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -462,7 +469,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/entity_test_mul');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -475,7 +482,7 @@ class LingotekEntityTestBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.document_completion_statuses', ['es-ES' => 100, 'it-IT' => 100]);
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

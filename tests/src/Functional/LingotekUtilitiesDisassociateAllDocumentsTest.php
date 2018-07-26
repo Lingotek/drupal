@@ -14,6 +14,7 @@ use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
  * Tests disassociating all site documents.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
 
@@ -39,7 +40,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     $this->vocabulary = $this->createVocabulary();
@@ -62,23 +63,30 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'manual',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      "taxonomy_term[$vocabulary_id][enabled]" => 1,
-      "taxonomy_term[$vocabulary_id][profiles]" => 'manual',
-      "taxonomy_term[$vocabulary_id][fields][name]" => 1,
-      "taxonomy_term[$vocabulary_id][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'manual',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+        ],
+      ],
+      'taxonomy_term' => [
+        $vocabulary_id => [
+          'profiles' => 'manual',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     $this->translateNodeWithLinks();
     $this->translateTermWithLinks();
@@ -136,7 +144,6 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     // Download the Spanish translation.
     $this->clickLink('ES');
   }
-
 
   public function translateSystemSiteConfig() {
     // This is a hack for avoiding writing different lingotek endpoint mocks.

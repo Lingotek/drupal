@@ -31,7 +31,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     if ($this->profile != 'standard') {
       $this->drupalCreateContentType([
         'type' => 'article',
-        'name' => 'Article'
+        'name' => 'Article',
       ]);
 
       $this->createImageField('field_image', 'article');
@@ -89,7 +89,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       'user[user][fields][user_picture]' => 1,
       'user[user][fields][user_picture:properties][alt]' => 'alt',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
 
     // Check that values are kept in the form.
     $this->assertFieldChecked('edit-node-article-enabled');
@@ -138,7 +138,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       'node[article][fields][field_image]' => 1,
       'node[article][fields][field_image:properties][alt]' => 'alt',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
     // Assert that body translation is enabled.
     $this->assertFieldChecked('edit-node-article-fields-body');
     $this->assertFieldChecked('edit-node-article-fields-field-imageproperties-alt');
@@ -152,7 +152,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       'node[article][fields][field_image]' => FALSE,
       'node[article][fields][field_image:properties][alt]' => FALSE,
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
 
     // Those checkboxes should not be checked anymore.
     $this->assertNoFieldChecked('edit-node-article-fields-body');
@@ -192,7 +192,7 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
       'node[article][fields][field_image]' => 1,
       'node[article][fields][field_image:properties][alt]' => 'alt',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-content-form');
     // Assert that body translation is enabled.
     $this->assertFieldChecked('edit-node-article-fields-title', 'The title field is enabled after enabled for Lingotek translation');
     $this->assertFieldChecked('edit-node-article-fields-body', 'The body field is enabled after enabled for Lingotek translation');

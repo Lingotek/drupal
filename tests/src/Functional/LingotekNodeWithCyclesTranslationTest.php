@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
  * Tests translating a node.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
 
@@ -38,7 +39,7 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     $this->createEntityReferenceField('node', 'article', 'field_reference', 'Reference', 'node');
@@ -58,15 +59,18 @@ class LingotekNodeWithCyclesTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'manual',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][fields][field_reference]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'manual',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_reference' => 1,
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**

@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Functional;
 use Drupal\Core\Url;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\workflows\Entity\Workflow;
 use GuzzleHttp\Cookie\CookieJar;
 
 /**
@@ -119,7 +120,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',
-      'vault' => 'test_vault'
+      'vault' => 'test_vault',
     ], 'Save configuration');
   }
 
@@ -132,7 +133,6 @@ abstract class LingotekTestBase extends BrowserTestBase {
   protected function goToContentBulkManagementForm($entity_type_id = 'node') {
     $this->drupalGet('admin/lingotek/manage/' . $entity_type_id);
   }
-
 
   /**
    * Go to the config bulk management form and filter one kind of configuration.
@@ -348,7 +348,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
         foreach ($bundles as $bundle) {
           $edit["bundles[$bundle]"] = $bundle;
         }
-        $this->drupalPostForm("admin/config/workflow/workflows/manage/$workflow_id/type/$entity_type_id", $edit, 'Save');
+        $this->drupalPostForm("/admin/config/workflow/workflows/manage/$workflow_id/type/$entity_type_id", $edit, 'Save');
       }
     }
     else {
@@ -374,7 +374,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $this->assertLinkByHref("/admin/lingotek/workbench/$document_id/$langcode");
     $url = Url::fromRoute('lingotek.workbench', [
       'doc_id' => $document_id,
-      'locale' => $locale
+      'locale' => $locale,
     ])->toString();
 
     $this->assertRaw('<a href="' . $url . '" target="_blank">', 'The workbench link opens in a new tab.');
@@ -438,6 +438,201 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $session_id = $this->getSession()->getCookie($this->getSessionName());
     $this->cookies = CookieJar::fromArray([$this->getSessionName() => $session_id], $domain);
     return $this->getSession()->getDriver()->getClient()->getClient();
+  }
+
+  /**
+   * Save Lingotek content translation settings.
+   *
+   * Example:
+   * @code
+   *   $this->saveLingotekContentTranslationSettings([
+   *     'node' => [
+   *       'article' => [
+   *         'profiles' => 'automatic',
+   *         'fields' => [
+   *           'title' => 1,
+   *           'body' => 1,
+   *         ],
+   *         'moderation' => [
+   *           'upload_status' => 'draft',
+   *           'download_transition' => 'request_review',
+   *         ],
+   *       ],
+   *    ],
+   *     'paragraph' => [
+   *       'image_text' => [
+   *         'fields' => [
+   *           'field_image_demo' => ['title', 'alt'],
+   *           'field_text_demo' => 1,
+   *         ],
+   *       ],
+   *     ],
+   *   ]);
+   * @endcode
+   *
+   * @param array $settings
+   *   The settings we want to save.
+   */
+  protected function saveLingotekContentTranslationSettings($settings) {
+    $edit = [];
+    foreach ($settings as $entity_type => $entity_type_settings) {
+      foreach ($entity_type_settings as $bundle_id => $bundle_settings) {
+        $edit[$entity_type . '[' . $bundle_id . '][enabled]'] = 1;
+        if (isset($bundle_settings['profiles']) && $bundle_settings['profiles'] !== NULL) {
+          $edit[$entity_type . '[' . $bundle_id . '][profiles]'] = $bundle_settings['profiles'];
+        }
+        foreach ($bundle_settings['fields'] as $field_id => $field_properties) {
+          $edit[$entity_type . '[' . $bundle_id . '][fields][' . $field_id . ']'] = 1;
+          if (is_array($field_properties)) {
+            foreach ($field_properties as $field_property) {
+              $edit[$entity_type . '[' . $bundle_id . '][fields][' . $field_id . ':properties][' . $field_property . ']'] = $field_property;
+            }
+          }
+        }
+        if (isset($bundle_settings['moderation']) && $bundle_settings['moderation'] !== NULL) {
+          $edit[$entity_type . '[' . $bundle_id . '][moderation][upload_status]'] = $bundle_settings['moderation']['upload_status'];
+          $edit[$entity_type . '[' . $bundle_id . '][moderation][download_transition]'] = $bundle_settings['moderation']['download_transition'];
+        }
+      }
+    }
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-content-form');
+  }
+
+  /**
+   * Save Lingotek translation settings for node types.
+   *
+   * Example:
+   * @code
+   *      $this->saveLingotekContentTranslationSettingsForNodeTypes(
+   *        ['article', 'page'], manual);
+   * @endcode
+   *
+   * @param array $node_types
+   *   The node types we want to enable.
+   * @param string $profile
+   *   The profile id we want to use.
+   */
+  protected function saveLingotekContentTranslationSettingsForNodeTypes($node_types = ['article'], $profile = 'automatic') {
+    $settings = [];
+    foreach ($node_types as $node_type) {
+      $settings['node'][$node_type] = [
+        'profiles' => $profile,
+        'fields' => [
+          'title' => 1,
+          'body' => 1,
+        ],
+      ];
+    }
+    $this->saveLingotekContentTranslationSettings($settings);
+  }
+
+  /**
+   * Save Lingotek configuration translation settings.
+   *
+   * Example:
+   * @code
+   *      $this->saveLingotekConfigTranslationSettings([
+   *        'node_type' => 'manual',
+   *        'node_fields' => 'automatic',
+   *      ]);
+   * @endcode
+   *
+   * @param array $settings
+   *   The settings we want to save.
+   */
+  protected function saveLingotekConfigTranslationSettings($settings) {
+    // ToDo: Remove this when 8.5.x is not supported anymore.
+    $this->drupalGet('admin/lingotek/settings');
+
+    $edit = [];
+    foreach ($settings as $entity_type => $profile) {
+      $edit['table[' . $entity_type . '][enabled]'] = 1;
+      $edit['table[' . $entity_type . '][profile]'] = $profile;
+    }
+    // ToDo: Remove this when 8.5.x is not supported anymore and replace with
+    // $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-configuration-form');
+    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+  }
+
+  /**
+   * Creates the editorial workflow.
+   *
+   * @deprecated ToDo: Remove when 8.5.x is unsupported.
+   * Copied from trait ContentModerationTestTrait in 8.6.x.
+   *
+   * @return \Drupal\workflows\Entity\Workflow
+   *   The editorial workflow entity.
+   */
+  protected function createEditorialWorkflow() {
+    if ($workflow = Workflow::load('editorial') === NULL) {
+      $workflow = Workflow::create([
+        'type' => 'content_moderation',
+        'id' => 'editorial',
+        'label' => 'Editorial',
+        'type_settings' => [
+          'states' => [
+            'archived' => [
+              'label' => 'Archived',
+              'weight' => 5,
+              'published' => FALSE,
+              'default_revision' => TRUE,
+            ],
+            'draft' => [
+              'label' => 'Draft',
+              'published' => FALSE,
+              'default_revision' => FALSE,
+              'weight' => -5,
+            ],
+            'published' => [
+              'label' => 'Published',
+              'published' => TRUE,
+              'default_revision' => TRUE,
+              'weight' => 0,
+            ],
+          ],
+          'transitions' => [
+            'archive' => [
+              'label' => 'Archive',
+              'from' => ['published'],
+              'to' => 'archived',
+              'weight' => 2,
+            ],
+            'archived_draft' => [
+              'label' => 'Restore to Draft',
+              'from' => ['archived'],
+              'to' => 'draft',
+              'weight' => 3,
+            ],
+            'archived_published' => [
+              'label' => 'Restore',
+              'from' => ['archived'],
+              'to' => 'published',
+              'weight' => 4,
+            ],
+            'create_new_draft' => [
+              'label' => 'Create New Draft',
+              'to' => 'draft',
+              'weight' => 0,
+              'from' => [
+                'draft',
+                'published',
+              ],
+            ],
+            'publish' => [
+              'label' => 'Publish',
+              'to' => 'published',
+              'weight' => 1,
+              'from' => [
+                'draft',
+                'published',
+              ],
+            ],
+          ],
+        ],
+      ]);
+      $workflow->save();
+    }
+    return $workflow;
   }
 
 }

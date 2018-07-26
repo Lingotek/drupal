@@ -8,6 +8,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests the Lingotek config translation document upload hook.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigTranslationDocumentUploadHookTest extends LingotekTestBase {
 
@@ -26,11 +27,9 @@ class LingotekConfigTranslationDocumentUploadHookTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[block][enabled]' => 1,
-      'table[block][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'block' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'block.powered-by');

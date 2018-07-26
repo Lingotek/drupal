@@ -33,7 +33,7 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add locales.

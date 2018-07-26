@@ -10,6 +10,7 @@ use Drupal\node\Entity\NodeType;
  * Tests translating a config entity using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
@@ -26,17 +27,15 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
@@ -112,7 +111,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -121,7 +120,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -129,7 +128,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'request_translation:de'
+      'operation' => 'request_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -138,7 +137,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translation:de'
+      'operation' => 'check_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
@@ -147,7 +146,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'download:de'
+      'operation' => 'download:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -166,11 +165,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     // Set upload as manual.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
@@ -178,7 +175,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Create another node type
     $this->drupalCreateContentType([
       'type' => 'page',
-      'name' => 'Page'
+      'name' => 'Page',
     ]);
 
     // Go to the bulk config management page.
@@ -192,7 +189,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -202,7 +199,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -212,7 +209,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'request_translations'
+      'operation' => 'request_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -222,7 +219,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -232,7 +229,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
   }
@@ -245,11 +242,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->testContentTypeTranslationUsingLinks();
 
     // Set upload as manual.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.
@@ -295,7 +290,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Check the translation after having been edited.
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');
@@ -313,11 +308,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->testContentTypeTranslationUsingLinks();
 
     // Set upload as automatic.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.
@@ -347,7 +340,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Check the translation after having been edited.
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');
@@ -356,7 +349,6 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->clickLink('ES');
     $this->assertText('Translation to es_MX downloaded successfully');
   }
-
 
   /**
    * Tests that a config can be translated using the links on the management page.
@@ -399,8 +391,6 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
   /**
    * Test that when a config is uploaded in a different locale that locale is used.
-   */
-  /**
    * ToDo: Add a test for this.
    */
   public function testAddingConfigInDifferentLocale() {
@@ -441,10 +431,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
    */
   public function testUpdatingWithAnError() {
     // Set upload as manual.
-    $edit = [
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     $this->goToConfigBulkManagementForm('node_type');
 
@@ -489,10 +478,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
    */
   public function testUploadingWithAnErrorUsingActions() {
     // Set upload as manual.
-    $edit = [
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 
@@ -503,7 +491,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Article upload failed. Please try again.');
@@ -530,10 +518,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
    */
   public function testUpdatingWithAnErrorUsingActions() {
     // Set upload as manual.
-    $edit = [
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     $this->goToConfigBulkManagementForm('node_type');
 
@@ -542,7 +529,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');
@@ -559,7 +546,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -599,7 +586,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -608,7 +595,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -618,7 +605,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Check statuses, that may been requested externally.
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -673,7 +660,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -682,7 +669,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -702,7 +689,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -734,7 +721,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()
@@ -744,7 +731,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -782,7 +769,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -795,7 +782,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.document_completion_statuses', ['es-ES' => 100, 'it-IT' => 100]);
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

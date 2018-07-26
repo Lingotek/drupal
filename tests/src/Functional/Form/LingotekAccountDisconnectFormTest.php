@@ -17,7 +17,7 @@ class LingotekAccountDisconnectFormTest extends LingotekTestBase {
   public function testAccountDisconnect() {
     // We try to disconnect from an already connected account.
     $this->drupalGet('admin/lingotek/settings');
-    $this->drupalPostForm(NULL, [], t('Disconnect'), [], [], 'lingoteksettings-tab-account-form');
+    $this->drupalPostForm(NULL, [], t('Disconnect'), [], 'lingoteksettings-tab-account-form');
 
     // We need to confirm disconnection.
     $this->drupalPostForm(NULL, [], t('Disconnect'));

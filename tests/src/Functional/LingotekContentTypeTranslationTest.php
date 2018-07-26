@@ -10,13 +10,12 @@ use Drupal\node\Entity\NodeType;
  * Tests translating a content type.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTypeTranslationTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image'];
 
@@ -25,6 +24,9 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -35,13 +37,11 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -269,11 +269,9 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
    * Test that we handle errors in upload.
    */
   public function testUploadingWithAnErrorViaAPI() {
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 

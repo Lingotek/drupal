@@ -52,14 +52,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
   }
 
   /**
@@ -478,13 +471,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[page][enabled]' => 1,
-      'node[page][profiles]' => 'automatic',
-      'node[page][fields][title]' => 1,
-      'node[page][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['page']);
 
     $nodes = [];
     // Create a node.
@@ -627,13 +614,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
 
     // Enable automatic profile for pages.
-    $edit = [
-      'node[page][enabled]' => 1,
-      'node[page][profiles]' => 'automatic',
-      'node[page][fields][title]' => 1,
-      'node[page][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['page'], 'automatic');
 
     // Now we should see the automatic profile.
     $this->goToContentBulkManagementForm();
@@ -651,13 +632,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // Now we change the default profile. Should still be the same for the node
     // we uploaded.
-    $edit = [
-      'node[page][enabled]' => 1,
-      'node[page][profiles]' => 'manual',
-      'node[page][fields][title]' => 1,
-      'node[page][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['page'], 'manual');
 
     $this->goToContentBulkManagementForm();
     // Ensure there is Automatic profile for node 1, but Manual profile for

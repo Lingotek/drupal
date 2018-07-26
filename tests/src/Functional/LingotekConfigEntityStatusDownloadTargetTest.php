@@ -8,6 +8,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating a field using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigEntityStatusDownloadTargetTest extends LingotekTestBase {
 
@@ -24,18 +25,16 @@ class LingotekConfigEntityStatusDownloadTargetTest extends LingotekTestBase {
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     node_add_body_field($type);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'body');

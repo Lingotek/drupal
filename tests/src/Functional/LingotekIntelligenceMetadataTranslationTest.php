@@ -11,6 +11,7 @@ use Drupal\Tests\lingotek\Functional\Form\IntelligenceMetadataFormTestTrait;
  * Tests if intelligence metadata is used when uploading and updating content.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
@@ -26,23 +27,26 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
     // Place the actions and title block.
     $this->drupalPlaceBlock('page_title_block', [
       'region' => 'content',
-      'weight' => -5
+      'weight' => -5,
     ]);
     $this->drupalPlaceBlock('local_tasks_block', [
       'region' => 'content',
-      'weight' => -10
+      'weight' => -10,
     ]);
 
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add a language.
@@ -65,15 +69,18 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][fields][uid]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'uid' => 1,
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**
@@ -320,7 +327,6 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['region'], 'region2');
   }
 
-
   public function testUploadNodeWithProfileOverride() {
     $domain = \Drupal::request()->getSchemeAndHttpHost();
 
@@ -407,7 +413,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
       'intelligence_metadata[use_base_domain]' => FALSE,
       'intelligence_metadata[use_reference_url]' => FALSE,
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], [], 'lingotekintelligence-metadata-form');
+    $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], 'lingotekintelligence-metadata-form');
   }
 
   protected function setupIntelligenceProfileSettings() {
@@ -484,14 +490,14 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
       'intelligence_metadata[purchase_order]' => 'General PO32',
       'intelligence_metadata[region]' => 'region2',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], [], 'lingotekintelligence-metadata-form');
+    $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], 'lingotekintelligence-metadata-form');
   }
 
   protected function setupContactEmailForAuthorIntelligenceSettings() {
     $edit = [
       'intelligence_metadata[use_contact_email_for_author]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], [], 'lingotekintelligence-metadata-form');
+    $this->drupalPostForm(NULL, $edit, 'Save Lingotek Intelligence Metadata', [], 'lingotekintelligence-metadata-form');
   }
 
 }

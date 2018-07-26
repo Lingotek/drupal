@@ -60,6 +60,8 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
     $this->rebuildContainer();
+
+    $workflow = $this->createEditorialWorkflow();
   }
 
   /**
@@ -123,14 +125,20 @@ class LingotekContentModerationSettingsTest extends LingotekTestBase {
     }
 
     // Let's save the settings for articles.
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][moderation][upload_status]' => 'draft',
-      'node[article][moderation][download_transition]' => 'archive',
-    ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+          ],
+          'moderation' => [
+            'upload_status' => 'draft',
+            'download_transition' => 'archive',
+          ],
+        ],
+      ],
+    ]);
 
     // Assert the values are saved.
     $this->assertOptionSelected('edit-node-article-moderation-upload-status', 'draft',

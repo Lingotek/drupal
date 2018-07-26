@@ -10,13 +10,12 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a field.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekFieldBodyTranslationTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'field_ui'];
 
@@ -25,6 +24,9 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -35,18 +37,16 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     node_add_body_field($type);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
@@ -134,7 +134,6 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->clickLink('Download');
     $this->assertText('Translation to es_MX downloaded successfully');
   }
-
 
   /**
    * Tests that no translation can be requested if the language is disabled.
@@ -276,11 +275,9 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
    * Test that we handle errors in upload.
    */
   public function testUploadingWithAnErrorViaAPI() {
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
 
     \Drupal::state()->set('lingotek.must_error_in_upload', TRUE);
 

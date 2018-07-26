@@ -11,6 +11,7 @@ use Drupal\node\Entity\Node;
  * Tests translating a node that contains a link field.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
 
@@ -37,7 +38,7 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Create a link field.
@@ -88,14 +89,18 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      "node[article][fields][$this->field_name]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            $this->field_name => 1,
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**

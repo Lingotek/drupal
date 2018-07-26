@@ -31,7 +31,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     // Create Article node type.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add languages.
@@ -54,14 +54,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
   }
 
   public function testRightNodeIsSavedIfThereIsNoRevisionInMetadata() {
@@ -69,13 +62,13 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     /** @var \Drupal\node\NodeInterface $node */
     $node1 = $this->createNode([
       'type' => 'article',
-      'title' => 'Node 1'
+      'title' => 'Node 1',
     ]);
     $node1->save();
 
     $node2 = $this->createNode([
       'type' => 'article',
-      'title' => 'Node 2'
+      'title' => 'Node 2',
     ]);
     $node2->save();
 
@@ -88,7 +81,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
       '_lingotek_metadata' => [
         '_entity_type_id' => 'node',
         '_entity_id' => 2,
-      ]
+      ],
     ];
     $translation_service->saveTargetData($node2, 'es', $es_data);
 
@@ -104,7 +97,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     /** @var \Drupal\node\NodeInterface $node */
     $node = $this->createNode([
       'type' => 'article',
-      'title' => 'Revision 1'
+      'title' => 'Revision 1',
     ]);
 
     // Create a new revision.
@@ -127,7 +120,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
         '_entity_type_id' => 'node',
         '_entity_id' => 1,
         '_entity_revision' => 2,
-      ]
+      ],
     ];
     $translation_service->saveTargetData($node, 'es', $es_data);
 
@@ -169,7 +162,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
 
     $es_data = [
       'title' => [0 => ['value' => 'es title']],
-      'body' => [0 => ['value' => 'es body']]
+      'body' => [0 => ['value' => 'es body']],
     ];
 
     $node = $translation_service->saveTargetData($node, 'es', $es_data);
@@ -186,7 +179,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
 
     $de_data = [
       'title' => [0 => ['value' => 'de title']],
-      'body' => [0 => ['value' => 'de body']]
+      'body' => [0 => ['value' => 'de body']],
     ];
     // If the field is not translatable, the field is not there.
     $node = $translation_service->saveTargetData($node, 'de', $de_data);

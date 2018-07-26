@@ -12,31 +12,29 @@ use Drupal\language\Entity\ConfigurableLanguage;
 class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'field_ui'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     node_add_body_field($type);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
-
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
   }
 
   /**
@@ -77,7 +75,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
 
     $edit = [
       'table[node.article.body]' => TRUE,
-      'operation' => 'debug.export'
+      'operation' => 'debug.export',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

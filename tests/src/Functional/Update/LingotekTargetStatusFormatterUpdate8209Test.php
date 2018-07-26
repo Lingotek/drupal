@@ -9,6 +9,7 @@ use Drupal\FunctionalTests\Update\UpdatePathTestBase;
  * lingotek_target_statuses.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekTargetStatusFormatterUpdate8209Test extends UpdatePathTestBase {
 
@@ -33,7 +34,7 @@ class LingotekTargetStatusFormatterUpdate8209Test extends UpdatePathTestBase {
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
       __DIR__ . '/../../../fixtures/update/drupal-8.lingotek.standard.pre8209.php.gz',
-      __DIR__ . '/../../../fixtures/update/lingotektargetstatusupgrade2985742.php'
+      __DIR__ . '/../../../fixtures/update/lingotektargetstatusupgrade2985742.php',
     ];
   }
 

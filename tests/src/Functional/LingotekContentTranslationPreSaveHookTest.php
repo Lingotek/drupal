@@ -11,15 +11,14 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests the hooks a node.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
 
   use TestFileCreationTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image'];
 
@@ -28,6 +27,9 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -35,13 +37,10 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
     $this->drupalPlaceBlock('local_tasks_block');
     $this->drupalPlaceBlock('page_title_block');
 
-    // Create Article node types.
-    if ($this->profile != 'standard') {
-      $this->drupalCreateContentType([
-        'type' => 'press_release',
-        'name' => 'Press Release'
-      ]);
-    }
+    $this->drupalCreateContentType([
+      'type' => 'press_release',
+      'name' => 'Press Release',
+    ]);
     $this->createImageField('field_image', 'press_release');
 
     // Add a language.
@@ -59,16 +58,18 @@ class LingotekContentTranslationPreSaveHookTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[press_release][enabled]' => 1,
-      'node[press_release][profiles]' => 'automatic',
-      'node[press_release][fields][title]' => 1,
-      'node[press_release][fields][body]' => 1,
-      'node[press_release][fields][field_image]' => 1,
-      'node[press_release][fields][field_image:properties][alt]' => 'alt',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'press_release' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_image' => ['alt'],
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**

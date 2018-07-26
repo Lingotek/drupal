@@ -9,6 +9,7 @@ use Drupal\Tests\BrowserTestBase;
  * Test the Drupal language form alters.
  *
  * @group lingotek
+ * @group legacy
  */
 class LanguageFormTest extends BrowserTestBase {
 

@@ -11,15 +11,14 @@ use Drupal\node\Entity\Node;
  * Tests translating a node that contains a path.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
 
   use EntityReferenceTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image', 'comment', 'path', 'dblog'];
 
@@ -28,6 +27,9 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -38,7 +40,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add locales.
@@ -57,14 +59,18 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][fields][path]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'path' => 1,
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**

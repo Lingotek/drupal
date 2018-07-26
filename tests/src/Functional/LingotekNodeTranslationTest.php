@@ -73,16 +73,18 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][fields][field_image]' => 1,
-      'node[article][fields][field_image:properties][alt]' => 'alt',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_image' => ['alt'],
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**
@@ -330,7 +332,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     $translation_manager = $this->drupalCreateUser([
       'bypass node access',
-      'assign lingotek translation profiles'
+      'assign lingotek translation profiles',
     ]);
     // Login as translation manager.
     $this->drupalLogin($translation_manager);
@@ -584,7 +586,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,

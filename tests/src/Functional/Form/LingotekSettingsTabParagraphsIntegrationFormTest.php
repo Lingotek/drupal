@@ -12,6 +12,7 @@ use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
  * Tests the Lingotek integrations settings form with paragraphs.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase {
 
@@ -42,11 +43,11 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     // Place the actions and title block.
     $this->drupalPlaceBlock('page_title_block', [
       'region' => 'content',
-      'weight' => -5
+      'weight' => -5,
     ]);
     $this->drupalPlaceBlock('local_tasks_block', [
       'region' => 'content',
-      'weight' => -10
+      'weight' => -10,
     ]);
 
     // Create Article node types.
@@ -84,18 +85,25 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'paragraph[image_text][enabled]' => 1,
-      'paragraph[image_text][fields][field_image_demo]' => 1,
-      'paragraph[image_text][fields][field_image_demo:properties][title]' => 'title',
-      'paragraph[image_text][fields][field_image_demo:properties][alt]' => 'alt',
-      'paragraph[image_text][fields][field_text_demo]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+        ],
+      ],
+      'paragraph' => [
+        'image_text' => [
+          'fields' => [
+            'field_image_demo' => ['title', 'alt'],
+            'field_text_demo' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // Login as admin.
     $this->drupalLogin($this->rootUser);
@@ -126,7 +134,7 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     // Activate the settings tab.
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['contrib[paragraphs][enable_bulk_management]' => 1];
-    $this->drupalPostForm(NULL, $edit, 'Save settings', [], [], 'lingoteksettings-integrations-form');
+    $this->drupalPostForm(NULL, $edit, 'Save settings', [], 'lingoteksettings-integrations-form');
     $this->assertText('The configuration options have been saved.');
 
     // Now the tab is active.
@@ -148,7 +156,7 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     // Disable the settings tab.
     $this->drupalGet('admin/lingotek/settings');
     $edit = ['contrib[paragraphs][enable_bulk_management]' => FALSE];
-    $this->drupalPostForm(NULL, $edit, 'Save settings', [], [], 'lingoteksettings-integrations-form');
+    $this->drupalPostForm(NULL, $edit, 'Save settings', [], 'lingoteksettings-integrations-form');
     $this->assertText('The configuration options have been saved.');
 
     // Now the tab is not shown.
@@ -162,13 +170,17 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
   public function testOtherBulkTabsAreShownAfterDeactivating() {
     $this->testBulkTabCanBeDeactivated();
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'automatic',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // Now the taxonomy tab should be shown.
     $this->goToContentBulkManagementForm();
@@ -190,7 +202,7 @@ class LingotekSettingsTabParagraphsIntegrationFormTest extends LingotekTestBase 
     $this->assertNoFieldByName('paragraph[image_text][profiles]', NULL, 'The profile is not selectable for paragraphs by default.');
 
     $edit = ['contrib[paragraphs][enable_bulk_management]' => 1];
-    $this->drupalPostForm(NULL, $edit, 'Save settings', [], [], 'lingoteksettings-integrations-form');
+    $this->drupalPostForm(NULL, $edit, 'Save settings', [], 'lingoteksettings-integrations-form');
     $this->assertText('The configuration options have been saved.');
 
     $this->assertFieldByName('paragraph[image_text][profiles]', NULL, 'The profile can be assigned to a paragraph if they are managed individually.');

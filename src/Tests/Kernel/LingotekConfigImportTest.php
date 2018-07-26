@@ -9,6 +9,7 @@ use Drupal\KernelTests\KernelTestBase;
  * Tests content translation updates performed during config import.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigImportTest extends KernelTestBase {
 
@@ -31,7 +32,7 @@ class LingotekConfigImportTest extends KernelTestBase {
    */
   protected function setUp() {
     parent::setUp();
-
+    $this->installConfig(['system']);
     $this->installEntitySchema('entity_test_mul');
   }
 
@@ -49,9 +50,9 @@ class LingotekConfigImportTest extends KernelTestBase {
         'id' => 'entity1',
         'dependencies' => [
           'enforced' => [
-            'content' => [$content_entity->getConfigDependencyName()]
-          ]
-        ]
+            'content' => [$content_entity->getConfigDependencyName()],
+          ],
+        ],
       ]
     );
     $entity1->save();
@@ -78,7 +79,7 @@ class LingotekConfigImportTest extends KernelTestBase {
       'langcode' => 'en',
       'status' => TRUE,
       'dependencies' => [
-        'module' => ['content_translation']
+        'module' => ['content_translation'],
       ],
       'id' => $config_id,
       'target_entity_type_id' => 'entity_test_mul',

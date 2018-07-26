@@ -24,7 +24,7 @@ class LingotekContentTypeExistingBulkTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add a language.
@@ -34,11 +34,9 @@ class LingotekContentTypeExistingBulkTranslationTest extends LingotekTestBase {
     $config = \Drupal::languageManager()->getLanguageConfigOverride('es', 'node.type.article');
     $config->set('name', 'Translated Article')->save();
 
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
   }
 
   /**

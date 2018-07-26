@@ -53,7 +53,8 @@ class LingotekSourceStatusFormatter extends LanguageFormatter {
     $source_status = Lingotek::STATUS_UNTRACKED;
     if ($entity instanceof LingotekContentMetadata) {
       // $entity is the metadata of another entity. Let's get the source.
-      $entity = $this->entityManager->getStorage($entity->getContentEntityTypeId())->load($entity->getContentEntityId());
+      // ToDo: Use injected service. See https://www.drupal.org/project/drupal/issues/2981025#comment-12707077.
+      $entity = \Drupal::entityTypeManager()->getStorage($entity->getContentEntityTypeId())->load($entity->getContentEntityId());
       $source_status = \Drupal::service('lingotek.content_translation')->getSourceStatus($entity);
     }
 

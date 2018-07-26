@@ -9,6 +9,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests translating into chinese locales.
  *
  * @group lingotek
+ * @group legacy
  */
 class ChineseBulkTranslationTest extends LingotekTestBase {
 
@@ -25,7 +26,7 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add locale.
@@ -51,19 +52,10 @@ class ChineseBulkTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'manual',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['article'], 'manual');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
   }
 
   /**

@@ -9,34 +9,33 @@ use Drupal\lingotek\Lingotek;
  * Tests translating config using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTypeBulkDisassociateTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->save();
 
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
-
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
   }
 
   /**

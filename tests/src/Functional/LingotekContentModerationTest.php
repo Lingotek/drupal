@@ -10,6 +10,7 @@ use Drupal\workflows\Entity\Workflow;
  * Tests setting up the integration with content moderation.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentModerationTest extends LingotekTestBase {
 
@@ -52,18 +53,25 @@ class LingotekContentModerationTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     // Enable content moderation.
+    $workflow = $this->createEditorialWorkflow();
     $this->enableModerationThroughUI('article');
     $this->addReviewStateToEditorialWorkflow();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][moderation][upload_status]' => 'draft',
-      'node[article][moderation][download_transition]' => 'request_review',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+          'moderation' => [
+            'upload_status' => 'draft',
+            'download_transition' => 'request_review',
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**
@@ -219,15 +227,21 @@ class LingotekContentModerationTest extends LingotekTestBase {
   }
 
   protected function configureNeedsReviewAsUploadState() {
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][moderation][upload_status]' => 'needs_review',
-      'node[article][moderation][download_transition]' => 'publish',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+          ],
+          'moderation' => [
+            'upload_status' => 'needs_review',
+            'download_transition' => 'publish',
+          ],
+        ],
+      ],
+    ]);
   }
 
   public function testModerationToUploadStateWithAutomaticProfileTriggersUpload() {

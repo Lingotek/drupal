@@ -57,14 +57,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
   }
 
   /**
@@ -100,7 +93,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -135,7 +128,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -198,7 +191,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'phase',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -239,7 +232,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -262,7 +255,6 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
   }
-
 
   /**
    * Tests that a node can be translated using the links on the management page.
@@ -299,7 +291,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -337,7 +329,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -381,10 +373,10 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'es' => [
           'overrides' => 'custom',
           'custom' => [
-            'auto_download' => FALSE
-          ]
-        ]
-      ]
+            'auto_download' => FALSE,
+          ],
+        ],
+      ],
     ]);
     $profile->save();
 
@@ -419,7 +411,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -454,7 +446,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -477,7 +469,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -547,7 +539,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'body' => http_build_query([]),
@@ -581,7 +573,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'body' => http_build_query([]),
@@ -643,7 +635,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
           'complete' => 'true',
           'type' => 'target',
           'progress' => '100',
-        ]
+        ],
       ])->setAbsolute()->toString();
       $requests[] = \Drupal::httpClient()->postAsync($url);
     }
@@ -655,14 +647,14 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
           $message = new TranslatableMarkup(
             'FULFILLED. Got a response with status %status and body: %body', [
               '%status' => $response->getStatusCode(),
-              '%body' => (string) $response->getBody(TRUE)
+              '%body' => (string) $response->getBody(TRUE),
             ]);
           $this->verbose($message);
         }, function ($response) use ($request) {
             $message = new TranslatableMarkup(
               'REJECTED. Got a response with status %status and body: %body', [
                 '%status' => $response->getStatusCode(),
-                '%body' => (string) $response->getBody(TRUE)
+                '%body' => (string) $response->getBody(TRUE),
               ]);
             $this->verbose($message);
         });
@@ -711,7 +703,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -732,7 +724,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -767,7 +759,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -791,7 +783,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = \Drupal::httpClient()->postAsync($url);
 
@@ -826,7 +818,6 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $content_translation_service = \Drupal::service('lingotek.content_translation');
     $this->assertIdentical(Lingotek::STATUS_ERROR, $content_translation_service->getTargetStatus($node, 'it'));
   }
-
 
   /**
    * Resets node and metadata storage caches and reloads the node.

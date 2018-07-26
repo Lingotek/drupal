@@ -9,6 +9,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests translating a node with content moderation enabled.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
 
@@ -17,6 +18,9 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
    */
   public static $modules = ['block', 'node', 'content_moderation'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -43,16 +47,10 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     // Enable content moderation for articles.
+    $workflow = $this->createEditorialWorkflow();
     $this->configureContentModeration('editorial', ['node' => ['article']]);
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
   }
 
   /**

@@ -47,14 +47,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
   }
 
   /**
@@ -89,7 +82,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -100,7 +93,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -112,7 +105,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      'operation' => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -122,7 +115,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[2]' => TRUE,
-      'operation' => 'change_profile:manual'
+      'operation' => 'change_profile:manual',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -137,7 +130,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'change_profile:disabled'
+      'operation' => 'change_profile:disabled',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -159,7 +152,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -174,7 +167,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -189,7 +182,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'request_translations'
+      'operation' => 'request_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -204,7 +197,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -219,7 +212,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'download:es'
+      'operation' => 'download:es',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -234,7 +227,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      'operation' => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -256,7 +249,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -274,7 +267,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -292,7 +285,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'request_translations'
+      'operation' => 'request_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -310,7 +303,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -328,7 +321,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -411,7 +404,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'disassociate'
+      'operation' => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -419,7 +412,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      'operation' => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

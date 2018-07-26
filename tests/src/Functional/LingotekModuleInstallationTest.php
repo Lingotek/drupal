@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests that the module can be enabled.
  *
  * @group lingotek
  */
-class LingotekModuleInstallationTest extends WebTestBase {
+class LingotekModuleInstallationTest extends BrowserTestBase {
 
   /**
    * Tests that the module can be enabled.

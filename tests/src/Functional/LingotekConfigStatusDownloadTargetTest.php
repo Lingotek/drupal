@@ -8,6 +8,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating a field using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
 
@@ -24,18 +25,16 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     node_add_body_field($type);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
@@ -59,7 +58,7 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -70,7 +69,7 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -104,7 +103,7 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     // Download the Spanish translation.
     $edit = [
        'table[system.site_information_settings]' => TRUE,
-       'operation' => 'download'
+       'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -113,7 +112,6 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertEqual(count($source_edited), 1, 'Edited source is shown.');
     $edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
     $this->assertEqual(count($edited), 1, 'Edited translation is shown.');
-
   }
 
 }

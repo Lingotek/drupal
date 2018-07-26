@@ -11,6 +11,7 @@ use Drupal\lingotek\Lingotek;
  *
  * @package Drupal\lingotek\Tests
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigDependenciesTest extends LingotekTestBase {
 
@@ -45,23 +46,12 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
     $this->assertResponse(200);
 
-    // Set up articles for translation.
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'manual',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['article'], 'manual');
     // Set up node types and node fields for translation.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'manual',
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+      'node_fields' => 'automatic',
+    ]);
 
     // Go to config translation.
     $this->goToConfigBulkManagementForm('node_type');

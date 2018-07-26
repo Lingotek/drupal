@@ -11,6 +11,7 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the Lingotek profile form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekProfileFormTest extends LingotekTestBase {
 
@@ -179,13 +180,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
 
     // Create a node.
     $edit = [];
@@ -225,12 +220,9 @@ class LingotekProfileFormTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
-    $this->drupalGet('admin/lingotek/settings');
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => $profile_id,
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => $profile_id,
+    ]);
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
 
@@ -265,13 +257,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => $profile_id,
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['article'], $profile_id);
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
 

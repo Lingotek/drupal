@@ -11,6 +11,7 @@ use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
  * Tests translating a taxonomy term.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
 
@@ -61,13 +62,17 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'automatic',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'taxonomy_term');
@@ -183,13 +188,18 @@ class LingotekTaxonomyTermTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'manual',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'manual',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // Create a term.
     $this->term = Term::create([

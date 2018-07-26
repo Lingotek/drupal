@@ -8,16 +8,18 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating user settings using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -99,7 +101,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -108,7 +110,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -116,7 +118,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'request_translation:de'
+      'operation' => 'request_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -125,7 +127,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_translation:de'
+      'operation' => 'check_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
@@ -134,7 +136,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'download:de'
+      'operation' => 'download:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -197,7 +199,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     // Check status of the Spanish translation.
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_translation:es'
+      'operation' => 'check_translation:es',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertText('Operations completed.');
@@ -226,7 +228,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -234,7 +236,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -242,7 +244,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'request_translations'
+      'operation' => 'request_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -250,7 +252,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -258,7 +260,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
   }
@@ -286,10 +288,8 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
 
   /**
    * Test that when a config is uploaded in a different locale that locale is used.
+   * ToDo: Add a test for this.
    */
-  /**
- * ToDo: Add a test for this.
- */
   public function testAddingConfigInDifferentLocale() {
     $this->pass('Test not implemented yet.');
   }

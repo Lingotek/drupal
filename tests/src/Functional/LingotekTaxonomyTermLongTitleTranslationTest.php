@@ -12,6 +12,7 @@ use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
  * Tests translating a taxonomy term with a very long title that doesn't fit.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
 
@@ -62,13 +63,17 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'automatic',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'taxonomy_term_long_title');
@@ -202,13 +207,17 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'manual',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'manual',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // Create a term.
     $this->term = Term::create([
@@ -275,13 +284,17 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->drupalLogin($this->rootUser);
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'manual',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'manual',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // Create a term.
     $edit = [];
@@ -353,13 +366,17 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'manual',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'manual',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // Create a term.
     $edit = [];
@@ -377,7 +394,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/taxonomy_term/1?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -386,7 +403,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -394,7 +411,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'request_translation:de'
+      'operation' => 'request_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -403,7 +420,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_translation:de'
+      'operation' => 'check_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
@@ -412,7 +429,7 @@ class LingotekTaxonomyTermLongTitleTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/admin/lingotek/manage/taxonomy_term');
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download:de'
+      'operation' => 'download:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

@@ -8,6 +8,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests changing a profile using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
@@ -29,17 +30,15 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
 
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');
@@ -62,7 +61,7 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      'operation' => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -72,7 +71,7 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:manual'
+      'operation' => 'change_profile:manual',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -83,7 +82,7 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:disabled'
+      'operation' => 'change_profile:disabled',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -93,7 +92,7 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      'operation' => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -117,13 +116,13 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'disassociate'
+      'operation' => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      'operation' => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

@@ -10,6 +10,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests translating a node with paragraphs using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBase {
 
@@ -43,18 +44,25 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[paragraphed_content_demo][enabled]' => 1,
-      'node[paragraphed_content_demo][profiles]' => 'automatic',
-      'node[paragraphed_content_demo][fields][title]' => 1,
-      'node[paragraphed_content_demo][fields][field_paragraphs_demo]' => 1,
-      'paragraph[image_text][enabled]' => 1,
-      'paragraph[image_text][fields][field_image_demo]' => 1,
-      'paragraph[image_text][fields][field_image_demo:properties][title]' => 'title',
-      'paragraph[image_text][fields][field_image_demo:properties][alt]' => 'alt',
-      'paragraph[image_text][fields][field_text_demo]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'paragraphed_content_demo' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'field_paragraphs_demo' => 1,
+          ],
+        ],
+      ],
+      'paragraph' => [
+        'image_text' => [
+          'fields' => [
+            'field_image_demo' => ['title', 'alt'],
+            'field_text_demo' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs');
@@ -168,7 +176,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/node/1/manage');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -177,7 +185,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/node/1/manage');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'check_upload'
+      'operation' => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -185,7 +193,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/node/1/manage');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'request_translation:de'
+      'operation' => 'request_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -194,7 +202,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/node/1/manage');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'check_translation:de'
+      'operation' => 'check_translation:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
@@ -203,7 +211,7 @@ class LingotekNodeWithParagraphsManageTranslationTabTest extends LingotekTestBas
     $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/node/1/manage');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'download:de'
+      'operation' => 'download:de',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));

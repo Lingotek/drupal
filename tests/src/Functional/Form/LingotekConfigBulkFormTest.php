@@ -11,6 +11,7 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the config bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekConfigBulkFormTest extends LingotekTestBase {
 
@@ -46,24 +47,10 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $this->drupalGet('admin/lingotek/settings');
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[page][enabled]' => 1,
-      'node[page][profiles]' => 'automatic',
-      'node[page][fields][title]' => 1,
-      'node[page][fields][body]' => 1,
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-content-form');
-
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['article', 'page']);
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
   }
 
   /**

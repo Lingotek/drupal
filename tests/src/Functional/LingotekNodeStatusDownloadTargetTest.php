@@ -45,14 +45,7 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
   }
 
   /**
@@ -110,7 +103,7 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
 
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_translations'
+      'operation' => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -120,7 +113,7 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     // Download the Spanish translation.
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download'
+      'operation' => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 

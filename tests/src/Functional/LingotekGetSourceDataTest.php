@@ -10,16 +10,18 @@ use Drupal\language\Entity\ContentLanguageSettings;
  * Tests the Lingotek content service extract data from entities correctly.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekGetSourceDataTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['node', 'image'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -29,7 +31,7 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
     // Create Article node type.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Enable translation for the current entity type and ensure the change is
@@ -39,13 +41,7 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
 
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
@@ -57,7 +53,6 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
   }
 
   public function testFieldsAreNotExtractedIfNotTranslatableEvenIfStorageIsTranslatable() {
-
     // Ensure field storage is translatable.
     $field_storage = FieldStorageConfig::loadByName('node', 'body');
     $field_storage->setTranslatable(TRUE)->save();
@@ -75,7 +70,7 @@ class LingotekGetSourceDataTest extends LingotekTestBase {
     // Create a node.
     $node = $this->createNode([
         'type' => 'article',
-      ]);
+    ]);
 
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');

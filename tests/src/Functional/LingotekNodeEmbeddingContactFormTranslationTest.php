@@ -47,7 +47,7 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     $this->contactForm = ContactForm::create([
@@ -83,14 +83,18 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][fields][field_contact_form]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_contact_form' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+contact_form');
@@ -164,7 +168,6 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     $this->assertText('Las llamas son muy chulas');
     $this->assertText('Formulario de Contacto');
   }
-
 
   /**
    * Tests that a node can be translated.

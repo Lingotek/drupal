@@ -15,6 +15,7 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests translating a node with multiple locales embedding another entity.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
@@ -49,7 +50,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     $this->createImageField('field_image', 'article');
     $this->vocabulary = $this->createVocabulary();
@@ -89,22 +90,28 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     $bundle = $this->vocabulary->id();
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-      'node[article][fields][field_image]' => 1,
-      'node[article][fields][field_image:properties][alt]' => 'alt',
-      'node[article][fields][field_tags]' => 1,
-      "taxonomy_term[$bundle][enabled]" => 1,
-      "taxonomy_term[$bundle][profiles]" => 'manual',
-      "taxonomy_term[$bundle][fields][name]" => 1,
-      "taxonomy_term[$bundle][fields][description]" => 1,
-
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_image' => ['alt'],
+            'field_tags' => 1,
+          ],
+        ],
+      ],
+      'taxonomy_term' => [
+        $bundle => [
+          'profiles' => 'manual',
+          'fields' => [
+            'name' => 1,
+            'description' => 1,
+          ],
+        ],
+      ],
+    ]);
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+taxonomy_term');
   }
@@ -187,7 +194,6 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $this->assertText('Camélido');
     $this->assertText('Hervíboro');
   }
-
 
   /**
    * Tests that a node can be translated.
@@ -394,7 +400,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit = [
       'node[article][fields][field_other_tags]' => 1,
     ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-content-form');
 
     // Create the terms.
     Term::create(['name' => 'Camelid', 'vid' => $this->vocabulary->id()])->save();

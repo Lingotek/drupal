@@ -11,16 +11,18 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a content type using the notification callback.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -40,11 +42,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // Create Article node types. We use the form at least once to ensure that
     // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
@@ -69,7 +69,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -108,7 +108,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -144,11 +144,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'manual',
+    ]);
 
     // Create Article node types.
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
@@ -181,7 +179,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -226,7 +224,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -272,11 +270,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // Create Article node types. We use the form at least once to ensure that
     // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
@@ -307,7 +303,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'phase',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -354,7 +350,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -396,10 +392,10 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'es' => [
           'overrides' => 'custom',
           'custom' => [
-            'auto_download' => FALSE
-          ]
-        ]
-      ]
+            'auto_download' => FALSE,
+          ],
+        ],
+      ],
     ]);
     $profile->save();
 
@@ -410,11 +406,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'profile2',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'profile2',
+    ]);
 
     // Create Article node types.
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
@@ -446,7 +440,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'body' => http_build_query([]),
@@ -486,7 +480,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'body' => http_build_query([]),
@@ -509,7 +503,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -556,11 +550,9 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // Create Article node types. We use the form at least once to ensure that
     // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
@@ -591,7 +583,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -619,7 +611,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,

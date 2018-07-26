@@ -23,7 +23,7 @@ class LingotekSettingsTabConfigurationFormTest extends LingotekTestBase {
       'table[configurable_language][enabled]' => 1,
       'table[configurable_language][profile]' => 'manual',
     ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->drupalPostForm(NULL, $edit, 'Save', [], 'lingoteksettings-tab-configuration-form');
 
     // The values shown are correct.
     $this->assertFieldChecked('edit-table-configurable-language-enabled');

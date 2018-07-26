@@ -8,23 +8,25 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests translating a config entity into locales using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTypeBulkLocaleTranslationTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['node', 'comment'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
     // Create Article node types.
     $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
 
     // Create a locale outside of Lingotek dashboard.
@@ -34,12 +36,9 @@ class LingotekContentTypeBulkLocaleTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_AR')->save();
     ConfigurableLanguage::createFromLangcode('es-es')->setThirdPartySetting('lingotek', 'locale', 'es_ES')->save();
 
-    $this->drupalGet('admin/lingotek/settings');
-    $edit = [
-      'table[node_type][enabled]' => 1,
-      'table[node_type][profile]' => 'automatic',
-    ];
-    $this->submitForm($edit, 'Save', 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'content_type');

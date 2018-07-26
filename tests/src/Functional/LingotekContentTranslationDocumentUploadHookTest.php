@@ -11,15 +11,14 @@ use Drupal\Tests\TestFileCreationTrait;
  * Tests the hooks a node.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase {
 
   use TestFileCreationTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image'];
 
@@ -28,6 +27,9 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -38,7 +40,7 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
     // Create node types.
     $this->drupalCreateContentType([
       'type' => 'animal',
-      'name' => 'Animal'
+      'name' => 'Animal',
     ]);
     $this->createImageField('field_image', 'animal');
 
@@ -57,16 +59,18 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[animal][enabled]' => 1,
-      'node[animal][profiles]' => 'automatic',
-      'node[animal][fields][title]' => 1,
-      'node[animal][fields][body]' => 1,
-      'node[animal][fields][field_image]' => 1,
-      'node[animal][fields][field_image:properties][alt]' => 'alt',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
-
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'animal' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
+            'field_image' => ['alt'],
+          ],
+        ],
+      ],
+    ]);
   }
 
   /**

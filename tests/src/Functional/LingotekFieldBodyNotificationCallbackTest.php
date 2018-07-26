@@ -11,16 +11,18 @@ use Drupal\lingotek\Lingotek;
  * Tests translating a content type using the notification callback.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'field_ui', 'dblog'];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -40,16 +42,14 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
 
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     node_add_body_field($type);
 
@@ -72,7 +72,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -112,7 +112,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -148,11 +148,9 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'manual',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'manual',
+    ]);
 
     // Create Article node types.
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
@@ -186,7 +184,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -231,7 +229,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -281,10 +279,10 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'es' => [
           'overrides' => 'custom',
           'custom' => [
-            'auto_download' => FALSE
-          ]
-        ]
-      ]
+            'auto_download' => FALSE,
+          ],
+        ],
+      ],
     ]);
     $profile->save();
 
@@ -295,11 +293,9 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'profile2',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'profile2',
+    ]);
 
     // Create Article node types.
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
@@ -333,7 +329,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -372,7 +368,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -394,7 +390,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'true',
         'type' => 'target',
         'progress' => '100',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -441,11 +437,9 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Enable translation for the current entity type and ensure the change is
     // picked up.
-    $edit = [
-      'table[node_fields][enabled]' => 1,
-      'table[node_fields][profile]' => 'automatic',
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-configuration-form');
+    $this->saveLingotekConfigTranslationSettings([
+      'node_fields' => 'automatic',
+    ]);
 
     $type1 = entity_create('node_type', ['type' => 'article', 'name' => 'Article']);
     $type1->save();
@@ -480,7 +474,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,
@@ -512,7 +506,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
         'complete' => 'false',
         'type' => 'document_uploaded',
         'progress' => '0',
-      ]
+      ],
     ])->setAbsolute()->toString();
     $request = $this->client->post($url, [
       'cookies' => $this->cookies,

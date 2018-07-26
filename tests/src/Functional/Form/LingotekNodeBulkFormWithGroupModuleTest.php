@@ -34,7 +34,6 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
    */
   protected $groups;
 
-
   /**
    * {@inheritdoc}
    */
@@ -79,13 +78,7 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][fields][body]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettingsForNodeTypes();
 
     $this->configureGroups();
   }
@@ -132,7 +125,7 @@ class LingotekNodeBulkFormWithGroupModuleTest extends LingotekTestBase {
       'user[user][profiles]' => 'automatic',
       'user[user][fields][changed]' => 1,
     ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], 'lingoteksettings-tab-content-form');
   }
 
   /**

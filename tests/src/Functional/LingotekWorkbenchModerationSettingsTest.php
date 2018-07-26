@@ -115,14 +115,20 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
     $this->assertLinkByHref('/admin/structure/types/manage/page/moderation');
 
     // Let's save the settings for articles.
-    $edit = [
-      'node[article][enabled]' => 1,
-      'node[article][profiles]' => 'automatic',
-      'node[article][fields][title]' => 1,
-      'node[article][moderation][upload_status]' => 'draft',
-      'node[article][moderation][download_transition]' => 'draft_needs_review',
-    ];
-    $this->drupalPostForm(NULL, $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'article' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+          ],
+          'moderation' => [
+            'upload_status' => 'draft',
+            'download_transition' => 'draft_needs_review',
+          ],
+        ],
+      ],
+    ]);
 
     // Assert the values are saved.
     $this->assertOptionSelected('edit-node-article-moderation-upload-status', 'draft',
@@ -141,7 +147,6 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
     $this->assertEqual(count($header), 1, 'There is a Workbench Moderation column for content.');
     $header = $this->xpath("//details[@id='edit-entity-taxonomy-term']//th[text()='Workbench Moderation']");
     $this->assertEqual(count($header), 0, 'There is no Workbench Moderation column for taxonomies.');
-
   }
 
   /**

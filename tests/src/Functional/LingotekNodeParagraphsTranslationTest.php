@@ -17,9 +17,7 @@ use Drupal\paragraphs\Entity\Paragraph;
 class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   public static $modules = ['block', 'node', 'image', 'comment', 'paragraphs', 'lingotek_paragraphs_test'];
 
@@ -28,6 +26,9 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
    */
   protected $node;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -52,18 +53,25 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // that hold a list of languages.
     $this->rebuildContainer();
 
-    $edit = [
-      'node[paragraphed_content_demo][enabled]' => 1,
-      'node[paragraphed_content_demo][profiles]' => 'automatic',
-      'node[paragraphed_content_demo][fields][title]' => 1,
-      'node[paragraphed_content_demo][fields][field_paragraphs_demo]' => 1,
-      'paragraph[image_text][enabled]' => 1,
-      'paragraph[image_text][fields][field_image_demo]' => 1,
-      'paragraph[image_text][fields][field_image_demo:properties][title]' => 'title',
-      'paragraph[image_text][fields][field_image_demo:properties][alt]' => 'alt',
-      'paragraph[image_text][fields][field_text_demo]' => 1,
-    ];
-    $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
+    $this->saveLingotekContentTranslationSettings([
+      'node' => [
+        'paragraphed_content_demo' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'field_paragraphs_demo' => 1,
+          ],
+        ],
+      ],
+      'paragraph' => [
+        'image_text' => [
+          'fields' => [
+            'field_image_demo' => ['title', 'alt'],
+            'field_text_demo' => 1,
+          ],
+        ],
+      ],
+    ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs');
@@ -215,7 +223,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->saveAndPublishNodeForm($edit, NULL);
 
     // Ensure paragraphs tab is enabled.
-    $this->drupalPostForm('admin/lingotek/settings', ['contrib[paragraphs][enable_bulk_management]' => 1], 'Save settings', [], [], 'lingoteksettings-integrations-form');
+    $this->drupalPostForm('admin/lingotek/settings', ['contrib[paragraphs][enable_bulk_management]' => 1], 'Save settings', [], 'lingoteksettings-integrations-form');
 
     $this->goToContentBulkManagementForm('paragraph');
     // Assert there is at least one paragraph in the list.
@@ -551,7 +559,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload'
+      'operation' => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -575,7 +583,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // Request translation.
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'request_translation:es-ar'
+      'operation' => 'request_translation:es-ar',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
 
@@ -595,7 +603,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'download:es-ar'
+      'operation' => 'download:es-ar',
     ];
     $this->drupalPostForm(NULL, $edit, t('Execute'));
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.downloaded_locale'));
