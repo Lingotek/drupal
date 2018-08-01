@@ -61,9 +61,9 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:automatic',
+      $this->getBulkOperationFormName() => 'change_profile:automatic',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
@@ -71,9 +71,9 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:manual',
+      $this->getBulkOperationFormName() => 'change_profile:manual',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there is one node with the Manual Profile
     // Check that there are two nodes with the Automatic Profile
@@ -82,9 +82,9 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:disabled',
+      $this->getBulkOperationFormName() => 'change_profile:disabled',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Disabled Profile
     $disabled_profile = $this->xpath("//td[contains(text(), 'Disabled')]");
@@ -92,9 +92,9 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:automatic',
+      $this->getBulkOperationFormName() => 'change_profile:automatic',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
@@ -116,15 +116,15 @@ class LingotekConfigEntityBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'disassociate',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'change_profile:automatic',
+      $this->getBulkOperationFormName() => 'change_profile:automatic',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");

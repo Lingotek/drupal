@@ -12,6 +12,7 @@ use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
  * Tests translating a node using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
 
@@ -124,45 +125,41 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertText('Camelid');
     $this->assertText('Herbivorous');
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekUploadLink();
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/node/1/manage');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
     $this->assertText('Node Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekCheckSourceStatusLink();
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->clickLink('ES');
     $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekCheckTargetStatusLink('es_MX');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekDownloadTargetLink('es_MX');
     $this->clickLink('ES');
     $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_MX' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('es_MX');
   }
 
   /**
@@ -195,56 +192,61 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertText('Camelid');
     $this->assertText('Herbivorous');
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekUploadLink();
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekCheckSourceStatusLink();
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request the German (AT) translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/node/1/manage');
+    $this->assertLingotekRequestTranslationLink('de_AT');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'request_translation:de',
+      $this->getBulkOperationFormName() => 'request_translation:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
 
-    // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/de_AT?destination=' . $basepath . '/node/1/manage');
+    // Check status of the German (AT) translation.
+    $this->assertLingotekCheckTargetStatusLink('de_AT');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'check_translation:de',
+      $this->getBulkOperationFormName() => 'check_translation:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
-    // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/de_AT?destination=' . $basepath . '/node/1/manage');
+    // Download the German (AT) translation.
+    $this->assertLingotekDownloadTargetLink('de_AT');
     $edit = [
       'table[node:1]' => TRUE,
-      'operation' => 'download:de',
+      $this->getBulkOperationFormName() => 'download:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/de_AT' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('de_AT');
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * We override this for the destination url.
+   */
+  protected function getContentBulkManagementFormUrl($entity_type_id = 'node', $prefix = NULL) {
+    return ($prefix === NULL ? '' : '/' . $prefix) . '/' . $entity_type_id . '/1/manage';
   }
 
 }

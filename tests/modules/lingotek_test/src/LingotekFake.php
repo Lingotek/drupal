@@ -181,7 +181,7 @@ class LingotekFake implements LingotekInterface {
 
   public function uploadDocument($title, $content, $locale, $url = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
-      throw new LingotekApiException();
+      throw new LingotekApiException('Error was forced.');
     }
     if (is_array($content)) {
       $content = json_encode($content);
@@ -214,7 +214,7 @@ class LingotekFake implements LingotekInterface {
 
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (\Drupal::state()->get('lingotek.must_error_in_upload', FALSE)) {
-      throw new LingotekApiException();
+      throw new LingotekApiException('Error was forced.');
     }
     if (is_array($content)) {
       $content = json_encode($content);

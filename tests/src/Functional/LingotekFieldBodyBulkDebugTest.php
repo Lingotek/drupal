@@ -75,9 +75,9 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
 
     $edit = [
       'table[node.article.body]' => TRUE,
-      'operation' => 'debug.export',
+      $this->getBulkOperationFormName() => 'debug.export',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertText('Exports available');
     // Download the file.

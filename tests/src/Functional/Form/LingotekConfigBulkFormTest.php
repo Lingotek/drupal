@@ -103,7 +103,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // Clicking English must init the upload of content.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
 
     // There is a link for checking status.
@@ -146,9 +146,9 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[article]' => TRUE,
       'table[page]' => TRUE,
       'job_id' => 'my_custom_job_id',
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertEquals('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     $this->assertEquals('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
 
@@ -190,9 +190,9 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[book]' => TRUE,
       'table[banner]' => TRUE,
       'job_id' => 'my_custom_job_id',
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertEquals('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     $this->assertEquals('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
 
@@ -243,10 +243,10 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[content_type_4]' => TRUE,
       'table[content_type_6]' => TRUE,
       'table[content_type_8]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
       'job_id' => 'even numbers',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[content_type_1]' => TRUE,
@@ -254,10 +254,10 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
       'table[content_type_3]' => TRUE,
       'table[content_type_5]' => TRUE,
       'table[content_type_7]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
       'job_id' => 'prime numbers',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // After we filter by prime, there is no pager and the rows
     // selected are the ones expected.

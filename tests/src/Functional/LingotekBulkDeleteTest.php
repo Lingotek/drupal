@@ -100,9 +100,9 @@ class LingotekBulkDeleteTest extends LingotekTestBase {
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'table[3]' => FALSE,
-      'operation' => 'delete_nodes',
+      $this->getBulkOperationFormName() => 'delete_nodes',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Ensure the confirmation page is shown.
     $this->assertText(t('Are you sure you want to delete these items?'));

@@ -68,11 +68,12 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Mark the first two for disassociation.
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'disassociate',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $node = Node::load(1);
 
@@ -114,11 +115,12 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Mark the first two for disassociation.
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'disassociate',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $node = Node::load(1);
 
@@ -138,8 +140,6 @@ class LingotekNodeBulkDisassociateTest extends LingotekTestBase {
 
   protected function createAndTranslateNodeWithLinks() {
     $this->goToContentBulkManagementForm();
-
-    $basepath = \Drupal::request()->getBasePath();
 
     // Clicking English must init the upload of content.
     $this->clickLink('EN');

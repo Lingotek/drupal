@@ -167,11 +167,12 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     // We re-download, now with different values for the multivalued field.
     $this->goToContentBulkManagementForm();
 
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'download:es',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'download:es',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     $this->clickLink('Llamas are cool');
@@ -187,11 +188,12 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     // We re-download, now with different values for the multivalued field.
     $this->goToContentBulkManagementForm();
 
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'download:es',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'download:es',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     $this->clickLink('Llamas are cool');
@@ -208,11 +210,12 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     // We re-download, now with different values for the multivalued field.
     $this->goToContentBulkManagementForm();
 
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'download:es',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'download:es',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     $this->clickLink('Llamas are cool');

@@ -86,12 +86,10 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink();
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
     $this->assertText('Node Llamas are cool has been uploaded.');
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
@@ -106,9 +104,9 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
     $this->assertTrue(isset($data['new_field'][0]['value']));
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckSourceStatusLink();
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool is complete.');
 
@@ -123,27 +121,25 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Request the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->clickLink('ES');
     $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool.");
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckTargetStatusLink('es_MX');
     $this->clickLink('ES');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.checked_target_locale'));
     $this->assertText('The es_MX translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekDownloadTargetLink('es_MX');
     $this->clickLink('ES');
     $this->assertText('The translation of node Llamas are cool into es_MX has been downloaded.');
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_MX' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('es_MX');
 
     // Open the node and it works.
     $this->clickLink('Llamas are cool');

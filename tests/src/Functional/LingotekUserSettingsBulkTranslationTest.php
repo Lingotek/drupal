@@ -77,9 +77,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_MX' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('es_MX');
   }
 
   /**
@@ -101,50 +99,48 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request the German (AT) translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'request_translation:de',
+      $this->getBulkOperationFormName() => 'request_translation:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_translation:de',
+      $this->getBulkOperationFormName() => 'check_translation:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
     // Download the German translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'download:de',
+      $this->getBulkOperationFormName() => 'download:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/de_AT' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('de_AT');
   }
 
   /**
@@ -169,15 +165,11 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     // Check the status is edited for Spanish.
-    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
-
+    $this->assertTargetStatus('ES', 'edited');
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
-    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
-    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
-    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
+    $this->assertNoTargetStatus('EU', 'edited');
+    $this->assertTargetStatus('EU', 'request');
 
     // Request korean, with outdated content available.
     $this->clickLink('KO');
@@ -199,9 +191,9 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     // Check status of the Spanish translation.
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_translation:es',
+      $this->getBulkOperationFormName() => 'check_translation:es',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertText('Operations completed.');
 
     // Download the translation.
@@ -228,41 +220,41 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/entity.user.admin_form/entity.user.admin_form?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request all the translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'request_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check status of all the translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/entity.user.admin_form/entity.user.admin_form/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'check_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Download all the translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      'operation' => 'download',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
   }
 
   /**

@@ -132,7 +132,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_AR');
+    $this->assertLingotekWorkbenchLink('es_AR');
 
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -292,7 +292,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_AR');
+    $this->assertLingotekWorkbenchLink('es_AR');
 
     // Edit the original node.
     $this->drupalGet('node/1');
@@ -392,7 +392,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_AR');
+    $this->assertLingotekWorkbenchLink('es_AR');
 
     // Edit the original node.
     $this->drupalGet('node/1');
@@ -523,7 +523,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Check that the Edit link points to the workbench and it is opened in a new tab.
-    $this->assertLinkToWorkbenchInNewTabInSinglePage('dummy-document-hash-id', 'es', 'es_AR');
+    $this->assertLingotekWorkbenchLink('es_AR');
 
     // Download translation.
     $this->clickLink('Download completed translation');
@@ -557,11 +557,12 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->saveAndPublishNodeForm($edit, NULL);
 
     $this->goToContentBulkManagementForm();
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'upload',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that only the configured fields have been uploaded,
     // but not the missing one.
@@ -581,11 +582,12 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
 
     // Request translation.
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'request_translation:es-ar',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'request_translation:es-ar',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->drupalGet('node/1');
     $this->clickLink('Edit');
@@ -601,11 +603,12 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Download translation.
     $this->goToContentBulkManagementForm();
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'download:es-ar',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'download:es-ar',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_AR', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     $this->drupalGet('node/1/translations');

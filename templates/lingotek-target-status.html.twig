@@ -17,4 +17,4 @@
  * @ingroup themeable
  */
 #}
-{% if url %}<a href="{{ url }}" {%if new_window%}target="_blank"{%endif%}{%else%}<span {%endif%} class="language-icon target-{{status|lower}}" title="{{status_text}}">{{language|upper}}{%if url%}</a>{%else%}</span>{%endif%}
+{% if url %}<a href="{{ url }}"{%if new_window%} target="_blank"{%endif%}{%else%}<span{%endif%} class="language-icon target-{{status|lower}}" title="{{status_text}}">{{language|upper}}{%if url%}</a>{%else%}</span>{%endif%}

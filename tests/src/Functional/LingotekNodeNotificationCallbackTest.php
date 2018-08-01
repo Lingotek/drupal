@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Tests translating a node using the notification callback.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
@@ -805,13 +806,11 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Download the Italian translation.
-    $basepath = \Drupal::request()->getBasePath();
     $this->clickLink('IT');
     $this->assertText('The translation of node Llamas are cool into it_IT failed to download.');
 
     // Check the right class is added.
-    $target_error = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-error')  and contains(text(), 'IT')]");
-    $this->assertEqual(count($target_error), 1, 'The target node has been marked as error.');
+    $this->assertTargetStatus('IT', Lingotek::STATUS_ERROR);
 
     // Check that the Target Status is Error
     $node = Node::load(1);

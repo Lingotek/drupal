@@ -50,7 +50,7 @@ class LingotekTargetStatus extends RenderElement {
       return [];
     }
     $element['#url'] = $this->getTargetActionUrl($element['#entity'], $element['#status'], $element['#language']);
-    $element['#new_window'] = !($element['#entity']->hasTranslation($element['#language']) && $element['#status'] == Lingotek::STATUS_REQUEST) && $element['#status'] == Lingotek::STATUS_CURRENT;
+    $element['#new_window'] = !($element['#entity']->hasTranslation($element['#language']) && $element['#status'] == Lingotek::STATUS_REQUEST) && in_array($element['#status'], [Lingotek::STATUS_CURRENT, Lingotek::STATUS_INTERMEDIATE, Lingotek::STATUS_EDITED]);
     $element['#status_text'] = $this->getTargetStatusText($element['#entity'], $element['#status'], $element['#language']);
     return $element;
   }

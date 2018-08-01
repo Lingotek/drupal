@@ -43,9 +43,9 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      $this->getBulkOperationFormName() => 'change_profile:automatic'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
@@ -53,9 +53,9 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'change_profile:manual'
+      $this->getBulkOperationFormName() => 'change_profile:manual'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there is one node with the Manual Profile
     // Check that there are two nodes with the Automatic Profile
@@ -66,9 +66,9 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'change_profile:disabled'
+      $this->getBulkOperationFormName() => 'change_profile:disabled'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Disabled Profile
     $disabled_profile = $this->xpath("//td[contains(text(), 'Disabled')]");
@@ -95,54 +95,54 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'upload'
+      $this->getBulkOperationFormName() => 'upload'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigSourceStatus($mapper));
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigTargetStatus($mapper, 'es'));
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'check_upload'
+      $this->getBulkOperationFormName() => 'check_upload'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigSourceStatus($mapper));
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigTargetStatus($mapper, 'es'));
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'request_translations'
+      $this->getBulkOperationFormName() => 'request_translations'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigSourceStatus($mapper));
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigTargetStatus($mapper, 'es'));
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'check_translations'
+      $this->getBulkOperationFormName() => 'check_translations'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigSourceStatus($mapper));
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigTargetStatus($mapper, 'es'));
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'download:es'
+      $this->getBulkOperationFormName() => 'download:es'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigSourceStatus($mapper));
     $this->assertIdentical(Lingotek::STATUS_DISABLED, $config_translation_service->getConfigTargetStatus($mapper, 'es'));
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      $this->getBulkOperationFormName() => 'change_profile:automatic'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
@@ -166,9 +166,9 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'change_profile:automatic'
+      $this->getBulkOperationFormName() => 'change_profile:automatic'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there are three nodes with the Automatic Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
@@ -176,51 +176,51 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'upload'
+      $this->getBulkOperationFormName() => 'upload'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'check_upload'
+      $this->getBulkOperationFormName() => 'check_upload'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'request_translations'
+      $this->getBulkOperationFormName() => 'request_translations'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'check_translations'
+      $this->getBulkOperationFormName() => 'check_translations'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'download'
+      $this->getBulkOperationFormName() => 'download'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'disassociate'
+      $this->getBulkOperationFormName() => 'disassociate'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'upload'
+      $this->getBulkOperationFormName() => 'upload'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'change_profile:disabled'
+      $this->getBulkOperationFormName() => 'change_profile:disabled'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();

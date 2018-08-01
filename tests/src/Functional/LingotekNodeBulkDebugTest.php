@@ -89,11 +89,12 @@ class LingotekNodeBulkDebugTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
 
+    $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
-      'table[1]' => TRUE,
-      'operation' => 'debug.export',
+      $key => TRUE,
+      $this->getBulkOperationFormName() => 'debug.export',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertText('Exports available');
     // Download the file.

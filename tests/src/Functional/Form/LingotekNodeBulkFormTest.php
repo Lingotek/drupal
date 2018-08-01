@@ -13,6 +13,7 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeBulkFormTest extends LingotekTestBase {
 
@@ -80,26 +81,29 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->clickLink(t('Page 2'));
     $this->assertUrl('admin/lingotek/manage/node?page=1');
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/11?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink(11, 'node');
+    $this->assertLingotekUploadLink(12, 'node');
+
+    $key1 = $this->getBulkSelectionKey('en', 11);
+    $key2 = $this->getBulkSelectionKey('en', 12);
+
     $edit = [
       // Node 11.
-      'table[11]' => TRUE,
+      $key1 => TRUE,
       // Node 12.
-      'table[12]' => TRUE,
-      'operation' => 'upload',
+      $key2 => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // The current page is kept.
     $this->assertUrl('admin/lingotek/manage/node?page=1');
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckSourceStatusLink();
     // And we can already request a translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
     $this->assertText('The import for node Llamas are cool 11 is complete.');
 
@@ -186,8 +190,6 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
    * Tests that the bulk management job filtering works correctly.
    */
   public function testJobIdFilter() {
-    $basepath = \Drupal::request()->getBasePath();
-
     $nodes = [];
     // See https://www.drupal.org/project/drupal/issues/2925290.
     $indexes = "ABCDEFGHIJKLMNOPQ";
@@ -227,7 +229,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/11?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink(11, 'node');
     $edit = [
       'table[4]' => TRUE,
       'table[6]' => TRUE,
@@ -235,10 +237,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       'table[10]' => TRUE,
       'table[12]' => TRUE,
       'table[14]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
       'job_id' => 'even numbers',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[1]' => TRUE,
@@ -248,10 +250,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       'table[7]' => TRUE,
       'table[11]' => TRUE,
       'table[13]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
       'job_id' => 'prime numbers',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Show 10 results.
     \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 10);
@@ -545,25 +547,23 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // Go and upload this node.
     $this->goToContentBulkManagementForm();
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // Clicking English must init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink();
     // And we cannot request yet a translation.
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
     $this->clickLink('EN');
 
     // There is a link for checking status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckSourceStatusLink();
     // And we can already request a translation for Spanish.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekRequestTranslationLink('es_MX');
 
     // Then we disable the Spanish language.
     \Drupal::service('lingotek.configuration')->disableLanguage(ConfigurableLanguage::load('es'));
 
     // And we check that Spanish is not there anymore.
     $this->goToContentBulkManagementForm();
-    $this->assertNoLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
 
     // We re-enable Spanish.
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotekConfig */
@@ -573,7 +573,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // And Spanish should be back in the management form.
     $this->goToContentBulkManagementForm();
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekRequestTranslationLink('es_MX');
   }
 
   /**
@@ -657,39 +657,37 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink();
 
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'disassociate',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     $this->assertIdentical(NULL, \Drupal::state()->get('lingotek.uploaded_job_id'));
 
     // I can check current status.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckSourceStatusLink();
 
     $edit = [
       'table[1]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check that there is a node with the Automatic (default) Profile
     $automatic_profile = $this->xpath("//td[contains(text(), 'Automatic')]");
@@ -716,19 +714,18 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // I can init the upload of content.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/2?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink(1);
+    $this->assertLingotekUploadLink(2);
 
     $edit = [
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'job_id' => 'my_custom_job_id',
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     $this->assertIdentical('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
 
@@ -765,20 +762,18 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->assertNull($metadata->getJobId(), 'There was no job id to save along with metadata.');
     }
 
-    $basepath = \Drupal::request()->getBasePath();
-
     // I can check the status of the upload. So next operation will perform an
     // update.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id-1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckSourceStatusLink('dummy-document-hash-id');
+    $this->assertLingotekCheckSourceStatusLink('dummy-document-hash-id-1');
 
     $edit = [
       'table[1]' => TRUE,
       'table[2]' => TRUE,
       'job_id' => 'my_custom_job_id',
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
     $this->assertIdentical('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
 

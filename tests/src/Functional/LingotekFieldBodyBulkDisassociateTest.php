@@ -56,9 +56,9 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     // Mark the first for disassociation.
     $edit = [
       'table[node.article.body]' => 'node.article.body',
-      'operation' => 'disassociate',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node_fields'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
@@ -92,9 +92,9 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     // Mark the first for disassociation.
     $edit = [
       'table[node.article.body]' => 'node.article.body',
-      'operation' => 'disassociate',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDisassociate('node_fields'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');

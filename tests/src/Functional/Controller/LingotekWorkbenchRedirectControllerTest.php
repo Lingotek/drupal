@@ -59,8 +59,6 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
    * Tests that the workbench link works.
    */
   public function testWorkbenchLink() {
-    $basepath = \Drupal::request()->getBasePath();
-
     // We need this helper for setting the host.
     $this->drupalGet(Url::fromRoute('lingotek_test.fake_sethost'));
 
@@ -91,14 +89,11 @@ class LingotekWorkbenchRedirectControllerTest extends LingotekTestBase {
     $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
 
     // Download the Spanish translation.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/download/dummy-document-hash-id/es_AR?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekDownloadTargetLink('es_AR');
     $this->clickLink('ES');
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref('/admin/lingotek/workbench/dummy-document-hash-id/es_AR');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_AR' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
-
+    $this->assertLingotekWorkbenchLink('es_AR');
     $expiration = FrozenTime::MY_BIRTHDAY + (60 * 30);
 
     // Click the workbench tab.

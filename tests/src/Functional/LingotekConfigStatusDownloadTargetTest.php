@@ -58,9 +58,9 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('config'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // There is a link for checking status.
@@ -69,9 +69,9 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/system.site_information_settings/system.site_information_settings/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('config'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // Request the Spanish translation.
@@ -97,21 +97,19 @@ class LingotekConfigStatusDownloadTargetTest extends LingotekTestBase {
     // Check the status is edited for Spanish.
     // TODO: should be testing for STATUS_EDITED, but since config is not
     // following the correct translation flow it is STATUS_READY
-    $ready = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-ready')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($ready), 1, 'Edited translation is shown.');
+    $this->assertTargetStatus('ES', 'ready');
 
     // Download the Spanish translation.
     $edit = [
        'table[system.site_information_settings]' => TRUE,
-       'operation' => 'download',
+       $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('config'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check the status is edited for Spanish.
     $source_edited = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, 'source-edited')  and contains(@title, 'Re-upload (content has changed since last upload)')]");
     $this->assertEqual(count($source_edited), 1, 'Edited source is shown.');
-    $edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($edited), 1, 'Edited translation is shown.');
+    $this->assertTargetStatus('ES', 'edited');
   }
 
 }

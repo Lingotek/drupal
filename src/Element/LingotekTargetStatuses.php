@@ -85,7 +85,7 @@ class LingotekTargetStatuses extends RenderElement {
           $translations[$langcode] = [
             'status' => $status,
             'url' => $this->getTargetActionUrl($entity, $status, $langcode),
-            'new_window' => $status == Lingotek::STATUS_CURRENT,
+            'new_window' => in_array($status, [Lingotek::STATUS_CURRENT, Lingotek::STATUS_INTERMEDIATE, Lingotek::STATUS_EDITED]),
           ];
         }
       }

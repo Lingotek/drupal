@@ -19,4 +19,4 @@
  * @ingroup themeable
  */
 #}
-{% for status in statuses %}{% if status.url %}<a href="{{ status.url }}" {%if status.new_window%}target="_blank"{%endif%}{%else%}<span {%endif%} class="language-icon target-{{status.status|lower}}" title="{{status.status_text}}">{{status.language|upper}}{%if status.url%}</a>{%else%}</span>{%endif%}{% endfor %}
+{% for status in statuses %}{% if status.url %}<a href="{{ status.url }}"{%if status.new_window%} target="_blank"{%endif%}{%else%}<span{%endif%} class="language-icon target-{{status.status|lower}}" title="{{status.status_text}}">{{status.language|upper}}{%if status.url%}</a>{%else%}</span>{%endif%}{% endfor %}

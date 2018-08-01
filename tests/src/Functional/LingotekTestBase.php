@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
-use Drupal\Core\Url;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\workflows\Entity\Workflow;
@@ -13,33 +12,37 @@ use GuzzleHttp\Cookie\CookieJar;
  */
 abstract class LingotekTestBase extends BrowserTestBase {
 
+  use LingotekManagementTestTrait;
+
   /**
    * The cookie jar holding the testing session cookies for Guzzle requests.
    *
-   * @var \GuzzleHttp\Client;
+   * @var \GuzzleHttp\Client
    */
   protected $client;
 
   /**
    * The Guzzle HTTP client.
    *
-   * @var \GuzzleHttp\Cookie\CookieJar;
+   * @var \GuzzleHttp\Cookie\CookieJar
    */
   protected $cookies;
 
-  /*
-   * Modules to install.
-   *
-   * @var array
+  /**
+   * {@inheritdoc}
    */
   public static $modules = ['lingotek', 'lingotek_test'];
 
   /**
+   * Minimal Lingotek translation manager user.
+   *
    * @var \Drupal\Core\Session\AccountInterface
-   *   Minimal Lingotek translation manager user.
    */
   protected $translationManagerUser;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -72,15 +75,20 @@ abstract class LingotekTestBase extends BrowserTestBase {
    * @param string $type_name
    *   The bundle that this field will be added to.
    * @param string $entity_type_id
-   *   The entity type that this field will be added to. Defaults to 'node'
+   *   The entity type that this field will be added to. Defaults to 'node'.
    * @param array $storage_settings
    *   A list of field storage settings that will be added to the defaults.
    * @param array $field_settings
    *   A list of instance settings that will be added to the instance defaults.
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   The field config.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createImageField($name, $type_name, $entity_type_id = 'node', $storage_settings = [], $field_settings = [], $widget_settings = []) {
+  public function createImageField($name, $type_name, $entity_type_id = 'node', array $storage_settings = [], array $field_settings = [], array $widget_settings = []) {
     entity_create('field_storage_config', [
       'field_name' => $name,
       'entity_type' => $entity_type_id,
@@ -114,6 +122,9 @@ abstract class LingotekTestBase extends BrowserTestBase {
 
   }
 
+  /**
+   * Connects to Lingotek.
+   */
   protected function connectToLingotek() {
     $this->drupalGet('admin/lingotek/setup/account');
     $this->clickLink('Connect Lingotek Account');
@@ -129,9 +140,25 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *
    * @param string $entity_type_id
    *   Entity type ID we want to manage in bulk. By default is node.
+   *
+   * @param string $prefix
+   *   The prefix if we want to visit the page in a different locale.
    */
-  protected function goToContentBulkManagementForm($entity_type_id = 'node') {
-    $this->drupalGet('admin/lingotek/manage/' . $entity_type_id);
+  protected function goToContentBulkManagementForm($entity_type_id = 'node', $prefix = NULL) {
+    $this->drupalGet($this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+  }
+
+  /**
+   * Get the content bulk management url.
+   *
+   * @param string $entity_type_id
+   *   Entity type ID we want to manage in bulk. By default is node.
+   *
+   * @return string
+   *   The url.
+   */
+  protected function getContentBulkManagementFormUrl($entity_type_id = 'node', $prefix = NULL) {
+    return ($prefix === NULL ? '' : '/' . $prefix) . '/admin/lingotek/manage/' . $entity_type_id;
   }
 
   /**
@@ -157,13 +184,10 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The uploaded data.
    * @param $count
    *   The expected number of items.
-   *
-   * @return bool
-   *   TRUE if the assertion succeeded, FALSE otherwise.
    */
   protected function assertUploadedDataFieldCount(array $data, $count) {
     // We have to add one item because of the metadata we include.
-    return $this->assertEqual($count + 1, count($data));
+    $this->assertEqual($count + 1, count($data));
   }
 
   /**
@@ -181,9 +205,6 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   messages: use \Drupal\Component\Utility\SafeMarkup::format() to embed
    *   variables in the message text, not t(). If left blank, a default message
    *   will be displayed.
-   *
-   * @return bool
-   *   TRUE if the assertion succeeded, FALSE otherwise.
    */
   protected function assertSourceStatusStateCount($status, $languageLabel, $count, $message = '') {
     $statusCssClass = 'source-' . strtolower($status);
@@ -194,7 +215,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
     else {
       $statusCount = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, '$statusCssClass')]/a[contains(text(), '$languageLabel')]");
     }
-    return $this->assertEqual(count($statusCount), $count, $message);
+    $this->assertEqual(count($statusCount), $count, $message);
   }
 
   /**
@@ -341,7 +362,7 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The entities and bundles map that wants to be enabled for a given workflow.
    *   Array in the form: [entity_type => [bundle1, bundle2]].
    */
-  protected function configureContentModeration($workflow_id, $entities_map) {
+  protected function configureContentModeration($workflow_id, array $entities_map) {
     if (floatval(\Drupal::VERSION) >= 8.4) {
       foreach ($entities_map as $entity_type_id => $bundles) {
         $edit = [];
@@ -365,19 +386,15 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *
    * @param string $document_id
    *   The document id.
-   * @param $langcode
+   * @param string $langcode
    *   The language code.
-   * @param $locale
+   * @param string $locale
    *   The Lingotek locale.
+   *
+   * @deprecated Use ::assertLingotekWorkbenchLink instead.
    */
   protected function assertLinkToWorkbenchInNewTabInSinglePage($document_id, $langcode, $locale) {
-    $this->assertLinkByHref("/admin/lingotek/workbench/$document_id/$langcode");
-    $url = Url::fromRoute('lingotek.workbench', [
-      'doc_id' => $document_id,
-      'locale' => $locale,
-    ])->toString();
-
-    $this->assertRaw('<a href="' . $url . '" target="_blank">', 'The workbench link opens in a new tab.');
+    $this->assertLingotekWorkbenchLink($locale, $document_id);
   }
 
   /**
@@ -389,8 +406,48 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The status.
    */
   protected function assertTargetStatus($language, $status) {
-    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . $status . "')  and contains(text(), '" . $language . "')]");
-    $this->assertEqual(count($status_target), 1, 'The target ' . $language . ' has been marked with status ' . $status . '.');
+    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
+    // If not found, maybe it didn't have a link.
+    if (count($status_target) === 1) {
+      $this->assertEqual(count($status_target), 1, 'The target ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+    }
+    else {
+      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
+      $this->assertEqual(count($status_target), 1, 'The target ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+    }
+  }
+
+  /**
+   * Assert that a content target has not the given status.
+   *
+   * @param string $language
+   *   The target language.
+   * @param string $status
+   *   The status.
+   */
+  protected function assertNoTargetStatus($language, $status) {
+    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
+    $this->assertEqual(count($status_target), 0, 'The target ' . $language . ' has not been marked with status ' . strtolower($status) . '.');
+  }
+
+  /**
+   * Assert that a content source has the given status.
+   *
+   * @param string $language
+   *   The target language.
+   * @param string $status
+   *   The status.
+   */
+  protected function assertSourceStatus($language, $status) {
+    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . $language . "')]]");
+    // If not found, maybe it didn't have a link.
+    if (count($status_target) === 1) {
+      $this->assertEqual(count($status_target), 1, 'The source ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+    }
+    else {
+      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
+      $this->assertEqual(count($status_target), 1, 'The source ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+    }
   }
 
   /**

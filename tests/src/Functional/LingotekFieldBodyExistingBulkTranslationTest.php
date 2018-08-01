@@ -58,8 +58,7 @@ class LingotekFieldBodyExistingBulkTranslationTest extends LingotekTestBase {
     $basepath = \Drupal::request()->getBasePath();
 
     // Assert the untracked translation is shown.
-    $untracked = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, 'target-untracked') and contains(., 'ES')]");
-    $this->assertEqual(count($untracked), 1, 'Untracked translation is shown.');
+    $this->assertTargetStatus('ES', 'untracked');
 
     // Clicking English must init the upload of content.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -70,8 +69,7 @@ class LingotekFieldBodyExistingBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // Assert the untracked translation is shown.
-    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-untracked')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($untracked), 1, 'Untracked translation is shown.');
+    $this->assertTargetStatus('ES', 'untracked');
 
     // There is a link for checking status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/field_config/node.article.body?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -99,9 +97,7 @@ class LingotekFieldBodyExistingBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_MX' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('es_MX');
   }
 
 }

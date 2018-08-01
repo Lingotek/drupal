@@ -44,9 +44,9 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     // Mark the first two for disassociation.
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'disassociate'
+      $this->getBulkOperationFormName() => 'disassociate'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
@@ -87,9 +87,9 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     // Mark the first two for disassociation.
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      'operation' => 'disassociate'
+      $this->getBulkOperationFormName() => 'disassociate'
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');

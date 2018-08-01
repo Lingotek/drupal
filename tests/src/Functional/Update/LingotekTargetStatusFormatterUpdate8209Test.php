@@ -57,7 +57,7 @@ class LingotekTargetStatusFormatterUpdate8209Test extends UpdatePathTestBase {
 
     $this->drupalGet('/lingotektargetstatusupgrade2985742');
     $this->assertSession()->responseNotContains('IGNORED-SEPARATOR');
-    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/add_target/document_id_1/de_DE?destination=' . $basepath . '/lingotektargetstatusupgrade2985742"  class="language-icon target-request" title="German - Request translation">DE</a><a href="' . $basepath . '/admin/lingotek/workbench/document_id_1/es_ES" target="_blank" class="language-icon target-current" title="Spanish - Current">ES</a>');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/add_target/document_id_1/de_DE?destination=' . $basepath . '/lingotektargetstatusupgrade2985742" class="language-icon target-request" title="German - Request translation">DE</a><a href="' . $basepath . '/admin/lingotek/workbench/document_id_1/es_ES" target="_blank" class="language-icon target-current" title="Spanish - Current">ES</a>');
   }
 
 }

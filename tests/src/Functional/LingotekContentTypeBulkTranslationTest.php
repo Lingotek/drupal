@@ -87,9 +87,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/es_MX');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/es_MX' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('es_MX');
   }
 
   /**
@@ -111,50 +109,48 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request the German (AT) translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'request_translation:de',
+      $this->getBulkOperationFormName() => 'request_translation:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
 
     // Check status of the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translation:de',
+      $this->getBulkOperationFormName() => 'check_translation:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
 
     // Download the German translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'download:de',
+      $this->getBulkOperationFormName() => 'download:de',
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));
 
     // Now the link is to the workbench, and it opens in a new tab.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/workbench/dummy-document-hash-id/de_AT');
-    $workbench_link = $this->xpath("//a[@href='$basepath/admin/lingotek/workbench/dummy-document-hash-id/de_AT' and @target='_blank']");
-    $this->assertEqual(count($workbench_link), 1, 'Workbench links open in a new tab.');
+    $this->assertLingotekWorkbenchLink('de_AT');
   }
 
   /**
@@ -189,9 +185,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -199,9 +195,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request all the translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -209,9 +205,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'request_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Check status of all the translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -219,9 +215,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'check_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Download all the translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -229,9 +225,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $edit = [
       'table[article]' => TRUE,
       'table[page]' => TRUE,
-      'operation' => 'download',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
   }
 
   /**
@@ -261,15 +257,11 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
 
     // Check the status is edited for Spanish.
-    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
-
+    $this->assertTargetStatus('ES', 'edited');
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
-    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
-    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
-    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
+    $this->assertNoTargetStatus('EU', 'edited');
+    $this->assertTargetStatus('EU', 'request');
 
     // Request korean, with outdated content available.
     $this->clickLink('KO');
@@ -284,15 +276,14 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertText('Article EDITED status checked successfully');
 
     // Korean should still be marked as requested, so we can check target.
-    $status = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'KO')]");
-    $this->assertEqual(count($status), 1, 'Korean is still requested, so we can still check the progress status of the translation');
+    $this->assertTargetStatus('KO', 'pending');
 
     // Check the translation after having been edited.
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertText('Operations completed.');
 
     // Download the translation.
@@ -323,15 +314,11 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
 
     // Check the status is edited for Spanish.
-    $untracked = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($untracked), 1, 'Edited translation is shown.');
-
+    $this->assertTargetStatus('ES', 'edited');
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $eu_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'EU')]");
-    $this->assertEqual(count($eu_edited), 0, 'Vasque is not marked as edited.');
-    $eu_request = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-request')  and contains(text(), 'EU')]");
-    $this->assertEqual(count($eu_request), 1, 'Vasque is ready for request.');
+    $this->assertNoTargetStatus('EU', 'edited');
+    $this->assertTargetStatus('EU', 'request');
 
     // Recheck status.
     $this->clickLink('EN');
@@ -340,9 +327,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Check the translation after having been edited.
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertText('Operations completed.');
 
     // Download the translation.
@@ -491,9 +478,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertText('Article upload failed. Please try again.');
 
     // Check the right class is added.
@@ -529,9 +516,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertText('Operations completed.');
 
     // Check upload.
@@ -546,9 +533,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('node_type');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->assertText('Blogpost update failed. Please try again.');
 
@@ -586,18 +573,18 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Assert that I could request translations.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -605,9 +592,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     // Check statuses, that may been requested externally.
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Now Drupal knows that there are translations ready.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -615,12 +602,12 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     // Even if I just add a new language.
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
 
     // Ensure locales are handled correctly by setting manual values.
     \Drupal::state()->set('lingotek.document_completion_statuses', ['de-AT' => 50, 'de-DE' => 100, 'es-MX' => 10]);
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Now Drupal knows which translations are ready.
     $this->assertNoLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -631,7 +618,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     \Drupal::state()->set('lingotek.document_completion_statuses', ['it-IT' => 100, 'de-DE' => 50, 'es-MX' => 10]);
     // Check all statuses again.
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // All translations must be updated according exclusively with the
     // information from the TMS.
@@ -660,18 +647,18 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // I can check current status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -689,9 +676,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'download',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // The translations not requested shouldn't change its status.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_DE?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -721,9 +708,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()
       ->get('lingotek.uploaded_locale'));
 
@@ -731,9 +718,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_upload',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckUpload('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Request the Spanish translation.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -769,9 +756,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/download/node_type/article/es_MX?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'download',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // They are marked with the right status.
     $this->assertTargetStatus('ES', 'current');
@@ -782,9 +769,9 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     \Drupal::state()->set('lingotek.document_completion_statuses', ['es-ES' => 100, 'it-IT' => 100]);
     $edit = [
       'table[article]' => TRUE,
-      'operation' => 'check_translations',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslations('node_type'),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Execute'));
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // And statuses should remain the same.
     $this->assertTargetStatus('ES', 'current');
