@@ -385,7 +385,7 @@ class LingotekConfigManagementForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $operation = $form_state->getValue('operation');
     $job_id = $form_state->getValue('job_id') ?: NULL;
-    $values = array_keys(array_filter($form_state->getValue(['table'], function($key, $value){ return $value; })));
+    $values = array_keys(array_filter($form_state->getValue(['table'])));
     $processed = FALSE;
     switch ($operation) {
       case 'debug.export':
