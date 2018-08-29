@@ -608,7 +608,7 @@ class LingotekConfigManagementForm extends FormBase {
    *   Language code for the request.
    */
   protected function createLanguageDownloadBatch($values, $language) {
-    $this->createBatch('downloadTranslation', $values, $this->t('Requesting translations to Lingotek service'), $language);
+    $this->createBatch('downloadTranslation', $values, $this->t('Downloading translation to Lingotek service'), $language);
   }
 
   /**

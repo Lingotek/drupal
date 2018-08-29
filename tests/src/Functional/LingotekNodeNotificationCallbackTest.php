@@ -772,8 +772,8 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->verbose($request);
-    $this->assertFalse($response['result']['download'], 'Italian language has been downloaded after notification automatically.');
-    $this->assertEqual('No download for target it_IT happened in document dummy-document-hash-id.', $response['messages'][0]);
+    $this->assertFalse(isset($response['result']['download']), 'Italian language has not been downloaded after notification automatically.');
+    $this->assertEqual('Download of target it_IT for document dummy-document-hash-id failed', $response['messages'][0]);
 
     $url = Url::fromRoute('lingotek.notify', [], [
       'query' => [
@@ -807,7 +807,7 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
 
     // Download the Italian translation.
     $this->clickLink('IT');
-    $this->assertText('The translation of node Llamas are cool into it_IT failed to download.');
+    $this->assertText('The download for node Llamas are cool failed. Please try again.');
 
     // Check the right class is added.
     $this->assertTargetStatus('IT', Lingotek::STATUS_ERROR);

@@ -735,7 +735,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
-    $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile, $job_id);
+    try {
+      $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getSourceLocale($entity), $url, $profile, $job_id);
+    }
+    catch (LingotekApiException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
     if ($document_id) {
       $this->lingotekConfiguration->setProfile($entity, $profile->id());
       $this->setDocumentId($entity, $document_id);
@@ -774,6 +780,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       catch (LingotekApiException $exception) {
         // TODO: log issue
         $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
+        throw $exception;
         return FALSE;
       }
 
@@ -835,7 +842,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id)) {
+    $result = FALSE;
+    try {
+      $result = $this->lingotek->updateDocument($document_id, $source_data, $url, $document_name, $profile, $job_id);
+    }
+    catch (LingotekApiException $exception) {
+      $this->setSourceStatus($entity, Lingotek::STATUS_ERROR);
+      throw $exception;
+    }
+
+    if ($result) {
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
       $this->setJobId($entity, $job_id);
@@ -847,15 +863,81 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return FALSE;
   }
 
-  public function downloadDocuments(){
-    try {
-      $data = $this->lingotek->downloadDocuments();
-    }
-    catch (LingotekApiException $exception) {
+  public function downloadDocuments(ContentEntityInterface &$entity){
+    $profile = $this->lingotekConfiguration->getEntityProfile($entity);
+    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
+    if ($document_id = $this->getDocumentId($entity)) {
+      $source_status = $this->getSourceStatus($entity);
+      $target_languages = $this->languageManager->getLanguages();
+      $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
+        $configLanguage = ConfigurableLanguage::load($language->getId());
+        return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
+      });
 
-    return $data;
+      $entity_langcode = $entity->getUntranslated()->language()->getId();
+
+      foreach ($target_languages as $langcode => $language) {
+        $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
+        if ($langcode !== $entity_langcode) {
+          try {
+            if ($this->lingotek->getDocumentTranslationStatus($document_id, $locale) !== FALSE) {
+              $data = $this->lingotek->downloadDocument($document_id, $locale);
+              if ($data) {
+                // Check the real status, because it may still need review or anything.
+                $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
+                $transaction = db_transaction();
+                try {
+                  $saved = $this->saveTargetData($entity, $langcode, $data);
+                  if ($saved) {
+                    // If the status was "Importing", and the target was added
+                    // successfully, we can ensure that the content is current now.
+                    if ($source_status == Lingotek::STATUS_IMPORTING) {
+                      $this->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
+                    }
+                    if ($source_status == Lingotek::STATUS_EDITED) {
+                      $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+                    }
+                    elseif ($status === TRUE) {
+                      $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_CURRENT);
+                    }
+                    else {
+                      $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_INTERMEDIATE);
+                    }
+                  }
+                }
+                catch (LingotekApiException $exception) {
+                  // TODO: log issue
+                  $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
+                  throw $exception;
+                }
+                catch (LingotekContentEntityStorageException $storageException) {
+                  $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
+                  throw $storageException;
+                }
+                catch (\Exception $exception) {
+                  $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
+                  $transaction->rollback();
+                }
+              }
+              else {
+                return NULL;
+              }
+            }
+          }
+          catch (LingotekApiException $exception) {
+            // TODO: log issue
+            $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
+            throw $exception;
+          }
+        }
+      }
+    }
+    if ($this->getSourceStatus($entity) == Lingotek::STATUS_DISABLED) {
+      $this->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+    }
+    return FALSE;
   }
 
   public function downloadDocumentContent($document_id){

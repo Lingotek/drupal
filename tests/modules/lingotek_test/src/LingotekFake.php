@@ -240,6 +240,9 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL) {
+    if (\Drupal::state()->get('lingotek.must_error_in_request_translation', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
     $requested_locales = \Drupal::state()->get('lingotek.requested_locales', []);
     $requested_locales[$doc_id][] = $locale;
     \Drupal::state()->set('lingotek.requested_locales', $requested_locales);
@@ -251,6 +254,9 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentStatus($doc_id) {
+    if (\Drupal::state()->get('lingotek.must_error_in_check_source_status', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
     return \Drupal::state()->get('lingotek.document_status_completion', TRUE);
   }
 
@@ -258,6 +264,9 @@ class LingotekFake implements LingotekInterface {
    * {@inheritdoc}
    */
   public function getDocumentTranslationStatus($doc_id, $locale) {
+    if (\Drupal::state()->get('lingotek.must_error_in_check_target_status', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
     \Drupal::state()->set('lingotek.checked_target_locale', $locale);
     // Return true if translation is done.
     if (\Drupal::state()->get('lingotek.document_completion', NULL) === NULL) {
@@ -303,6 +312,9 @@ class LingotekFake implements LingotekInterface {
    * {@inheritDoc}
    */
   public function deleteDocument($doc_id) {
+    if (\Drupal::state()->get('lingotek.must_error_in_disassociate', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
     $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
     $deleted_docs[] = $doc_id;
     \Drupal::state()->set('lingotek.deleted_docs', $deleted_docs);
@@ -320,6 +332,9 @@ class LingotekFake implements LingotekInterface {
   }
 
   public function getDocumentTranslationStatuses($doc_id) {
+    if (\Drupal::state()->get('lingotek.must_error_in_check_target_status', FALSE)) {
+      throw new LingotekApiException('Error was forced.');
+    }
     $statuses = \Drupal::state()->get('lingotek.document_completion_statuses', []);
     if (!empty($statuses)) {
       return $statuses;

@@ -573,6 +573,41 @@ function lingotek_update_8209() {
   return $message;
 }
 
+/**
+ * Install needed actions if action module and lingotek are enabled.
+ */
+function lingotek_update_8210() {
+  if (!\Drupal::moduleHandler()->moduleExists('action')) {
+    return;
+  }
+  $actions = [
+    'entity:lingotek_upload_action',
+    'entity:lingotek_check_upload_action',
+    'entity:lingotek_request_translations_action',
+    'entity:lingotek_check_translations_action',
+    'entity:lingotek_download_translations_action',
+    'entity:lingotek_disassociate_action',
+  ];
+
+  $enabled_entity_types = \Drupal::service('lingotek.configuration')
+    ->getEnabledEntityTypes();
+  foreach ($enabled_entity_types as $entity_type_id => $entity_type) {
+    foreach ($actions as $action) {
+      $pluginId = $action . ':' . $entity_type_id;
+      /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+      $plugin = \Drupal::service('plugin.manager.action')->getDefinition($pluginId);
+      $action_id = $entity_type_id . '_' . str_replace('entity:', '', $action);
+      \Drupal\system\Entity\Action::create([
+        'id' => $action_id,
+        'label' => $plugin['label'],
+        'type' => $entity_type_id,
+        'plugin' => $pluginId,
+        'configuration' => [],
+      ])->save();
+    }
+  }
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

@@ -451,6 +451,27 @@ abstract class LingotekTestBase extends BrowserTestBase {
   }
 
   /**
+   * Assert that a content source has not the given status.
+   *
+   * @param string $language
+   *   The target language.
+   * @param string $status
+   *   The status.
+   */
+  protected function assertNoSourceStatus($language, $status) {
+    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . $language . "')]]");
+    // If not found, maybe it didn't have a link.
+    if (count($status_target) === 0) {
+      $this->assertEqual(count($status_target), 0, 'The source ' . $language . ' has not been marked with status ' . strtolower($status) . '.');
+    }
+    else {
+      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
+      $this->assertEqual(count($status_target), 0, 'The source ' . $language . ' has not been marked with status ' . strtolower($status) . '.');
+    }
+  }
+
+
+  /**
    * Assert that a content target has not been marked as error.
    *
    * @param string $label

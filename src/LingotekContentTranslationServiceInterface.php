@@ -227,6 +227,8 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return boolean
    *   TRUE if the document was uploaded successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function uploadDocument(ContentEntityInterface $entity, $job_id = NULL);
 
@@ -244,6 +246,17 @@ interface LingotekContentTranslationServiceInterface {
   public function downloadDocument(ContentEntityInterface &$entity, $locale);
 
   /**
+   * Downloads a document from the Lingotek service for all available locales.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
+   *   The entity being downloaded.
+   *
+   * @return boolean
+   *   TRUE if the document was downloaded successfully, FALSE if not.
+   */
+  public function downloadDocuments(ContentEntityInterface &$entity);
+
+    /**
    * Resends a document to the translation service.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
@@ -253,6 +266,8 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return boolean
    *   TRUE if the document was updated successfully, FALSE if not.
+   *
+   * @throws \Drupal\lingotek\Exception\LingotekApiException
    */
   public function updateDocument(ContentEntityInterface &$entity, $job_id = NULL);
 

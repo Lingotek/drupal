@@ -670,7 +670,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Language code for the request.
    */
   protected function createLanguageDownloadBatch($values, $language) {
-    $this->createBatch('downloadTranslation', $values, $this->t('Requesting translations to Lingotek service'), $language);
+    $this->createBatch('downloadTranslation', $values, $this->t('Downloading translations to Lingotek service'), $language);
   }
 
   /**
@@ -946,10 +946,9 @@ abstract class LingotekManagementFormBase extends FormBase {
               $this->translationService->downloadDocument($entity, $locale);
             }
             catch (LingotekApiException $exception) {
-              drupal_set_message(t('The download for @entity_type %title @locale translation failed. Please try again.', [
+              drupal_set_message(t('The download for @entity_type %title translation failed. Please try again.', [
                 '@entity_type' => $entity->getEntityTypeId(),
                 '%title' => $entity->label(),
-                '@locale' => $locale
               ]), 'error');
             }
           }

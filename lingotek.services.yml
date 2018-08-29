@@ -62,6 +62,11 @@ services:
     arguments: ['@lingotek.configuration']
     tags:
       - { name: event_subscriber }
+  lingotek.actions_creation_subscriber:
+    class: \Drupal\lingotek\Plugin\Action\Subscriber\LingotekActionsManagementSubscriber
+    arguments: ['@entity_type.manager', '@plugin.manager.action', '@lingotek.configuration']
+    tags:
+      - { name: event_subscriber }
 
   lingotek.no_moderation_configuration:
     class: Drupal\lingotek\Moderation\LingotekNoModerationConfigurationService
