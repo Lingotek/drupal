@@ -4,6 +4,7 @@ weight: 100
 locked: true
 auto_upload: false
 auto_download: false
+append_type_to_title: global_setting
 vault: default
 project: default
 workflow: default

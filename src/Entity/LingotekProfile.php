@@ -34,6 +34,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "locked",
  *     "auto_upload",
  *     "auto_download",
+ *     "append_type_to_title",
  *     "vault",
  *     "project",
  *     "workflow",
@@ -134,6 +135,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var string
    */
   protected $language_overrides = [];
+
+  /**
+   * If content type is to be appended to title when uploading to TMS.
+   *
+   * @var string
+   */
+  protected $append_type_to_title = 'global_setting';
 
   /**
    * Metadata for content with this translation profile
@@ -598,6 +606,21 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function isLocked() {
     return (bool) $this->locked;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAppendContentTypeToTitle() {
+    return $this->append_type_to_title;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAppendContentTypeToTitle($append_type_to_title = 'global_setting') {
+    $this->append_type_to_title = $append_type_to_title;
+    return $this;
   }
 
   /**

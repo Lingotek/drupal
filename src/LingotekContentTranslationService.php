@@ -728,9 +728,29 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       return $this->updateDocument($entity, $job_id);
     }
     $source_data = $this->getSourceData($entity);
-    $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
+    $extended_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
+    switch ($profile->getAppendContentTypeToTitle()) {
+      default:
+      case 'global_setting': {
+        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
+          $document_name = $extended_name;
+        }
+        else {
+          $document_name = $entity->label();
+        }
+        break;
+      }
+      case 'yes': {
+        $document_name = $extended_name;
+        break;
+      }
+      case 'no': {
+        $document_name = $entity->label();
+        break;
+      }
+    }
+
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
-    $profile = $this->lingotekConfiguration->getEntityProfile($entity);
 
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
@@ -836,8 +856,28 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
-    $document_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
-    $profile = $this->lingotekConfiguration->getEntityProfile($entity);
+    $extended_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
+    switch ($profile->getAppendContentTypeToTitle()) {
+      default:
+      case 'global_setting': {
+        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
+          $document_name = $extended_name;
+        }
+        else {
+          $document_name = $entity->label();
+        }
+        break;
+      }
+      case 'yes': {
+        $document_name = $extended_name;
+        break;
+      }
+      case 'no': {
+        $document_name = $entity->label();
+        break;
+      }
+    }
+
  
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
@@ -1316,7 +1356,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $intelligenceService->setProfile($profile);
 
         $data['_lingotek_metadata']['_intelligence']['external_document_id'] = $entity->id();
-        $data['_lingotek_metadata']['_intelligence']['content_type'] = $entity->getEntityTypeId();
+        $data['_lingotek_metadata']['_intelligence']['content_type'] = $entity->getEntityTypeId() . ' - ' . $entity->bundle();
 
         //Check if we have permission to send these
         if ($intelligenceService->getBaseDomainPermission()) {

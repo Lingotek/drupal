@@ -366,7 +366,28 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return $this->updateDocument($entity, $job_id);
     }
     $source_data = $this->getSourceData($entity);
-    $document_name = $entity->id() . ' (config): ' . $entity->label();
+    $extended_name = $entity->id() . ' (config): ' . $entity->label();
+    switch ($profile->getAppendContentTypeToTitle()) {
+      default:
+      case 'global_setting': {
+        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
+          $document_name = $extended_name;
+        }
+        else {
+          $document_name = $entity->label();
+        }
+        break;
+      }
+      case 'yes': {
+        $document_name = $extended_name;
+        break;
+      }
+      case 'no': {
+        $document_name = $entity->label();
+        break;
+      }
+    }
+
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
 
     // Allow other modules to alter the data before is uploaded.
@@ -416,7 +437,27 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
-    $document_name = $entity->id() . ' (config): ' . $entity->label();
+    $extended_name = $entity->id() . ' (config): ' . $entity->label();
+    switch ($profile->getAppendContentTypeToTitle()) {
+      default:
+      case 'global_setting': {
+        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
+          $document_name = $extended_name;
+        }
+        else {
+          $document_name = $entity->label();
+        }
+        break;
+      }
+      case 'yes': {
+        $document_name = $extended_name;
+        break;
+      }
+      case 'no': {
+        $document_name = $entity->label();
+        break;
+      }
+    }
 
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
 
@@ -878,7 +919,28 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return $this->updateConfig($mapper_id);
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
-    $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
+    $extended_name = $mapper_id . ' (config): ' . $mapper->getTitle();
+    switch ($profile->getAppendContentTypeToTitle()) {
+      default:
+      case 'global_setting': {
+        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
+          $document_name = $extended_name;
+        }
+        else {
+          $document_name = (string) $mapper->getTitle();
+        }
+        break;
+      }
+      case 'yes': {
+        $document_name = $extended_name;
+        break;
+      }
+      case 'no': {
+        $document_name = (string) $mapper->getTitle();
+        break;
+      }
+    }
+
     $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id);
     if ($document_id) {
       $this->setConfigDocumentId($mapper, $document_id);
@@ -1176,7 +1238,27 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_id = $this->getConfigDocumentId($mapper);
-    $document_name = $mapper_id . ' (config): ' . $mapper->getTitle();
+    $extended_name = $mapper_id . ' (config): ' . $mapper->getTitle();
+    switch ($profile->getAppendContentTypeToTitle()) {
+      default:
+      case 'global_setting': {
+        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
+          $document_name = $extended_name;
+        }
+        else {
+          $document_name = (string) $mapper->getTitle();
+        }
+        break;
+      }
+      case 'yes': {
+        $document_name = $extended_name;
+        break;
+      }
+      case 'no': {
+        $document_name = (string) $mapper->getTitle();
+        break;
+      }
+    }
 
     if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);

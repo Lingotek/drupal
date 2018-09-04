@@ -55,7 +55,6 @@ class LingotekProfileFormTest extends LingotekTestBase {
    */
   public function testAddingProfile() {
     $this->drupalGet('admin/lingotek/settings');
-
     $this->clickLink(t('Add new Translation Profile'));
 
     $profile_id = strtolower($this->randomMachineName());
@@ -65,6 +64,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'label' => $profile_name,
       'auto_upload' => 1,
       'auto_download' => 1,
+      'append_type_to_title' => 'yes',
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -82,6 +82,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $profile = LingotekProfile::load($profile_id);
     $this->assertTrue($profile->hasAutomaticUpload());
     $this->assertTrue($profile->hasAutomaticDownload());
+    $this->assertIdentical('yes', $profile->getAppendContentTypeToTitle());
     $this->assertIdentical('default', $profile->getProject());
     $this->assertIdentical('default', $profile->getVault());
     $this->assertIdentical('default', $profile->getWorkflow());
@@ -102,6 +103,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $profile->save();
     $profile_id = $profile->id();
 
+    $this->assertIdentical('global_setting', $profile->getAppendContentTypeToTitle());
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
 
     $edit = [
@@ -112,6 +114,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
       'workflow' => 'test_workflow',
       'filter' => 'test_filter',
       'subfilter' => 'another_filter',
+      'append_type_to_title' => 'no',
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -119,6 +122,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $profile = LingotekProfile::load($profile_id);
     $this->assertFalse($profile->hasAutomaticUpload());
     $this->assertTrue($profile->hasAutomaticDownload());
+    $this->assertIdentical('no', $profile->getAppendContentTypeToTitle());
     $this->assertIdentical('test_project', $profile->getProject());
     $this->assertIdentical('test_vault', $profile->getVault());
     $this->assertIdentical('test_workflow', $profile->getWorkflow());
@@ -128,6 +132,7 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/edit");
     $this->assertNoFieldChecked("edit-auto-upload");
     $this->assertFieldChecked("edit-auto-download");
+    $this->assertOptionSelected('edit-append-type-to-title', 'no');
     $this->assertOptionSelected('edit-project', 'test_project');
     $this->assertOptionSelected('edit-vault', 'test_vault');
     $this->assertOptionSelected('edit-workflow', 'test_workflow');

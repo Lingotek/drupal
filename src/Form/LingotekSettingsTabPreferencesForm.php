@@ -65,7 +65,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Enable advanced handling of taxonomy terms'),
       '#description' => t('This option is used to handle translation of custom fields assigned to taxonomy terms.'),
-      '#default_value' => $this->lingotek->get('preference.advanced_taxonomy_terms'),
+      '#default_value' => $lingotek_config->getPreference('advanced_taxonomy_terms'),
     );
 
     $form['prefs']['hide_top_level'] = array(
@@ -79,14 +79,14 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Show language label on node pages'),
       '#description' => t('If checked, language labels will be displayed for nodes that have the \'language selection\' field set to be visible.'),
-      '#default_value' => $this->lingotek->get('preference.show_language_labels'),
+      '#default_value' => $lingotek_config->getPreference('show_language_labels'),
     );
 
     $form['prefs']['always_show_translate_tabs'] = array(
       '#type' => 'checkbox',
       '#title' => t('Always show non-Lingotek translate tabs'),
       '#description' => t('If checked, edit-form tabs for both Content Translation and Entity Translation will not be hidden, even if the entity is managed by Lingotek.'),
-      '#default_value' => $this->lingotek->get('preference.always_show_translate_tabs'),
+      '#default_value' => $lingotek_config->getPreference('always_show_translate_tabs'),
     );
 
     $form['prefs']['allow_local_editing'] = array(
@@ -95,7 +95,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Allow local editing of Lingotek translations'),
       '#description' => t('If checked, local editing of translations managed by Lingotek will be allowed. (Note: any changes made may be overwritten if the translation is downloaded from Lingotek again.)'),
-      '#default_value' => $this->lingotek->get('preference.allow_local_editing'),
+      '#default_value' => $lingotek_config->getPreference('allow_local_editing'),
       '#states' => array(
         'visible' => array(
           ':input[name="always_show_translate_tabs"]' => array('checked' => TRUE),
@@ -107,7 +107,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Enable language-specific profiles'),
       '#description' => t('If checked, languages enabled for Lingotek translation will not automatically be queued for all content. Instead, languages enabled for Lingotek will be added to the available languages for profiles but will be disabled by default on profiles that have existing content. (Note: this cannot be unchecked if language-specific settings are in use.)'),
-      '#default_value' => $this->lingotek->get('preference.language_specific_profiles'),
+      '#default_value' => $lingotek_config->getPreference('language_specific_profiles'),
     );
 
     $form['prefs']['delete_tms_documents_upon_disassociation'] = array(
@@ -122,7 +122,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#title' => t('Enable advanced features'),
       '#description' => t('Some features may not be available without an <a href=":url">Enterprise License</a> for the Lingotek TMS. Call <a href=":phone_link">%phone</a> for details.',
         [':url' => 'http://www.lingotek.com', ':phone_link' => 'tel:1-801-331-7777', '%phone' => '+1 (801) 331-7777']),
-      '#default_value' => $this->lingotek->get('preference.advanced_parsing'),
+      '#default_value' => $lingotek_config->getPreference('advanced_parsing'),
     );
 
     $states = array(
@@ -143,7 +143,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#type' => 'checkbox',
       '#title' => t('Enable importing from Lingotek Content Cloud (beta)'),
       '#description' => t('Allows the importing of documents that are in your TMS. An \'Import\' tab will appear next to the \'Settings\' tab. <br> Note: The settings could take longer to save if this setting is changed.'),
-      '#default_value' => $this->lingotek->get('preference.enable_content_cloud', FALSE),
+      '#default_value' => $lingotek_config->getPreference('enable_content_cloud', FALSE),
     );
 
     $form['prefs']['enable_download_source'] = array(
@@ -151,6 +151,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       '#title' => t('Download source if content is missing'),
       '#description' => t('If some content is not shown, the original words will be.'),
       '#default_value' => $lingotek_config->getPreference('enable_download_source') ?: FALSE,
+    );
+
+    $form['prefs']['append_type_to_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Append Entity Type to TMS Document Name'),
+      '#description' => t('Enable to have content/entity type appended to the document title in TMS.'),
+      '#default_value' => $lingotek_config->getPreference('append_type_to_title') ?: FALSE,
     );
 
     $form['prefs']['actions']['#type'] = 'actions';
@@ -176,9 +183,10 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
     $this->saveLanguageSwitcherSettings($form_values);
     $this->saveShowLanguageFields($form_values);
     $this->saveAlwaysShowTranslateTabs($form_values);
-    $this->lingotek->set('preference.language_specific_profiles', $form_values['language_specific_profiles']);
-    $this->lingotek->set('preference.advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
-    $this->lingotek->set('preference.advanced_parsing', $form_values['advanced_parsing']);
+    $lingotek_config->setPreference('language_specific_profiles', $form_values['language_specific_profiles']);
+    $lingotek_config->setPreference('advanced_taxonomy_terms', $form_values['advanced_taxonomy_terms']);
+    $lingotek_config->setPreference('advanced_parsing', $form_values['advanced_parsing']);
+    $lingotek_config->setPreference('append_type_to_title', $form_values['append_type_to_title']);
     $lingotek_config->setPreference('target_download_status', $form_values['target_download_status']);
     $lingotek_config->setDeleteRemoteAfterDisassociation($form_values['delete_tms_documents_upon_disassociation']);
     $lingotek_config->setPreference('enable_download_source', $form_values['enable_download_source']);

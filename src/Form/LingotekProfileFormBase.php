@@ -105,6 +105,22 @@ class LingotekProfileFormBase extends EntityForm {
       '#disabled' => $profile->isLocked(),
       '#default_value' => $profile->hasAutomaticDownload(),
     );
+
+    $options = [
+      'global_setting' => $this->t('Use global setting'),
+      'yes' => $this->t('Yes'),
+      'no' => $this->t('No'),
+    ];
+
+    $form['append_type_to_title'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Append Entity Type to TMS Document Name'),
+      '#description' => $this->t('When enabled, the content/entity type will be appended to the title when uploading to TMS. The source and target titles will remain unchanged.'),
+      '#options' => $options,
+      '#default_value' => $profile->getAppendContentTypeToTitle(),
+      '#disabled' => $profile->isLocked(),
+    ];
+
     $form['future_only_note'] = array(
       '#type' => 'markup',
       '#markup' => '<h3>' . $this->t('Profile settings impacting only new nodes') . '</h3><hr />',

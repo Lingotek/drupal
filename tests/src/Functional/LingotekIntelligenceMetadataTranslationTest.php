@@ -129,7 +129,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
     $this->assertIdentical($data['_lingotek_metadata']['_entity_revision'], '1');
     $this->assertIdentical($data['_lingotek_metadata']['_entity_type_id'], 'node');
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['external_document_id'], '1');
-    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node');
+    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node - article');
   }
 
   public function testUploadNodeWithDefaultSettings() {
@@ -177,7 +177,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
     $this->assertEqual(17, count($data['_lingotek_metadata']['_intelligence']));
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['external_document_id'], '1');
-    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node');
+    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node - article');
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['domain'], $domain);
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['reference_url'], $this->node->toUrl()->setAbsolute(TRUE)->toString());
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['author_name'], 'admin');
@@ -244,7 +244,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
     $this->assertEqual(17, count($data['_lingotek_metadata']['_intelligence']));
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['external_document_id'], '1');
-    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node');
+    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node - article');
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['domain'], $domain);
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['reference_url'], $this->node->toUrl()->setAbsolute(TRUE)->toString());
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['author_name'], 'admin');
@@ -309,7 +309,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
     $this->assertEqual(17, count($data['_lingotek_metadata']['_intelligence']));
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['external_document_id'], '1');
-    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node');
+    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node - article');
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['domain'], $domain);
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['reference_url'], $this->node->toUrl()->setAbsolute(TRUE)->toString());
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['author_name'], 'admin');
@@ -375,7 +375,7 @@ class LingotekIntelligenceMetadataTranslationTest extends LingotekTestBase {
 
     $this->assertEqual(17, count($data['_lingotek_metadata']['_intelligence']));
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['external_document_id'], '1');
-    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node');
+    $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['content_type'], 'node - article');
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['domain'], $domain);
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['reference_url'], $this->node->toUrl()->setAbsolute(TRUE)->toString());
     $this->assertIdentical($data['_lingotek_metadata']['_intelligence']['author_name'], 'admin');

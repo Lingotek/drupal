@@ -38,6 +38,24 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
   public function isLocked();
 
   /**
+   * Returns value of append content type to title option.
+   *
+   * @return string
+   *   Values will be 'global_setting', 'yes', or 'no'
+   */
+  public function getAppendContentTypeToTitle();
+
+  /**
+   * Sets the value of append content type to title option.
+   *
+   * @param string $append_type_to_title
+   *   Values can be 'global_setting', 'yes', or 'no'
+   *
+   * @return $this
+   */
+  public function setAppendContentTypeToTitle($append_type_to_title = 'global_setting');
+
+  /**
    * Gets the weight of the profile.
    *
    * @return int

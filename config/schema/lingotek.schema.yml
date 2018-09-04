@@ -39,6 +39,9 @@ lingotek.settings:
         target_download_status:
           label: 'Published status for content translation downloads'
           type: string
+        append_type_to_title:
+          label: 'Global setting to set whether to append content type to title in TMS'
+          type: string
         enable_content_cloud:
           type: boolean
         enable_download_source:
@@ -256,6 +259,9 @@ lingotek.profile.*:
     workflow:
       type: string
       label: 'TM Workflow'
+    append_type_to_title:
+      type: string
+      label: 'Append Content Type To Title'
     intelligence_metadata:
       type: mapping
       mapping:

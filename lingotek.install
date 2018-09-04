@@ -608,6 +608,16 @@ function lingotek_update_8210() {
   }
 }
 
+/**
+ * The default for appending content type to the document name was changed
+ * so make sure current users continue to see the same behavior as before the update.
+ */
+function lingotek_update_8211() {
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+  $lingotek_config = \Drupal::service('lingotek.configuration');
+  $lingotek_config->setPreference('append_type_to_title', TRUE);
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {
