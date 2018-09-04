@@ -216,6 +216,18 @@ class LingotekConfigManagementForm extends FormBase {
         'translations' => $translations,
         'profile' => $profile ? $profile->label() : '',
       ];
+      if ($is_config_entity) {
+        $link = NULL;
+        if ($mapper->getEntity()->hasLinkTemplate('canonical')) {
+          $link = $mapper->getEntity()->toLink($mapper->getTitle());
+        }
+        elseif ($mapper->getEntity()->hasLinkTemplate('edit-form')) {
+          $link = $mapper->getEntity()->toLink($mapper->getTitle(), 'edit-form');
+        }
+        if ($link !== NULL) {
+          $rows[$mapper_id]['title'] = $link;
+        }
+      }
 
       if ($showingFields) {
         $entity_type_id = $mapper->getEntity()->get('entity_type');

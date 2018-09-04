@@ -290,4 +290,16 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     }
   }
 
+  /**
+   * Tests that config listed links to the config when there are links available.
+   */
+  public function testLabelsAndLinksWhenAvailable() {
+    $this->goToConfigBulkManagementForm();
+    $this->assertText('System maintenance');
+    $this->assertNoLink('System maintenance');
+
+    $this->goToConfigBulkManagementForm('configurable_language');
+    $this->assertLink('Spanish language');
+  }
+
 }
