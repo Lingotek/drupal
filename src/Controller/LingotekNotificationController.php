@@ -62,7 +62,8 @@ class LingotekNotificationController extends LingotekControllerBase {
           $result['request_translations'] = ($profile->hasAutomaticUpload()) ?
              $translation_service->requestTranslations($entity) : [];
         } else {
-          $http_status_code = Response::HTTP_NOT_FOUND;
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $messages[] = "Document not found.";
         }
         break;
 
@@ -116,7 +117,7 @@ class LingotekNotificationController extends LingotekControllerBase {
             }
           }
           else {
-            $http_status_code = Response::HTTP_NOT_FOUND;
+            $http_status_code = Response::HTTP_NO_CONTENT;
             $messages[] = "Document not found.";
           }
         }
