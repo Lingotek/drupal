@@ -12,6 +12,7 @@ use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekLocale;
+use Psr\Log\LogLevel;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -67,7 +68,111 @@ class LingotekNotificationController extends LingotekControllerBase {
           $messages[] = "Document not found.";
         }
         break;
+      case 'target_deleted':
+        /**
+        array(
+        'community_id' => 'my_community_id',
+        'complete' => 'true',
+        'deleted_at' => '1536115104487',
+        'deleted_by_user_id' => 'user_hash',
+        'deleted_by_user_login' => 'user@example.com',
+        'deleted_by_user_name' => 'Name Surname',
+        'doc_cts' => '1536115021300',
+        'doc_domain_type' => 'http://example.com',
+        'doc_region' => '',
+        'doc_status' => 'COMPLETE',
+        'documentId' => 'document_tms_id',
+        'document_id' => 'document_id',
+        'locale' => 'ca_ES',
+        'locale_code' => 'ca-ES',
+        'original_project_id' => '0',
+        'progress' => '100',
+        'projectId' => 'project_tms_id',
+        'project_id' => 'project_id_hash',
+        'status' => 'COMPLETE',
+        'targetId' => 'target_tms_id',
+        'target_id' => 'target_hash',
+        'type' => 'target_deleted',
+        )
+         */
+        $entity = $this->getEntity($request->get('document_id'));
+        if ($entity !== NULL) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $config_translation_service;
+          }
+          $locale = $request->get('locale');
+          $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
+            ->id();
+          $user_login = $request->get('deleted_by_user_login');
+          $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_UNTRACKED);
+          $this->logger->log(LogLevel::DEBUG, 'Target @locale for entity @label deleted by @user_login', [
+            '@locale' => $locale,
+            '@user_login' => $user_login,
+            '@label' => $entity->label()
+          ]);
+          $http_status_code = Response::HTTP_OK;
+          $messages[] = new FormattableMarkup('Target @locale for entity @label deleted by @user_login', [
+            '@locale' => $locale,
+            '@user_login' => $user_login,
+            '@label' => $entity->label()
+          ]);
 
+        } else {
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $document_id = $request->get('document_id');
+          $user_login = $request->get('deleted_by_user_login');
+          $locale = $request->get('locale');
+          $this->logger->log(LogLevel::WARNING, 'Target @locale for document @document_id deleted by @user_login in the TMS, but document not found on the system.', [
+            '@locale' => $locale,
+            '@user_login' => $user_login,
+            '@document_id' => $document_id,
+          ]);
+        }
+        break;
+      case 'document_deleted':
+        /**
+        array(
+        'community_id' => 'my_community_id',
+        'complete' => 'true',
+        'deleted_at' => '1536171165274',
+        'deleted_by_user_id' => 'user_hash',
+        'deleted_by_user_login' => 'user@example.com',
+        'deleted_by_user_name' => 'Name Surname',
+        'documentId' => 'document_tms_id',
+        'document_id' => 'document_id',
+        'original_project_id' => '0',
+        'progress' => '100',
+        'projectId' => 'project_tms_id',
+        'project_id' => 'project_id_hash',
+        'type' => 'document_deleted',
+        )
+         */
+        $entity = $this->getEntity($request->get('document_id'));
+        if ($entity !== NULL) {
+          if ($entity instanceof ConfigEntityInterface) {
+            $translation_service = $config_translation_service;
+          }
+          $user_login = $request->get('deleted_by_user_login');
+          $translation_service->deleteMetadata($entity);
+          $this->logger->log(LogLevel::DEBUG, 'Document for entity @label deleted by @user_login in the TMS.', [
+            '@user_login' => $user_login,
+            '@label' => $entity->label()
+          ]);
+          $http_status_code = Response::HTTP_OK;
+          $messages[] = new FormattableMarkup('Document for entity @label deleted by @user_login in the TMS.', [
+            '@user_login' => $user_login,
+            '@label' => $entity->label()
+          ]);
+        } else {
+          $http_status_code = Response::HTTP_NO_CONTENT;
+          $document_id = $request->get('document_id');
+          $user_login = $request->get('deleted_by_user_login');
+          $this->logger->log(LogLevel::WARNING, 'Document @document_id deleted by @user_login in the TMS, but not found on the system.', [
+            '@user_login' => $user_login,
+            '@document_id' => $document_id,
+          ]);
+        }
+        break;
       case 'phase':
       case 'target': // translation (i.e., chinese) has been completed for a document
         //TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
