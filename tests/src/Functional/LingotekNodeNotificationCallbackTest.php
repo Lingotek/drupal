@@ -62,6 +62,29 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
   }
 
   /**
+   * Tests notification callbacks without any arguments, like in a browser.
+   */
+  public function testNotificationCallbackWithNoArguments() {
+    // Simulate the notification of an empty request.
+    $url = Url::fromRoute('lingotek.notify', [], [])
+      ->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $this->assertEquals($request->getStatusCode(), Response::HTTP_ACCEPTED);
+    $this->assertEquals('It works, but nothing to look here.', (string) $request->getBody());
+
+    $this->drupalGet('lingotek/notify');
+    $this->assertSession()->statusCodeEquals(Response::HTTP_ACCEPTED);
+    $this->assertSession()->responseContains('It works, but nothing to look here.');
+  }
+
+  /**
    * Tests that a node can be translated using the links on the management page.
    */
   public function testAutomatedNotificationNodeTranslation() {

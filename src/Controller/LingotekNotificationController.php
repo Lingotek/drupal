@@ -5,6 +5,7 @@ namespace Drupal\lingotek\Controller;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Render\HtmlResponse;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Exception\LingotekContentEntityStorageException;
@@ -30,13 +31,13 @@ class LingotekNotificationController extends LingotekControllerBase {
     $translation_service = $content_translation_service;
 
     $request_method = $request->getMethod();
-    $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
+    $http_status_code = Response::HTTP_ACCEPTED;
     $type = $request->get('type');
     $result = array();
     $messages = array();
     $security_token = $request->get('security_token');
     if ($security_token == 1) {
-      $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
+      $http_status_code = Response::HTTP_ACCEPTED;
     }
     parse_str($request->getQueryString(), $params);
     switch ($type) {
@@ -133,8 +134,8 @@ class LingotekNotificationController extends LingotekControllerBase {
         }
         break;
       default: //ignore
-        $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
-        $messages[] = "Not implemented.";
+        $http_status_code = Response::HTTP_ACCEPTED;
+        return new HtmlResponse('It works, but nothing to look here.', $http_status_code);
         break;
     }
 
