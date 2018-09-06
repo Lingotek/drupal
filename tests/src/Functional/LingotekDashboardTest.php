@@ -132,7 +132,6 @@ class LingotekDashboardTest extends LingotekTestBase {
     // @ToDo: The native language is not saved.
   }
 
-
   /**
    * Test that different locales from same language can be added.
    */
@@ -574,6 +573,18 @@ class LingotekDashboardTest extends LingotekTestBase {
     // There are no missing translations, translations are local.
     $this->drupalGet('admin/lingotek');
     $this->assertNoRaw(t('Missing translations for: @languages. See the <a href=":updates">Available translation updates</a> page for more information.', ['@languages' => t('Spanish'), ':updates' => \Drupal::url('locale.translate_status')]), 'No missing translations message with local translations');
+  }
+
+  /**
+   * Ensure endpoint url is relative.
+   */
+  public function testDashboardEndpointUrlIsRelative() {
+    $basepath = \Drupal::request()->getBasePath();
+    $this->drupalGet('/admin/lingotek');
+    $drupalSettings = $this->getDrupalSettings();
+    // Using an absolute url can be problematic in https environments, ensure we
+    // use a relative one.
+    $this->assertEquals($basepath . '/admin/lingotek/dashboard_endpoint', $drupalSettings['lingotek']['cms_data']['endpoint_url']);
   }
 
 }

@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Url;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
@@ -272,7 +273,7 @@ class LingotekDashboardController extends LingotekControllerBase {
         "cms_tag" => 'CMS TAG HERE',
         "locale" => "en_US", // FIX: should be currently selected locale
         "module_version" => '1.x',
-        "endpoint_url" => $base_root . $this->url('lingotek.dashboard_endpoint'),
+        "endpoint_url" => Url::fromRoute('lingotek.dashboard_endpoint')->toString(),
     );
   }
 
