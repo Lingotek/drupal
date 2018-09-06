@@ -6,6 +6,8 @@ use Drupal\Core\Url;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\Lingotek;
+use Drupal\node\Entity\NodeType;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Tests translating a content type using the notification callback.
@@ -623,6 +625,269 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     ]);
     $response = json_decode($request->getBody(), TRUE);
     $this->assertIdentical(['es'], $response['result']['request_translations'], 'Italian language has not been requested after notification automatically because it is disabled.');
+  }
+
+  /**
+   * Test that a notification with a target deleted is responded correctly.
+   */
+  public function testTargetDeleted() {
+    // Add an additional language.
+    ConfigurableLanguage::createFromLangcode('it')->save();
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
+
+    // Create Article node types. We use the form at least once to ensure that
+    // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
+    $this->drupalPostForm('/admin/structure/types/add', ['type' => 'article', 'name' => 'Article'], 'Save content type');
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
+    $this->assertEquals('Document downloaded.', $response['messages'][0]);
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'it-IT',
+        'locale' => 'it_IT',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Italian language has been downloaded after notification automatically.');
+    $this->assertEquals('Document downloaded.', $response['messages'][0]);
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // All the links are current.
+    $current_links = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-current')]");
+    $this->assertEqual(count($current_links), 2, 'Translation "es_ES" and "it_IT" are current.');
+
+    // Simulate the notification of target deleted.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'it-IT',
+        'locale' => 'it_IT',
+        'deleted_by_user_login' => 'user@example.com',
+        'complete' => 'true',
+        'status' => 'COMPLETE',
+        'type' => 'target_deleted',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $this->assertEquals(Response::HTTP_OK, $request->getStatusCode());
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertEquals('Target it_IT for entity Article deleted by user@example.com', $response['messages'][0]);
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Check the right class is added.
+    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
+
+    // Check that the Target Status is Untracked
+    $node_type = NodeType::load('article');
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($node_type, 'it'));
+  }
+
+  /**
+   * Test that a notification with a document deleted is responded correctly.
+   */
+  public function testDocumentDeleted() {
+    // Add an additional language.
+    ConfigurableLanguage::createFromLangcode('it')->save();
+
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    $this->saveLingotekConfigTranslationSettings([
+      'node_type' => 'automatic',
+    ]);
+
+    // Create Article node types. We use the form at least once to ensure that
+    // we don't break anything. E.g. see https://www.drupal.org/node/2645202.
+    $this->drupalPostForm('/admin/structure/types/add', ['type' => 'article', 'name' => 'Article'], 'Save content type');
+
+    // Simulate the notification of content successfully uploaded.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'complete' => 'false',
+        'type' => 'document_uploaded',
+        'progress' => '0',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'es-ES',
+        'locale' => 'es_ES',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Spanish language has been downloaded after notification automatically.');
+    $this->assertEquals('Document downloaded.', $response['messages'][0]);
+
+    // Simulate the notification of content successfully translated.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'locale_code' => 'it-IT',
+        'locale' => 'it_IT',
+        'complete' => 'true',
+        'type' => 'target',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $response = json_decode($request->getBody(), TRUE);
+    $this->verbose($request);
+    $this->assertTrue($response['result']['download'], 'Italian language has been downloaded after notification automatically.');
+    $this->assertEquals('Document downloaded.', $response['messages'][0]);
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // All the links are current.
+    $current_links = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-current')]");
+    $this->assertEquals(count($current_links), 2, 'Translation "es_ES" and "it_IT" are current.');
+
+    // Simulate the notification of target deleted.
+    $url = Url::fromRoute('lingotek.notify', [], [
+      'query' => [
+        'project_id' => 'test_project',
+        'document_id' => 'dummy-document-hash-id',
+        'deleted_by_user_login' => 'user@example.com',
+        'complete' => 'true',
+        'type' => 'document_deleted',
+        'progress' => '100',
+      ],
+    ])->setAbsolute()->toString();
+    $request = $this->client->post($url, [
+      'cookies' => $this->cookies,
+      'headers' => [
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ],
+      'http_errors' => FALSE,
+    ]);
+    $this->assertEquals(Response::HTTP_OK, $request->getStatusCode());
+    $response = json_decode($request->getBody(), TRUE);
+    $this->assertSame('Document for entity Article deleted by user@example.com in the TMS.', $response['messages'][0]);
+
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_type');
+    // Check the right class is added.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+    $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_UNTRACKED);
+
+    // Check that the Target Status is Untracked
+    $node_type = NodeType::load('article');
+    $translation_service = \Drupal::service('lingotek.config_translation');
+    $this->assertEmpty($translation_service->getDocumentId($node_type));
+    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($node_type, 'it'));
+    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getTargetStatus($node_type, 'es'));
+    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $translation_service->getSourceStatus($node_type));
   }
 
 }

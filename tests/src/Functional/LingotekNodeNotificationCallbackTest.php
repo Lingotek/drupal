@@ -1144,8 +1144,9 @@ class LingotekNodeNotificationCallbackTest extends LingotekTestBase {
     $this->assertEmpty($content_translation_service->getDocumentId($node));
     $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'it'));
     $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'es'));
-    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getTargetStatus($node, 'en'));
+    $this->assertEquals(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($node));
   }
+
   /**
    * Resets node and metadata storage caches and reloads the node.
    *
