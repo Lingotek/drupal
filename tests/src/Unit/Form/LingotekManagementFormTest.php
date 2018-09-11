@@ -220,15 +220,19 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('get')
         ->with('lingotek.management.filter.node')
         ->willReturn($tempStore);
-      $this->tempStoreFactory->expects($this->at(1))
-        ->method('get')
-        ->with('lingotek.management.items_per_page')
-        ->willReturn($tempStore);
-      $this->tempStoreFactory->expects($this->at(2))
+        $this->tempStoreFactory->expects($this->at(1))
         ->method('get')
         ->with('lingotek.management.filter.node')
         ->willReturn($tempStore);
+      $this->tempStoreFactory->expects($this->at(2))
+        ->method('get')
+        ->with('lingotek.management.items_per_page')
+        ->willReturn($tempStore);
       $this->tempStoreFactory->expects($this->at(3))
+        ->method('get')
+        ->with('lingotek.management.filter.node')
+        ->willReturn($tempStore);
+      $this->tempStoreFactory->expects($this->at(4))
         ->method('get')
         ->with('lingotek.management.items_per_page')
         ->willReturn($tempStore);
@@ -242,43 +246,27 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->willReturn(NULL);
       $tempStore->expects($this->at(2))
         ->method('get')
-        ->with('profile')
+        ->with('job')
         ->willReturn(NULL);
       $tempStore->expects($this->at(3))
         ->method('get')
-        ->with('source_language')
+        ->with('document_id')
         ->willReturn(NULL);
       $tempStore->expects($this->at(4))
         ->method('get')
-        ->with('job')
+        ->with('entity_id')
         ->willReturn(NULL);
       $tempStore->expects($this->at(5))
         ->method('get')
-        ->with('limit')
+        ->with('source_language')
         ->willReturn(NULL);
       $tempStore->expects($this->at(6))
         ->method('get')
-        ->with('label')
+        ->with('upload_status')
         ->willReturn(NULL);
       $tempStore->expects($this->at(7))
         ->method('get')
-        ->with('bundle')
-        ->willReturn(NULL);
-      $tempStore->expects($this->at(8))
-        ->method('get')
         ->with('profile')
-        ->willReturn(NULL);
-      $tempStore->expects($this->at(9))
-        ->method('get')
-        ->with('source_language')
-        ->willReturn(NULL);
-      $tempStore->expects($this->at(10))
-        ->method('get')
-        ->with('job')
-        ->willReturn(NULL);
-      $tempStore->expects($this->at(11))
-        ->method('get')
-        ->with('limit')
         ->willReturn(NULL);
 
       $entityType = $this->getMock(EntityTypeInterface::class);

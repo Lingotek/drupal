@@ -242,44 +242,44 @@ class LingotekConfigManagementForm extends FormBase {
       }
     }
     // Add filters.
-    $form['filters'] = array(
+    $form['filters'] = [
       '#type' => 'details',
       '#title' => $this->t('Select config bundle'),
       '#open' => TRUE,
       '#weight' => 5,
       '#tree' => TRUE,
-    );
-    $form['filters']['wrapper'] = array(
+    ];
+    $form['filters']['wrapper'] = [
       '#type' => 'container',
       '#attributes' => array('class' => array('form--inline', 'clearfix')),
-    );
-    $form['filters']['wrapper']['bundle'] = array(
+    ];
+    $form['filters']['wrapper']['bundle'] = [
       '#type' => 'select',
       '#title' => $this->t('Filter'),
       '#options' => ['config' => $this->t('Config')] + $this->getAllBundles(),
       '#default_value' => $this->filter,
       '#attributes' => array('class' => array('form-item')),
-    );
+    ];
     $form['filters']['wrapper']['job'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Job ID'),
       '#default_value' => $jobFilter,
       '#attributes' => ['class' => ['form-item']],
     ];
-    $form['filters']['actions'] = array(
+    $form['filters']['actions'] = [
       '#type' => 'container',
       '#attributes' => array('class' => array('clearfix'),),
-    );
-    $form['filters']['actions']['submit'] = array(
+    ];
+    $form['filters']['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
       '#submit' => array('::filterForm'),
-    );
-    $form['filters']['actions']['reset'] = array(
+    ];
+    $form['filters']['actions']['reset'] = [
       '#type' => 'submit',
       '#value' => $this->t('Reset'),
       '#submit' => array('::resetFilterForm'),
-    );
+    ];
 
     // If we are showing field config instances, we need to show bundles for
     // a better UX.
@@ -309,21 +309,11 @@ class LingotekConfigManagementForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Execute'),
     );
-    $form['options']['show_advanced'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show advanced options'),
-      '#title_display' => 'before',
-    ];
     $form['options']['job_id'] = [
       '#type' => 'textfield',
       '#size' => 50,
       '#title' => $this->t('Job ID'),
       '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
-      '#states' => [
-        'visible' => [
-          ':input[name="show_advanced"]' => ['checked' => TRUE],
-        ],
-      ],
     ];
     $form['table'] = [
       '#header' => $headers,
@@ -545,7 +535,6 @@ class LingotekConfigManagementForm extends FormBase {
         ['@exports' => drupal_render($build)]));
     }
   }
-
 
   /**
    * Create and set a check upload status batch.

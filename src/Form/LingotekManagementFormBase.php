@@ -167,6 +167,17 @@ abstract class LingotekManagementFormBase extends FormBase {
       return $redirect;
     }
 
+    $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
+
+    $labelFilter = $temp_store->get('label');
+    $bundleFilter = $temp_store->get('bundle');
+    $jobFilter = $temp_store->get('job');
+    $documentIdFilter = $temp_store->get('document_id');
+    $entityIdFilter = $temp_store->get('entity_id');
+    $sourceLanguageFilter = $temp_store->get('source_language');
+    $uploadStatusFilter = $temp_store->get('upload_status');
+    $profileFilter = $temp_store->get('profile');
+
     // Add the filters if any.
     $filters = $this->getFilters();
     if (!empty($filters)) {
@@ -184,6 +195,59 @@ abstract class LingotekManagementFormBase extends FormBase {
       foreach ($filters as $filter_id => $filter) {
         $form['filters']['wrapper'][$filter_id] = $filter;
       }
+      // Advanced filters
+      $form['filters']['advanced_options'] = [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['form--inline', 'clearfix']],
+      ];
+      $form['filters']['advanced_options'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Show advanced options'),
+        '#title_display' => 'before',
+        '#attributes' => ['class' => ['form--inline', 'clearfix']],
+      ];
+      $form['filters']['advanced_options']['document_id'] = [
+        '#type' => 'textfield',
+        '#size' => 35,
+        '#title' => $this->t('Document ID'),
+        '#default_value' => $documentIdFilter,
+       ];
+      $form['filters']['advanced_options']['entity_id'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Entity ID'),
+        '#size' => 35,
+        '#default_value' => $entityIdFilter,
+      ];
+      $form['filters']['advanced_options']['source_language'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Source language'),
+        '#options' => ['' => $this->t('All languages')] + $this->getAllLanguages(),
+        '#default_value' => $sourceLanguageFilter,
+      ];
+      $form['filters']['advanced_options']['upload_status'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Upload Status'),
+        '#default_value' => $uploadStatusFilter,
+        '#options' => [
+          '' => $this->t('All'),
+          Lingotek::STATUS_CURRENT => $this->t('Current'),
+          Lingotek::STATUS_EDITED => $this->t('Edited'),
+          Lingotek::STATUS_IMPORTING => $this->t('Importing'),
+          Lingotek::STATUS_PENDING => $this->t('Pending'),
+          Lingotek::STATUS_READY => $this->t('Ready'),
+          Lingotek::STATUS_ERROR => $this->t('Error'),
+          Lingotek::STATUS_UNTRACKED => $this->t('Untracked'),
+        ],
+      ];
+      $form['filters']['advanced_options']['profile'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Profile'),
+        '#options' => ['' => $this->t('All')] + $this->lingotekConfiguration->getProfileOptions(),
+        '#multiple' => TRUE,
+        '#default_value' => $profileFilter,
+      ];
+
+      // Filter actions
       $form['filters']['actions'] = [
         '#type' => 'container',
         '#attributes' => ['class' => ['clearfix']],
@@ -294,7 +358,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
     $keys = $this->getFilterKeys();
     foreach ($keys as $key) {
-      $temp_store->delete($key);
+      //Reset the filter, no matter if it's under 'wrapper' or 'advanced_filters.'
+      $temp_store->delete($key[1]);
     }
   }
 
@@ -311,7 +376,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
     $keys = $this->getFilterKeys();
     foreach ($keys as $key) {
-      $temp_store->set($key, $form_state->getValue(['filters', 'wrapper', $key]));
+      //This sets and gets the values of the specific key. $key[0] can be either 'wrapper' or 'advanced_filters', and $key[1] is the specific filter itself.
+       $temp_store->set($key[1], $form_state->getValue(['filters', $key[0], $key[1]]));
     }
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');
@@ -335,7 +401,6 @@ abstract class LingotekManagementFormBase extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Execute'),
     ];
-
     $options['show_advanced'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Show advanced options'),

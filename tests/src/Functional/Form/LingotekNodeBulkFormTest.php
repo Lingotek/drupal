@@ -8,7 +8,6 @@ use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
-
 /**
  * Tests the bulk management form.
  *
@@ -37,6 +36,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
+
+    $this->drupalCreateContentType(['type' => 'custom_type', 'name' => 'Custom Type']);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -143,51 +144,59 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLinkByHref('?page=1');
 
     // After we filter by automatic profile, there is no pager and the rows
-    // selected are the ones expected.
+    // listed are the ones expected.
     $edit = [
-      'filters[wrapper][profile]' => 'automatic',
+      'filters[advanced_options][profile][]' => 'automatic',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
     foreach ([1, 5, 7, 11, 13] as $j) {
+      // The filtered id is shown, but not others.
       $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $this->assertNoLink('Llamas are cool 2');
+
+      // The value is retained in the filter.
+      $this->assertFieldByName('filters[advanced_options][profile][]', 'automatic', 'The value is retained in the filter.');
     }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool ' . $indexes[2]);
 
     // After we filter by manual profile, there is no pager and the rows
-    // selected are the ones expected.
+    // listed are the ones expected.
     $edit = [
-      'filters[wrapper][profile]' => 'manual',
+      'filters[advanced_options][profile][]' => 'manual',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
     foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
+      // The filtered id is shown, but not others.
       $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $this->assertNoLink('Llamas are cool 2');
+
+      // The value is retained in the filter.
+      $this->assertFieldByName('filters[advanced_options][profile][]', 'manual', 'The value is retained in the filter.');
     }
-    $this->assertNoLink('Page 2');
-    $this->assertNoLink('Llamas are cool ' . $indexes[1]);
 
     // After we filter by disabled profile, there is no pager and the rows
-    // selected are the ones expected.
+    // listed are the ones expected.
     $edit = [
-      'filters[wrapper][profile]' => Lingotek::PROFILE_DISABLED,
+      'filters[advanced_options][profile][]' => 'disabled',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
-    foreach ([3, 9] as $j) {
-      $this->assertLink('Llamas are cool ' . $indexes[$j]);
-    }
-    $this->assertNoLinkByHref('?page=1');
-    $this->assertNoLink('Llamas are cool ' . $indexes[5]);
 
-    // After we reset, we get back to having a pager and all the content.
-    $this->drupalPostForm(NULL, [], 'Reset');
-    foreach (range(1, 10) as $j) {
+    foreach ([3, 9] as $j) {
+      // The filtered id is shown, but not others.
       $this->assertLink('Llamas are cool ' . $indexes[$j]);
+      $this->assertNoLink('Llamas are cool 2');
+
+      // The value is retained in the filter.
+      $this->assertFieldByName('filters[advanced_options][profile][]', 'disabled', 'The value is retained in the filter.');
     }
-    $this->assertLinkByHref('?page=1');
+
+    $this->assertNoLink('Llamas are cool 15');
+    $this->assertNoLinkByHref('?page=1');
   }
 
   /**
-   * Tests that the bulk management job filtering works correctly.
+   * Tests that the bulk management job filter works correctly.
    */
   public function testJobIdFilter() {
     $nodes = [];
@@ -271,6 +280,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLink('Page 2');
     $this->assertNoLink('Llamas are cool ' . $indexes[4]);
 
+    $this->assertFieldByName('filters[wrapper][job]', 'prime', 'The value is retained in the filter.');
+
     // After we filter by even, there is no pager and the rows selected are the
     // ones expected.
     $edit = [
@@ -282,6 +293,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Llamas are cool ' . $indexes[5]);
+
+    $this->assertFieldByName('filters[wrapper][job]', 'even', 'The value is retained in the filter.');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
@@ -332,6 +345,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Dogs are cool 2');
 
+    $this->assertFieldByName('filters[wrapper][label]', 'Llamas', 'The value is retained in the filter.');
+
     // After we filter by label 'Dogs', there is no pager and the rows selected
     // are the ones expected.
     $edit = [
@@ -344,6 +359,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLink('Page 2');
     $this->assertNoLink('Llamas are cool 1');
 
+    $this->assertFieldByName('filters[wrapper][label]', 'Dogs', 'The value is retained in the filter.');
+
     // After we filter by label 'Cats', there is no pager and the rows selected
     // are the ones expected.
     $edit = [
@@ -355,6 +372,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Dogs are cool 5');
+
+    $this->assertFieldByName('filters[wrapper][label]', 'Cats', 'The value is retained in the filter.');
 
     // After we reset, we get back to having a pager and all the content under
     // limit of 10.
@@ -407,7 +426,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by Spanish source language, there is no pager and the
     // rows selected are the ones expected.
     $edit = [
-      'filters[wrapper][source_language]' => 'es',
+      'filters[advanced_options][source_language]' => 'es',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7, 11, 13] as $j) {
@@ -416,10 +435,12 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Llamas are cool IT 2');
 
+    $this->assertFieldByName('filters[advanced_options][source_language]', 'es', 'The value is retained in the filter.');
+
     // After we filter by Italian source language, there is no pager and the
     // rows selected are the ones expected.
     $edit = [
-      'filters[wrapper][source_language]' => 'it',
+      'filters[advanced_options][source_language]' => 'it',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([2, 4, 6, 8, 10, 12, 14] as $j) {
@@ -428,10 +449,12 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLink('Page 2');
     $this->assertNoLink('Llamas are cool ES 1');
 
+    $this->assertFieldByName('filters[advanced_options][source_language]', 'it', 'The value is retained in the filter.');
+
     // After we filter by English source language, there is no pager and the
     // rows selected are the ones expected.
     $edit = [
-      'filters[wrapper][source_language]' => 'en',
+      'filters[advanced_options][source_language]' => 'en',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 9] as $j) {
@@ -439,6 +462,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Llamas are cool ES 5');
+
+    $this->assertFieldByName('filters[advanced_options][source_language]', 'en', 'The value is retained in the filter.');
 
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
@@ -466,6 +491,9 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
 
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'custom_type')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'custom_type', TRUE);
+
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
@@ -474,11 +502,15 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->rebuildContainer();
 
     $this->saveLingotekContentTranslationSettingsForNodeTypes(['page']);
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['custom_type']);
 
     $nodes = [];
     // Create a node.
     for ($i = 1; $i < 15; $i++) {
       $bundle = 'page';
+      if ($i % 2 == 0) {
+        $bundle = 'custom_type';
+      }
       if ($i % 3 == 0) {
         $bundle = 'article';
       }
@@ -500,19 +532,36 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by article, there is no pager and the rows selected are
     // the ones expected.
     $edit = [
-      'filters[wrapper][bundle]' => 'page',
+      "filters[wrapper][bundle][]" => 'page',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
-    foreach ([1, 2, 4, 5, 7, 8, 10, 11, 13, 14] as $j) {
+    foreach ([1, 5, 7, 11, 13] as $j) {
       $this->assertLink('Llamas are cool page ' . $j);
     }
     $this->assertNoLinkByHref('?page=1');
     $this->assertNoLink('Llamas are cool article 3');
 
-    // After we filter by page, there is no pager and the rows selected are the
+    $this->assertFieldByName('filters[wrapper][bundle][]', 'page', 'The value is retained in the filter.');
+
+    // After we filter by custom_type, there is no pager and the rows selected are
+    // the ones expected.
+    $edit = [
+      "filters[wrapper][bundle][]" => 'custom_type',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([2, 4, 8, 10, 14] as $j) {
+      $this->assertLink('Llamas are cool custom_type ' . $j);
+    }
+    $this->assertNoLinkByHref('?page=1');
+    $this->assertNoLink('Llamas are cool article 3');
+    $this->assertNoLink('Llamas are cool page 1');
+
+    $this->assertFieldByName('filters[wrapper][bundle][]', 'custom_type', 'The value is retained in the filter.');
+
+    // After we filter by article, there is no pager and the rows selected are the
     // ones expected.
     $edit = [
-      'filters[wrapper][bundle]' => 'article',
+      'filters[wrapper][bundle][]' => 'article',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([3, 6, 9, 12] as $j) {
@@ -521,10 +570,30 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoLink('Page 2');
     $this->assertNoLink('Llamas are cool page 1');
 
+    $this->assertFieldByName('filters[wrapper][bundle][]', 'article', 'The value is retained in the filter.');
+
+    // After we filter by both page and article, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = array();
+    $edit['filters[wrapper][bundle][]'] = array(
+        'page',
+        'article',
+      );
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([1, 5, 7] as $j) {
+      $this->assertLink('Llamas are cool page ' . $j);
+    }
+    foreach ([3, 9] as $j) {
+      $this->assertLink('Llamas are cool article ' . $j);
+    }
+
     // After we reset, we get back to having a pager and all the content.
     $this->drupalPostForm(NULL, [], 'Reset');
-    foreach ([1, 2, 4, 5, 7, 8, 10] as $j) {
+    foreach ([1, 5, 7] as $j) {
       $this->assertLink('Llamas are cool page ' . $j);
+    }
+    foreach ([2, 4, 8, 10] as $j) {
+      $this->assertLink('Llamas are cool custom_type ' . $j);
     }
     foreach ([3, 6, 9] as $j) {
       $this->assertLink('Llamas are cool article ' . $j);
@@ -695,7 +764,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
-   * Tests job id is uploaded on upload.
+   * Tests if job id is uploaded on upload.
    */
   public function testJobIdOnUpload() {
     // Create a node.
@@ -784,4 +853,141 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     }
   }
 
+  /**
+   * Test if doc id filter works
+   */
+  public function testDocIdFilter() {
+
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i < 15; $i++) {
+      $edit = [];
+      $edit['title[0][value]'] = 'Llamas are cool ' . $i;
+      $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'automatic';
+      $this->saveAndPublishNodeForm($edit);
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    // After we reset, we get back to having a pager and all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+
+    foreach (range(1, 10) as $j) {
+      $this->assertLink('Llamas are cool ' . $j);
+    }
+
+    $this->assertLinkByHref('?page=1');
+
+    // After we filter by an existing document_id, there are filtered rows.
+    $edit = [
+    'filters[advanced_options][document_id]' => '1',
+    ];
+
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    // Our fake doc ids are dummy-document-hash-id-X. We know we will find
+    // dummy-document-hash-id, dummy-document-hash-id-1 and those after dummy-document-hash-id-10.
+    foreach ([1,2,11,12,13,14] as $j) {
+      $this->assertLink('Llamas are cool ' . $j);
+    }
+
+    // And we won't find the others.
+    foreach ([3,4,5,6,7,8,9,10] as $j) {
+      $this->assertNoLink('Llamas are cool ' . $j);
+    }
+
+    $this->assertFieldByName('filters[advanced_options][document_id]', 1, 'The value is retained in the filter.');
+
+    $this->assertNoLinkByHref('?page=1');
+}
+
+  /**
+   * Tests if entity id filter works
+   */
+  public function testEntityIdFilter() {
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i < 15; $i++) {
+      $edit = [];
+      $edit['title[0][value]'] = 'Llamas are cool ' . $i;
+      $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->saveAndPublishNodeForm($edit);
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    foreach (range(1, 14) as $j) {
+      $edit = [
+        'filters[advanced_options][entity_id]' => $j,
+      ];
+      $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+      // The filtered id is shown, but not others.
+      $this->assertLink('Llamas are cool ' . $j);
+      $this->assertNoLink('Llamas are cool ' . ($j + 1));
+
+      // The value is retained in the filter.
+      $this->assertFieldByName('filters[advanced_options][entity_id]', $j, 'The value is retained in the filter.');
+    }
+
+    $this->assertNoLink('Llamas are cool 15');
+    $this->assertNoLinkByHref('?page=1');
+  }
+
+  /**
+   * Tests if upload status filter works
+   */
+  public function testUploadStatusFilter() {
+    $basepath = \Drupal::request()->getBasePath();
+    // Create a node.
+      $edit = [];
+      $edit['title[0][value]'] = 'Llamas are cool';
+      $edit['body[0][value]'] = 'Llamas are very cool';
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->saveAndPublishNodeForm($edit);
+
+    // Go to the bulk management form.
+    $this->goToContentBulkManagementForm();
+
+    // Ensure there is a link to upload and click it.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->clickLink('EN');
+
+    // After we filter by "IMPORTING", there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[advanced_options][upload_status]' => 'IMPORTING',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertLink('Llamas are cool');
+
+    $this->assertFieldByName('filters[advanced_options][upload_status]', 'IMPORTING', 'The value is retained in the filter.');
+
+    // Ensure there is a link to upload and click it.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->clickLink('EN');
+
+    // After we filter by "CURRENT", there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[advanced_options][upload_status]' => 'CURRENT',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertLink('Llamas are cool');
+
+    $this->assertFieldByName('filters[advanced_options][upload_status]', 'CURRENT', 'The value is retained in the filter.');
+  }
 }

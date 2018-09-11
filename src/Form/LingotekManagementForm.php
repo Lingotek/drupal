@@ -71,7 +71,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
 
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
-
     $query = $this->connection->select($entity_type->getBaseTable(), 'entity_table')->extend('\Drupal\Core\Database\Query\PagerSelectExtender');
     $query->fields('entity_table', [$entity_type->getKey('id')]);
 
@@ -79,16 +78,25 @@ class LingotekManagementForm extends LingotekManagementFormBase {
 
     $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
 
-    // Filter results.
+    // Filter results
+    // Default options
     $labelFilter = $temp_store->get('label');
     $bundleFilter = $temp_store->get('bundle');
-    $profileFilter = $temp_store->get('profile');
-    $sourceLanguageFilter = $temp_store->get('source_language');
     $groupFilter = $groupsExists ? $temp_store->get('group') : NULL;
     $jobFilter = $temp_store->get('job');
 
+    // Advanced options
+    $documentIdFilter = $temp_store->get('document_id');
+    $entityIdFilter = $temp_store->get('entity_id');
+    $sourceLanguageFilter = $temp_store->get('source_language');
+    $uploadFilter = $temp_store->get('upload_status');
+    $profileFilter = $temp_store->get('profile');
+
+    //Default queries
     if ($has_bundles && $bundleFilter) {
-      $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter);
+      if (!in_array("", $bundleFilter, TRUE)) {
+        $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter, 'IN');
+      }
     }
     if ($labelFilter) {
       $labelKey = $entity_type->getKey('label');
@@ -98,29 +106,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $query->condition('entity_data.' . $labelKey, '%' . $labelFilter . '%', 'LIKE');
       }
     }
-    if ($sourceLanguageFilter) {
-      $query->innerJoin($entity_type->getDataTable(), 'entity_data',
-        'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
-      $query->condition('entity_table.' . $entity_type->getKey('langcode'), $sourceLanguageFilter);
-      $query->condition('entity_data.default_langcode', 1);
-    }
-
-    // We don't want items with language undefined.
-    $query->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
-
-    if ($profileFilter) {
-      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
-      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
-        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
-      $query->condition('metadata.profile', $profileFilter);
-    }
-    if ($jobFilter) {
-      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
-      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
-        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
-      $query->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
-    }
-
     if ($groupFilter) {
       /** @var \Drupal\group\Plugin\GroupContentEnablerManagerInterface $groupContentEnablers */
       $groupType = Group::load($groupFilter)->getGroupType();
@@ -133,13 +118,58 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       foreach ($definitions as $node_definition) {
         $valid_values[] = $groupType->id() . '-' . $node_definition['id'] . '-' . $node_definition['entity_bundle'];
       }
-
       $query->innerJoin('group_content_field_data', 'group_content',
         'entity_table.' . $entity_type->getKey('id') . '= group_content.entity_id');
       $query->condition('group_content.gid', $groupFilter);
       $query->condition('group_content.type', $valid_values, 'IN');
     }
+    if ($jobFilter) {
+      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+      $query->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
+    }
+    // Advanced queries
+    if ($documentIdFilter) {
+      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+      $query->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+    }
+    if ($entityIdFilter) {
+      $query->innerJoin($entity_type->getDataTable(), 'entity_data',
+      'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+      $query->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+    }
+    if ($profileFilter) {
+      $profileOptions = $this->lingotekConfiguration->getProfileOptions();
+      if (is_string($profileFilter)) {
+        $profileFilter = [$profileFilter];
+      }
+      if (!in_array("", $profileFilter, TRUE)) {
+        $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+        $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $query->condition('metadata.profile', $profileFilter, 'IN');
+      }
+    }
+    if ($sourceLanguageFilter) {
+      $query->innerJoin($entity_type->getDataTable(), 'entity_data',
+        'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+      $query->condition('entity_table.' . $entity_type->getKey('langcode'), $sourceLanguageFilter);
+      $query->condition('entity_data.default_langcode', 1);
+    }
+    // We don't want items with language undefined.
+    $query->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
 
+    if ($uploadFilter) {
+      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+      $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
+        'metadata.id = translation_status.entity_id AND translation_status.delta=\'0\'');
+      $query->condition('translation_status.translation_status_value', $uploadFilter);
+    }
     $ids = $query->limit($items_per_page)->execute()->fetchCol(0);
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
@@ -180,8 +210,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
 
     $labelFilter = $temp_store->get('label');
     $bundleFilter = $temp_store->get('bundle');
-    $profileFilter = $temp_store->get('profile');
-    $sourceLanguageFilter = $temp_store->get('source_language');
     $groupFilter = $groupsExists ? $temp_store->get('group') : NULL;
     $jobFilter = $temp_store->get('job');
 
@@ -201,6 +229,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         '#options' => ['' => $this->t('All')] + $this->getAllBundles(),
         '#default_value' => $bundleFilter,
         '#attributes' => ['class' => ['form-item']],
+        '#multiple' => TRUE,
       ];
     }
     if ($groupsExists) {
@@ -212,20 +241,6 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         '#attributes' => ['class' => ['form-item']],
       ];
     }
-    $filters['source_language'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Source language'),
-      '#options' => ['' => $this->t('All languages')] + $this->getAllLanguages(),
-      '#default_value' => $sourceLanguageFilter,
-      '#attributes' => ['class' => ['form-item']],
-    ];
-    $filters['profile'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Profile'),
-      '#options' => ['' => $this->t('All')] + $this->lingotekConfiguration->getProfileOptions(),
-      '#default_value' => $profileFilter,
-      '#attributes' => ['class' => ['form-item']],
-    ];
     $filters['job'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Job ID'),
@@ -276,9 +291,10 @@ class LingotekManagementForm extends LingotekManagementFormBase {
    */
   protected function getFilterKeys() {
     $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
-    $filtersKeys = ['label', 'profile', 'source_language', 'bundle', 'job'];
+    //We need specific identifiers for default and advanced filters since the advanced filters bundle is unique.
+    $filtersKeys = [['wrapper', 'label'], ['wrapper','bundle'], ['wrapper', 'job'], ['advanced_options','document_id'], ['advanced_options','entity_id'], ['advanced_options','profile'], ['advanced_options','source_language'], ['advanced_options','upload_status']];
     if ($groupsExists) {
-      $filtersKeys[] = 'group';
+      $filtersKeys[] = ['wrapper','group'];
     }
     return $filtersKeys;
   }
