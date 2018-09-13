@@ -60,7 +60,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    *   A Lingotek moderation configuration service.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle service.
-   * @param ContainerInterface $container
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *   The container from which optional services can be requested.
    */
   public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, LingotekModerationConfigurationServiceInterface $moderation_configuration, EntityTypeBundleInfoInterface $entity_type_bundle_info, ContainerInterface $container) {
@@ -79,7 +79,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
    * {@inheritdoc}
    */
   public function getColumnHeader() {
-    return  $this->t('Content moderation');
+    return $this->t('Content moderation');
   }
 
   /**
@@ -272,7 +272,7 @@ class LingotekContentModerationSettingsForm implements LingotekModerationSetting
     elseif ($this->moderationInfo->canModerateEntitiesOfEntityType($entity_type_definition)) {
       $bundle_type_id = $entity_type_definition->getBundleEntityType();
       $form = [
-        '#markup' => $this->t('This entity bundle is not enabled for moderation with content_moderation. You can change its settings <a href=":moderation">here</a>.', [':moderation' => $this->getContentModerationConfigurationLink($bundle, $bundle_type_id)])
+        '#markup' => $this->t('This entity bundle is not enabled for moderation with content_moderation. You can change its settings <a href=":moderation">here</a>.', [':moderation' => $this->getContentModerationConfigurationLink($bundle, $bundle_type_id)]),
       ];
     }
     return $form;
