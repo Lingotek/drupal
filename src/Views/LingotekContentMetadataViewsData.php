@@ -113,7 +113,7 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
         ],
         'filter' => [
           'id' => 'lingotek_translation_status',
-          'allow empty' => TRUE
+          'allow empty' => TRUE,
         ],
       ];
     }
