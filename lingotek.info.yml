@@ -2,7 +2,6 @@ name: Lingotek Translation
 type: module
 description: 'Translates content, configuration, and interface using the Lingotek Translation Management System.'
 package: Multilingual
-version: VERSION
 core: 8.x
 hidden: false
 

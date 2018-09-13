@@ -1,13 +1,19 @@
 <?php
 
+/**
+ * @file
+ * Hooks provided by the Lingotek module.
+ */
+
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Serialization\Yaml;
 
 /**
- * @defgroup lingotek_api Entity API
+ * @defgroup lingotek_api Lingotek API
  * @{
- * TBD
+ * During Lingotek operations there are several sets of hooks that get
+ * invoked to allow modules to modify the operation.
  * @}
  */
 
@@ -82,7 +88,9 @@ function hook_lingotek_config_entity_translation_presave(ConfigEntityInterface &
       // Decode all [tokens].
       $yaml = Yaml::encode($data);
       $yaml = preg_replace_callback(
-        '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {return '[' . base64_decode($matches[1]) . ']';},
+        '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {
+          return '[' . base64_decode($matches[1]) . ']';
+        },
         $yaml
       );
       $data = Yaml::decode($yaml);
@@ -111,7 +119,9 @@ function hook_lingotek_config_entity_document_upload(array &$source_data, Config
       // Encode all [tokens].
       $yaml = Yaml::encode($source_data);
       $yaml = preg_replace_callback(
-        '/\[([a-z][^]]+)\]/', function ($matches) {return '[***' . base64_encode($matches[1]) . '***]';},
+        '/\[([a-z][^]]+)\]/', function ($matches) {
+          return '[***' . base64_encode($matches[1]) . '***]';
+        },
         $yaml
       );
       $source_data = Yaml::decode($yaml);

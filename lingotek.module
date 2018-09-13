@@ -1,10 +1,11 @@
 <?php
 
 /**
+ * @file
  * Implements Drupal-related hooks for the Lingotek Translation module.
  */
 
-use Drupal\content_translation\ContentTranslationManagerInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -19,15 +20,15 @@ use Drupal\lingotek\Lingotek;
  * Implements hook_toolbar().
  */
 function lingotek_toolbar() {
-  $items = array();
-  $items['translation'] = array(
+  $items = [];
+  $items['translation'] = [
     '#type' => 'toolbar_item',
-    '#attached' => array(
-      'library' => array(
+    '#attached' => [
+      'library' => [
         'lingotek/lingotek.icons',
-      ),
-    ),
-  );
+      ],
+    ],
+  ];
   return $items;
 }
 
@@ -78,7 +79,7 @@ function lingotek_entity_insert(EntityInterface $entity) {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $entity_type_id = $entity->getEntityTypeId();
-    if ($entity instanceof \Drupal\field\Entity\FieldConfig) {
+    if ($entity instanceof FieldConfig) {
       $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
     }
     if ($translation_service->isEnabled($entity_type_id)) {
@@ -112,12 +113,12 @@ function lingotek_entity_insert(EntityInterface $entity) {
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
           }
         }
       }
       // Updated entity with manual-upload
-      elseif (!$has_autoupload){
+      elseif (!$has_autoupload) {
         if ($entity_has_changed) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           $translation_service->markTranslationsAsDirty($entity);
@@ -184,11 +185,11 @@ function lingotek_entity_insert(EntityInterface $entity) {
           try {
             $document_id = $translation_service->uploadDocument($entity);
             $translation_service->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
-            drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', array('@title' => $entity->label())));
+            drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
           }
         }
         // Updated entity with auto-upload
@@ -199,11 +200,11 @@ function lingotek_entity_insert(EntityInterface $entity) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
             $translation_service->markTranslationsAsDirty($entity);
             $translation_service->setTargetStatuses($entity, Lingotek::STATUS_PENDING);
-            drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', array('@title' => $entity->label())));
+            drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The update for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+            drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
           }
         }
       }
@@ -230,7 +231,7 @@ function lingotek_entity_update(EntityInterface $entity) {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.config_translation');
     $entity_type_id = $entity->getEntityTypeId();
-    if ($entity instanceof \Drupal\field\Entity\FieldConfig) {
+    if ($entity instanceof FieldConfig) {
       $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
     }
     if ($translation_service->isEnabled($entity_type_id)) {
@@ -264,11 +265,11 @@ function lingotek_entity_update(EntityInterface $entity) {
         }
         catch (LingotekApiException $exception) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-          drupal_set_message(t('The update for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+          drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
         }
       }
       // Updated entity with manual-upload
-      elseif (!$has_autoupload){
+      elseif (!$has_autoupload) {
         if ($entity_has_changed) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           $translation_service->markTranslationsAsDirty($entity);
@@ -326,11 +327,11 @@ function lingotek_entity_update(EntityInterface $entity) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           try {
             $document_id = $translation_service->uploadDocument($entity);
-            drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', array('@title' => $entity->label())));
+            drupal_set_message(t('<em>@title</em> sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+            drupal_set_message(t('The upload for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
           }
         }
         // Updated entity with auto-upload
@@ -340,11 +341,11 @@ function lingotek_entity_update(EntityInterface $entity) {
             $response = $translation_service->updateDocument($entity);
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
             $translation_service->markTranslationsAsDirty($entity);
-            drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', array('@title' => $entity->label())));
+            drupal_set_message(t('<em>@title</em> was updated and sent to Lingotek successfully.', ['@title' => $entity->label()]));
           }
           catch (LingotekApiException $exception) {
             $translation_service->setSourceStatus($entity, Lingotek::STATUS_ERROR);
-            drupal_set_message(t('The update for @entity_type %title failed. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+            drupal_set_message(t('The update for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
           }
         }
       }
@@ -375,14 +376,13 @@ function lingotek_entity_delete(EntityInterface $entity) {
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
 
-
   // Delete the TMS document if it hasn't been disassociated.
   if ($translation_service->getDocumentId($entity)) {
     try {
       $response = $translation_service->deleteDocument($entity);
     }
     catch (LingotekApiException $exception) {
-      drupal_set_message(t('Failed deleting @entity_type %title. Please try again.', array('@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label())), 'error');
+      drupal_set_message(t('Failed deleting @entity_type %title. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
     }
   }
 }
@@ -400,7 +400,7 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
     $entity = $form_object->getEntity();
 
-    /** @var ContentTranslationManagerInterface $content_translation_manager */
+    /** @var \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager */
     $content_translation_manager = \Drupal::service('content_translation.manager');
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
@@ -418,22 +418,22 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     $can_assign_profile = $current_user->hasPermission('assign lingotek translation profiles') ||
       $current_user->hasPermission('administer lingotek');
 
-    $form['lingotek_translation_management'] = array(
+    $form['lingotek_translation_management'] = [
       '#type' => 'details',
       '#title' => t('Translation Management'),
-      '#description' => t('The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek\'s translation tools and services without ever having to leave the comfort of your Drupal environment.'),
+      '#description' => t("The Lingotek Translation module was developed to help you translate your site. The module integrates the Lingotek translation management system directly into Drupal, so that your users can leverage the power of Lingotek's translation tools and services without ever having to leave the comfort of your Drupal environment."),
       '#group' => 'advanced',
       '#weight' => 50,
       '#access' => $can_assign_profile,
-    );
+    ];
 
-    $form['lingotek_translation_management']['lingotek_translation_profile'] = array(
+    $form['lingotek_translation_management']['lingotek_translation_profile'] = [
       '#type' => 'select',
       '#title' => t('Translation Profile'),
       '#options' => $profile_options,
       '#default_value' => $default_profile->id(),
       '#access' => $can_assign_profile,
-    );
+    ];
 
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && $action != 'lingotek_metadata' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
@@ -456,9 +456,9 @@ function lingotek_form_content_entity_form_submit(array $form, FormStateInterfac
   $translation_service = \Drupal::service('lingotek.content_translation');
   /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
   $lingotek_config = \Drupal::service('lingotek.configuration');
-  /** @var ContentEntityFormInterface $entity_form */
+  /** @var \Drupal\Core\Entity\ContentEntityFormInterface $entity_form */
   $entity_form = $form_state->getFormObject();
-  /** @var ContentEntityInterface $entity */
+  /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
   $entity = $entity_form->getEntity();
 
   if ($entity_form->getOperation() !== 'lingotek_metadata') {

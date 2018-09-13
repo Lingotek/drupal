@@ -28,7 +28,7 @@ function lingotek_post_update_lingotek_manage_lingotek_translations_permission(&
  */
 function lingotek_post_update_lingotek_metadata_dependencies() {
   $metadatas = LingotekConfigMetadata::loadMultiple();
-  array_walk($metadatas, function(LingotekConfigMetadata $metadata) {
+  array_walk($metadatas, function (LingotekConfigMetadata $metadata) {
     $old_dependencies = $metadata->getDependencies();
     $new_dependencies = $metadata->calculateDependencies()->getDependencies();
     if ($old_dependencies !== $new_dependencies) {
