@@ -7,7 +7,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\RequestOptions;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/*
+/**
  * Lingotek HTTP implementation using Guzzle.
  */
 class LingotekHttp implements LingotekHttpInterface {
@@ -40,10 +40,10 @@ class LingotekHttp implements LingotekHttpInterface {
     );
   }
 
-  /*
-   * send a GET request
+  /**
+   * Send a GET request.
    */
-  public function get($path, $args = array()) {
+  public function get($path, $args = []) {
     $options = [];
     if (count($args)) {
       $options = [RequestOptions::QUERY => $args];
@@ -55,10 +55,10 @@ class LingotekHttp implements LingotekHttpInterface {
     );
   }
 
-  /*
-   * send a POST request
+  /**
+   * Send a POST request.
    */
-  public function post($path, $args = array(), $use_multipart = FALSE) {
+  public function post($path, $args = [], $use_multipart = FALSE) {
     $options = [];
     if (count($args) && $use_multipart) {
       $multipart = [];
@@ -77,10 +77,10 @@ class LingotekHttp implements LingotekHttpInterface {
     );
   }
 
-  /*
-   * send a DELETE request
+  /**
+   * Send a DELETE request.
    */
-  public function delete($path, $args = array()) {
+  public function delete($path, $args = []) {
     // Let the post method masquerade as a DELETE
     $options = [];
     if (count($args)) {
@@ -94,10 +94,10 @@ class LingotekHttp implements LingotekHttpInterface {
     );
   }
 
-  /*
-   * send a PATCH request
+  /**
+   * Send a PATCH request.
    */
-  public function patch($path, $args = array(), $use_multipart = FALSE) {
+  public function patch($path, $args = [], $use_multipart = FALSE) {
     return $this->httpClient->patch($this->getBaseUrl() . $path,
       [
         RequestOptions::FORM_PARAMS => $args,
