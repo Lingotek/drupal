@@ -212,7 +212,7 @@ class LingotekTargetStatuses extends RenderElement {
         $target_status == Lingotek::STATUS_EDITED) {
         $url = Url::fromRoute('lingotek.workbench', [
           'doc_id' => $document_id,
-          'locale' => $locale
+          'locale' => $locale,
         ]);
       }
       if ($target_status == Lingotek::STATUS_UNTRACKED) {
