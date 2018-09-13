@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait.
- */
-
 namespace Drupal\lingotek\Helpers;
 
 /**
