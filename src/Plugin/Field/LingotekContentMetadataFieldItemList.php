@@ -85,10 +85,10 @@ class LingotekContentMetadataFieldItemList extends EntityReferenceFieldItemList 
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function preSave() {
-    /** @var LingotekContentMetadata $metadata */
+    /** @var \Drupal\lingotek\Entity\LingotekContentMetadata $metadata */
     $metadata = $this->getContentMetadata();
     if ($metadata && !$metadata->getContentEntityId()) {
       $metadata->setEntity($this->getEntity());

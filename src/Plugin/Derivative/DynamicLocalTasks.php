@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\example\Plugin\Derivative\DynamicLocalTasks.
- */
 
 namespace Drupal\lingotek\Plugin\Derivative;
 
@@ -21,11 +17,11 @@ class DynamicLocalTasks extends DeriverBase {
     $config = \Drupal::configFactory()->get('lingotek.settings');
     $show_import_tab = $config->get('preference.enable_content_cloud');
 
-    if ($show_import_tab){
-        $this->derivatives['lingotek.import'] = $base_plugin_definition;
-        $this->derivatives['lingotek.import']['title'] = 'Import (Beta)';
-        $this->derivatives['lingotek.import']['route_name'] = 'lingotek.import';
-        $this->derivatives['lingotek.import']['base_route'] = 'lingotek.dashboard';
+    if ($show_import_tab) {
+      $this->derivatives['lingotek.import'] = $base_plugin_definition;
+      $this->derivatives['lingotek.import']['title'] = 'Import (Beta)';
+      $this->derivatives['lingotek.import']['route_name'] = 'lingotek.import';
+      $this->derivatives['lingotek.import']['base_route'] = 'lingotek.dashboard';
 
     }
 
@@ -33,4 +29,3 @@ class DynamicLocalTasks extends DeriverBase {
   }
 
 }
-?>

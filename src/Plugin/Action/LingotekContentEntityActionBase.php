@@ -44,7 +44,6 @@ abstract class LingotekContentEntityActionBase extends EntityActionBase {
     );
   }
 
-
   /**
    * {@inheritdoc}
    */
