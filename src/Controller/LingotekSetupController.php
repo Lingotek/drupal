@@ -2,8 +2,6 @@
 
 namespace Drupal\lingotek\Controller;
 
-use Drupal\lingotek\Controller\LingotekControllerBase;
-
 /**
  * Returns responses for lingotek module setup routes.
  */
@@ -12,9 +10,6 @@ class LingotekSetupController extends LingotekControllerBase {
   /**
    * Presents a connection page to Lingotek Services
    *
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The page request.
-   *
    * @return array
    *   The connection form.
    */
@@ -22,10 +17,10 @@ class LingotekSetupController extends LingotekControllerBase {
     if ($this->setupCompleted()) {
       return $this->getLingotekForm('LingotekSettingsAccountForm');
     }
-    return array(
+    return [
       '#type' => 'markup',
       'markup' => $this->getLingotekForm('LingotekSettingsConnectForm'),
-    );
+    ];
   }
 
   public function handshake() {
@@ -43,11 +38,11 @@ class LingotekSetupController extends LingotekControllerBase {
       return $this->redirect('lingotek.setup_community');
     }
     else {
-      return array(
+      return [
         '#type' => 'markup',
         '#markup' => $this->t('Connecting... Please wait to be redirected'),
         '#attached' => ['library' => ['lingotek/lingotek.connect']],
-      );
+      ];
     }
   }
 
@@ -67,13 +62,14 @@ class LingotekSetupController extends LingotekControllerBase {
       // No choice necessary. Save and advance to next page.
       $config->set('default.community', current(array_keys($communities)));
       $config->save();
-      $this->lingotek->getResources(TRUE); // update resources based on newly selected community
+      // update resources based on newly selected community
+      $this->lingotek->getResources(TRUE);
       return $this->redirect('lingotek.setup_defaults');
     }
-    return array(
+    return [
       '#type' => 'markup',
       'markup' => $this->getLingotekForm('LingotekSettingsCommunityForm'),
-    );
+    ];
   }
 
   public function defaultsPage() {
@@ -92,10 +88,10 @@ class LingotekSetupController extends LingotekControllerBase {
       $new_response = $this->lingotek->setProjectCallBackUrl($this->lingotek->get('default.project'), $new_callback_url);
       return $this->redirect('lingotek.dashboard');
     }
-    return array(
+    return [
       '#type' => 'markup',
       'markup' => $this->getLingotekForm('LingotekSettingsDefaultsForm'),
-    );
+    ];
   }
 
   protected function receivedToken() {
@@ -108,7 +104,7 @@ class LingotekSetupController extends LingotekControllerBase {
     }
   }
 
-  protected function  saveAccountInfo($account_info) {
+  protected function saveAccountInfo($account_info) {
     if (!empty($account_info)) {
       $config = \Drupal::configFactory()->getEditable('lingotek.settings');
       $config->set('account.login_id', $account_info['login_id']);

@@ -12,7 +12,6 @@ use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekLocale;
-use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\Core\Language\LanguageInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -61,7 +60,7 @@ class LingotekDashboardController extends LingotekControllerBase {
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    *   The lingotek service.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
+   *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
@@ -136,9 +135,9 @@ class LingotekDashboardController extends LingotekControllerBase {
     $request_method = $request->getMethod();
 
     $http_status_code = Response::HTTP_NOT_IMPLEMENTED;
-    $response = array(
+    $response = [
         'method' => $request_method,
-    );
+    ];
     switch ($request_method) {
       case 'POST':
         $languageStorage = $this->entityTypeManager->getStorage('configurable_language');
@@ -166,12 +165,12 @@ class LingotekDashboardController extends LingotekControllerBase {
           else {
             $rtl = ($direction == 'RTL') ? LanguageInterface::DIRECTION_RTL : LanguageInterface::DIRECTION_LTR;
             $langcode = LingotekLocale::generateLingotek2Drupal($lingotek_locale);
-            $language = $languageStorage->create(array(
+            $language = $languageStorage->create([
               'id' => $langcode,
               'label' => $language,
               'native' => $native,
               'direction' => $rtl,
-            ));
+            ]);
           }
           $language->setThirdPartySetting('lingotek', 'disabled', FALSE);
           $language->setThirdPartySetting('lingotek', 'locale', $lingotek_locale);
@@ -180,7 +179,7 @@ class LingotekDashboardController extends LingotekControllerBase {
           $http_status_code = 200;
         }
 
-        //TO-DO: (1) add language to CMS if not enabled X, (2) add language to TMS project
+        // TO-DO: (1) add language to CMS if not enabled X, (2) add language to TMS project
         break;
 
       case 'DELETE':
@@ -198,7 +197,8 @@ class LingotekDashboardController extends LingotekControllerBase {
 
       case 'GET':
       default:
-        $locale_code = $request->get('code'); //isset($request->get('code')) ? $_REQUEST['code'] : NULL;
+        // isset($request->get('code')) ? $_REQUEST['code'] : NULL;
+        $locale_code = $request->get('code');
         $details = $this->getLanguageDetails($locale_code);
         if (empty($details)) {
           $response['error'] = "language code not found.";
@@ -213,12 +213,12 @@ class LingotekDashboardController extends LingotekControllerBase {
   }
 
   private function getLanguageDetails($lingotek_locale_requested = NULL) {
-    $response = array();
+    $response = [];
     $available_languages = $this->languageManager->getLanguages();
     $source_total = 0;
     $target_total = 0;
-    $source_totals = array();
-    $target_totals = array();
+    $source_totals = [];
+    $target_totals = [];
 
     // If we get a parameter, only return that language. Otherwise return all languages.
     foreach ($available_languages as $language) {
@@ -229,12 +229,14 @@ class LingotekDashboardController extends LingotekControllerBase {
       // loads the configuration bypassing it.
       $lingotek_locale = $this->languageLocaleMapper->getLocaleForLangcode($language->getId());
 
-      if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $lingotek_locale)
+      if (!is_null($lingotek_locale_requested) && $lingotek_locale_requested != $lingotek_locale) {
         continue;
+      }
       $language_report = $this->getLanguageReport($language);
       if ($lingotek_locale_requested == $lingotek_locale) {
         $response = $language_report;
-      } else {
+      }
+      else {
         $response[$lingotek_locale] = $language_report;
       }
       $source_total += $language_report['source']['total'];
@@ -243,38 +245,39 @@ class LingotekDashboardController extends LingotekControllerBase {
       $target_totals = self::calcLanguageTotals($target_totals, $language_report['target']['types']);
     }
     if (is_null($lingotek_locale_requested)) {
-      $response = array(
+      $response = [
           'languages' => $response,
-          'source' => array('types' => $source_totals, 'total' => $source_total),
-          'target' => array('types' => $target_totals, 'total' => $target_total),
+          'source' => ['types' => $source_totals, 'total' => $source_total],
+          'target' => ['types' => $target_totals, 'total' => $target_total],
           'count' => count($available_languages),
-      );
+      ];
     }
     return $response;
   }
 
   protected function getDashboardInfo() {
     global $base_url, $base_root;
-    return array(
-        "community_id" => $this->lingotek->get('default.community'),
-        "external_id" => $this->lingotek->get('account.login_id'),
-        "vault_id" => $this->lingotek->get('default.vault'),
-        "workflow_id" => $this->lingotek->get('default.workflow'),
-        "project_id" => $this->lingotek->get('default.project'),
-        "first_name" => 'Drupal User',
-        "last_name" => '',
-        "email" => $this->lingotek->get('account.login_id'),
-        // cms
-        "cms_site_id" => $base_url,
-        "cms_site_key" => $base_url,
-        "cms_site_name" => 'Drupal Site',
-        "cms_type" => 'Drupal',
-        "cms_version" => 'VERSION HERE',
-        "cms_tag" => 'CMS TAG HERE',
-        "locale" => "en_US", // FIX: should be currently selected locale
-        "module_version" => '1.x',
-        "endpoint_url" => Url::fromRoute('lingotek.dashboard_endpoint')->toString(),
-    );
+    return [
+      "community_id" => $this->lingotek->get('default.community'),
+      "external_id" => $this->lingotek->get('account.login_id'),
+      "vault_id" => $this->lingotek->get('default.vault'),
+      "workflow_id" => $this->lingotek->get('default.workflow'),
+      "project_id" => $this->lingotek->get('default.project'),
+      "first_name" => 'Drupal User',
+      "last_name" => '',
+      "email" => $this->lingotek->get('account.login_id'),
+      // CMS data that will be used for building the dashboard with JS.
+      "cms_site_id" => $base_url,
+      "cms_site_key" => $base_url,
+      "cms_site_name" => 'Drupal Site',
+      "cms_type" => 'Drupal',
+      "cms_version" => 'VERSION HERE',
+      "cms_tag" => 'CMS TAG HERE',
+      // FIX: should be the currently selected locale
+      "locale" => "en_US",
+      "module_version" => '1.x',
+      "endpoint_url" => Url::fromRoute('lingotek.dashboard_endpoint')->toString(),
+    ];
   }
 
   protected function getLanguageReport(LanguageInterface $language, $active = 1, $enabled = 1) {
@@ -283,20 +286,20 @@ class LingotekDashboardController extends LingotekControllerBase {
     $configLanguage = $this->entityTypeManager->getStorage('configurable_language')->load($langcode);
     $types = $this->getEnabledTypes();
 
-    $stat = array(
+    $stat = [
         'locale' => $locale,
         'xcode' => $langcode,
         'active' => $this->lingotek_configuration->isLanguageEnabled($configLanguage) ? 1 : 0,
         'enabled' => 1,
-        'source' => array(
+        'source' => [
             'types' => $this->getSourceTypeCounts($langcode),
             'total' => 0,
-        ),
-        'target' => array(
+        ],
+        'target' => [
             'types' => $this->getTargetTypeCounts($langcode),
             'total' => 0,
-        ),
-    );
+        ],
+    ];
     foreach ($types as $type) {
       $stat['source']['total'] += isset($stat['source']['types'][$type]) ? $stat['source']['types'][$type] : 0;
       $stat['target']['total'] += isset($stat['target']['types'][$type]) ? $stat['target']['types'][$type] : 0;
@@ -316,7 +319,7 @@ class LingotekDashboardController extends LingotekControllerBase {
 
   protected function getSourceTypeCounts($langcode, $types = NULL) {
     $types = is_null($types) ? $this->getEnabledTypes() : $types;
-    $result = array();
+    $result = [];
     foreach ($types as $type) {
       $result[$type] = $this->getSourceTypeCount($langcode, $type);
     }
@@ -325,16 +328,16 @@ class LingotekDashboardController extends LingotekControllerBase {
 
   protected function getSourceTypeCount($langcode, $type) {
     $count = $this->queryFactory->get($type)
-            ->condition('langcode', $langcode)
-            ->condition('default_langcode', 1)
-            ->count()
-            ->execute();
+      ->condition('langcode', $langcode)
+      ->condition('default_langcode', 1)
+      ->count()
+      ->execute();
     return (int) $count;
   }
 
   protected function getTargetTypeCounts($langcode, $types = NULL) {
     $types = is_null($types) ? $this->getEnabledTypes() : $types;
-    $result = array();
+    $result = [];
     foreach ($types as $type) {
       $result[$type] = $this->getTargetTypeCount($langcode, $type);
     }
@@ -343,10 +346,10 @@ class LingotekDashboardController extends LingotekControllerBase {
 
   protected function getTargetTypeCount($langcode, $type) {
     $count = $this->queryFactory->get($type)
-            ->condition('langcode', $langcode)
-            ->condition('default_langcode', 0)
-            ->count()
-            ->execute();
+      ->condition('langcode', $langcode)
+      ->condition('default_langcode', 0)
+      ->count()
+      ->execute();
     return (int) $count;
   }
 
@@ -355,7 +358,7 @@ class LingotekDashboardController extends LingotekControllerBase {
    * array array_sum_values ( array array1 [, array array2 [, array ...]] )
    */
   private static function calcLanguageTotals() {
-    $return = array();
+    $return = [];
     $intArgs = func_num_args();
     $arrArgs = func_get_args();
     if ($intArgs < 1) {
@@ -367,7 +370,7 @@ class LingotekDashboardController extends LingotekControllerBase {
         trigger_error('Warning: Wrong parameter values for calcLanguageTotals()', E_USER_WARNING);
       }
       foreach ($arrItem as $k => $v) {
-        if (!key_exists($k, $return)) {
+        if (!array_key_exists($k, $return)) {
           $return[$k] = 0;
         }
         $return[$k] += $v;
@@ -375,10 +378,10 @@ class LingotekDashboardController extends LingotekControllerBase {
     }
     return $return;
 
-    $sumArray = array();
+    $sumArray = [];
     foreach ($myArray as $k => $subArray) {
       foreach ($subArray as $id => $value) {
-        $sumArray[$id]+=$value;
+        $sumArray[$id] += $value;
       }
     }
     return $sumArray;

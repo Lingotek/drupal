@@ -2,20 +2,22 @@
 
 namespace Drupal\lingotek\Controller;
 
-class LingotekImportController extends LingotekControllerBase{
+class LingotekImportController extends LingotekControllerBase {
+
   /**
-   *Generates the import content. It has two tabs, the import form and the settings
+   * Generates the import content. It has two tabs, the import form and the settings
    *form.
    *@author Unknown
    */
   public function content() {
-    $import_tab = array (
+    $import_tab = [
     $this->getLingotekForm('LingotekImportSettingsForm'),
-    $this->getLingotekForm('LingotekImportForm')
+    $this->getLingotekForm('LingotekImportForm'),
 
-    );
+    ];
 
     return $import_tab;
 
   }
+
 }

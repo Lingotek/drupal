@@ -38,10 +38,10 @@ class LingotekSettingsController extends LingotekControllerBase {
   public function getProfileListForm() {
     $form_builder = \Drupal::formBuilder();
     $original_form = $form_builder->getForm($this->entityManager()->getListBuilder('lingotek_profile'), new FormState());
-    $form['profiles_wrapper'] = array(
+    $form['profiles_wrapper'] = [
       '#type' => 'details',
       '#title' => $this->t('Translation Profiles'),
-    );
+    ];
     $form['profiles_wrapper']['form'] = $original_form;
     // We add the link manually, as we cannot use local actions for that.
     $form['profiles_wrapper']['form']['add_link'] = [
@@ -49,17 +49,17 @@ class LingotekSettingsController extends LingotekControllerBase {
       '#title' => t('Add new Translation Profile'),
       '#url' => Url::fromRoute('entity.lingotek_profile.add_form'),
       '#weight' => 50,
-      '#ajax' => array(
-        'class' => array('use-ajax'),
-      ),
-      '#attributes' => array(
-        'class' => array('use-ajax'),
+      '#ajax' => [
+        'class' => ['use-ajax'],
+      ],
+      '#attributes' => [
+        'class' => ['use-ajax'],
         'data-dialog-type' => 'modal',
-        'data-dialog-options' => Json::encode(array(
+        'data-dialog-options' => Json::encode([
           'width' => 860,
           'height' => 530,
-        )),
-      ),
+        ]),
+      ],
     ];
 
     return $form;
@@ -70,10 +70,10 @@ class LingotekSettingsController extends LingotekControllerBase {
     $original_form = $form_builder->getForm(LingotekSettingsTabIntegrationsForm::class);
 
     if (isset($original_form['contrib'])) {
-      $form['integrations_wrapper'] = array(
+      $form['integrations_wrapper'] = [
         '#type' => 'details',
         '#title' => $this->t('Integrations Settings'),
-      );
+      ];
       $form['integrations_wrapper']['form'] = $original_form;
       return $form;
     }
@@ -87,9 +87,9 @@ class LingotekSettingsController extends LingotekControllerBase {
       return $redirect;
     }
 
-    $profiles_modal = array(
+    $profiles_modal = [
       $this->getLingotekForm('LingotekSettingsTabProfilesEditForm'),
-    );
+    ];
 
     return $profiles_modal;
   }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Controller\LingotekControllerBase.
- */
-
 namespace Drupal\lingotek\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -12,7 +7,6 @@ use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Routing\UrlGeneratorTrait;
 use Drupal\lingotek\LingotekSetupTrait;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,7 +64,7 @@ abstract class LingotekControllerBase extends ControllerBase {
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    *   The lingotek service.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
+   *   The language-locale mapper.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
    * @param \Psr\Log\LoggerInterface $logger
@@ -116,7 +110,11 @@ abstract class LingotekControllerBase extends ControllerBase {
   /**
    * Return a Lingotek form (convenience function)
    *
-   * @param type $form_path
+   * @param string $local_form_path
+   *   The form class name.
+   *
+   * @return array
+   *   The form array.
    */
   protected function getLingotekForm($local_form_path) {
     return $this->formBuilder->getForm('\\Drupal\\lingotek\\Form\\' . $local_form_path, $this->request);

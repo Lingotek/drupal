@@ -45,7 +45,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
   /**
    * The Lingotek config translation service.
    *
-   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translationService
+   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface
    */
   protected $translationService;
 
@@ -53,7 +53,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    * Constructs a LingotekConfigTranslationController.
    *
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
+   *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service
    *   The Lingotek config translation service.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
@@ -113,7 +113,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     $mapper->populateFromRouteMatch($route_match);
 
     $languages = $this->languageManager->getLanguages();
-    $languages = array_filter($languages, function(LanguageInterface $language) {
+    $languages = array_filter($languages, function (LanguageInterface $language) {
       $configLanguage = ConfigurableLanguage::load($language->getId());
       return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
     });
@@ -123,10 +123,10 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // If the language is not configured on the site, create a dummy language
       // object for this listing only to ensure the user gets useful info.
       $language_name = $this->languageManager->getLanguageName($original_langcode);
-      $languages[$original_langcode] = new Language(array(
+      $languages[$original_langcode] = new Language([
         'id' => $original_langcode,
-        'name' => $language_name
-      ));
+        'name' => $language_name,
+      ]);
     }
     if ($mapper instanceof ConfigEntityMapper) {
       /** @var $mapper ConfigEntityMapper */
@@ -142,35 +142,35 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
 
       if ($locale && $langcode === $original_langcode) {
-        $page['languages'][$langcode]['operations']['#links']['upload'] = array(
+        $page['languages'][$langcode]['operations']['#links']['upload'] = [
           'title' => $this->t('Upload'),
           'url' => Url::fromRoute('lingotek.config.upload',
             [
               'entity_type' => $plugin_id,
               'entity_id' => $entity_id,
             ]),
-        );
+        ];
         if ($entity && $document_id = $this->translationService->getDocumentId($entity)) {
-          $page['languages'][$langcode]['operations']['#links']['check_upload'] = array(
+          $page['languages'][$langcode]['operations']['#links']['check_upload'] = [
             'title' => $this->t('Check upload status'),
             'url' => Url::fromRoute('lingotek.config.check_upload',
               [
                 'entity_type' => $plugin_id,
                 'entity_id' => $entity_id,
               ]),
-          );
+          ];
         }
         // If it's a ConfigNamesMapper, we have to call a different method.
         elseif ($entity_id === $plugin_id) {
           if ($document_id = $this->translationService->getConfigDocumentId($mapper)) {
-            $page['languages'][$langcode]['operations']['#links']['check_upload'] = array(
+            $page['languages'][$langcode]['operations']['#links']['check_upload'] = [
               'title' => $this->t('Check upload status'),
               'url' => Url::fromRoute('lingotek.config.check_upload',
                 [
                   'entity_type' => $plugin_id,
                   'entity_id' => $entity_id,
                 ]),
-            );
+            ];
           }
         }
       }
@@ -208,7 +208,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($entity_type === $entity_id) {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
-      $mappers =  $this->configMapperManager->getMappers();
+      $mappers = $this->configMapperManager->getMappers();
       if ($this->translationService->getConfigDocumentId($mappers[$entity_type])) {
         try {
           if ($this->translationService->updateConfig($entity_type)) {
@@ -276,7 +276,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     if ($entity_type === $entity_id) {
       // It is not a config entity, but a config object.
       $definition = $this->configMapperManager->getDefinition($entity_type);
-      $mappers =  $this->configMapperManager->getMappers();
+      $mappers = $this->configMapperManager->getMappers();
 
       try {
         if ($this->translationService->updateConfig($entity_type)) {
@@ -414,8 +414,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     return $this->redirectToEntityTranslateOverview($entity_type, $entity_id);
   }
 
-
-  public function download($entity_type, $entity_id,  $locale, Request $request) {
+  public function download($entity_type, $entity_id, $locale, Request $request) {
     $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale);
     $langcode = $drupal_language->id();
     if ($entity_type === $entity_id) {
@@ -427,14 +426,14 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
           drupal_set_message($this->t('Translation to %locale downloaded successfully', ['%locale' => $locale]));
         }
         elseif ($success === FALSE) {
-          $mappers =  $this->configMapperManager->getMappers();
+          $mappers = $this->configMapperManager->getMappers();
           $this->translationService->setConfigTargetStatus($mappers[$entity_type], $langcode, Lingotek::STATUS_ERROR);
           drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
             ['%label' => $definition['title'], '@locale' => $locale]), 'error');
         }
       }
       catch (LingotekApiException $e) {
-        $mappers =  $this->configMapperManager->getMappers();
+        $mappers = $this->configMapperManager->getMappers();
         $this->translationService->setConfigTargetStatus($mappers[$entity_type], $langcode, Lingotek::STATUS_ERROR);
         drupal_set_message($this->t('%label @locale translation download failed. Please try again.',
           ['%label' => $definition['title'], '@locale' => $locale]), 'error');
@@ -479,15 +478,15 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    *   A redirect response.
    */
   protected function redirectToEntityTranslateOverview($entity_type, $entity_id) {
-    $mappers =  $this->configMapperManager->getMappers();
+    $mappers = $this->configMapperManager->getMappers();
     if ($entity_type === 'field_config') {
       $field_config = FieldConfig::load($entity_id);
       $id = $field_config->getTargetEntityTypeId();
       $mapper = $mappers[$id . '_fields'];
       $mapper->setEntity($field_config);
-      $entity_definition =  $this->entityManager->getDefinition($id);
+      $entity_definition = $this->entityManager->getDefinition($id);
 
-      $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id, $entity_definition->getBundleEntityType()  => $field_config->getTargetBundle()]);
+      $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id, $entity_definition->getBundleEntityType() => $field_config->getTargetBundle()]);
     }
     else {
       $mapper = $mappers[$entity_type];
@@ -506,7 +505,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
    *   A redirect response.
    */
   protected function redirectToConfigTranslateOverview($plugin_id) {
-    $mappers =  $this->configMapperManager->getMappers();
+    $mappers = $this->configMapperManager->getMappers();
     $mapper = $mappers[$plugin_id];
     $uri = Url::fromRoute($mapper->getOverviewRouteName());
     return new RedirectResponse($uri->setAbsolute(TRUE)->toString());
@@ -542,22 +541,22 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
     ];
 
     if ($target_status === NULL || $target_status == Lingotek::STATUS_REQUEST || $target_status == Lingotek::STATUS_EDITED || $target_status == Lingotek::STATUS_UNTRACKED) {
-      $page['languages'][$langcode]['operations']['#links']['request'] = array(
+      $page['languages'][$langcode]['operations']['#links']['request'] = [
         'title' => $this->t('Request translation'),
         'url' => Url::fromRoute('lingotek.config.request', $route_params),
-      );
+      ];
     }
     elseif ($target_status == Lingotek::STATUS_PENDING) {
-      $page['languages'][$langcode]['operations']['#links']['check_download'] = array(
+      $page['languages'][$langcode]['operations']['#links']['check_download'] = [
         'title' => $this->t('Check Download'),
         'url' => Url::fromRoute('lingotek.config.check_download', $route_params),
-      );
+      ];
     }
     elseif ($target_status == Lingotek::STATUS_READY) {
-      $page['languages'][$langcode]['operations']['#links']['download'] = array(
+      $page['languages'][$langcode]['operations']['#links']['download'] = [
         'title' => $this->t('Download'),
         'url' => Url::fromRoute('lingotek.config.download', $route_params),
-      );
+      ];
     }
   }
 
