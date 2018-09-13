@@ -1,15 +1,5 @@
 <?php
 
-/**
- * @file
- * Defines LingotekAccount.
- */
-
-/**
- * A class representing a Lingotek Account
- *
- * The Account class works off a locally cached copy of the account information, so it doesnt have to query the billing server very often.
- */
 namespace Drupal\lingotek;
 
 class LingotekAccount {
@@ -72,7 +62,7 @@ class LingotekAccount {
   }
 
   public function getStatusText() {
-    return ( $this->status == 'active' ) ? '<span style="color: green;">'.t('Active').'</span>' : '<span style="color: red;">'.t('Inactive').'</span>';
+    return ($this->status == 'active') ? '<span style="color: green;">' . t('Active') . '</span>' : '<span style="color: red;">' . t('Inactive') . '</span>';
   }
 
   public function setPlan($plan) {
@@ -88,7 +78,8 @@ class LingotekAccount {
 
   public function setPlanType($type = 'unknown') {
     variable_set('lingotek_account_plan_type', $type);
-    $standard_types = array('cosmopolitan_monthly', 'cosmopolitan_yearly'); // if in this list, then set to 'standard'
+    // if in this list, then set to 'standard'
+    $standard_types = ['cosmopolitan_monthly', 'cosmopolitan_yearly'];
     $type = in_array($type, $standard_types) ? 'standard' : $type;
     $this->planType = $type;
   }
@@ -105,7 +96,8 @@ class LingotekAccount {
 
   public function getPlanTypeText() {
     $plan_pieces = explode('_', $this->getPlanType());
-    $details = ucwords(end($plan_pieces)); // e.g., Enterprise, Monthly, Yearly
+    // e.g., Enterprise, Monthly, Yearly
+    $details = ucwords(end($plan_pieces));
     return $details;
   }
 

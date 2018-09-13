@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekConfigTranslationService.
- */
-
 namespace Drupal\lingotek;
 
 use Drupal\config_translation\ConfigEntityMapper;
@@ -12,7 +7,6 @@ use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\ConfigNamesMapper;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -55,7 +49,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * The language manager.
    *
-   * @var \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
   protected $languageManager;
 
@@ -72,7 +66,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    *   An lingotek object.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
+   *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
@@ -108,7 +102,6 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     return $enabled_types;
   }
 
-
   /**
    * {@inheritDoc}
    */
@@ -132,7 +125,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritDoc}
    */
   public function getConfigTranslatableProperties(ConfigNamesMapper $mapper) {
-    /** @var TypedConfigManagerInterface $typed_config */
+    /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typed_config */
     $typed_config = \Drupal::service('config.typed');
 
     $properties = [];
@@ -313,7 +306,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       Lingotek::STATUS_READY,
     ];
 
-    foreach($target_languages as $langcode => $language) {
+    foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
         if (in_array($current_status, $to_change)) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
@@ -326,7 +319,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function getSourceData(ConfigEntityInterface $entity) {
-    /** @var ConfigEntityMapper $mapper */
+    /** @var \Drupal\config_translation\ConfigEntityMapper $mapper */
     if ($entity->getEntityTypeId() == 'field_config') {
       $id = $entity->getTargetEntityTypeId();
       $mapper = clone $this->mappers[$id . '_fields'];
@@ -367,25 +360,20 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = $this->getSourceData($entity);
     $extended_name = $entity->id() . ' (config): ' . $entity->label();
-    switch ($profile->getAppendContentTypeToTitle()) {
-      default:
-      case 'global_setting': {
-        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
-          $document_name = $extended_name;
-        }
-        else {
-          $document_name = $entity->label();
-        }
-        break;
-      }
-      case 'yes': {
+    $profile_preference = $profile->getAppendContentTypeToTitle();
+    $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
+    switch ($profile_preference) {
+      case 'yes':
         $document_name = $extended_name;
         break;
-      }
-      case 'no': {
+      case 'no':
         $document_name = $entity->label();
         break;
-      }
+      case 'global_setting':
+        $document_name = $global_preference ? $extended_name : $entity->label();
+        break;
+      default:
+        $document_name = $extended_name;
     }
 
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
@@ -438,25 +426,20 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
     $extended_name = $entity->id() . ' (config): ' . $entity->label();
-    switch ($profile->getAppendContentTypeToTitle()) {
-      default:
-      case 'global_setting': {
-        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
-          $document_name = $extended_name;
-        }
-        else {
-          $document_name = $entity->label();
-        }
-        break;
-      }
-      case 'yes': {
+    $profile_preference = $profile->getAppendContentTypeToTitle();
+    $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
+    switch ($profile_preference) {
+      case 'yes':
         $document_name = $extended_name;
         break;
-      }
-      case 'no': {
+      case 'no':
         $document_name = $entity->label();
         break;
-      }
+      case 'global_setting':
+        $document_name = $global_preference ? $extended_name : $entity->label();
+        break;
+      default:
+        $document_name = $extended_name;
     }
 
     $url = $entity->hasLinkTemplate('edit-form') ? $entity->toUrl()->setAbsolute()->toString() : NULL;
@@ -521,7 +504,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $languages = [];
     if ($document_id = $this->getDocumentId($entity)) {
       $target_languages = $this->languageManager->getLanguages();
-      $target_languages = array_filter($target_languages, function(LanguageInterface $language) {
+      $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
         $configLanguage = ConfigurableLanguage::load($language->getId());
         return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
       });
@@ -627,14 +610,16 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
       if ($drupal_language == NULL) {
-        continue;// languages existing in TMS, but not configured on Drupal
+        // languages existing in TMS, but not configured on Drupal
+        continue;
       }
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
       if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
         if ($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-        } else {
+        }
+        else {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
         }
       }
@@ -920,25 +905,20 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $extended_name = $mapper_id . ' (config): ' . $mapper->getTitle();
-    switch ($profile->getAppendContentTypeToTitle()) {
-      default:
-      case 'global_setting': {
-        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
-          $document_name = $extended_name;
-        }
-        else {
-          $document_name = (string) $mapper->getTitle();
-        }
-        break;
-      }
-      case 'yes': {
+    $profile_preference = $profile->getAppendContentTypeToTitle();
+    $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
+    switch ($profile_preference) {
+      case 'yes':
         $document_name = $extended_name;
         break;
-      }
-      case 'no': {
+      case 'no':
         $document_name = (string) $mapper->getTitle();
         break;
-      }
+      case 'global_setting':
+        $document_name = $global_preference ? $extended_name : (string) $mapper->getTitle();
+        break;
+      default:
+        $document_name = $extended_name;
     }
 
     $document_id = $this->lingotek->uploadDocument($document_name, $source_data, $this->getConfigSourceLocale($mapper), NULL, $this->lingotekConfiguration->getConfigProfile($mapper_id), $job_id);
@@ -1083,7 +1063,6 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     return $current_status;
   }
 
-
   /**
    * Clear the target statuses.
    * @param string $mapper_id
@@ -1125,21 +1104,23 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
       if ($drupal_language == NULL) {
-        continue;// languages existing in TMS, but not configured on Drupal
+        // languages existing in TMS, but not configured on Drupal
+        continue;
       }
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
       if (in_array($current_target_status, [Lingotek::STATUS_UNTRACKED, Lingotek::STATUS_DISABLED, Lingotek::STATUS_EDITED, Lingotek::STATUS_REQUEST, Lingotek::STATUS_NONE, Lingotek::STATUS_READY, Lingotek::STATUS_PENDING, NULL])) {
-        if($progress === Lingotek::PROGRESS_COMPLETE) {
+        if ($progress === Lingotek::PROGRESS_COMPLETE) {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_READY);
-        } else {
+        }
+        else {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_PENDING);
         }
       }
       if ($source_status !== Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_EDITED && $langcode !== $mapper->getLangcode()) {
         $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_EDITED);
       }
-      if ($source_status === Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_CURRENT && $langcode !==  $mapper->getLangcode()) {
+      if ($source_status === Lingotek::STATUS_CURRENT && $statuses[$langcode] === Lingotek::STATUS_CURRENT && $langcode !== $mapper->getLangcode()) {
         $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_CURRENT);
       }
     }
@@ -1239,25 +1220,20 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_id = $this->getConfigDocumentId($mapper);
     $extended_name = $mapper_id . ' (config): ' . $mapper->getTitle();
-    switch ($profile->getAppendContentTypeToTitle()) {
-      default:
-      case 'global_setting': {
-        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
-          $document_name = $extended_name;
-        }
-        else {
-          $document_name = (string) $mapper->getTitle();
-        }
-        break;
-      }
-      case 'yes': {
+    $profile_preference = $profile->getAppendContentTypeToTitle();
+    $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
+    switch ($profile_preference) {
+      case 'yes':
         $document_name = $extended_name;
         break;
-      }
-      case 'no': {
+      case 'no':
         $document_name = (string) $mapper->getTitle();
         break;
-      }
+      case 'global_setting':
+        $document_name = $global_preference ? $extended_name : (string) $mapper->getTitle();
+        break;
+      default:
+        $document_name = $extended_name;
     }
 
     if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id)) {
@@ -1271,7 +1247,6 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     return FALSE;
   }
-
 
   public function saveConfigTargetData(ConfigNamesMapper $mapper, $langcode, $data) {
     $names = $mapper->getConfigNames();
@@ -1293,11 +1268,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     // We cannot use a mapping table as in content, because config can be staged.
     $entity = NULL;
     // Check config first.
-    $config_mappers = array_filter($this->mappers, function($mapper) {
+    $config_mappers = array_filter($this->mappers, function ($mapper) {
       return ($mapper instanceof ConfigNamesMapper
-        && ! $mapper instanceof ConfigEntityMapper
-        && ! $mapper instanceof ConfigFieldMapper)
-        ;
+        && !$mapper instanceof ConfigEntityMapper
+        && !$mapper instanceof ConfigFieldMapper);
     });
     foreach ($config_mappers as $mapper_id => $mapper) {
       if ($this->getConfigDocumentId($mapper) === $document_id) {
@@ -1331,7 +1305,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $target_languages = $this->languageManager->getLanguages();
     $source_langcode = $mapper->getLangcode();
 
-    foreach($target_languages as $langcode => $language) {
+    foreach ($target_languages as $langcode => $language) {
       if ($langcode != $source_langcode && $current_status = $this->getConfigTargetStatus($mapper, $langcode)) {
         if ($current_status == Lingotek::STATUS_CURRENT) {
           $this->setConfigTargetStatus($mapper, $langcode, Lingotek::STATUS_EDITED);

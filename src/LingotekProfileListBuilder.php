@@ -1,9 +1,5 @@
 <?php
 
-/**
- * Contains \Drupal\lingotek\LingotekProfileListBuilder.
- */
-
 namespace Drupal\lingotek;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -60,7 +56,7 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
    *   The entity type definition.
    * @param \Drupal\Core\Entity\EntityStorageInterface $storage
    *   The entity storage controller class.
-   * @param \Drupal\Core\Language\LanguageManagerInterface
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
@@ -79,7 +75,7 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
 
     // Sort the entities using the entity class's sort() method.
     // See \Drupal\Core\Config\Entity\ConfigEntityBase::sort().
-    uasort($entities, array($this->entityType->getClass(), 'sort'));
+    uasort($entities, [$this->entityType->getClass(), 'sort']);
     return $entities;
   }
 
@@ -94,11 +90,11 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header = array(
+    $header = [
         'label' => t('Name'),
         'auto_upload' => t('Automatic Upload'),
         'auto_download' => t('Automatic Download'),
-      ) + parent::buildHeader();
+      ] + parent::buildHeader();
     return $header;
   }
 
@@ -107,20 +103,20 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $this->getLabel($entity);
-    $row['auto_upload'] = array(
+    $row['auto_upload'] = [
       '#type' => 'checkbox',
-      '#title' => t('Set @title for automatic upload', array('@title' => $entity->label())),
+      '#title' => t('Set @title for automatic upload', ['@title' => $entity->label()]),
       '#title_display' => 'invisible',
       '#disabled' => $entity->isLocked(),
       '#default_value' => $entity->hasAutomaticUpload(),
-    );
-    $row['auto_download'] = array(
+    ];
+    $row['auto_download'] = [
       '#type' => 'checkbox',
-      '#title' => t('Set @title for automatic download', array('@title' => $entity->label())),
+      '#title' => t('Set @title for automatic download', ['@title' => $entity->label()]),
       '#title_display' => 'invisible',
       '#disabled' => $entity->isLocked(),
       '#default_value' => $entity->hasAutomaticDownload(),
-    );
+    ];
     return $row + parent::buildRow($entity);
   }
 
@@ -153,7 +149,6 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
     drupal_set_message(t('Configuration saved.'));
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -161,22 +156,20 @@ class LingotekProfileListBuilder extends DraggableListBuilder {
     // We don't call parent, as we don't want config_translation operations.
     $operations = [];
     if (!$entity->isLocked() && $entity->hasLinkTemplate('edit-form')) {
-      $operations['edit'] = array(
+      $operations['edit'] = [
         'title' => $this->t('Edit'),
         'weight' => 10,
         'url' => $entity->urlInfo('edit-form'),
-      );
+      ];
     }
     if (!$entity->isLocked() && $entity->hasLinkTemplate('delete-form')) {
-      $operations['delete'] = array(
+      $operations['delete'] = [
         'title' => $this->t('Delete'),
         'weight' => 100,
         'url' => $entity->urlInfo('delete-form'),
-      );
+      ];
     }
     return $operations;
   }
-
-
 
 }

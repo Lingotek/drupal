@@ -2,8 +2,6 @@
 
 namespace Drupal\lingotek;
 
-use Drupal\language\ConfigurableLanguageInterface;
-
 interface LanguageLocaleMapperInterface {
 
   /**
@@ -12,7 +10,7 @@ interface LanguageLocaleMapperInterface {
    * @param string $locale
    *   The Lingotek locale.
    *
-   * @return ConfigurableLanguageInterface|NULL
+   * @return \Drupal\language\ConfigurableLanguageInterface|null
    *   The Drupal language created for this locale, or NULL if there is none.
    */
   public function getConfigurableLanguageForLocale($locale);
@@ -23,7 +21,7 @@ interface LanguageLocaleMapperInterface {
    * @param string $langcode
    *   The Drupal langcode.
    *
-   * @return ConfigurableLanguageInterface|NULL
+   * @return \Drupal\language\ConfigurableLanguageInterface|null
    *   The Lingotek locale.
    */
   public function getLocaleForLangcode($langcode);

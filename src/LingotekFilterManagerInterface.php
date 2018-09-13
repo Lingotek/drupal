@@ -55,7 +55,7 @@ interface LingotekFilterManagerInterface {
    * Given filter provider can take precedence, or the settings default will be
    * applied.
    *
-   * @param \Drupal\lingotek\LingotekFilterProviderInterface|NULL $profile
+   * @param \Drupal\lingotek\LingotekFilterProviderInterface|null $profile
    *   A filter provider.
    *
    * @return string
@@ -69,7 +69,7 @@ interface LingotekFilterManagerInterface {
    * Given filter provider can take precedence, or the settings default will be
    * applied.
    *
-   * @param \Drupal\lingotek\LingotekFilterProviderInterface|NULL $profile
+   * @param \Drupal\lingotek\LingotekFilterProviderInterface|null $profile
    *   A filter provider.
    *
    * @return string

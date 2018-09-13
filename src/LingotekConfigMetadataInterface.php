@@ -15,7 +15,7 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    * Sets the document id.
    *
    * @param string $document_id
-   *  The document id.
+   *   The document id.
    *
    * @return $this
    */
@@ -30,7 +30,7 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    * Sets the source status.
    *
    * @param array $source_status
-   *  The source status, as an associative array langcode => status_code.
+   *   The source status, as an associative array langcode => status_code.
    *
    * @return $this
    */
@@ -45,7 +45,7 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    * Sets the target status.
    *
    * @param array $target_status
-   *  The target status, as an associative array langcode => status_code.
+   *   The target status, as an associative array langcode => status_code.
    *
    * @return $this
    */
@@ -60,7 +60,7 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    * Sets the hash of the uploaded document.
    *
    * @param string $hash
-   *  The hash of the uploaded document.
+   *   The hash of the uploaded document.
    *
    * @return $this
    */
@@ -75,7 +75,7 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
    * Sets the job ID of the uploaded document.
    *
    * @param string $job_id
-   *  The job ID of the uploaded document.
+   *   The job ID of the uploaded document.
    *
    * @return $this
    */

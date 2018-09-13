@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Lingotek.
- */
-
 namespace Drupal\lingotek;
 
 use Drupal\lingotek\Exception\LingotekApiException;
@@ -15,10 +10,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
-/*
+/**
  * The connecting class between Drupal and Lingotek
  */
-
 class Lingotek implements LingotekInterface {
 
   use UrlGeneratorTrait;
@@ -105,13 +99,13 @@ class Lingotek implements LingotekInterface {
   }
 
   public function getResources($force = FALSE) {
-    return array(
+    return [
         'community' => $this->getCommunities($force),
         'project' => $this->getProjects($force),
         'vault' => $this->getVaults($force),
         'workflow' => $this->getWorkflows($force),
-        'filter' => $this->getFilters($force)
-    );
+        'filter' => $this->getFilters($force),
+    ];
   }
 
   public function getDefaults() {
@@ -151,22 +145,22 @@ class Lingotek implements LingotekInterface {
   /**
   * {@inheritdoc}
   */
-  public function getFilters($force = FALSE){
+  public function getFilters($force = FALSE) {
     return $this->getResource('account.resources.filter', 'getFilters', $force);
   }
 
   public function setProjectCallBackUrl($project_id, $callback_url) {
-    $args = array(
+    $args = [
       'format' => 'JSON',
       'callback_url' => $callback_url,
-    );
+    ];
 
     $response = $this->api->setProjectCallBackUrl($project_id, $args);
 
     if ($response->getStatusCode() == Response::HTTP_NO_CONTENT) {
       return TRUE;
     }
-    //TODO: Log item
+    // TODO: Log item
     return FALSE;
   }
 
@@ -195,13 +189,13 @@ class Lingotek implements LingotekInterface {
     }
     // Handle adding site defaults to the upload here, and leave
     // the handling of the upload call itself to the API.
-    $defaults = array(
+    $defaults = [
       'format' => 'JSON',
       'project_id' => $this->get('default.project'),
       'fprm_id' => $this->lingotekFilterManager->getFilterId($profile),
       'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-    );
+    ];
     $metadata = $this->getIntelligenceMetadata($content);
 
     if ($profile !== NULL && $project = $profile->getProject()) {
@@ -247,12 +241,12 @@ class Lingotek implements LingotekInterface {
       $content = ($data === NULL) ? $content : $data;
     }
 
-    $defaults = array(
+    $defaults = [
       'format' => 'JSON',
       'fprm_id' => $this->lingotekFilterManager->getFilterId($profile),
       'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
-    );
+    ];
 
     $metadata = $this->getIntelligenceMetadata($content);
     $args = array_merge($metadata, $defaults);
@@ -279,7 +273,7 @@ class Lingotek implements LingotekInterface {
    * Pulls the Intelligence Metadata from the Lingotek Metadata and returns it.
    *
    * @param array $data
-   *    The structure of a document content.
+   *   The structure of a document content.
    *
    * @return array
    */
@@ -388,7 +382,6 @@ class Lingotek implements LingotekInterface {
     return $modified_date;
   }
 
-
   public function getDocumentStatus($doc_id) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
@@ -435,10 +428,11 @@ class Lingotek implements LingotekInterface {
   }
 
   public function getDocumentTranslationStatuses($doc_id) {
-    $statuses = array();
+    $statuses = [];
     try {
       $response = $this->api->getDocumentTranslationStatuses($doc_id);
-    } catch (LingotekApiException $e) {
+    }
+    catch (LingotekApiException $e) {
       // No targets found for this doc
       return $statuses;
     }
@@ -464,39 +458,14 @@ class Lingotek implements LingotekInterface {
     return FALSE;
   }
 
-  public function downloadDocumentContent($doc_id){
+  public function downloadDocumentContent($doc_id) {
     $response = $this->api->getDocumentContent($doc_id);
     return $response;
   }
 
-  // Added for importing all documents
-  /*
-   * get all documents
-   *
-   * @since 0.1
-   */
-  public function downloadDocuments($args = array()) {
+  public function downloadDocuments($args = []) {
     $response = $this->api->getDocuments($args);
     return $response;
-  }
-
-  // Added for importing all documents
-  /*
-   * get specific document content
-   *
-   * @since 0.1
-   *
-   * @param string $id document id
-   * @return string
-   */
-  public function getDocumentContent($doc_id) {
-    $response = $this->get($this->api_url . '/document/' . $doc_id . '/content');
-
-    if (!is_wp_error($response) && 200 == wp_remote_retrieve_response_code($response)) {
-      $content = wp_remote_retrieve_body( $response );
-    }
-
-    return $content;
   }
 
   /**
@@ -512,20 +481,9 @@ class Lingotek implements LingotekInterface {
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
    *   A redirect response object that may be returned by any controller.
    */
-  public function redirect($route_name, array $route_parameters = array(), $status = 302) {
+  public function redirect($route_name, array $route_parameters = [], $status = 302) {
     $url = $this->url($route_name, $route_parameters, ['absolute' => TRUE]);
     return new RedirectResponse($url, $status);
-  }
-
-  public static function d($data, $label = NULL, $die = FALSE) {
-    echo '<pre style="background: #f3f3f3; color: #000">';
-    if (is_string($label)) {
-      echo '<h1>' . $label . '</h1>';
-    }
-    echo '</pre>';
-    if ($die || is_bool($label) && $label) {
-      die();
-    }
   }
 
 }

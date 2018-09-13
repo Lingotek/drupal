@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekContentTranslationService.
- */
-
 namespace Drupal\lingotek;
 
 use Drupal\Component\Utility\SortArray;
@@ -33,7 +28,6 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * The Lingotek interface
    *
-   * @var \Drupal\lingotek\LingotekInterface
    * @var \Drupal\lingotek\LingotekInterface
    */
   protected $lingotek;
@@ -210,7 +204,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     foreach ($translation_statuses as $lingotek_locale => $progress) {
       $drupal_language = $this->languageLocaleMapper->getConfigurableLanguageForLocale($lingotek_locale);
       if ($drupal_language == NULL) {
-        continue;// languages existing in TMS, but not configured on Drupal
+        // Language existing in TMS, but not configured on Drupal.
+        continue;
       }
       $langcode = $drupal_language->id();
       $current_target_status = $statuses[$langcode];
@@ -324,7 +319,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       foreach ($metadata->translation_status->getIterator() as $delta => $value) {
         if ($value->language == $langcode) {
           $value->value = $status;
-          $set = true;
+          $set = TRUE;
         }
       }
     }
@@ -392,7 +387,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       Lingotek::STATUS_READY,
     ];
 
-    foreach($target_languages as $langcode => $language) {
+    foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
         if (in_array($current_status, $to_change)) {
           $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
@@ -445,8 +440,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $visited[$entity->bundle()][] = $entity->id();
     $entity_type = $entity->getEntityType();
     $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
-    $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityManager->getFieldStorageDefinitions($entity_type->id()) : array();
-    $translatable_fields = array();
+    $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityManager->getFieldStorageDefinitions($entity_type->id()) : [];
+    $translatable_fields = [];
     // We need to include computed fields, as we may have a URL alias.
     foreach ($entity->getFields(TRUE) as $field_name => $definition) {
       if ($this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $field_name)
@@ -457,12 +452,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $default_display = entity_get_display($entity->getEntityTypeId(), $entity->bundle(), 'default');
     if ($default_display !== NULL) {
-      uksort($translatable_fields, function($a, $b) use ($default_display) {
+      uksort($translatable_fields, function ($a, $b) use ($default_display) {
         return SortArray::sortByKeyString($default_display->getComponent($a), $default_display->getComponent($b), 'weight');
       });
     }
 
-    $data = array();
+    $data = [];
     $source_entity = $entity->getUntranslated();
     foreach ($translatable_fields as $k => $definition) {
       // If there is only one relevant attribute, upload it.
@@ -684,7 +679,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $languages = [];
     if ($document_id = $this->getDocumentId($entity)) {
       $target_languages = $this->languageManager->getLanguages();
-      $target_languages = array_filter($target_languages, function(LanguageInterface $language) {
+      $target_languages = array_filter($target_languages, function (LanguageInterface $language) {
         $configLanguage = ConfigurableLanguage::load($language->getId());
         return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
       });
@@ -729,25 +724,21 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     $source_data = $this->getSourceData($entity);
     $extended_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
-    switch ($profile->getAppendContentTypeToTitle()) {
-      default:
-      case 'global_setting': {
-        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
-          $document_name = $extended_name;
-        }
-        else {
-          $document_name = $entity->label();
-        }
-        break;
-      }
-      case 'yes': {
+
+    $profile_preference = $profile->getAppendContentTypeToTitle();
+    $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
+    switch ($profile_preference) {
+      case 'yes':
         $document_name = $extended_name;
         break;
-      }
-      case 'no': {
+      case 'no':
         $document_name = $entity->label();
         break;
-      }
+      case 'global_setting':
+        $document_name = $global_preference ? $extended_name : $entity->label();
+        break;
+      default:
+        $document_name = $extended_name;
     }
 
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
@@ -857,28 +848,22 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $document_id = $this->getDocumentId($entity);
     $url = $entity->hasLinkTemplate('canonical') ? $entity->toUrl()->setAbsolute(TRUE)->toString() : NULL;
     $extended_name = $entity->bundle() . ' (' . $entity->getEntityTypeId() . '): ' . $entity->label();
-    switch ($profile->getAppendContentTypeToTitle()) {
-      default:
-      case 'global_setting': {
-        if ($this->lingotekConfiguration->getPreference('append_type_to_title')) {
-          $document_name = $extended_name;
-        }
-        else {
-          $document_name = $entity->label();
-        }
-        break;
-      }
-      case 'yes': {
+    $profile_preference = $profile->getAppendContentTypeToTitle();
+    $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
+    switch ($profile_preference) {
+      case 'yes':
         $document_name = $extended_name;
         break;
-      }
-      case 'no': {
+      case 'no':
         $document_name = $entity->label();
         break;
-      }
+      case 'global_setting':
+        $document_name = $global_preference ? $extended_name : $entity->label();
+        break;
+      default:
+        $document_name = $extended_name;
     }
 
- 
     // Allow other modules to alter the data before is uploaded.
     \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_document_upload', [&$source_data, &$entity, &$url]);
 
@@ -903,7 +888,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return FALSE;
   }
 
-  public function downloadDocuments(ContentEntityInterface &$entity){
+  public function downloadDocuments(ContentEntityInterface &$entity) {
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
     if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
@@ -980,16 +965,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     return FALSE;
   }
 
-  public function downloadDocumentContent($document_id){
-      try {
-        $data = $this->lingotek->downloadDocumentContent($document_id);
-      }
-      catch (LingotekApiException $exception) {
-        // TODO: log issue
-        return FALSE;
-      }
-      return $data;
+  public function downloadDocumentContent($document_id) {
+    try {
+      $data = $this->lingotek->downloadDocumentContent($document_id);
     }
+    catch (LingotekApiException $exception) {
+      // TODO: log issue
+      return FALSE;
+    }
+    return $data;
+  }
 
   /**
    * {@inheritdoc}
@@ -1008,7 +993,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     $doc_id = $this->getDocumentId($entity);
     $metadata = $entity->lingotek_metadata->entity;
-    if ($metadata !== NULL){
+    if ($metadata !== NULL) {
       $metadata->delete();
     }
   }
@@ -1035,12 +1020,12 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * Loads the correct revision is loaded from the database, bypassing caches.
    *
-   * @param ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity we want to load a revision from.
-   * @param int|NULL $revision
+   * @param int|null $revision
    *   The revision id. NULL if we don't know it.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The wanted revision of the entity.
    */
   protected function loadUploadedRevision(ContentEntityInterface $entity, $revision = NULL) {
@@ -1054,7 +1039,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // This may come from the uploaded data, but in case we didn't have it, we
       // have to infer using the timestamp.
       if ($revision !== NULL) {
-         $the_revision = entity_revision_load($type, $revision);
+        $the_revision = entity_revision_load($type, $revision);
       }
       elseif ($revision === NULL && $entity->hasField('revision_timestamp')) {
         // Let's find the better revision based on the timestamp.
@@ -1079,13 +1064,13 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   protected function getClosestRevisionToTimestamp(ContentEntityInterface &$entity, $timestamp) {
     $entity_id = $entity->id();
 
-    $query= \Drupal::database()->select($entity->getEntityType()->getRevisionDataTable(), 'nfr');
+    $query = \Drupal::database()->select($entity->getEntityType()->getRevisionDataTable(), 'nfr');
     $query->fields('nfr', [$entity->getEntityType()->getKey('revision')]);
     $query->addJoin('INNER', $entity->getEntityType()->getRevisionTable(), 'nr',
         'nfr.vid = nr.vid and nfr.nid = nr.nid and nfr.langcode = nr.langcode'
       );
-    $query->condition('nfr.'.$entity->getEntityType()->getKey('id'), $entity_id);
-    $query->condition('nfr.'.$entity->getEntityType()->getKey('langcode'), $entity->language()->getId());
+    $query->condition('nfr.' . $entity->getEntityType()->getKey('id'), $entity_id);
+    $query->condition('nfr.' . $entity->getEntityType()->getKey('langcode'), $entity->language()->getId());
     $query->condition('nr.revision_timestamp', $timestamp, '<');
     $query->orderBy('nfr.changed', 'DESC');
     $query->range(0, 1);
@@ -1111,19 +1096,19 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // we check if we have a valid revision in the response, and if not, we
       // check the date of the uploaded document.
 
-      /** @var ContentEntityInterface $entity */
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
       $revision = (isset($data['_lingotek_metadata']) && isset($data['_lingotek_metadata']['_entity_revision'])) ? $data['_lingotek_metadata']['_entity_revision'] : NULL;
       $revision = $this->loadUploadedRevision($entity, $revision);
 
       // Initialize the translation on the Drupal side, if necessary.
-      /** @var ContentEntityInterface $translation */
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $translation */
       if (!$entity->hasTranslation($langcode)) {
         $entity->addTranslation($langcode, $revision->toArray());
       }
       $translation = $entity->getTranslation($langcode);
 
       foreach ($data as $name => $field_data) {
-        if (strpos($name, '_') === 0 ) {
+        if (strpos($name, '_') === 0) {
           // Skip special fields underscored.
           break;
         }
@@ -1161,7 +1146,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                     $this->saveTargetData($embedded_entity, $langcode, $field_item);
                   }
                   else {
-                    \Drupal::logger('lingotek')->warning($this->t('Field %field not saved as it\'s referenced entity is not translatable by Lingotek', ['%field' => $name]));
+                    \Drupal::logger('lingotek')->warning($this->t('Field %field not saved as its referenced entity is not translatable by Lingotek', ['%field' => $name]));
                   }
                 }
                 elseif ($embedded_entity instanceof ConfigEntityInterface) {
@@ -1277,9 +1262,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
       $status_field = $entity->getEntityType()->getKey('status');
       $status_field_definition = $entity->getFieldDefinition($status_field);
-      if ($status_field_definition !== NULL && $status_field_definition->isTranslatable()){
+      if ($status_field_definition !== NULL && $status_field_definition->isTranslatable()) {
         $status_setting = $this->lingotekConfiguration->getPreference('target_download_status');
-        if ($status_setting !== "same-as-source" ){
+        if ($status_setting !== "same-as-source") {
           $status_value = ($status_setting === 'published') ? NODE_PUBLISHED : NODE_NOT_PUBLISHED;
           $translation->set($status_field, $status_value);
         }
@@ -1295,7 +1280,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $translation->save();
 
       return $entity;
-    } catch (EntityStorageException $storage_exception) {
+    }
+    catch (EntityStorageException $storage_exception) {
       $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_ERROR);
       throw new LingotekContentEntityStorageException($entity, $storage_exception, $storage_exception->getMessage());
     }
@@ -1358,7 +1344,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $data['_lingotek_metadata']['_intelligence']['external_document_id'] = $entity->id();
         $data['_lingotek_metadata']['_intelligence']['content_type'] = $entity->getEntityTypeId() . ' - ' . $entity->bundle();
 
-        //Check if we have permission to send these
+        // Check if we have permission to send these
         if ($intelligenceService->getBaseDomainPermission()) {
           $data['_lingotek_metadata']['_intelligence']['domain'] = $domain;
         }

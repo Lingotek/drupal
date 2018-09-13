@@ -114,7 +114,6 @@ interface LingotekInterface {
    */
   public function addTarget($doc_id, $locale, LingotekProfileInterface $profile = NULL);
 
-
   public function getDocumentStatus($doc_id);
 
   /**
@@ -137,12 +136,13 @@ interface LingotekInterface {
    *   The locale we want to know the translation status.
    *
    * @return bool|int
-   *  Returns TRUE if the document translation is completed. FALSE if it was not
-   *  requested. The percentage if it's still in progress.
+   *   Returns TRUE if the document translation is completed. FALSE if it was not
+   *   requested. The percentage if it's still in progress.
    */
   public function getDocumentTranslationStatus($doc_id, $locale);
 
   public function getDocumentTranslationStatuses($doc_id);
+
   public function downloadDocument($doc_id, $locale);
 
   /**

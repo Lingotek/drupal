@@ -68,7 +68,7 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
     foreach ($mappers as $plugin_id => $mapper) {
       $config_profile = $this->lingotekConfiguration->getConfigProfile($plugin_id, FALSE);
       if ($config_profile !== NULL && $config_profile->id() === $profile->id()) {
-        $used |=  LingotekProfileUsageInterface::USED_BY_CONFIG;
+        $used |= LingotekProfileUsageInterface::USED_BY_CONFIG;
       }
     }
 
@@ -87,7 +87,7 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
       foreach ($bundles as $bundle_id => $bundle_definition) {
         $config_profile = $this->lingotekConfiguration->getDefaultProfileId($entity_type_id, $bundle_id);
         if ($config_profile === $profile->id()) {
-          $used |=  LingotekProfileUsageInterface::USED_BY_SETTINGS;
+          $used |= LingotekProfileUsageInterface::USED_BY_SETTINGS;
         }
       }
     }
@@ -96,4 +96,3 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
   }
 
 }
-

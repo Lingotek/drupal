@@ -1,15 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekConfigurationServiceInterface
- */
-
 namespace Drupal\lingotek;
+
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\language\ConfigurableLanguageInterface;
-use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
  * Defines service for accessing the Lingotek configuration.
@@ -37,7 +32,6 @@ interface LingotekConfigurationServiceInterface {
    *   TRUE if the specified bundle is configured for Lingotek translation.
    *   If no bundle is provided returns TRUE if at least one of the entity
    *   bundles is translatable.
-   *
    */
   public function isEnabled($entity_type_id, $bundle = NULL);
 
@@ -64,7 +58,6 @@ interface LingotekConfigurationServiceInterface {
    *
    * @returns string
    *   The profile id.
-   *
    */
   public function getConfigDefaultProfileId($plugin_id, $provide_default = TRUE);
 
@@ -79,7 +72,6 @@ interface LingotekConfigurationServiceInterface {
    *
    * @returns string
    *   The profile id.
-   *
    */
   public function getConfigEntityDefaultProfileId($plugin_id, $provide_default = TRUE);
 
@@ -93,7 +85,6 @@ interface LingotekConfigurationServiceInterface {
    *
    * @returns string
    *   The profile id.
-   *
    */
   public function getDefaultProfileId($entity_type_id, $bundle);
 
@@ -126,7 +117,7 @@ interface LingotekConfigurationServiceInterface {
   /**
    * Determines the default Lingotek profile for the given entity.
    *
-   * @param ConfigEntityInterface $entity
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity.
    * @param bool $provide_default
    *   If TRUE, and the entity does not have a profile, will retrieve the default
@@ -140,7 +131,7 @@ interface LingotekConfigurationServiceInterface {
   /**
    * Determines the default Lingotek profile for the given entity.
    *
-   * @param ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    * @param bool $provide_default
    *   If TRUE, and the entity does not have a profile, will retrieve the default
@@ -154,7 +145,7 @@ interface LingotekConfigurationServiceInterface {
   /**
    * Sets the default Lingotek profile for the given entity.
    *
-   * @param ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity.
    * @param string $profile_id
    *   The profile id.
@@ -245,14 +236,14 @@ interface LingotekConfigurationServiceInterface {
   /**
    * Determines if remote documents must be deleted after disassociation.
    *
-   * @return boolean
+   * @return bool
    */
   public function mustDeleteRemoteAfterDisassociation();
 
   /**
    * Sets if remote documents must be deleted after disassociation.
    *
-   * @param boolean $delete
+   * @param bool $delete
    *   TRUE if remote documents must be deleted, FALSE otherwise.
    */
   public function setDeleteRemoteAfterDisassociation($delete);
@@ -275,7 +266,6 @@ interface LingotekConfigurationServiceInterface {
    *   The preference value.
    */
   public function setPreference($preference_id, $value);
-
 
   /**
    * Checks if a language is enabled in the Lingotek interface.

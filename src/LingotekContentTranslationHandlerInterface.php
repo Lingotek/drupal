@@ -1,11 +1,6 @@
 <?php
 
-/**
- * Contains \Drupal\lingotek\LingotekContentTranslationHandlerInterface.
- */
-
 namespace Drupal\lingotek;
-
 
 /**
  * Interface for providing Lingotek content translation.

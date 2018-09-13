@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\content_translation\ContentTranslationHandler.
- */
-
 namespace Drupal\lingotek;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -79,7 +74,7 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
   }
 
   public function getFieldDefinitions() {
-    $definitions = array();
+    $definitions = [];
 
     // ToDo: Remove these when possible. See https://www.drupal.org/node/2859665
     // We need to keep these until we can purge data.

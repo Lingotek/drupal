@@ -1,11 +1,6 @@
 <?php
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekSetupTrait.
- */
 
 namespace Drupal\lingotek;
-use Drupal\Core\Routing\LinkGeneratorTrait;
 
 /**
  * Useful methods for checking if Lingotek is already setup.
@@ -22,7 +17,7 @@ trait LingotekSetupTrait {
   /**
    * Verify the Lingotek Translation module has been properly initialized.
    *
-   * @return mixed Symfony\Component\HttpFoundation\RedirectResponse or FALSE
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|false
    *   A redirect response object, or FALSE if setup is complete.
    */
   protected function checkSetup() {

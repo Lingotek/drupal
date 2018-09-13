@@ -35,8 +35,8 @@ interface LingotekProfileUsageInterface {
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   The profile being checked.
    * @return int
-   *  Bitwise flag. Can include LingotekProfileUsageInterface::USED_BY_CONTENT
-   *  or LingotekProfileUsageInterface::UNUSED.
+   *   Bitwise flag. Can include LingotekProfileUsageInterface::USED_BY_CONTENT
+   *   or LingotekProfileUsageInterface::UNUSED.
    */
   public function isUsedByContent(LingotekProfileInterface $profile);
 
@@ -46,8 +46,8 @@ interface LingotekProfileUsageInterface {
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   The profile being checked.
    * @return int
-   *  Bitwise flag. Can include LingotekProfileUsageInterface::USED_BY_CONFIG or
-   *  LingotekProfileUsageInterface::UNUSED.
+   *   Bitwise flag. Can include LingotekProfileUsageInterface::USED_BY_CONFIG or
+   *   LingotekProfileUsageInterface::UNUSED.
    */
   public function isUsedByConfig(LingotekProfileInterface $profile);
 
@@ -57,8 +57,8 @@ interface LingotekProfileUsageInterface {
    * @param \Drupal\lingotek\LingotekProfileInterface $profile
    *   The profile being checked.
    * @return int
-   *  Bitwise flag. Can include LingotekProfileUsageInterface::USED_BY_SETTINGS
-   *  or LingotekProfileUsageInterface::UNUSED.
+   *   Bitwise flag. Can include LingotekProfileUsageInterface::USED_BY_SETTINGS
+   *   or LingotekProfileUsageInterface::UNUSED.
    */
   public function isUsedByContentSettings(LingotekProfileInterface $profile);
 

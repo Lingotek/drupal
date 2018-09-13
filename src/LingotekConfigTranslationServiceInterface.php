@@ -1,18 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekConfigTranslationServiceInterface.
- */
-
 namespace Drupal\lingotek;
-use Drupal\config_translation\ConfigEntityMapper;
-use Drupal\config_translation\ConfigMapperInterface;
-use Drupal\config_translation\ConfigMapperManagerInterface;
+
 use Drupal\config_translation\ConfigNamesMapper;
-use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
  * Service for managing Lingotek configuration translations.
@@ -84,7 +75,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Gets the source status of the given entity.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which status we want to check.
    *
    * @return int
@@ -95,19 +86,19 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Sets the translation status of a given entity.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek class constants.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function setSourceStatus(ConfigEntityInterface &$entity, $status);
 
   /**
    * Gets the translation status of a given entity translation for a locale.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which status we want to get.
    * @param string $locale
    *   Lingotek translation language which we want to get.
@@ -120,7 +111,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Gets the translation status of a given entity translation for all locales.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which statuses we want to get.
    *
    * @return array
@@ -131,7 +122,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Sets the translation status of a given entity translation for a locale.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which status we want to change.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
@@ -140,39 +131,39 @@ interface LingotekConfigTranslationServiceInterface {
    * @param bool $save
    *   If FALSE, the entity is not saved yet. Defaults to TRUE.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function setTargetStatus(ConfigEntityInterface &$entity, $locale, $status, $save = TRUE);
 
   /**
    * Sets the translation status of all translations of a given entity.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek constants.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function setTargetStatuses(ConfigEntityInterface &$entity, $status);
 
   /**
    * Marks the translation status as dirty if they exist.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity which status we want to change.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function markTranslationsAsDirty(ConfigEntityInterface &$entity);
 
   /**
    * Checks if the source entity data has changed from last time we uploaded it.
    *
-   * @param ConfigEntityInterface &$entity
+   * @param \Drupal\Core\Config\ConfigEntityInterface &$entity
    *   The entity being checked
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the entity has changed, false if not.
    */
   public function hasEntityChanged(ConfigEntityInterface &$entity);
@@ -198,7 +189,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    */
   public function uploadDocument(ConfigEntityInterface $entity, $job_id = NULL);
@@ -209,7 +200,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity which status we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is uploaded succesfully.
    */
   public function checkSourceStatus(ConfigEntityInterface &$entity);
@@ -222,7 +213,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    */
   public function updateDocument(ConfigEntityInterface &$entity, $job_id = NULL);
@@ -253,7 +244,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to download.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is checked successfully.
    */
   public function checkTargetStatus(ConfigEntityInterface &$entity, $locale);
@@ -264,7 +255,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
    *   The entity which status we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is checked successfully.
    */
   public function checkTargetStatuses(ConfigEntityInterface &$entity);
@@ -277,7 +268,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to download.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadDocument(ConfigEntityInterface $entity, $locale);
@@ -307,7 +298,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Gets the document id in the Lingotek platform for a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which we want the document id.
    *
    * @return string
@@ -318,7 +309,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Sets the document id in the Lingotek platform for a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which we want to set the document id.
    * @param string $document_id
    *   The document id.
@@ -331,7 +322,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Gets the source status of a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which status we want to change.
    *
    * @return int
@@ -342,19 +333,19 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Sets the translation status of a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek class constants.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function setConfigSourceStatus(ConfigNamesMapper $mapper, $status);
 
   /**
    * Gets the translation status of a given entity translation for all locales.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which status we want to get.
    *
    * @return array
@@ -365,7 +356,7 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Gets the translation status of a given entity translation for a locale.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which status we want to get.
    * @param string $locale
    *   Lingotek translation language which we want to get.
@@ -378,33 +369,33 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Sets the translation status of all translations of a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which status we want to change.
    * @param string $locale
    *   Lingotek translation language which we want to get.
    * @param int $status
    *   Status of the translation. Use Lingotek constants.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function setConfigTargetStatus(ConfigNamesMapper $mapper, $locale, $status);
 
   /**
    * Sets the translation status of all translations of a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek constants.
    *
-   * @return ConfigEntityInterface
+   * @return \Drupal\Core\Config\ConfigEntityInterface
    */
   public function setConfigTargetStatuses(ConfigNamesMapper $mapper, $status);
 
   /**
    * Gets the translation source locale of a given entity.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which we want to get the source locale.
    *
    * @return string
@@ -418,7 +409,7 @@ interface LingotekConfigTranslationServiceInterface {
    * Only those fields that have actual translatable text, and have marked for upload will
    * be included.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
    *   The entity which we want the source data.
    *
    * @return mixed
@@ -433,7 +424,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    */
   public function uploadConfig($mapper_id, $job_id = NULL);
@@ -444,7 +435,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $mapper_id
    *   The entity which status we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is uploaded successfully.
    */
   public function checkConfigSourceStatus($mapper_id);
@@ -475,7 +466,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is available for download.
    */
   public function checkConfigTargetStatus($mapper_id, $locale);
@@ -486,7 +477,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $mapper_id
    *   The entity which status we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is available for download.
    */
   public function checkConfigTargetStatuses($mapper_id);
@@ -499,7 +490,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to modify.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadConfig($mapper_id, $locale);
@@ -509,7 +500,6 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param string $mapper_id
    *   The entity being uploaded.
-   *
    */
   public function deleteConfigDocument($mapper_id);
 
@@ -518,7 +508,6 @@ interface LingotekConfigTranslationServiceInterface {
    *
    * @param string $mapper_id
    *   The entity being uploaded.
-   *
    */
   public function deleteConfigMetadata($mapper_id);
 
@@ -530,7 +519,7 @@ interface LingotekConfigTranslationServiceInterface {
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    */
   public function updateConfig($mapper_id, $job_id = NULL);
@@ -538,10 +527,10 @@ interface LingotekConfigTranslationServiceInterface {
   /**
    * Marks the translation status as dirty if they exist.
    *
-   * @param ConfigNamesMapper $mapper
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper_id
    *   The mapper which status we want to change.
    *
-   * @return ConfigNamesMapper
+   * @return \Drupal\config_translation\ConfigNamesMapper
    */
   public function markConfigTranslationsAsDirty(ConfigNamesMapper $mapper_id);
 

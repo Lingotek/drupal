@@ -1,11 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\LingotekContentTranslationServiceInterface.
- */
-
 namespace Drupal\lingotek;
+
 use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
@@ -16,10 +12,10 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Checks the source is uploaded correctly.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is uploaded successfully.
    */
   public function checkSourceStatus(ContentEntityInterface &$entity);
@@ -27,7 +23,7 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Gets the source status of the given entity.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to check.
    *
    * @return int
@@ -38,33 +34,32 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Sets the translation status of a given entity.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek class constants.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    */
   public function setSourceStatus(ContentEntityInterface &$entity, $status);
 
   /**
    * Gets the current status of all the target translations.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to check.
-   *
    */
   public function checkTargetStatuses(ContentEntityInterface &$entity);
 
   /**
    * Gets the current status of the target translation.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to check.
    * @param string $langcode
    *   Translation language we want to check.
    *
-   * @return boolean
+   * @return bool
    *   True if the entity is uploaded succesfully.
    */
   public function checkTargetStatus(ContentEntityInterface &$entity, $langcode);
@@ -72,7 +67,7 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Gets the translation status of a given entity translation for a locale.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to get.
    * @param string $locale
    *   Lingotek translation language which we want to get.
@@ -85,7 +80,7 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Gets the translation statuses of a given entity translation for all locales.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to get.
    * @return array
    *   The statuses of the target translation keyed by langcode
@@ -96,7 +91,7 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Sets the translation status of a given entity translation for a locale.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to change.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
@@ -105,29 +100,29 @@ interface LingotekContentTranslationServiceInterface {
    * @param bool $save
    *   If FALSE, the entity is not saved yet. Defaults to TRUE.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    */
   public function setTargetStatus(ContentEntityInterface &$entity, $locale, $status, $save = TRUE);
 
   /**
    * Sets the translation status of all translations of a given entity.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to change.
    * @param int $status
    *   Status of the translation. Use Lingotek constants.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    */
   public function setTargetStatuses(ContentEntityInterface &$entity, $status);
 
   /**
    * Marks the translation status as dirty if they exist.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to change.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    */
   public function markTranslationsAsDirty(ContentEntityInterface &$entity);
 
@@ -149,7 +144,7 @@ interface LingotekContentTranslationServiceInterface {
    *   The entity which we want to set a document id.
    * @param $doc_id
    *   The document id in the Lingotek platform.
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity.
    */
   public function setDocumentId(ContentEntityInterface &$entity, $doc_id);
@@ -181,7 +176,7 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Updates the entity hash.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being checked
    *
    * @return $this
@@ -194,7 +189,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity being checked
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the entity has changed, false if not.
    */
   public function hasEntityChanged(ContentEntityInterface &$entity);
@@ -202,7 +197,7 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Request a translation for a given entity in the given locale.
    *
-   * @param ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which target we want to add.
    * @param string $locale
    *   Lingotek translation language which we want to modify.
@@ -220,12 +215,12 @@ interface LingotekContentTranslationServiceInterface {
   /**
    * Uploads a document to the Lingotek service.
    *
-   * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being uploaded.
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was uploaded successfully, FALSE if not.
    *
    * @throws \Drupal\lingotek\Exception\LingotekApiException
@@ -240,7 +235,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param string $locale
    *   Lingotek translation language which we want to download.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadDocument(ContentEntityInterface &$entity, $locale);
@@ -251,12 +246,12 @@ interface LingotekContentTranslationServiceInterface {
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity being downloaded.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was downloaded successfully, FALSE if not.
    */
   public function downloadDocuments(ContentEntityInterface &$entity);
 
-    /**
+  /**
    * Resends a document to the translation service.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
@@ -264,7 +259,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param string $job_id
    *   (optional) The job ID that will be associated.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the document was updated successfully, FALSE if not.
    *
    * @throws \Drupal\lingotek\Exception\LingotekApiException
@@ -277,7 +272,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which we want to delete.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity.
    */
   public function deleteDocument(ContentEntityInterface &$entity);
@@ -288,7 +283,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which we want to forget about.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity.
    */
   public function deleteMetadata(ContentEntityInterface &$entity);
@@ -299,7 +294,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param string $document_id
    *   The document id.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    *   The entity with the given document id.
    */
   public function loadByDocumentId($document_id);
@@ -322,7 +317,7 @@ interface LingotekContentTranslationServiceInterface {
    * @param $data
    *   The data being saved.
    *
-   * @return ContentEntityInterface
+   * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the entity which translations are saved.
    */
   public function saveTargetData(ContentEntityInterface &$entity, $locale, $data);
