@@ -77,7 +77,7 @@ class LingotekAccountTest extends BrowserTestBase {
     // Try to navigate to the Dashboard page, and assert we are redirected.
     $this->drupalGet('admin/lingotek/setup/account');
     // Fake the connection to an account in Lingotek.
-    $this->clickLink('Create New Lingotek Account');
+    $this->clickLink('Get started');
     // This will simulate a "cancel" click, so we need to ensure we are back
     // at the same page. We cannot test that we will be redirected, as it's done
     // via js. There is no way on the server to know the hash part of the url.

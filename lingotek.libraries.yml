@@ -16,6 +16,12 @@ lingotek.dashboard:
     - core/drupal
     - core/drupalSettings
 
+lingotek.signup:
+  version: VERSION
+  css:
+    theme:
+      css/lingotek.signup.css: {}
+
 lingotek.icons:
   version: VERSION
   css:

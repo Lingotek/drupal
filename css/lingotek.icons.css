@@ -20,16 +20,3 @@
 .toolbar .toolbar-tray .toolbar-icon.toolbar-icon-lingotek-dashboard.active:before {
   background-image: url("../icons/000000/lingotek-chevron.png");
 }
-
-.button.action-connect {
-  height: 46px;
-  line-height: 44px;
-  vertical-align: baseline;
-  padding: 0 36px;
-  color: #555;
-  border-color: #cccccc;
-  background: #f7f7f7 url("../images/lingotek-icon.png") 15px 15px no-repeat;
-}
-.button.action-connect:hover {
-  background: #f7f7f7 url("../images/lingotek-icon.png") 15px 15px no-repeat;
-}

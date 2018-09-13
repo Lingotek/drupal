@@ -1,0 +1,191 @@
+.lingotek_signup {
+}
+
+.lingotek_signup::after {
+    content: "";
+    background-size: 40%;
+    background-repeat: no-repeat;
+    background-image: url("../images/ltk-badge-orng-gry60x60.svg");
+    background-position: 0px;
+    opacity: 0.25;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    z-index: -1;
+}
+
+
+.lingotek_signup_types {
+    background: rgba(239, 239, 239, 0.35);
+}
+
+.lingotek_signup_box {
+    background: #F8F8F8;
+    border: 1px solid #CCCCCC;
+    width: 30%;
+    padding: 5px;
+    display: block;
+    float: left;
+    min-width: 250px;
+    min-height: 250px;
+    margin: 20px;
+}
+
+    .lingotek_signup_box h3 {
+        background: #F8F8F8;
+        border-bottom: 1px solid #CCCCCC;
+        margin: 0 auto;
+        text-align: center;
+        text-transform: uppercase;
+        padding: 5px;
+    }
+
+    .lingotek_signup_box .lingotek_signup_box_main {
+        padding: 10px;
+        margin: 0 auto;
+        text-align: center;
+        vertical-align: center;
+        min-height: 180px;
+        max-width: 70%;
+    }
+
+    .lingotek_signup_box .lingotek_signup_box_cta {
+        display: block;
+        width: 50%;
+        height: 25px;
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px;
+        text-transform: capitalize;
+        vertical-align: bottom;
+        margin: 0 auto;
+        background-color: #FFFFFF;
+        border: 1px solid #CCCCCC;
+        color: #635E58;
+        min-width: 180px;
+    }
+
+    .lingotek_signup_box .lingotek_signup_box_cta.lingotek_signup_box_main_cta {
+        background-color: #F47920;
+        color: white;
+        font-weight: bold;
+    }
+
+
+#edit-account-types{
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.lingotek_signup_types {
+    background: none;
+}
+
+.lingotek_signup_box {
+    width: 400px;
+    min-width: 95px;
+    min-height: 330px;
+    color: rgba(99,94,88,1);
+    box-shadow: 1px 1px 8px rgba(0,0,0,.2);
+    border:none;
+}
+
+.lingotek_signup_box h3{
+    border-bottom: 1px solid rgba(99,94,88,.2);
+}
+
+
+
+.lingotek_signup_box_main {
+    height: 70%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+.item-list {
+    display: flex;
+    height: 75%;
+    align-items: center;
+    text-align: left;
+}
+
+.lingotek_signup_box .lingotek_signup_box_cta {
+    display: block;
+    width: 50%;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    text-transform: capitalize;
+    vertical-align: bottom;
+    margin: 0 auto;
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    color: #635E58;
+    min-width: 180px;
+}
+
+
+.lingotek_signup_box .lingotek_signup_box_main {
+    padding: 10px;
+    margin: 0 auto;
+    text-align: left;
+    vertical-align: center;
+    min-height: auto;
+    max-width: 100%;
+    font-size: 12pt;
+    line-height: 24pt;
+}
+
+.lingotek_signup_box .lingotek_signup_box_cta {
+    display: block;
+    width: 50%;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    text-transform: capitalize;
+    vertical-align: bottom;
+    margin: 0 auto;
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    color: #635E58;
+    min-width: 180px;
+    width: calc(100% - 48px);
+    font-size: 12pt;
+
+    line-height: 20pt;
+}
+
+#edit-existing-account .lingotek_signup_box_main {
+    text-align: center;
+}
+
+.lingotek_signup::after {
+    content: "";
+    background-size: 40%;
+    background-repeat: no-repeat;
+    background-position: 0px 100px;
+    opacity: 1;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    z-index: -1;
+    font-weight:normal;
+
+}
+
+.lingotek_signup_box .lingotek_signup_box_cta.lingotek_signup_box_main_cta {
+    background-color: #F47920;
+    color: white;
+    font-weight: normal;
+
+}
+
+
+.lingotek_signup_box_cta {
+    box-shadow: 1px 1px 4px rgba(0,0,0,.2);
+}
