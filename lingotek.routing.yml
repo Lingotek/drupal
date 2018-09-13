@@ -35,7 +35,7 @@ lingotek.setup_account:
   path: '/admin/lingotek/setup/account'
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekSetupController::accountPage'
-    _title: 'Lingotek Account Info'
+    _title: 'Connect to Lingotek Account'
   requirements:
     _permission: 'administer lingotek'
 
@@ -43,7 +43,7 @@ lingotek.setup_account_handshake:
   path: '/admin/lingotek/setup/account/handshake'
   defaults:
     _controller: '\Drupal\lingotek\Controller\LingotekSetupController::handshake'
-    _title: 'Lingotek Account Info'
+    _title: 'Connect to Lingotek Account'
   requirements:
     _permission: 'administer lingotek'
 

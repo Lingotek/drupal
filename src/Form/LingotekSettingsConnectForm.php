@@ -66,7 +66,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     ];
     $form['account_types']['existing_account']['title'] = [
       '#prefix' => '<h3>',
-      '#markup' => $this->t('Existing account'),
+      '#markup' => $this->t('Connect existing account'),
       '#suffix' => '</h3>',
     ];
     $form['account_types']['existing_account']['body'] = [
@@ -88,7 +88,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     ];
     $form['account_types']['free_account']['title'] = [
       '#prefix' => '<h3>',
-      '#markup' => $this->t('Free account'),
+      '#markup' => $this->t('Get Free account'),
       '#suffix' => '</h3>',
     ];
     $form['account_types']['free_account']['body'] = [
@@ -116,7 +116,7 @@ class LingotekSettingsConnectForm extends LingotekConfigFormBase {
     ];
     $form['account_types']['enterprise_account']['title'] = [
       '#prefix' => '<h3>',
-      '#markup' => $this->t('Enterprise account'),
+      '#markup' => $this->t('Get Enterprise account'),
       '#suffix' => '</h3>',
     ];
     $form['account_types']['enterprise_account']['body'] = [
