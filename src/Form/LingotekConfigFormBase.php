@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekConfigFormBase.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\lingotek\LingotekInterface;
@@ -40,8 +35,7 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
   }
 
   public function getEditableConfigNames() {
-    return [
-    ];
+    return [];
   }
 
 }

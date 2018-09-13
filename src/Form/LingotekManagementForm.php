@@ -92,7 +92,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $uploadFilter = $temp_store->get('upload_status');
     $profileFilter = $temp_store->get('profile');
 
-    //Default queries
+    // Default queries
     if ($has_bundles && $bundleFilter) {
       if (!in_array("", $bundleFilter, TRUE)) {
         $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter, 'IN');
@@ -265,7 +265,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       '#ajax' => [
         'callback' => [$this, 'itemsPerPageCallback'],
         'event' => 'change',
-      ]
+      ],
     ];
   }
 
@@ -291,10 +291,10 @@ class LingotekManagementForm extends LingotekManagementFormBase {
    */
   protected function getFilterKeys() {
     $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
-    //We need specific identifiers for default and advanced filters since the advanced filters bundle is unique.
-    $filtersKeys = [['wrapper', 'label'], ['wrapper','bundle'], ['wrapper', 'job'], ['advanced_options','document_id'], ['advanced_options','entity_id'], ['advanced_options','profile'], ['advanced_options','source_language'], ['advanced_options','upload_status']];
+    // We need specific identifiers for default and advanced filters since the advanced filters bundle is unique.
+    $filtersKeys = [['wrapper', 'label'], ['wrapper', 'bundle'], ['wrapper', 'job'], ['advanced_options', 'document_id'], ['advanced_options', 'entity_id'], ['advanced_options', 'profile'], ['advanced_options', 'source_language'], ['advanced_options', 'upload_status']];
     if ($groupsExists) {
-      $filtersKeys[] = ['wrapper','group'];
+      $filtersKeys[] = ['wrapper', 'group'];
     }
     return $filtersKeys;
   }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsTabConfigurationForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\config_translation\ConfigEntityMapper;
@@ -41,14 +36,14 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
   /**
    * The Lingotek configuration service.
    *
-   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotekConfig
+   * @var \Drupal\lingotek\LingotekConfigurationServiceInterface
    */
   protected $lingotekConfig;
 
   /**
    * The Lingotek config translation service.
    *
-   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translationService
+   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface
    */
   protected $translationService;
 
@@ -101,37 +96,37 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
     return 'lingotek.settings_tab_configuration_form';
   }
 
-  /** 
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $profile_options = $this->lingotekConfig->getProfileOptions();
 
-    $header = array(
+    $header = [
       'enabled' => $this->t('Enable'),
       'type' => $this->t('Configuration Type'),
       'profile' => $this->t('Translation Profile'),
-    );
+    ];
 
-    $table = array(
+    $table = [
       '#type' => 'table',
       '#header' => $header,
       '#empty' => $this->t('No Entries'),
-    );
+    ];
 
     foreach ($this->mappers as $mapper) {
       // We don't want to show config objects, where we only have one instance.
       // Just show config entities.
       if ($mapper instanceof ConfigEntityMapper) {
         $enabled = $this->translationService->isEnabled($mapper->getPluginId());
-        $row = array();
-        $row['enabled'] = array(
+        $row = [];
+        $row['enabled'] = [
           '#type' => 'checkbox',
           '#default_value' => $enabled,
-        );
-        $row['type'] = array(
+        ];
+        $row['type'] = [
           '#markup' => $mapper->getTypeLabel(),
-        );
+        ];
         $row['profile'] = [
           '#type' => 'select',
           '#options' => $this->lingotekConfig->getProfileOptions(),
@@ -142,22 +137,22 @@ class LingotekSettingsTabConfigurationForm extends LingotekConfigFormBase {
     }
     ksort($table);
 
-    $form['config'] = array(
+    $form['config'] = [
       '#type' => 'details',
       '#title' => 'Translate Configuration Types',
-    );
+    ];
 
     $form['config']['table'] = $table;
 
     $form['config']['actions']['#type'] = 'actions';
-    $form['config']['actions']['submit'] = array(
+    $form['config']['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
       '#button_type' => 'primary',
-    );
+    ];
 
-     return $form;
-   }
+    return $form;
+  }
 
   /**
    * {@inheritdoc}

@@ -1,11 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsEditDefaultsForm.
- */
-
 namespace Drupal\lingotek\Form;
+
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -32,13 +28,12 @@ class LingotekSettingsEditDefaultsForm extends LingotekSettingsDefaultsForm {
     // about callback url.
     $config = $this->configFactory()->getEditable('lingotek.settings');
     $form_values = $form_state->getValues();
-    foreach($this->defaults_labels as $key => $label){
-      $config->set('default.'. $key, $form_values[$key]);
+    foreach ($this->defaults_labels as $key => $label) {
+      $config->set('default.' . $key, $form_values[$key]);
     }
     $config->save();
 
     $form_state->setRedirect('lingotek.settings');
   }
-
 
 }

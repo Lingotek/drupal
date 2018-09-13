@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekContentTranslationForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -40,7 +35,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
    *
    * @param \Drupal\lingotek\LingotekInterface $lingotek
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
+   *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config
@@ -74,7 +69,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  function buildForm(array $form, FormStateInterface $form_state, array $build = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, array $build = NULL) {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
 
@@ -89,13 +84,13 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
     $form_state->set('entity', $entity);
     $overview = $build['content_translation_overview'];
-    $form['#title'] = $this->t('Translations of @title', array('@title' => $entity->label()));
+    $form['#title'] = $this->t('Translations of @title', ['@title' => $entity->label()]);
 
-    $form['languages'] = array(
+    $form['languages'] = [
       '#type' => 'tableselect',
       '#header' => $overview['#header'],
-      '#options' => array(),
-    );
+      '#options' => [],
+    ];
 
     $languages = \Drupal::languageManager()->getLanguages();
 
@@ -109,10 +104,10 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
 
       // Buttons for the ENTITY SOURCE LANGUAGE
       // We disable the checkbox for this row.
-      $form['languages'][$langcode] = array(
+      $form['languages'][$langcode] = [
         '#type' => 'checkbox',
         '#disabled' => $source_language == $locale || !$enabled,
-      );
+      ];
 
       if ($source_language == $locale) {
         // Check-Progress button if the source upload status is PENDING.
@@ -166,26 +161,26 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       $form['actions']['#type'] = 'actions';
 
       if ($status_check_needed) {
-        $form['actions']['request'] = array(
+        $form['actions']['request'] = [
           '#type' => 'submit',
           '#value' => $this->t('Check Progress'),
-          '#submit' => array('::submitForm'),
+          '#submit' => ['::submitForm'],
           '#button_type' => 'primary',
-        );
+        ];
       }
       elseif ($targets_ready) {
-        $form['actions']['request'] = array(
+        $form['actions']['request'] = [
           '#type' => 'submit',
           '#value' => $this->t('Download selected translations'),
-          '#submit' => array('::submitForm'),
+          '#submit' => ['::submitForm'],
           '#button_type' => 'primary',
-        );
+        ];
       }
     }
-    $form['fieldset']['entity'] = array(
+    $form['fieldset']['entity'] = [
       '#type' => 'value',
       '#value' => $entity,
-    );
+    ];
 
     return $form;
   }
@@ -193,11 +188,11 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_values = $form_state->getValues();
     $entity = $form_values['entity'];
     $selected_langcodes = $form_values['languages'];
-    $locales = array();
+    $locales = [];
     foreach ($selected_langcodes as $langcode => $selected) {
       if ($selected) {
         $locale = $this->languageLocaleMapper->getLocaleForLangcode($langcode);
@@ -218,61 +213,61 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
     return $found;
   }
 
-  /*
-   * Add an operation to the list of available operations for each language.
-   */
+  /**
+ * Add an operation to the list of available operations for each language.
+ */
   protected function addOperationLink(ContentEntityInterface $entity, array &$option, $name, $path, LanguageInterface $language, $first = FALSE) {
     $operation_col = $this->getOperationColumnId($entity, $option);
     $open_in_window = FALSE;
 
     if (!isset($option[$operation_col]['data']['#links'])) {
-      $option[$operation_col]['data']['#links'] = array();
+      $option[$operation_col]['data']['#links'] = [];
     }
     if (is_string($path)) {
       if (strpos($path, '/admin/lingotek/batch/') === 0) {
         $path = str_replace('/admin/lingotek/batch/', '', $path);
         list($action, $entity_type, $entity_id) = explode('/', $path);
-        $url = Url::fromRoute('lingotek.batch', array(
+        $url = Url::fromRoute('lingotek.batch', [
           'action' => $action,
           'entity_type' => $entity_type,
-          'entity_id' => $entity_id
-        ));
+          'entity_id' => $entity_id,
+        ]);
       }
       elseif (strpos($path, '/admin/lingotek/entity/check_upload/') === 0) {
         $doc_id = str_replace('/admin/lingotek/entity/check_upload/', '', $path);
-        $url = Url::fromRoute('lingotek.entity.check_upload', array('doc_id' => $doc_id));
+        $url = Url::fromRoute('lingotek.entity.check_upload', ['doc_id' => $doc_id]);
       }
       elseif (strpos($path, '/admin/lingotek/entity/add_target/') === 0) {
         $path = str_replace('/admin/lingotek/entity/add_target/', '', $path);
         list($doc_id, $locale) = explode('/', $path);
-        $url = Url::fromRoute('lingotek.entity.request_translation', array(
+        $url = Url::fromRoute('lingotek.entity.request_translation', [
           'doc_id' => $doc_id,
-          'locale' => $locale
-        ));
+          'locale' => $locale,
+        ]);
       }
       elseif (strpos($path, '/admin/lingotek/entity/check_target/') === 0) {
         $path = str_replace('/admin/lingotek/entity/check_target/', '', $path);
         list($doc_id, $locale) = explode('/', $path);
-        $url = Url::fromRoute('lingotek.entity.check_target', array(
+        $url = Url::fromRoute('lingotek.entity.check_target', [
           'doc_id' => $doc_id,
-          'locale' => $locale
-        ));
+          'locale' => $locale,
+        ]);
       }
       elseif (strpos($path, '/admin/lingotek/entity/download/') === 0) {
         $path = str_replace('/admin/lingotek/entity/download/', '', $path);
         list($doc_id, $locale) = explode('/', $path);
-        $url = Url::fromRoute('lingotek.entity.download', array(
+        $url = Url::fromRoute('lingotek.entity.download', [
           'doc_id' => $doc_id,
-          'locale' => $locale
-        ));
+          'locale' => $locale,
+        ]);
       }
       elseif (strpos($path, '/admin/lingotek/workbench/') === 0) {
         $path = str_replace('/admin/lingotek/workbench/', '', $path);
         list($doc_id, $locale) = explode('/', $path);
-        $url = Url::fromRoute('lingotek.workbench', array(
+        $url = Url::fromRoute('lingotek.workbench', [
           'doc_id' => $doc_id,
-          'locale' => $locale
-        ));
+          'locale' => $locale,
+        ]);
         $open_in_window = TRUE;
       }
       else {
@@ -293,10 +288,10 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
       $option[$operation_col]['data']['#links'] += $previous;
     }
     else {
-      $option[$operation_col]['data']['#links'][strtolower($name)] = array(
+      $option[$operation_col]['data']['#links'][strtolower($name)] = [
         'title' => $name,
         'url' => $url,
-      );
+      ];
     }
     if ($open_in_window) {
       $option[$operation_col]['data']['#links'][strtolower($name)]['attributes']['target'] = '_blank';

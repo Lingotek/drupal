@@ -358,7 +358,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
     $keys = $this->getFilterKeys();
     foreach ($keys as $key) {
-      //Reset the filter, no matter if it's under 'wrapper' or 'advanced_filters.'
+      // Reset the filter, no matter if it's under 'wrapper' or 'advanced_filters.'
       $temp_store->delete($key[1]);
     }
   }
@@ -376,8 +376,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
     $keys = $this->getFilterKeys();
     foreach ($keys as $key) {
-      //This sets and gets the values of the specific key. $key[0] can be either 'wrapper' or 'advanced_filters', and $key[1] is the specific filter itself.
-       $temp_store->set($key[1], $form_state->getValue(['filters', $key[0], $key[1]]));
+      // This sets and gets the values of the specific key. $key[0] can be either 'wrapper' or 'advanced_filters', and $key[1] is the specific filter itself.
+      $temp_store->set($key[1], $form_state->getValue(['filters', $key[0], $key[1]]));
     }
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');
@@ -1124,10 +1124,9 @@ abstract class LingotekManagementFormBase extends FormBase {
         '#entity' => $entity,
         '#source_langcode' => $entity->language()->getId(),
         '#statuses' => $statuses,
-      ]
+      ],
     ];
   }
-
 
   /**
    * Gets all the bundles as options.

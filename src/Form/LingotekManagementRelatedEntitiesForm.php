@@ -39,14 +39,16 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    *   The language manager.
    * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
    *   The entity query factory.
+   * @param \Drupal\lingotek\LingotekInterface $lingotek
+   *   The lingotek service.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
-   * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
-   *   The Lingotek content translation service.
+   *   The language-locale mapper.
    * @param \Drupal\content_translation\ContentTranslationManagerInterface $content_translation_manager
    *   The content translation manager.
+   * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
+   *   The Lingotek content translation service.
    * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -97,7 +99,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     $entityTypes = [];
     $entities = [];
     foreach ($values as $type_entity_id) {
-      list($type, $entity_id) = explode(":",$type_entity_id);
+      list($type, $entity_id) = explode(":", $type_entity_id);
       $entityTypes[$type][] = $entity_id;
     }
 
@@ -183,7 +185,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     $rows = [];
     foreach ($entity_list as $entity_type_id => $entities) {
       foreach ($entities as $entity_id => $entity) {
-        $rowId = (string) $entity->getEntityTypeId() . ':' . (String)$entity->id();
+        $rowId = (string) $entity->getEntityTypeId() . ':' . (String) $entity->id();
         $rows[$rowId] = $this->getRow($entity);
         $counter += 1;
       }
@@ -206,7 +208,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     return $row;
   }
 
-    /**
+  /**
    * Gets the key used for persisting filtering options in the temp storage.
    *
    * @return string
@@ -245,4 +247,5 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   protected function getPager() {
     return NULL;
   }
+
 }

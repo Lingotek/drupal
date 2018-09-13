@@ -31,6 +31,7 @@ class LingotekLanguageContentSettingsForm {
   public function __construct(EntityTypeBundleInfoInterface $entity_bundle_info) {
     $this->entityBundleInfo = $entity_bundle_info;
   }
+
   /**
    * Alters the Drupal language content settings form for removing the lingotek
    * fields that we don't want to be enabled for translation.
@@ -49,7 +50,7 @@ class LingotekLanguageContentSettingsForm {
           $bundle_fields = $form['settings'][$entity_type_id][$bundle]['fields'];
           $keys = ['lingotek_metadata', 'lingotek_translation_source'];
           foreach ($keys as $key) {
-            if (key_exists($key, $bundle_fields)) {
+            if (array_key_exists($key, $bundle_fields)) {
               unset($form['settings'][$entity_type_id][$bundle]['fields'][$key]);
             }
           }

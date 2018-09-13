@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekProfileEditForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Form\FormStateInterface;

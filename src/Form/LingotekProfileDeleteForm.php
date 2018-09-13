@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekProfileDeleteForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Entity\EntityDeleteForm;
@@ -77,6 +72,5 @@ class LingotekProfileDeleteForm extends EntityDeleteForm {
 
     $form_state->setRedirectUrl($this->getCancelUrl());
   }
-
 
 }

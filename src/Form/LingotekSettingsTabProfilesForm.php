@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsProfilesForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\Core\Url;
@@ -21,6 +16,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
   protected $profiles;
   protected $profile_names;
   protected $profile_index;
+
   /**
    * {@inheritdoc}
    */
@@ -28,44 +24,44 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     return 'lingotek.settings_tab_profiles_form';
   }
 
-  /** 
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $profiles = \Drupal::entityManager()->getListBuilder('lingotek_profile')->load();
     $this->profile_index = 0;
 
-    $header = array(
+    $header = [
       $this->t('Profile Name'),
       $this->t('Usage'),
       $this->t('Actions'),
-    );
+    ];
 
-    $table = array(
+    $table = [
       '#type' => 'table',
       '#header' => $header,
       '#empty' => $this->t('No Entries'),
-    );
-      
+    ];
+
     foreach ($this->profiles as $profile) {
-      $row = array();
-      $row['profile_name'] = array(
+      $row = [];
+      $row['profile_name'] = [
         '#markup' => $this->t(ucwords($profile['name'])),
-      );
+      ];
       $usage = $this->retrieveUsage($profile);
-      $row['usage'] = array(
+      $row['usage'] = [
         '#markup' => $this->t($usage . ' content types'),
-      );
+      ];
       $row['profile_actions'] = $this->retrieveActions($profile, $usage);
       $table[$profile['name']] = $row;
 
       $this->profile_index++;
     }
 
-    $form['config_parent'] = array(
+    $form['config_parent'] = [
       '#type' => 'details',
       '#title' => $this->t('Translation Profiles'),
-    );
+    ];
 
     $form['config_parent']['table'] = $table;
     $form['config_parent']['add_profile'] = $this->retrieveActions();
@@ -76,11 +72,11 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
   protected function retrieveUsage($profile) {
     $usage = 0;
     $entity_types = $this->lingotek->get('translate.entity');
-    
+
     // Count how many content types are using this $profile
     if (!empty($entity_types)) {
-      foreach($entity_types as $entity_id => $bundles) {
-        foreach($bundles as $bundle) {
+      foreach ($entity_types as $entity_id => $bundles) {
+        foreach ($bundles as $bundle) {
           $profile_choice = $bundle['profile'];
 
           if ($profile_choice == $profile['id']) {
@@ -89,7 +85,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
         }
       }
     }
-    
+
     return $usage;
   }
 
@@ -98,9 +94,9 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
     if ($profile) {
       $title = t('Edit');
       $url = Url::fromRoute('lingotek.settings_profile', [
-        'profile_choice' => $profile, 
+        'profile_choice' => $profile,
         'profile_index' => $this->profile_index,
-        'profile_usage' => $usage
+        'profile_usage' => $usage,
       ]);
     }
     else {
@@ -110,27 +106,27 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
 
     // If it's a disabled profile, no link is provided
     if ($profile['id'] == Lingotek::PROFILE_DISABLED) {
-      $edit_link = array(
+      $edit_link = [
         '#markup' => $this->t('Not Editable'),
-      );
+      ];
     }
     else {
-      $edit_link = array(
+      $edit_link = [
         '#type' => 'link',
         '#title' => $title,
         '#url' => $url,
-        '#ajax' => array(
-          'class' => array('use-ajax'),
-        ),
-        '#attributes' => array(
-          'class' => array('use-ajax'),
+        '#ajax' => [
+          'class' => ['use-ajax'],
+        ],
+        '#attributes' => [
+          'class' => ['use-ajax'],
           'data-dialog-type' => 'modal',
-          'data-dialog-options' => Json::encode(array(
+          'data-dialog-options' => Json::encode([
             'width' => 861,
             'height' => 700,
-          )),
-        ),
-      );
+          ]),
+        ],
+      ];
     }
 
     return $edit_link;

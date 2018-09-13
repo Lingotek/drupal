@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsTabContentForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\block\Entity\Block;
@@ -28,7 +23,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     return 'lingotek.settings_tab_content_form';
   }
 
-  /** 
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
@@ -42,34 +37,34 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
 
     // Retrieve bundles
     $this->retrieveBundles();
-    
+
     // Retrieve translatable bundles
     $this->retrieveTranslatableBundles();
 
-    $form['parent_details'] = array(
+    $form['parent_details'] = [
       '#type' => 'details',
       '#title' => t('Translate Content Entities'),
-    );
-    
+    ];
+
     $form['parent_details']['list']['#type'] = 'container';
     $form['parent_details']['list']['#attributes']['class'][] = 'entity-meta';
 
     // If user specifies no translatable entities, post this message
     if (empty($this->translatable_bundles)) {
-      $form['parent_details']['empty_message'] = array(
+      $form['parent_details']['empty_message'] = [
         '#markup' => t('There are no translatable content entities specified. You can enable translation for the desired content entities on the <a href=":translation-entity">Content language</a> page.',
           [':translation-entity' => \Drupal::url('language.content_settings_page')]),
-      );
+      ];
     }
-    
+
     // I. Loop through all entities and create a details container for each
     foreach ($this->translatable_bundles as $entity_id => $bundles) {
       $entity_key = 'entity-' . $entity_id;
-      $form['parent_details']['list'][$entity_key] = array(
+      $form['parent_details']['list'][$entity_key] = [
         '#type' => 'details',
         '#title' => $entity_type_definitions[$entity_id]->getLabel(),
-        'content' => array(),
-      );
+        'content' => [],
+      ];
 
       /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderationFactory */
       $moderationFactory = \Drupal::service('lingotek.moderation_factory');
@@ -77,35 +72,35 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
       $moderationForm = $moderationFactory->getModerationSettingsForm();
 
       $bundle_label = $entity_type_definitions[$entity_id]->getBundleLabel();
-      $header = array(
+      $header = [
         $this->t('Enable'),
         $bundle_label,
         $this->t('Translation Profile'),
         'moderation' => $moderationForm->getColumnHeader(),
         $this->t('Fields'),
-      );
+      ];
 
       if (!$moderationForm->needsColumn($entity_id)) {
         unset($header['moderation']);
       }
 
-      $table = array(
+      $table = [
         '#type' => 'table',
         '#header' => $header,
         '#empty' => $this->t('No Entries'),
-      );
+      ];
 
       // II. Loop through bundles per entity and make a table
       foreach ($bundles as $bundle_id => $bundle) {
-        $row = array();
+        $row = [];
         $row['enabled'] = [
           '#type' => 'checkbox',
           '#label' => $this->t('Enabled'),
           '#default_value' => $lingotek_config->isEnabled($entity_id, $bundle_id),
         ];
-        $row['content_type'] = array(
+        $row['content_type'] = [
           '#markup' => $bundle['label'],
-        );
+        ];
         $row['profiles'] = $this->retrieveProfiles($entity_id, $bundle_id);
 
         $moderation = $moderationForm->form($entity_id, $bundle_id);
@@ -117,21 +112,21 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         $table[$bundle_id] = $row;
       }
 
-      // III. Add table to respective details 
+      // III. Add table to respective details
       $form['parent_details']['list'][$entity_key]['content'][$entity_id] = $table;
     }
 
     if (!empty($this->translatable_bundles)) {
-      $form['parent_details']['note'] = array(
+      $form['parent_details']['note'] = [
         '#markup' => t('Note: changing the profile will update all settings for existing nodes except for the project, workflow, vault, and storage method (e.g. node/field)'),
-      );
+      ];
 
       $form['parent_details']['actions']['#type'] = 'actions';
-      $form['parent_details']['actions']['submit'] = array(
+      $form['parent_details']['actions']['submit'] = [
         '#type' => 'submit',
         '#value' => $this->t('Save'),
         '#button_type' => 'primary',
-      );
+      ];
     }
 
     $form['#attached']['library'][] = 'lingotek/lingotek.settings';
@@ -163,7 +158,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
                 $lingotek_config->setFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id, $form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
               }
             }
-            else if ($field_choice == 0) {
+            elseif ($field_choice == 0) {
               $lingotek_config->setFieldLingotekEnabled($entity_id, $bundle_id, $field_id, FALSE);
               if (isset($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties'])) {
                 $properties = array_keys($form_values[$entity_id][$bundle_id]['fields'][$field_id . ':properties']);
@@ -206,7 +201,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
 
   protected function retrieveBundles() {
     $entities = \Drupal::entityManager()->getDefinitions();
-    $this->bundles = array();
+    $this->bundles = [];
 
     foreach ($entities as $entity) {
       if ($entity instanceof ContentEntityType && $entity->hasKey('langcode')) {
@@ -217,7 +212,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveTranslatableBundles() {
-    $this->translatable_bundles = array();
+    $this->translatable_bundles = [];
 
     foreach ($this->bundles as $bundle_group_id => $bundle_group) {
       foreach ($bundle_group as $bundle_id => $bundle) {
@@ -239,7 +234,8 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         '#options' => $lingotek_config->getProfileOptions(),
         '#default_value' => $lingotek_config->getDefaultProfileId($entity_id, $bundle_id),
       ];
-    } else {
+    }
+    else {
       $select = [
         '#markup' => $this->t("A profile doesn't apply for paragraphs. Not recommended, but you may want to <a href=':link'>translate paragraphs independently</a>.", [':link' => '#edit-contrib-paragraphs-enable-bulk-management']),
       ];
@@ -253,7 +249,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $content_translation_manager = \Drupal::service('content_translation.manager');
     $storage_definitions = \Drupal::entityManager()->getFieldStorageDefinitions($entity_id);
-    $field_checkboxes = array ();
+    $field_checkboxes = [];
 
     if ($content_translation_manager->isSupported($entity_id)) {
       $fields = \Drupal::entityManager()->getFieldDefinitions($entity_id, $bundle_id);
@@ -266,44 +262,43 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
         if (!empty($storage_definitions[$field_id]) &&
               $storage_definitions[$field_id]->getProvider() != 'content_translation' &&
               !in_array($storage_definitions[$field_id]->getName(), [$entity_type->getKey('langcode'), $entity_type->getKey('default_langcode'), 'revision_translation_affected']) &&
-          ($field_definition->isTranslatable() || ($field_definition->getType()  == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
+          ($field_definition->isTranslatable() || ($field_definition->getType() == 'entity_reference_revisions' || $field_definition->getType() == 'path')) && !$field_definition->isComputed() && !$field_definition->isReadOnly()) {
 
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
             $checkbox_choice = $value;
           }
-          $field_checkbox = array(
+          $field_checkbox = [
             '#type' => 'checkbox',
             '#title' => $field_definition->getLabel(),
             '#default_value' => $checkbox_choice,
-          );
+          ];
           $field_checkboxes[$field_id] = $field_checkbox;
-
 
           // Display the column translatability configuration widget.
           module_load_include('inc', 'content_translation', 'content_translation.admin');
           $column_element = content_translation_field_sync_widget($field_definition);
           if ($column_element) {
             $properties_checkbox_choice = $lingotek_config->getFieldPropertiesLingotekEnabled($entity_id, $bundle_id, $field_id);
-            $field_checkbox = array(
+            $field_checkbox = [
               '#type' => 'checkboxes',
               '#options' => $column_element['#options'],
               '#default_value' => $properties_checkbox_choice ?: [] ,
-              '#attributes' => ['class' => array('field-property-checkbox')],
-            );
-            $field_checkboxes[$field_id . ':properties' ] = $field_checkbox;
+              '#attributes' => ['class' => ['field-property-checkbox']],
+            ];
+            $field_checkboxes[$field_id . ':properties'] = $field_checkbox;
           }
         }
         // We have an exception here, if the entity alias is a computed field we
         // may still want to translate it.
-        elseif ($field_definition->getType()  == 'path' && $field_definition->isComputed()) {
+        elseif ($field_definition->getType() == 'path' && $field_definition->isComputed()) {
           if ($value = $lingotek_config->isFieldLingotekEnabled($entity_id, $bundle_id, $field_id)) {
             $checkbox_choice = $value;
           }
-          $field_checkbox = array(
+          $field_checkbox = [
             '#type' => 'checkbox',
             '#title' => $field_definition->getLabel(),
             '#default_value' => $checkbox_choice,
-          );
+          ];
           $field_checkboxes[$field_id] = $field_checkbox;
         }
       }

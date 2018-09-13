@@ -9,7 +9,6 @@ use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekFilterManagerInterface;
-use Drupal\lingotek\LingotekProfileInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -66,45 +65,45 @@ class LingotekProfileFormBase extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
-    /** @var LingotekProfileInterface $profile */
+    /** @var \Drupal\lingotek\LingotekProfileInterface $profile */
     $profile = $this->entity;
-    $form['id'] = array(
+    $form['id'] = [
       '#type' => 'machine_name',
       '#description' => t('A unique machine-readable name. Can only contain lowercase letters, numbers, and underscores.'),
       '#disabled' => !$profile->isNew(),
       '#default_value' => $profile->id(),
-      '#machine_name' => array(
+      '#machine_name' => [
         'exists' => '\Drupal\lingotek\Entity\LingotekProfile::load',
-        'source' => array('label'),
-        'replace_pattern' =>'([^a-z0-9_]+)|(^custom$)',
+        'source' => ['label'],
+        'replace_pattern' => '([^a-z0-9_]+)|(^custom$)',
         'error' => $this->t('The machine-readable name must be unique, and can only contain lowercase letters, numbers, and underscores. Additionally, it can not be the reserved word "custom".'),
-      ),
-    );
-    $form['label'] = array(
+      ],
+    ];
+    $form['label'] = [
       '#id' => 'label',
       '#type' => 'textfield',
       '#title' => $this->t('Profile Name'),
       '#required' => TRUE,
       '#default_value' => $profile->label(),
-    );
-    $form['current_future_note'] = array(
+    ];
+    $form['current_future_note'] = [
       '#type' => 'markup',
       '#markup' => '<h3>' . $this->t('Profile settings impacting all entities (new and existing)') . '</h3><hr />',
-    );
-    $form['auto_upload'] = array(
+    ];
+    $form['auto_upload'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Upload Content Automatically'),
       '#description' => $this->t('When enabled, your Drupal content (including saved edits) will automatically be uploaded to Lingotek for translation. When disabled, you are required to manually upload your content by clicking the "Upload" button on the Translations tab.'),
       '#disabled' => $profile->isLocked(),
       '#default_value' => $profile->hasAutomaticUpload(),
-    );
-    $form['auto_download'] = array(
+    ];
+    $form['auto_download'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Download Translations Automatically'),
       '#description' => $this->t('When enabled, completed translations will automatically be downloaded from Lingotek. When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
       '#disabled' => $profile->isLocked(),
       '#default_value' => $profile->hasAutomaticDownload(),
-    );
+    ];
 
     $options = [
       'global_setting' => $this->t('Use global setting'),
@@ -121,55 +120,55 @@ class LingotekProfileFormBase extends EntityForm {
       '#disabled' => $profile->isLocked(),
     ];
 
-    $form['future_only_note'] = array(
+    $form['future_only_note'] = [
       '#type' => 'markup',
       '#markup' => '<h3>' . $this->t('Profile settings impacting only new nodes') . '</h3><hr />',
-    );
+    ];
 
     $projects = $this->config('lingotek.settings')->get('account.resources.project');
     $default_project = $this->config('lingotek.settings')->get('default.project');
 
-    $form['project'] = array(
+    $form['project'] = [
       '#type' => 'select',
       '#title' => $this->t('Default Project'),
-      '#options' => ['default' => 'Default ('. $projects[$default_project] . ')'] + $projects,
+      '#options' => ['default' => 'Default (' . $projects[$default_project] . ')'] + $projects,
       '#description' => $this->t('The default Translation Memory Project where translations are saved.'),
       '#default_value' => $profile->getProject(),
-    );
+    ];
 
     $workflows = $this->config('lingotek.settings')->get('account.resources.workflow');
     $default_workflow = $this->config('lingotek.settings')->get('default.workflow');
 
-    $form['workflow'] = array(
+    $form['workflow'] = [
       '#type' => 'select',
       '#title' => $this->t('Default Workflow'),
-      '#options' => ['default' => 'Default ('. $workflows[$default_workflow] . ')'] + $workflows,
+      '#options' => ['default' => 'Default (' . $workflows[$default_workflow] . ')'] + $workflows,
       '#description' => $this->t('The default Workflow which would be used for translations.'),
       '#default_value' => $profile->getWorkflow(),
-    );
+    ];
 
     $vaults = $this->config('lingotek.settings')->get('account.resources.vault');
     $default_vault = $this->config('lingotek.settings')->get('default.vault');
 
     // We have two defaults: default vault, or the Project Workflow Template
     // Default vault.
-    $form['vault'] = array(
+    $form['vault'] = [
       '#type' => 'select',
       '#title' => $this->t('Default Vault'),
       '#options' => [
-          'default' => 'Default ('. $vaults[$default_vault] . ')',
+          'default' => 'Default (' . $vaults[$default_vault] . ')',
           'project_workflow_vault' => 'Use Project Workflow Template Default',
         ] + $vaults,
       '#description' => $this->t('The default Translation Memory Vault where translations are saved.'),
       '#default_value' => $profile->getVault(),
-    );
+    ];
 
     /** @var \Drupal\lingotek\LingotekFilterManagerInterface $filter_manager */
     $filters = $this->lingotekFilterManager->getLocallyAvailableFilters();
     // Locally available filters include always the default project filter.
     // So we check if there is more than 1.
     if (count($filters) > 1) {
-      $form['filter'] = array(
+      $form['filter'] = [
         '#type' => 'select',
         '#title' => $this->t('Default Filter'),
         '#options' => [
@@ -178,8 +177,8 @@ class LingotekProfileFormBase extends EntityForm {
           ] + $filters,
         '#description' => $this->t('The default FPRM Filter used when uploading or updating a document.'),
         '#default_value' => $profile->getFilter(),
-      );
-      $form['subfilter'] = array(
+      ];
+      $form['subfilter'] = [
         '#type' => 'select',
         '#title' => $this->t('Default Subfilter'),
         '#options' => [
@@ -188,7 +187,7 @@ class LingotekProfileFormBase extends EntityForm {
           ] + $filters,
         '#description' => $this->t('The default FPRM Subfilter used when uploading or updating a document.'),
         '#default_value' => $profile->getSubfilter(),
-      );
+      ];
     }
 
     // We add the overrides.
@@ -215,14 +214,14 @@ class LingotekProfileFormBase extends EntityForm {
     ];
     unset($form['intelligence_metadata_overrides']['form']['actions']);
 
-    $form['language_overrides'] = array(
+    $form['language_overrides'] = [
       '#type' => 'details',
       '#title' => $this->t('Target language specific settings'),
       '#tree' => TRUE,
-    );
+    ];
     $languages = \Drupal::languageManager()->getLanguages();
     // Filter the disabled languages.
-    $languages = array_filter($languages, function(LanguageInterface $language) {
+    $languages = array_filter($languages, function (LanguageInterface $language) {
       $configLanguage = ConfigurableLanguage::load($language->getId());
       return $this->lingotekConfiguration->isLanguageEnabled($configLanguage);
     });
@@ -230,39 +229,39 @@ class LingotekProfileFormBase extends EntityForm {
     // We want to have them alphabetically.
     ksort($languages);
     foreach ($languages as $langcode => $language) {
-      $form['language_overrides'][$langcode] = array(
-        'overrides' => array(
+      $form['language_overrides'][$langcode] = [
+        'overrides' => [
           '#type' => 'select',
           '#title' => $language->getName() . ' (' . $language->getId() . ')',
           '#options' => ['default' => $this->t('Use default settings'), 'custom' => $this->t('Use custom settings')],
           '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? 'custom' : 'default',
-        ),
-        'custom' => array(
+        ],
+        'custom' => [
           '#type' => 'container',
-          '#attributes' => array(
+          '#attributes' => [
             'class' => 'profile-language-overrides-container',
-          ),
-          '#states' => array(
-            'visible' => array(
-              ':input[name="language_overrides['.$langcode.'][overrides]"]' => array('value' => 'custom'),
-            ),
-          ),
-          'workflow' => array(
+          ],
+          '#states' => [
+            'visible' => [
+              ':input[name="language_overrides[' . $langcode . '][overrides]"]' => ['value' => 'custom'],
+            ],
+          ],
+          'workflow' => [
             '#type' => 'select',
             '#title' => $this->t('Default Workflow'),
-            '#options' => ['default' => 'Default ('. $workflows[$default_workflow] . ')'] + $workflows,
+            '#options' => ['default' => 'Default (' . $workflows[$default_workflow] . ')'] + $workflows,
             '#description' => $this->t('The default Workflow which would be used for translations.'),
             '#default_value' => $profile->hasCustomSettingsForTarget($langcode) ? $profile->getWorkflowForTarget($langcode) : 'default',
-          ),
-          'auto_download' => array(
+          ],
+          'auto_download' => [
             '#type' => 'checkbox',
             '#title' => $this->t('Download Translations Automatically'),
             '#description' => $this->t('When enabled, completed translations will automatically be downloaded from Lingotek. When disabled, you are required to manually download translations by clicking the "Download" button on the Translations tab.'),
             '#disabled' => $profile->isLocked(),
             '#default_value' => $profile->hasAutomaticDownloadForTarget($langcode),
-          ),
-        ),
-      );
+          ],
+        ],
+      ];
     }
     $form['#attached']['library'][] = 'lingotek/lingotek.settings';
     return $form;

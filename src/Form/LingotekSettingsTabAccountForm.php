@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsAccountForm.
- */
-
 namespace Drupal\lingotek\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -61,7 +56,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     return 'lingotek.settings_tab_account_form';
   }
 
-  /** 
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
@@ -77,7 +72,8 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       if ($this->lingotek->getAccountInfo()) {
         $connectionStatus = $this->t('Active');
       }
-    } catch(LingotekApiException $exception) {
+    }
+    catch (LingotekApiException $exception) {
       drupal_set_message($this->t('There was a problem checking your account status.'), 'warning');
     }
 
@@ -106,7 +102,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $default_community_name = $config->get('account.resources.community.' . $default_community);
     $communityRow = [
       ['#markup' => $this->t('Community:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_community_name, '@id' => $default_community])],
+      ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_community_name, '@id' => $default_community])],
       ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
 
@@ -114,7 +110,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $default_workflow_name = $config->get('account.resources.workflow.' . $default_workflow);
     $workflowRow = [
       ['#markup' => $this->t('Default Workflow:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_workflow_name, '@id' => $default_workflow])],
+      ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_workflow_name, '@id' => $default_workflow])],
       ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
 
@@ -122,10 +118,9 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
     $default_project_name = $config->get('account.resources.project.' . $default_project);
     $projectRow = [
       ['#markup' => $this->t('Default Project:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_project_name, '@id' => $default_project])],
+      ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_project_name, '@id' => $default_project])],
       ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
-
 
     $filters = $this->lingotekFilterManager->getLocallyAvailableFilters();
     if ($filters > 0) {
@@ -135,12 +130,12 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       $default_subfilter_label = $this->lingotekFilterManager->getDefaultSubfilterLabel();
       $filterRow = [
         ['#markup' => $this->t('Default Filter:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-        ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_filter_label, '@id' => $default_filter])],
+        ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_filter_label, '@id' => $default_filter])],
         ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
       ];
       $subfilterRow = [
         ['#markup' => $this->t('Default Subfilter:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-        ['#markup' => new FormattableMarkup('@name (@id)', ['@name'=> $default_subfilter_label, '@id' => $default_subfilter])],
+        ['#markup' => new FormattableMarkup('@name (@id)', ['@name' => $default_subfilter_label, '@id' => $default_subfilter])],
         ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
       ];
     }
@@ -150,7 +145,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
 
     $vaultRow = [
       ['#markup' => $this->t('Default Vault:'), '#prefix' => '<b>', '#suffix' => '</b>'],
-      ['#markup' => $default_vault ? new FormattableMarkup('@name (@id)', ['@name'=> $default_vault_name, '@id' => $default_vault]) : ''],
+      ['#markup' => $default_vault ? new FormattableMarkup('@name (@id)', ['@name' => $default_vault_name, '@id' => $default_vault]) : ''],
       ['#markup' => $this->getLinkGenerator()->generate($this->t('Edit defaults'), Url::fromRoute('lingotek.edit_defaults'))],
     ];
 
@@ -164,7 +159,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       ['#markup' => 'https://gmc.lingotek.com'],
       ['#markup' => ''],
     ];
-    
+
     $accountTable = [
       '#type' => 'table',
       '#empty' => $this->t('No Entries'),
@@ -197,7 +192,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
       '#submit' => [[$this, 'disconnect']],
     ];
 
-     return $form;
+    return $form;
   }
 
   /**

@@ -1,13 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekSettingsProjectVaultForm.
- */
-
 namespace Drupal\lingotek\Form;
 
-use Drupal\lingotek\Form\LingotekConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -18,7 +12,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   protected $defaults;
   protected $resources;
 
-  public function init(){
+  public function init() {
     $this->defaults = $this->lingotek->getDefaults();
     $this->resources = $this->lingotek->getResources();
     $config = $this->configFactory()->getEditable('lingotek.settings');
@@ -26,7 +20,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
     // Make visible only those options that have more than one choice
     if (count($this->resources['project']) > 1) {
       $this->defaults_labels['project'] = t('Default Project');
-    } 
+    }
     elseif (count($this->resources['project']) == 1) {
       $this->lingotek->set('default.project', current(array_keys($this->resources['project'])));
     }
@@ -67,7 +61,7 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $this->init();
 
-    foreach($this->defaults_labels as $key => $label){
+    foreach ($this->defaults_labels as $key => $label) {
       $resources_key = ($key === 'subfilter') ? 'filter' : $key;
       asort($this->resources[$resources_key]);
       if ($key === 'filter' || $key === 'subfilter') {
@@ -76,15 +70,15 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       else {
         $options = $this->resources[$key];
       }
-      $form[$key] = array(
+      $form[$key] = [
         '#title' => $label,
         '#type' => 'select',
         '#options' => $options,
         '#default_value' => $this->defaults[$key],
         '#required' => TRUE,
-      );
+      ];
     }
-    
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -94,8 +88,8 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->configFactory()->getEditable('lingotek.settings');
     $form_values = $form_state->getValues();
-    foreach($this->defaults_labels as $key => $label){
-      $config->set('default.'. $key, $form_values[$key]);
+    foreach ($this->defaults_labels as $key => $label) {
+      $config->set('default.' . $key, $form_values[$key]);
     }
     $config->save();
 

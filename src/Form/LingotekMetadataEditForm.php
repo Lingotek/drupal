@@ -2,8 +2,6 @@
 
 namespace Drupal\lingotek\Form;
 
-
-use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -11,8 +9,6 @@ use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\lingotek\Entity\LingotekContentMetadata;
-use Drupal\lingotek\Helpers\LingotekManagementFormHelperTrait;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
@@ -40,7 +36,7 @@ class LingotekMetadataEditForm extends ContentEntityForm {
   /**
    * The Lingotek content translation service.
    *
-   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
+   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface
    */
   protected $translationService;
 
@@ -59,7 +55,7 @@ class LingotekMetadataEditForm extends ContentEntityForm {
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
-   *  The language-locale mapper.
+   *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    *   The Lingotek content translation service.
    * @param string $entity_type_id
@@ -131,7 +127,7 @@ class LingotekMetadataEditForm extends ContentEntityForm {
     foreach ($languages as $langcode => $language) {
       $form['metadata']['lingotek_target_status'][$langcode] = [
         '#type' => 'select',
-        '#title' => $this->t('Lingotek Target Status: ') . $language->getName(),
+        '#title' => $this->t('Lingotek Target Status: %language', ['%language' => $language->getName()]),
         '#default_value' => $this->translationService->getTargetStatus($entity, $langcode),
         '#options' => $this->getLingotekStatusesOptions(),
       ];
@@ -143,13 +139,13 @@ class LingotekMetadataEditForm extends ContentEntityForm {
     ];
 
     $form['actions'] = [];
-    $form['actions']['save_metadata'] = array(
+    $form['actions']['save_metadata'] = [
       '#type' => 'submit',
       '#value' => t('Save metadata'),
       '#button_type' => 'primary',
-      '#limit_validation_errors' => array(),
+      '#limit_validation_errors' => [],
       '#submit' => [[$this, 'saveMetadata']],
-    );
+    ];
     return $form;
   }
 
@@ -182,7 +178,6 @@ class LingotekMetadataEditForm extends ContentEntityForm {
 
     drupal_set_message($this->t('Metadata saved successfully'));
   }
-
 
   /**
    * {@inheritdoc}
@@ -223,7 +218,6 @@ class LingotekMetadataEditForm extends ContentEntityForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Not needed, we have our own handler.
   }
-
 
   protected function getEditedFieldNames(FormStateInterface $form_state) {
     return [];

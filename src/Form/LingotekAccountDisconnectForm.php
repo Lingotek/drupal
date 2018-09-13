@@ -1,20 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\lingotek\Form\LingotekAccountDisconnect.
- */
-
 namespace Drupal\lingotek\Form;
 
-use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\lingotek\LingotekInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides a form to disconnect from Lingotek.

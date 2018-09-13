@@ -20,14 +20,14 @@ class LingotekDisassociateAllConfirmForm extends ConfirmFormBase {
   /**
    * The Lingotek content translation service.
    *
-   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $contentTranslationService
+   * @var \Drupal\lingotek\LingotekContentTranslationServiceInterface
    */
   protected $contentTranslationService;
 
   /**
    * The Lingotek configuration translation service.
    *
-   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $configTranslationService
+   * @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface
    */
   protected $configTranslationService;
 
