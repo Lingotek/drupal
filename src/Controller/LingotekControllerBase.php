@@ -115,6 +115,8 @@ abstract class LingotekControllerBase extends ControllerBase {
    *
    * @return array
    *   The form array.
+   *
+   * @deprecated in 8.x-2.10. Use FormBuilderInterface::getForm() instead.
    */
   protected function getLingotekForm($local_form_path) {
     return $this->formBuilder->getForm('\\Drupal\\lingotek\\Form\\' . $local_form_path, $this->request);

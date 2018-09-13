@@ -6,7 +6,12 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Url;
 use Drupal\lingotek\Form\LingotekIntelligenceMetadataForm;
+use Drupal\lingotek\Form\LingotekSettingsTabAccountForm;
+use Drupal\lingotek\Form\LingotekSettingsTabConfigurationForm;
+use Drupal\lingotek\Form\LingotekSettingsTabContentForm;
 use Drupal\lingotek\Form\LingotekSettingsTabIntegrationsForm;
+use Drupal\lingotek\Form\LingotekSettingsTabPreferencesForm;
+use Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm;
 
 class LingotekSettingsController extends LingotekControllerBase {
 
@@ -16,14 +21,14 @@ class LingotekSettingsController extends LingotekControllerBase {
     }
 
     $settings_tab = [
-      $this->getLingotekForm('LingotekSettingsTabAccountForm'),
-      $this->getLingotekForm('LingotekSettingsTabContentForm'),
-      $this->getLingotekForm('LingotekSettingsTabConfigurationForm'),
+      $this->formBuilder->getForm(LingotekSettingsTabAccountForm::class),
+      $this->formBuilder->getForm(LingotekSettingsTabContentForm::class),
+      $this->formBuilder->getForm(LingotekSettingsTabConfigurationForm::class),
       $this->getProfileListForm(),
       $this->getIntelligenceMetadataForm(),
-      $this->getLingotekForm('LingotekSettingsTabPreferencesForm'),
+      $this->formBuilder->getForm(LingotekSettingsTabPreferencesForm::class),
       $this->getIntegrationsSettingsForm(),
-      $this->getLingotekForm('LingotekSettingsTabUtilitiesForm'),
+      $this->formBuilder->getForm(LingotekSettingsTabUtilitiesForm::class),
     ];
 
     return $settings_tab;
@@ -36,8 +41,7 @@ class LingotekSettingsController extends LingotekControllerBase {
    *   The form definition.
    */
   public function getProfileListForm() {
-    $form_builder = \Drupal::formBuilder();
-    $original_form = $form_builder->getForm($this->entityManager()->getListBuilder('lingotek_profile'), new FormState());
+    $original_form = $this->formBuilder->getForm($this->entityTypeManager()->getListBuilder('lingotek_profile'), new FormState());
     $form['profiles_wrapper'] = [
       '#type' => 'details',
       '#title' => $this->t('Translation Profiles'),
@@ -66,8 +70,7 @@ class LingotekSettingsController extends LingotekControllerBase {
   }
 
   public function getIntegrationsSettingsForm() {
-    $form_builder = \Drupal::formBuilder();
-    $original_form = $form_builder->getForm(LingotekSettingsTabIntegrationsForm::class);
+    $original_form = $this->formBuilder->getForm(LingotekSettingsTabIntegrationsForm::class);
 
     if (isset($original_form['contrib'])) {
       $form['integrations_wrapper'] = [
@@ -88,7 +91,7 @@ class LingotekSettingsController extends LingotekControllerBase {
     }
 
     $profiles_modal = [
-      $this->getLingotekForm('LingotekSettingsTabProfilesEditForm'),
+      $this->formBuilder->getForm(LingotekSettingsTabProfilesEditForm::class),
     ];
 
     return $profiles_modal;

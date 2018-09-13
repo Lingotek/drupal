@@ -2,6 +2,11 @@
 
 namespace Drupal\lingotek\Controller;
 
+use Drupal\lingotek\Form\LingotekSettingsAccountForm;
+use Drupal\lingotek\Form\LingotekSettingsCommunityForm;
+use Drupal\lingotek\Form\LingotekSettingsConnectForm;
+use Drupal\lingotek\Form\LingotekSettingsDefaultsForm;
+
 /**
  * Returns responses for lingotek module setup routes.
  */
@@ -15,11 +20,11 @@ class LingotekSetupController extends LingotekControllerBase {
    */
   public function accountPage() {
     if ($this->setupCompleted()) {
-      return $this->getLingotekForm('LingotekSettingsAccountForm');
+      return $this->formBuilder->getForm(LingotekSettingsAccountForm::class);
     }
     return [
       '#type' => 'markup',
-      'markup' => $this->getLingotekForm('LingotekSettingsConnectForm'),
+      'markup' => $this->formBuilder->getForm(LingotekSettingsConnectForm::class),
     ];
   }
 
@@ -68,7 +73,7 @@ class LingotekSetupController extends LingotekControllerBase {
     }
     return [
       '#type' => 'markup',
-      'markup' => $this->getLingotekForm('LingotekSettingsCommunityForm'),
+      'markup' => $this->formBuilder->getForm(LingotekSettingsCommunityForm::class),
     ];
   }
 
@@ -90,7 +95,7 @@ class LingotekSetupController extends LingotekControllerBase {
     }
     return [
       '#type' => 'markup',
-      'markup' => $this->getLingotekForm('LingotekSettingsDefaultsForm'),
+      'markup' => $this->formBuilder->getForm(LingotekSettingsDefaultsForm::class),
     ];
   }
 
