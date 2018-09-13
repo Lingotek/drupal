@@ -60,17 +60,17 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
 
         // Add a route for bulk translation management.
         $path = "admin/lingotek/manage/{$entity_type_id}";
-        $options = array('_admin_route' => TRUE);
-        $defaults = array(
+        $options = ['_admin_route' => TRUE];
+        $defaults = [
           'entity_type_id' => $entity_type_id,
-        );
+        ];
         $route = new Route(
           $path,
-          array(
+          [
             '_form' => 'Drupal\lingotek\Form\LingotekManagementForm',
             '_title' => 'Manage Translations',
-          ) + $defaults,
-          array('_permission' => 'manage lingotek translations'),
+          ] + $defaults,
+          ['_permission' => 'manage lingotek translations'],
           $options
         );
         $collection->add("lingotek.manage.{$entity_type_id}", $route);
@@ -110,7 +110,7 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
   public static function getSubscribedEvents() {
     $events = parent::getSubscribedEvents();
     //  ContentTranslationRouteSubscriber is -100.
-    $events[RoutingEvents::ALTER] = array('onAlterRoutes', -211);
+    $events[RoutingEvents::ALTER] = ['onAlterRoutes', -211];
     return $events;
   }
 
