@@ -126,7 +126,6 @@ class LingotekDashboardControllerTest extends UnitTestCase {
     $this->controller->setStringTranslation($this->getStringTranslationStub());
   }
 
-
   /**
    * Tests that when no type is enabled, no types are included in the stats.
    *

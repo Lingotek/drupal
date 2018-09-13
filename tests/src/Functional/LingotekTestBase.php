@@ -470,7 +470,6 @@ abstract class LingotekTestBase extends BrowserTestBase {
     }
   }
 
-
   /**
    * Assert that a content target has not been marked as error.
    *

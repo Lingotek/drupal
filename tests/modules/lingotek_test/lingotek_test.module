@@ -46,7 +46,9 @@ function lingotek_test_lingotek_config_entity_translation_presave(ConfigEntityIn
       // Lowercase all [tokens] and remove the asterisks prefix.
       $yaml = Yaml::encode($data);
       $yaml = preg_replace_callback(
-        '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {return '[' . strtolower($matches[1]) . ']';},
+        '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {
+          return '[' . strtolower($matches[1]) . ']';
+        },
         $yaml
       );
       $data = Yaml::decode($yaml);
@@ -63,7 +65,9 @@ function lingotek_test_lingotek_config_entity_document_upload(array &$source_dat
       // Uppercase all [tokens] and prefix with asterisks.
       $yaml = Yaml::encode($source_data);
       $yaml = preg_replace_callback(
-        '/\[([a-z][^]]+)\]/', function ($matches) {return '[***' . strtoupper($matches[1]) . '***]';},
+        '/\[([a-z][^]]+)\]/', function ($matches) {
+          return '[***' . strtoupper($matches[1]) . '***]';
+        },
         $yaml
       );
       $source_data = Yaml::decode($yaml);

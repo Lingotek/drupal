@@ -43,7 +43,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'change_profile:automatic'
+      $this->getBulkOperationFormName() => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -53,7 +53,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'change_profile:manual'
+      $this->getBulkOperationFormName() => 'change_profile:manual',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -66,7 +66,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'change_profile:disabled'
+      $this->getBulkOperationFormName() => 'change_profile:disabled',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -95,7 +95,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'upload'
+      $this->getBulkOperationFormName() => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -104,7 +104,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'check_upload'
+      $this->getBulkOperationFormName() => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -113,7 +113,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'request_translations'
+      $this->getBulkOperationFormName() => 'request_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -122,7 +122,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'check_translations'
+      $this->getBulkOperationFormName() => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -131,7 +131,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:es'
+      $this->getBulkOperationFormName() => 'download:es',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -140,7 +140,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'change_profile:automatic'
+      $this->getBulkOperationFormName() => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -166,7 +166,7 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'change_profile:automatic'
+      $this->getBulkOperationFormName() => 'change_profile:automatic',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -176,49 +176,49 @@ class LingotekConfigBulkProfileTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'upload'
+      $this->getBulkOperationFormName() => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'check_upload'
+      $this->getBulkOperationFormName() => 'check_upload',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'request_translations'
+      $this->getBulkOperationFormName() => 'request_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'check_translations'
+      $this->getBulkOperationFormName() => 'check_translations',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'download'
+      $this->getBulkOperationFormName() => 'download',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'disassociate'
+      $this->getBulkOperationFormName() => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'upload'
+      $this->getBulkOperationFormName() => 'upload',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'change_profile:disabled'
+      $this->getBulkOperationFormName() => 'change_profile:disabled',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

@@ -278,7 +278,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
 
     // Create a content type.
-    $edit  = ['name' => 'Landing Page', 'type' => 'landing_page'];
+    $edit = ['name' => 'Landing Page', 'type' => 'landing_page'];
     $this->drupalPostForm('admin/structure/types/add', $edit, 'Save content type');
 
     // The document was uploaded automatically and failed.

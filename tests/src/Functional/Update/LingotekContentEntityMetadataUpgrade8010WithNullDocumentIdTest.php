@@ -140,7 +140,7 @@ class LingotekContentEntityMetadataUpgrade8010WithNullDocumentIdTest extends Upd
     $this->drupalPostForm(NULL, ['community' => 'test_community'], 'Next');
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',
-      'vault' => 'test_vault'
+      'vault' => 'test_vault',
     ], 'Save configuration');
   }
 

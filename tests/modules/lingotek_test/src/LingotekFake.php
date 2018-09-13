@@ -149,7 +149,7 @@ class LingotekFake implements LingotekInterface {
         'title' => 'Test project',
         'community_id' => 'test_community',
         'id' => 'test_project',
-      ]
+      ],
     ];
   }
 

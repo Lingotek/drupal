@@ -2,7 +2,6 @@
 
 namespace Drupal\frozenintime;
 
-
 use Drupal\Component\Datetime\TimeInterface;
 
 /**

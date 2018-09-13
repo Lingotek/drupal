@@ -35,7 +35,7 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     $this->createOptionsField('list_string', 'article', 'field_options', 'Options');
 

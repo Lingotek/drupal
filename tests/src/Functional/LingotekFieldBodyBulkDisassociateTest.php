@@ -25,7 +25,7 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     // Create Article node types.
     $type = $this->drupalCreateContentType([
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ]);
     node_add_body_field($type);
 
@@ -42,7 +42,6 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     // This is a hack for avoiding writing different lingotek endpoint mocks.
     \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
   }
-
 
   /**
    * Tests that a field config can be disassociated using the bulk operations on the management page.
@@ -111,7 +110,6 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
     // We can request again.
     $this->createAndTranslateFieldWithLinks();
   }
-
 
   protected function createAndTranslateFieldWithLinks() {
     // Go to the bulk config management page.

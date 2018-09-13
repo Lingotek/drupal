@@ -4,7 +4,6 @@ namespace Drupal\Tests\lingotek\Functional\Update;
 
 use Drupal\FunctionalTests\Update\UpdatePathTestBase;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
-use Drupal\lingotek\Entity\LingotekProfile;
 
 /**
  * Tests the upgrade path for adding the job id field to content metadata.

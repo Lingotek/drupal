@@ -284,7 +284,7 @@ class LingotekFieldBodyTranslationTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
 
     // Create a field.
-    $edit  = ['label' => 'Excerpt', 'new_storage_type' => 'text', 'field_name' => 'excerpt'];
+    $edit = ['label' => 'Excerpt', 'new_storage_type' => 'text', 'field_name' => 'excerpt'];
     $this->drupalPostForm('/admin/structure/types/manage/article/fields/add-field', $edit, 'Save and continue');
 
     // The document was uploaded automatically and failed.

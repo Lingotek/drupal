@@ -7,7 +7,6 @@
 
 use Drupal\Core\Database\Database;
 
-
 $connection = Database::getConnection();
 
 // Set all the language source to NULL.

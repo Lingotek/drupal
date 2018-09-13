@@ -44,7 +44,7 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     // Mark the first two for disassociation.
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'disassociate'
+      $this->getBulkOperationFormName() => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -87,7 +87,7 @@ class LingotekSystemSiteBulkDisassociateTest extends LingotekTestBase {
     // Mark the first two for disassociation.
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'disassociate'
+      $this->getBulkOperationFormName() => 'disassociate',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

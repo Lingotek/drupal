@@ -8,6 +8,7 @@ use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
+
 /**
  * Tests the bulk management form.
  *
@@ -574,11 +575,11 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // After we filter by both page and article, there is no pager and the rows
     // selected are the ones expected.
-    $edit = array();
-    $edit['filters[wrapper][bundle][]'] = array(
+    $edit = [];
+    $edit['filters[wrapper][bundle][]'] = [
         'page',
         'article',
-      );
+      ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7] as $j) {
       $this->assertLink('Llamas are cool page ' . $j);
@@ -893,19 +894,19 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     // Our fake doc ids are dummy-document-hash-id-X. We know we will find
     // dummy-document-hash-id, dummy-document-hash-id-1 and those after dummy-document-hash-id-10.
-    foreach ([1,2,11,12,13,14] as $j) {
+    foreach ([1, 2, 11, 12, 13, 14] as $j) {
       $this->assertLink('Llamas are cool ' . $j);
     }
 
     // And we won't find the others.
-    foreach ([3,4,5,6,7,8,9,10] as $j) {
+    foreach ([3, 4, 5, 6, 7, 8, 9, 10] as $j) {
       $this->assertNoLink('Llamas are cool ' . $j);
     }
 
     $this->assertFieldByName('filters[advanced_options][document_id]', 1, 'The value is retained in the filter.');
 
     $this->assertNoLinkByHref('?page=1');
-}
+  }
 
   /**
    * Tests if entity id filter works
@@ -952,12 +953,12 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   public function testUploadStatusFilter() {
     $basepath = \Drupal::request()->getBasePath();
     // Create a node.
-      $edit = [];
-      $edit['title[0][value]'] = 'Llamas are cool';
-      $edit['body[0][value]'] = 'Llamas are very cool';
-      $edit['langcode[0][value]'] = 'en';
-      $edit['lingotek_translation_profile'] = 'manual';
-      $this->saveAndPublishNodeForm($edit);
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
 
     // Go to the bulk management form.
     $this->goToContentBulkManagementForm();
@@ -990,4 +991,5 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
 
     $this->assertFieldByName('filters[advanced_options][upload_status]', 'CURRENT', 'The value is retained in the filter.');
   }
+
 }

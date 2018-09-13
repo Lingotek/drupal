@@ -68,7 +68,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
 
     $edit = [
       'table[system.site_information_settings]' => TRUE,
-      $this->getBulkOperationFormName() => 'debug.export'
+      $this->getBulkOperationFormName() => 'debug.export',
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

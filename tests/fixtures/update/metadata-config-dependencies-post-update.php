@@ -8,7 +8,6 @@
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Database\Database;
 
-
 $connection = Database::getConnection();
 
 $connection->insert('config')
@@ -38,10 +37,11 @@ $extensions = $connection->select('config')
 $extensions = unserialize($extensions);
 $connection->update('config')
   ->fields([
-    'data' => serialize(array_merge_recursive($extensions, ['module' =>
-      [
+    'data' => serialize(array_merge_recursive($extensions, [
+      'module' => [
         'lingotek_test' => 0,
-      ]]))
+      ],
+    ])),
   ])
   ->condition('name', 'core.extension')
   ->execute();

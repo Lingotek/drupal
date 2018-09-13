@@ -161,9 +161,9 @@ namespace Drupal\Tests\lingotek\Unit\Form {
           'lingotek.settings' => [
             'account' => [
               'access_token' => 'token',
-              'login_id' => 'test@example.com'
-            ]
-          ]
+              'login_id' => 'test@example.com',
+            ],
+          ],
         ]
       ));
       $this->form->setStringTranslation($this->getStringTranslationStub());
@@ -220,7 +220,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('get')
         ->with('lingotek.management.filter.node')
         ->willReturn($tempStore);
-        $this->tempStoreFactory->expects($this->at(1))
+      $this->tempStoreFactory->expects($this->at(1))
         ->method('get')
         ->with('lingotek.management.filter.node')
         ->willReturn($tempStore);
@@ -326,7 +326,9 @@ namespace {
 
   // @todo Delete after https://drupal.org/node/1858196 is in.
   if (!function_exists('drupal_set_message')) {
+
     function drupal_set_message() {
     }
+
   }
 }

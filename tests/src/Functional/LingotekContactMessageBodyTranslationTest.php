@@ -41,7 +41,7 @@ class LingotekContactMessageBodyTranslationTest extends LingotekTestBase {
     $fieldStorage = FieldStorageConfig::create([
       'field_name' => 'field_test',
       'entity_type' => 'contact_message',
-      'type' => 'text'
+      'type' => 'text',
     ]);
     $fieldStorage->save();
 

@@ -1,7 +1,6 @@
 name: Lingotek Translation Group Test Helper
 type: module
 package: Testing
-version: VERSION
 core: 8.x
 
 dependencies:
