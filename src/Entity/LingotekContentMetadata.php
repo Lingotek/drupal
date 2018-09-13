@@ -117,7 +117,7 @@ class LingotekContentMetadata extends ContentEntityBase {
    * @param string $document_id
    *   Lingotek Document ID
    *
-   * @return $this|NULL
+   * @return $this|null
    *   The Lingotek content metadata if it exists. Otherwise, returns NULL.
    */
   public static function loadByDocumentId($document_id) {

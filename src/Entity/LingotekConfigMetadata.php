@@ -1,7 +1,7 @@
 <?php
 
 namespace Drupal\lingotek\Entity;
-use Drupal\config_translation\ConfigMapperInterface;
+
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\lingotek\LingotekConfigMetadataInterface;
@@ -149,7 +149,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    *
    * @param string $config_name
    *   The config name.
-   * @return LingotekConfigMetadataInterface
+   * @return \Drupal\lingotek\LingotekConfigMetadataInterface
    */
   public static function loadByConfigName($config_name) {
     if ($config_name == NULL) {
@@ -188,7 +188,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
       $field_config = FieldConfig::load($entity_id);
       $value = $field_config->getConfigDependencyName();
     }
-    else if ($this->entityManager()->hasDefinition($entity_type)) {
+    elseif ($this->entityManager()->hasDefinition($entity_type)) {
       $storage = $this->entityManager()->getStorage($entity_type);
       $entity = $storage->load($entity_id);
       $value = ($entity) ? $entity->getConfigDependencyName() : $this->config_name;
@@ -202,12 +202,12 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
   /**
    * Gets the config mapper for this metadata.
    *
-   * @return ConfigMapperInterface
+   * @return \Drupal\config_translation\ConfigMapperInterface
    *   The config mapper this metadata is related to.
    */
   public function getConfigMapper() {
     $mapper = NULL;
-    /** @var ConfigMapperInterface[] $mappers */
+    /** @var \Drupal\config_translation\ConfigMapperInterface[] $mappers */
     $mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
     $name = $this->getDependencyName();
     $config_mapper_id = $this->getMapperIdForName($name);
@@ -236,7 +236,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    */
   protected function getMapperIdForName($name) {
     $mapper_id = NULL;
-    /** @var ConfigMapperInterface[] $config_mappers */
+    /** @var \Drupal\config_translation\ConfigMapperInterface[] $config_mappers */
     $config_mappers = \Drupal::service('plugin.manager.config_translation.mapper')->getMappers();
     foreach ($config_mappers as $config_mapper_id => $config_mapper) {
       $names = $config_mapper->getConfigNames();
