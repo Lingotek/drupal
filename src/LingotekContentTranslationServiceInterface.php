@@ -93,8 +93,8 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface &$entity
    *   The entity which status we want to change.
-   * @param string $locale
-   *   Lingotek translation language which we want to modify.
+   * @param string $langcode
+   *   Language code which we want to modify.
    * @param int $status
    *   Status of the translation. Use Lingotek constants.
    * @param bool $save
@@ -102,7 +102,7 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    */
-  public function setTargetStatus(ContentEntityInterface &$entity, $locale, $status, $save = TRUE);
+  public function setTargetStatus(ContentEntityInterface &$entity, $langcode, $status, $save = TRUE);
 
   /**
    * Sets the translation status of all translations of a given entity.

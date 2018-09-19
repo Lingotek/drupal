@@ -3,6 +3,7 @@
 namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Tests translating a field using the bulk management form.
@@ -39,7 +40,7 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     ]);
 
     // This is a hack for avoiding writing different lingotek endpoint mocks.
-    \Drupal::state()->set('lingotek.uploaded_content_type', 'body');
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'system.site');
   }
 
   /**
@@ -105,11 +106,9 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm('config');
 
     // Check the status is edited for Spanish.
-    $edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($edited), 1, 'Edited translation is shown.');
-
+    $this->assertTargetStatus('ES', Lingotek::STATUS_EDITED);
     // Check the status is marked REQUEST for German
-    $this->assertTargetStatus('DE', 'request');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
 
     // Clicking English must init the upload of content.
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/update/system.site_information_settings/system.site_information_settings?destination=' . $basepath . '/admin/lingotek/config/manage');
@@ -128,11 +127,11 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
-    // Check the status is edited for Spanish.
-    $this->assertTargetStatus('ES', 'pending');
 
+    // Check the status is pending for Spanish.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
     // Check the status is still request for German.
-    $this->assertTargetStatus('DE', 'request');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
   }
 
 }

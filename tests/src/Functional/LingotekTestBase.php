@@ -406,14 +406,14 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The status.
    */
   protected function assertTargetStatus($language, $status) {
-    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
+    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
     // If not found, maybe it didn't have a link.
     if (count($status_target) === 1) {
-      $this->assertEqual(count($status_target), 1, 'The target ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+      $this->assertEqual(count($status_target), 1, 'The target ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');
     }
     else {
-      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
-      $this->assertEqual(count($status_target), 1, 'The target ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
+      $this->assertEqual(count($status_target), 1, 'The target ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');
     }
   }
 
@@ -426,8 +426,8 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The status.
    */
   protected function assertNoTargetStatus($language, $status) {
-    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
-    $this->assertEqual(count($status_target), 0, 'The target ' . $language . ' has not been marked with status ' . strtolower($status) . '.');
+    $status_target = $this->xpath("//a[contains(@class,'language-icon') and contains(@class,'target-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
+    $this->assertEqual(count($status_target), 0, 'The target ' . strtoupper($language) . ' has not been marked with status ' . strtolower($status) . '.');
   }
 
   /**
@@ -439,14 +439,14 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The status.
    */
   protected function assertSourceStatus($language, $status) {
-    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . $language . "')]]");
+    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
     // If not found, maybe it didn't have a link.
     if (count($status_target) === 1) {
-      $this->assertEqual(count($status_target), 1, 'The source ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+      $this->assertEqual(count($status_target), 1, 'The source ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');
     }
     else {
-      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
-      $this->assertEqual(count($status_target), 1, 'The source ' . $language . ' has been marked with status ' . strtolower($status) . '.');
+      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
+      $this->assertEqual(count($status_target), 1, 'The source ' . strtoupper($language) . ' has been marked with status ' . strtolower($status) . '.');
     }
   }
 
@@ -459,14 +459,14 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The status.
    */
   protected function assertNoSourceStatus($language, $status) {
-    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . $language . "')]]");
+    $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
     // If not found, maybe it didn't have a link.
     if (count($status_target) === 0) {
-      $this->assertEqual(count($status_target), 0, 'The source ' . $language . ' has not been marked with status ' . strtolower($status) . '.');
+      $this->assertEqual(count($status_target), 0, 'The source ' . strtoupper($language) . ' has not been marked with status ' . strtolower($status) . '.');
     }
     else {
-      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . $language . "')]");
-      $this->assertEqual(count($status_target), 0, 'The source ' . $language . ' has not been marked with status ' . strtolower($status) . '.');
+      $status_target = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'source-" . strtolower($status) . "')  and contains(text(), '" . strtoupper($language) . "')]");
+      $this->assertEqual(count($status_target), 0, 'The source ' . strtoupper($language) . ' has not been marked with status ' . strtolower($status) . '.');
     }
   }
 
@@ -481,8 +481,8 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The target locale.
    */
   protected function assertNoTargetError($label, $language, $locale) {
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-error')  and ./a[contains(text(), '" . $language . "')]]");
-    $this->assertEqual(count($source_error), 0, 'The target ' . $language . ' has not been marked as error.');
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-error')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
+    $this->assertEqual(count($source_error), 0, 'The target ' . strtoupper($language) . ' has not been marked as error.');
     $this->assertNoText($label . ' ' . $locale . ' translation download failed. Please try again.');
   }
 
@@ -497,8 +497,8 @@ abstract class LingotekTestBase extends BrowserTestBase {
    *   The target locale.
    */
   protected function assertNoConfigTargetError($label, $language, $locale) {
-    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-error')  and ./a[contains(text(), '" . $language . "')]]");
-    $this->assertEqual(count($source_error), 0, 'The target ' . $language . ' has not been marked as error.');
+    $source_error = $this->xpath("//span[contains(@class,'language-icon') and contains(@class,'target-error')  and ./a[contains(text(), '" . strtoupper($language) . "')]]");
+    $this->assertEqual(count($source_error), 0, 'The target ' . strtoupper($language) . ' has not been marked as error.');
     $this->assertNoText($label . ' ' . $locale . ' translation download failed. Please try again.');
   }
 

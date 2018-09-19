@@ -1803,4 +1803,21 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('DE', 'request');
   }
 
+  /**
+   * Tests that we update the statuses when a translation is deleted.
+   */
+  public function testDeleteTranslationUpdatesStatuses() {
+    $this->testNodeTranslationUsingActionsForMultipleLocales();
+
+    $this->goToContentBulkManagementForm();
+    $this->assertTargetStatus('DE', Lingotek::STATUS_CURRENT);
+
+    $this->drupalGet('node/1/translations');
+    $this->clickLink('Delete');
+    $this->drupalPostForm(NULL, [], t('Delete @language translation', ['@language' => ConfigurableLanguage::load('de')->getName()]));
+
+    $this->goToContentBulkManagementForm();
+    $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
+  }
+
 }

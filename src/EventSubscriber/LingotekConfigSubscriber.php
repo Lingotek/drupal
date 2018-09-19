@@ -2,11 +2,14 @@
 
 namespace Drupal\lingotek\EventSubscriber;
 
+use Drupal\config_translation\ConfigEntityMapper;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\language\Config\LanguageConfigOverrideCrudEvent;
+use Drupal\language\Config\LanguageConfigOverrideEvents;
 use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
@@ -84,6 +87,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
   public static function getSubscribedEvents() {
     return [
       ConfigEvents::SAVE => 'onConfigSave',
+      LanguageConfigOverrideEvents::DELETE_OVERRIDE => 'onConfigLanguageOverrideDelete',
     ];
   }
 
@@ -171,17 +175,92 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
     }
   }
 
+  /**
+   * Updates the Lingotek configuration when a field is deleted.
+   *
+   * @param \Drupal\Core\Config\ConfigCrudEvent $event
+   *   The configuration event.
+   */
+  public function onConfigLanguageOverrideDelete(LanguageConfigOverrideCrudEvent $event) {
+    if (!drupal_installation_attempted()) {
+      /** @var \Drupal\lingotek\LanguageLocaleMapperInterface $languageMapper */
+      $languageMapper = \Drupal::service('lingotek.language_locale_mapper');
+
+      $configOverride = $event->getLanguageConfigOverride();
+      $config_name = $configOverride->getName();
+      $mapper = $this->getMapperFromConfigName($config_name);
+      if ($mapper !== NULL) {
+        /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
+        $translation_service = \Drupal::service('lingotek.config_translation');
+        if ($mapper instanceof ConfigEntityMapper) {
+          $entity = $mapper->getEntity();
+          $document_id = $translation_service->getDocumentId($entity);
+          $translation_statuses = \Drupal::service('lingotek')
+            ->getDocumentTranslationStatuses($document_id);
+          foreach ($translation_statuses as $lingotek_locale => $progress) {
+            $drupal_language = $languageMapper->getConfigurableLanguageForLocale($lingotek_locale);
+            if ($drupal_language !== NULL && $drupal_language->getId() === $configOverride->getLangcode()) {
+              if ($progress === Lingotek::PROGRESS_COMPLETE) {
+                $translation_service->setTargetStatus($entity, $configOverride->getLangcode(), Lingotek::STATUS_READY);
+              }
+              else {
+                $translation_service->setTargetStatus($entity, $configOverride->getLangcode(), Lingotek::STATUS_PENDING);
+              }
+              return;
+            }
+          }
+        }
+        else {
+          $document_id = $translation_service->getConfigDocumentId($mapper);
+          $translation_statuses = \Drupal::service('lingotek')
+            ->getDocumentTranslationStatuses($document_id);
+          foreach ($translation_statuses as $lingotek_locale => $progress) {
+            $drupal_language = $languageMapper->getConfigurableLanguageForLocale($lingotek_locale);
+            if ($drupal_language->getId() === $configOverride->getLangcode()) {
+              if ($progress === Lingotek::PROGRESS_COMPLETE) {
+                $translation_service->setConfigTargetStatus($mapper, $configOverride->getLangcode(), Lingotek::STATUS_READY);
+              }
+              else {
+                $translation_service->setConfigTargetStatus($mapper, $configOverride->getLangcode(), Lingotek::STATUS_PENDING);
+              }
+              return;
+            }
+          }
+        }
+      }
+    }
+  }
+
   protected function getMapperFromConfigName($name) {
     // ToDo: This is inefficient.
+    $result = NULL;
     foreach ($this->mappers as $mapper) {
       $names = $mapper->getConfigNames();
       foreach ($names as $the_name) {
         if ($the_name === $name) {
-          return $mapper;
+          $result = $mapper;
+          break;
         }
       }
     }
-    return NULL;
+    if (!$result) {
+      // It may not be config, but config entity.
+      /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
+      $config_manager = \Drupal::service('config.manager');
+      $entity_type_id = $config_manager->getEntityTypeIdByName($name);
+
+      if ($entity_type_id === 'field_config') {
+        list($field1, $field2, $field_entity_type_id, $field_bundle, $field_id) = explode('.', $name);
+        $entity_type_id = $field_entity_type_id . '_fields';
+      }
+      if (isset($this->mappers[$entity_type_id])) {
+        $entity = $config_manager->loadConfigEntityByName($name);
+        $mapper = clone $this->mappers[$entity_type_id];
+        $mapper->setEntity($entity);
+        $result = $mapper;
+      }
+    }
+    return $result;
   }
 
 }

@@ -757,4 +757,21 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('DE', 'request');
   }
 
+  /**
+   * Tests that we update the statuses when a translation is deleted.
+   */
+  public function testDeleteTranslationUpdatesStatuses() {
+    $this->testFieldBodyTranslationUsingActions();
+
+    $this->goToConfigBulkManagementForm('node_fields');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_CURRENT);
+
+    $this->drupalGet('/admin/structure/types/manage/article/fields/node.article.body/translate');
+    $this->clickLink('Delete');
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    $this->goToConfigBulkManagementForm('node_fields');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
+  }
+
 }

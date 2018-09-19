@@ -834,4 +834,21 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertFieldByName('translation[config_names][node.type.article][description]', 'Uso de "artículos" sensibles al tiempo.');
   }
 
+  /**
+   * Tests that we update the statuses when a translation is deleted.
+   */
+  public function testDeleteTranslationUpdatesStatuses() {
+    $this->testContentTypeTranslationUsingActions();
+
+    $this->goToConfigBulkManagementForm('node_type');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_CURRENT);
+
+    $this->drupalGet('/admin/structure/types/manage/article/translate');
+    $this->clickLink('Delete');
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    $this->goToConfigBulkManagementForm('node_type');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
+  }
+
 }

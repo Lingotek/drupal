@@ -534,6 +534,33 @@ function lingotek_entity_translation_insert(ContentEntityInterface $translation)
   }
 }
 
+function lingotek_entity_translation_delete(ContentEntityInterface $entity) {
+  /** @var \Drupal\lingotek\LanguageLocaleMapperInterface $languageMapper */
+  $languageMapper = \Drupal::service('lingotek.language_locale_mapper');
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+  $lingotek_config = \Drupal::service('lingotek.configuration');
+  /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
+  $translation_service = \Drupal::service('lingotek.content_translation');
+  $langcode = $entity->language()->getId();
+  if ($lingotek_config->isEnabled($entity->getEntityTypeId(), $entity->bundle())) {
+    $document_id = $translation_service->getDocumentId($entity);
+    $translation_statuses = \Drupal::service('lingotek')
+      ->getDocumentTranslationStatuses($document_id);
+    foreach ($translation_statuses as $lingotek_locale => $progress) {
+      $drupal_language = $languageMapper->getConfigurableLanguageForLocale($lingotek_locale);
+      if ($drupal_language->getId() === $langcode) {
+        if ($progress === Lingotek::PROGRESS_COMPLETE) {
+          $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
+        }
+        else {
+          $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+        }
+        return;
+      }
+    }
+  }
+}
+
 /**
  * Implements hook_form_FORM_ID_alter().
  */

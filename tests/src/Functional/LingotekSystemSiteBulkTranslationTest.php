@@ -810,4 +810,21 @@ class LingotekSystemSiteBulkTranslationTest extends LingotekTestBase {
     $this->assertFieldByName('translation[config_names][system.site][slogan]', '"Las llamas" son muy chulas');
   }
 
+  /**
+   * Tests that we update the statuses when a translation is deleted.
+   */
+  public function testDeleteTranslationUpdatesStatuses() {
+    $this->testSystemSiteTranslationUsingActions();
+
+    $this->goToConfigBulkManagementForm();
+    $this->assertTargetStatus('DE', Lingotek::STATUS_CURRENT);
+
+    $this->drupalGet('/admin/config/system/site-information/translate');
+    $this->clickLink('Delete');
+    $this->drupalPostForm(NULL, [], t('Delete'));
+
+    $this->goToConfigBulkManagementForm();
+    $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
+  }
+
 }
