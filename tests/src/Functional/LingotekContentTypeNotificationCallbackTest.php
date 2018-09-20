@@ -390,6 +390,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
       'label' => 'Profile with overrides',
       'auto_upload' => TRUE,
       'auto_download' => TRUE,
+      'auto_download_worker' => FALSE,
       'language_overrides' => [
         'es' => [
           'overrides' => 'custom',

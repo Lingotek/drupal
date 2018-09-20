@@ -104,6 +104,18 @@ class LingotekProfileFormBase extends EntityForm {
       '#disabled' => $profile->isLocked(),
       '#default_value' => $profile->hasAutomaticDownload(),
     ];
+    $form['auto_download_worker'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use a Queue Worker to Download Translations'),
+      '#description' => $this->t('When enabled, completed translations will automatically be queued for download. This worker can be processed multiple ways, e.g. using cron.'),
+      '#disabled' => $profile->isLocked(),
+      '#default_value' => $profile->hasAutomaticDownloadWorker(),
+      '#states' => [
+        'visible' => [
+          ':input[name="auto_download"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
 
     $options = [
       'global_setting' => $this->t('Use global setting'),

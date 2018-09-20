@@ -88,6 +88,8 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
    *
    * @param bool $auto_upload
    *   Whether the profile indicates automatic uploads or not.
+   *
+   * @return $this
    */
   public function setAutomaticUpload($auto_upload);
 
@@ -104,8 +106,28 @@ interface LingotekProfileInterface extends ConfigEntityInterface, LingotekFilter
    *
    * @param bool $auto_download
    *   Whether the profile indicates automatic download or not.
+   *
+   * @return $this
    */
   public function setAutomaticDownload($auto_download);
+
+  /**
+   * Returns whether this profile indicates automatically adding downloads to a worker queue.
+   *
+   * @return bool
+   *   Whether the profile indicates automatic adding downloads to a worker queue.
+   */
+  public function hasAutomaticDownloadWorker();
+
+  /**
+   * Sets whether this profile indicates automatically adding downloads to a worker queue.
+   *
+   * @param bool $auto_download_worker
+   *   Whether the profile indicates automatic adding downloads to a worker queue.
+   *
+   * @return $this
+   */
+  public function setAutomaticDownloadWorker($auto_download_worker);
 
   /**
    * Gets the TM vault of the profile.

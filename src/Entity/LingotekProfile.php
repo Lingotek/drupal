@@ -34,6 +34,7 @@ use Drupal\lingotek\LingotekProfileInterface;
  *     "locked",
  *     "auto_upload",
  *     "auto_download",
+ *     "auto_download_worker",
  *     "append_type_to_title",
  *     "vault",
  *     "project",
@@ -93,6 +94,13 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    * @var bool
    */
   protected $auto_download = FALSE;
+
+  /**
+   * Entities using this profile may use a worker queue to download translations.
+   *
+   * @var bool
+   */
+  protected $auto_download_worker = FALSE;
 
   /**
    * Entities using this profile will use this vault.
@@ -650,6 +658,21 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    */
   public function setAutomaticUpload($auto_upload) {
     $this->auto_upload = $auto_upload;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAutomaticDownloadWorker() {
+    return (bool) $this->auto_download_worker;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAutomaticDownloadWorker($auto_download_worker) {
+    $this->auto_download_worker = $auto_download_worker;
     return $this;
   }
 

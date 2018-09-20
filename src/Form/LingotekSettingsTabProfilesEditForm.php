@@ -63,6 +63,13 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
       '#default_value' => $this->profile['auto_download'],
     ];
 
+    $form['defaults']['auto_download_worker'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use a Queue Worker to Download Translations'),
+      '#description' => $this->t('When enabled, completed translations will automatically be queued for download. This worker can be processed multiple ways, e.g. using cron.'),
+      '#default_value' => $this->profile['auto_download_worker'],
+    ];
+
     $form['defaults']['future_only_note'] = [
       '#type' => 'markup',
       '#markup' => '<h3>' . $this->t('Profile settings impacting only new nodes') . '</h3><hr />',
@@ -129,11 +136,11 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
 
     // Save a new profile
     if (!$this->profile) {
-      $this->saveNewProfile(strtolower($form_values['name']), $form_values['auto_upload'], $form_values['auto_download']);
+      $this->saveNewProfile(strtolower($form_values['name']), $form_values['auto_upload'], $form_values['auto_download'], $form_values['auto_upload_worker']);
     }
     // Edit an existing custom profile
     elseif ($this->is_custom_id) {
-      $this->updateCustomProfile(strtolower($form_values['name']), $form_values['auto_upload'], $form_values['auto_download']);
+      $this->updateCustomProfile(strtolower($form_values['name']), $form_values['auto_upload'], $form_values['auto_download'], $form_values['auto_upload_worker']);
     }
 
     $this->lingotek->set('default.vault', $form_values['vault']);
@@ -200,17 +207,17 @@ class LingotekSettingsTabProfilesEditForm extends LingotekConfigFormBase {
     }
   }
 
-  protected function saveNewProfile($name, $auto_upload, $auto_download) {
-    $profile = LingotekProfile::create(['id' => \Drupal::transliteration()->transliterate($name), 'label' => $name, 'auto_upload' => $auto_upload, 'auto_download' => $auto_download]);
-    $profile->save();
+  protected function saveNewProfile($name, $auto_upload, $auto_download, $auto_download_worker) {
+    $profile = LingotekProfile::create(['id' => \Drupal::transliteration()->transliterate($name), 'label' => $name, 'auto_upload' => $auto_upload, 'auto_download' => $auto_download, 'auto_download_worker' => $auto_download_worker]);
   }
 
-  protected function updateCustomProfile($name, $auto_upload, $auto_download) {
+  protected function updateCustomProfile($name, $auto_upload, $auto_download, $auto_download_worker) {
     /** @var \Drupal\lingotek\Entity\LingotekProfile $current_profile */
     $current_profile = $this->profile;
     $current_profile->set('label', $name);
     $current_profile->setAutomaticDownload($auto_download);
     $current_profile->setAutomaticUpload($auto_upload);
+    $current_profile->setAutomaticDownloadWorker($auto_download_worker);
     $current_profile->save();
   }
 

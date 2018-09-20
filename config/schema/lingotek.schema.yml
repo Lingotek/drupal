@@ -250,6 +250,9 @@ lingotek.profile.*:
     auto_download:
       type: boolean
       label: 'Automatic Download'
+    auto_download_worker:
+      type: boolean
+      label: 'Automatic Download using a Worker Queue'
     vault:
       type: string
       label: 'TM Vault'

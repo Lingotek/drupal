@@ -11,6 +11,7 @@ use Drupal\lingotek\Form\LingotekSettingsTabConfigurationForm;
 use Drupal\lingotek\Form\LingotekSettingsTabContentForm;
 use Drupal\lingotek\Form\LingotekSettingsTabIntegrationsForm;
 use Drupal\lingotek\Form\LingotekSettingsTabPreferencesForm;
+use Drupal\lingotek\Form\LingotekSettingsTabProfilesEditForm;
 use Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm;
 
 class LingotekSettingsController extends LingotekControllerBase {

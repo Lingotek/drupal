@@ -179,6 +179,9 @@ class LingotekNotificationController extends LingotekControllerBase {
         // TO-DO: download target for locale_code and document_id (also, progress and complete params can be used as needed)
         // ex. ?project_id=103956f4-17cf-4d79-9d15-5f7b7a88dee2&locale_code=de-DE&document_id=bbf48a7b-b201-47a0-bc0e-0446f9e33a2f&complete=true&locale=de_DE&progress=100&type=target
         $document_id = $request->get('document_id');
+        $locale = $request->get('locale');
+        $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
+          ->id();
 
         $lock = \Drupal::lock();
         $lock_name = __FUNCTION__ . ':' . $document_id;
@@ -200,14 +203,34 @@ class LingotekNotificationController extends LingotekControllerBase {
             if ($entity instanceof ConfigEntityInterface) {
               $translation_service = $config_translation_service;
             }
-            $locale = $request->get('locale');
-            $langcode = $this->languageLocaleMapper->getConfigurableLanguageForLocale($locale)
-              ->id();
             $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_READY);
-            $result['download'] = $profile->hasAutomaticDownloadForTarget($langcode) ?
-              $translation_service->downloadDocument($entity, $locale) : FALSE;
-            if ($result['download']) {
+
+            if ($profile->hasAutomaticDownloadForTarget($langcode) && $profile->hasAutomaticDownloadWorker()) {
+              $queue = \Drupal::queue('lingotek_downloader_queue_worker');
+              $item = [
+                'entity_type_id' => $entity->getEntityTypeId(),
+                'entity_id' => $entity->id(),
+                'locale' => $locale,
+                'document_id' => $document_id,
+              ];
+              $result['download_queued'] = $queue->createItem($item);
+            }
+            elseif ($profile->hasAutomaticDownloadForTarget($langcode) && !$profile->hasAutomaticDownloadWorker()) {
+              $result['download'] = $translation_service->downloadDocument($entity, $locale);
+            }
+            else {
+              $result['download'] = FALSE;
+            }
+            if (isset($result['download']) && $result['download']) {
               $messages[] = "Document downloaded.";
+              $http_status_code = Response::HTTP_OK;
+            }
+            elseif (isset($result['download_queued']) && $result['download_queued']) {
+              $messages[] = new FormattableMarkup('Download for target @locale in document @document has been queued.', [
+                '@locale' => $locale,
+                '@document' => $document_id,
+              ]);
+              $result['download_queued'] = TRUE;
               $http_status_code = Response::HTTP_OK;
             }
             else {
