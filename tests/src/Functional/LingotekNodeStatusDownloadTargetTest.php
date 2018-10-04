@@ -4,11 +4,13 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Tests translating a node.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
 
@@ -99,6 +101,11 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
 
     $this->goToContentBulkManagementForm();
 
+    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
+
+    // Check that the Spanish translation is still 'Ready'.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
+
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
@@ -106,9 +113,8 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    // Check that the Spanish translation is still EDITED.
-    $this->assertLingotekWorkbenchLink('es_MX');
-    $this->assertTargetStatus('ES', 'edited');
+    // Check that the Spanish translation is still 'Ready'.
+    $this->assertTargetStatus('ES', Lingotek::STATUS_READY);
 
     // Download the Spanish translation.
     $key = $this->getBulkSelectionKey('en', 1);
@@ -118,10 +124,10 @@ class LingotekNodeStatusDownloadTargetTest extends LingotekTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
-    // Check the status is not Current for source or for Spanish
+    // Check the status is not Current for source.
     $source_edited = $this->xpath("//span[contains(@class,'language-icon') and contains(@class, 'source-edited')  and contains(@title, 'Re-upload (content has changed since last upload)')]");
     $this->assertEqual(count($source_edited), 1, 'Source is marked as edited.');
-    $this->assertTargetStatus('ES', 'edited');
+    $this->assertTargetStatus('ES', Lingotek::STATUS_EDITED);
 
   }
 

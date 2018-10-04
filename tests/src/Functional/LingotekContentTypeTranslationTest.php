@@ -115,10 +115,7 @@ class LingotekContentTypeTranslationTest extends LingotekTestBase {
     // Check the status is not edited for Vasque, but available to request
     // translation.
     $this->assertLinkByHref('admin/lingotek/config/request/node_type/article/eu_ES');
-
-    $this->clickLink(t('Request translation'), 1);
-    $this->assertText(t('Translation to es_MX requested successfully'));
-    $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.added_target_locale'));
+    $this->assertNoLinkByHref('admin/lingotek/config/request/node_type/article/es_MX');
 
     // Recheck status.
     $this->clickLink('Check Download');

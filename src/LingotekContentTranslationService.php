@@ -378,19 +378,18 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $target_languages = $this->languageManager->getLanguages();
     $entity_langcode = $entity->getUntranslated()->language()->getId();
 
-    // These statuses indicate that content has been uploaded to the API, so
-    // we need to flag them as out of date.
+    // Only mark as out of date the current ones.
     $to_change = [
       Lingotek::STATUS_CURRENT,
-      Lingotek::STATUS_PENDING,
-      Lingotek::STATUS_INTERMEDIATE,
-      Lingotek::STATUS_READY,
+      // Lingotek::STATUS_PENDING,
+      // Lingotek::STATUS_INTERMEDIATE,
+      // Lingotek::STATUS_READY,
     ];
 
     foreach ($target_languages as $langcode => $language) {
       if ($langcode != $entity_langcode && $current_status = $this->getTargetStatus($entity, $langcode)) {
         if (in_array($current_status, $to_change)) {
-          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_EDITED);
+          $this->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
         }
       }
     }

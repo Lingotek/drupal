@@ -312,11 +312,6 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     // Go back to translations.
     $this->clickLink('Translate');
 
-    // Request translation.
-    $link = $this->xpath('//a[normalize-space()="Request translation" and contains(@href,"es_AR")]');
-    $link[0]->click();
-    $this->assertText("Locale 'es_AR' was added as a translation target for node Dogs are cool.");
-
     // Check translation status.
     $this->clickLink('Check translation status');
     $this->assertText('The es_AR translation for node Dogs are cool is ready for download.');
@@ -411,11 +406,6 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Go back to translations.
     $this->clickLink('Translate');
-
-    // Request translation.
-    $link = $this->xpath('//a[normalize-space()="Request translation" and contains(@href,"es_AR")]');
-    $link[0]->click();
-    $this->assertText("Locale 'es_AR' was added as a translation target for node Dogs are cool.");
 
     // Check translation status.
     $this->clickLink('Check translation status');

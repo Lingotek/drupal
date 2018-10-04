@@ -242,12 +242,13 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_fields');
 
-    // Check the status is edited for Spanish.
-    $this->assertTargetStatus('ES', 'edited');
+    // Check the source status is edited.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertNoTargetStatus('EU', 'edited');
-    $this->assertTargetStatus('EU', 'request');
+    $this->assertNoTargetStatus('EU', Lingotek::STATUS_EDITED);
+    $this->assertTargetStatus('EU', Lingotek::STATUS_REQUEST);
 
     // Request korean, with outdated content available.
     $this->clickLink('KO');
@@ -299,12 +300,13 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_fields');
 
-    // Check the status is edited for Spanish.
-    $this->assertTargetStatus('ES', 'edited');
+    // Check the source status is edited.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertNoTargetStatus('EU', 'edited');
-    $this->assertTargetStatus('EU', 'request');
+    $this->assertNoTargetStatus('EU', Lingotek::STATUS_EDITED);
+    $this->assertTargetStatus('EU', Lingotek::STATUS_REQUEST);
 
     // Recheck status.
     $this->clickLink('EN');

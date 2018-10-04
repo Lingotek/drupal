@@ -1140,9 +1140,6 @@ class LingotekConfigManagementForm extends FormBase {
         ],
       ],
     ];
-    if ($source_status == Lingotek::STATUS_EDITED && !$this->translationService->getConfigDocumentId($mapper)) {
-      $data['data']['#context']['status'] = strtolower(Lingotek::STATUS_REQUEST);
-    }
     return $data;
   }
 

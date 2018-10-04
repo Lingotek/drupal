@@ -105,8 +105,12 @@ class LingotekConfigTranslationEditedToPendingTest extends LingotekTestBase {
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('config');
 
-    // Check the status is edited for Spanish.
-    $this->assertTargetStatus('ES', Lingotek::STATUS_EDITED);
+    // Check the source status is marked as EDITED.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
+
+    // Check the status is marked as PENDING for Spanish
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
     // Check the status is marked REQUEST for German
     $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
 

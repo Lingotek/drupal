@@ -3,6 +3,7 @@
 namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Tests translating a field using the bulk management form.
@@ -94,9 +95,12 @@ class LingotekConfigEntityTranslationEditedToPendingTest extends LingotekTestBas
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_fields');
 
-    // Check the status is edited for Spanish.
-    $edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($edited), 1, 'Edited translation is shown.');
+    // Check the source status is marked as Importing after automatic upload.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_IMPORTING);
+
+    // Check the status is marked as PENDING for Spanish
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
+
     // TODO: once the config is following the correct translation flow then the
     // following tests will work, but for now it's not
     // Clicking English must init the upload of content.

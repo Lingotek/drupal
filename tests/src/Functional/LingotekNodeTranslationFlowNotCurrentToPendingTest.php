@@ -4,11 +4,13 @@ namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
 
 /**
  * Tests translating a node.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBase {
 
@@ -110,12 +112,14 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
 
     $this->goToContentBulkManagementForm();
 
-    // Check the status is marked NOT_CURRENT for Spanish
-    $es_edited = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-edited')  and contains(text(), 'ES')]");
-    $this->assertEqual(count($es_edited), 1, 'Spanish is marked as not current.');
+    // Check the source status is marked as EDITED.
+    $this->assertSourceStatus('EN', Lingotek::STATUS_EDITED);
+
+    // Check the status is marked as PENDING for Spanish
+    $this->assertTargetStatus('ES', Lingotek::STATUS_PENDING);
 
     // Check the status is marked REQUEST for German
-    $this->assertTargetStatus('DE', 'request');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
 
     // Clicking English must init the upload of content.
     $this->assertLingotekUpdateLink();
@@ -130,8 +134,9 @@ class LingotekNodeTranslationFlowNotCurrentToPendingTest extends LingotekTestBas
 
     $es_pending = $this->xpath("//a[contains(@class,'language-icon') and contains(@class, 'target-pending')  and contains(text(), 'ES')]");
     $this->assertEqual(count($es_pending), 1, 'Spanish is marked as pending.');
+
     // Check the status is still request for German.
-    $this->assertTargetStatus('DE', 'request');
+    $this->assertTargetStatus('DE', Lingotek::STATUS_REQUEST);
 
   }
 

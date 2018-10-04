@@ -288,8 +288,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Check the status is not edited for Vasque, but available to request
     // translation.
     $this->assertLinkByHref('admin/lingotek/entity/add_target/dummy-document-hash-id/eu_ES');
-    $this->clickLink('Request translation', 1);
-    $this->assertText("Locale 'es_MX' was added as a translation target for node Llamas are cool EDITED.");
+    $this->assertNoLinkByHref('admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
 
     // Recheck status.
     $this->clickLink('Check translation status');

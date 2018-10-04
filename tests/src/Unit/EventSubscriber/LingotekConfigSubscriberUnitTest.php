@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
 
-  use Drupal\config_translation\ConfigFieldMapper;
   use Drupal\config_translation\ConfigMapperManagerInterface;
+  use Drupal\config_translation\ConfigNamesMapper;
   use Drupal\Core\Config\Config;
   use Drupal\Core\Config\ConfigCrudEvent;
   use Drupal\Core\Entity\EntityManagerInterface;
@@ -74,7 +74,7 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
 
       $this->translationService = $this->createMock(LingotekConfigTranslationServiceInterface::class);
       $this->mapperManager = $this->createMock(ConfigMapperManagerInterface::class);
-      $this->mapper = $this->createMock(ConfigFieldMapper::class);
+      $this->mapper = $this->createMock(ConfigNamesMapper::class);
       $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
       $this->entityManager = $this->createMock(EntityManagerInterface::class);
 

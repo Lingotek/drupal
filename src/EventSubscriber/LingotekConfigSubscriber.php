@@ -104,9 +104,18 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
         $name = $config->getName();
         $mapper = $this->getMapperFromConfigName($name);
         if ($mapper !== NULL) {
-          if ($this->translationService->getConfigDocumentId($mapper)) {
-            $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_EDITED);
-            $this->translationService->markConfigTranslationsAsDirty($mapper);
+          if ($mapper instanceof ConfigEntityMapper) {
+            $entity = $mapper->getEntity();
+            if ($this->translationService->getDocumentId($entity)) {
+              $this->translationService->setSourceStatus($entity, Lingotek::STATUS_EDITED);
+              $this->translationService->markTranslationsAsDirty($entity);
+            }
+          }
+          else {
+            if ($this->translationService->getConfigDocumentId($mapper)) {
+              $this->translationService->setConfigSourceStatus($mapper, Lingotek::STATUS_EDITED);
+              $this->translationService->markConfigTranslationsAsDirty($mapper);
+            }
           }
           /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
           $lingotek_config = $this->lingotekConfiguration;
