@@ -148,6 +148,11 @@ abstract class LingotekTestBase extends BrowserTestBase {
     $this->drupalGet($this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
   }
 
+  protected function getDestination($entity_type_id = 'node', $prefix = NULL) {
+    $basepath = \Drupal::request()->getBasePath();
+    return '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix);
+  }
+
   /**
    * Get the content bulk management url.
    *

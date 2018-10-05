@@ -964,7 +964,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->goToContentBulkManagementForm();
 
     // Ensure there is a link to upload and click it.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/upload/node/1?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekUploadLink();
     $this->clickLink('EN');
 
     // After we filter by "IMPORTING", there is no pager and the rows
@@ -978,7 +978,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertFieldByName('filters[advanced_options][upload_status]', 'IMPORTING', 'The value is retained in the filter.');
 
     // Ensure there is a link to upload and click it.
-    $this->assertLinkByHref($basepath . '/admin/lingotek/entity/check_upload/dummy-document-hash-id?destination=' . $basepath . '/admin/lingotek/manage/node');
+    $this->assertLingotekCheckSourceStatusLink();
     $this->clickLink('EN');
 
     // After we filter by "CURRENT", there is no pager and the rows

@@ -20,7 +20,11 @@ trait LingotekManagementTestTrait {
   protected function assertLingotekUploadLink($entity_id = 1, $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/upload/' . $entity_type_id . '/' . $entity_id . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/upload/' . $entity_type_id . '/' . $entity_id;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
   }
 
   /**
@@ -36,7 +40,11 @@ trait LingotekManagementTestTrait {
   protected function assertLingotekUpdateLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/update/' . $document_id . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/update/' . $document_id;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
   }
 
   /**
@@ -52,7 +60,11 @@ trait LingotekManagementTestTrait {
   protected function assertLingotekCheckSourceStatusLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/check_upload/' . $document_id . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_upload/' . $document_id;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
   }
 
   /**
@@ -68,7 +80,11 @@ trait LingotekManagementTestTrait {
   protected function assertNoLingotekCheckSourceStatusLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertNoLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/check_upload/' . $document_id . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_upload/' . $document_id;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertNoLinkByHref($href);
   }
 
   /**
@@ -86,7 +102,11 @@ trait LingotekManagementTestTrait {
   protected function assertLingotekRequestTranslationLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
   }
 
   /**
@@ -104,7 +124,11 @@ trait LingotekManagementTestTrait {
   protected function assertNoLingotekRequestTranslationLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertNoLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertNoLinkByHref($href);
   }
 
   /**
@@ -122,7 +146,11 @@ trait LingotekManagementTestTrait {
   protected function assertLingotekCheckTargetStatusLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/check_target/' . $document_id . '/' . $locale . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_target/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
   }
 
   /**
@@ -140,7 +168,11 @@ trait LingotekManagementTestTrait {
   protected function assertLingotekDownloadTargetLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/download/' . $document_id . '/' . $locale . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertLinkByHref($href);
   }
 
   /**
@@ -158,7 +190,11 @@ trait LingotekManagementTestTrait {
   protected function assertNoLingotekDownloadTargetLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
-    $this->assertNoLinkByHref($basepath . $languagePrefix . '/admin/lingotek/entity/download/' . $document_id . '/' . $locale . '?destination=' . $basepath . $this->getContentBulkManagementFormUrl($entity_type_id, $prefix));
+    $href = $basepath . $languagePrefix . '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
+    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+      $href .= $destination;
+    }
+    $this->assertNoLinkByHref($href);
   }
 
   /**

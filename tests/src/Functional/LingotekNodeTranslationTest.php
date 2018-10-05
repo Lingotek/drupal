@@ -143,8 +143,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Assert the link keeps the language.
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
-    $this->assertNoLinkByHref('/es/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertNoLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id', 'node', 'es');
 
     // Request translation.
     $this->clickLink('Request translation');
@@ -234,8 +234,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->assertText('The import for node Llamas are cool is complete.');
 
     // Assert the link keeps the language.
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
-    $this->assertNoLinkByHref('/es/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->assertNoLingotekRequestTranslationLink('es_MX', 'dummy-document-hash-id', 'node', 'es');
 
     // Request translation.
     $this->clickLink('Request translation');
@@ -287,8 +287,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // Check the status is not edited for Vasque, but available to request
     // translation.
-    $this->assertLinkByHref('admin/lingotek/entity/add_target/dummy-document-hash-id/eu_ES');
-    $this->assertNoLinkByHref('admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertLingotekRequestTranslationLink('eu_ES');
+    $this->assertNoLingotekRequestTranslationLink('es_MX');
 
     // Recheck status.
     $this->clickLink('Check translation status');
@@ -389,8 +389,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
 
     // There are two links for requesting translations, or we can add them
     // manually.
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertLingotekRequestTranslationLink('it_IT');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertLinkByHref('/node/1/translations/add/en/it');
     $this->assertLinkByHref('/node/1/translations/add/en/es');
 
@@ -402,8 +402,8 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->drupalGet('node/1/translations');
 
     // Italian is not present anymore, but still can add a translation.
-    $this->assertNoLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/it_IT');
-    $this->assertLinkByHref('/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX');
+    $this->assertNoLingotekRequestTranslationLink('it_IT');
+    $this->assertLingotekRequestTranslationLink('es_MX');
     $this->assertLinkByHref('/node/1/translations/add/en/it');
     $this->assertLinkByHref('/node/1/translations/add/en/es');
   }
@@ -683,6 +683,10 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $this->clickLink('Las llamas son chulas');
     $this->assertSession()->pageTextContains('Las llamas son chulas');
     $this->assertSession()->pageTextContains('Las llamas son muy chulas');
+  }
+
+  protected function getDestination($entity_type_id = 'node', $prefix = NULL) {
+    return '';
   }
 
 }
