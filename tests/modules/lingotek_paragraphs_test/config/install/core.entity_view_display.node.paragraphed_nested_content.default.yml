@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.paragraphed_nested_content.field_paragraph_container
+    - node.type.paragraphed_nested_content
+  module:
+    - entity_reference_revisions
+    - text
+    - user
+id: node.paragraphed_nested_content.default
+targetEntityType: node
+bundle: paragraphed_nested_content
+mode: default
+content:
+  field_paragraph_container:
+    type: entity_reference_revisions_entity_view
+    weight: 102
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    region: content
+  links:
+    weight: 100
+    region: content
+hidden:
+  langcode: true

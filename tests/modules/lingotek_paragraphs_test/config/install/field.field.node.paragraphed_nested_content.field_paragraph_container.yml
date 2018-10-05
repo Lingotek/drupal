@@ -1,0 +1,36 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_paragraph_container
+    - node.type.paragraphed_nested_content
+    - paragraphs.paragraphs_type.paragraph_container
+  module:
+    - entity_reference_revisions
+id: node.paragraphed_nested_content.field_paragraph_container
+field_name: field_paragraph_container
+entity_type: node
+bundle: paragraphed_nested_content
+label: 'Paragraph Container'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      paragraph_container: paragraph_container
+    target_bundles_drag_drop:
+      paragraph_container:
+        enabled: true
+        weight: 4
+      image_text:
+        weight: 5
+        enabled: false
+      text_image:
+        weight: 6
+        enabled: false
+field_type: entity_reference_revisions

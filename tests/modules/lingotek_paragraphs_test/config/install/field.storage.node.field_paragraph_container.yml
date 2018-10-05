@@ -3,10 +3,11 @@ status: true
 dependencies:
   module:
     - entity_reference_revisions
+    - node
     - paragraphs
-id: paragraph.field_paragraphs_demo
-field_name: field_paragraphs_demo
-entity_type: paragraph
+id: node.field_paragraph_container
+field_name: field_paragraph_container
+entity_type: node
 type: entity_reference_revisions
 settings:
   target_type: paragraph

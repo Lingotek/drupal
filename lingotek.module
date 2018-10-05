@@ -87,6 +87,7 @@ function lingotek_entity_insert(EntityInterface $entity) {
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+        return;
       }
       elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
         if ($translation_service->getDocumentId($entity) !== NULL) {
@@ -96,6 +97,7 @@ function lingotek_entity_insert(EntityInterface $entity) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
         }
         $translation_service->checkTargetStatuses($entity);
+        return;
       }
 
       $has_autoupload = $profile->hasAutomaticUpload();
@@ -218,7 +220,9 @@ function lingotek_entity_insert(EntityInterface $entity) {
  */
 function lingotek_entity_update(EntityInterface $entity) {
   // If it's new, has been already processed.
-  if (isset($entity->lingotek_processed) && $entity->lingotek_processed) {
+  if ((isset($entity->lingotek_processed) && $entity->lingotek_processed) ||
+      // If it's deleted, the original has been marked as processed.
+      (isset($entity->original->lingotek_processed) && $entity->original->lingotek_processed)) {
     return;
   }
   /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $configuration_service */
@@ -239,6 +243,7 @@ function lingotek_entity_update(EntityInterface $entity) {
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+        return;
       }
       elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
         if ($translation_service->getDocumentId($entity) !== NULL) {
@@ -248,6 +253,7 @@ function lingotek_entity_update(EntityInterface $entity) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
         }
         $translation_service->checkTargetStatuses($entity);
+        return;
       }
 
       $has_autoupload = $profile->hasAutomaticUpload();
@@ -293,10 +299,7 @@ function lingotek_entity_update(EntityInterface $entity) {
       /** @var \Drupal\lingotek\Moderation\LingotekModerationFactoryInterface $moderation_factory */
       $moderation_factory = \Drupal::service('lingotek.moderation_factory');
       $moderation_handler = $moderation_factory->getModerationHandler();
-      $prevent = $moderation_handler->shouldModerationPreventUpload($entity);
-      if ($prevent) {
-        return;
-      }
+      $preventUpload = $moderation_handler->shouldModerationPreventUpload($entity);
 
       /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
       $translation_service = \Drupal::service('lingotek.content_translation');
@@ -305,6 +308,7 @@ function lingotek_entity_update(EntityInterface $entity) {
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
         $translation_service->setTargetStatuses($entity, Lingotek::STATUS_DISABLED);
+        return;
       }
       elseif ($translation_service->getSourceStatus($entity) === Lingotek::STATUS_DISABLED) {
         if ($translation_service->getDocumentId($entity) !== NULL) {
@@ -314,9 +318,10 @@ function lingotek_entity_update(EntityInterface $entity) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_CURRENT);
         }
         $translation_service->checkTargetStatuses($entity);
+        return;
       }
 
-      $has_autoupload = $profile->hasAutomaticUpload();
+      $has_autoupload = !$preventUpload && $profile->hasAutomaticUpload();
 
       $source_status = $translation_service->getSourceStatus($entity);
       $entity_has_changed = $translation_service->hasEntityChanged($entity);
@@ -554,6 +559,9 @@ function lingotek_entity_translation_delete(ContentEntityInterface $entity) {
         }
         else {
           $translation_service->setTargetStatus($entity, $langcode, Lingotek::STATUS_PENDING);
+        }
+        if (isset($entity->original)) {
+          $entity->original->lingotek_processed = TRUE;
         }
         return;
       }

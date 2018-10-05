@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: { }
+third_party_settings: { }
+name: 'Paragraphed nested content'
+type: paragraphed_nested_content
+description: "Article with nested paragraphs."
+help: ''
+new_revision: true
+preview_mode: 1
+display_submitted: true

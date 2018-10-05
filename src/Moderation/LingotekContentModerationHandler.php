@@ -160,9 +160,12 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
    * {@inheritdoc}
    */
   public function isModerationEnabled(EntityInterface $entity) {
+    $moderationEnabled = FALSE;
     $moderationClass = $entity->getEntityType()->getHandlerClass('moderation');
-    $implements = class_implements($moderationClass);
-    $moderationEnabled = in_array('Drupal\content_moderation\Entity\Handler\ModerationHandlerInterface', $implements);
+    if ($moderationClass) {
+      $implements = class_implements($moderationClass);
+      $moderationEnabled = in_array('Drupal\content_moderation\Entity\Handler\ModerationHandlerInterface', $implements);
+    }
     return $moderationEnabled;
   }
 

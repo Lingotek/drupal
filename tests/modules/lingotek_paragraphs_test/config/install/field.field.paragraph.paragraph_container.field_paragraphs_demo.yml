@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_paragraphs_demo
+    - paragraphs.paragraphs_type.image_text
+    - paragraphs.paragraphs_type.paragraph_container
+    - paragraphs.paragraphs_type.text_image
+  module:
+    - entity_reference_revisions
+id: paragraph.paragraph_container.field_paragraphs_demo
+field_name: field_paragraphs_demo
+entity_type: paragraph
+bundle: paragraph_container
+label: field_paragraphs_demo
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      image_text: image_text
+      text_image: text_image
+    target_bundles_drag_drop:
+      paragraph_container:
+        weight: 4
+        enabled: false
+      image_text:
+        enabled: true
+        weight: 5
+      text_image:
+        enabled: true
+        weight: 6
+field_type: entity_reference_revisions

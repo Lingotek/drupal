@@ -600,6 +600,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function hasEntityChanged(ContentEntityInterface &$entity) {
     if (isset($entity->original)) {
+      if ($entity->getRevisionId() !== $entity->original->getRevisionId()) {
+        return TRUE;
+      }
       $source_data = $this->getSourceData($entity);
       if (isset($source_data['_lingotek_metadata'])) {
         unset($source_data['_lingotek_metadata']['_entity_revision']);

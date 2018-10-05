@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: paragraph_container
+label: 'Paragraph Container'
+icon_uuid: null
+description: 'A paragraph hosting other paragraphs.'
+behavior_plugins: {  }

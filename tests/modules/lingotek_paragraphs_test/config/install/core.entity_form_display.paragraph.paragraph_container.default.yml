@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.paragraph_container.field_paragraphs_demo
+    - paragraphs.paragraphs_type.paragraph_container
+  module:
+    - entity_reference_revisions
+id: paragraph.paragraph_container.default
+targetEntityType: paragraph
+bundle: paragraph_container
+mode: default
+content:
+  field_paragraphs_demo:
+    type: entity_reference_paragraphs
+    weight: 122
+    settings:
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
+    third_party_settings: {  }
+    region: content
+hidden:
+  created: true
+  status: true
+  uid: true
