@@ -7,6 +7,9 @@ build:
         halt-on-fail: true
       host_command:
         commands:
+          - 'php -f modules/contrib/lingotek/scripts/check-version.php; if [ $? -eq 1 ]; then sudo -u www-data curl "https://www.drupal.org/files/issues/2018-05-28/revision-create-hooks-2975754-2.patch" | sudo -u www-data patch -p1; fi;'
+          - 'php -f modules/contrib/lingotek/scripts/check-version.php; if [ $? -eq 1 ]; then sudo -u www-data curl "https://www.drupal.org/files/issues/2018-05-29/2826021-31.patch" | sudo -u www-data patch -p1; fi;'
+          - 'php -f modules/contrib/lingotek/scripts/check-version.php; if [ $? -eq 1 ]; then sudo -u www-data curl "https://www.drupal.org/files/issues/2018-05-28/respect-multilingual-2975762-2.patch" | sudo -u www-data patch -p1; fi;'
           - 'cd modules/contrib/entity_reference_revisions; sudo -u www-data curl "https://www.drupal.org/files/issues/2018-09-26/err-forward-translation-revision-2961399-62.patch" | sudo -u www-data patch -p1'
       csslint:
         halt-on-fail: false
