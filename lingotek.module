@@ -436,7 +436,8 @@ function lingotek_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#type' => 'select',
       '#title' => t('Translation Profile'),
       '#options' => $profile_options,
-      '#default_value' => $default_profile->id(),
+      // If the profile is invalid, default to not do anything for safety.
+      '#default_value' => array_key_exists($default_profile->id(), $profile_options) ? $default_profile->id() : Lingotek::PROFILE_MANUAL,
       '#access' => $can_assign_profile,
     ];
 

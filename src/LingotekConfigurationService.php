@@ -146,7 +146,8 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function getEntityProfile(ContentEntityInterface $entity, $provide_default = TRUE) {
-    $profile_id = $this->getDefaultProfileId($entity->getEntityTypeId(), $entity->bundle(), $provide_default);
+    $default_profile_id = $this->getDefaultProfileId($entity->getEntityTypeId(), $entity->bundle(), $provide_default);
+    $profile_id = $default_profile_id;
     if ($entity->lingotek_metadata !== NULL && $entity->lingotek_metadata->entity !== NULL) {
       if ($entity->lingotek_metadata->entity->getProfile() !== NULL) {
         $profile_id = $entity->lingotek_metadata->entity->getProfile();
@@ -157,7 +158,17 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
         $profile_id = $provide_default ? $profile_id : NULL;
       }
     }
-    return $profile_id ? LingotekProfile::load($profile_id) : NULL;
+    $profile = $profile_id ? LingotekProfile::load($profile_id) : NULL;
+    if ($profile === NULL && $provide_default) {
+      $profile = $default_profile_id ? LingotekProfile::load($default_profile_id) : NULL;
+    }
+    if ($profile === NULL && $provide_default) {
+      // If we still didn't get a profile, return an agnostic profile that won't
+      // auto upload or auto download anything.
+      $profile = LingotekProfile::create([]);
+    }
+
+    return $profile;
   }
 
   /**
