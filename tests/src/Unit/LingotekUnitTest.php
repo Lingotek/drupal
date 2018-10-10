@@ -517,7 +517,7 @@ class LingotekUnitTest extends UnitTestCase {
 
     // We upload with a profile that has marked to use the default vault and project,
     // so must be replaced.
-    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default', 'filter' => 'project_default'], 'lingotek_profile');
+    $profile = new LingotekProfile(['id' => 'profile2', 'project' => 'default', 'vault' => 'default', 'filter' => 'drupal_default'], 'lingotek_profile');
     $this->lingotek->uploadDocument('title', 'content', 'es', NULL, $profile);
 
     // We upload without a profile.

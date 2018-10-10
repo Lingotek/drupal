@@ -624,6 +624,44 @@ function lingotek_update_8211() {
   $lingotek_config->setPreference('append_type_to_title', TRUE);
 }
 
+/**
+ * Set the default filter for existing profiles and settings.
+ */
+function lingotek_update_8212() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('lingotek.settings');
+  $modified = FALSE;
+  if ($config->get('default.filter') === 'project_default') {
+    $config->set('default.filter', 'drupal_default');
+    $modified = TRUE;
+  }
+  if ($config->get('default.subfilter') === 'project_default') {
+    $config->set('default.subfilter', 'drupal_default');
+    $modified = TRUE;
+  }
+  if ($modified) {
+    $config->save();
+  }
+
+  /** @var \Drupal\lingotek\Entity\LingotekProfile $profiles */
+  $profiles = LingotekProfile::loadMultiple();
+  $modified = FALSE;
+  foreach ($profiles as $id => $profile) {
+    if ($profile->getFilter() === 'project_default') {
+      $profile->setFilter('drupal_default');
+      $modified = TRUE;
+    }
+    if ($profile->getSubfilter() === 'project_default') {
+      $profile->setSubfilter('drupal_default');
+      $modified = TRUE;
+    }
+    if ($modified) {
+      $profile->save();
+      $modified = FALSE;
+    }
+  }
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

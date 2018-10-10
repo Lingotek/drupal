@@ -196,6 +196,9 @@ class Lingotek implements LingotekInterface {
       'fprm_subfilter_id' => $this->lingotekFilterManager->getSubfilterId($profile),
       'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
     ];
+    // Remove filters set to NULL
+    $defaults = array_filter($defaults);
+
     $metadata = $this->getIntelligenceMetadata($content);
 
     if ($profile !== NULL && $project = $profile->getProject()) {
@@ -353,7 +356,7 @@ class Lingotek implements LingotekInterface {
     $default_value = $this->get($default_key);
     $valid_resource_ids = array_keys($resources);
     if ($default_key === 'default.filter') {
-      $valid_resource_ids[] = 'project_default';
+      $valid_resource_ids[] = 'drupal_default';
     }
     if (empty($default_value) || !in_array($default_value, $valid_resource_ids)) {
       $value = current($valid_resource_ids);

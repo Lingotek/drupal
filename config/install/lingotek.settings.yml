@@ -3,8 +3,8 @@ default:
     project:
     workflow:
     vault:
-    filter: project_default
-    subfilter: project_default
+    filter: drupal_default
+    subfilter: drupal_default
 preference:
   advanced_parsing: true
   advanced_taxonomy_terms: true

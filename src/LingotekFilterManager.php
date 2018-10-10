@@ -34,6 +34,7 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
   public function getLocallyAvailableFilters() {
     $filters = $this->configFactory->get('lingotek.settings')->get('account.resources.filter');
     $filters['project_default'] = 'Project Default';
+    $filters['drupal_default'] = 'Drupal Default';
     return $filters;
   }
 
@@ -93,17 +94,26 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
   public function getFilterId(LingotekFilterProviderInterface $profile = NULL) {
     $defaults = new LingotekDefaultFilterProvider();
     $defaultFilter = $defaults->getFilter();
-    $filter = $defaultFilter;
+    $filter = NULL;
     $settingsFilter = $this->getDefaultFilter();
     if ($profile !== NULL && $profileFilter = $profile->getFilter()) {
-      if ($profileFilter !== 'project_default' && $settingsFilter !== 'project_default') {
-        if ($profileFilter === 'default') {
-          $filter = $settingsFilter;
-        }
-        else {
+      switch ($profileFilter) {
+        case 'project_default':
+          $filter = NULL;
+          break;
+        case 'drupal_default':
+          $filter = $defaultFilter;
+          break;
+        case 'default':
+          $filter = $this->chooseAppropriateFilterID($settingsFilter, $defaultFilter);
+          break;
+        default:
           $filter = $profileFilter;
-        }
+          break;
       }
+    }
+    else {
+      $filter = $this->chooseAppropriateFilterID($settingsFilter, $defaultFilter);
     }
     return $filter;
   }
@@ -114,17 +124,50 @@ class LingotekFilterManager implements LingotekFilterManagerInterface {
   public function getSubfilterId(LingotekFilterProviderInterface $profile = NULL) {
     $defaults = new LingotekDefaultFilterProvider();
     $defaultFilter = $defaults->getSubfilter();
-    $filter = $defaultFilter;
+    $filter = NULL;
     $settingsFilter = $this->getDefaultSubfilter();
     if ($profile !== NULL && $profileFilter = $profile->getSubfilter()) {
-      if ($profileFilter !== 'project_default' && $settingsFilter !== 'project_default') {
-        if ($profileFilter === 'default') {
-          $filter = $settingsFilter;
-        }
-        else {
+      switch ($profileFilter) {
+        case 'project_default':
+          $filter = NULL;
+          break;
+        case 'drupal_default':
+          $filter = $defaultFilter;
+          break;
+        case 'default':
+          $filter = $this->chooseAppropriateFilterID($settingsFilter, $defaultFilter);
+          break;
+        default:
           $filter = $profileFilter;
-        }
+          break;
       }
+    }
+    else {
+      $filter = $this->chooseAppropriateFilterID($settingsFilter, $defaultFilter);
+    }
+    return $filter;
+  }
+
+  /**
+   * Helper used to choose the appropriate filter ID based on the one listed in settings.
+   *
+   * @param string $settingsFilter
+   *   Either 'project_default', 'drupal_default' or the filter ID.
+   * @param string $drupalDefaultFilterID
+   *   The Drupal default filter ID.
+   *
+   * @return string|null
+   *   The appropriate filter ID or NULL if project default is to be used.
+   */
+  protected function chooseAppropriateFilterID($settingsFilter, $drupalDefaultFilterID) {
+    $filter = $settingsFilter;
+    switch ($settingsFilter) {
+      case 'project_default':
+        $filter = NULL;
+        break;
+      case 'drupal_default':
+        $filter = $drupalDefaultFilterID;
+        break;
     }
     return $filter;
   }

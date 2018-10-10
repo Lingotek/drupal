@@ -81,8 +81,8 @@ class LingotekSettingsTabAccountFormTest extends LingotekTestBase {
   public function testTableValuesWithDefaultFilters() {
     $this->drupalGet('admin/lingotek/settings');
 
-    $this->assertTableValue('filter', 'Project Default (project_default)');
-    $this->assertTableValue('subfilter', 'Project Default (project_default)');
+    $this->assertTableValue('filter', 'Project Default (drupal_default)');
+    $this->assertTableValue('subfilter', 'Project Default (drupal_default)');
   }
 
   /**

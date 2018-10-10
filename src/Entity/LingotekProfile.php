@@ -114,14 +114,14 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
    *
    * @var string
    */
-  protected $filter = 'project_default';
+  protected $filter = 'drupal_default';
 
   /**
    * Entities using this profile will use this FPRM Subfilter.
    *
    * @var string
    */
-  protected $subfilter = 'project_default';
+  protected $subfilter = 'drupal_default';
 
   /**
    * Entities using this profile will use this project.

@@ -67,9 +67,9 @@ class LingotekFake implements LingotekInterface {
       case 'default.vault':
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_vault';
       case 'default.filter':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'project_default';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'drupal_default';
       case 'default.subfilter':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'project_default';
+        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'drupal_default';
       case 'default.workflow':
         return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_workflow';
       case 'profile':
@@ -172,8 +172,8 @@ class LingotekFake implements LingotekInterface {
     return [
       'project' => 'test_project',
       'vault' => 'test_vault',
-      'filter' => 'project_default',
-      'subfilter' => 'project_default',
+      'filter' => 'drupal_default',
+      'subfilter' => 'drupal_default',
       'community' => 'test_community',
       'workflow' => 'test_workflow',
     ];

@@ -8,6 +8,6 @@ append_type_to_title: global_setting
 vault: default
 project: default
 workflow: default
-filter: project_default
-subfilter: project_default
+filter: drupal_default
+subfilter: drupal_default
 language_overrides: { }

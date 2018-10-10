@@ -37,8 +37,8 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       $this->defaults_labels['subfilter'] = t('Default Subfilter');
     }
     else {
-      $this->lingotek->set('default.filter', 'project_default');
-      $this->lingotek->set('default.subfilter', 'project_default');
+      $this->lingotek->set('default.filter', 'drupal_default');
+      $this->lingotek->set('default.subfilter', 'drupal_default');
     }
 
     // Set workflow to machine translation every time regardless if there's more than one choice
@@ -65,7 +65,10 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
       $resources_key = ($key === 'subfilter') ? 'filter' : $key;
       asort($this->resources[$resources_key]);
       if ($key === 'filter' || $key === 'subfilter') {
-        $options = ['project_default' => 'Use Project Default'] + $this->resources[$resources_key];
+        $options = [
+          'project_default' => 'Use Project Default',
+          'drupal_default' => 'Use Drupal Default',
+        ] + $this->resources[$resources_key];
       }
       else {
         $options = $this->resources[$key];

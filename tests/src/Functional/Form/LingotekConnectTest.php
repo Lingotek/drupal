@@ -39,15 +39,17 @@ class LingotekConnectTest extends BrowserTestBase {
 
     // Assert there are options for filters.
     $this->assertFieldByName('filter');
-    $this->assertOptionSelected('edit-filter', 'project_default');
+    $this->assertOptionSelected('edit-filter', 'drupal_default');
     $this->assertOption('edit-filter', 'project_default');
+    $this->assertOption('edit-filter', 'drupal_default');
     $this->assertOption('edit-filter', 'test_filter');
     $this->assertOption('edit-filter', 'test_filter2');
     $this->assertOption('edit-filter', 'test_filter3');
 
     $this->assertFieldByName('subfilter');
-    $this->assertOptionSelected('edit-subfilter', 'project_default');
+    $this->assertOptionSelected('edit-subfilter', 'drupal_default');
     $this->assertOption('edit-subfilter', 'project_default');
+    $this->assertOption('edit-subfilter', 'drupal_default');
     $this->assertOption('edit-subfilter', 'test_filter');
     $this->assertOption('edit-subfilter', 'test_filter2');
     $this->assertOption('edit-subfilter', 'test_filter3');
@@ -55,8 +57,8 @@ class LingotekConnectTest extends BrowserTestBase {
     $this->drupalPostForm(NULL, [
       'project' => 'test_project',
       'vault' => 'test_vault',
-      'filter' => 'project_default',
-      'subfilter' => 'project_default',
+      'filter' => 'drupal_default',
+      'subfilter' => 'drupal_default',
     ], 'Save configuration');
     $this->assertText('The configuration options have been saved.');
   }

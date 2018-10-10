@@ -87,8 +87,8 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertIdentical('default', $profile->getVault());
     $this->assertIdentical('default', $profile->getWorkflow());
     $this->assertFalse($profile->hasIntelligenceMetadataOverrides());
-    $this->assertIdentical('project_default', $profile->getFilter());
-    $this->assertIdentical('project_default', $profile->getSubfilter());
+    $this->assertIdentical('drupal_default', $profile->getFilter());
+    $this->assertIdentical('drupal_default', $profile->getSubfilter());
   }
 
   /**
@@ -529,16 +529,18 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->assertFieldByName('subfilter');
     $this->assertOption('edit-filter', 'default');
     $this->assertOption('edit-filter', 'project_default');
+    $this->assertOption('edit-filter', 'drupal_default');
     $this->assertOption('edit-filter', 'test_filter');
     $this->assertOption('edit-filter', 'another_filter');
     $this->assertOption('edit-subfilter', 'default');
     $this->assertOption('edit-subfilter', 'project_default');
+    $this->assertOption('edit-subfilter', 'drupal_default');
     $this->assertOption('edit-subfilter', 'test_filter');
     $this->assertOption('edit-subfilter', 'another_filter');
   }
 
   /**
-   * Tests that filter is hidden when there are filters.
+   * Tests that only three filters are given when no resource filters are available.
    */
   public function testNoFilters() {
     \Drupal::configFactory()->getEditable('lingotek.settings')->set('account.resources.filter', [])->save();
@@ -546,8 +548,21 @@ class LingotekProfileFormTest extends LingotekTestBase {
     $this->drupalGet('admin/lingotek/settings');
     $this->clickLink(t('Add new Translation Profile'));
 
-    $this->assertNoFieldByName('filter');
-    $this->assertNoFieldByName('subfilter');
+    $this->assertFieldByName('filter');
+    $this->assertOptionSelected('edit-filter', 'drupal_default');
+    $this->assertOption('edit-filter', 'default');
+    $this->assertOption('edit-filter', 'project_default');
+    $this->assertOption('edit-filter', 'drupal_default');
+    $this->assertNoOption('edit-filter', 'test_filter');
+    $this->assertNoOption('edit-filter', 'another_filter');
+
+    $this->assertFieldByName('subfilter');
+    $this->assertOptionSelected('edit-subfilter', 'drupal_default');
+    $this->assertOption('edit-subfilter', 'default');
+    $this->assertOption('edit-subfilter', 'project_default');
+    $this->assertOption('edit-subfilter', 'drupal_default');
+    $this->assertNoOption('edit-subfilter', 'test_filter');
+    $this->assertNoOption('edit-subfilter', 'another_filter');
   }
 
   /**

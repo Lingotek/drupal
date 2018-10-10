@@ -177,30 +177,28 @@ class LingotekProfileFormBase extends EntityForm {
 
     /** @var \Drupal\lingotek\LingotekFilterManagerInterface $filter_manager */
     $filters = $this->lingotekFilterManager->getLocallyAvailableFilters();
-    // Locally available filters include always the default project filter.
-    // So we check if there is more than 1.
-    if (count($filters) > 1) {
-      $form['filter'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Default Filter'),
-        '#options' => [
-            'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultFilterLabel()]),
-            'project_default' => $this->t('Use Project Default'),
-          ] + $filters,
-        '#description' => $this->t('The default FPRM Filter used when uploading or updating a document.'),
-        '#default_value' => $profile->getFilter(),
-      ];
-      $form['subfilter'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Default Subfilter'),
-        '#options' => [
-            'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultSubfilterLabel()]),
-            'project_default' => $this->t('Use Project Default'),
-          ] + $filters,
-        '#description' => $this->t('The default FPRM Subfilter used when uploading or updating a document.'),
-        '#default_value' => $profile->getSubfilter(),
-      ];
-    }
+    $form['filter'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Default Filter'),
+      '#options' => [
+          'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultFilterLabel()]),
+          'project_default' => $this->t('Use Project Default'),
+          'drupal_default' => $this->t('Use Drupal Default'),
+        ] + $filters,
+      '#description' => $this->t('The default FPRM Filter used when uploading or updating a document.'),
+      '#default_value' => $profile->getFilter(),
+    ];
+    $form['subfilter'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Default Subfilter'),
+      '#options' => [
+          'default' => $this->t('Use Global Default (%filter)', ['%filter' => $this->lingotekFilterManager->getDefaultSubfilterLabel()]),
+          'project_default' => $this->t('Use Project Default'),
+          'drupal_default' => $this->t('Use Drupal Default'),
+        ] + $filters,
+      '#description' => $this->t('The default FPRM Subfilter used when uploading or updating a document.'),
+      '#default_value' => $profile->getSubfilter(),
+    ];
 
     // We add the overrides.
     $form['intelligence_metadata_overrides'] = [

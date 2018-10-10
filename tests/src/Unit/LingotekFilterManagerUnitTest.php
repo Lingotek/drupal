@@ -55,7 +55,7 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
 
     $filters = $this->filterManager->getLocallyAvailableFilters();
     $this->assertNotEmpty($filters);
-    $this->assertArrayEquals($filters, ['project_default' => 'Project Default']);
+    $this->assertArrayEquals($filters, ['project_default' => 'Project Default', 'drupal_default' => 'Drupal Default']);
 
     // Test with some filters.
     $this->config->expects($this->at(0))
@@ -65,7 +65,7 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
 
     $filters = $this->filterManager->getLocallyAvailableFilters();
     $this->assertNotEmpty($filters);
-    $this->assertEquals(['project_default' => 'Project Default', 'aaa' => 'Test filter'], $filters);
+    $this->assertEquals(['project_default' => 'Project Default', 'drupal_default' => 'Drupal Default', 'aaa' => 'Test filter'], $filters);
   }
 
   public function getDefaultFilterProvider() {
@@ -178,6 +178,11 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
     // Filter is replaced with project default.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault', 'filter' => 'project_default'], 'lingotek_profile');
     $filter = $this->filterManager->getFilterId($profile);
+    $this->assertEquals(NULL, $filter);
+
+    // Filter is replaced with drupal default.
+    $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault', 'filter' => 'drupal_default'], 'lingotek_profile');
+    $filter = $this->filterManager->getFilterId($profile);
     $this->assertEquals('4f91482b-5aa1-4a4a-a43f-712af7b39625', $filter);
 
     // Filter is replaced with the default.
@@ -206,6 +211,11 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
 
     // Filter is replaced with project default.
     $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault', 'subfilter' => 'project_default'], 'lingotek_profile');
+    $filter = $this->filterManager->getSubfilterId($profile);
+    $this->assertEquals(NULL, $filter);
+
+    // Filter is replaced with drupal default.
+    $profile = new LingotekProfile(['id' => 'profile1', 'project' => 'my_test_project', 'vault' => 'my_test_vault', 'subfilter' => 'drupal_default'], 'lingotek_profile');
     $filter = $this->filterManager->getSubfilterId($profile);
     $this->assertEquals('0e79f34d-f27b-4a0c-880e-cd9181a5d265', $filter);
 
