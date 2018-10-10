@@ -159,8 +159,11 @@ class LingotekNodeContentModerationTranslationTest extends LingotekTestBase {
 
     $this->clickLink('Llamas are cool');
 
-    // There is no revisions tab as it's the only one revision.
-    $this->assertNoLink('Revisions');
+    if ((float) \Drupal::VERSION < 8.7) {
+      // See change record: https://www.drupal.org/node/3001224.
+      // There is no revisions tab as it's the only one revision.
+      $this->assertNoLink('Revisions');
+    }
 
     // Only one revision stored.
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
