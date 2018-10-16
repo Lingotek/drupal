@@ -662,6 +662,13 @@ function lingotek_update_8212() {
   }
 }
 
+/**
+ * Empty on purpose.
+ */
+function lingotek_update_8213() {
+  // Needed for LingotekModuleUninstallWith8x1xDataTest to pass.
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {
