@@ -48,12 +48,24 @@ trait LingotekViewsTestTrait {
     return $entity_type_id . '_lingotek_request_translations_action';
   }
 
+  protected function getBulkOperationNameForRequestTranslation($langcode, $entity_type_id) {
+    return $entity_type_id . '_' . $langcode . '_lingotek_request_translation_action';
+  }
+
   protected function getBulkOperationNameForCheckTranslations($entity_type_id) {
     return $entity_type_id . '_lingotek_check_translations_action';
   }
 
+  protected function getBulkOperationNameForCheckTranslation($langcode, $entity_type_id) {
+    return $entity_type_id . '_' . $langcode . '_lingotek_check_translation_action';
+  }
+
   protected function getBulkOperationNameForDownloadTranslations($entity_type_id) {
     return $entity_type_id . '_lingotek_download_translations_action';
+  }
+
+  protected function getBulkOperationNameForDownloadTranslation($langcode, $entity_type_id) {
+    return $entity_type_id . '_' . $langcode . '_lingotek_download_translation_action';
   }
 
   protected function getBulkOperationNameForDisassociate($entity_type_id) {

@@ -213,7 +213,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertLingotekRequestTranslationLink('de_AT');
     $edit = [
       'table[node:1]' => TRUE,
-      $this->getBulkOperationFormName() => 'request_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -222,7 +222,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertLingotekCheckTargetStatusLink('de_AT');
     $edit = [
       'table[node:1]' => TRUE,
-      $this->getBulkOperationFormName() => 'check_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));
@@ -231,7 +231,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertLingotekDownloadTargetLink('de_AT');
     $edit = [
       'table[node:1]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.downloaded_locale'));

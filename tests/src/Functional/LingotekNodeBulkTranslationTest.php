@@ -173,7 +173,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'request_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()
@@ -184,7 +184,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'check_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()
@@ -195,7 +195,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()
@@ -1228,7 +1228,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'request_translation:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -1364,7 +1364,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'check_translation:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
@@ -1512,7 +1512,7 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     // Download translation.
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

@@ -5,6 +5,7 @@
  * Install, update and uninstall functions for the Lingotek module.
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\system\Entity\Action;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\Core\Entity\ContentEntityType;
@@ -667,6 +668,51 @@ function lingotek_update_8212() {
  */
 function lingotek_update_8213() {
   // Needed for LingotekModuleUninstallWith8x1xDataTest to pass.
+}
+
+/**
+ * Create actions for enabled entity types per target language.
+ */
+function lingotek_update_8214() {
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+  $lingotek_config = \Drupal::service('lingotek.configuration');
+  $action_manager = \Drupal::service('plugin.manager.action');
+
+  $lang_actions = [
+    'entity:lingotek_check_translation_action',
+    'entity:lingotek_download_translation_action',
+    'entity:lingotek_request_translation_action',
+  ];
+  $languages = \Drupal::languageManager()->getLanguages();
+  $entity_types = \Drupal::entityTypeManager()->getDefinitions();
+  $enabled_entity_types = $lingotek_config->getEnabledEntityTypes();
+  foreach ($entity_types as $entity_type_id => $entity_type) {
+    foreach ($lang_actions as $action) {
+      foreach ($languages as $langcode => $language) {
+        $pluginId = $action . ':' . $entity_type_id;
+        /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+        $plugin = $action_manager->getDefinition($pluginId, FALSE);
+        $action_id = $entity_type_id . '_' . $langcode . '_' . str_replace('entity:', '', $action);
+        $existingAction = \Drupal::entityTypeManager()->getStorage('action')
+          ->load($action_id);
+        if ($plugin && isset($enabled_entity_types[$entity_type_id]) && !$existingAction) {
+          Action::create([
+            'id' => $action_id,
+            'label' => new FormattableMarkup($plugin['action_label'], [
+              '@entity_label' => $entity_type->getSingularLabel(),
+              '@language' => $language->getName(),
+            ]),
+            'type' => $entity_type_id,
+            'plugin' => $pluginId,
+            'configuration' => ['language' => $langcode],
+          ])->save();
+        }
+        elseif (!isset($enabled_entity_types[$entity_type_id]) && $existingAction) {
+          $existingAction->delete();
+        }
+      }
+    }
+  }
 }
 
 function lingotek_legacy_get_translation_status($field) {

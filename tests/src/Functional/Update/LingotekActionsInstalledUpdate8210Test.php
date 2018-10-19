@@ -42,14 +42,15 @@ class LingotekActionsInstalledUpdate8210Test extends UpdatePathTestBase {
    */
   public function testUpgrade() {
     $actions = Action::loadMultiple();
-    $this->assertEquals(19, count($actions));
+    $this->assertCount(19, $actions);
 
     $this->runUpdates();
 
     $actions = Action::loadMultiple();
     // There should be 6 new actions: 5 steps in the complete roundtrip plus the
     // action for disassociating.
-    $this->assertEquals(19 + 6, count($actions));
+    // After lingotek_update_8214 count on 9 more.
+    $this->assertCount(19 + 6 + 9, $actions);
 
     $expectedActions = [
       'node_lingotek_upload_action',

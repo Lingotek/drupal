@@ -32,36 +32,8 @@ class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTe
   /**
    * {@inheritdoc}
    */
-  public function testNodeTranslationUsingActions() {
-    $this->markTestSkipped('This cannot be executed until we have actions for individual targets.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function testAddContentLinkPresent() {
     $this->markTestSkipped('This doesn\'t apply if we replace the management pages with views. Or if you do, it is your decision to add the content creation link.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testRequestTranslationWithActionWithAnError() {
-    $this->markTestSkipped('This cannot be executed until we have actions for individual targets.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testCheckTranslationStatusWithActionWithAnError() {
-    $this->markTestSkipped('This cannot be executed until we have actions for individual targets.');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function testDownloadTranslationWithActionWithAnError() {
-    $this->markTestSkipped('This cannot be executed until we have actions for individual targets.');
   }
 
 }

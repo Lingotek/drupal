@@ -117,7 +117,7 @@ class LingotekUserSettingsBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/entity.user.admin_form/entity.user.admin_form/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[entity.user.admin_form]' => TRUE,
-      $this->getBulkOperationFormName() => 'request_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('de', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));

@@ -250,12 +250,24 @@ trait LingotekManagementTestTrait {
     return 'request_translations';
   }
 
+  protected function getBulkOperationNameForRequestTranslation($langcode, $entity_type_id) {
+    return 'request_translation:' . $langcode;
+  }
+
   protected function getBulkOperationNameForCheckTranslations($entity_type_id) {
     return 'check_translations';
   }
 
+  protected function getBulkOperationNameForCheckTranslation($langcode, $entity_type_id) {
+    return 'check_translation:' . $langcode;
+  }
+
   protected function getBulkOperationNameForDownloadTranslations($entity_type_id) {
     return 'download';
+  }
+
+  protected function getBulkOperationNameForDownloadTranslation($langcode, $entity_type_id) {
+    return 'download:' . $langcode;
   }
 
   protected function getBulkOperationNameForDisassociate($entity_type_id) {

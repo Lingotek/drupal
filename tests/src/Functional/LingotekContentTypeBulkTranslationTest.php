@@ -126,7 +126,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/request/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      $this->getBulkOperationFormName() => 'request_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('de', 'node_type'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.added_target_locale'));
@@ -135,7 +135,7 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->assertLinkByHref($basepath . '/admin/lingotek/config/check_download/node_type/article/de_AT?destination=' . $basepath . '/admin/lingotek/config/manage');
     $edit = [
       'table[article]' => TRUE,
-      $this->getBulkOperationFormName() => 'check_translation:de',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForCheckTranslation('de', 'node_type'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('de_AT', \Drupal::state()->get('lingotek.checked_target_locale'));

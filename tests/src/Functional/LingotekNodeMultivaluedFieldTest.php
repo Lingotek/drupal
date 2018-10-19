@@ -170,7 +170,7 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -191,7 +191,7 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));
@@ -213,7 +213,7 @@ class LingotekNodeMultivaluedFieldTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'download:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $this->assertIdentical('es_MX', \Drupal::state()->get('lingotek.downloaded_locale'));

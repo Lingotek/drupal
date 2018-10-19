@@ -218,7 +218,7 @@ class LingotekNodeBulkProfileTest extends LingotekTestBase {
       $key => TRUE,
       'table[2]' => TRUE,
       'table[3]' => TRUE,
-      $this->getBulkOperationFormName() => 'download:es',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDownloadTranslation('es', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

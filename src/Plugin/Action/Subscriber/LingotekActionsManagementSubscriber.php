@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Plugin\Action\Subscriber;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Action\ActionManager;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
@@ -73,8 +74,14 @@ class LingotekActionsManagementSubscriber implements EventSubscriberInterface {
       'entity:lingotek_download_translations_action',
       'entity:lingotek_disassociate_action',
     ];
+    $lang_actions = [
+      'entity:lingotek_check_translation_action',
+      'entity:lingotek_download_translation_action',
+      'entity:lingotek_request_translation_action',
+    ];
 
-    $configName = $event->getConfig()->getName();
+    $config = $event->getConfig();
+    $configName = $config->getName();
     if ($configName === 'lingotek.settings' && $event->isChanged('translate.entity')) {
       $entity_types = $this->entityTypeManager->getDefinitions();
       $enabled_entity_types = $this->lingotekConfiguration->getEnabledEntityTypes();
@@ -93,6 +100,66 @@ class LingotekActionsManagementSubscriber implements EventSubscriberInterface {
               'type' => $entity_type_id,
               'plugin' => $pluginId,
               'configuration' => [],
+            ])->save();
+          }
+          elseif (!isset($enabled_entity_types[$entity_type_id]) && $existingAction) {
+            $existingAction->delete();
+          }
+        }
+
+        $languages = \Drupal::languageManager()->getLanguages();
+        foreach ($lang_actions as $action) {
+          foreach ($languages as $langcode => $language) {
+            $pluginId = $action . ':' . $entity_type_id;
+            /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+            $plugin = $this->actionManager->getDefinition($pluginId, FALSE);
+            $action_id = $entity_type_id . '_' . $langcode . '_' . str_replace('entity:', '', $action);
+            $existingAction = $this->entityTypeManager->getStorage('action')
+              ->load($action_id);
+            if ($plugin && isset($enabled_entity_types[$entity_type_id]) && !$existingAction) {
+              Action::create([
+                'id' => $action_id,
+                'label' => new FormattableMarkup($plugin['action_label'], [
+                  '@entity_label' => $entity_type->getSingularLabel(),
+                  '@language' => $language->getName(),
+                ]),
+                'type' => $entity_type_id,
+                'plugin' => $pluginId,
+                'configuration' => ['language' => $langcode],
+              ])->save();
+            }
+            elseif (!isset($enabled_entity_types[$entity_type_id]) && $existingAction) {
+              $existingAction->delete();
+            }
+          }
+        }
+
+      }
+    }
+
+    if (0 === strpos($configName, 'language.entity.')) {
+      $langcode = $config->get('id');
+      $langname = $config->get('label');
+      $entity_types = $this->entityTypeManager->getDefinitions();
+      $enabled_entity_types = $this->lingotekConfiguration->getEnabledEntityTypes();
+      foreach ($entity_types as $entity_type_id => $entity_type) {
+        foreach ($lang_actions as $action) {
+          $pluginId = $action . ':' . $entity_type_id;
+          /** @var \Drupal\Component\Plugin\Definition\PluginDefinitionInterface $plugin */
+          $plugin = $this->actionManager->getDefinition($pluginId, FALSE);
+          $action_id = $entity_type_id . '_' . $langcode . '_' . str_replace('entity:', '', $action);
+          $existingAction = $this->entityTypeManager->getStorage('action')
+            ->load($action_id);
+          if ($plugin && isset($enabled_entity_types[$entity_type_id]) && !$existingAction) {
+            Action::create([
+              'id' => $action_id,
+              'label' => new FormattableMarkup($plugin['action_label'], [
+                '@entity_label' => $entity_type->getSingularLabel(),
+                '@language' => $langname,
+              ]),
+              'type' => $entity_type_id,
+              'plugin' => $pluginId,
+              'configuration' => ['language' => $langcode],
             ])->save();
           }
           elseif (!isset($enabled_entity_types[$entity_type_id]) && $existingAction) {

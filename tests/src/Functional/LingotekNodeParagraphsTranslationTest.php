@@ -575,7 +575,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
       $key => TRUE,
-      $this->getBulkOperationFormName() => 'request_translation:es-ar',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForRequestTranslation('es-ar', 'node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 

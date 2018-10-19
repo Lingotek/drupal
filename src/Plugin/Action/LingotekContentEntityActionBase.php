@@ -26,6 +26,8 @@ abstract class LingotekContentEntityActionBase extends EntityActionBase {
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    *   The Lingotek content translation service.
    */
