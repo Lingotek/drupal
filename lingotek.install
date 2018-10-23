@@ -715,6 +715,37 @@ function lingotek_update_8214() {
   }
 }
 
+
+/**
+ * Remove old unused Lingotek metadata fields from content entities.
+ */
+function lingotek_update_8215() {
+  $fields = [
+    'lingotek_document_id',
+    'lingotek_hash',
+    'lingotek_profile',
+    'lingotek_translation_source',
+    'lingotek_translation_status',
+    'lingotek_translation_created',
+    'lingotek_translation_changed',
+  ];
+  /** @var \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface $entity_definition_update_manager */
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $entities = $entity_type_manager->getDefinitions();
+  foreach ($entities as $entity_type_id => $entity_type) {
+    foreach ($fields as $field) {
+      if ($field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field, $entity_type_id)) {
+        $entity_definition_update_manager->uninstallFieldStorageDefinition($field_definition);
+        \Drupal::messenger()->addStatus(new FormattableMarkup('%field_name deleted for entity %entity_type_id', ['%field_name' => $field, '%entity_type_id' => $entity_type_id]));
+      }
+      else {
+        \Drupal::messenger()->addWarning(new FormattableMarkup('%field_name not found in entity %entity_type_id', ['%field_name' => $field, '%entity_type_id' => $entity_type_id]));
+      }
+    }
+  }
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {

@@ -518,7 +518,12 @@ function lingotek_entity_base_field_info(EntityTypeInterface $entity_type) {
     //   enabled for translation, once base field purging is supported.
     //   See https://www.drupal.org/node/2282119.
     if ($manager->isEnabled($entity_type_id) || array_intersect_key($definitions, $installed_storage_definitions)) {
-      return $definitions;
+      if (drupal_get_installed_schema_version('lingotek') < 8215) {
+        return $definitions;
+      }
+      else {
+        return ['lingotek_metadata' => $definitions['lingotek_metadata']];
+      }
     }
   }
 }
