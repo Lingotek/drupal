@@ -736,8 +736,22 @@ function lingotek_update_8215() {
   foreach ($entities as $entity_type_id => $entity_type) {
     foreach ($fields as $field) {
       if ($field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field, $entity_type_id)) {
-        $entity_definition_update_manager->uninstallFieldStorageDefinition($field_definition);
-        \Drupal::messenger()->addStatus(new FormattableMarkup('%field_name deleted for entity %entity_type_id', ['%field_name' => $field, '%entity_type_id' => $entity_type_id]));
+        try {
+          $entity_definition_update_manager->uninstallFieldStorageDefinition($field_definition);
+          \Drupal::messenger()
+            ->addStatus(new FormattableMarkup('%field_name deleted for entity %entity_type_id', [
+              '%field_name' => $field,
+              '%entity_type_id' => $entity_type_id,
+            ]));
+        }
+        catch (\Exception $e) {
+          \Drupal::messenger()
+            ->addError(new FormattableMarkup('%field_name deletion failed for entity %entity_type_id with message: %message', [
+              '%field_name' => $field,
+              '%entity_type_id' => $entity_type_id,
+              '%message' => $e->getMessage(),
+            ]));
+        }
       }
       else {
         \Drupal::messenger()->addWarning(new FormattableMarkup('%field_name not found in entity %entity_type_id', ['%field_name' => $field, '%entity_type_id' => $entity_type_id]));
