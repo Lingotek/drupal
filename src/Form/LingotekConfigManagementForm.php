@@ -244,7 +244,7 @@ class LingotekConfigManagementForm extends FormBase {
     $form['filters']['wrapper']['bundle'] = [
       '#type' => 'select',
       '#title' => $this->t('Filter'),
-      '#options' => ['config' => $this->t('Config')] + $this->getAllBundles(),
+      '#options' => ['config' => $this->t('Simple configuration')] + $this->getAllBundles(),
       '#default_value' => $this->filter,
       '#attributes' => ['class' => ['form-item']],
     ];
