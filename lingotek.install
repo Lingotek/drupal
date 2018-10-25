@@ -745,12 +745,13 @@ function lingotek_update_8215() {
             ]));
         }
         catch (\Exception $e) {
-          \Drupal::messenger()
-            ->addError(new FormattableMarkup('%field_name deletion failed for entity %entity_type_id with message: %message', [
-              '%field_name' => $field,
-              '%entity_type_id' => $entity_type_id,
-              '%message' => $e->getMessage(),
-            ]));
+          $error = new FormattableMarkup('%field_name deletion failed for entity %entity_type_id with message: %message', [
+            '%field_name' => $field,
+            '%entity_type_id' => $entity_type_id,
+            '%message' => $e->getMessage(),
+          ]);
+          \Drupal::messenger()->addError($error);
+          \Drupal::logger('lingotek')->error($error);
         }
       }
       else {
