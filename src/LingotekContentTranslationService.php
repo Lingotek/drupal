@@ -500,9 +500,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           }
         }
       }
-
       // If we have an entity reference, we may want to embed it.
-      if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
+      if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'bricks') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
         foreach ($entity->{$k} as $field_item) {
           $embedded_entity_id = $field_item->get('target_id')->getValue();
@@ -1119,7 +1118,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           && $this->lingotekConfiguration->isFieldLingotekEnabled($entity->getEntityTypeId(), $entity->bundle(), $name)) {
           // First we check if this is a entity reference, and save the translated entity.
           $field_type = $field_definition->getType();
-          if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
+          if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'bricks') {
             $target_entity_type_id = $field_definition->getFieldStorageDefinition()
               ->getSetting('target_type');
             $index = 0;

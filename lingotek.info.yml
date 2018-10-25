@@ -17,3 +17,4 @@ test_dependencies:
   - pathauto:pathauto
   - workbench_moderation:workbench_moderation
   - group:group
+  - bricks:bricks
