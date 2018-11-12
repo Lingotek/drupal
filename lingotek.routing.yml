@@ -190,6 +190,8 @@ lingotek.entity.manage:
     _title: 'Manage Translations'
   requirements:
     _permission: 'manage lingotek translations'
+  options:
+    _node_operation_route: TRUE
 
 lingotek.config.upload:
   path: '/admin/lingotek/config/upload/{entity_type}/{entity_id}'

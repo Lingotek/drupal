@@ -88,6 +88,12 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
               ],
             ],
           ];
+          if ($entity_type_id === 'node') {
+            // Using _node_operation_route would be more elegant, but this
+            // subscriber runs after NodeAdminRouteSubscriber already run.
+            $options['_admin_route'] = \Drupal::config('node.settings')->get('use_admin_theme');
+          }
+
           $route = new Route(
             $path,
             [
