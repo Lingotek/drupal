@@ -45,6 +45,12 @@ class LingotekContentModerationTest extends LingotekTestBase {
     \Drupal::service('content_translation.manager')
       ->setEnabled('node', 'article', TRUE);
 
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'page', TRUE);
+
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
@@ -68,6 +74,13 @@ class LingotekContentModerationTest extends LingotekTestBase {
           'moderation' => [
             'upload_status' => 'draft',
             'download_transition' => 'request_review',
+          ],
+        ],
+        'page' => [
+          'profiles' => 'automatic',
+          'fields' => [
+            'title' => 1,
+            'body' => 1,
           ],
         ],
       ],
@@ -368,6 +381,23 @@ class LingotekContentModerationTest extends LingotekTestBase {
     $value = $this->xpath('//div[@id="edit-current"]/text()');
     $value = trim($value[1]->getHtml());
     $this->assertEqual($value, 'Draft', 'The transition to a new content moderation status didn\'t happen because the source wasn\'t the expected.');
+  }
+
+  /**
+   * Tests a content entity that is enabled, but with a disabled bundle.
+   */
+  public function testUnconfiguredBundle() {
+    $this->drupalGet('/admin/lingotek/settings');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit, 'page');
+
+    $this->assertText('Page Llamas are cool has been created.');
+    $this->assertText('Llamas are cool sent to Lingotek successfully.');
   }
 
   /**

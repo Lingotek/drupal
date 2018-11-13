@@ -48,6 +48,11 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
       ->save();
     \Drupal::service('content_translation.manager')
       ->setEnabled('node', 'article', TRUE);
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')
+      ->setLanguageAlterable(TRUE)
+      ->save();
+    \Drupal::service('content_translation.manager')
+      ->setEnabled('node', 'page', TRUE);
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
@@ -67,6 +72,11 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
       'node[article][fields][body]' => 1,
       'node[article][moderation][upload_status]' => 'draft',
       'node[article][moderation][download_transition]' => 'draft_needs_review',
+      'node[page][enabled]' => 1,
+      'node[page][profiles]' => 'automatic',
+      'node[page][fields][title]' => 1,
+      'node[page][fields][body]' => 1,
+
     ];
     $this->drupalPostForm('admin/lingotek/settings', $edit, 'Save', [], [], 'lingoteksettings-tab-content-form');
   }
@@ -397,6 +407,23 @@ class LingotekWorkbenchModerationTest extends LingotekTestBase {
     $value = $this->xpath('//div[@id="edit-current"]/text()');
     $value = trim($value[1]->getHtml());
     $this->assertEqual($value, 'Draft', 'The transition to a new workbench status didn\'t happen because the source wasn\'t the expected.');
+  }
+
+  /**
+   * Tests a content entity that is enabled, but with a disabled bundle.
+   */
+  public function testUnconfiguredBundle() {
+    $this->drupalGet('/admin/lingotek/settings');
+
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit, 'page');
+
+    $this->assertText('Page Llamas are cool has been created.');
+    $this->assertText('Llamas are cool sent to Lingotek successfully.');
   }
 
   /**

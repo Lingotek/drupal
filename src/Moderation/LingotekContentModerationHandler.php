@@ -83,7 +83,7 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
       if ($moderationEnabled) {
         $uploadStatus = $this->moderationConfiguration->getUploadStatus($entity->getEntityTypeId(), $entity->bundle());
         $state = $this->getModerationState($entity);
-        if ($state !== $uploadStatus) {
+        if (!empty($state) && $state !== $uploadStatus) {
           $prevent = TRUE;
         }
       }

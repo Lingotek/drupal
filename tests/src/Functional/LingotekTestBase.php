@@ -253,7 +253,9 @@ abstract class LingotekTestBase extends BrowserTestBase {
   protected function saveAndPublishNodeForm(array $edit, $bundle = 'article') {
     $path = ($bundle !== NULL) ? "node/add/$bundle" : NULL;
     if (floatval(\Drupal::VERSION) >= 8.4) {
-      if (\Drupal::moduleHandler()->moduleExists('content_moderation')) {
+      $entity_definition = \Drupal::entityTypeManager()->getDefinition('node');
+      if (\Drupal::moduleHandler()->moduleExists('content_moderation') &&
+          \Drupal::service('content_moderation.moderation_information')->shouldModerateEntitiesOfBundle($entity_definition, $bundle)) {
         $edit['moderation_state[0][state]'] = 'published';
         $this->drupalPostForm($path, $edit, t('Save'));
       }
