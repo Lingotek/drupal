@@ -17,6 +17,9 @@ services:
   lingotek.language_content_settings_form:
     class: Drupal\lingotek\Form\LingotekLanguageContentSettingsForm
     arguments: ['@entity_type.bundle.info']
+  lingotek.field_config_edit_form:
+    class: Drupal\lingotek\Form\LingotekFieldConfigEditForm
+    arguments: ['@lingotek.configuration']
   lingotek.configuration:
     class: Drupal\lingotek\LingotekConfigurationService
   lingotek.intelligence_config:
