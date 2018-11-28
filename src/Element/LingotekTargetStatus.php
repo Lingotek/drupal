@@ -49,6 +49,9 @@ class LingotekTargetStatus extends RenderElement {
     if ($isSourceLanguage) {
       return [];
     }
+    if (NULL === ConfigurableLanguage::load($element['#language'])) {
+      return [];
+    }
     $element['#url'] = $this->getTargetActionUrl($element['#entity'], $element['#status'], $element['#language']);
     $element['#new_window'] = !($element['#entity']->hasTranslation($element['#language']) && $element['#status'] == Lingotek::STATUS_REQUEST) && in_array($element['#status'], [Lingotek::STATUS_CURRENT, Lingotek::STATUS_INTERMEDIATE, Lingotek::STATUS_EDITED]);
     $element['#status_text'] = $this->getTargetStatusText($element['#entity'], $element['#status'], $element['#language']);

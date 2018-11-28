@@ -4,6 +4,8 @@ namespace Drupal\Tests\lingotek\Functional\FieldFormatters;
 
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\lingotek\Lingotek;
+use Drupal\node\Entity\Node;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
@@ -60,6 +62,28 @@ class LingotekTranslationStatusesFormatterTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'automatic';
     $this->saveAndPublishNodeForm($edit);
     $this->assertSession()->addressEquals('/node/1');
+
+    $this->drupalGet('/metadata/1');
+    $this->assertSession()->responseNotContains('Lingotek translation status');
+    $this->assertSession()->responseContains('<a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/de_DE?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="German - Request translation">DE</a><a href="' . $basepath . '/admin/lingotek/entity/add_target/dummy-document-hash-id/es_MX?destination=' . $basepath . '/metadata/1" class="language-icon target-request" title="Spanish - Request translation">ES</a>');
+  }
+
+  public function testStatusForMissingLanguage() {
+    $basepath = \Drupal::request()->getBasePath();
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndPublishNodeForm($edit);
+    $this->assertSession()->addressEquals('/node/1');
+
+    $node = Node::load(1);
+    /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $service */
+    $service = \Drupal::service('lingotek.content_translation');
+    $service->setTargetStatus($node, 'nb_NO', Lingotek::STATUS_READY);
 
     $this->drupalGet('/metadata/1');
     $this->assertSession()->responseNotContains('Lingotek translation status');
