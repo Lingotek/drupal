@@ -21,10 +21,20 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
    *
    * @var array
    */
-  public static $modules = ['node', 'field_ui', 'image'];
+  public static $modules = ['block', 'node', 'field_ui', 'image'];
 
   protected function setUp() {
     parent::setUp();
+
+    // Place the actions and title block.
+    $this->drupalPlaceBlock('page_title_block', [
+      'region' => 'content',
+      'weight' => -5,
+    ]);
+    $this->drupalPlaceBlock('local_actions_block', [
+      'region' => 'content',
+      'weight' => -10,
+    ]);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')
@@ -274,6 +284,80 @@ class LingotekSettingsTabContentFormTest extends LingotekTestBase {
     // If the field is translatable, the field is available again.
     $this->drupalGet('admin/lingotek/settings');
     $this->assertFieldById('edit-node-article-fields-field-image', '', 'The image field is present after marked as translatable.');
+  }
+
+  public function testAddContentTypeAndConfigureLingotekToTranslate() {
+    // Check the form contains the article type and only its text-based fields.
+    $this->drupalGet('admin/structure/types');
+    $this->clickLink('Add content type');
+    $this->assertNoFieldChecked('language_configuration[language_alterable]');
+    $this->assertNoFieldChecked('language_configuration[content_translation]');
+    $this->assertNoFieldChecked('language_configuration[content_translation_for_lingotek]');
+
+    $edit = [
+      'name' => 'Test',
+      'type' => 'test',
+      'language_configuration[language_alterable]' => TRUE,
+      'language_configuration[content_translation]' => TRUE,
+      'language_configuration[content_translation_for_lingotek]' => TRUE,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Save and manage fields');
+    $this->assertText('The content type Test has been added.');
+
+    // It should result that the field is enabled in Lingotek settings.
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertFieldChecked('edit-node-test-enabled');
+  }
+
+  /**
+   * Tests the "Use Lingotek To Translate" option when editing a content type.
+   */
+  public function testEditContentTypeAndUseLingotekToTranslate() {
+    // Enable translation for the current entity type and ensure the change is
+    // picked up.
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+
+    drupal_static_reset();
+    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+    // Rebuild the container so that the new languages are picked up by services
+    // that hold a list of languages.
+    $this->rebuildContainer();
+
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+    // Check the form contains the article type and only its text-based fields.
+    $this->drupalGet('admin/structure/types/manage/article');
+
+    // It should result that the field is disabled in Lingotek.
+    $edit = [
+      'language_configuration[language_alterable]' => FALSE,
+      'language_configuration[content_translation]' => FALSE,
+      'language_configuration[content_translation_for_lingotek]' => FALSE,
+    ];
+    $this->drupalPostForm('admin/structure/types/manage/article', $edit, t('Save content type'));
+
+    // Check the form contains the article type and only its text-based fields.
+    $this->drupalGet('admin/structure/types/manage/article');
+
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertText('There are no translatable content entities specified');
+
+    // It should result that the field is enabled in Lingotek.
+    $edit = [
+      'language_configuration[language_alterable]' => TRUE,
+      'language_configuration[content_translation]' => TRUE,
+      'language_configuration[content_translation_for_lingotek]' => TRUE,
+    ];
+    $this->drupalPostForm('admin/structure/types/manage/article', $edit, t('Save content type'));
+    \Drupal::service('entity.definition_update_manager')->applyUpdates();
+
+    // Check the form contains the article type and only its text-based fields.
+    $this->drupalGet('admin/structure/types/manage/article');
+
+    $this->drupalGet('admin/lingotek/settings');
+    $this->assertFieldChecked('edit-node-article-enabled');
   }
 
   /**
