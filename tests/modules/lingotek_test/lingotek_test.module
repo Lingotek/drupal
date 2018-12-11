@@ -74,3 +74,23 @@ function lingotek_test_lingotek_config_entity_document_upload(array &$source_dat
       break;
   }
 }
+
+/**
+ * Implements hook_lingotek_content_object_translation_upload().
+ */
+function lingotek_test_lingotek_config_object_document_upload(array &$data, $config_name) {
+  if ($config_name === 'system.rss') {
+    // Replace Llamas with Cats.
+    $data['system.rss']['channel.description'] = str_replace('Llamas', 'Cats', $data['system.rss']['channel.description']);
+  }
+}
+
+/**
+ * Implements hook_lingotek_content_object_translation_presave().
+ */
+function lingotek_test_lingotek_config_object_translation_presave(array &$data, $config_name) {
+  if ($config_name === 'system.rss') {
+    // Replace Gatos with Perros.
+    $data['system.rss']['channel.description'] = str_replace('Gatos', 'Perros', $data['system.rss']['channel.description']);
+  }
+}

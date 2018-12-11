@@ -128,3 +128,49 @@ function hook_lingotek_config_entity_document_upload(array &$source_data, Config
       break;
   }
 }
+
+/**
+ * Act on a translation of a config entity before it is saved or updated after
+ * being downloaded from Lingotek.
+ *
+ * @param array &$data
+ *   Data returned from the Lingotek service when asking for the translation.
+ * @param string $config_name
+ *   The simple configuration name.
+ *
+ * @ingroup lingotek_api
+ */
+function hook_lingotek_config_object_translation_presave(array &$data, $config_name) {
+  // Decode all [tokens].
+  $yaml = Yaml::encode($data);
+  $yaml = preg_replace_callback(
+    '/\[\*\*\*([^]]+)\*\*\*\]/', function ($matches) {
+      return '[' . base64_decode($matches[1]) . ']';
+    },
+    $yaml
+  );
+  $data = Yaml::decode($yaml);
+}
+
+/**
+ * Act on the data extracted from a config object before it is uploaded to
+ * Lingotek.
+ *
+ * @param array &$data
+ *   Data returned from the Lingotek service when asking for the translation.
+ * @param string $config_name
+ *   The simple configuration name.
+ *
+ * @ingroup lingotek_api
+ */
+function hook_lingotek_config_object_document_upload(array &$data, $config_name) {
+  // Encode all [tokens].
+  $yaml = Yaml::encode($data);
+  $yaml = preg_replace_callback(
+    '/\[([a-z][^]]+)\]/', function ($matches) {
+      return '[***' . base64_encode($matches[1]) . '***]';
+    },
+    $yaml
+  );
+  $data = Yaml::decode($yaml);
+}

@@ -902,7 +902,15 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (!empty($this->getConfigDocumentId($mapper))) {
       return $this->updateConfig($mapper_id);
     }
-    $source_data = json_encode($this->getConfigSourceData($mapper));
+    $source_data = $this->getConfigSourceData($mapper);
+
+    // Allow other modules to alter the data before is uploaded.
+    $config_names = $mapper->getConfigNames();
+    $config_name = reset($config_names);
+    \Drupal::moduleHandler()->invokeAll('lingotek_config_object_document_upload', [&$source_data, $config_name]);
+
+    $source_data = json_encode($source_data);
+
     $extended_name = $mapper_id . ' (config): ' . $mapper->getTitle();
     $profile_preference = $profile->getAppendContentTypeToTitle();
     $global_preference = $this->lingotekConfiguration->getPreference('append_type_to_title');
@@ -1154,6 +1162,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         return FALSE;
       }
       if ($data) {
+        // Allow other modules to alter the data after it is downloaded.
+        $config_names = $mapper->getConfigNames();
+        $config_name = reset($config_names);
+        \Drupal::moduleHandler()->invokeAll('lingotek_config_object_translation_presave', [&$data, $config_name]);
+
         // Check the real status, because it may still need review or anything.
         $status = $this->lingotek->getDocumentTranslationStatus($document_id, $locale);
         $this->saveConfigTargetData($mapper, $langcode, $data);
