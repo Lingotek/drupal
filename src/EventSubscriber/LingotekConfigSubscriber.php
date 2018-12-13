@@ -264,9 +264,13 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
       }
       if (isset($this->mappers[$entity_type_id])) {
         $entity = $config_manager->loadConfigEntityByName($name);
-        $mapper = clone $this->mappers[$entity_type_id];
-        $mapper->setEntity($entity);
-        $result = $mapper;
+        // Maybe the entity is null because we are deleting also the original
+        // entity, e.g. uninstalling a module.
+        if ($entity !== NULL) {
+          $mapper = clone $this->mappers[$entity_type_id];
+          $mapper->setEntity($entity);
+          $result = $mapper;
+        }
       }
     }
     return $result;
