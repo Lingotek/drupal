@@ -4,6 +4,7 @@ namespace Drupal\lingotek\Form;
 
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
@@ -131,6 +132,29 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     return $headers;
   }
 
+  public function calculateNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
+    $visited[$entity->bundle()][] = $entity->id();
+    $entities[$entity->getEntityTypeId()][] = $entity->id();
+    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+    foreach ($field_definitions as $k => $definition) {
+      $field_type = $field_definitions[$k]->getType();
+      if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'entity_reference_revisions') {
+        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
+          ->getSetting('target_type');
+        $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
+        if ($target_entity_type instanceof ContentEntityType) {
+          foreach ($entity->{$k} as $field_item) {
+            if (!isset($entities[$target_entity_type_id])) {
+              $entities[$target_entity_type_id] = [];
+            }
+            $entities[$target_entity_type_id][] = $field_item->target_id;
+          }
+        }
+      }
+    }
+    return $entities;
+  }
+
   public function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
     $visited[$entity->bundle()][] = $entity->id();
     $entities[$entity->getEntityTypeId()][$entity->id()] = $entity;
@@ -138,18 +162,19 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     foreach ($field_definitions as $k => $definition) {
       $field_type = $field_definitions[$k]->getType();
       if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
-        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
-        foreach ($entity->{$k} as $field_item) {
-          $embedded_entity_id = $field_item->get('target_id')->getValue();
-          $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
-          // We may have orphan references, so ensure that they exist before
-          // continuing.
-          if ($embedded_entity !== NULL) {
-            if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
-              // We need to avoid cycles if we have several entity references
-              // referencing each other.
-              if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                $this->getNestedEntities($embedded_entity, $visited, $entities);
+        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
+          ->getSetting('target_type');
+        $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
+        if ($target_entity_type instanceof ContentEntityType) {
+          $child_entities = $entity->{$k}->referencedEntities();
+          foreach ($child_entities as $embedded_entity) {
+            if ($embedded_entity !== NULL) {
+              if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                // We need to avoid cycles if we have several entity references
+                // referencing each other.
+                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
+                  $this->getNestedEntities($embedded_entity, $visited, $entities);
+                }
               }
             }
           }
@@ -157,16 +182,19 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       }
       // Paragraphs use the entity_reference_revisions field type.
       elseif ($field_type === 'entity_reference_revisions') {
-        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
-        foreach ($entity->{$k} as $field_item) {
-          $embedded_entity_revision_id = $field_item->get('target_revision_id')->getValue();
-          $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
-          if ($embedded_entity !== NULL) {
-            if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
-              // We need to avoid cycles if we have several entity references
-              // referencing each other.
-              if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                $this->getNestedEntities($embedded_entity, $visited, $entities);
+        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
+          ->getSetting('target_type');
+        $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
+        if ($target_entity_type instanceof ContentEntityType) {
+          $child_entities = $entity->{$k}->referencedEntities();
+          foreach ($child_entities as $embedded_entity) {
+            if ($embedded_entity !== NULL) {
+              if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                // We need to avoid cycles if we have several entity references
+                // referencing each other.
+                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
+                  $this->getNestedEntities($embedded_entity, $visited, $entities);
+                }
               }
             }
           }
@@ -177,7 +205,23 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   }
 
   protected function getFilteredEntities() {
-    return $this->getNestedEntities($this->node);
+    // This implies recursion through all the related content.
+    // So let's try something lighter instead, with the first level only.
+    // return $this->getNestedEntities($this->node);
+    $nested = $this->calculateNestedEntities($this->node);
+    $entities = [];
+    foreach ($nested as $type => $ids) {
+      $loaded = $this->entityManager->getStorage($type)->loadMultiple($ids);
+      $loaded = array_filter($loaded, function ($value) {
+        return ($value instanceof ContentEntityInterface &&
+          $value->isTranslatable() &&
+          $this->lingotekConfiguration->isEnabled($value->getEntityTypeId(), $value->bundle()));
+      });
+      if (!empty($loaded)) {
+        $entities[$type] = $loaded;
+      }
+    }
+    return $entities;
   }
 
   protected function getRows($entity_list) {

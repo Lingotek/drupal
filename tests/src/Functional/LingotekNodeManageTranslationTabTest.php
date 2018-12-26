@@ -6,6 +6,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
 
 /**
@@ -56,6 +57,16 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
         'type' => 'entity_reference_autocomplete_tags',
       ])->save();
     entity_get_display('node', 'article', 'default')
+      ->setComponent('field_tags')->save();
+
+    $this->createEntityReferenceField('taxonomy_term', $this->vocabulary->id(),
+      'field_tags', 'Tags', 'taxonomy_term', 'default',
+      $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    entity_get_form_display('taxonomy_term', $this->vocabulary->id(), 'default')
+      ->setComponent('field_tags', [
+        'type' => 'entity_reference_autocomplete_tags',
+      ])->save();
+    entity_get_display('taxonomy_term', $this->vocabulary->id(), 'default')
       ->setComponent('field_tags')->save();
 
     // Add a language.
@@ -114,6 +125,15 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
+    $term3 = Term::create(['name' => 'Hominid', 'vid' => $this->vocabulary->id()]);
+    $term3->save();
+
+    $term2 = Term::load(2);
+    $term2->field_tags = $term3;
+    $term2->save();
+
+    $this->drupalGet('/taxonomy/term/2');
+
     // Login as translation manager.
     $this->drupalLogin($this->translationManagerUser);
 
@@ -124,6 +144,8 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertText('Llamas are cool');
     $this->assertText('Camelid');
     $this->assertText('Herbivorous');
+    // Assert second level is not included.
+    $this->assertNoText('Hominid');
 
     // Clicking English must init the upload of content.
     $this->assertLingotekUploadLink();
@@ -181,6 +203,15 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
+    $term3 = Term::create(['name' => 'Hominid', 'vid' => $this->vocabulary->id()]);
+    $term3->save();
+
+    $term2 = Term::load(2);
+    $term2->field_tags = $term3;
+    $term2->save();
+
+    $this->drupalGet('/taxonomy/term/2');
+
     // Login as translation manager.
     $this->drupalLogin($this->translationManagerUser);
 
@@ -191,6 +222,8 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertText('Llamas are cool');
     $this->assertText('Camelid');
     $this->assertText('Herbivorous');
+    // Assert second level is not included.
+    $this->assertNoText('Hominid');
 
     // I can init the upload of content.
     $this->assertLingotekUploadLink();
