@@ -274,6 +274,14 @@ trait LingotekManagementTestTrait {
     return 'disassociate';
   }
 
+  protected function getBulkOperationNameForDeleteTranslation($langcode, $entity_type_id) {
+    return 'delete_translation:' . $langcode;
+  }
+
+  protected function getBulkOperationNameForDeleteTranslations($entity_type_id) {
+    return 'delete_translations';
+  }
+
   protected function getApplyActionsButtonLabel() {
     return t('Execute');
   }

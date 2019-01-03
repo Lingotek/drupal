@@ -1822,4 +1822,54 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
     $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
   }
 
+  /**
+   * Tests that translations can be deleted using the actions on the management page.
+   */
+  public function testDeleteTranslation() {
+    $this->testNodeTranslationUsingActionsForMultipleLocales();
+
+    $this->goToContentBulkManagementForm();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDeleteTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->confirmBulkDeleteTranslation(1, 1);
+
+    $this->assertLingotekDownloadTargetLink('es_MX');
+    $this->assertNoLingotekDownloadTargetLink('de_AT');
+  }
+
+  /**
+   * Tests that translations can be deleted using the actions on the management page.
+   */
+  public function testDeleteTranslationsInBulk() {
+    $this->testNodeTranslationUsingActionsForMultipleLocales();
+
+    $this->goToContentBulkManagementForm();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDeleteTranslations('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->confirmBulkDeleteTranslations(1, 2);
+
+    $this->assertLingotekDownloadTargetLink('es_MX');
+    $this->assertLingotekDownloadTargetLink('de_AT');
+  }
+
+  protected function confirmBulkDeleteTranslation($nodeCount, $translationCount) {
+    $this->drupalPostForm(NULL, [], t('Delete'));
+    $this->assertText("Deleted $translationCount content item.");
+  }
+
+  protected function confirmBulkDeleteTranslations($nodeCount, $translationCount) {
+    $this->drupalPostForm(NULL, [], t('Delete'));
+    $this->assertText("Deleted $translationCount content items.");
+  }
+
 }

@@ -72,6 +72,14 @@ trait LingotekViewsTestTrait {
     return $entity_type_id . '_lingotek_disassociate_action';
   }
 
+  protected function getBulkOperationNameForDeleteTranslation($langcode, $entity_type_id) {
+    return $entity_type_id . '_' . $langcode . '_lingotek_delete_translation_action';
+  }
+
+  protected function getBulkOperationNameForDeleteTranslations($entity_type_id) {
+    return $entity_type_id . '_lingotek_delete_translations_action';
+  }
+
   protected function getApplyActionsButtonLabel() {
     return t('Apply to selected items');
   }

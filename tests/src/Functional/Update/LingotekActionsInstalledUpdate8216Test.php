@@ -11,7 +11,7 @@ use Drupal\system\Entity\Action;
  * @group lingotek
  * @group legacy
  */
-class LingotekActionsInstalledUpdate8210Test extends UpdatePathTestBase {
+class LingotekActionsInstalledUpdate8216Test extends UpdatePathTestBase {
 
   /**
    * The config factory service.
@@ -33,7 +33,7 @@ class LingotekActionsInstalledUpdate8210Test extends UpdatePathTestBase {
    */
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
-      __DIR__ . '/../../../fixtures/update/drupal-8.lingotek.standard.pre8210.php.gz',
+      __DIR__ . '/../../../fixtures/update/drupal-8.lingotek.standard.pre8216.php.gz',
     ];
   }
 
@@ -42,24 +42,20 @@ class LingotekActionsInstalledUpdate8210Test extends UpdatePathTestBase {
    */
   public function testUpgrade() {
     $actions = Action::loadMultiple();
-    $this->assertCount(19, $actions);
+    $this->assertCount(34, $actions);
 
     $this->runUpdates();
 
     $actions = Action::loadMultiple();
-    // There should be 6 new actions: 5 steps in the complete roundtrip plus the
-    // action for disassociating.
-    // After lingotek_update_8214 count on 9 more.
-    // After lingotek_update_8216 count on 4 more.
-    $this->assertCount(19 + 6 + 9 + 4, $actions);
+    // There should be 4 new actions: 1 for delete translations plus the
+    // actions for deleting a concrete translation per language.
+    $this->assertCount(34 + 4, $actions);
 
     $expectedActions = [
-      'node_lingotek_upload_action',
-      'node_lingotek_check_upload_action',
-      'node_lingotek_request_translations_action',
-      'node_lingotek_check_translations_action',
-      'node_lingotek_download_translations_action',
-      'node_lingotek_disassociate_action',
+      'node_lingotek_delete_translations_action',
+      'node_es_lingotek_delete_translation_action',
+      'node_en_lingotek_delete_translation_action',
+      'node_de_lingotek_delete_translation_action',
     ];
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);
