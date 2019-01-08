@@ -12,6 +12,7 @@ use Drupal\Tests\lingotek\Functional\LingotekTestBase;
  * Tests the markup of lingotek render element types passed to drupal_render().
  *
  * @group lingotek
+ * @group legacy
  */
 class RenderElementTypesTest extends LingotekTestBase {
 
@@ -115,8 +116,9 @@ class RenderElementTypesTest extends LingotekTestBase {
 
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
     $this->assertSession()->responseContains('lingotek/css/base.css');
-    // There's nothing to display yet, so there's nothing inside "region-content".
-    $this->assertSession()->elementNotExists('xpath', '//div[contains(@class, "region-content")]/*');
+    // Assert there are no language icons as there's nothing to display yet.
+    $this->assertSession()->elementNotExists('xpath', '//div[contains(@class, "region-content")]/span[contains(@class, "language-icon")]');
+    $this->assertSession()->elementNotExists('xpath', '//div[contains(@class, "region-content")]/a[contains(@class, "language-icon")]');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_UNTRACKED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_statuses/node/1');
@@ -160,8 +162,9 @@ class RenderElementTypesTest extends LingotekTestBase {
 
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
     $this->assertSession()->responseNotContains('lingotek/css/base.css');
-    // There's nothing to display yet, so there's nothing inside "region-content".
-    $this->assertSession()->elementNotExists('xpath', '//div[contains(@class, "region-content")]/*');
+    // Assert there are no language icons as there's nothing to display yet.
+    $this->assertSession()->elementNotExists('xpath', '//div[contains(@class, "region-content")]/span[contains(@class, "language-icon")]');
+    $this->assertSession()->elementNotExists('xpath', '//div[contains(@class, "region-content")]/a[contains(@class, "language-icon")]');
 
     $translation_service->setTargetStatus($entity, 'es', Lingotek::STATUS_UNTRACKED);
     $this->drupalGet('/lingotek_form_test/lingotek_translation_status/node/1');
