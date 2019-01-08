@@ -145,7 +145,11 @@ class LingotekContentModerationHandler implements LingotekModerationHandlerInter
    * {@inheritdoc}
    */
   public function getModerationState(ContentEntityInterface $entity) {
-    return $entity->get('moderation_state')->getString();
+    $state = NULL;
+    if ($this->moderationInfo->isModeratedEntity($entity)) {
+      $state = $entity->get('moderation_state')->getString();
+    }
+    return $state;
   }
 
   /**
