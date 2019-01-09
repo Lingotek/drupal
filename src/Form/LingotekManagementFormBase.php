@@ -774,6 +774,10 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Array of ids to delete.
    */
   protected function redirectToDeleteMultipleNodesForm($values, FormStateInterface $form_state) {
+    if (((float) \Drupal::VERSION) < 8.6) {
+      drupal_set_message($this->t('Deletion of nodes is only available with Drupal > 8.6'), 'error');
+      return;
+    }
     $entityInfo = [];
     $entities = $this->getSelectedEntities($values);
     foreach ($entities as $entity) {
@@ -794,6 +798,10 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Array of ids to delete.
    */
   protected function redirectToDeleteTranslationForm($values, $langcode, FormStateInterface $form_state) {
+    if (((float) \Drupal::VERSION) < 8.6) {
+      drupal_set_message($this->t('Deletion of translations is only available with Drupal > 8.6'), 'error');
+      return;
+    }
     $entityInfo = [];
     $entities = $this->getSelectedEntities($values);
     foreach ($entities as $entity) {
@@ -816,6 +824,10 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   Array of ids to delete.
    */
   protected function redirectToDeleteMultipleTranslationsForm($values, FormStateInterface $form_state) {
+    if (((float) \Drupal::VERSION) < 8.6) {
+      drupal_set_message($this->t('Deletion of translations is only available with Drupal > 8.6'), 'error');
+      return;
+    }
     $entityInfo = [];
     $entities = $this->getSelectedEntities($values);
     $languages = $this->languageManager->getLanguages();
@@ -1247,7 +1259,9 @@ abstract class LingotekManagementFormBase extends FormBase {
     $operations[(string) $this->t('Request translations')]['request_translations'] = $this->t('Request all translations');
     $operations[(string) $this->t('Check translation progress')]['check_translations'] = $this->t('Check progress of all translations');
     $operations[(string) $this->t('Download')]['download'] = $this->t('Download all translations');
-    $operations[(string) $this->t('Delete translations')]['delete_translations'] = $this->t('Delete translations');
+    if (((float) \Drupal::VERSION) >= 8.6) {
+      $operations[(string) $this->t('Delete translations')]['delete_translations'] = $this->t('Delete translations');
+    }
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
       $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
@@ -1256,7 +1270,9 @@ abstract class LingotekManagementFormBase extends FormBase {
       $operations[(string) $this->t('Request translations')]['request_translation:' . $langcode] = $this->t('Request @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Check translation progress')]['check_translation:' . $langcode] = $this->t('Check progress of @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
       $operations[(string) $this->t('Download')]['download:' . $langcode] = $this->t('Download @language translation', ['@language' => $language->getName()]);
-      $operations[(string) $this->t('Delete translations')]['delete_translation:' . $langcode] = $this->t('Delete @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
+      if (((float) \Drupal::VERSION) >= 8.6) {
+        $operations[(string) $this->t('Delete translations')]['delete_translation:' . $langcode] = $this->t('Delete @language translation', ['@language' => $language->getName() . ' (' . $language->getId() . ')']);
+      }
     }
 
     // We add the delete operation in nodes and comments, as we have those
