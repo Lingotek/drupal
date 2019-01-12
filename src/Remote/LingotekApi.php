@@ -107,7 +107,7 @@ class LingotekApi implements LingotekApiInterface {
   public function deleteDocument($id) {
     try {
       $this->logger->debug('Lingotek::deleteDocument called with id ' . $id);
-      $response = $this->lingotekClient->delete('/api/document' . '/' . $id);
+      $response = $this->lingotekClient->delete('/api/document/' . $id);
     }
     catch (\Exception $e) {
       $http_status_code = $e->getCode();
