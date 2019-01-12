@@ -244,7 +244,7 @@ class LingotekApi implements LingotekApiInterface {
   public function getTranslation($id, $locale, $useSource = FALSE) {
     try {
       $this->logger->debug('Lingotek::getTranslation called with id ' . $id . ' and locale ' . $locale);
-      $response = $this->lingotekClient->get('/api/document/' . $id . '/content', ['locale_code' => $locale, 'use_source' => $useSource]);
+      $response = $this->lingotekClient->get('/api/document/' . $id . '/content', ['locale_code' => $locale, 'use_source' => $useSource ? 'true' : 'false']);
     }
     catch (\Exception $e) {
       $this->logger->error('Error getting translation (%id, %locale): %message.',

@@ -211,17 +211,17 @@ class LingotekApiUnitTest extends UnitTestCase {
 
     $this->client->expects($this->at(0))
       ->method('get')
-      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => FALSE])
+      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => 'false'])
       ->will($this->returnValue($response));
 
     $this->client->expects($this->at(1))
       ->method('get')
-      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => FALSE])
+      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => 'false'])
       ->will($this->returnValue($response));
 
     $this->client->expects($this->at(2))
       ->method('get')
-      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => TRUE])
+      ->with('/api/document/fancy-document-id/content', ['locale_code' => 'es_ES', 'use_source' => 'true'])
       ->will($this->returnValue($response));
 
     $this->lingotek_api->getTranslation('fancy-document-id', 'es_ES');
