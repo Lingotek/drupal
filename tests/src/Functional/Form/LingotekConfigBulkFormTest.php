@@ -77,10 +77,10 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
 
     // Assert that there is a "Bundle" header on the second position.
     // First position is the checkbox, that's why we care about the second.
-    $second_header = $this->xpath('//*[@id="edit-table"]/thead/tr/th[2]')[0];
+    $second_header = $this->xpath('//*[@id="edit-table"]/thead/tr/th[2]/a')[0];
     $this->assertEqual($second_header->getHtml(), 'Bundle', 'There is a Bundle header.');
 
-    $third_header = $this->xpath('//*[@id="edit-table"]/thead/tr/th[3]')[0];
+    $third_header = $this->xpath('//*[@id="edit-table"]/thead/tr/th[3]/a')[0];
     $this->assertEqual($third_header->getHtml(), 'Entity', 'There is a Entity header.');
 
     // Assert that there is a bundle printed with the Body field, and by that
@@ -280,6 +280,77 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     foreach ([4, 6, 8] as $j) {
       $this->assertText('Content Type ' . $indexes[$j]);
     }
+    $this->assertNoText('Content Type ' . $indexes[5]);
+
+    // After we reset, we get back to having all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    $this->goToConfigBulkManagementForm('node_type');
+    foreach (range(1, 9) as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+  }
+
+  /**
+   * Tests that the bulk management filtering works correctly.
+   */
+  public function testLabelFilter() {
+    $this->goToConfigBulkManagementForm();
+    $this->assertNoField('filters[wrapper][label]');
+
+    \Drupal::configFactory()->getEditable('lingotek.settings')->set('translate.config.node_type.profile', 'manual')->save();
+
+    $node_types = [];
+    // See https://www.drupal.org/project/drupal/issues/2925290.
+    $indexes = "ABCDEFGHIJKLMNOPQ";
+    // Create some nodes.
+    for ($i = 1; $i < 10; $i++) {
+      $odd_index = $i % 2 == 0;
+      $name = 'Content Type ' . $indexes[$i] . ' ' . ($odd_index ? 'odd' : 'even');
+      $node_types[$i] = $this->drupalCreateContentType(['type' => 'content_type_' . $i, 'name' => $name]);
+    }
+
+    $this->goToConfigBulkManagementForm('node_type');
+    $this->assertField('filters[wrapper][label]');
+    $this->assertNoText('No content available');
+
+    // After we filter by an unexisting label, there is no content and no rows.
+    $edit = [
+      'filters[wrapper][label]' => 'this label does not exist',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertText('No content available');
+
+    // After we reset, we get back to having all the content.
+    $this->drupalPostForm(NULL, [], 'Reset');
+    $this->goToConfigBulkManagementForm('node_type');
+    foreach (range(1, 9) as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+
+    // After we filter by prime, there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[wrapper][label]' => 'even',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([1, 3, 5, 7, 9] as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+    $this->assertNoText('Content Type ' . $indexes[2]);
+    $this->assertNoText('Content Type ' . $indexes[4]);
+    $this->assertNoText('Content Type ' . $indexes[6]);
+
+    // After we filter by even, there is no pager and the rows selected are the
+    // ones expected.
+    $edit = [
+      'filters[wrapper][label]' => 'odd',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    foreach ([2, 4, 6, 8] as $j) {
+      $this->assertText('Content Type ' . $indexes[$j]);
+    }
+    $this->assertNoText('Content Type ' . $indexes[1]);
+    $this->assertNoText('Content Type ' . $indexes[3]);
     $this->assertNoText('Content Type ' . $indexes[5]);
 
     // After we reset, we get back to having all the content.

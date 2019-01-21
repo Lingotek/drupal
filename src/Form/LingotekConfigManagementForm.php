@@ -141,6 +141,16 @@ class LingotekConfigManagementForm extends FormBase {
     $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
     $jobFilter = $temp_store->get('job');
 
+    // Create the headers first so they can be used for sorting.
+    $headers = [
+      'title' => [
+        'data' => $this->t('Entity'),
+      ],
+      'source' => $this->t('Source'),
+      'translations' => $this->t('Translations'),
+      'profile' => $this->t('Profile'),
+    ];
+
     // ToDo: Find a better filter?
     if ($this->filter === 'config') {
       $mappers = array_filter($this->mappers, function ($mapper) {
@@ -153,8 +163,22 @@ class LingotekConfigManagementForm extends FormBase {
       $showingFields = TRUE;
       $mapper = $this->mappers[$this->filter];
       $base_entity_type = $mapper->getPluginDefinition()['base_entity_type'];
+
+      // If we are showing field config instances, we need to show bundles for
+      // a better UX.
+      $headers = [
+        'bundle' => [
+          'data' => $this->t('Bundle'),
+          'specifier' => 'bundle',
+        ],
+      ] + $headers;
+
+      // Make the table sortable by field label.
+      $headers['title']['specifier'] = 'label';
+
       $ids = \Drupal::entityQuery('field_config')
         ->condition('id', $base_entity_type . '.', 'STARTS_WITH')
+        ->tableSort($headers)
         ->execute();
       $fields = FieldConfig::loadMultiple($ids);
       $mappers = [];
@@ -166,8 +190,24 @@ class LingotekConfigManagementForm extends FormBase {
     }
     else {
       $mapper = $this->mappers[$this->filter];
-      $ids = \Drupal::entityQuery($this->filter)->execute();
-      $entities = \Drupal::entityManager()->getStorage($this->filter)->loadMultiple($ids);
+      $query = \Drupal::entityQuery($this->filter);
+      $label_filter = $temp_store->get('label');
+
+      // Determine the machine name of the title for this entity type.
+      $entity_storage = \Drupal::entityManager()->getStorage($this->filter);
+      $entity_keys = $entity_storage->getEntityType()->getKeys();
+      if (isset($entity_keys['label'])) {
+        $label_key = $entity_keys['label'];
+        if ($label_filter) {
+          $query->condition($label_key, $label_filter, 'CONTAINS');
+        }
+
+        $headers['title']['specifier'] = $label_key;
+        $query->tableSort($headers);
+      }
+
+      $ids = $query->execute();
+      $entities = $entity_storage->loadMultiple($ids);
       /** @var \Drupal\config_translation\ConfigEntityMapper $mapper  */
       $mappers = [];
       foreach ($entities as $entity) {
@@ -248,6 +288,14 @@ class LingotekConfigManagementForm extends FormBase {
       '#default_value' => $this->filter,
       '#attributes' => ['class' => ['form-item']],
     ];
+    if ($mapper instanceof ConfigEntityMapper) {
+      $form['filters']['wrapper']['label'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Label'),
+        '#default_value' => $temp_store->get('label'),
+        '#attributes' => ['class' => ['form-item']],
+      ];
+    }
     $form['filters']['wrapper']['job'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Job ID'),
@@ -267,16 +315,6 @@ class LingotekConfigManagementForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Reset'),
       '#submit' => ['::resetFilterForm'],
-    ];
-
-    // If we are showing field config instances, we need to show bundles for
-    // a better UX.
-    $headers = $showingFields ? ['bundle' => $this->t('Bundle')] : [];
-    $headers += [
-      'title' => $this->t('Entity'),
-      'source' => $this->t('Source'),
-      'translations' => $this->t('Translations'),
-      'profile' => $this->t('Profile'),
     ];
 
     // Build an 'Update options' form.
@@ -344,11 +382,13 @@ class LingotekConfigManagementForm extends FormBase {
   public function filterForm(array &$form, FormStateInterface $form_state) {
     $value = $form_state->getValue(['filters', 'wrapper', 'bundle']);
     $job_id = $form_state->getValue(['filters', 'wrapper', 'job']) ?: NULL;
+    $label = $form_state->getValue(['filters', 'wrapper', 'label']) ?: NULL;
 
     /** @var \Drupal\user\PrivateTempStore $temp_store */
     $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
     $temp_store->set('bundle', $value);
     $temp_store->set('job', $job_id);
+    $temp_store->set('label', $label);
     $this->filter = $value;
     // If we apply any filters, we need to go to the first page again.
     $form_state->setRedirect('<current>');
@@ -367,6 +407,7 @@ class LingotekConfigManagementForm extends FormBase {
     $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
     $temp_store->delete('bundle');
     $temp_store->delete('job');
+    $temp_store->delete('label');
   }
 
   /**
