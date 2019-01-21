@@ -466,6 +466,9 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       $field = $source_entity->get($k);
       $field_type = $field_definitions[$k]->getType();
 
+      if ($field->isEmpty()) {
+        $data[$k] = [];
+      }
       foreach ($field as $fkey => $fval) {
         // If we have only one relevant column, upload that. If not, check our
         // settings.
@@ -1121,8 +1124,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
           if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'bricks') {
             $target_entity_type_id = $field_definition->getFieldStorageDefinition()
               ->getSetting('target_type');
-            $index = 0;
-            foreach ($field_data as $field_item) {
+            $index = -1;
+            foreach ($field_data as $index => $field_item) {
               if (isset($field_item['_lingotek_metadata'])) {
                 $target_entity_type_id = $field_item['_lingotek_metadata']['_entity_type_id'];
                 $embedded_entity_id = $field_item['_lingotek_metadata']['_entity_id'];
@@ -1157,15 +1160,27 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 // the reference will be saved too.
                 $translation->{$name}->set($index, $embedded_entity_id);
               }
+            }
+            if ($index === -1) {
+              // Remove the rest of deltas that were no longer found in the document downloaded from lingotek.
               ++$index;
+              $continue = TRUE;
+              while ($continue) {
+                if ($translation->get($name)->offsetExists($index)) {
+                  $translation->get($name)->removeItem($index);
+                }
+                else {
+                  $continue = FALSE;
+                }
+              }
             }
           }
           // Paragraphs module use 'entity_reference_revisions'.
           elseif ($field_type === 'entity_reference_revisions') {
             $target_entity_type_id = $field_definition->getFieldStorageDefinition()
               ->getSetting('target_type');
-            $index = 0;
-            foreach ($field_data as $field_item) {
+            $index = -1;
+            foreach ($field_data as $index => $field_item) {
               $embedded_entity_id = $revision->{$name}->get($index)
                 ->get('target_id')
                 ->getValue();
@@ -1178,7 +1193,19 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 // the reference will be saved too. Ensure it's the same revision.
                 $translation->{$name}->set($index, ['target_id' => $embedded_entity_id, 'target_revision_id' => $embedded_entity->getRevisionId()]);
               }
+            }
+            if ($index === -1) {
+              // Remove the rest of deltas that were no longer found in the document downloaded from lingotek.
               ++$index;
+              $continue = TRUE;
+              while ($continue) {
+                if ($translation->get($name)->offsetExists($index)) {
+                  $translation->get($name)->removeItem($index);
+                }
+                else {
+                  $continue = FALSE;
+                }
+              }
             }
           }
           // If there is a path item, we need to handle it separately. See

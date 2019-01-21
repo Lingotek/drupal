@@ -297,6 +297,52 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Download the translation.
     $this->clickLink('Download completed translation');
     $this->assertText('The translation of node Llamas are cool EDITED into es_MX has been downloaded.');
+
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas');
+  }
+
+  /**
+   * Tests that a node is correctly translated after body is deleted.
+   */
+  public function testEditedNodeTranslationWhenBodyRemoved() {
+    // We need a node with translations first.
+    $this->testNodeTranslation();
+
+    // Edit the node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $edit['body[0][value]'] = '';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'automatic';
+    $this->saveAndKeepPublishedThisTranslationNodeForm($edit, 1);
+
+    $this->clickLink('Translate');
+
+    // Re-upload.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // Check that only the configured fields have been uploaded.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 3);
+    $this->assertTrue(isset($data['title'][0]['value']));
+    $this->assertTrue(isset($data['body']));
+    $this->assertEmpty(count($data['body']));
+
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+emptybody');
+
+    // Recheck status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_MX translation for node Llamas are cool EDITED is ready for download.');
+
+    // Download the translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool EDITED into es_MX has been downloaded.');
+
+    $this->clickLink('Las llamas son chulas EDITADO');
+    $this->assertNoText('Las llamas son muy chulas');
   }
 
   /**
@@ -367,7 +413,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     // Check that only the configured fields have been uploaded.
     $data = json_decode(\Drupal::state()
       ->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 2);
+    $this->assertUploadedDataFieldCount($data, 3);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));

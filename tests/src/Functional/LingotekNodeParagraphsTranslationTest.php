@@ -434,6 +434,42 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that when we remove a paragraph from a translated source node, when
+   * reuploading and translating the target doesn't contain the paragraph.
+   */
+  public function testParagraphIsRemovedIfTranslationIsRemoved() {
+    $this->testNodeWithParagraphsTranslation();
+
+    $this->drupalGet('node/1/edit');
+    $this->drupalPostForm(NULL, [], 'Remove');
+    $this->drupalPostForm(NULL, [], 'Confirm removal');
+    $this->drupalPostForm(NULL, [], 'Save (this translation)');
+
+    // Check that only the configured fields have been uploaded, including metatags.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertTrue(isset($data['field_paragraphs_demo']));
+    $this->assertEmpty($data['field_paragraphs_demo']);
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+paragraphs_removed');
+
+    $this->clickLink('Translate');
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertNoText('Las llamas son muy chulas');
+  }
+
+  /**
    * Tests that metadata is created when a paragraph is added.
    */
   public function testParagraphContentMetadataIsSavedWhenContentAdded() {

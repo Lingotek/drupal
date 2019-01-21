@@ -44,8 +44,8 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     parent::setUp();
 
     // Place the actions and title block.
-    $this->drupalPlaceBlock('local_tasks_block');
-    $this->drupalPlaceBlock('page_title_block');
+    $this->drupalPlaceBlock('page_title_block', ['id' => 'block_1', 'label' => 'Title block', 'region' => 'content', 'weight' => -5]);
+    $this->drupalPlaceBlock('local_tasks_block', ['id' => 'block_2', 'label' => 'Local tasks block', 'region' => 'content', 'weight' => -10]);
 
     // Create Article node types.
     $this->drupalCreateContentType([
@@ -230,7 +230,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     // Check that only the configured fields have been uploaded, including tags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 3);
+    $this->assertUploadedDataFieldCount($data, 4);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
@@ -310,7 +310,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     // Check that only the configured fields have been uploaded, including tags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 3);
+    $this->assertUploadedDataFieldCount($data, 4);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
@@ -370,6 +370,67 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     // The tags are BOTH there. Because we have translated an older revision.
     $this->assertText('Camélido');
     $this->assertText('Hervíboro');
+  }
+
+  /**
+   * Tests that previous tags are deleted when downloading a new translation.
+   */
+  public function testNodeTranslationAfterDeletedReference() {
+    $this->testNodeTranslationWithADeletedReferenceInARevision();
+
+    // This is a hack for avoiding writing different lingotek endpoint mocks.
+    \Drupal::state()->set('lingotek.uploaded_content_type', 'node+taxonomy_term_emptied+metadata');
+
+    // Now we create a new revision, and this is removing both field tag reference.
+    \Drupal::entityTypeManager()->getStorage('node')->resetCache();
+    $this->node = Node::load(1);
+    unset($this->node->field_tags[0]);
+    $this->node->setNewRevision();
+    $this->node->save();
+
+    // Check that we removed the tags correctly.
+    $this->drupalGet('node/1');
+    $this->assertNoText('Camelid');
+    $this->assertNoText('Herbivorous');
+
+    // We go back to the translations.
+    $this->clickLink('Translate');
+
+    // And we reupload it.
+    $this->clickLink('Upload');
+    $this->checkForMetaRefresh();
+    $this->assertText('Uploaded 1 document to Lingotek.');
+
+    // Check that only the configured fields have been uploaded, including tags
+    // and image even if not set.
+    $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
+    $this->assertUploadedDataFieldCount($data, 4);
+    $this->assertTrue(isset($data['title'][0]['value']));
+    $this->assertEqual(1, count($data['body'][0]));
+    $this->assertTrue(isset($data['body'][0]['value']));
+    $this->assertTrue(isset($data['field_image']));
+    $this->assertTrue(isset($data['field_tags']));
+    // The tags are emptied.
+    $this->assertEmpty($data['field_tags']);
+    // The image field is empty.
+    $this->assertEmpty($data['field_image']);
+
+    // Check translation status.
+    $this->clickLink('Check translation status');
+    $this->assertText('The es_AR translation for node Llamas are cool is ready for download.');
+
+    // Download translation.
+    $this->clickLink('Download completed translation');
+    $this->assertText('The translation of node Llamas are cool into es_AR has been downloaded.');
+
+    // The content is translated and published.
+    $this->clickLink('Las llamas son chulas');
+    $this->assertText('Las llamas son chulas');
+    $this->assertText('Las llamas son muy chulas');
+
+    // The tags have been removed from the content when re-downloading.
+    $this->assertNoText('Camélido');
+    $this->assertNoText('Hervíboro');
   }
 
   /**
@@ -441,7 +502,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
 
     // Check that only the configured fields have been uploaded, including tags.
     $data = json_decode(\Drupal::state()->get('lingotek.uploaded_content', '[]'), TRUE);
-    $this->assertUploadedDataFieldCount($data, 4);
+    $this->assertUploadedDataFieldCount($data, 5);
     $this->assertTrue(isset($data['title'][0]['value']));
     $this->assertEqual(1, count($data['body'][0]));
     $this->assertTrue(isset($data['body'][0]['value']));
