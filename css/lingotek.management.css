@@ -1,11 +1,15 @@
-.form-item-items-per-page {
+.form-item-items-per-page,
+.form-item-depth-selection {
     text-align: center;
 }
-
-    .form-item-items-per-page label {
+    .form-item-depth-selection .form-item-depth div {
         display: inline;
     }
 
-    .form-item-items-per-page select {
+    .form-item-items-per-page label,
+    .form-item-items-per-page select,
+    .form-item-depth-selection label,
+    .form-item-depth-selection select,
+    .form-item-depth-selection input {
         display: inline;
     }

@@ -93,7 +93,27 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
 
   public function buildForm(array $form, FormStateInterface $form_state, ContentEntityInterface $node = NULL) {
     $this->node = $node;
-    return parent::buildForm($form, $form_state);
+    $form = parent::buildForm($form, $form_state);
+
+    $depth = $this->getRecursionDepth();
+    $form['depth_selection'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => 'form-item-depth-selection'],
+      '#weight' => 60,
+    ];
+    $form['depth_selection']['depth'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Recursion depth:'),
+      '#options' => [1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5],
+      '#default_value' => $depth,
+    ];
+    $form['depth_selection']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Apply'),
+      '#submit' => [[$this, 'recursionDepthCallback']],
+    ];
+
+    return $form;
   }
 
   protected function getSelectedEntities($values) {
@@ -134,7 +154,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
 
   public function calculateNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
     $visited[$entity->bundle()][] = $entity->id();
-    $entities[$entity->getEntityTypeId()][] = $entity->id();
+    $entities[$entity->getEntityTypeId()][] = $entity;
     $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     foreach ($field_definitions as $k => $definition) {
       $field_type = $field_definitions[$k]->getType();
@@ -155,45 +175,28 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     return $entities;
   }
 
-  public function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
+  protected function getNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = [], $depth = 1) {
     $visited[$entity->bundle()][] = $entity->id();
     $entities[$entity->getEntityTypeId()][$entity->id()] = $entity;
-    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
-    foreach ($field_definitions as $k => $definition) {
-      $field_type = $field_definitions[$k]->getType();
-      if ($field_type === 'entity_reference' || $field_type === 'er_viewmode') {
-        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
-          ->getSetting('target_type');
-        $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
-        if ($target_entity_type instanceof ContentEntityType) {
-          $child_entities = $entity->{$k}->referencedEntities();
-          foreach ($child_entities as $embedded_entity) {
-            if ($embedded_entity !== NULL) {
-              if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
-                // We need to avoid cycles if we have several entity references
-                // referencing each other.
-                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                  $this->getNestedEntities($embedded_entity, $visited, $entities);
-                }
-              }
-            }
-          }
-        }
-      }
-      // Paragraphs use the entity_reference_revisions field type.
-      elseif ($field_type === 'entity_reference_revisions') {
-        $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
-          ->getSetting('target_type');
-        $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
-        if ($target_entity_type instanceof ContentEntityType) {
-          $child_entities = $entity->{$k}->referencedEntities();
-          foreach ($child_entities as $embedded_entity) {
-            if ($embedded_entity !== NULL) {
-              if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
-                // We need to avoid cycles if we have several entity references
-                // referencing each other.
-                if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
-                  $this->getNestedEntities($embedded_entity, $visited, $entities);
+    if ($depth > 0) {
+      --$depth;
+      $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+      foreach ($field_definitions as $k => $definition) {
+        $field_type = $field_definitions[$k]->getType();
+        if (in_array($field_type, ['entity_reference', 'entity_reference_revisions', 'er_viewmode'])) {
+          $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
+            ->getSetting('target_type');
+          $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
+          if ($target_entity_type instanceof ContentEntityType) {
+            $child_entities = $entity->{$k}->referencedEntities();
+            foreach ($child_entities as $embedded_entity) {
+              if ($embedded_entity !== NULL) {
+                if ($embedded_entity instanceof ContentEntityInterface && $embedded_entity->isTranslatable() && $this->lingotekConfiguration->isEnabled($embedded_entity->getEntityTypeId(), $embedded_entity->bundle())) {
+                  // We need to avoid cycles if we have several entity references
+                  // referencing each other.
+                  if (!isset($visited[$embedded_entity->bundle()]) || !in_array($embedded_entity->id(), $visited[$embedded_entity->bundle()])) {
+                    $entities = $this->getNestedEntities($embedded_entity, $visited, $entities, $depth);
+                  }
                 }
               }
             }
@@ -206,21 +209,10 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
 
   protected function getFilteredEntities() {
     // This implies recursion through all the related content.
-    // So let's try something lighter instead, with the first level only.
-    // return $this->getNestedEntities($this->node);
-    $nested = $this->calculateNestedEntities($this->node);
+    $visited = [];
     $entities = [];
-    foreach ($nested as $type => $ids) {
-      $loaded = $this->entityManager->getStorage($type)->loadMultiple($ids);
-      $loaded = array_filter($loaded, function ($value) {
-        return ($value instanceof ContentEntityInterface &&
-          $value->isTranslatable() &&
-          $this->lingotekConfiguration->isEnabled($value->getEntityTypeId(), $value->bundle()));
-      });
-      if (!empty($loaded)) {
-        $entities[$type] = $loaded;
-      }
-    }
+    $recursion_depth = $this->getRecursionDepth();
+    $entities = $this->getNestedEntities($this->node, $visited, $entities, $recursion_depth);
     return $entities;
   }
 
@@ -283,13 +275,46 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   }
 
   /**
-   * Gets the pager.
-   *
-   * @return array
-   *   A render array.
+   * {@inheritdoc}
    */
   protected function getPager() {
     return NULL;
+  }
+
+  /**
+   * Gets the recursion depth saved in temp storage.
+   *
+   * @return int
+   *   The recursion depth.
+   */
+  protected function getRecursionDepth() {
+    $temp_store = $this->tempStoreFactory->get('lingotek.management.recursion_depth');
+    $depth = $temp_store->get('depth');
+    if ($depth === NULL) {
+      $depth = 1;
+    }
+    return $depth;
+  }
+
+  /**
+   * Saves the recursion depth in temp storage.
+   *
+   * @param int $depth
+   *   The recursion depth.
+   *
+   * @throws \Drupal\Core\TempStore\TempStoreException
+   */
+  protected function setRecursionDepth($depth) {
+    $temp_store = $this->tempStoreFactory->get('lingotek.management.recursion_depth');
+    $temp_store->set('depth', $depth);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function recursionDepthCallback(array &$form, FormStateInterface $form_state) {
+    $value = $form_state->getValue('depth');
+    $this->setRecursionDepth($value);
   }
 
 }

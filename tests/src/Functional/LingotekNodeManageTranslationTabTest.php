@@ -34,8 +34,8 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     parent::setUp();
 
     // Place the actions and title block.
-    $this->drupalPlaceBlock('local_tasks_block');
-    $this->drupalPlaceBlock('page_title_block');
+    $this->drupalPlaceBlock('local_tasks_block', ['region' => 'content', 'weight' => -10]);
+    $this->drupalPlaceBlock('page_title_block', ['region' => 'content', 'weight' => -5]);
 
     $this->vocabulary = $this->createVocabulary();
 
@@ -125,14 +125,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
-    $term3 = Term::create(['name' => 'Hominid', 'vid' => $this->vocabulary->id()]);
-    $term3->save();
-
-    $term2 = Term::load(2);
-    $term2->field_tags = $term3;
-    $term2->save();
-
-    $this->drupalGet('/taxonomy/term/2');
+    $this->createRelatedTermsForTestingDepth();
 
     // Login as translation manager.
     $this->drupalLogin($this->translationManagerUser);
@@ -146,6 +139,28 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertText('Herbivorous');
     // Assert second level is not included.
     $this->assertNoText('Hominid');
+    // Assert third level is not included.
+    $this->assertNoText('Ruminant');
+
+    $this->drupalPostForm(NULL, ['depth' => 2], 'Apply');
+
+    $this->assertText('Llamas are cool');
+    $this->assertText('Camelid');
+    $this->assertText('Herbivorous');
+    // Assert second level is included.
+    $this->assertText('Hominid');
+    // Assert third level is not included.
+    $this->assertNoText('Ruminant');
+
+    $this->drupalPostForm(NULL, ['depth' => 3], 'Apply');
+
+    $this->assertText('Llamas are cool');
+    $this->assertText('Camelid');
+    $this->assertText('Herbivorous');
+    // Assert second level is included.
+    $this->assertText('Hominid');
+    // Assert third level is also included.
+    $this->assertText('Ruminant');
 
     // Clicking English must init the upload of content.
     $this->assertLingotekUploadLink();
@@ -203,14 +218,7 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $edit['lingotek_translation_profile'] = 'manual';
     $this->saveAndPublishNodeForm($edit);
 
-    $term3 = Term::create(['name' => 'Hominid', 'vid' => $this->vocabulary->id()]);
-    $term3->save();
-
-    $term2 = Term::load(2);
-    $term2->field_tags = $term3;
-    $term2->save();
-
-    $this->drupalGet('/taxonomy/term/2');
+    $this->createRelatedTermsForTestingDepth();
 
     // Login as translation manager.
     $this->drupalLogin($this->translationManagerUser);
@@ -224,6 +232,8 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
     $this->assertText('Herbivorous');
     // Assert second level is not included.
     $this->assertNoText('Hominid');
+    // Assert third level is not included.
+    $this->assertNoText('Ruminant');
 
     // I can init the upload of content.
     $this->assertLingotekUploadLink();
@@ -280,6 +290,25 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
    */
   protected function getContentBulkManagementFormUrl($entity_type_id = 'node', $prefix = NULL) {
     return ($prefix === NULL ? '' : '/' . $prefix) . '/' . $entity_type_id . '/1/manage';
+  }
+
+  /**
+   * Create some terms with relations so we can test if they are listed or not.
+   */
+  protected function createRelatedTermsForTestingDepth() {
+    $term3 = Term::create(['name' => 'Hominid', 'vid' => $this->vocabulary->id()]);
+    $term3->save();
+
+    $term2 = Term::load(2);
+    $term2->field_tags = $term3;
+    $term2->save();
+
+    $term4 = Term::create(['name' => 'Ruminant', 'vid' => $this->vocabulary->id()]);
+    $term4->save();
+
+    $term3 = Term::load(3);
+    $term3->field_tags = $term4;
+    $term3->save();
   }
 
 }
