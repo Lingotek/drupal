@@ -948,10 +948,9 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
-   * Tests if upload status filter works
+   * Tests if source status filter works correctly
    */
-  public function testUploadStatusFilter() {
-    $basepath = \Drupal::request()->getBasePath();
+  public function testSourceStatusFilter() {
     // Create a node.
     $edit = [];
     $edit['title[0][value]'] = 'Llamas are cool';
@@ -970,12 +969,12 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by "IMPORTING", there is no pager and the rows
     // selected are the ones expected.
     $edit = [
-      'filters[advanced_options][upload_status]' => 'IMPORTING',
+      'filters[advanced_options][source_status]' => 'IMPORTING',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $this->assertLink('Llamas are cool');
 
-    $this->assertFieldByName('filters[advanced_options][upload_status]', 'IMPORTING', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[advanced_options][source_status]', 'IMPORTING', 'The value is retained in the filter.');
 
     // Ensure there is a link to upload and click it.
     $this->assertLingotekCheckSourceStatusLink();
@@ -984,12 +983,57 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by "CURRENT", there is no pager and the rows
     // selected are the ones expected.
     $edit = [
-      'filters[advanced_options][upload_status]' => 'CURRENT',
+      'filters[advanced_options][source_status]' => 'CURRENT',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $this->assertLink('Llamas are cool');
 
-    $this->assertFieldByName('filters[advanced_options][upload_status]', 'CURRENT', 'The value is retained in the filter.');
+    $this->assertFieldByName('filters[advanced_options][source_status]', 'CURRENT', 'The value is retained in the filter.');
+  }
+
+  /**
+    * Tests if target status filter works correctly
+    */
+  public function testTargetStatusFilter() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    // Go to the bulk management form.
+    $this->goToContentBulkManagementForm();
+
+    // Ensure there is a link to upload and click it.
+    $this->assertLingotekUploadLink();
+    $this->clickLink('EN');
+
+    // After we filter by "PENDING", there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[advanced_options][target_status]' => 'PENDING',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertFieldByName('filters[advanced_options][target_status]', 'PENDING', 'The value is retained in the filter.');
+    $this->assertNoLink('Llamas are cool');
+
+    // Reset filters.
+    $this->drupalPostForm(NULL, [], 'Reset');
+
+    // Ensure there is a link to request and click it.
+    $this->assertLingotekRequestTranslationLink('es_MX');
+    $this->clickLink('ES');
+
+    // After we filter by "READY", there is no pager and the rows
+    // selected are the ones expected.
+    $edit = [
+      'filters[advanced_options][target_status]' => 'PENDING',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+    $this->assertFieldByName('filters[advanced_options][target_status]', 'PENDING', 'The value is retained in the filter.');
+    $this->assertLink('Llamas are cool');
   }
 
 }

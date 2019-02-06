@@ -89,7 +89,8 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $documentIdFilter = $temp_store->get('document_id');
     $entityIdFilter = $temp_store->get('entity_id');
     $sourceLanguageFilter = $temp_store->get('source_language');
-    $uploadFilter = $temp_store->get('upload_status');
+    $sourceStatusFilter = $temp_store->get('source_status');
+    $targetStatusFilter = $temp_store->get('target_status');
     $profileFilter = $temp_store->get('profile');
 
     // Default queries
@@ -162,14 +163,23 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     // We don't want items with language undefined.
     $query->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
 
-    if ($uploadFilter) {
+    if ($sourceStatusFilter) {
       $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
-      $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
-        'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata_source',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata_source.content_entity_id AND metadata_source.content_entity_type_id = \'' . $entity_type->id() . '\'');
       $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
-        'metadata.id = translation_status.entity_id AND translation_status.delta=\'0\'');
-      $query->condition('translation_status.translation_status_value', $uploadFilter);
+       'metadata_source.id = translation_status.entity_id AND translation_status.translation_status_language = entity_table.' . $entity_type->getKey('langcode'));
+      $query->condition('translation_status.translation_status_value', $sourceStatusFilter);
     }
+    if ($targetStatusFilter) {
+      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $query->innerJoin($metadata_type->getBaseTable(), 'metadata_target',
+        'entity_table.' . $entity_type->getKey('id') . '= metadata_target.content_entity_id AND metadata_target.content_entity_type_id = \'' . $entity_type->id() . '\'');
+      $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_target_status',
+       'metadata_target.id = translation_target_status.entity_id AND translation_target_status.translation_status_language <> entity_table.' . $entity_type->getKey('langcode'));
+      $query->condition('translation_target_status.translation_status_value', $targetStatusFilter);
+    }
+
     $ids = $query->limit($items_per_page)->execute()->fetchCol(0);
     $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
@@ -292,7 +302,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
   protected function getFilterKeys() {
     $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';
     // We need specific identifiers for default and advanced filters since the advanced filters bundle is unique.
-    $filtersKeys = [['wrapper', 'label'], ['wrapper', 'bundle'], ['wrapper', 'job'], ['advanced_options', 'document_id'], ['advanced_options', 'entity_id'], ['advanced_options', 'profile'], ['advanced_options', 'source_language'], ['advanced_options', 'upload_status']];
+    $filtersKeys = [['wrapper', 'label'], ['wrapper', 'bundle'], ['wrapper', 'job'], ['advanced_options', 'document_id'], ['advanced_options', 'entity_id'], ['advanced_options', 'profile'], ['advanced_options', 'source_language'], ['advanced_options', 'source_status'], ['advanced_options', 'target_status']];
     if ($groupsExists) {
       $filtersKeys[] = ['wrapper', 'group'];
     }

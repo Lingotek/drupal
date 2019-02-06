@@ -262,9 +262,13 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->willReturn(NULL);
       $tempStore->expects($this->at(6))
         ->method('get')
-        ->with('upload_status')
+        ->with('source_status')
         ->willReturn(NULL);
       $tempStore->expects($this->at(7))
+        ->method('get')
+        ->with('target_status')
+        ->willReturn(NULL);
+      $tempStore->expects($this->at(8))
         ->method('get')
         ->with('profile')
         ->willReturn(NULL);

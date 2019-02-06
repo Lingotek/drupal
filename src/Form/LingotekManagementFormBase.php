@@ -175,7 +175,8 @@ abstract class LingotekManagementFormBase extends FormBase {
     $documentIdFilter = $temp_store->get('document_id');
     $entityIdFilter = $temp_store->get('entity_id');
     $sourceLanguageFilter = $temp_store->get('source_language');
-    $uploadStatusFilter = $temp_store->get('upload_status');
+    $sourceStatusFilter = $temp_store->get('source_status');
+    $targetStatusFilter = $temp_store->get('target_status');
     $profileFilter = $temp_store->get('profile');
 
     // Add the filters if any.
@@ -224,19 +225,31 @@ abstract class LingotekManagementFormBase extends FormBase {
         '#options' => ['' => $this->t('All languages')] + $this->getAllLanguages(),
         '#default_value' => $sourceLanguageFilter,
       ];
-      $form['filters']['advanced_options']['upload_status'] = [
+      $form['filters']['advanced_options']['source_status'] = [
         '#type' => 'select',
-        '#title' => $this->t('Upload Status'),
-        '#default_value' => $uploadStatusFilter,
+        '#title' => $this->t('Source Status'),
+        '#default_value' => $sourceStatusFilter,
+        '#options' => [
+          '' => $this->t('All'),
+          Lingotek::STATUS_CURRENT => $this->t('Current'),
+          Lingotek::STATUS_IMPORTING => $this->t('Importing'),
+          Lingotek::STATUS_EDITED => $this->t('Edited'),
+          Lingotek::STATUS_ERROR => $this->t('Error'),
+        ],
+      ];
+      $form['filters']['advanced_options']['target_status'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Target Status'),
+        '#default_value' => $targetStatusFilter,
         '#options' => [
           '' => $this->t('All'),
           Lingotek::STATUS_CURRENT => $this->t('Current'),
           Lingotek::STATUS_EDITED => $this->t('Edited'),
-          Lingotek::STATUS_IMPORTING => $this->t('Importing'),
-          Lingotek::STATUS_PENDING => $this->t('Pending'),
+          Lingotek::STATUS_PENDING => $this->t('In Progress'),
           Lingotek::STATUS_READY => $this->t('Ready'),
           Lingotek::STATUS_ERROR => $this->t('Error'),
-          Lingotek::STATUS_UNTRACKED => $this->t('Untracked'),
+          Lingotek::STATUS_INTERMEDIATE => $this->t('Interim'),
+          Lingotek::STATUS_REQUEST => $this->t('Not Requested'),
         ],
       ];
       $form['filters']['advanced_options']['profile'] = [
