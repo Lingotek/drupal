@@ -191,6 +191,16 @@ class LingotekProfile extends ConfigEntityBase implements LingotekProfileInterfa
   /**
    * {@inheritdoc}
    */
+  public function __construct(array $values, $entity_type) {
+    if (isset($values['intelligence_metadata']) && is_array($values['intelligence_metadata'])) {
+      $values['intelligence_metadata'] += $this->intelligence_metadata;
+    }
+    return parent::__construct($values, $entity_type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getBusinessUnit() {
     return $this->intelligence_metadata['business_unit'];
   }

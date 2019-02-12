@@ -137,7 +137,7 @@ interface LingotekConfigurationServiceInterface {
    *   If TRUE, and the entity does not have a profile, will retrieve the default
    *   for this entity type and bundle. Defaults to TRUE.
    *
-   * @returns LingotekProfile
+   * @returns \Drupal\lingotek\LingotekProfileInterface
    *   The default profile.
    */
   public function getEntityProfile(ContentEntityInterface $entity, $provide_default = TRUE);

@@ -168,6 +168,9 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
       $profile = LingotekProfile::create([]);
     }
 
+    // Allow other modules to alter the calculated profile.
+    \Drupal::moduleHandler()->invokeAll('lingotek_content_entity_get_profile', [$entity, &$profile, $provide_default]);
+
     return $profile;
   }
 

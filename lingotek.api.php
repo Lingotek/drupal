@@ -69,6 +69,34 @@ function hook_lingotek_content_entity_document_upload(array &$source_data, Conte
 }
 
 /**
+ * Determines the default Lingotek profile for the given entity.
+ *
+ * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+ *   The entity.
+ * @param \Drupal\lingotek\LingotekProfileInterface &$profile
+ *   The already calculated profile.
+ * @param bool $provide_default
+ *   If TRUE, and the entity does not have a profile, will retrieve the default
+ *   for this entity type and bundle. Defaults to TRUE.
+ *
+ * @returns \Drupal\lingotek\LingotekProfileInterface
+ *   The default profile.
+ */
+function hook_lingotek_content_entity_get_profile(ContentEntityInterface $entity, LingotekProfileInterface &$profile, $provide_default = TRUE) {
+  /*
+   * If the document being uploaded is a comment, use the profile from the
+   * commented entity.
+   */
+  if ($entity->getEntityTypeId() === 'comment') {
+    /** @var \Drupal\comment\CommentInterface $entity */
+    $commented = $entity->getCommentedEntity();
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+    $profile = $lingotek_config->getEntityProfile($commented, FALSE);
+  }
+}
+
+/**
  * Act on a translation of a config entity before it is saved or updated after
  * being downloaded from Lingotek.
  *

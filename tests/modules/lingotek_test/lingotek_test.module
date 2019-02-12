@@ -8,6 +8,7 @@
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Serialization\Yaml;
+use Drupal\lingotek\LingotekProfileInterface;
 
 /**
  * Implements hook_lingotek_content_entity_translation_presave().
@@ -21,6 +22,21 @@ function lingotek_test_lingotek_content_entity_translation_presave(ContentEntity
       /** @var \Drupal\node\NodeInterface $translation */
       $translation->setPublished(FALSE);
     }
+  }
+}
+
+/**
+ * Implements hook_lingotek_content_entity_get_profile().
+ *
+ * If the document being uploaded is a comment, use the profile from the parent.
+ */
+function lingotek_test_lingotek_content_entity_get_profile(ContentEntityInterface $entity, LingotekProfileInterface &$profile, $provide_default = TRUE) {
+  if ($entity->getEntityTypeId() === 'comment') {
+    /** @var \Drupal\comment\CommentInterface $entity */
+    $commented = $entity->getCommentedEntity();
+    /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
+    $lingotek_config = \Drupal::service('lingotek.configuration');
+    $profile = $lingotek_config->getEntityProfile($commented, FALSE);
   }
 }
 
@@ -57,7 +73,7 @@ function lingotek_test_lingotek_config_entity_translation_presave(ConfigEntityIn
 }
 
 /**
- * Implements hook_lingotek_content_entity_document_upload().
+ * Implements hook_lingotek_config_entity_document_upload().
  */
 function lingotek_test_lingotek_config_entity_document_upload(array &$source_data, ConfigEntityInterface &$entity, &$url) {
   switch ($entity->getEntityTypeId()) {
