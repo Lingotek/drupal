@@ -5,6 +5,7 @@
  * Implements Drupal-related hooks for the Lingotek Translation module.
  */
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityFormInterface;
@@ -82,7 +83,7 @@ function lingotek_entity_insert(EntityInterface $entity) {
     if ($entity instanceof FieldConfig) {
       $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
     }
-    if ($translation_service->isEnabled($entity_type_id)) {
+    if ($translation_service->isEnabled($entity_type_id) && !in_array($entity->language()->getId(), [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
       $profile = $configuration_service->getConfigEntityProfile($entity);
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);
@@ -238,7 +239,7 @@ function lingotek_entity_update(EntityInterface $entity) {
     if ($entity instanceof FieldConfig) {
       $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
     }
-    if ($translation_service->isEnabled($entity_type_id)) {
+    if ($translation_service->isEnabled($entity_type_id) && !in_array($entity->language()->getId(), [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
       $profile = $configuration_service->getConfigEntityProfile($entity);
       if ($profile->id() === Lingotek::PROFILE_DISABLED) {
         $translation_service->setSourceStatus($entity, Lingotek::STATUS_DISABLED);

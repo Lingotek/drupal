@@ -219,53 +219,60 @@ class LingotekConfigManagementForm extends FormBase {
 
     $rows = [];
     foreach ($mappers as $mapper_id => $mapper) {
-      $is_config_entity = $mapper instanceof ConfigEntityMapper;
+      if (!in_array($mapper->getLangcode(), [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
+        $is_config_entity = $mapper instanceof ConfigEntityMapper;
 
-      $source = $this->getSourceStatus($mapper);
-      $translations = $this->getTranslationsStatuses($mapper);
+        $source = $this->getSourceStatus($mapper);
+        $translations = $this->getTranslationsStatuses($mapper);
 
-      // We select those that we want if there is a filter for job ID.
-      if (!empty($jobFilter)) {
-        $job_id = $this->getMetadataJobId($mapper);
-        $found = strpos($job_id, $jobFilter);
-        if ($found === FALSE || $found < 0) {
-          continue;
+        // We select those that we want if there is a filter for job ID.
+        if (!empty($jobFilter)) {
+          $job_id = $this->getMetadataJobId($mapper);
+          $found = strpos($job_id, $jobFilter);
+          if ($found === FALSE || $found < 0) {
+            continue;
+          }
         }
-      }
 
-      $profile = $is_config_entity ?
-        $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity(), FALSE) :
-        $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
-      $form['table'][$mapper_id] = ['#type' => 'checkbox', '#value' => $mapper_id];
-      $rows[$mapper_id] = [];
-      $rows[$mapper_id] += [
-        'title' => $mapper->getTitle(),
-        'source' => $source,
-        'translations' => $translations,
-        'profile' => $profile ? $profile->label() : '',
-      ];
-      if ($is_config_entity) {
-        $link = NULL;
-        if ($mapper->getEntity()->hasLinkTemplate('canonical')) {
-          $link = $mapper->getEntity()->toLink($mapper->getTitle());
+        $profile = $is_config_entity ?
+          $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity(), FALSE) :
+          $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
+        $form['table'][$mapper_id] = [
+          '#type' => 'checkbox',
+          '#value' => $mapper_id,
+        ];
+        $rows[$mapper_id] = [];
+        $rows[$mapper_id] += [
+          'title' => $mapper->getTitle(),
+          'source' => $source,
+          'translations' => $translations,
+          'profile' => $profile ? $profile->label() : '',
+        ];
+        if ($is_config_entity) {
+          $link = NULL;
+          if ($mapper->getEntity()->hasLinkTemplate('canonical')) {
+            $link = $mapper->getEntity()->toLink($mapper->getTitle());
+          }
+          elseif ($mapper->getEntity()->hasLinkTemplate('edit-form')) {
+            $link = $mapper->getEntity()
+              ->toLink($mapper->getTitle(), 'edit-form');
+          }
+          if ($link !== NULL) {
+            $rows[$mapper_id]['title'] = $link;
+          }
         }
-        elseif ($mapper->getEntity()->hasLinkTemplate('edit-form')) {
-          $link = $mapper->getEntity()->toLink($mapper->getTitle(), 'edit-form');
-        }
-        if ($link !== NULL) {
-          $rows[$mapper_id]['title'] = $link;
-        }
-      }
 
-      if ($showingFields) {
-        $entity_type_id = $mapper->getEntity()->get('entity_type');
-        $bundle = $mapper->getEntity()->get('bundle');
-        $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type_id);
-        if (isset($bundle_info[$bundle])) {
-          $rows[$mapper_id]['bundle'] = $bundle_info[$bundle]['label'];
-        }
-        else {
-          $rows[$mapper_id]['bundle'] = $bundle;
+        if ($showingFields) {
+          $entity_type_id = $mapper->getEntity()->get('entity_type');
+          $bundle = $mapper->getEntity()->get('bundle');
+          $bundle_info = \Drupal::service('entity_type.bundle.info')
+            ->getBundleInfo($entity_type_id);
+          if (isset($bundle_info[$bundle])) {
+            $rows[$mapper_id]['bundle'] = $bundle_info[$bundle]['label'];
+          }
+          else {
+            $rows[$mapper_id]['bundle'] = $bundle;
+          }
         }
       }
     }
@@ -1174,7 +1181,7 @@ class LingotekConfigManagementForm extends FormBase {
         '#type' => 'inline_template',
         '#template' => '<span class="language-icon source-{{status}}" title="{{status_title}}">{% if url %}<a href="{{url}}">{%endif%}{{language}}{%if url %}</a>{%endif%}</span>',
         '#context' => [
-          'language' => strtoupper($language_source->id()),
+          'language' => empty($language_source) ? 'N/A' : strtoupper($language_source->id()),
           'status' => strtolower($source_status),
           'status_title' => $this->getSourceStatusText($mapper, $source_status),
           'url' => $this->getSourceActionUrl($mapper, $source_status),

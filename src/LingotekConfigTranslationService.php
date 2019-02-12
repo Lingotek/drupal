@@ -342,8 +342,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function getSourceLocale(ConfigEntityInterface &$entity) {
+    $locale = NULL;
     $source_language = $entity->language()->getId();
-    return $this->languageLocaleMapper->getLocaleForLangcode($source_language);
+    if (!in_array($source_language, [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
+      $locale = $this->languageLocaleMapper->getLocaleForLangcode($source_language);
+    }
+    return $locale;
   }
 
   /**
@@ -767,8 +771,12 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function getConfigSourceLocale(ConfigNamesMapper $mapper) {
+    $locale = NULL;
     $source_langcode = $mapper->getLangcode();
-    return $this->languageLocaleMapper->getLocaleForLangcode($source_langcode);
+    if (!in_array($source_langcode, [LanguageInterface::LANGCODE_NOT_SPECIFIED, LanguageInterface::LANGCODE_NOT_APPLICABLE])) {
+      $locale = $this->languageLocaleMapper->getLocaleForLangcode($source_langcode);
+    }
+    return $locale;
   }
 
   /**

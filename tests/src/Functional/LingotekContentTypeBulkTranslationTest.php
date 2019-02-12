@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\lingotek\Lingotek;
 use Drupal\node\Entity\NodeType;
@@ -851,6 +852,24 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
 
     $this->goToConfigBulkManagementForm('node_type');
     $this->assertTargetStatus('DE', Lingotek::STATUS_READY);
+  }
+
+  /**
+   * Tests that no config entity is uploaded or listed if has not specified language.
+   */
+  public function testNotSpecifiedLanguageConfigEntityInBulkManagement() {
+    $this->drupalCreateContentType([
+      'type' => 'und_language_content_type',
+      'name' => 'Not specified language content type',
+      'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
+    ]);
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // Nothing was uploaded even with automatic profile, and nothing is listed
+    // for upload.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNoText('Not specified language content type');
+    $this->assertText('Article content type');
   }
 
 }
