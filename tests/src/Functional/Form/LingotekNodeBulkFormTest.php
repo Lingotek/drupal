@@ -7,6 +7,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Lingotek;
+use Drupal\node\Entity\Node;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
 
 /**
@@ -39,6 +40,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
     $this->drupalCreateContentType(['type' => 'custom_type', 'name' => 'Custom Type']);
+    $this->drupalCreateContentType(['type' => 'not_configured', 'name' => 'Not Configured']);
 
     // Add a language.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_MX')->save();
@@ -47,6 +49,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // picked up.
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'custom_type')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'custom_type', TRUE);
+    ContentLanguageSettings::loadByEntityTypeBundle('node', 'not_configured')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('node', 'not_configured', TRUE);
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
@@ -533,7 +539,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by article, there is no pager and the rows selected are
     // the ones expected.
     $edit = [
-      "filters[wrapper][bundle][]" => 'page',
+      'filters[wrapper][bundle][]' => 'page',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([1, 5, 7, 11, 13] as $j) {
@@ -547,7 +553,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     // After we filter by custom_type, there is no pager and the rows selected are
     // the ones expected.
     $edit = [
-      "filters[wrapper][bundle][]" => 'custom_type',
+      'filters[wrapper][bundle][]' => 'custom_type',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     foreach ([2, 4, 8, 10, 14] as $j) {
@@ -1034,6 +1040,201 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
     $this->assertFieldByName('filters[advanced_options][target_status]', 'PENDING', 'The value is retained in the filter.');
     $this->assertLink('Llamas are cool');
+  }
+
+  /**
+   * Tests if the "Needs Upload" source status filter works in combination
+   * with other filters.
+   */
+  public function testNeedsUploadSourceStatusFilter() {
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_DE')->save();
+
+    $this->saveLingotekContentTranslationSettingsForNodeTypes(['article', 'custom_type'], 'manual');
+
+    $node_defaults = [
+      'type' => 'article',
+      'langcode' => 'en',
+    ];
+    /** @var \Drupal\node\Entity\Node[] $nodes */
+    $nodes = [
+      Node::create(['title' => 'CustomType edited ready ready', 'type' => 'custom_type'] + $node_defaults),
+      Node::create(['title' => 'Article current error current'] + $node_defaults),
+      Node::create(['title' => 'Article importing null null'] + $node_defaults),
+      Node::create(['title' => 'Article null null null'] + $node_defaults),
+      Node::create(['title' => 'CustomType edited current edited', 'type' => 'custom_type'] + $node_defaults),
+      Node::create(['title' => 'CustomType edited edited current', 'type' => 'custom_type', 'langcode' => 'de'] + $node_defaults),
+      Node::create(['title' => 'Article error edited ready'] + $node_defaults),
+      Node::create(['title' => 'Article current interim ready'] + $node_defaults),
+      Node::create(['title' => 'CustomType error null null', 'type' => 'custom_type'] + $node_defaults),
+      Node::create(['title' => 'CustomType current current ready', 'type' => 'custom_type'] + $node_defaults),
+    ];
+    foreach ($nodes as $node) {
+      $node->save();
+    }
+
+    $metadata_defaults = [
+      'profile' => 'automatic',
+      'translation_source' => 'en',
+    ];
+    $metadatas = [
+      ['profile' => 'manual', 'translation_status' => [['language' => 'en', 'value' => 'edited'], ['language' => 'de', 'value' => 'ready'], ['language' => 'es', 'value' => 'ready']]] + $metadata_defaults,
+      ['profile' => 'manual', 'translation_status' => [['language' => 'en', 'value' => 'current'], ['language' => 'de', 'value' => 'error'], ['language' => 'es', 'value' => 'current']]] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'importing']]] + $metadata_defaults,
+      ['translation_status' => []] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'edited'], ['language' => 'de', 'value' => 'current'], ['language' => 'es', 'value' => 'edited']]] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'edited'], ['language' => 'de', 'value' => 'edited'], ['language' => 'es', 'value' => 'current']]] + $metadata_defaults,
+      ['profile' => 'manual', 'translation_status' => [['language' => 'en', 'value' => 'error'], ['language' => 'de', 'value' => 'edited'], ['language' => 'es', 'value' => 'ready']]] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'current'], ['language' => 'de', 'value' => 'interim'], ['language' => 'es', 'value' => 'ready']]] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'error']]] + $metadata_defaults,
+      ['translation_status' => [['language' => 'en', 'value' => 'current'], ['language' => 'de', 'value' => 'current'], ['language' => 'es', 'value' => 'ready']]] + $metadata_defaults,
+    ];
+    $index = 0;
+    foreach ($metadatas as $metadata_data) {
+      ++$index;
+      $metadata = LingotekContentMetadata::loadByTargetId('node', $index);
+      $metadata->setDocumentId('document_id_' . $index);
+      $metadata->set('translation_status', $metadata_data['translation_status']);
+      $metadata->set('profile', $metadata_data['profile']);
+      $metadata->set('translation_source', $metadata_data['translation_source']);
+      $metadata->save();
+    }
+    Node::create(['title' => 'CustomType nothing nothing nothing', 'type' => 'custom_type'] + $node_defaults)->save();
+    Node::create(['title' => 'NotConfigured nothing nothing nothing', 'type' => 'not_configured'] + $node_defaults)->save();
+
+    $this->assertEquals(11, count(LingotekContentMetadata::loadMultiple()));
+
+    $this->goToContentBulkManagementForm();
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertText('Article current error current');
+    $this->assertText('Article importing null null');
+    $this->assertText('Article null null null');
+    $this->assertText('CustomType edited current edited');
+    $this->assertText('CustomType edited edited current');
+    $this->assertText('Article error edited ready');
+    $this->assertText('Article current interim ready');
+    $this->assertText('CustomType error null null');
+    $this->assertText('CustomType current current ready');
+    $this->assertNoText('CustomType nothing nothing nothing');
+    $this->assertNoText('NotConfigured nothing nothing nothing');
+
+    // Change page limit
+    \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 50);
+    $this->goToContentBulkManagementForm();
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertText('Article current error current');
+    $this->assertText('Article importing null null');
+    $this->assertText('Article null null null');
+    $this->assertText('CustomType edited current edited');
+    $this->assertText('CustomType edited edited current');
+    $this->assertText('Article error edited ready');
+    $this->assertText('Article current interim ready');
+    $this->assertText('CustomType error null null');
+    $this->assertText('CustomType current current ready');
+    $this->assertText('CustomType nothing nothing nothing');
+    $this->assertText('NotConfigured nothing nothing nothing');
+
+    $edit = [
+      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertNoText('Article current error current');
+    $this->assertNoText('Article importing null null');
+    $this->assertText('Article null null null');
+    $this->assertText('CustomType edited current edited');
+    $this->assertText('CustomType edited edited current');
+    $this->assertText('Article error edited ready');
+    $this->assertNoText('Article current interim ready');
+    $this->assertText('CustomType error null null');
+    $this->assertNoText('CustomType current current ready');
+    $this->assertText('CustomType nothing nothing nothing');
+    $this->assertText('NotConfigured nothing nothing nothing');
+
+    $edit = [
+      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertNoText('Article current error current');
+    $this->assertNoText('Article importing null null');
+    $this->assertNoText('Article null null null');
+    $this->assertText('CustomType edited current edited');
+    $this->assertText('CustomType edited edited current');
+    $this->assertNoText('Article error edited ready');
+    $this->assertNoText('Article current interim ready');
+    $this->assertText('CustomType error null null');
+    $this->assertNoText('CustomType current current ready');
+    $this->assertText('CustomType nothing nothing nothing');
+    $this->assertText('NotConfigured nothing nothing nothing');
+
+    $edit = [
+      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
+      'filters[advanced_options][source_language]' => 'en',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertNoText('Article current error current');
+    $this->assertNoText('Article importing null null');
+    $this->assertNoText('Article null null null');
+    $this->assertText('CustomType edited current edited');
+    $this->assertNoText('CustomType edited edited current');
+    $this->assertNoText('Article error edited ready');
+    $this->assertNoText('Article current interim ready');
+    $this->assertText('CustomType error null null');
+    $this->assertNoText('CustomType current current ready');
+    $this->assertText('CustomType nothing nothing nothing');
+    $this->assertText('NotConfigured nothing nothing nothing');
+
+    $edit = [
+      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
+      'filters[advanced_options][source_language]' => 'en',
+      'filters[advanced_options][profile][]' => ['manual', 'automatic'],
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertNoText('Article current error current');
+    $this->assertNoText('Article importing null null');
+    $this->assertNoText('Article null null null');
+    $this->assertText('CustomType edited current edited');
+    $this->assertNoText('CustomType edited edited current');
+    $this->assertNoText('Article error edited ready');
+    $this->assertNoText('Article current interim ready');
+    $this->assertText('CustomType error null null');
+    $this->assertNoText('CustomType current current ready');
+    $this->assertNoText('CustomType nothing nothing nothing');
+    $this->assertNoText('NotConfigured nothing nothing nothing');
+
+    $edit = [
+      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
+      'filters[advanced_options][source_language]' => 'en',
+      'filters[advanced_options][profile][]' => ['manual', 'automatic'],
+      'filters[advanced_options][target_status]' => 'READY',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    $this->assertText('CustomType edited ready ready');
+    $this->assertNoText('Article current error current');
+    $this->assertNoText('Article importing null null');
+    $this->assertNoText('Article null null null');
+    $this->assertNoText('CustomType edited current edited');
+    $this->assertNoText('CustomType edited edited current');
+    $this->assertNoText('Article error edited ready');
+    $this->assertNoText('Article current interim ready');
+    $this->assertNoText('CustomType error null null');
+    $this->assertNoText('CustomType current current ready');
+    $this->assertNoText('CustomType nothing nothing nothing');
+    $this->assertNoText('NotConfigured nothing nothing nothing');
   }
 
 }

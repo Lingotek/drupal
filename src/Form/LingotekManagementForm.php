@@ -7,6 +7,7 @@ use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\group\Entity\Group;
+use Drupal\lingotek\Lingotek;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -70,9 +71,13 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     /** @var PrivateTempStore $temp_store */
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
 
+    /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
     $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
+    /** @var \Drupal\Core\Database\Query\SelectInterface $query */
     $query = $this->connection->select($entity_type->getBaseTable(), 'entity_table')->extend('\Drupal\Core\Database\Query\PagerSelectExtender');
     $query->fields('entity_table', [$entity_type->getKey('id')]);
+    $union = NULL;
+    $union2 = NULL;
 
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
@@ -93,10 +98,65 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $targetStatusFilter = $temp_store->get('target_status');
     $profileFilter = $temp_store->get('profile');
 
+    if ($sourceStatusFilter) {
+      if ($sourceStatusFilter === 'NEEDS_UPLOAD') {
+        // We consider that needing upload includes those never uploaded or
+        // disassociated, edited, or with error on last upload.
+        $needingUploadStatuses = [
+          Lingotek::STATUS_EDITED,
+          Lingotek::STATUS_REQUEST,
+          Lingotek::STATUS_ERROR,
+        ];
+        $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+        $query->innerJoin($metadata_type->getBaseTable(), 'metadata_source',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata_source.content_entity_id AND metadata_source.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
+          'metadata_source.id = translation_status.entity_id AND translation_status.translation_status_language = entity_table.' . $entity_type->getKey('langcode'));
+        $query->condition('translation_status.translation_status_value', $needingUploadStatuses, 'IN');
+
+        // No metadata.
+        $no_metadata_query = $this->connection->select($metadata_type->getBaseTable(), 'mt');
+        $no_metadata_query->fields('mt', [$metadata_type->getKey('id')]);
+        $no_metadata_query->where('entity_table.' . $entity_type->getKey('id') . ' = mt.content_entity_id');
+        $no_metadata_query->condition('mt.content_entity_type_id', $entity_type->id());
+        $union = $this->connection->select($entity_type->getBaseTable(), 'entity_table');
+        $union->fields('entity_table', [$entity_type->getKey('id')]);
+        $union->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
+        $union->notExists($no_metadata_query);
+
+        // No target statuses.
+        $no_statuses_query = $this->connection->select('lingotek_content_metadata__translation_status', 'tst');
+        $no_statuses_query->fields('tst', ['entity_id']);
+        $no_statuses_query->where('mt2.' . $metadata_type->getKey('id') . ' = tst.entity_id');
+        $union2 = $this->connection->select($entity_type->getBaseTable(), 'entity_table');
+        $union2->innerJoin($metadata_type->getBaseTable(), 'mt2',
+          'entity_table.' . $entity_type->getKey('id') . '= mt2.content_entity_id AND mt2.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union2->fields('entity_table', [$entity_type->getKey('id')]);
+        $union2->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
+        $union2->notExists($no_statuses_query);
+
+        $query->union($union);
+        $query->union($union2);
+      }
+      else {
+        $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+        $query->innerJoin($metadata_type->getBaseTable(), 'metadata_source',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata_source.content_entity_id AND metadata_source.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
+          'metadata_source.id = translation_status.entity_id AND translation_status.translation_status_language = entity_table.' . $entity_type->getKey('langcode'));
+        $query->condition('translation_status.translation_status_value', $sourceStatusFilter);
+      }
+    }
     // Default queries
     if ($has_bundles && $bundleFilter) {
       if (!in_array("", $bundleFilter, TRUE)) {
         $query->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter, 'IN');
+        if ($union !== NULL) {
+          $union->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter, 'IN');
+        }
+        if ($union2 !== NULL) {
+          $union2->condition('entity_table.' . $entity_type->getKey('bundle'), $bundleFilter, 'IN');
+        }
       }
     }
     if ($labelFilter) {
@@ -105,6 +165,16 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $query->innerJoin($entity_type->getDataTable(), 'entity_data',
           'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
         $query->condition('entity_data.' . $labelKey, '%' . $labelFilter . '%', 'LIKE');
+        if ($union !== NULL) {
+          $union->innerJoin($entity_type->getDataTable(), 'entity_data',
+            'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+          $union->condition('entity_data.' . $labelKey, '%' . $labelFilter . '%', 'LIKE');
+        }
+        if ($union2 !== NULL) {
+          $union2->innerJoin($entity_type->getDataTable(), 'entity_data',
+            'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+          $union2->condition('entity_data.' . $labelKey, '%' . $labelFilter . '%', 'LIKE');
+        }
       }
     }
     if ($groupFilter) {
@@ -123,12 +193,35 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         'entity_table.' . $entity_type->getKey('id') . '= group_content.entity_id');
       $query->condition('group_content.gid', $groupFilter);
       $query->condition('group_content.type', $valid_values, 'IN');
+      if ($union !== NULL) {
+        $union->innerJoin('group_content_field_data', 'group_content',
+          'entity_table.' . $entity_type->getKey('id') . '= group_content.entity_id');
+        $union->condition('group_content.gid', $groupFilter);
+        $union->condition('group_content.type', $valid_values, 'IN');
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin('group_content_field_data', 'group_content',
+          'entity_table.' . $entity_type->getKey('id') . '= group_content.entity_id');
+        $union2->condition('group_content.gid', $groupFilter);
+        $union2->condition('group_content.type', $valid_values, 'IN');
+      }
     }
     if ($jobFilter) {
+      /** @var \Drupal\Core\Entity\EntityTypeInterface $metadata_type */
       $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
       $query->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
+      if ($union !== NULL) {
+        $union->innerJoin($metadata_type->getBaseTable(), 'metadata',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin($metadata_type->getBaseTable(), 'metadata',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union2->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
+      }
     }
     // Advanced queries
     if ($documentIdFilter) {
@@ -136,11 +229,31 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
       $query->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+      if ($union !== NULL) {
+        $union->innerJoin($metadata_type->getBaseTable(), 'metadata',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin($metadata_type->getBaseTable(), 'metadata',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union2->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+      }
     }
     if ($entityIdFilter) {
       $query->innerJoin($entity_type->getDataTable(), 'entity_data',
       'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
       $query->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+      if ($union !== NULL) {
+        $union->innerJoin($entity_type->getDataTable(), 'entity_data',
+          'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+        $union->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin($entity_type->getDataTable(), 'entity_data',
+          'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+        $union2->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+      }
     }
     if ($profileFilter) {
       $profileOptions = $this->lingotekConfiguration->getProfileOptions();
@@ -152,6 +265,16 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
           'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
         $query->condition('metadata.profile', $profileFilter, 'IN');
+        if ($union !== NULL) {
+          $union->innerJoin($metadata_type->getBaseTable(), 'metadata',
+            'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+          $union->condition('metadata.profile', $profileFilter, 'IN');
+        }
+        if ($union2 !== NULL) {
+          $union2->innerJoin($metadata_type->getBaseTable(), 'metadata',
+            'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
+          $union2->condition('metadata.profile', $profileFilter, 'IN');
+        }
       }
     }
     if ($sourceLanguageFilter) {
@@ -159,18 +282,22 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
       $query->condition('entity_table.' . $entity_type->getKey('langcode'), $sourceLanguageFilter);
       $query->condition('entity_data.default_langcode', 1);
+      if ($union !== NULL) {
+        $union->innerJoin($entity_type->getDataTable(), 'entity_data',
+          'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+        $union->condition('entity_table.' . $entity_type->getKey('langcode'), $sourceLanguageFilter);
+        $union->condition('entity_data.default_langcode', 1);
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin($entity_type->getDataTable(), 'entity_data',
+          'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
+        $union2->condition('entity_table.' . $entity_type->getKey('langcode'), $sourceLanguageFilter);
+        $union2->condition('entity_data.default_langcode', 1);
+      }
     }
     // We don't want items with language undefined.
     $query->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
 
-    if ($sourceStatusFilter) {
-      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
-      $query->innerJoin($metadata_type->getBaseTable(), 'metadata_source',
-        'entity_table.' . $entity_type->getKey('id') . '= metadata_source.content_entity_id AND metadata_source.content_entity_type_id = \'' . $entity_type->id() . '\'');
-      $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
-       'metadata_source.id = translation_status.entity_id AND translation_status.translation_status_language = entity_table.' . $entity_type->getKey('langcode'));
-      $query->condition('translation_status.translation_status_value', $sourceStatusFilter);
-    }
     if ($targetStatusFilter) {
       $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata_target',
@@ -178,6 +305,20 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_target_status',
        'metadata_target.id = translation_target_status.entity_id AND translation_target_status.translation_status_language <> entity_table.' . $entity_type->getKey('langcode'));
       $query->condition('translation_target_status.translation_status_value', $targetStatusFilter);
+      if ($union !== NULL) {
+        $union->innerJoin($metadata_type->getBaseTable(), 'metadata_target',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata_target.content_entity_id AND metadata_target.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union->innerJoin('lingotek_content_metadata__translation_status', 'translation_target_status',
+          'metadata_target.id = translation_target_status.entity_id AND translation_target_status.translation_status_language <> entity_table.' . $entity_type->getKey('langcode'));
+        $union->condition('translation_target_status.translation_status_value', $targetStatusFilter);
+      }
+      if ($union2 !== NULL) {
+        $union2->innerJoin($metadata_type->getBaseTable(), 'metadata_target',
+          'entity_table.' . $entity_type->getKey('id') . '= metadata_target.content_entity_id AND metadata_target.content_entity_type_id = \'' . $entity_type->id() . '\'');
+        $union2->innerJoin('lingotek_content_metadata__translation_status', 'translation_target_status',
+          'metadata_target.id = translation_target_status.entity_id AND translation_target_status.translation_status_language <> entity_table.' . $entity_type->getKey('langcode'));
+        $union2->condition('translation_target_status.translation_status_value', $targetStatusFilter);
+      }
     }
 
     $ids = $query->limit($items_per_page)->execute()->fetchCol(0);
