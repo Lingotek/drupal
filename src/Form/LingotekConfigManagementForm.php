@@ -149,6 +149,7 @@ class LingotekConfigManagementForm extends FormBase {
       'source' => $this->t('Source'),
       'translations' => $this->t('Translations'),
       'profile' => $this->t('Profile'),
+      'job_id' => $this->t('Job ID'),
     ];
 
     // ToDo: Find a better filter?
@@ -226,8 +227,8 @@ class LingotekConfigManagementForm extends FormBase {
         $translations = $this->getTranslationsStatuses($mapper);
 
         // We select those that we want if there is a filter for job ID.
+        $job_id = $this->getMetadataJobId($mapper);
         if (!empty($jobFilter)) {
-          $job_id = $this->getMetadataJobId($mapper);
           $found = strpos($job_id, $jobFilter);
           if ($found === FALSE || $found < 0) {
             continue;
@@ -247,6 +248,7 @@ class LingotekConfigManagementForm extends FormBase {
           'source' => $source,
           'translations' => $translations,
           'profile' => $profile ? $profile->label() : '',
+          'job_id' => $job_id ?: '',
         ];
         if ($is_config_entity) {
           $link = NULL;

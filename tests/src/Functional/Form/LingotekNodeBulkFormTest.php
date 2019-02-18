@@ -810,6 +810,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     foreach ($metadatas as $metadata) {
       $this->assertEqual('my_custom_job_id', $metadata->getJobId(), 'The job id was saved along with metadata.');
     }
+
+    // The column for Job ID exists and there are values.
+    $this->assertText('Job ID');
+    $this->assertText('my_custom_job_id');
   }
 
   /**
@@ -858,6 +862,10 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     foreach ($metadatas as $metadata) {
       $this->assertEquals('my_custom_job_id', $metadata->getJobId(), 'The job id was saved along with metadata.');
     }
+
+    // The column for Job ID exists and there are values.
+    $this->assertText('Job ID');
+    $this->assertText('my_custom_job_id');
   }
 
   /**

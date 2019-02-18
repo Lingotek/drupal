@@ -148,6 +148,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       'source' => $this->t('Source'),
       'translations' => $this->t('Translations'),
       'profile' => $this->t('Profile'),
+      'job_id' => $this->t('Job ID'),
     ];
     return $headers;
   }

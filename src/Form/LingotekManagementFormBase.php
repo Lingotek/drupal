@@ -482,6 +482,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     $entityTypeId = $entity->getEntityTypeId();
     $translations = $this->getTranslationsStatuses($entity);
     $profile = $this->lingotekConfiguration->getEntityProfile($entity, TRUE);
+    $job_id = $this->translationService->getJobId($entity);
     $entity_type = $this->entityManager->getDefinition($entityTypeId);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
@@ -497,6 +498,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       'source' => $source,
       'translations' => $translations,
       'profile' => $profile ? $profile->label() : '',
+      'job_id' => $job_id ?: '',
     ];
     if (!$this->lingotekConfiguration->isEnabled($entityTypeId, $entity->bundle())) {
       $row['profile'] = 'Not enabled';

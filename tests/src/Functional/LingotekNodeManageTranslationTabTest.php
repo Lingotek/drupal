@@ -284,6 +284,38 @@ class LingotekNodeManageTranslationTabTest extends LingotekTestBase {
   }
 
   /**
+   * Tests if job id is uploaded on upload.
+   */
+  public function testJobIdOnUpload() {
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1);
+
+    $edit = [
+      'table[node:1]' => TRUE,
+      'job_id' => 'my_custom_job_id',
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForUpload('node'),
+    ];
+
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
+    $this->assertIdentical('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // The column for Job ID exists and there are values.
+    $this->assertText('Job ID');
+    $this->assertText('my_custom_job_id');
+  }
+
+  /**
    * {@inheritdoc}
    *
    * We override this for the destination url.
