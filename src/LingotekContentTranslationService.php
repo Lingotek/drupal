@@ -723,6 +723,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
+    // If job id was not set in the form, it may be already assigned.
+    if ($job_id === NULL) {
+      $job_id = $this->getJobId($entity);
+    }
     if ($document_id = $this->getDocumentId($entity)) {
       return $this->updateDocument($entity, $job_id);
     }
@@ -847,6 +851,10 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $profile = $this->lingotekConfiguration->getEntityProfile($entity);
     if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
+    }
+    // If job id was not set in the form, it may be already assigned.
+    if ($job_id === NULL) {
+      $job_id = $this->getJobId($entity);
     }
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);

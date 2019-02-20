@@ -322,4 +322,28 @@ interface LingotekContentTranslationServiceInterface {
    */
   public function saveTargetData(ContentEntityInterface &$entity, $locale, $data);
 
+  /**
+   * Sets the job ID of a given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity we want to save a job id for.
+   * @param $job_id
+   *   The job ID being saved.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Returns the entity which job ID is saved.
+   */
+  public function setJobId(ContentEntityInterface $entity, $job_id);
+
+  /**
+   * Gets the job ID of a given entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity we want to get the job id.
+   *
+   * @return string
+   *   Returns the job ID is saved.
+   */
+  public function getJobId(ContentEntityInterface $entity);
+
 }

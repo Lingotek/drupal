@@ -869,6 +869,211 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that can we assign job ids with the bulk operation.
+   */
+  public function testAssignJobIds() {
+    // Create a couple of nodes.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1);
+    $this->assertLingotekUploadLink(2);
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // There is no upload.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id');
+
+    // And the job id is used on upload.
+    $this->clickLink('EN');
+
+    $this->assertText('Node Llamas are cool has been uploaded.');
+    // Check that the job id used was the right one.
+    \Drupal::state()->resetCache();
+    $this->assertIdentical(\Drupal::state()->get('lingotek.uploaded_job_id'), 'my_custom_job_id');
+  }
+
+  /**
+   * Tests that can we cancel assignation of job ids with the bulk operation.
+   */
+  public function testCancelAssignJobIds() {
+    // Create a couple of nodes.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1);
+    $this->assertLingotekUploadLink(2);
+
+    // Canceling resets.
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Llamas are cool');
+    $this->assertNoText('Dogs are cool');
+    $this->drupalPostForm(NULL, [], 'Cancel');
+
+    $edit = [
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertNoText('Llamas are cool');
+    $this->assertText('Dogs are cool');
+  }
+
+  /**
+   * Tests that can we reset assignation of job ids with the bulk operation.
+   */
+  public function testResetAssignJobIds() {
+    // Create a couple of nodes.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1);
+    $this->assertLingotekUploadLink(2);
+
+    // Canceling resets.
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Llamas are cool');
+    $this->assertNoText('Dogs are cool');
+
+    $this->goToContentBulkManagementForm();
+
+    $edit = [
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertNoText('Llamas are cool');
+    $this->assertText('Dogs are cool');
+  }
+
+  /**
+   * Tests clearing job ids.
+   */
+  public function testClearJobIds() {
+    // Create a couple of nodes.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1);
+    $this->assertLingotekUploadLink(2);
+
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id_1',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    $edit = [
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id_2',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id_1');
+    $this->assertText('my_custom_job_id_2');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForClearJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // The job id is gone.
+    $this->assertNoText('my_custom_job_id_1');
+    $this->assertNoText('my_custom_job_id_2');
+  }
+
+  /**
    * Test if doc id filter works
    */
   public function testDocIdFilter() {

@@ -17,11 +17,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertLingotekUploadLink($entity_id = 1, $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertLingotekUploadLink($entity_id = 1, $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/upload/' . $entity_type_id . '/' . $entity_id;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertLinkByHref($href);
@@ -37,11 +38,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertLingotekUpdateLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertLingotekUpdateLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/update/' . $document_id;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertLinkByHref($href);
@@ -57,11 +59,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertLingotekCheckSourceStatusLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertLingotekCheckSourceStatusLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_upload/' . $document_id;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertLinkByHref($href);
@@ -77,11 +80,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertNoLingotekCheckSourceStatusLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertNoLingotekCheckSourceStatusLink($document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_upload/' . $document_id;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertNoLinkByHref($href);
@@ -99,11 +103,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertLingotekRequestTranslationLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertLingotekRequestTranslationLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertLinkByHref($href);
@@ -121,11 +126,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertNoLingotekRequestTranslationLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertNoLingotekRequestTranslationLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/add_target/' . $document_id . '/' . $locale;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertNoLinkByHref($href);
@@ -143,11 +149,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertLingotekCheckTargetStatusLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertLingotekCheckTargetStatusLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/check_target/' . $document_id . '/' . $locale;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertLinkByHref($href);
@@ -165,11 +172,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertLingotekDownloadTargetLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertLingotekDownloadTargetLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertLinkByHref($href);
@@ -187,11 +195,12 @@ trait LingotekManagementTestTrait {
    * @param string|null $prefix
    *   Language prefix if any. Optional, defaults to NULL.
    */
-  protected function assertNoLingotekDownloadTargetLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL) {
+  protected function assertNoLingotekDownloadTargetLink($locale, $document_id = 'dummy-document-hash-id', $entity_type_id = 'node', $prefix = NULL, $destination_entity_type_id = NULL, $destination_entity_id = NULL) {
     $basepath = \Drupal::request()->getBasePath();
     $languagePrefix = ($prefix === NULL ? '' : '/' . $prefix);
+    $destination_entity_type_id = $destination_entity_type_id ?: $entity_type_id;
     $href = $basepath . $languagePrefix . '/admin/lingotek/entity/download/' . $document_id . '/' . $locale;
-    if ($destination = $this->getDestination($entity_type_id, $prefix)) {
+    if ($destination = $this->getDestination($destination_entity_type_id, $prefix)) {
       $href .= $destination;
     }
     $this->assertNoLinkByHref($href);
@@ -280,6 +289,14 @@ trait LingotekManagementTestTrait {
 
   protected function getBulkOperationNameForDeleteTranslations($entity_type_id) {
     return 'delete_translations';
+  }
+
+  protected function getBulkOperationNameForAssignJobId($entity_type_id) {
+    return 'assign_job';
+  }
+
+  protected function getBulkOperationNameForClearJobId($entity_type_id) {
+    return 'clear_job';
   }
 
   protected function getApplyActionsButtonLabel() {

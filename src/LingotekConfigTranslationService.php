@@ -358,6 +358,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
+    // If job id was not set in the form, it may be already assigned.
+    if ($job_id === NULL) {
+      $job_id = $this->getJobId($entity);
+    }
     if (!empty($this->getDocumentId($entity))) {
       return $this->updateDocument($entity, $job_id);
     }
@@ -425,6 +429,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $profile = $this->lingotekConfiguration->getConfigEntityProfile($entity);
     if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
+    }
+    // If job id was not set in the form, it may be already assigned.
+    if ($job_id === NULL) {
+      $job_id = $this->getJobId($entity);
     }
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
@@ -905,8 +913,11 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if ($profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
-
     $mapper = $this->mappers[$mapper_id];
+    // If job id was not set in the form, it may be already assigned.
+    if ($job_id === NULL) {
+      $job_id = $this->getConfigJobId($mapper);
+    }
     if (!empty($this->getConfigDocumentId($mapper))) {
       return $this->updateConfig($mapper_id);
     }
@@ -1237,6 +1248,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       return FALSE;
     }
     $mapper = $this->mappers[$mapper_id];
+    // If job id was not set in the form, it may be already assigned.
+    if ($job_id === NULL) {
+      $job_id = $this->getConfigJobId($mapper);
+    }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_id = $this->getConfigDocumentId($mapper);
     $extended_name = $mapper_id . ' (config): ' . $mapper->getTitle();
@@ -1344,6 +1359,19 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
       $metadata->setJobId($job_id);
       $metadata->save();
     }
+    return $mapper;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfigJobId(ConfigNamesMapper $mapper) {
+    $config_names = $mapper->getConfigNames();
+    foreach ($config_names as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      return $metadata->getJobId();
+    }
+    return NULL;
   }
 
   /**
@@ -1353,6 +1381,15 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
     $metadata->setJobId($job_id);
     $metadata->save();
+    return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getJobId(ConfigEntityInterface $entity) {
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    return $metadata->getJobId();
   }
 
   protected function getPluginIdFromConfigName($name) {

@@ -177,7 +177,7 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\Entity\LingotekConfigMetadata[] $metadatas */
     $metadatas = LingotekConfigMetadata::loadMultiple();
     foreach ($metadatas as $metadata) {
-      $this->assertNull($metadata->getJobId(), 'There was no job id to save along with metadata.');
+      $this->assertEmpty($metadata->getJobId(), 'There was no job id to save along with metadata.');
     }
 
     $basepath = \Drupal::request()->getBasePath();
@@ -207,6 +207,163 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // The column for Job ID exists and there are values.
     $this->assertText('Job ID');
     $this->assertText('my_custom_job_id');
+  }
+
+  /**
+   * Tests that can we assign job ids with the bulk operation.
+   */
+  public function testAssignJobIds() {
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // There is no upload.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id');
+
+    // And the job id is used on upload.
+    $this->clickLink('EN');
+
+    $this->assertText('Article uploaded successfully');
+    // Check that the job id used was the right one.
+    \Drupal::state()->resetCache();
+    $this->assertIdentical(\Drupal::state()->get('lingotek.uploaded_job_id'), 'my_custom_job_id');
+  }
+
+  /**
+   * Tests that can we cancel assignation of job ids with the bulk operation.
+   */
+  public function testCancelAssignJobIds() {
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    // Canceling resets.
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Article content type');
+    $this->assertNoText('Page content type');
+    $this->drupalPostForm(NULL, [], 'Cancel');
+
+    $edit = [
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertNoText('Article content type');
+    $this->assertText('Page content type');
+  }
+
+  /**
+   * Tests that can we reset assignation of job ids with the bulk operation.
+   */
+  public function testResetAssignJobIds() {
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    // Canceling resets.
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('Article content type');
+    $this->assertNoText('Page content type');
+
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $edit = [
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertNoText('Article content type');
+    $this->assertText('Page content type');
+  }
+
+  /**
+   * Tests clearing job ids.
+   */
+  public function testClearJobIds() {
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id_1',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    $edit = [
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id_2',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id_1');
+    $this->assertText('my_custom_job_id_2');
+
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForClearJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    // The job id is gone.
+    $this->assertNoText('my_custom_job_id_1');
+    $this->assertNoText('my_custom_job_id_2');
   }
 
   /**

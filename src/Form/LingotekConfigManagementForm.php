@@ -456,8 +456,12 @@ class LingotekConfigManagementForm extends FormBase {
         $this->createDisassociateBatch($values);
         $processed = TRUE;
         break;
-      case 'delete_nodes':
-        $this->redirectToDeleteMultipleNodesForm($values, $form_state);
+      case 'assign_job':
+        $this->redirectToAssignJobIdMultipleConfigForm($values, $form_state);
+        $processed = TRUE;
+        break;
+      case 'clear_job':
+        $this->createClearJobBatch($values);
         $processed = TRUE;
         break;
     }
@@ -483,6 +487,28 @@ class LingotekConfigManagementForm extends FormBase {
         $processed = TRUE;
       }
     }
+  }
+
+  /**
+   * Redirect to assign Job ID form.
+   *
+   * @param array $values
+   *   Array of ids to assign a Job ID.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function redirectToAssignJobIdMultipleConfigForm($values, FormStateInterface $form_state) {
+    $entityInfo = [];
+    $mappers = $this->getSelectedMappers($values);
+    foreach ($mappers as $mapper_id => $mapper) {
+      /** @var \Drupal\config_translation\ConfigNamesMapper $mapper */
+      $langcode = $mapper->getLangcode();
+      $entityInfo[$this->filter][$mapper_id] = [$langcode => $langcode];
+    }
+    \Drupal::getContainer()->get('tempstore.private')
+      ->get('lingotek_assign_job_config_multiple_confirm')
+      ->set($this->currentUser()->id(), $entityInfo);
+    $form_state->setRedirect('lingotek.assign_job_config_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
 
   protected function getAllBundles() {
@@ -658,6 +684,16 @@ class LingotekConfigManagementForm extends FormBase {
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
+  }
+
+  /**
+   * Create and set a job clear batch.
+   *
+   * @param array $values
+   *   Array of ids to clear the Job ID.
+   */
+  protected function createClearJobBatch($values) {
+    $this->createBatch('clearJobId', $values, $this->t('Clearing Job ID'));
   }
 
   /**
@@ -1093,6 +1129,37 @@ class LingotekConfigManagementForm extends FormBase {
   }
 
   /**
+   * Clear Job IDs.
+   *
+   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
+   *   The mapper.
+   */
+  public function clearJobId(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
+    $context['message'] = $this->t('Clearing Job ID for %label.', ['%label' => $mapper->getTitle()]);
+    $entity = $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
+    if ($mapper instanceof ConfigEntityMapper) {
+      try {
+        $this->translationService->setJobId($entity, NULL);
+      }
+      catch (LingotekApiException $e) {
+        drupal_set_message(t('The Job ID change for %title failed. Please try again.', [
+          '%title' => $mapper->getTitle(),
+        ]), 'error');
+      }
+    }
+    else {
+      try {
+        $this->translationService->setConfigJobId($mapper, NULL);
+      }
+      catch (LingotekApiException $e) {
+        drupal_set_message(t('The Job ID change for %title failed. Please try again.', [
+          '%title' => $mapper->getTitle(),
+        ]), 'error');
+      }
+    }
+  }
+
+  /**
    * Change Translation Profile.
    *
    * @param \Drupal\config_translation\ConfigMapperInterface $mapper
@@ -1389,7 +1456,10 @@ class LingotekConfigManagementForm extends FormBase {
     foreach ($this->lingotekConfiguration->getProfileOptions() as $profile_id => $profile) {
       $operations[(string) $this->t('Change Translation Profile')]['change_profile:' . $profile_id] = $this->t('Change to @profile Profile', ['@profile' => $profile]);
     }
-
+    $operations['Jobs management'] = [
+      'assign_job' => $this->t('Assign Job ID'),
+      'clear_job' => $this->t('Clear Job ID'),
+    ];
     $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
     if ($debug_enabled) {
       $operations['debug']['debug.export'] = $this->t('Debug: Export sources as JSON');
@@ -1501,35 +1571,7 @@ class LingotekConfigManagementForm extends FormBase {
   protected function generateOperations($operation, $values, $language, $job_id = NULL) {
     $operations = [];
 
-    $mappers = [];
-    if ($this->filter === 'config') {
-      foreach ($values as $value) {
-        $mappers[$value] = $this->mappers[$value];
-      }
-    }
-    elseif (substr($this->filter, -7) == '_fields') {
-      $mapper = $this->mappers[$this->filter];
-      $ids = \Drupal::entityQuery('field_config')
-        ->condition('id', $values)
-        ->execute();
-      $fields = FieldConfig::loadMultiple($ids);
-      $mappers = [];
-      foreach ($fields as $id => $field) {
-        $new_mapper = clone $mapper;
-        $new_mapper->setEntity($field);
-        $mappers[$field->id()] = $new_mapper;
-      }
-    }
-    else {
-      $entities = \Drupal::entityManager()
-        ->getStorage($this->filter)
-        ->loadMultiple($values);
-      foreach ($entities as $entity) {
-        $mapper = clone $this->mappers[$this->filter];
-        $mapper->setEntity($entity);
-        $mappers[$entity->id()] = $mapper;
-      }
-    }
+    $mappers = $this->getSelectedMappers($values);
 
     foreach ($mappers as $mapper) {
       $operations[] = [[$this, $operation], [$mapper, $language, $job_id]];
@@ -1598,6 +1640,52 @@ class LingotekConfigManagementForm extends FormBase {
       $job_id = $metadata->getJobId();
     }
     return $job_id;
+  }
+
+  /**
+   * Gets the select mappers from their IDs.
+   *
+   * @param $values
+   *   Array of ids.
+   *
+   * @return \Drupal\config_translation\ConfigNamesMapper[]
+   *   The mappers.
+   */
+  protected function getSelectedMappers($values) {
+    $mappers = [];
+    if ($this->filter === 'config') {
+      foreach ($values as $value) {
+        $mappers[$value] = $this->mappers[$value];
+      }
+    }
+    elseif (substr($this->filter, -7) == '_fields') {
+      $mapper = $this->mappers[$this->filter];
+      $ids = \Drupal::entityQuery('field_config')
+        ->condition('id', $values)
+        ->execute();
+      $fields = FieldConfig::loadMultiple($ids);
+      $mappers = [];
+      foreach ($fields as $id => $field) {
+        $new_mapper = clone $mapper;
+        $new_mapper->setEntity($field);
+        $mappers[$field->id()] = $new_mapper;
+      }
+    }
+    else {
+      $entities = \Drupal::entityManager()
+        ->getStorage($this->filter)
+        ->loadMultiple($values);
+      foreach ($entities as $entity) {
+        $mapper = clone $this->mappers[$this->filter];
+        $mapper->setEntity($entity);
+        $mappers[$entity->id()] = $mapper;
+      }
+    }
+    return $mappers;
+  }
+
+  protected function getDestinationWithQueryArray() {
+    return ['destination' => \Drupal::request()->getRequestUri()];
   }
 
 }

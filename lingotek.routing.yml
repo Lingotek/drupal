@@ -193,6 +193,22 @@ lingotek.entity.manage:
   options:
     _node_operation_route: TRUE
 
+lingotek.assign_job_entity_multiple_form:
+  path: '/admin/lingotek/job-assign'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekJobAssignToMultipleEntitiesForm'
+    _title: 'Assign Job ID'
+  requirements:
+    _permission: 'manage lingotek translations'
+
+lingotek.assign_job_config_multiple_form:
+  path: '/admin/lingotek/config/job-assign'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekJobAssignToMultipleConfigForm'
+    _title: 'Assign Job ID'
+  requirements:
+    _permission: 'manage lingotek translations,translate configuration'
+
 lingotek.config.upload:
   path: '/admin/lingotek/config/upload/{entity_type}/{entity_id}'
   defaults:

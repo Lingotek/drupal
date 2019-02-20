@@ -545,4 +545,52 @@ interface LingotekConfigTranslationServiceInterface {
    */
   public function loadByDocumentId($document_id);
 
+  /**
+   * Sets the job ID of a given entity.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity which we want the document id.
+   * @param $job_id
+   *   The job ID being saved.
+   *
+   * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
+   *   Returns the entity which job ID is saved.
+   */
+  public function setJobId(ConfigEntityInterface $entity, $job_id);
+
+  /**
+   * Gets the job ID of a given entity.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity which we want the document id.
+   *
+   * @return string
+   *   Returns the job ID is saved.
+   */
+  public function getJobId(ConfigEntityInterface $entity);
+
+  /**
+   * Sets the job ID of a given mapper.
+   *
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
+   *   The mapper we want to save a job id for.
+   * @param $job_id
+   *   The job ID being saved.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Returns the mapper which job ID is saved.
+   */
+  public function setConfigJobId(ConfigNamesMapper $mapper, $job_id);
+
+  /**
+   * Gets the job ID of a given mapper.
+   *
+   * @param \Drupal\config_translation\ConfigNamesMapper $mapper
+   *   The mapper we want to get the job id.
+   *
+   * @return string
+   *   Returns the job ID is saved.
+   */
+  public function getConfigJobId(ConfigNamesMapper $mapper);
+
 }
