@@ -6,7 +6,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
@@ -19,8 +18,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @package Drupal\lingotek\Form
  */
 class LingotekJobAssignToMultipleEntitiesForm extends FormBase {
-
-  use RedirectDestinationTrait;
 
   /**
    * The current user.
