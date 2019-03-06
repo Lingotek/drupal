@@ -3,10 +3,10 @@
 namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\Tests\taxonomy\Functional\TaxonomyTestTrait;
 
 /**
