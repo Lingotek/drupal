@@ -53,6 +53,9 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
 
+    ContentLanguageSettings::loadByEntityTypeBundle('user', 'user')->setLanguageAlterable(TRUE)->save();
+    \Drupal::service('content_translation.manager')->setEnabled('user', 'user', TRUE);
+
     ContentLanguageSettings::loadByEntityTypeBundle('taxonomy_term', $this->vocabulary->id())->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('taxonomy_term', $this->vocabulary->id(), TRUE);
 
@@ -68,6 +71,8 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
    * Tests that the workbench moderation settings are stored correctly.
    */
   public function testWorkbenchModerationSettings() {
+    $vocabulary_id = $this->vocabulary->id();
+
     $this->drupalGet('admin/lingotek/settings');
 
     // We don't have any fields for configuring workbench moderation until it's
@@ -136,17 +141,38 @@ class LingotekWorkbenchModerationSettingsTest extends LingotekTestBase {
     $this->assertOptionSelected('edit-node-article-moderation-download-transition', 'draft_needs_review',
       'The desired transition after download is stored correctly.');
 
-    // It never existed for taxonomies.
-    $this->assertNoField("taxonomy_term[{$this->vocabulary->id()}][moderation][upload_status]",
+    $this->assertNoField("taxonomy_term[$vocabulary_id][moderation][upload_status]",
       'The field for setting the state when a content should be uploaded does not exist as workbench moderation is not available for this entity type.');
-    $this->assertNoField("taxonomy_term[{$this->vocabulary->id()}][moderation][download_transition]",
+    $this->assertNoField("taxonomy_term[$vocabulary_id][moderation][download_transition]",
       'The field for setting the transition that must happen after download does not exist as workbench moderation is not available for this entity type.');
-    $this->assertNoLinkByHref("/admin/structure/taxonomy/manage/{$this->vocabulary->id()}/moderation", 'There is no link to moderation settings in taxonomies as they cannot be moderated.');
+
+    // In Drupal 8.7 and above taxonomy terms are moderable.
+    if (floatval(\Drupal::VERSION) >= 8.7) {
+      $this->assertLinkByHref("/admin/structure/taxonomy/manage/$vocabulary_id/moderation");
+    }
+    else {
+      // Taxonomy terms cannot be moderated.
+      $this->assertNoLinkByHref("/admin/structure/taxonomy/manage/$vocabulary_id/moderation");
+    }
+    // Users cannot be moderated.
+    $this->assertNoField("user[user][moderation][upload_status]",
+      'The field for setting the state when a content should be uploaded does not exist as workbench moderation is not available for this entity type.');
+    $this->assertNoField("user[user][moderation][download_transition]",
+      'The field for setting the transition that must happen after download does not exist as workbench moderation is not available for this entity type.');
+    $this->assertNoLinkByHref("/admin/structure/user/manage/user/moderation");
 
     $header = $this->xpath("//details[@id='edit-entity-node']//th[text()='Workbench Moderation']");
     $this->assertEqual(count($header), 1, 'There is a Workbench Moderation column for content.');
     $header = $this->xpath("//details[@id='edit-entity-taxonomy-term']//th[text()='Workbench Moderation']");
-    $this->assertEqual(count($header), 0, 'There is no Workbench Moderation column for taxonomies.');
+    // In Drupal 8.7 and above taxonomy terms are moderable.
+    if (floatval(\Drupal::VERSION) >= 8.7) {
+      $this->assertEqual(count($header), 1, 'There is a Workbench Moderation column for terms.');
+    }
+    else {
+      $this->assertEqual(count($header), 0, 'There is no Workbench Moderation column for terms.');
+    }
+    $header = $this->xpath("//details[@id='edit-entity-user']//th[text()='Workbench Moderation']");
+    $this->assertEqual(count($header), 0, 'There is no Workbench Moderation column for users.');
   }
 
   /**
