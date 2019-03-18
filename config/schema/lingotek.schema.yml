@@ -397,6 +397,9 @@ lingotek.lingotek_config_metadata.*:
       type: sequence
       sequence:
         type: string
+    profile:
+      type: string
+      label: 'Lingotek profile'
     hash:
       type: string
       label: 'Lingotek hash'

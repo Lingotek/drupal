@@ -109,7 +109,7 @@ interface LingotekConfigurationServiceInterface {
    *   If TRUE, and the entity does not have a profile, will retrieve the default
    *   for this entity type and bundle. Defaults to TRUE.
    *
-   * @returns LingotekProfile
+   * @returns \Drupal\lingotek\Entity\LingotekProfile
    *   The default profile.
    */
   public function getConfigProfile($plugin_id, $provide_default = TRUE);
@@ -123,10 +123,22 @@ interface LingotekConfigurationServiceInterface {
    *   If TRUE, and the entity does not have a profile, will retrieve the default
    *   for this entity type and bundle. Defaults to TRUE.
    *
-   * @returns LingotekProfile
+   * @returns \Drupal\lingotek\Entity\LingotekProfile
    *   The default profile.
    */
   public function getConfigEntityProfile(ConfigEntityInterface $entity, $provide_default = TRUE);
+
+  /**
+   * Sets the default Lingotek profile for the given config entity.
+   *
+   * @param \Drupal\Core\Config\Entity\ConfigEntityInterface $entity
+   *   The entity.
+   * @param string $profile_id
+   *   The profile id.
+   * @param bool $save
+   *   Indicates if we should save the entity after setting the value.
+   */
+  public function setConfigEntityProfile(ConfigEntityInterface &$entity, $profile_id, $save = TRUE);
 
   /**
    * Determines the default Lingotek profile for the given entity.

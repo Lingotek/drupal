@@ -51,6 +51,13 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
   protected $target_status = [];
 
   /**
+   * The Lingotek profile.
+   *
+   * @var string
+   */
+  protected $profile = NULL;
+
+  /**
    * The Lingotek hash.
    *
    * @var string
@@ -108,6 +115,22 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
    */
   public function setTargetStatus(array $target_status) {
     $this->target_status = $target_status;
+
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProfile() {
+    return $this->profile;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProfile($profile) {
+    $this->profile = $profile;
 
     return $this;
   }

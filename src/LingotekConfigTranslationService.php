@@ -392,6 +392,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $document_id = $this->lingotek->uploadDocument($document_name, $encoded_data, $this->getSourceLocale($entity), $url, $this->lingotekConfiguration->getConfigEntityProfile($entity), $job_id);
     if ($document_id) {
       $this->setDocumentId($entity, $document_id);
+      $this->lingotekConfiguration->setConfigEntityProfile($entity, $profile->id());
       $this->setSourceStatus($entity, Lingotek::STATUS_IMPORTING);
       $this->setTargetStatuses($entity, Lingotek::STATUS_REQUEST);
       $this->setJobId($entity, $job_id);
@@ -909,8 +910,8 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function uploadConfig($mapper_id, $job_id = NULL) {
-    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
+    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
     $mapper = $this->mappers[$mapper_id];
@@ -921,6 +922,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     if (!empty($this->getConfigDocumentId($mapper))) {
       return $this->updateConfig($mapper_id);
     }
+    // Get the provide providing a default.
+    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
+
     $source_data = $this->getConfigSourceData($mapper);
 
     // Allow other modules to alter the data before is uploaded.
@@ -1243,10 +1247,13 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    * {@inheritdoc}
    */
   public function updateConfig($mapper_id, $job_id = NULL) {
-    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
-    if ($profile->id() === Lingotek::PROFILE_DISABLED) {
+    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
+    if ($profile !== NULL && $profile->id() === Lingotek::PROFILE_DISABLED) {
       return FALSE;
     }
+    // Get the provide providing a default.
+    $profile = $this->lingotekConfiguration->getConfigProfile($mapper_id);
+
     $mapper = $this->mappers[$mapper_id];
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
@@ -1271,7 +1278,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
         $document_name = $extended_name;
     }
 
-    if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, NULL, $job_id)) {
+    if ($this->lingotek->updateDocument($document_id, $source_data, NULL, $document_name, $profile, $job_id)) {
       $this->setConfigSourceStatus($mapper, Lingotek::STATUS_IMPORTING);
       $this->setConfigTargetStatuses($mapper, Lingotek::STATUS_PENDING);
       $this->setConfigJobId($mapper, $job_id);

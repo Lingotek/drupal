@@ -4,7 +4,9 @@ namespace Drupal\lingotek;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\language\ConfigurableLanguageInterface;
+use Drupal\lingotek\Entity\LingotekConfigMetadata;
 use Drupal\lingotek\Entity\LingotekContentMetadata;
 use Drupal\lingotek\Entity\LingotekProfile;
 
@@ -66,7 +68,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config = \Drupal::config('lingotek.settings');
     $profile_id = $config->get('translate.config.' . $plugin_id . '.profile');
     if ($provide_default && $profile_id === NULL) {
-      $profile_id = Lingotek::PROFILE_AUTOMATIC;
+      $profile_id = Lingotek::PROFILE_MANUAL;
     }
     return $profile_id;
   }
@@ -122,7 +124,21 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function getConfigProfile($plugin_id, $provide_default = TRUE) {
-    $profile_id = $this->getConfigDefaultProfileId($plugin_id, $provide_default);
+    $profile_id = NULL;
+    /** @var \Drupal\config_translation\ConfigMapperManager $mapper_manager */
+    $mapper_manager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mappers = $mapper_manager->getMappers();
+    $mapper = isset($mappers[$plugin_id]) ? $mappers[$plugin_id] : NULL;
+    if ($mapper !== NULL) {
+      $config_names = $mapper->getConfigNames();
+      foreach ($config_names as $config_name) {
+        $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+        $profile_id = $metadata->getProfile();
+        if ($profile_id === NULL) {
+          $profile_id = $this->getConfigDefaultProfileId($plugin_id, $provide_default);
+        }
+      }
+    }
     return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
 
@@ -131,13 +147,16 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    */
   public function getConfigEntityProfile(ConfigEntityInterface $entity, $provide_default = TRUE) {
     $entity_type_id = $entity->getEntityTypeId();
-    if ('field_config' === $entity_type_id) {
-      $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
-    }
-    $config = \Drupal::config('lingotek.settings');
-    $profile_id = $config->get('translate.config.' . $entity_type_id . '.' . $entity->id() . '.profile');
+    /** @var \Drupal\lingotek\Entity\LingotekConfigMetadata $metadata */
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity_type_id . '.' . $entity->id());
+    $profile_id = $metadata->getProfile();
     if ($profile_id === NULL) {
-      $profile_id = $this->getConfigEntityDefaultProfileId($entity_type_id, $provide_default);
+      // Use mapper id.
+      $mapper_id = $entity_type_id;
+      if ($entity instanceof FieldConfig) {
+        $mapper_id = $entity->getTargetEntityTypeId() . '_fields';
+      }
+      $profile_id = $this->getConfigEntityDefaultProfileId($mapper_id, $provide_default);
     }
     return $profile_id ? LingotekProfile::load($profile_id) : NULL;
   }
@@ -192,20 +211,29 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function setConfigEntityProfile(ConfigEntityInterface &$entity, $profile_id, $save = TRUE) {
-    $entity_type_id = $entity->getEntityTypeId();
-    if ('field_config' === $entity_type_id) {
-      $entity_type_id = $entity->getTargetEntityTypeId() . '_fields';
+    $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
+    $metadata->setProfile($profile_id);
+    if ($save) {
+      $metadata->save();
     }
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-    $config->set('translate.config.' . $entity_type_id . '.' . $entity->id() . '.profile', $profile_id)->save();
+    return $entity;
   }
 
   /**
    * {@inheritDoc}
    */
   public function setConfigProfile($mapper_id, $profile_id, $save = TRUE) {
-    $config = \Drupal::configFactory()->getEditable('lingotek.settings');
-    $config->set('translate.config.' . $mapper_id . '.profile', $profile_id)->save();
+    /** @var \Drupal\config_translation\ConfigMapperManager $mapper_manager */
+    $mapper_manager = \Drupal::service('plugin.manager.config_translation.mapper');
+    $mappers = $mapper_manager->getMappers();
+    $mapper = $mappers[$mapper_id];
+    $config_names = $mapper->getConfigNames();
+    foreach ($config_names as $config_name) {
+      $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
+      $metadata->setProfile($profile_id);
+      $metadata->save();
+    }
+    return $mapper;
   }
 
   /**

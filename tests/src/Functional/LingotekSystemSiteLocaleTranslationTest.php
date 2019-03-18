@@ -69,10 +69,10 @@ class LingotekSystemSiteLocaleTranslationTest extends LingotekTestBase {
 
     // Check that the url used was the right one.
     $uploaded_url = \Drupal::state()->get('lingotek.uploaded_url');
-    $this->assertIdentical(NULL, $uploaded_url, 'The automatic profile was used.');
+    $this->assertIdentical(NULL, $uploaded_url, 'There is not URL.');
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
-    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+    $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
 
     $this->clickLink(t('Check upload status'));
     $this->assertText(t('System information status checked successfully'));

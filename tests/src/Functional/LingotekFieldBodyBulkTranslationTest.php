@@ -162,11 +162,6 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     // Login as admin.
     $this->drupalLogin($this->rootUser);
 
-    // Set upload as manual.
-    $this->saveLingotekConfigTranslationSettings([
-      'node_fields' => 'manual',
-    ]);
-
     // Add a language.
     ConfigurableLanguage::createFromLangcode('de')->setThirdPartySetting('lingotek', 'locale', 'de_AT')->save();
 
@@ -224,9 +219,11 @@ class LingotekFieldBodyBulkTranslationTest extends LingotekTestBase {
     $this->testFieldBodyTranslationUsingLinks();
 
     // Set upload as manual.
-    $this->saveLingotekConfigTranslationSettings([
-      'node_fields' => 'manual',
-    ]);
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      $this->getBulkOperationFormName() => 'change_profile:manual',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.

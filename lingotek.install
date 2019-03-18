@@ -816,6 +816,69 @@ function lingotek_update_8216() {
   }
 }
 
+/**
+ * Move Lingotek profile to config metadata from settings.
+ */
+function lingotek_update_8217() {
+  $lingotekSettings = \Drupal::configFactory()->getEditable('lingotek.settings');
+  $keys = [];
+  $data = $lingotekSettings->get('translate.config');
+  _lingotek_find_key($keys, '', $data);
+  /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
+  $config_manager = \Drupal::service('config.manager');
+  /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotekConfig */
+  $lingotekConfig = \Drupal::service('lingotek.configuration');
+  foreach ($keys as $plugin_id) {
+    $entity_type = $rootLabel = substr($plugin_id, 0, strpos($plugin_id, '.'));
+    $entity_name = substr_replace($plugin_id, '', 0, strlen($entity_type) + 1);
+    // Check if it's a field.
+    if (substr($entity_type, -7) == '_fields') {
+      // Hack for fields, the entity is field config.
+      $entity_type = 'field_config';
+    }
+    if (\Drupal::entityTypeManager()->hasDefinition($entity_type) && $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_name)) {
+      $profile_key = 'translate.config.' . $plugin_id . '.profile';
+      $profile_id = $lingotekSettings->get($profile_key);
+      $lingotekConfig->setConfigEntityProfile($entity, $profile_id);
+      // Clear old value.
+      foreach ($data as $type => $typeData) {
+        foreach ($typeData as $key => $value) {
+          if (!in_array($key, ['enabled', 'profile'])) {
+            $lingotekSettings->clear('translate.config.' . $rootLabel . '.' . $key);
+          }
+        }
+      }
+    }
+    // It may be a config object, not entity.
+    else {
+      $profile_key = 'translate.config.' . $plugin_id . '.profile';
+      $profile_id = $lingotekSettings->get($profile_key);
+      /** @var \Drupal\config_translation\ConfigNamesMapper $mapper */
+      $mapper = _lingotek_get_mapper($plugin_id);
+      if ($mapper) {
+        $lingotekConfig->setConfigProfile($plugin_id, $profile_id);
+        $lingotekSettings->clear('translate.config.' . $plugin_id);
+      }
+    }
+  }
+  $lingotekSettings->save();
+}
+
+function _lingotek_find_key(&$keys, $id, array $array) {
+  foreach ($array as $x => $y) {
+    // if (!in_array($x, ['enabled', 'profile'])) {}
+    if (is_array($y) && !in_array($id, ['enabled', 'profile'])) {
+      $newId = empty($id) ? $x : $id . '.' . $x;
+      _lingotek_find_key($keys, $newId, $y);
+    }
+    else {
+      if (count($array) == 1) {
+        $keys[] = $id;
+      }
+    }
+  }
+}
+
 function lingotek_legacy_get_translation_status($field) {
   $status = [];
   foreach ($field->getIterator() as $delta => $value) {
@@ -832,4 +895,12 @@ function lingotek_legacy_set_translation_status(&$metadata, $value) {
       'value' => $status,
     ]);
   }
+}
+
+function _lingotek_get_mapper($plugin_id) {
+  /** @var \Drupal\config_translation\ConfigMapperManager $mapper_manager */
+  $mapper_manager = \Drupal::service('plugin.manager.config_translation.mapper');
+  $mappers = $mapper_manager->getMappers();
+  $mapper = isset($mappers[$plugin_id]) ? $mappers[$plugin_id] : NULL;
+  return $mapper;
 }

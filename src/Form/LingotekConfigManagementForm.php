@@ -236,7 +236,7 @@ class LingotekConfigManagementForm extends FormBase {
         }
 
         $profile = $is_config_entity ?
-          $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity(), FALSE) :
+          $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity()) :
           $this->lingotekConfiguration->getConfigProfile($mapper_id, FALSE);
         $form['table'][$mapper_id] = [
           '#type' => 'checkbox',
@@ -714,38 +714,36 @@ class LingotekConfigManagementForm extends FormBase {
    */
   public function debugExport(ConfigMapperInterface $mapper, $language, $job_id, &$context) {
     $context['message'] = $this->t('Exporting %label.', ['%label' => $mapper->getTitle()]);
-    if ($profile = $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE) or TRUE) {
-      $data = $this->translationService->getConfigSourceData($mapper);
-      $data['_debug'] = [
-        'title' => trim($mapper->getPluginId() . ' (config): ' . $mapper->getTitle()),
-        'profile' => $profile ? $profile->id() : '<null>',
-        'source_locale' => $this->translationService->getConfigSourceLocale($mapper),
-      ];
-      $filename = 'config.' . $mapper->getPluginId() . '.json';
-      $plugin_definition = $mapper->getPluginDefinition();
-      if (isset($plugin_definition['entity_type']) && 'field_config' === $plugin_definition['entity_type']) {
-        $entity = $mapper->getEntity();
-        $data['_debug']['title'] = $entity->id() . ' (config): ' . $entity->label();
-        $filename = 'config.' . $entity->id() . '.json';
-      }
-      $source_data = json_encode($data);
+    $profile = ($mapper instanceof ConfigEntityMapper) ?
+      $this->lingotekConfiguration->getConfigEntityProfile($mapper->getEntity()) :
+      $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId());
 
-      $file = File::create([
-        'uid' => 1,
-        'filename' => $filename,
-        'uri' => 'public://' . $filename,
-        'filemime' => 'text/plain',
-        'created' => REQUEST_TIME,
-        'changed' => REQUEST_TIME,
-      ]);
-      file_put_contents($file->getFileUri(), $source_data);
-      $file->save();
-      $context['results']['exported'][] = $file->id();
+    $data = $this->translationService->getConfigSourceData($mapper);
+    $data['_debug'] = [
+      'title' => trim($mapper->getPluginId() . ' (config): ' . $mapper->getTitle()),
+      'profile' => $profile ? $profile->id() : '<null>',
+      'source_locale' => $this->translationService->getConfigSourceLocale($mapper),
+    ];
+    $filename = 'config.' . $mapper->getPluginId() . '.json';
+    $plugin_definition = $mapper->getPluginDefinition();
+    if (isset($plugin_definition['entity_type']) && 'field_config' === $plugin_definition['entity_type']) {
+      $entity = $mapper->getEntity();
+      $data['_debug']['title'] = $entity->id() . ' (config): ' . $entity->label();
+      $filename = 'config.' . $entity->id() . '.json';
     }
-    else {
-      drupal_set_message($this->t('The %label has no profile assigned so it was not processed.',
-        ['%label' => $mapper->getTitle()]), 'warning');
-    }
+    $source_data = json_encode($data);
+
+    $file = File::create([
+      'uid' => 1,
+      'filename' => $filename,
+      'uri' => 'public://' . $filename,
+      'filemime' => 'text/plain',
+      'created' => REQUEST_TIME,
+      'changed' => REQUEST_TIME,
+    ]);
+    file_put_contents($file->getFileUri(), $source_data);
+    $file->save();
+    $context['results']['exported'][] = $file->id();
   }
 
   /**
@@ -760,7 +758,7 @@ class LingotekConfigManagementForm extends FormBase {
     /** @var \Drupal\Core\Config\ConfigEntityInterface $entity */
     $entity = $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
     $profile = $mapper instanceof ConfigEntityMapper ?
-      $this->lingotekConfiguration->getConfigEntityProfile($entity, FALSE) :
+      $this->lingotekConfiguration->getConfigEntityProfile($entity) :
       $this->lingotekConfiguration->getConfigProfile($mapper->getPluginId(), FALSE);
     $document_id = $mapper instanceof ConfigEntityMapper ?
       $this->translationService->getDocumentId($entity) :

@@ -225,9 +225,13 @@ class LingotekProfileFormTest extends LingotekTestBase {
     // Create Article node types.
     $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
 
-    $this->saveLingotekConfigTranslationSettings([
-      'node_type' => $profile_id,
-    ]);
+    // Go to the bulk config management page.
+    $this->goToConfigBulkManagementForm('node_type');
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => 'change_profile:' . $profile_id,
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $this->drupalGet("/admin/lingotek/settings/profile/$profile_id/delete");
 

@@ -80,7 +80,7 @@ class LingotekSystemSiteBulkDebugTest extends LingotekTestBase {
     $this->assertIdentical('Drupal', $response['system.site']['name']);
     $this->assertIdentical('', $response['system.site']['slogan']);
     $this->assertIdentical('system.site_information_settings (config): System information', $response['_debug']['title']);
-    $this->assertIdentical('<null>', $response['_debug']['profile']);
+    $this->assertIdentical('manual', $response['_debug']['profile']);
     $this->assertIdentical('en_US', $response['_debug']['source_locale']);
   }
 

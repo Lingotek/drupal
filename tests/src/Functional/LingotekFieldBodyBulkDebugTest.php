@@ -8,6 +8,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * Tests debugging a field using the bulk management form.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
 
@@ -72,6 +73,12 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
 
     // Go to the bulk config management page.
     $this->goToConfigBulkManagementForm('node_fields');
+    // We need to ensure the profile is stored.
+    $edit = [
+      'table[node.article.body]' => TRUE,
+      $this->getBulkOperationFormName() => 'change_profile:manual',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     $edit = [
       'table[node.article.body]' => TRUE,
@@ -87,7 +94,7 @@ class LingotekFieldBodyBulkDebugTest extends LingotekTestBase {
     $this->assertIdentical('Body', $response['field.field.node.article.body']['label']);
     $this->assertIdentical('', $response['field.field.node.article.body']['description']);
     $this->assertIdentical('node.article.body (config): Body', $response['_debug']['title']);
-    $this->assertIdentical('automatic', $response['_debug']['profile']);
+    $this->assertIdentical('manual', $response['_debug']['profile']);
     $this->assertIdentical('en_US', $response['_debug']['source_locale']);
   }
 

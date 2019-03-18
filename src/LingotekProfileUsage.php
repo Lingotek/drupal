@@ -72,6 +72,13 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
       }
     }
 
+    if ($used !== LingotekProfileUsageInterface::USED_BY_CONFIG) {
+      $entity_query = $this->entityQuery->get('lingotek_config_metadata');
+      $entity_query->condition('profile', $profile->id());
+      $result = $entity_query->count()->execute();
+      $used = ($result > 0) ? LingotekProfileUsageInterface::USED_BY_CONFIG : LingotekProfileUsageInterface::UNUSED;
+    }
+
     return $used;
   }
 

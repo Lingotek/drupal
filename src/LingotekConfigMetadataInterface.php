@@ -52,6 +52,21 @@ interface LingotekConfigMetadataInterface extends ConfigEntityInterface {
   public function setTargetStatus(array $target_status);
 
   /**
+   * Gets the profile of the document.
+   */
+  public function getProfile();
+
+  /**
+   * Sets the profile of the document.
+   *
+   * @param string $profile
+   *   The profile of the document.
+   *
+   * @return $this
+   */
+  public function setProfile($profile);
+
+  /**
    * Gets the hash of the uploaded document.
    */
   public function getHash();

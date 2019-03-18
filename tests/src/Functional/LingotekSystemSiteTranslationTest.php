@@ -61,7 +61,7 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
-    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+    $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
 
     $this->clickLink(t('Check upload status'));
     $this->assertText(t('System information status checked successfully'));
@@ -154,10 +154,9 @@ class LingotekSystemSiteTranslationTest extends LingotekTestBase {
 
     // Check that the profile used was the right one.
     $used_profile = \Drupal::state()->get('lingotek.used_profile');
-    $this->assertIdentical('automatic', $used_profile, 'The automatic profile was used.');
+    $this->assertIdentical('manual', $used_profile, 'The manual profile was used.');
 
-    // The document should have been automatically uploaded, so let's check
-    // the upload status.
+    // The document should have been uploaded, so let's check the upload status.
     $this->clickLink(t('Check upload status'));
     $this->assertText(t('System information status checked successfully'));
 

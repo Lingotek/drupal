@@ -239,9 +239,11 @@ class LingotekContentTypeBulkTranslationTest extends LingotekTestBase {
     $this->testContentTypeTranslationUsingLinks();
 
     // Set upload as manual.
-    $this->saveLingotekConfigTranslationSettings([
-      'node_type' => 'manual',
-    ]);
+    $edit = [
+      'table[article]' => TRUE,
+      $this->getBulkOperationFormName() => 'change_profile:manual',
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Add a language so we can check that it's not marked as dirty if there are
     // no translations.
