@@ -1,0 +1,6 @@
+services:
+  lingotek.commands:
+    class: Drupal\lingotek\Cli\Commands\Drush9\LingotekCommands
+    arguments: ['@lingotek.cli_service']
+    tags:
+      - { name: drush.command }

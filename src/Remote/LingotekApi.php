@@ -20,6 +20,13 @@ class LingotekApi implements LingotekApiInterface {
   protected $lingotekClient;
 
   /**
+   * A logger instance.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Constructs a LingotekApi object.
    *
    * @param \Drupal\lingotek\Remote\LingotekHttpInterface $client

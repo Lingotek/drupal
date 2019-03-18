@@ -121,3 +121,7 @@ services:
     arguments: ['@module_handler', '@entity_type.manager', '@lingotek.content_moderation_configuration', '@entity_type.bundle.info', '@service_container']
     tags:
       - { name: lingotek_moderation_handler, priority: 20 }
+
+  lingotek.cli_service:
+    class: Drupal\lingotek\Cli\LingotekCliService
+    arguments: ['@entity_type.manager', '@lingotek.content_translation', '@lingotek.language_locale_mapper']
