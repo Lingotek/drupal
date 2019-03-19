@@ -12,6 +12,7 @@ use Drupal\node\Entity\Node;
  * Tests translating a node with multiple locales embedding another config entity.
  *
  * @group lingotek
+ * @group legacy
  */
 class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
 
@@ -74,7 +75,6 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     // picked up.
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'article')->setLanguageAlterable(TRUE)->save();
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
-    \Drupal::service('content_translation.manager')->setEnabled('contact_form', $this->contactForm->id(), TRUE);
 
     drupal_static_reset();
     \Drupal::entityManager()->clearCachedDefinitions();
