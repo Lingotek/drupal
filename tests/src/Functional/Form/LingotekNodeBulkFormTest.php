@@ -1350,7 +1350,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertText('NotConfigured nothing nothing nothing');
 
     $edit = [
-      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
 
@@ -1368,7 +1368,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertText('NotConfigured nothing nothing nothing');
 
     $edit = [
-      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
       'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
     ];
     $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
@@ -1387,7 +1387,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertText('NotConfigured nothing nothing nothing');
 
     $edit = [
-      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
       'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
       'filters[advanced_options][source_language]' => 'en',
     ];
@@ -1407,7 +1407,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertText('NotConfigured nothing nothing nothing');
 
     $edit = [
-      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
       'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
       'filters[advanced_options][source_language]' => 'en',
       'filters[advanced_options][profile][]' => ['manual', 'automatic'],
@@ -1428,7 +1428,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('NotConfigured nothing nothing nothing');
 
     $edit = [
-      'filters[advanced_options][source_status]' => 'NEEDS_UPLOAD',
+      'filters[advanced_options][source_status]' => 'UPLOAD_NEEDED',
       'filters[wrapper][bundle][]' => ['custom_type', 'not_configured'],
       'filters[advanced_options][source_language]' => 'en',
       'filters[advanced_options][profile][]' => ['manual', 'automatic'],

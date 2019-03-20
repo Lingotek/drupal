@@ -231,7 +231,7 @@ abstract class LingotekManagementFormBase extends FormBase {
         '#default_value' => $sourceStatusFilter,
         '#options' => [
           '' => $this->t('All'),
-          'NEEDS_UPLOAD' => $this->t('Needing upload'),
+          'UPLOAD_NEEDED' => $this->t('Upload Needed'),
           Lingotek::STATUS_CURRENT => $this->t('Current'),
           Lingotek::STATUS_IMPORTING => $this->t('Importing'),
           Lingotek::STATUS_EDITED => $this->t('Edited'),

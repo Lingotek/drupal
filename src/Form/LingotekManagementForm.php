@@ -100,8 +100,8 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $profileFilter = $temp_store->get('profile');
 
     if ($sourceStatusFilter) {
-      if ($sourceStatusFilter === 'NEEDS_UPLOAD') {
-        // We consider that needing upload includes those never uploaded or
+      if ($sourceStatusFilter === 'UPLOAD_NEEDED') {
+        // We consider that "Upload Needed" includes those never uploaded or
         // disassociated, edited, or with error on last upload.
         $needingUploadStatuses = [
           Lingotek::STATUS_EDITED,
