@@ -263,7 +263,15 @@ class Lingotek implements LingotekInterface {
     if ($job_id !== NULL) {
       $args['job_id'] = $job_id;
     }
-    $args = array_merge(['content' => json_encode($content)], $args);
+    if ($content !== NULL) {
+      $args = array_merge(['content' => json_encode($content)], $args);
+    }
+    else {
+      // IF there's no content, let's remove filters, we may want to update only
+      // the Job ID.
+      unset($args['fprm_id']);
+      unset($args['fprm_subfilter_id']);
+    }
 
     $response = $this->api->patchDocument($doc_id, $args);
     if ($response->getStatusCode() == Response::HTTP_ACCEPTED) {

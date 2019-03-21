@@ -1359,7 +1359,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
-  public function setConfigJobId(ConfigNamesMapper $mapper, $job_id) {
+  public function setConfigJobId(ConfigNamesMapper $mapper, $job_id, $update_tms = FALSE) {
+    if ($update_tms && $document_id = $this->getConfigDocumentId($mapper)) {
+      $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+    }
     $config_names = $mapper->getConfigNames();
     foreach ($config_names as $config_name) {
       $metadata = LingotekConfigMetadata::loadByConfigName($config_name);
@@ -1384,7 +1387,10 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * {@inheritdoc}
    */
-  public function setJobId(ConfigEntityInterface $entity, $job_id) {
+  public function setJobId(ConfigEntityInterface $entity, $job_id, $update_tms = FALSE) {
+    if ($update_tms && $document_id = $this->getDocumentId($entity)) {
+      $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+    }
     $metadata = LingotekConfigMetadata::loadByConfigName($entity->getEntityTypeId() . '.' . $entity->id());
     $metadata->setJobId($job_id);
     $metadata->save();

@@ -141,6 +141,11 @@ class LingotekJobAssignToMultipleConfigForm extends FormBase {
       '#title' => $this->t('Job ID'),
       '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
     ];
+    $form['update_tms'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Notify the Lingotek TMS'),
+      '#description' => $this->t('Notify the Lingotek TMS (when applicable)'),
+    ];
 
     $form['entities'] = [
       '#theme' => 'item_list',
@@ -180,15 +185,16 @@ class LingotekJobAssignToMultipleConfigForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $job_id = $form_state->getValue('job_id');
+    $updateTMS = $form_state->getValue('update_tms');
 
     $mappers = $this->getSelectedMappers($this->selection);
 
     foreach ($mappers as $mapper) {
       if ($mapper instanceof ConfigEntityMapper) {
-        $this->translationService->setJobId($mapper->getEntity(), $job_id);
+        $this->translationService->setJobId($mapper->getEntity(), $job_id, $updateTMS);
       }
       else {
-        $this->translationService->setConfigJobId($mapper, $job_id);
+        $this->translationService->setConfigJobId($mapper, $job_id, $updateTMS);
       }
     }
     $form_state->setRedirectUrl(Url::fromUserInput('/' . $form_state->getValue('destination')));

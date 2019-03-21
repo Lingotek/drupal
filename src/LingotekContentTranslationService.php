@@ -1339,11 +1339,15 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * {@inheritdoc}
    */
-  public function setJobId(ContentEntityInterface $entity, $job_id) {
+  public function setJobId(ContentEntityInterface $entity, $job_id, $update_tms = FALSE) {
     if ($entity->lingotek_metadata === NULL) {
       $entity->lingotek_metadata = LingotekContentMetadata::create();
     }
     $metadata = &$entity->lingotek_metadata->entity;
+
+    if ($update_tms && $document_id = $this->getDocumentId($entity)) {
+      $this->lingotek->updateDocument($document_id, NULL, NULL, NULL, NULL, $job_id);
+    }
 
     $metadata->setJobId($job_id);
     $metadata->save();

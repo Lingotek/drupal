@@ -222,7 +222,7 @@ class LingotekFake implements LingotekInterface {
 
     \Drupal::state()->set('lingotek.uploaded_content', $content);
     \Drupal::state()->set('lingotek.uploaded_content_url', $url);
-    \Drupal::state()->set('lingotek.uploaded_content_title', $title);
+    \Drupal::state()->set('lingotek.uploaded_title', $title);
     \Drupal::state()->set('lingotek.uploaded_job_id', $job_id);
 
     // Save the timestamp of the upload.

@@ -327,13 +327,16 @@ interface LingotekContentTranslationServiceInterface {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity we want to save a job id for.
-   * @param $job_id
+   * @param string $job_id
    *   The job ID being saved.
+   * @param bool $update_tms
+   *   (Optional) Flag indicating if the change should be communicated to the
+   *   TMS. False by default.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the entity which job ID is saved.
    */
-  public function setJobId(ContentEntityInterface $entity, $job_id);
+  public function setJobId(ContentEntityInterface $entity, $job_id, $update_tms = FALSE);
 
   /**
    * Gets the job ID of a given entity.

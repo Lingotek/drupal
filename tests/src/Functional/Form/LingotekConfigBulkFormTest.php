@@ -247,6 +247,88 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
     // Check that the job id used was the right one.
     \Drupal::state()->resetCache();
     $this->assertIdentical(\Drupal::state()->get('lingotek.uploaded_job_id'), 'my_custom_job_id');
+
+    // If we update the job ID without notification to the TMS, no update happens.
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'other_job_id',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // There is no upload.
+    \Drupal::state()->resetCache();
+    $this->assertNotNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNotNull(\Drupal::state()->get('lingotek.uploaded_content'));
+    $this->assertEquals('my_custom_job_id', \Drupal::state()->get('lingotek.uploaded_job_id'));
+  }
+
+  /**
+   * Tests that can we assign job ids with the bulk operation with TMS update.
+   */
+  public function testAssignJobIdsWithTMSUpdate() {
+    $this->goToConfigBulkManagementForm('node_type');
+
+    $basepath = \Drupal::request()->getBasePath();
+
+    // I can init the upload of content.
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // There is no update, because there are no document ids.
+    \Drupal::state()->resetCache();
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_content'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id');
+
+    // And the job id is used on upload.
+    $this->clickLink('EN');
+
+    $this->assertText('Article uploaded successfully');
+    // Check that the job id used was the right one.
+    \Drupal::state()->resetCache();
+    $this->assertIdentical(\Drupal::state()->get('lingotek.uploaded_job_id'), 'my_custom_job_id');
+
+    // If we update the job ID with notification to the TMS, an update happens.
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'other_job_id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // There is an update.
+    \Drupal::state()->resetCache();
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_title'));
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_content'));
+    $this->assertIdentical(\Drupal::state()->get('lingotek.uploaded_job_id'), 'other_job_id');
   }
 
   /**

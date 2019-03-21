@@ -552,11 +552,14 @@ interface LingotekConfigTranslationServiceInterface {
    *   The entity which we want the document id.
    * @param $job_id
    *   The job ID being saved.
+   * @param bool $update_tms
+   *   (Optional) Flag indicating if the change should be communicated to the
+   *   TMS. False by default.
    *
    * @return \Drupal\Core\Config\Entity\ConfigEntityInterface
    *   Returns the entity which job ID is saved.
    */
-  public function setJobId(ConfigEntityInterface $entity, $job_id);
+  public function setJobId(ConfigEntityInterface $entity, $job_id, $update_tms = FALSE);
 
   /**
    * Gets the job ID of a given entity.
@@ -576,11 +579,14 @@ interface LingotekConfigTranslationServiceInterface {
    *   The mapper we want to save a job id for.
    * @param $job_id
    *   The job ID being saved.
+   * @param bool $update_tms
+   *   (Optional) Flag indicating if the change should be communicated to the
+   *   TMS. False by default.
    *
    * @return \Drupal\Core\Entity\ContentEntityInterface
    *   Returns the mapper which job ID is saved.
    */
-  public function setConfigJobId(ConfigNamesMapper $mapper, $job_id);
+  public function setConfigJobId(ConfigNamesMapper $mapper, $job_id, $update_tms = FALSE);
 
   /**
    * Gets the job ID of a given mapper.
