@@ -209,6 +209,22 @@ lingotek.assign_job_config_multiple_form:
   requirements:
     _permission: 'manage lingotek translations,translate configuration'
 
+lingotek.clear_job_entity_multiple_form:
+  path: '/admin/lingotek/job-clear'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekJobClearMultipleEntitiesForm'
+    _title: 'Clear Job ID'
+  requirements:
+    _permission: 'manage lingotek translations'
+
+lingotek.clear_job_config_multiple_form:
+  path: '/admin/lingotek/config/job-clear'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekJobClearMultipleConfigForm'
+    _title: 'Clear Job ID'
+  requirements:
+    _permission: 'manage lingotek translations,translate configuration'
+
 lingotek.config.upload:
   path: '/admin/lingotek/config/upload/{entity_type}/{entity_id}'
   defaults:

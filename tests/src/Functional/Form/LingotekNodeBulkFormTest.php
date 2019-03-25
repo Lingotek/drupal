@@ -1128,6 +1128,8 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLingotekUploadLink(1);
     $this->assertLingotekUploadLink(2);
 
+    $this->clickLink('EN');
+
     $edit = [
       'table[1]' => TRUE,
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
@@ -1135,6 +1137,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $edit = [
       'job_id' => 'my_custom_job_id_1',
+      'update_tms' => 1,
     ];
     $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
     $this->assertText('Job ID was assigned successfully.');
@@ -1146,6 +1149,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
     $edit = [
       'job_id' => 'my_custom_job_id_2',
+      'update_tms' => 1,
     ];
     $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
     $this->assertText('Job ID was assigned successfully.');
@@ -1160,6 +1164,86 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
       $this->getBulkOperationFormName() => $this->getBulkOperationNameForClearJobId('node'),
     ];
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->drupalPostForm(NULL, [], 'Clear Job ID');
+    $this->assertText('Job ID was cleared successfully.');
+
+    // There is no upload.
+    \Drupal::state()->resetCache();
+    $this->assertEquals('my_custom_job_id_1', \Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    // The job id is gone.
+    $this->assertNoText('my_custom_job_id_1');
+    $this->assertNoText('my_custom_job_id_2');
+  }
+
+  /**
+   * Tests clearing job ids with TMS update.
+   */
+  public function testClearJobIdsWithTmsUpdate() {
+    // Create a couple of nodes.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1);
+    $this->assertLingotekUploadLink(2);
+
+    $this->clickLink('EN');
+
+    $edit = [
+      'table[1]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id_1',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    $edit = [
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+    $edit = [
+      'job_id' => 'my_custom_job_id_2',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('Job ID was assigned successfully.');
+
+    // The job id is displayed.
+    $this->assertText('my_custom_job_id_1');
+    $this->assertText('my_custom_job_id_2');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForClearJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->drupalPostForm(NULL, ['update_tms' => 1], 'Clear Job ID');
+    $this->assertText('Job ID was cleared successfully.');
+
+    // There is an update with empty job id.
+    \Drupal::state()->resetCache();
+    $this->assertEquals('', \Drupal::state()->get('lingotek.uploaded_job_id'));
 
     // The job id is gone.
     $this->assertNoText('my_custom_job_id_1');

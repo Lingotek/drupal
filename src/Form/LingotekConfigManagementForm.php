@@ -461,7 +461,7 @@ class LingotekConfigManagementForm extends FormBase {
         $processed = TRUE;
         break;
       case 'clear_job':
-        $this->createClearJobBatch($values);
+        $this->redirectToClearJobIdMultipleConfigForm($values, $form_state);
         $processed = TRUE;
         break;
     }
@@ -509,6 +509,28 @@ class LingotekConfigManagementForm extends FormBase {
       ->get('lingotek_assign_job_config_multiple_confirm')
       ->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect('lingotek.assign_job_config_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+  }
+
+  /**
+   * Redirect to clear Job ID form.
+   *
+   * @param array $values
+   *   Array of ids to clear Job ID.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function redirectToClearJobIdMultipleConfigForm($values, FormStateInterface $form_state) {
+    $entityInfo = [];
+    $mappers = $this->getSelectedMappers($values);
+    foreach ($mappers as $mapper_id => $mapper) {
+      /** @var \Drupal\config_translation\ConfigNamesMapper $mapper */
+      $langcode = $mapper->getLangcode();
+      $entityInfo[$this->filter][$mapper_id] = [$langcode => $langcode];
+    }
+    \Drupal::getContainer()->get('tempstore.private')
+      ->get('lingotek_assign_job_config_multiple_confirm')
+      ->set($this->currentUser()->id(), $entityInfo);
+    $form_state->setRedirect('lingotek.clear_job_config_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
 
   protected function getAllBundles() {
@@ -684,16 +706,6 @@ class LingotekConfigManagementForm extends FormBase {
    */
   protected function createDisassociateBatch($values) {
     $this->createBatch('disassociate', $values, $this->t('Disassociating content from Lingotek service'));
-  }
-
-  /**
-   * Create and set a job clear batch.
-   *
-   * @param array $values
-   *   Array of ids to clear the Job ID.
-   */
-  protected function createClearJobBatch($values) {
-    $this->createBatch('clearJobId', $values, $this->t('Clearing Job ID'));
   }
 
   /**
@@ -1123,37 +1135,6 @@ class LingotekConfigManagementForm extends FormBase {
     else {
       drupal_set_message($this->t('%label has no profile assigned so it was not processed.',
         ['%label' => $mapper->getTitle()]), 'warning');
-    }
-  }
-
-  /**
-   * Clear Job IDs.
-   *
-   * @param \Drupal\config_translation\ConfigMapperInterface $mapper
-   *   The mapper.
-   */
-  public function clearJobId(ConfigMapperInterface $mapper, $langcode, $job_id, &$context) {
-    $context['message'] = $this->t('Clearing Job ID for %label.', ['%label' => $mapper->getTitle()]);
-    $entity = $mapper instanceof ConfigEntityMapper ? $mapper->getEntity() : NULL;
-    if ($mapper instanceof ConfigEntityMapper) {
-      try {
-        $this->translationService->setJobId($entity, NULL);
-      }
-      catch (LingotekApiException $e) {
-        drupal_set_message(t('The Job ID change for %title failed. Please try again.', [
-          '%title' => $mapper->getTitle(),
-        ]), 'error');
-      }
-    }
-    else {
-      try {
-        $this->translationService->setConfigJobId($mapper, NULL);
-      }
-      catch (LingotekApiException $e) {
-        drupal_set_message(t('The Job ID change for %title failed. Please try again.', [
-          '%title' => $mapper->getTitle(),
-        ]), 'error');
-      }
     }
   }
 

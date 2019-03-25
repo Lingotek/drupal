@@ -548,7 +548,7 @@ abstract class LingotekManagementFormBase extends FormBase {
         $processed = TRUE;
         break;
       case 'clear_job':
-        $this->createClearJobBatch($values);
+        $this->redirectToClearJobIdMultipleEntitiesForm($values, $form_state);
         $processed = TRUE;
         break;
       case 'delete_nodes':
@@ -792,16 +792,6 @@ abstract class LingotekManagementFormBase extends FormBase {
   }
 
   /**
-   * Create and set a job clear batch.
-   *
-   * @param array $values
-   *   Array of ids to clear the Job ID.
-   */
-  protected function createClearJobBatch($values) {
-    $this->createBatch('clearJobId', $values, $this->t('Clearing Job ID'));
-  }
-
-  /**
    * Redirect to delete content form.
    *
    * @param array $values
@@ -845,6 +835,28 @@ abstract class LingotekManagementFormBase extends FormBase {
       ->get('lingotek_assign_job_entity_multiple_confirm')
       ->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect('lingotek.assign_job_entity_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+  }
+
+  /**
+   * Redirect to clear Job ID form.
+   *
+   * @param array $values
+   *   Array of ids to clear Job ID.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  protected function redirectToClearJobIdMultipleEntitiesForm($values, FormStateInterface $form_state) {
+    $entityInfo = [];
+    $entities = $this->getSelectedEntities($values);
+    foreach ($entities as $entity) {
+      /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+      $language = $entity->getUntranslated()->language();
+      $entityInfo[$entity->getEntityTypeId()][$entity->id()] = [$language->getId() => $language->getId()];
+    }
+    \Drupal::getContainer()->get('tempstore.private')
+      ->get('lingotek_assign_job_entity_multiple_confirm')
+      ->set($this->currentUser()->id(), $entityInfo);
+    $form_state->setRedirect('lingotek.clear_job_entity_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
 
   /**
@@ -1203,22 +1215,6 @@ abstract class LingotekManagementFormBase extends FormBase {
     }
     catch (LingotekApiException $exception) {
       drupal_set_message(t('The Tranlsation Profile change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
-    }
-  }
-
-  /**
-   * Clear Job IDs.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity.
-   */
-  public function clearJobId(ContentEntityInterface $entity, $profile_id = NULL, $job_id = NULL, &$context = NULL) {
-    $context['message'] = $this->t('Clearing Job ID for @type %label.', ['@type' => $entity->getEntityType()->getLabel(), '%label' => $entity->label()]);
-    try {
-      $this->translationService->setJobId($entity, NULL);
-    }
-    catch (LingotekApiException $exception) {
-      drupal_set_message(t('The Job ID change for @entity_type %title failed. Please try again.', ['@entity_type' => $entity->getEntityTypeId(), '%title' => $entity->label()]), 'error');
     }
   }
 

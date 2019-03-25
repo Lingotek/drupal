@@ -176,10 +176,17 @@ class LingotekJobAssignToMultipleEntitiesForm extends FormBase {
     }
     $form_state->setRedirectUrl(Url::fromUserInput('/' . $form_state->getValue('destination')));
 
-    $this->messenger->addStatus('Job ID was assigned successfully.');
+    $this->postStatusMessage();
 
     // Clear selected data.
     $this->tempStore->delete($this->currentUser->id());
+  }
+
+  /**
+   * Post a status message when succeeded.
+   */
+  protected function postStatusMessage() {
+    $this->messenger->addStatus('Job ID was assigned successfully.');
   }
 
   /**
