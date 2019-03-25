@@ -289,6 +289,41 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that the EDITED status is not assigned if the content is not uploaded.
+   */
+  public function testNodeNotMarkedAsEditedIfNotUploaded() {
+    // Login as admin.
+    $this->drupalLogin($this->rootUser);
+
+    // Add two languages.
+    ConfigurableLanguage::createFromLangcode('de')
+      ->setThirdPartySetting('lingotek', 'locale', 'de_AT')
+      ->save();
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+
+    // Edit the node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool EDITED';
+    $this->saveAndKeepPublishedNodeForm($edit, 1);
+
+    $this->goToContentBulkManagementForm();
+
+    $this->assertSourceStatus('EN', Lingotek::STATUS_UNTRACKED);
+  }
+
+  /**
    * Tests that a node can be translated using the actions on the management page for multiple locales after editing it.
    */
   public function testNodeTranslationUsingActionsForMultipleLocalesAfterEditing() {

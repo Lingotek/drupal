@@ -277,7 +277,7 @@ function lingotek_entity_update(EntityInterface $entity) {
       }
       // Updated entity with manual-upload
       elseif (!$has_autoupload) {
-        if ($entity_has_changed) {
+        if ($entity_has_changed && $source_status !== Lingotek::STATUS_UNTRACKED) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           $translation_service->markTranslationsAsDirty($entity);
         }
@@ -357,7 +357,7 @@ function lingotek_entity_update(EntityInterface $entity) {
       }
       // Updated entity with manual-upload
       elseif (!$has_autoupload) {
-        if ($entity_has_changed) {
+        if ($entity_has_changed && $source_status !== Lingotek::STATUS_UNTRACKED) {
           $translation_service->setSourceStatus($entity, Lingotek::STATUS_EDITED);
           $translation_service->markTranslationsAsDirty($entity);
         }
