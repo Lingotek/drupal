@@ -51,7 +51,7 @@ class LingotekContentTranslationForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static (
+    return new static(
       $container->get('lingotek'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.configuration'),

@@ -25,7 +25,7 @@ if (version_compare(\Drupal::VERSION, '8.6', '>=')) {
       'node',
       'group',
       'gnode',
-      'lingotek_group_test'
+      'lingotek_group_test',
     ];
 
     /**
@@ -51,15 +51,15 @@ if (version_compare(\Drupal::VERSION, '8.6', '>=')) {
       // Place the actions and title block.
       $this->drupalPlaceBlock('page_title_block', [
         'region' => 'content',
-        'weight' => -5
+        'weight' => -5,
       ]);
       $this->drupalPlaceBlock('local_tasks_block', [
         'region' => 'content',
-        'weight' => -10
+        'weight' => -10,
       ]);
       $this->drupalPlaceBlock('local_actions_block', [
         'region' => 'content',
-        'weight' => -2
+        'weight' => -2,
       ]);
 
       $type = NodeType::load('article');
@@ -171,7 +171,7 @@ if (version_compare(\Drupal::VERSION, '8.6', '>=')) {
         $edit = [];
         $edit['title[0][value]'] = new FormattableMarkup('Llamas are cool @i at Group @group', [
           '@group' => $this->groups[$group],
-          '@i' => $i
+          '@i' => $i,
         ]);
         $edit['body[0][value]'] = $edit['title[0][value]'];
         $edit['lingotek_translation_profile'] = 'manual';

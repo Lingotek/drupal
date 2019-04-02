@@ -2,9 +2,6 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
-use Drupal\entity\BundleFieldDefinition;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 

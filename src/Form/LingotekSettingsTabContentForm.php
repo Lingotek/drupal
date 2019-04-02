@@ -282,7 +282,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
             $field_checkbox = [
               '#type' => 'checkboxes',
               '#options' => $column_element['#options'],
-              '#default_value' => $properties_checkbox_choice ?: [] ,
+              '#default_value' => $properties_checkbox_choice ?: [],
               '#attributes' => ['class' => ['field-property-checkbox']],
             ];
             $field_checkboxes[$field_id . ':properties'] = $field_checkbox;

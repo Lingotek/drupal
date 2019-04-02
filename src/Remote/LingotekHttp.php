@@ -34,7 +34,7 @@ class LingotekHttp implements LingotekHttpInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static (
+    return new static(
       $container->get('http_client'),
       $container->get('config.factory')
     );

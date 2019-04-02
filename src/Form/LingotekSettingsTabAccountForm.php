@@ -42,7 +42,7 @@ class LingotekSettingsTabAccountForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static (
+    return new static(
       $container->get('lingotek'),
       $container->get('config.factory'),
       $container->get('lingotek.filter_manager')

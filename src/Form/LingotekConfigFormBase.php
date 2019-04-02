@@ -28,7 +28,7 @@ abstract class LingotekConfigFormBase extends ConfigFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static (
+    return new static(
       $container->get('lingotek'),
       $container->get('config.factory')
     );
