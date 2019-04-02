@@ -17,15 +17,32 @@ class DeleteAllTranslationsAction extends LingotekContentEntityActionBase {
   /**
    * {@inheritdoc}
    */
-  public function execute($entity = NULL) {
-    /** @var \Drupal\node\NodeInterface $entity */
-    foreach ($entity->getTranslationLanguages() as $language) {
-      if ($language->getId() !== $entity->getUntranslated()->language()->getId()) {
-        $entity->removeTranslation($language->getId());
+  public function executeMultiple(array $entities) {
+    $entityInfo = [];
+    $languages = \Drupal::languageManager()->getLanguages();
+
+    foreach ($entities as $entity) {
+      $source_language = $entity->getUntranslated()->language();
+      foreach ($languages as $langcode => $language) {
+        if ($source_language->getId() !== $langcode && $entity->hasTranslation($langcode)) {
+          /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
+          $entityInfo[$entity->id()][$langcode] = $langcode;
+        }
       }
     }
-    $entity->save();
-    return TRUE;
+    \Drupal::getContainer()->get('tempstore.private')
+      ->get('entity_delete_multiple_confirm')
+      ->set(\Drupal::currentUser()->id() . ':node', $entityInfo);
+    if (empty($entityInfo)) {
+      $this->messenger()->addWarning("No valid translations for deletion.");
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function execute($entity = NULL) {
+    $this->executeMultiple([$entity]);
   }
 
 }

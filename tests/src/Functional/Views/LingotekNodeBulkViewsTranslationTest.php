@@ -37,14 +37,12 @@ class LingotekNodeBulkViewsTranslationTest extends LingotekNodeBulkTranslationTe
     $this->markTestSkipped('This doesn\'t apply if we replace the management pages with views. Or if you do, it is your decision to add the content creation link.');
   }
 
-  protected function confirmBulkDeleteTranslation($nodeCount, $translationCount) {
-    // There is no need to confirm in views actions.
-    $this->assertText("Delete content item translation for Spanish was applied to $nodeCount item.");
-  }
-
-  protected function confirmBulkDeleteTranslations($nodeCount, $translationCount) {
-    // There is no need to confirm in views actions.
-    $this->assertText("Delete all content item translations was applied to $nodeCount item.");
+  /**
+   * {@inheritdoc}
+   */
+  protected function assertSelectionIsKept(string $key) {
+    // No valid selection, so permission denied message.
+    $this->assertText('You are not authorized to access this page.');
   }
 
 }

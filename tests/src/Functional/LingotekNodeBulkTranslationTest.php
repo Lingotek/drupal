@@ -1884,6 +1884,44 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   /**
    * Tests that translations can be deleted using the actions on the management page.
    */
+  public function testDeleteMissingTranslation() {
+    if ((float) \Drupal::VERSION < 8.6) {
+      $this->markTestSkipped("This test doesn't apply for this version of Drupal Core.");
+    }
+
+    // Create a node.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink();
+
+    $this->goToContentBulkManagementForm();
+
+    $key = $this->getBulkSelectionKey('en', 1);
+    $edit = [
+      $key => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForDeleteTranslation('es', 'node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $this->assertText('No valid translations for deletion.');
+    // Assert we kept selection.
+    $this->assertSelectionIsKept($key);
+
+    $this->goToContentBulkManagementForm();
+    $this->assertNoLingotekDownloadTargetLink('de_AT');
+  }
+
+  /**
+   * Tests that translations can be deleted using the actions on the management page.
+   */
   public function testDeleteTranslationsInBulk() {
     if ((float) \Drupal::VERSION < 8.6) {
       $this->markTestSkipped("This test doesn't apply for this version of Drupal Core.");
@@ -1891,7 +1929,14 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
 
     $this->testNodeTranslationUsingActionsForMultipleLocales();
 
+    // Add a language.
+    ConfigurableLanguage::createFromLangcode('ca')
+      ->setThirdPartySetting('lingotek', 'locale', 'ca_ES')
+      ->save();
+
     $this->goToContentBulkManagementForm();
+
+    $this->assertLingotekRequestTranslationLink('ca_ES');
 
     $key = $this->getBulkSelectionKey('en', 1);
     $edit = [
@@ -1913,6 +1958,17 @@ class LingotekNodeBulkTranslationTest extends LingotekTestBase {
   protected function confirmBulkDeleteTranslations($nodeCount, $translationCount) {
     $this->drupalPostForm(NULL, [], t('Delete'));
     $this->assertText("Deleted $translationCount content items.");
+  }
+
+  /**
+   * Assert the selected action and key are kept.
+   *
+   * @param string $key
+   *   The selection key.
+   */
+  protected function assertSelectionIsKept(string $key) {
+    $this->assertOptionSelected($this->getBulkOperationFormName(), $this->getBulkOperationNameForDeleteTranslation('es', 'node'));
+    $this->assertFieldChecked($key);
   }
 
 }

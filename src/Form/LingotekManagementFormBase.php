@@ -874,15 +874,22 @@ abstract class LingotekManagementFormBase extends FormBase {
     $entities = $this->getSelectedEntities($values);
     foreach ($entities as $entity) {
       $source_language = $entity->getUntranslated()->language();
-      if ($source_language->getId() !== $langcode) {
+      if ($source_language->getId() !== $langcode && $entity->hasTranslation($langcode)) {
         /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
         $entityInfo[$entity->id()][$langcode] = $langcode;
       }
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('entity_delete_multiple_confirm')
-      ->set($this->currentUser()->id() . ':node', $entityInfo);
-    $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+    if (!empty($entityInfo)) {
+      \Drupal::getContainer()->get('tempstore.private')
+        ->get('entity_delete_multiple_confirm')
+        ->set($this->currentUser()->id() . ':node', $entityInfo);
+      $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+    }
+    else {
+      drupal_set_message($this->t('No valid translations for deletion.'), 'warning');
+      // Ensure selection is persisted.
+      $form_state->setRebuild();
+    }
   }
 
   /**
@@ -902,16 +909,23 @@ abstract class LingotekManagementFormBase extends FormBase {
     foreach ($entities as $entity) {
       $source_language = $entity->getUntranslated()->language();
       foreach ($languages as $langcode => $language) {
-        if ($source_language->getId() !== $language->getId()) {
+        if ($source_language->getId() !== $langcode && $entity->hasTranslation($langcode)) {
           /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
           $entityInfo[$entity->id()][$langcode] = $langcode;
         }
       }
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('entity_delete_multiple_confirm')
-      ->set($this->currentUser()->id() . ':node', $entityInfo);
-    $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+    if (!empty($entityInfo)) {
+      \Drupal::getContainer()->get('tempstore.private')
+        ->get('entity_delete_multiple_confirm')
+        ->set($this->currentUser()->id() . ':node', $entityInfo);
+      $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
+    }
+    else {
+      drupal_set_message($this->t('No valid translations for deletion.'), 'warning');
+      // Ensure selection is persisted.
+      $form_state->setRebuild();
+    }
   }
 
   /**
