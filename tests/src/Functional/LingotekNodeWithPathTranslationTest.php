@@ -140,6 +140,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
+    $this->assertUrl('/es-ar/las-llamas-son-chulas');
   }
 
   /**
@@ -208,6 +209,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     $this->clickLink('Las llamas son chulas');
     $this->assertText('Las llamas son chulas');
     $this->assertText('Las llamas son muy chulas');
+    $this->assertUrl('/es-ar/node/1');
   }
 
   /**
@@ -283,6 +285,7 @@ class LingotekNodeWithPathTranslationTest extends LingotekTestBase {
     $this->assert($status, 'A watchdog message was logged for the invalid uri in a field');
     // Url will be the same as before.
     $this->assertUrl(\Drupal::request()->getUriForPath('/es-ar/llamas-are-cool'));
+    $this->assertUrl('/es-ar/llamas-are-cool');
   }
 
 }

@@ -3,6 +3,7 @@
 namespace Drupal\lingotek;
 
 use Drupal\Component\Utility\SortArray;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
@@ -1230,14 +1231,22 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
             }
             $alias = $field_data[0]['alias'];
             // Validate the alias before saving.
-            if (!\Drupal::pathValidator()->isValid($alias)) {
+            if (!UrlHelper::isValid($alias)) {
               \Drupal::logger('lingotek')->warning($this->t('Alias for %type %label in language %langcode not saved, invalid uri "%uri"',
                 ['%type' => $entity->getEntityTypeId(), '%label' => $entity->label(), '%langcode' => $langcode, '%uri' => $alias]));
               // Default to the original path.
               $alias = $original_path ? $original_path['alias'] : $source;
+              if (\Drupal::moduleHandler()->moduleExists('pathauto')) {
+                $alias = '';
+                $translation->get($name)->offsetGet(0)->set('alias', $alias);
+                $translation->get($name)->offsetGet(0)->set('pathauto', TRUE);
+              }
             }
             if ($alias !== NULL) {
-              \Drupal::service('path.alias_storage')->save($source, $alias, $langcode, $pid);
+              $translation->get($name)->offsetGet(0)->set('alias', $alias);
+              if (\Drupal::moduleHandler()->moduleExists('pathauto') && !empty($alias) && $alias !== $original_path) {
+                $translation->get($name)->offsetGet(0)->set('pathauto', FALSE);
+              }
             }
           }
           elseif ($field_type === 'metatag') {
