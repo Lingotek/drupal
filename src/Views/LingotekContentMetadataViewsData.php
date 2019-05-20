@@ -2,6 +2,7 @@
 
 namespace Drupal\lingotek\Views;
 
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
@@ -41,8 +42,8 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The lingotek configuration service.
    */
-  public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, LingotekConfigurationServiceInterface $lingotek_configuration) {
-    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager);
+  public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, LingotekConfigurationServiceInterface $lingotek_configuration, EntityFieldManagerInterface $entity_field_manager = NULL) {
+    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager, $entity_field_manager);
     $this->lingotekConfigService = $lingotek_configuration;
   }
 
@@ -56,7 +57,8 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
       $container->get('entity.manager'),
       $container->get('module_handler'),
       $container->get('string_translation'),
-      $container->get('lingotek.configuration')
+      $container->get('lingotek.configuration'),
+      $container->get('entity_field.manager')
     );
   }
 
