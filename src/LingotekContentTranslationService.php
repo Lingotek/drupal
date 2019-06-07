@@ -312,8 +312,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setTargetStatus(ContentEntityInterface &$entity, $langcode, $status, $save = TRUE) {
     $set = FALSE;
-    if ($entity->lingotek_metadata === NULL) {
-      $entity->lingotek_metadata = LingotekContentMetadata::create();
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
     }
     $metadata = &$entity->lingotek_metadata->entity;
     if ($metadata->hasField('translation_status') && count($metadata->translation_status) > 0) {
@@ -413,7 +413,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    */
   public function setDocumentId(ContentEntityInterface &$entity, $doc_id) {
     if ($entity->lingotek_metadata->entity === NULL) {
-      $entity->lingotek_metadata->entity = LingotekContentMetadata::create();
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
     }
     $entity->lingotek_processed = TRUE;
     $entity->lingotek_metadata->entity->setDocumentId($doc_id);
@@ -726,7 +726,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
-      $job_id = $this->getJobId($entity);
+      $job_id = $this->getJobId($entity) ?: NULL;
     }
     if ($document_id = $this->getDocumentId($entity)) {
       return $this->updateDocument($entity, $job_id);
@@ -855,7 +855,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     }
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
-      $job_id = $this->getJobId($entity);
+      $job_id = $this->getJobId($entity) ?: NULL;
     }
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
@@ -1349,8 +1349,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    * {@inheritdoc}
    */
   public function setJobId(ContentEntityInterface $entity, $job_id, $update_tms = FALSE) {
-    if ($entity->lingotek_metadata === NULL) {
-      $entity->lingotek_metadata = LingotekContentMetadata::create();
+    if (!$entity->lingotek_metadata->entity) {
+      $entity->lingotek_metadata->entity = LingotekContentMetadata::loadByTargetId($entity->getEntityTypeId(), $entity->id());
     }
     $metadata = &$entity->lingotek_metadata->entity;
 

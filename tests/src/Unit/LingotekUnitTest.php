@@ -643,9 +643,7 @@ class LingotekUnitTest extends UnitTestCase {
     $this->api->expects($this->at(6))
       ->method('patchDocument')
       ->with('my_doc_id', [
-        'format' => 'JSON',
         'job_id' => 'my_job_id',
-        'external_application_id' => 'e39e24c7-6c69-4126-946d-cf8fbff38ef0',
       ])
       ->will($this->returnValue($response));
 

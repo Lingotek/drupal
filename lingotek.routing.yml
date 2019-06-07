@@ -304,3 +304,35 @@ entity.lingotek_profile.delete_form:
     _title: 'Delete Profile'
   requirements:
     _permission: 'administer lingotek'
+
+lingotek.translation_jobs:
+  path: '/admin/lingotek/jobs'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekJobManagementController::listJobs'
+    _title: 'Translation Jobs'
+  requirements:
+    _permission: 'manage lingotek translations'
+
+lingotek.translation_job_info:
+  path: '/admin/lingotek/job/{job_id}'
+  defaults:
+    _controller: '\Drupal\lingotek\Controller\LingotekJobManagementController::indexJob'
+    _title_callback: '\Drupal\lingotek\Controller\LingotekJobManagementController::title'
+  requirements:
+    _permission: 'manage lingotek translations'
+
+lingotek.translation_job_info.content:
+  path: '/admin/lingotek/job/{job_id}/content'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekJobManagementContentEntitiesForm'
+    _title_callback: '\Drupal\lingotek\Controller\LingotekJobManagementController::titleContent'
+  requirements:
+    _permission: 'manage lingotek translations'
+
+lingotek.translation_job_info.config:
+  path: '/admin/lingotek/job/{job_id}/config'
+  defaults:
+    _form: '\Drupal\lingotek\Form\LingotekJobManagementConfigForm'
+    _title_callback: '\Drupal\lingotek\Controller\LingotekJobManagementController::titleConfig'
+  requirements:
+    _permission: 'manage lingotek translations,translate configuration'

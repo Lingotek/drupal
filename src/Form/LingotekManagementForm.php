@@ -394,7 +394,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       ];
     }
     $filters['job'] = [
-      '#type' => 'textfield',
+      '#type' => 'lingotek_job_id',
       '#title' => $this->t('Job ID'),
       '#default_value' => $jobFilter,
       '#attributes' => ['class' => ['form-item']],

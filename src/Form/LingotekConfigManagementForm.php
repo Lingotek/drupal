@@ -138,7 +138,7 @@ class LingotekConfigManagementForm extends FormBase {
     $showingFields = FALSE;
 
     $this->filter = $this->getFilter();
-    $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
+    $temp_store = $this->getFilterTempStore();
     $jobFilter = $temp_store->get('job');
 
     // Create the headers first so they can be used for sorting.
@@ -306,7 +306,7 @@ class LingotekConfigManagementForm extends FormBase {
       ];
     }
     $form['filters']['wrapper']['job'] = [
-      '#type' => 'textfield',
+      '#type' => 'lingotek_job_id',
       '#title' => $this->t('Job ID'),
       '#default_value' => $jobFilter,
       '#attributes' => ['class' => ['form-item']],
@@ -345,8 +345,7 @@ class LingotekConfigManagementForm extends FormBase {
       '#value' => $this->t('Execute'),
     ];
     $form['options']['job_id'] = [
-      '#type' => 'textfield',
-      '#size' => 50,
+      '#type' => 'lingotek_job_id',
       '#title' => $this->t('Job ID'),
       '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
     ];
@@ -372,7 +371,7 @@ class LingotekConfigManagementForm extends FormBase {
    */
   protected function getFilter() {
     /** @var \Drupal\user\PrivateTempStore $temp_store */
-    $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
+    $temp_store = $this->getFilterTempStore();
     $value = $temp_store->get('bundle');
     if (!$value) {
       $value = 'config';
@@ -394,7 +393,7 @@ class LingotekConfigManagementForm extends FormBase {
     $label = $form_state->getValue(['filters', 'wrapper', 'label']) ?: NULL;
 
     /** @var \Drupal\user\PrivateTempStore $temp_store */
-    $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
+    $temp_store = $this->getFilterTempStore();
     $temp_store->set('bundle', $value);
     $temp_store->set('job', $job_id);
     $temp_store->set('label', $label);
@@ -413,7 +412,7 @@ class LingotekConfigManagementForm extends FormBase {
    */
   public function resetFilterForm(array &$form, FormStateInterface $form_state) {
     /** @var \Drupal\user\PrivateTempStore $temp_store */
-    $temp_store = $this->tempStoreFactory->get('lingotek.config_management.filter');
+    $temp_store = $this->getFilterTempStore();
     $temp_store->delete('bundle');
     $temp_store->delete('job');
     $temp_store->delete('label');
@@ -1665,6 +1664,10 @@ class LingotekConfigManagementForm extends FormBase {
 
   protected function getDestinationWithQueryArray() {
     return ['destination' => \Drupal::request()->getRequestUri()];
+  }
+
+  protected function getFilterTempStore() {
+    return $this->tempStoreFactory->get('lingotek.config_management.filter');
   }
 
 }

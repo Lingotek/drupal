@@ -239,9 +239,11 @@ class Lingotek implements LingotekInterface {
    */
   public function updateDocument($doc_id, $content, $url = NULL, $title = NULL, LingotekProfileInterface $profile = NULL, $job_id = NULL) {
     if (!is_array($content)) {
-      $data = json_decode($content, TRUE);
-      // This is the quickest way if $content is not a valid json object.
-      $content = ($data === NULL) ? $content : $data;
+      if ($content !== NULL) {
+        $data = json_decode($content, TRUE);
+        // This is the quickest way if $content is not a valid json object.
+        $content = ($data === NULL) ? $content : $data;
+      }
     }
 
     $defaults = [
@@ -263,14 +265,16 @@ class Lingotek implements LingotekInterface {
     if ($job_id !== NULL) {
       $args['job_id'] = $job_id;
     }
-    if ($content !== NULL) {
+    if ($content !== NULL && !empty($content)) {
       $args = array_merge(['content' => json_encode($content)], $args);
     }
     else {
       // IF there's no content, let's remove filters, we may want to update only
       // the Job ID.
+      unset($args['format']);
       unset($args['fprm_id']);
       unset($args['fprm_subfilter_id']);
+      unset($args['external_application_id']);
     }
 
     $response = $this->api->patchDocument($doc_id, $args);

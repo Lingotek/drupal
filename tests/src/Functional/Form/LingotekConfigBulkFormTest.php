@@ -332,6 +332,46 @@ class LingotekConfigBulkFormTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that we cannot assign job ids with invalid chars.
+   */
+  public function testAssignInvalidJobIdsWithTMSUpdate() {
+    $this->goToConfigBulkManagementForm('node_type');
+
+    // I can init the upload of content.
+    $basepath = \Drupal::request()->getBasePath();
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/article?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->assertLinkByHref($basepath . '/admin/lingotek/config/upload/node_type/page?destination=' . $basepath . '/admin/lingotek/config/manage');
+    $this->clickLink('EN');
+
+    $edit = [
+      'table[article]' => TRUE,
+      'table[page]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node_type'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $edit = [
+      'job_id' => 'my\invalid\id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('The job ID name cannot contain invalid chars as "/" or "\".');
+
+    // There is no update, because it's not valid.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    $edit = [
+      'job_id' => 'my/invalid/id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('The job ID name cannot contain invalid chars as "/" or "\".');
+
+    // There is no update, because it's not valid.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+  }
+
+  /**
    * Tests that can we cancel assignation of job ids with the bulk operation.
    */
   public function testCancelAssignJobIds() {

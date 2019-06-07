@@ -44,3 +44,14 @@ lingotek.manage:
   css:
     theme:
       css/lingotek.management.css: {}
+
+lingotek.job:
+  version: VERSION
+  js:
+    'js/lingotek.job.js': {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.form

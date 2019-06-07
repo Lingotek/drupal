@@ -136,8 +136,7 @@ class LingotekJobAssignToMultipleConfigForm extends FormBase {
     }, $mappers);
 
     $form['job_id'] = [
-      '#type' => 'textfield',
-      '#size' => 50,
+      '#type' => 'lingotek_job_id',
       '#title' => $this->t('Job ID'),
       '#description' => $this->t('Assign a job id that you can filter on later on the TMS or in this page.'),
     ];

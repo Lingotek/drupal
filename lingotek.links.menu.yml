@@ -26,6 +26,13 @@ lingotek.manage_config:
   parent: 'lingotek.dashboard'
   weight: 12
 
+lingotek.translation_jobs:
+  route_name: 'lingotek.translation_jobs'
+  title: 'Translation Jobs'
+  description: 'Manage translations Jobs'
+  parent: 'lingotek.dashboard'
+  weight: 13
+
 lingotek.config.dashboard:
   route_name: 'lingotek.dashboard'
   title: 'Lingotek Translation'

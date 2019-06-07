@@ -1014,6 +1014,59 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
+   * Tests that we cannot assign job ids with invalid chars.
+   */
+  public function testAssignInvalidJobIdsWithTMSUpdate() {
+    // Create a couple of nodes.
+    $edit = [];
+    $edit['title[0][value]'] = 'Llamas are cool';
+    $edit['body[0][value]'] = 'Llamas are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $edit['title[0][value]'] = 'Dogs are cool';
+    $edit['body[0][value]'] = 'Dogs are very cool';
+    $edit['langcode[0][value]'] = 'en';
+    $edit['lingotek_translation_profile'] = 'manual';
+    $this->saveAndPublishNodeForm($edit);
+
+    $this->goToContentBulkManagementForm();
+
+    // I can init the upload of content.
+    $this->assertLingotekUploadLink(1, 'node');
+    $this->assertLingotekUploadLink(2, 'node');
+    $this->clickLink('EN');
+
+    $edit = [
+      'table[1]' => TRUE,
+      'table[2]' => TRUE,
+      $this->getBulkOperationFormName() => $this->getBulkOperationNameForAssignJobId('node'),
+    ];
+    $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
+
+    $edit = [
+      'job_id' => 'my\invalid\id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('The job ID name cannot contain invalid chars as "/" or "\".');
+
+    // There is no update, because it's not valid.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+
+    $edit = [
+      'job_id' => 'my/invalid/id',
+      'update_tms' => 1,
+    ];
+    $this->drupalPostForm(NULL, $edit, 'Assign Job ID');
+    $this->assertText('The job ID name cannot contain invalid chars as "/" or "\".');
+
+    // There is no update, because it's not valid.
+    $this->assertNull(\Drupal::state()->get('lingotek.uploaded_job_id'));
+  }
+
+  /**
    * Tests that can we cancel assignation of job ids with the bulk operation.
    */
   public function testCancelAssignJobIds() {

@@ -147,6 +147,16 @@ class LingotekContentMetadata extends ContentEntityBase {
   }
 
   /**
+   * Gets the Lingotek document id.
+   *
+   * @return string
+   *   The Lingotek document ID.
+   */
+  public function getDocumentId() {
+    return $this->document_id->value;
+  }
+
+  /**
    * Sets the Lingotek document id.
    *
    * @param string $document_id

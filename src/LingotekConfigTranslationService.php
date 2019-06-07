@@ -360,7 +360,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
-      $job_id = $this->getJobId($entity);
+      $job_id = $this->getJobId($entity) ?: NULL;
     }
     if (!empty($this->getDocumentId($entity))) {
       return $this->updateDocument($entity, $job_id);
@@ -433,7 +433,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     }
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
-      $job_id = $this->getJobId($entity);
+      $job_id = $this->getJobId($entity) ?: NULL;
     }
     $source_data = $this->getSourceData($entity);
     $document_id = $this->getDocumentId($entity);
@@ -917,7 +917,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
-      $job_id = $this->getConfigJobId($mapper);
+      $job_id = $this->getConfigJobId($mapper) ?: NULL;
     }
     if (!empty($this->getConfigDocumentId($mapper))) {
       return $this->updateConfig($mapper_id);
@@ -1257,7 +1257,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
     $mapper = $this->mappers[$mapper_id];
     // If job id was not set in the form, it may be already assigned.
     if ($job_id === NULL) {
-      $job_id = $this->getConfigJobId($mapper);
+      $job_id = $this->getConfigJobId($mapper) ?: NULL;
     }
     $source_data = json_encode($this->getConfigSourceData($mapper));
     $document_id = $this->getConfigDocumentId($mapper);
