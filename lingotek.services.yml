@@ -122,6 +122,12 @@ services:
     tags:
       - { name: lingotek_moderation_handler, priority: 20 }
 
+  lingotek.translation_job_breadcrumb_builder:
+    class: Drupal\lingotek\Breadcrumb\TranslationJobBreadcrumbBuilder
+    arguments: ['@request_stack', '@current_user', '@title_resolver', '@access_manager']
+    tags:
+      - { name: breadcrumb_builder, priority: 100 }
+
   lingotek.cli_service:
     class: Drupal\lingotek\Cli\LingotekCliService
     arguments: ['@entity_type.manager', '@lingotek.content_translation', '@lingotek.language_locale_mapper']
