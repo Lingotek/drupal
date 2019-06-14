@@ -1360,6 +1360,42 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   /**
    * Tests if entity id filter works
    */
+  public function testEntityIdFilterMultiple() {
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i < 15; $i++) {
+      $edit = [];
+      $edit['title[0][value]'] = 'Llamas are cool ' . $i;
+      $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'manual';
+      $this->saveAndPublishNodeForm($edit);
+      $nodes[$i] = $edit;
+    }
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    $edit = [
+      'filters[advanced_options][entity_id]' => '1,2,4',
+    ];
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    // The filtered id is shown, but not others.
+    $this->assertLink('Llamas are cool 1');
+    $this->assertLink('Llamas are cool 2');
+    $this->assertLink('Llamas are cool 4');
+    $this->assertNoLink('Llamas are cool 3');
+
+    // The value is retained in the filter.
+    $this->assertFieldByName('filters[advanced_options][entity_id]', '1,2,4', 'The value is retained in the filter.');
+    $this->assertNoLinkByHref('?page=1');
+  }
+
+  /**
+   * Tests if entity id filter works
+   */
   public function testEntityIdFilter() {
     $nodes = [];
     // Create a node.

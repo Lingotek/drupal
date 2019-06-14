@@ -242,18 +242,24 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       }
     }
     if ($entityIdFilter) {
+      $entityIdArray = explode(',', $entityIdFilter);
+
       $query->innerJoin($entity_type->getDataTable(), 'entity_data',
       'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
-      $query->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+
+      $entityIdOperator = (count($entityIdArray) > 1) ? 'IN' : '=';
+      $entityIdValue = (count($entityIdArray) > 1) ? $entityIdArray : $entityIdFilter;
+
+      $query->condition('entity_table.' . $entity_type->getKey('id'), $entityIdValue, $entityIdOperator);
       if ($union !== NULL) {
         $union->innerJoin($entity_type->getDataTable(), 'entity_data',
           'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
-        $union->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+        $union->condition('entity_table.' . $entity_type->getKey('id'), $entityIdValue, $entityIdOperator);
       }
       if ($union2 !== NULL) {
         $union2->innerJoin($entity_type->getDataTable(), 'entity_data',
           'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
-        $union2->condition('entity_table.' . $entity_type->getKey('id'), $entityIdFilter);
+        $union2->condition('entity_table.' . $entity_type->getKey('id'), $entityIdValue, $entityIdOperator);
       }
     }
     if ($profileFilter) {
