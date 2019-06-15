@@ -226,29 +226,38 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     }
     // Advanced queries
     if ($documentIdFilter) {
+      $documentIdArray = explode(',', $documentIdFilter);
+      array_walk($documentIdArray, function (&$value) {
+        $value = trim($value);
+      });
+      $documentIdOperator = (count($documentIdArray) > 1) ? 'IN' : 'LIKE';
+      $documentIdValue = (count($documentIdArray) > 1) ? $documentIdArray : '%' . $documentIdFilter . '%';
+
       $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
-      $query->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+      $query->condition('metadata.document_id', $documentIdValue, $documentIdOperator);
       if ($union !== NULL) {
         $union->innerJoin($metadata_type->getBaseTable(), 'metadata',
           'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
-        $union->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+        $union->condition('metadata.document_id', $documentIdValue, $documentIdOperator);
       }
       if ($union2 !== NULL) {
         $union2->innerJoin($metadata_type->getBaseTable(), 'metadata',
           'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
-        $union2->condition('metadata.document_id', '%' . $documentIdFilter . '%', 'LIKE');
+        $union2->condition('metadata.document_id', $documentIdValue, $documentIdOperator);
       }
     }
     if ($entityIdFilter) {
       $entityIdArray = explode(',', $entityIdFilter);
+      array_walk($entityIdArray, function (&$value) {
+        $value = trim($value);
+      });
+      $entityIdOperator = (count($entityIdArray) > 1) ? 'IN' : '=';
+      $entityIdValue = (count($entityIdArray) > 1) ? $entityIdArray : $entityIdFilter;
 
       $query->innerJoin($entity_type->getDataTable(), 'entity_data',
       'entity_table.' . $entity_type->getKey('id') . '= entity_data.' . $entity_type->getKey('id'));
-
-      $entityIdOperator = (count($entityIdArray) > 1) ? 'IN' : '=';
-      $entityIdValue = (count($entityIdArray) > 1) ? $entityIdArray : $entityIdFilter;
 
       $query->condition('entity_table.' . $entity_type->getKey('id'), $entityIdValue, $entityIdOperator);
       if ($union !== NULL) {

@@ -1358,7 +1358,48 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
   }
 
   /**
-   * Tests if entity id filter works
+   * Test if doc id filter works with multiple values.
+   */
+  public function testDocIdFilterMultiple() {
+
+    $nodes = [];
+    // Create a node.
+    for ($i = 1; $i < 15; $i++) {
+      $edit = [];
+      $edit['title[0][value]'] = 'Llamas are cool ' . $i;
+      $edit['body[0][value]'] = 'Llamas are very cool ' . $i;
+      $edit['langcode[0][value]'] = 'en';
+      $edit['lingotek_translation_profile'] = 'automatic';
+      $this->saveAndPublishNodeForm($edit);
+      $nodes[$i] = $edit;
+    }
+
+    $this->goToContentBulkManagementForm();
+
+    // Assert there is a pager.
+    $this->assertLinkByHref('?page=1');
+
+    // After we filter by an existing document_id, there are filtered rows.
+    $edit = [
+      'filters[advanced_options][document_id]' => 'dummy-document-hash-id-2, dummy-document-hash-id-3',
+    ];
+
+    $this->drupalPostForm(NULL, $edit, 'edit-filters-actions-submit');
+
+    // Our fake doc ids are dummy-document-hash-id-X. We know we will find
+    // dummy-document-hash-id-2 and dummy-document-hash-id-3.
+    $this->assertLink('Llamas are cool 3');
+    $this->assertLink('Llamas are cool 4');
+    $this->assertNoLink('Llamas are cool 1');
+
+    $this->assertFieldByName('filters[advanced_options][document_id]', 'dummy-document-hash-id-2, dummy-document-hash-id-3', 'The value is retained in the filter.');
+
+    // Assert there is no pager.
+    $this->assertNoLinkByHref('?page=1');
+  }
+
+  /**
+   * Tests if entity id filter works with multiple values.
    */
   public function testEntityIdFilterMultiple() {
     $nodes = [];

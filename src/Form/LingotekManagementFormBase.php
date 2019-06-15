@@ -211,11 +211,13 @@ abstract class LingotekManagementFormBase extends FormBase {
         '#type' => 'textfield',
         '#size' => 35,
         '#title' => $this->t('Document ID'),
+        '#description' => $this->t('You can indicate multiple comma-separated values.'),
         '#default_value' => $documentIdFilter,
        ];
       $form['filters']['advanced_options']['entity_id'] = [
         '#type' => 'textfield',
         '#title' => $this->t('Entity ID'),
+        '#description' => $this->t('You can indicate multiple comma-separated values.'),
         '#size' => 35,
         '#default_value' => $entityIdFilter,
       ];
