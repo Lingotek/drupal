@@ -66,6 +66,10 @@ class LingotekActionsManagementSubscriber implements EventSubscriberInterface {
    *   The configuration event.
    */
   public function onConfigSave(ConfigCrudEvent $event) {
+    if (\Drupal::isConfigSyncing()) {
+      return;
+    }
+
     $actions = [
       'entity:lingotek_upload_action',
       'entity:lingotek_check_upload_action',
