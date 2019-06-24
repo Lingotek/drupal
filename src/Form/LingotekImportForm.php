@@ -8,7 +8,7 @@ use Drupal\node\Entity\Node;
 
 /**
  * @file
- * Contains \Drupal\Lingotek\Form\LingotekManagementForm.
+ * Contains \Drupal\lingotek\Form\LingotekManagementForm.
  */
 
 class LingotekImportForm extends LingotekConfigFormBase {

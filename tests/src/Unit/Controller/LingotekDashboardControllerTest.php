@@ -86,7 +86,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
   /**
    * The controller under test.
    *
-   * @var \Drupal\Lingotek\Controller\LingotekDashboardController
+   * @var \Drupal\lingotek\Controller\LingotekDashboardController
    */
   protected $controller;
 

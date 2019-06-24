@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Lingotek\Plugin\QueueWorker;
+namespace Drupal\lingotek\Plugin\QueueWorker;
 
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\lingotek\Lingotek;
