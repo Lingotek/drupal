@@ -13,9 +13,8 @@ class LingotekSettingsDefaultsForm extends LingotekConfigFormBase {
   protected $resources;
 
   public function init() {
-    $this->defaults = $this->lingotek->getDefaults();
+    $this->defaults = $this->lingotek->getEditable('default');
     $this->resources = $this->lingotek->getResources();
-    $config = $this->configFactory()->getEditable('lingotek.settings');
 
     // Make visible only those options that have more than one choice
     if (count($this->resources['project']) > 1) {

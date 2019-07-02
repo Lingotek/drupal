@@ -19,7 +19,11 @@ class Lingotek implements LingotekInterface {
 
   protected static $instance;
   protected $api;
-  protected $config;
+
+  /**
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * The language-locale mapper.
@@ -57,6 +61,8 @@ class Lingotek implements LingotekInterface {
   const PROFILE_MANUAL = 'manual';
   const PROFILE_DISABLED = 'disabled';
 
+  const SETTINGS = 'lingotek.settings';
+
   /**
    * Constructs a Lingotek object.
    *
@@ -64,15 +70,15 @@ class Lingotek implements LingotekInterface {
    *   The Lingotek configuration service.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
    *   The language-locale mapper.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
    * @param LingotekFilterManagerInterface $lingotek_filter_manager
    *   The Lingotek Filter manager.
    */
-  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config, LingotekFilterManagerInterface $lingotek_filter_manager) {
+  public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config_factory, LingotekFilterManagerInterface $lingotek_filter_manager) {
     $this->api = $api;
     $this->languageLocaleMapper = $language_locale_mapper;
-    $this->config = $config->getEditable('lingotek.settings');
+    $this->configFactory = $config_factory;
     $this->lingotekFilterManager = $lingotek_filter_manager;
   }
 
@@ -168,14 +174,18 @@ class Lingotek implements LingotekInterface {
    * @deprecated
    */
   public function get($key) {
-    return $this->config->get($key);
+    return $this->configFactory->get(static::SETTINGS)->get($key);
+  }
+
+  public function getEditable($key) {
+    return $this->configFactory->getEditable(static::SETTINGS)->get($key);
   }
 
   /**
    * @deprecated
    */
   public function set($key, $value) {
-    $this->config->set($key, $value)->save();
+    $this->configFactory->getEditable(static::SETTINGS)->set($key, $value)->save();
   }
 
   /**
@@ -466,7 +476,7 @@ class Lingotek implements LingotekInterface {
   public function downloadDocument($doc_id, $locale) {
     // For now, a passthrough to the API object so the controllers do not
     // need to include that class.
-    $response = $this->api->getTranslation($doc_id, $locale, $this->config->get('preference.enable_download_source'));
+    $response = $this->api->getTranslation($doc_id, $locale, $this->configFactory->get(static::SETTINGS)->get('preference.enable_download_source'));
     if ($response->getStatusCode() == Response::HTTP_OK) {
       return json_decode($response->getBody(), TRUE);
     }

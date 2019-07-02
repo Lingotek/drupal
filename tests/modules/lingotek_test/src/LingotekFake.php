@@ -12,13 +12,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LingotekFake implements LingotekInterface {
 
+  const SETTINGS = 'lingotek.settings';
+
   protected $api;
   protected $config;
 
   public function __construct(LingotekApiInterface $api, LanguageLocaleMapperInterface $language_locale_mapper, ConfigFactoryInterface $config) {
     $this->api = $api;
     $this->languageLocaleMapper = $language_locale_mapper;
-    $this->config = $config->getEditable('lingotek.settings');
+    $this->config = $config;
   }
 
   public static function create(ContainerInterface $container) {
@@ -60,18 +62,20 @@ class LingotekFake implements LingotekInterface {
         return '/lingofake/authorize';
       case 'account.default_client_id':
         return 'test_default_client_id';
+      case 'default':
+        return $this->getDefaults();
       case 'default.community':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_community';
+        return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_community';
       case 'default.project':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_project';
+        return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_project';
       case 'default.vault':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_vault';
+        return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_vault';
       case 'default.filter':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'drupal_default';
+        return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'drupal_default';
       case 'default.subfilter':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'drupal_default';
+        return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'drupal_default';
       case 'default.workflow':
-        return \Drupal::config('lingotek.settings')->get($key) ? \Drupal::config('lingotek.settings')->get($key) : 'test_workflow';
+        return $this->config->get($this::SETTINGS)->get($key) ? $this->config->get($this::SETTINGS)->get($key) : 'test_workflow';
       case 'profile':
         return [
             [
@@ -84,8 +88,15 @@ class LingotekFake implements LingotekInterface {
     }
   }
 
+  public function getEditable($key) {
+    if (in_array($key, ['default.community', 'default.project', 'default.value', 'default.workflow']) && ($output = $this->config->getEditable($this::SETTINGS)->get($key))) {
+      return $output;
+    }
+    return $this->get($key);
+  }
+
   public function set($key, $value) {
-    \Drupal::configFactory()->getEditable('lingotek.settings')->set($key, $value)->save();
+    $this->config->getEditable($this::SETTINGS)->set($key, $value)->save();
   }
 
   public function getAccountInfo() {

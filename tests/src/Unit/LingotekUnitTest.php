@@ -15,26 +15,36 @@ use Symfony\Component\HttpFoundation\Response;
 class LingotekUnitTest extends UnitTestCase {
 
   /**
-   * @var \Drupal\lingotek\Lingotek
+   * @var \Drupal\lingotek\Lingotek|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $lingotek;
 
   /**
    * The language-locale mapper.
    *
-   * @var \Drupal\lingotek\LanguageLocaleMapperInterface
+   * @var \Drupal\lingotek\LanguageLocaleMapperInterface|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $languageLocaleMapper;
 
   /**
-   * @var \Drupal\lingotek\Remote\LingotekHttpInterface
+   * @var \Drupal\lingotek\Remote\LingotekHttpInterface|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $api;
 
   /**
-   * @var \Drupal\Core\Config\Config
+   * @var \Drupal\Core\Config\Config|\PHPUnit_Framework_MockObject_MockObject
    */
   protected $config;
+
+  /**
+   * @var \Drupal\Core\Config\Config|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $configEditable;
+
+  /**
+   * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $configFactory;
 
   /**
    * The Lingotek Filter manager.
@@ -52,14 +62,22 @@ class LingotekUnitTest extends UnitTestCase {
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
       ->disableOriginalConstructor()
       ->getMock();
+    $this->configEditable = $this->getMockBuilder('\Drupal\Core\Config\Config')
+      ->disableOriginalConstructor()
+      ->getMock();
+
     $this->lingotekFilterManager = $this->getMock('\Drupal\lingotek\LingotekFilterManagerInterface');
-    $config_factory = $this->getMock('\Drupal\Core\Config\ConfigFactoryInterface');
-    $config_factory->expects($this->once())
-      ->method('getEditable')
+    $this->configFactory = $this->createMock('\Drupal\Core\Config\ConfigFactoryInterface');
+    $this->configFactory->expects($this->any())
+      ->method('get')
       ->with('lingotek.settings')
       ->will($this->returnValue($this->config));
+    $this->configFactory->expects($this->any())
+      ->method('getEditable')
+      ->with('lingotek.settings')
+      ->will($this->returnValue($this->configEditable));
 
-    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $config_factory, $this->lingotekFilterManager);
+    $this->lingotek = new Lingotek($this->api, $this->languageLocaleMapper, $this->configFactory, $this->lingotekFilterManager);
   }
 
   /**
@@ -73,7 +91,9 @@ class LingotekUnitTest extends UnitTestCase {
       ->will($this->returnValue(['a_vault' => 'A vault']));
     $this->api->expects($this->never())
       ->method('getVaults');
-    $this->lingotek->getVaults(FALSE);
+
+    $vaults = $this->lingotek->getVaults(FALSE);
+    $this->assertArrayEquals($vaults, ['a_vault' => 'A vault']);
   }
 
   /**
@@ -90,34 +110,35 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
+    $this->config->expects($this->at(2))
+      ->method('get')
+      ->with('default.vault')
+      ->will($this->returnValue(NULL));
+
     // Ensure the call will be made.
     $this->api->expects($this->once())
       ->method('getVaults')
       ->will($this->returnValue(['a_vault' => 'A vault']));
 
     // And the results will be stored.
-    $this->config->expects($this->at(2))
+    $this->configEditable->expects($this->at(0))
       ->method('set')
       ->with('account.resources.vault', ['a_vault' => 'A vault'])
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(3))
+    $this->configEditable->expects($this->at(1))
       ->method('save');
 
-    $this->config->expects($this->at(4))
-      ->method('get')
-      ->with('default.vault')
-      ->will($this->returnValue(NULL));
-
-    $this->config->expects($this->at(5))
+    $this->configEditable->expects($this->at(2))
       ->method('set')
       ->with('default.vault', 'a_vault')
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(6))
+    $this->configEditable->expects($this->at(3))
       ->method('save');
 
-    $this->lingotek->getVaults(FALSE);
+    $vaults = $this->lingotek->getVaults(FALSE);
+    $this->assertArrayEquals($vaults, ['a_vault' => 'A vault']);
   }
 
   /**
@@ -135,34 +156,35 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
+    $this->config->expects($this->at(2))
+      ->method('get')
+      ->with('default.vault')
+      ->will($this->returnValue(NULL));
+
     // Ensure the call will be made.
     $this->api->expects($this->once())
       ->method('getVaults')
       ->will($this->returnValue(['a_vault' => 'A vault']));
 
     // And the results will be stored.
-    $this->config->expects($this->at(2))
+    $this->configEditable->expects($this->at(0))
       ->method('set')
       ->with('account.resources.vault', ['a_vault' => 'A vault'])
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(3))
+    $this->configEditable->expects($this->at(1))
       ->method('save');
 
-    $this->config->expects($this->at(4))
-      ->method('get')
-      ->with('default.vault')
-      ->will($this->returnValue(NULL));
-
-    $this->config->expects($this->at(5))
+    $this->configEditable->expects($this->at(2))
       ->method('set')
       ->with('default.vault', 'a_vault')
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(6))
+    $this->configEditable->expects($this->at(3))
       ->method('save');
 
-    $this->lingotek->getVaults(TRUE);
+    $vaults = $this->lingotek->getVaults(TRUE);
+    $this->assertArrayEquals($vaults, ['a_vault' => 'A vault']);
   }
 
   /**
@@ -183,7 +205,7 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::getFilters
    */
   public function testGetFiltersWithNoData() {
-    // A call is performed when getting vaults and there are none locally.
+    // A call is performed when getting filters and there are none locally.
     $this->config->expects($this->at(0))
       ->method('get')
       ->with('account.resources.filter')
@@ -193,41 +215,42 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
+    $this->config->expects($this->at(2))
+      ->method('get')
+      ->with('default.filter')
+      ->will($this->returnValue(NULL));
+
     // Ensure the call will be made.
     $this->api->expects($this->once())
       ->method('getFilters')
       ->will($this->returnValue(['a_filter' => 'A filter']));
 
     // And the results will be stored.
-    $this->config->expects($this->at(2))
+    $this->configEditable->expects($this->at(0))
       ->method('set')
       ->with('account.resources.filter', ['a_filter' => 'A filter'])
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(3))
+    $this->configEditable->expects($this->at(1))
       ->method('save');
 
-    $this->config->expects($this->at(4))
-      ->method('get')
-      ->with('default.filter')
-      ->will($this->returnValue(NULL));
-
-    $this->config->expects($this->at(5))
+    $this->configEditable->expects($this->at(2))
       ->method('set')
       ->with('default.filter', 'a_filter')
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(6))
+    $this->configEditable->expects($this->at(3))
       ->method('save');
 
-    $this->lingotek->getFilters(FALSE);
+    $filters = $this->lingotek->getFilters(FALSE);
+    $this->assertArrayEquals($filters, ['a_filter' => 'A filter']);
   }
 
   /**
    * @covers ::getFilters
    */
   public function testGetFiltersWithDataButForcing() {
-    // A call is performed when forced even if there are vaults locally.
+    // A call is performed when forced even if there are filters locally.
     $this->config->expects($this->at(0))
       ->method('get')
       ->with('account.resources.filter')
@@ -238,34 +261,35 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
+    $this->config->expects($this->at(2))
+      ->method('get')
+      ->with('default.filter')
+      ->will($this->returnValue(NULL));
+
     // Ensure the call will be made.
     $this->api->expects($this->once())
       ->method('getFilters')
       ->will($this->returnValue(['a_filter' => 'A filter']));
 
     // And the results will be stored.
-    $this->config->expects($this->at(2))
+    $this->configEditable->expects($this->at(0))
       ->method('set')
       ->with('account.resources.filter', ['a_filter' => 'A filter'])
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(3))
+    $this->configEditable->expects($this->at(1))
       ->method('save');
 
-    $this->config->expects($this->at(4))
-      ->method('get')
-      ->with('default.filter')
-      ->will($this->returnValue(NULL));
-
-    $this->config->expects($this->at(5))
+    $this->configEditable->expects($this->at(2))
       ->method('set')
       ->with('default.filter', 'a_filter')
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(6))
+    $this->configEditable->expects($this->at(3))
       ->method('save');
 
-    $this->lingotek->getFilters(TRUE);
+    $filters = $this->lingotek->getFilters(TRUE);
+    $this->assertArrayEquals($filters, ['a_filter' => 'A filter']);
   }
 
   /**
@@ -279,7 +303,8 @@ class LingotekUnitTest extends UnitTestCase {
       ->will($this->returnValue(['a_project' => 'A project']));
     $this->api->expects($this->never())
       ->method('getProjects');
-    $this->lingotek->getProjects(FALSE);
+    $projects = $this->lingotek->getProjects(FALSE);
+    $this->assertArrayEquals($projects, ['a_project' => 'A project']);
   }
 
   /**
@@ -296,34 +321,35 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
+    $this->config->expects($this->at(2))
+      ->method('get')
+      ->with('default.project')
+      ->will($this->returnValue(NULL));
+
     // Ensure the call will be made.
     $this->api->expects($this->once())
       ->method('getProjects')
       ->will($this->returnValue(['a_project' => 'A project']));
 
     // And the results will be stored.
-    $this->config->expects($this->at(2))
+    $this->configEditable->expects($this->at(0))
       ->method('set')
       ->with('account.resources.project', ['a_project' => 'A project'])
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(3))
+    $this->configEditable->expects($this->at(1))
       ->method('save');
 
-    $this->config->expects($this->at(4))
-      ->method('get')
-      ->with('default.project')
-      ->will($this->returnValue(NULL));
-
-    $this->config->expects($this->at(5))
+    $this->configEditable->expects($this->at(2))
       ->method('set')
       ->with('default.project', 'a_project')
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(6))
+    $this->configEditable->expects($this->at(3))
       ->method('save');
 
-    $this->lingotek->getProjects(FALSE);
+    $projects = $this->lingotek->getProjects(FALSE);
+    $this->assertArrayEquals($projects, ['a_project' => 'A project']);
   }
 
   /**
@@ -341,34 +367,35 @@ class LingotekUnitTest extends UnitTestCase {
       ->with('default.community')
       ->will($this->returnValue(['my_community']));
 
+    $this->config->expects($this->at(2))
+      ->method('get')
+      ->with('default.project')
+      ->will($this->returnValue(NULL));
+
     // Ensure the call will be made.
     $this->api->expects($this->once())
       ->method('getProjects')
       ->will($this->returnValue(['a_project' => 'A project']));
 
     // And the results will be stored.
-    $this->config->expects($this->at(2))
+    $this->configEditable->expects($this->at(0))
       ->method('set')
       ->with('account.resources.project', ['a_project' => 'A project'])
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(3))
+    $this->configEditable->expects($this->at(1))
       ->method('save');
 
-    $this->config->expects($this->at(4))
-      ->method('get')
-      ->with('default.project')
-      ->will($this->returnValue(NULL));
-
-    $this->config->expects($this->at(5))
+    $this->configEditable->expects($this->at(2))
       ->method('set')
       ->with('default.project', 'a_project')
       ->will($this->returnSelf());
 
-    $this->config->expects($this->at(6))
+    $this->configEditable->expects($this->at(3))
       ->method('save');
 
-    $this->lingotek->getProjects(TRUE);
+    $projects = $this->lingotek->getProjects(TRUE);
+    $this->assertArrayEquals($projects, ['a_project' => 'A project']);
   }
 
   /**
