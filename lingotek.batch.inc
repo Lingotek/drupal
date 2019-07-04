@@ -11,15 +11,18 @@ use Drupal\lingotek\Exception\LingotekApiException;
 /**
  * Wrapper function for running content uploads.
  */
-function lingotek_operation_content_upload($entity_type, $entity_id, &$context) {
+function lingotek_operation_content_upload($entity_type_id, $entity_id, &$context) {
   if ($context) {
-    $context['message'] = t('Uploading @entity_type @entity_id', ['@entity_type' => $entity_type, '@entity_id' => $entity_id]);
+    $context['message'] = t('Uploading @entity_type @entity_id', ['@entity_type' => $entity_type_id, '@entity_id' => $entity_id]);
   }
 
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
+
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
+  $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
   // Prepare the entity's translatable content for upload.
-  $entity = entity_load($entity_type, $entity_id);
+  $entity = $entity_storage->load($entity_id);
 
   // Use upload with new entities.
   if (!$translation_service->getDocumentId($entity)) {
@@ -86,14 +89,17 @@ function lingotek_operation_content_upload_finished($success, $results, $operati
 /**
  * Wrapper function for running content downloads.
  */
-function lingotek_operation_content_download($entity_type, $entity_id, $locale, &$context) {
+function lingotek_operation_content_download($entity_type_id, $entity_id, $locale, &$context) {
   if ($context) {
-    $context['message'] = t('Downloading translation "@locale" for @entity_type #@entity_id', ['@entity_type' => $entity_type, '@entity_id' => $entity_id, '@locale' => $locale]);
+    $context['message'] = t('Downloading translation "@locale" for @entity_type #@entity_id', ['@entity_type' => $entity_type_id, '@entity_id' => $entity_id, '@locale' => $locale]);
   }
   /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
   $translation_service = \Drupal::service('lingotek.content_translation');
+
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $entity_storage */
+  $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
   // Prepare the entity's translatable content for upload.
-  $entity = entity_load($entity_type, $entity_id);
+  $entity = $entity_storage->load($entity_id);
 
   try {
     if ($translation_service->downloadDocument($entity, $locale)) {

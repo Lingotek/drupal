@@ -1045,31 +1045,33 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $the_revision = NULL;
 
     $entity_type = $entity->getEntityType();
-    $type = $entity->getEntityTypeId();
+    $entity_type_id = $entity->getEntityTypeId();
+    $entity_storage = $this->entityManager->getStorage($entity_type_id);
 
     if ($entity_type->isRevisionable()) {
       // If the entity type is revisionable, we need to check the proper revision.
       // This may come from the uploaded data, but in case we didn't have it, we
       // have to infer using the timestamp.
       if ($revision !== NULL) {
-        $the_revision = entity_revision_load($type, $revision);
+        $the_revision = $entity_storage->loadRevision($revision);
       }
       elseif ($revision === NULL && $entity->hasField('revision_timestamp')) {
         // Let's find the better revision based on the timestamp.
         $timestamp = $this->lingotek->getUploadedTimestamp($this->getDocumentId($entity));
         $revision = $this->getClosestRevisionToTimestamp($entity, $timestamp);
         if ($revision !== NULL) {
-          $the_revision = entity_revision_load($type, $revision);
+          $the_revision = $entity_storage->loadRevision($revision);
         }
       }
       if ($the_revision === NULL) {
         // We didn't find a better option, but let's reload this one so it's not
         // cached.
-        $the_revision = entity_revision_load($type, $entity->getRevisionId());
+        $the_revision = $entity_storage->loadRevision($entity->getRevisionId());
       }
     }
     else {
-      $the_revision = entity_load($type, $entity->id(), TRUE);
+      $entity_storage->resetCache([$entity->id()]);
+      $the_revision = $entity_storage->load($entity->id());
     }
     return $the_revision;
   }
