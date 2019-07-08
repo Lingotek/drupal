@@ -126,7 +126,7 @@ function lingotek_update_8001() {
   $mappers = $mapper_manager->getMappers();
   foreach ($mappers as $mapper_id => $mapper) {
     if ($mapper instanceof ConfigEntityMapper &&
-       !$mapper instanceof ConfigFieldMapper) {
+      !$mapper instanceof ConfigFieldMapper) {
 
       $ids = \Drupal::service('entity.query')->get($mapper_id)
         ->exists('third_party_settings.lingotek.lingotek_document_id')
@@ -729,12 +729,55 @@ function lingotek_update_8215() {
     'lingotek_translation_changed',
   ];
   /** @var \Drupal\Core\Entity\EntityDefinitionUpdateManagerInterface $entity_definition_update_manager */
+  $connection = \Drupal::database();
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   $entity_type_manager = \Drupal::entityTypeManager();
   $entities = $entity_type_manager->getDefinitions();
   foreach ($entities as $entity_type_id => $entity_type) {
     foreach ($fields as $field) {
       if ($field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field, $entity_type_id)) {
+        try {
+          // Data was migrated in lingotek_update_8011, we can delete values from
+          // columns or tables without looking behind now.
+          if ($field !== 'lingotek_translation_status') {
+            $connection->update($entity_type->getDataTable())
+              ->fields([$field => NULL])
+              ->execute();
+            $message = new FormattableMarkup('%field_name values deleted for entity %entity_type_id', [
+              '%field_name' => $field,
+              '%entity_type_id' => $entity_type_id,
+            ]);
+            \Drupal::messenger()->addWarning($message);
+            \Drupal::logger('lingotek')->warning($message);
+          }
+          else {
+            $data_table_name = _lingotek_get_deleted_translation_status_data_table_name($entity_type_id);
+            $tables = [$data_table_name];
+            if ($entity_type->isRevisionable()) {
+              $revision_table_name = _lingotek_get_deleted_translation_status_revision_table_name($entity_type_id);
+              $tables[] = $revision_table_name;
+            }
+            foreach ($tables as $table_name) {
+              $connection->schema()->dropTable($table_name);
+              $message = new FormattableMarkup('%table deleted for updating entity %entity_type_id field %field_name', [
+                '%table' => $table_name,
+                '%field_name' => $field,
+                '%entity_type_id' => $entity_type_id,
+              ]);
+              \Drupal::messenger()->addWarning($message);
+              \Drupal::logger('lingotek')->warning($message);
+            }
+          }
+        }
+        catch (\Exception $e) {
+          $error = new FormattableMarkup('%field_name values deletion previous to field deletion failed for entity %entity_type_id with message: %message', [
+            '%field_name' => $field,
+            '%entity_type_id' => $entity_type_id,
+            '%message' => $e->getMessage(),
+          ]);
+          \Drupal::messenger()->addError($error);
+          \Drupal::logger('lingotek')->error($error);
+        }
         try {
           $entity_definition_update_manager->uninstallFieldStorageDefinition($field_definition);
           \Drupal::messenger()
@@ -903,4 +946,14 @@ function _lingotek_get_mapper($plugin_id) {
   $mappers = $mapper_manager->getMappers();
   $mapper = isset($mappers[$plugin_id]) ? $mappers[$plugin_id] : NULL;
   return $mapper;
+}
+
+function _lingotek_get_deleted_translation_status_data_table_name($entity_type_id) {
+  $unique_id = $entity_type_id . '-' . 'lingotek_translation_status';
+  return "field_deleted_data_" . substr(hash('sha256', $unique_id), 0, 10);
+}
+
+function _lingotek_get_deleted_translation_status_revision_table_name($entity_type_id) {
+  $unique_id = $entity_type_id . '-' . 'lingotek_translation_status';
+  return "field_deleted_revision_" . substr(hash('sha256', $unique_id), 0, 10);
 }
