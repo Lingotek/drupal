@@ -509,22 +509,13 @@ function lingotek_entity_base_field_info(EntityTypeInterface $entity_type) {
   $entity_type_id = $entity_type->id();
 
   if ($manager->isEnabled($entity_type_id) && $lingotek_config->isEnabled($entity_type_id)) {
-    $definitions = \Drupal::entityManager()->getHandler($entity_type_id, 'lingotek')->getFieldDefinitions();
-    $installed_storage_definitions = \Drupal::entityManager()->getLastInstalledFieldStorageDefinitions($entity_type_id);
+    $definitions = \Drupal::entityTypeManager()->getHandler($entity_type_id, 'lingotek')->getFieldDefinitions();
+    $installed_storage_definitions = \Drupal::service('entity.last_installed_schema.repository')->getLastInstalledFieldStorageDefinitions($entity_type_id);
     // We return metadata storage fields whenever content translation is enabled
     // or it was enabled before, so that we keep translation metadata around
     // when translation is disabled.
-    // @todo Re-evaluate this approach and consider removing field storage
-    //   definitions and the related field data if the entity type has no bundle
-    //   enabled for translation, once base field purging is supported.
-    //   See https://www.drupal.org/node/2282119.
     if ($manager->isEnabled($entity_type_id) || array_intersect_key($definitions, $installed_storage_definitions)) {
-      if (drupal_get_installed_schema_version('lingotek') < 8215) {
-        return $definitions;
-      }
-      else {
-        return ['lingotek_metadata' => $definitions['lingotek_metadata']];
-      }
+      return $definitions;
     }
   }
 }
