@@ -13,6 +13,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Form\FormState;
   use Drupal\Core\Language\LanguageManagerInterface;
   use Drupal\Core\State\StateInterface;
+  use Drupal\Core\TempStore\PrivateTempStoreFactory;
   use Drupal\language\ConfigurableLanguageInterface;
   use Drupal\lingotek\Form\LingotekManagementForm;
   use Drupal\lingotek\LanguageLocaleMapperInterface;
@@ -20,8 +21,6 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\lingotek\LingotekContentTranslationServiceInterface;
   use Drupal\lingotek\LingotekInterface;
   use Drupal\Tests\UnitTestCase;
-  use Drupal\user\PrivateTempStore;
-  use Drupal\user\PrivateTempStoreFactory;
 
   /**
    * @coversDefaultClass \Drupal\lingotek\Form\LingotekManagementForm
@@ -101,7 +100,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     /**
      * The tempstore factory.
      *
-     * @var \Drupal\user\PrivateTempStoreFactory|\PHPUnit_Framework_MockObject_MockObject
+     * @var \Drupal\Core\TempStore\PrivateTempStoreFactory|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $tempStoreFactory;
 
@@ -215,7 +214,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('select')
         ->willReturn($select);
 
-      $tempStore = $this->getMockBuilder(PrivateTempStore::class)->disableOriginalConstructor()->getMock();
+      $tempStore = $this->getMockBuilder(PrivateTempStoreFactory::class)->disableOriginalConstructor()->getMock();
       $this->tempStoreFactory->expects($this->at(0))
         ->method('get')
         ->with('lingotek.management.filter.node')

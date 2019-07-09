@@ -231,7 +231,7 @@ class LingotekNodeParagraphsTranslationTest extends LingotekTestBase {
 
     // Set a filter, and there should still be paragraphs.
     /** @var \Drupal\user\PrivateTempStore $tempStore */
-    $tempStore = \Drupal::service('user.private_tempstore')->get('lingotek.management.filter.paragraph');
+    $tempStore = \Drupal::service('tempstore.private')->get('lingotek.management.filter.paragraph');
     $tempStore->set('label', 'Llamas');
 
     $this->goToContentBulkManagementForm('paragraph');

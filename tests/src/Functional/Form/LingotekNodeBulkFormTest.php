@@ -241,7 +241,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertLinkByHref('?page=1');
 
     // Show 50 results.
-    \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 50);
+    \Drupal::service('tempstore.private')->get('lingotek.management.items_per_page')->set('limit', 50);
     $this->goToContentBulkManagementForm();
 
     // I can init the upload of content.
@@ -272,7 +272,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->drupalPostForm(NULL, $edit, $this->getApplyActionsButtonLabel());
 
     // Show 10 results.
-    \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 10);
+    \Drupal::service('tempstore.private')->get('lingotek.management.items_per_page')->set('limit', 10);
     $this->goToContentBulkManagementForm();
 
     // After we filter by prime, there is no pager and the rows
@@ -1640,7 +1640,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     $this->assertNoText('NotConfigured nothing nothing nothing');
 
     // Change page limit
-    \Drupal::service('user.private_tempstore')->get('lingotek.management.items_per_page')->set('limit', 50);
+    \Drupal::service('tempstore.private')->get('lingotek.management.items_per_page')->set('limit', 50);
     $this->goToContentBulkManagementForm();
 
     $this->assertText('CustomType edited ready ready');

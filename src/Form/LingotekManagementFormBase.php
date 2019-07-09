@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Routing\LocalRedirectResponse;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\lingotek\Exception\LingotekApiException;
@@ -25,7 +26,6 @@ use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
 use Drupal\lingotek\LingotekLocale;
 use Drupal\lingotek\LingotekSetupTrait;
-use Drupal\user\PrivateTempStoreFactory;
 
 /**
  * Form for bulk management of content.
@@ -134,7 +134,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The content translation manager.
    * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    *   The Lingotek content translation service.
-   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
    * @param \Drupal\Core\State\StateInterface $state
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -810,8 +810,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $language = $entity->getUntranslated()->language();
       $entityInfo[$entity->id()] = [$language->getId() => $language->getId()];
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('entity_delete_multiple_confirm')
+    $this->tempStoreFactory->get('entity_delete_multiple_confirm')
       ->set($this->currentUser()->id() . ':node', $entityInfo);
     $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
@@ -832,8 +831,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $language = $entity->getUntranslated()->language();
       $entityInfo[$entity->getEntityTypeId()][$entity->id()] = [$language->getId() => $language->getId()];
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('lingotek_assign_job_entity_multiple_confirm')
+    $this->tempStoreFactory->get('lingotek_assign_job_entity_multiple_confirm')
       ->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect('lingotek.assign_job_entity_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
@@ -854,8 +852,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $language = $entity->getUntranslated()->language();
       $entityInfo[$entity->getEntityTypeId()][$entity->id()] = [$language->getId() => $language->getId()];
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('lingotek_assign_job_entity_multiple_confirm')
+    $this->tempStoreFactory->get('lingotek_assign_job_entity_multiple_confirm')
       ->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect('lingotek.clear_job_entity_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
@@ -881,8 +878,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     if (!empty($entityInfo)) {
-      \Drupal::getContainer()->get('tempstore.private')
-        ->get('entity_delete_multiple_confirm')
+      $this->tempStoreFactory->get('entity_delete_multiple_confirm')
         ->set($this->currentUser()->id() . ':node', $entityInfo);
       $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
     }
@@ -917,8 +913,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     if (!empty($entityInfo)) {
-      \Drupal::getContainer()->get('tempstore.private')
-        ->get('entity_delete_multiple_confirm')
+      $this->tempStoreFactory->get('entity_delete_multiple_confirm')
         ->set($this->currentUser()->id() . ':node', $entityInfo);
       $form_state->setRedirect('entity.' . $this->entityTypeId . '.delete_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
     }

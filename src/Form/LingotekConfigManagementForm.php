@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Entity\File;
@@ -21,7 +22,6 @@ use Drupal\lingotek\Lingotek;
 use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekSetupTrait;
-use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -62,7 +62,7 @@ class LingotekConfigManagementForm extends FormBase {
   /**
    * The tempstore factory.
    *
-   * @var \Drupal\user\PrivateTempStoreFactory
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
    */
   protected $tempStoreFactory;
 
@@ -91,7 +91,7 @@ class LingotekConfigManagementForm extends FormBase {
    *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service
    *   The Lingotek config translation service.
-   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
    * @param \Drupal\config_translation\ConfigMapperInterface[] $mappers
    *   The configuration mappers.
@@ -116,7 +116,7 @@ class LingotekConfigManagementForm extends FormBase {
       $container->get('lingotek.configuration'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.config_translation'),
-      $container->get('user.private_tempstore'),
+      $container->get('tempstore.private'),
       $container->get('plugin.manager.config_translation.mapper')->getMappers()
     );
   }
@@ -504,8 +504,7 @@ class LingotekConfigManagementForm extends FormBase {
       $langcode = $mapper->getLangcode();
       $entityInfo[$this->filter][$mapper_id] = [$langcode => $langcode];
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('lingotek_assign_job_config_multiple_confirm')
+    $this->tempStoreFactory->get('lingotek_assign_job_config_multiple_confirm')
       ->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect('lingotek.assign_job_config_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }
@@ -526,8 +525,7 @@ class LingotekConfigManagementForm extends FormBase {
       $langcode = $mapper->getLangcode();
       $entityInfo[$this->filter][$mapper_id] = [$langcode => $langcode];
     }
-    \Drupal::getContainer()->get('tempstore.private')
-      ->get('lingotek_assign_job_config_multiple_confirm')
+    $this->tempStoreFactory->get('lingotek_assign_job_config_multiple_confirm')
       ->set($this->currentUser()->id(), $entityInfo);
     $form_state->setRedirect('lingotek.clear_job_config_multiple_form', [], ['query' => $this->getDestinationWithQueryArray()]);
   }

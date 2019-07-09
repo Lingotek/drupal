@@ -29,7 +29,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       $container->get('lingotek.language_locale_mapper'),
       $container->get('content_translation.manager'),
       $container->get('lingotek.content_translation'),
-      $container->get('user.private_tempstore'),
+      $container->get('tempstore.private'),
       $container->get('state'),
       $container->get('module_handler'),
       \Drupal::routeMatch()->getParameter('entity_type_id')

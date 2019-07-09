@@ -12,11 +12,11 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekConfigurationServiceInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\lingotek\LingotekInterface;
-use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -50,7 +50,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    *   The content translation manager.
    * @param \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service
    *   The Lingotek content translation service.
-   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    *   The factory for the temp store object.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
@@ -85,7 +85,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       $container->get('lingotek.language_locale_mapper'),
       $container->get('content_translation.manager'),
       $container->get('lingotek.content_translation'),
-      $container->get('user.private_tempstore'),
+      $container->get('tempstore.private'),
       $container->get('state'),
       $container->get('module_handler')
     );
