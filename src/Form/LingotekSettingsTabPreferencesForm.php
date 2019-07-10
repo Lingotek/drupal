@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
  * Configure Lingotek
  */
 class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
+
   protected $lang_switcher_value = 0;
   protected $top_level_value = 0;
   protected $show_import_tab = 0;
@@ -315,7 +316,8 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         if ($bundle['translatable']) {
           $field_definitions = \Drupal::entityManager()->getFieldDefinitions('node', $bundle_id);
           $langcode = $field_definitions['langcode'];
-          $display = entity_get_display('node', $bundle_id, 'default');
+          $display = $this->entityManager->getStorage('entity_view_display')
+            ->load('node.' . $bundle_id . '.default');
 
           if ($form_values['show_language_labels']) {
             $component_values = [

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -65,12 +67,14 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
       'field_tags', 'Tags', 'taxonomy_term', 'default',
       $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    entity_get_form_display('node', 'article', 'default')
+    EntityFormDisplay::load('node.article.default')
       ->setComponent('field_tags', [
         'type' => 'entity_reference_autocomplete_tags',
-      ])->save();
-    entity_get_display('node', 'article', 'default')
-      ->setComponent('field_tags')->save();
+      ])
+      ->save();
+    EntityViewDisplay::load('node.article.default')
+      ->setComponent('field_tags')
+      ->save();
 
     // Add locales.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_ES')->save();
@@ -451,12 +455,14 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
       'field_other_tags', 'Other Tags', 'taxonomy_term', 'default',
       $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    entity_get_form_display('node', 'article', 'default')
+    EntityFormDisplay::load('node.article.default')
       ->setComponent('field_other_tags', [
         'type' => 'entity_reference_autocomplete',
-      ])->save();
-    entity_get_display('node', 'article', 'default')
-      ->setComponent('field_other_tags')->save();
+      ])
+      ->save();
+    EntityViewDisplay::load('node.article.default')
+      ->setComponent('field_other_tags')
+      ->save();
 
     $edit = [
       'node[article][fields][field_other_tags]' => 1,

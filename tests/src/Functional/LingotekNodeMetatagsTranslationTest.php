@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\node\Entity\Node;
@@ -165,12 +167,12 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
       'bundle' => $bundle,
     ]);
     $field->save();
-    entity_get_form_display($entity_type, $bundle, 'default')
+    EntityFormDisplay::load($entity_type . '.' . $bundle . '.' . 'default')
       ->setComponent($field_name, [
         'type' => 'metatag_firehose',
       ])
       ->save();
-    entity_get_display($entity_type, $bundle, 'default')
+    EntityViewDisplay::load($entity_type . '.' . $bundle . '.' . 'default')
       ->setComponent($field_name, [
         'type' => 'metatag_empty_formatter',
       ])

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -183,14 +185,12 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
     $field->save();
 
     // Assign widget settings for the 'default' form mode.
-    entity_get_form_display($entity_type_id, $bundle, 'default')
+    EntityFormDisplay::load($entity_type_id . '.' . $bundle . '.' . 'default')
       ->setComponent($field_name, [
         'type' => 'text_textarea_with_summary',
       ])
       ->save();
-
-    // Assign display settings for the 'default' and 'teaser' view modes.
-    entity_get_display($entity_type_id, $bundle, 'default')
+    EntityViewDisplay::load($entity_type_id . '.' . $bundle . '.' . 'default')
       ->setComponent($field_name, [
         'label' => 'hidden',
         'type' => 'text_default',
@@ -201,7 +201,7 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
     // might not exist.
     $view_modes = \Drupal::entityManager()->getViewModes($entity_type_id);
     if (isset($view_modes['teaser'])) {
-      entity_get_display($entity_type_id, $bundle, 'teaser')
+      EntityViewDisplay::load($entity_type_id . '.' . $bundle . '.' . 'default')
         ->setComponent($field_name, [
           'label' => 'hidden',
           'type' => 'text_summary_or_trimmed',

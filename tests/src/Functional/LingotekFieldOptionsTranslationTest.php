@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -121,7 +122,9 @@ class LingotekFieldOptionsTranslationTest extends LingotekTestBase {
       'bundle' => $bundle,
     ])->save();
 
-    entity_get_form_display('node', $bundle, 'default')->setComponent($field_name)->save();
+    EntityFormDisplay::load('node.' . $bundle . '.default')
+      ->setComponent($field_name)
+      ->save();
 
     $adminPath = 'admin/structure/types/manage/' . $bundle . '/fields/node.' . $bundle . '.' . $field_name . '/storage';
     $input_string = "zero|Zero\none|One";

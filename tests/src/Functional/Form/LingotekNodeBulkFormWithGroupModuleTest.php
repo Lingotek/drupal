@@ -3,6 +3,8 @@
 namespace Drupal\Tests\lingotek\Functional\Form;
 
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\Tests\lingotek\Functional\LingotekTestBase;
@@ -64,15 +66,31 @@ if (version_compare(\Drupal::VERSION, '8.6', '>=')) {
 
       $type = NodeType::load('article');
       $field = node_add_body_field($type);
-      entity_get_form_display('node', $type->id(), 'default')
-        ->setComponent('body', [
+
+      // Assign display settings for the 'default' and 'teaser' view modes.
+      $entity_form_display = EntityFormDisplay::load('node' . '.' . $type->id() . '.' . 'default');
+      if (!$entity_form_display) {
+        $entity_form_display = EntityFormDisplay::create([
+          'targetEntityType' => 'node',
+          'bundle' => $type->id(),
+          'mode' => 'default',
+          'status' => TRUE,
+        ]);
+      }
+      $entity_form_display->setComponent('body', [
           'type' => 'text_textarea_with_summary',
         ])
         ->save();
-
-      // Assign display settings for the 'default' and 'teaser' view modes.
-      entity_get_display('node', $type->id(), 'default')
-        ->setComponent('body', [
+      $display = EntityViewDisplay::load('node' . '.' . $type->id() . '.' . 'default');
+      if (!$display) {
+        $display = EntityViewDisplay::create([
+          'targetEntityType' => 'node',
+          'bundle' => $type->id(),
+          'mode' => 'default',
+          'status' => TRUE,
+        ]);
+      }
+      $display->setComponent('body', [
           'label' => 'hidden',
           'type' => 'text_default',
         ])

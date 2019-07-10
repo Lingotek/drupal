@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\lingotek\Lingotek;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\workflows\Entity\Workflow;
@@ -107,19 +109,33 @@ abstract class LingotekTestBase extends BrowserTestBase {
     ]);
     $field_config->save();
 
-    entity_get_form_display($entity_type_id, $type_name, 'default')
-      ->setComponent($name, [
-        'type' => 'image_image',
-        'settings' => $widget_settings,
-      ])
+    $entity_form_display = EntityFormDisplay::load($entity_type_id . '.' . $type_name . '.' . 'default');
+    if (!$entity_form_display) {
+      $entity_form_display = EntityFormDisplay::create([
+        'targetEntityType' => $entity_type_id,
+        'bundle' => $type_name,
+        'mode' => 'default',
+        'status' => TRUE,
+      ]);
+    }
+    $entity_form_display->setComponent($name, [
+      'type' => 'image_image',
+      'settings' => $widget_settings,
+    ])
       ->save();
-
-    entity_get_display($entity_type_id, $type_name, 'default')
-      ->setComponent($name)
+    $display = EntityViewDisplay::load($entity_type_id . '.' . $type_name . '.' . 'default');
+    if (!$display) {
+      $display = EntityViewDisplay::create([
+        'targetEntityType' => $entity_type_id,
+        'bundle' => $type_name,
+        'mode' => 'default',
+        'status' => TRUE,
+      ]);
+    }
+    $display->setComponent($name)
       ->save();
 
     return $field_config;
-
   }
 
   /**

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
 use Drupal\link\LinkItemInterface;
@@ -58,12 +60,13 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
       ],
     ]);
     $field->save();
-    entity_get_form_display('node', 'article', 'default')
+
+    EntityFormDisplay::load('node.article.default')
       ->setComponent($this->field_name, [
         'type' => 'link_default',
       ])
       ->save();
-    entity_get_display('node', 'article', 'default')
+    EntityViewDisplay::load('node.article.default')
       ->setComponent($this->field_name, [
         'type' => 'link',
       ])

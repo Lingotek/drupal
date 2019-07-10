@@ -3,6 +3,8 @@
 namespace Drupal\Tests\lingotek\Functional;
 
 use Drupal\contact\Entity\ContactForm;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\field\Tests\EntityReference\EntityReferenceTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
@@ -60,12 +62,14 @@ class LingotekNodeEmbeddingContactFormTranslationTest extends LingotekTestBase {
     $this->createEntityReferenceField('node', 'article',
       'field_contact_form', 'Contact Form', 'contact_form');
 
-    entity_get_form_display('node', 'article', 'default')
+    EntityFormDisplay::load('node.article.default')
       ->setComponent('field_contact_form', [
         'type' => 'entity_reference_autocomplete',
-      ])->save();
-    entity_get_display('node', 'article', 'default')
-      ->setComponent('field_contact_form')->save();
+      ])
+      ->save();
+    EntityViewDisplay::load('node.article.default')
+      ->setComponent('field_contact_form')
+      ->save();
 
     // Add locales.
     ConfigurableLanguage::createFromLangcode('es')->setThirdPartySetting('lingotek', 'locale', 'es_AR')->save();

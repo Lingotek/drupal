@@ -450,7 +450,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $translatable_fields[$field_name] = $definition;
       }
     }
-    $default_display = entity_get_display($entity->getEntityTypeId(), $entity->bundle(), 'default');
+    $default_display = $this->entityManager->getStorage('entity_view_display')
+      ->load($entity_type->id() . '.' . $entity->bundle() . '.' . 'default');
     if ($default_display !== NULL) {
       uksort($translatable_fields, function ($a, $b) use ($default_display) {
         return SortArray::sortByKeyString($default_display->getComponent($a), $default_display->getComponent($b), 'weight');

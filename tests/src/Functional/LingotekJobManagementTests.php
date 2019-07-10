@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Functional;
 
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\language\Entity\ContentLanguageSettings;
@@ -56,11 +58,11 @@ class LingotekJobManagementTests extends LingotekTestBase {
       'field_tags', 'Tags', 'taxonomy_term', 'default',
       $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    entity_get_form_display('node', 'article', 'default')
+    EntityFormDisplay::load('node.article.default')
       ->setComponent('field_tags', [
         'type' => 'entity_reference_autocomplete_tags',
       ])->save();
-    entity_get_display('node', 'article', 'default')
+    EntityViewDisplay::load('node.article.default')
       ->setComponent('field_tags')->save();
 
     // Add locales.
