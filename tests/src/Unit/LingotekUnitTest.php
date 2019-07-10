@@ -2,9 +2,16 @@
 
 namespace Drupal\Tests\lingotek\Unit;
 
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\Lingotek;
+use Drupal\lingotek\LingotekFilterManagerInterface;
+use Drupal\lingotek\Remote\LingotekApiInterface;
 use Drupal\Tests\UnitTestCase;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -57,17 +64,17 @@ class LingotekUnitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
-    $this->api = $this->getMock('\Drupal\lingotek\Remote\LingotekApiInterface');
-    $this->languageLocaleMapper = $this->getMock('Drupal\lingotek\LanguageLocaleMapperInterface');
-    $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
+    $this->api = $this->createMock(LingotekApiInterface::class);
+    $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
+    $this->config = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $this->configEditable = $this->getMockBuilder('\Drupal\Core\Config\Config')
+    $this->configEditable = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
 
-    $this->lingotekFilterManager = $this->getMock('\Drupal\lingotek\LingotekFilterManagerInterface');
-    $this->configFactory = $this->createMock('\Drupal\Core\Config\ConfigFactoryInterface');
+    $this->lingotekFilterManager = $this->createMock(LingotekFilterManagerInterface::class);
+    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
     $this->configFactory->expects($this->any())
       ->method('get')
       ->with('lingotek.settings')
@@ -570,7 +577,7 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::updateDocument
    */
   public function testUpdateDocument() {
-    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+    $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())
@@ -701,13 +708,13 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::addTarget
    */
   public function testAddTarget() {
-    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+    $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())
       ->method('getStatusCode')
       ->willReturn(Response::HTTP_CREATED);
-    $language = $this->getMock('\Drupal\language\ConfigurableLanguageInterface');
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
     $language->expects($this->any())
       ->method('getId')
       ->will($this->returnValue('es'));
@@ -787,7 +794,7 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::deleteDocument
    */
   public function testDeleteDocument() {
-    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+    $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     // Both HTTP_ACCEPTED (202) AND HTTP_NO_CONTENT (204) are success statuses.
@@ -822,7 +829,7 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::getDocumentTranslationStatus
    */
   public function testGetDocumentTranslationStatus() {
-    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+    $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())
@@ -882,7 +889,7 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::uploadDocument
    */
   public function testUploadWithNoMetadataLeaked() {
-    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+    $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())
@@ -925,7 +932,7 @@ class LingotekUnitTest extends UnitTestCase {
    * @covers ::updateDocument
    */
   public function testUpdateWithNoMetadataLeaked() {
-    $response = $this->getMockBuilder('\Psr\Http\Message\ResponseInterface')
+    $response = $this->getMockBuilder(ResponseInterface::class)
       ->disableOriginalConstructor()
       ->getMock();
     $response->expects($this->any())

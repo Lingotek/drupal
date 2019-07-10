@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\lingotek\Unit;
 
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\lingotek\Entity\LingotekProfile;
 use Drupal\lingotek\LingotekFilterManager;
 use Drupal\Tests\UnitTestCase;
@@ -31,10 +33,10 @@ class LingotekFilterManagerUnitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
-    $this->config = $this->getMockBuilder('\Drupal\Core\Config\Config')
+    $this->config = $this->getMockBuilder(Config::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $configFactory = $this->getMock('\Drupal\Core\Config\ConfigFactoryInterface');
+    $configFactory = $this->createMock(ConfigFactoryInterface::class);
     $configFactory->expects($this->any())
       ->method('get')
       ->with('lingotek.settings')

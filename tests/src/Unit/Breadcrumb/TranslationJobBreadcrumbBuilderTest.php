@@ -4,13 +4,18 @@ namespace Drupal\Tests\lingotek\Unit\Breadcrumb;
 
 use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Access\AccessResultAllowed;
+use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Routing\ResettableStackedRouteMatchInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\lingotek\Breadcrumb\TranslationJobBreadcrumbBuilder;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Route;
 
 /**
  * @coversDefaultClass \Drupal\lingotek\Breadcrumb\TranslationJobBreadcrumbBuilder
@@ -66,7 +71,7 @@ class TranslationJobBreadcrumbBuilderTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $cache_contexts_manager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
+    $cache_contexts_manager = $this->getMockBuilder(CacheContextsManager::class)
       ->disableOriginalConstructor()
       ->getMock();
     $cache_contexts_manager->method('assertValidTokens')->willReturn(TRUE);
@@ -74,7 +79,7 @@ class TranslationJobBreadcrumbBuilderTest extends UnitTestCase {
     $container->set('cache_contexts_manager', $cache_contexts_manager);
     \Drupal::setContainer($container);
 
-    $this->request = $this->createMock('\Symfony\Component\HttpFoundation\Request');
+    $this->request = $this->createMock(Request::class);
     $this->requestStack = $this->createMock(RequestStack::class);
     $this->requestStack->expects($this->any())
       ->method('getCurrentRequest')
@@ -101,7 +106,7 @@ class TranslationJobBreadcrumbBuilderTest extends UnitTestCase {
    * @covers ::applies
    */
   public function testApplies($expected, $route_name = NULL, $parameter_map = []) {
-    $route_match = $this->getMock('Drupal\Core\Routing\RouteMatchInterface');
+    $route_match = $this->createMock(RouteMatchInterface::class);
     $route_match->expects($this->once())
       ->method('getRouteName')
       ->will($this->returnValue($route_name));
@@ -160,7 +165,7 @@ class TranslationJobBreadcrumbBuilderTest extends UnitTestCase {
    * @covers ::build
    */
   public function testBuild($route_name, $expected, $title, $job_id) {
-    $route_match = $this->createMock('Drupal\Core\Routing\ResettableStackedRouteMatchInterface');
+    $route_match = $this->createMock(ResettableStackedRouteMatchInterface::class);
     $route_match->expects($this->any())
       ->method('getRouteName')
       ->willReturn($route_name);
@@ -184,7 +189,7 @@ class TranslationJobBreadcrumbBuilderTest extends UnitTestCase {
         ->method('getRouteMatchFromRequest')
         ->with($this->request)
         ->willReturn($route_match);
-      $route = $this->createMock('\Symfony\Component\Routing\Route');
+      $route = $this->createMock(Route::class);
       $route_match->expects($this->once())
         ->method('getParameter')
         ->with('job_id')

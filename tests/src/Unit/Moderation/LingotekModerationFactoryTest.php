@@ -35,11 +35,11 @@ class LingotekModerationFactoryTest extends UnitTestCase {
    * @covers ::getModerationConfigurationService
    */
   public function testAddModerationConfiguration() {
-    $configServiceLast = $this->getMock(LingotekModerationConfigurationServiceInterface::class);
+    $configServiceLast = $this->createMock(LingotekModerationConfigurationServiceInterface::class);
     $configServiceLast->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
-    $configServiceFirst = $this->getMock(LingotekModerationConfigurationServiceInterface::class);
+    $configServiceFirst = $this->createMock(LingotekModerationConfigurationServiceInterface::class);
     $configServiceFirst->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
@@ -56,11 +56,11 @@ class LingotekModerationFactoryTest extends UnitTestCase {
    * @covers ::getModerationConfigurationService
    */
   public function testAddModerationConfigurationWithANonApplyingService() {
-    $configServiceLast = $this->getMock(LingotekModerationConfigurationServiceInterface::class);
+    $configServiceLast = $this->createMock(LingotekModerationConfigurationServiceInterface::class);
     $configServiceLast->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
-    $configServiceFirst = $this->getMock(LingotekModerationConfigurationServiceInterface::class);
+    $configServiceFirst = $this->createMock(LingotekModerationConfigurationServiceInterface::class);
     $configServiceFirst->expects($this->any())
       ->method('applies')
       ->willReturn(FALSE);
@@ -77,11 +77,11 @@ class LingotekModerationFactoryTest extends UnitTestCase {
    * @covers ::getModerationSettingsForm
    */
   public function testAddModerationSettingsForm() {
-    $configServiceLast = $this->getMock(LingotekModerationSettingsFormInterface::class);
+    $configServiceLast = $this->createMock(LingotekModerationSettingsFormInterface::class);
     $configServiceLast->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
-    $configServiceFirst = $this->getMock(LingotekModerationSettingsFormInterface::class);
+    $configServiceFirst = $this->createMock(LingotekModerationSettingsFormInterface::class);
     $configServiceFirst->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
@@ -98,11 +98,11 @@ class LingotekModerationFactoryTest extends UnitTestCase {
    * @covers ::getModerationSettingsForm
    */
   public function testAddModerationSettingsFormWithANonApplyingService() {
-    $configServiceLast = $this->getMock(LingotekModerationSettingsFormInterface::class);
+    $configServiceLast = $this->createMock(LingotekModerationSettingsFormInterface::class);
     $configServiceLast->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
-    $configServiceFirst = $this->getMock(LingotekModerationSettingsFormInterface::class);
+    $configServiceFirst = $this->createMock(LingotekModerationSettingsFormInterface::class);
     $configServiceFirst->expects($this->any())
       ->method('applies')
       ->willReturn(FALSE);
@@ -119,11 +119,11 @@ class LingotekModerationFactoryTest extends UnitTestCase {
    * @covers ::getModerationHandler
    */
   public function testAddModerationHandler() {
-    $configServiceLast = $this->getMock(LingotekModerationHandlerInterface::class);
+    $configServiceLast = $this->createMock(LingotekModerationHandlerInterface::class);
     $configServiceLast->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
-    $configServiceFirst = $this->getMock(LingotekModerationHandlerInterface::class);
+    $configServiceFirst = $this->createMock(LingotekModerationHandlerInterface::class);
     $configServiceFirst->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
@@ -140,11 +140,11 @@ class LingotekModerationFactoryTest extends UnitTestCase {
    * @covers ::getModerationHandler
    */
   public function testAddModerationHandlerWithANonApplyingService() {
-    $configServiceLast = $this->getMock(LingotekModerationHandlerInterface::class);
+    $configServiceLast = $this->createMock(LingotekModerationHandlerInterface::class);
     $configServiceLast->expects($this->any())
       ->method('applies')
       ->willReturn(TRUE);
-    $configServiceFirst = $this->getMock(LingotekModerationHandlerInterface::class);
+    $configServiceFirst = $this->createMock(LingotekModerationHandlerInterface::class);
     $configServiceFirst->expects($this->any())
       ->method('applies')
       ->willReturn(FALSE);

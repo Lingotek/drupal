@@ -4,11 +4,14 @@ namespace Drupal\Tests\lingotek\Unit\Cli;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\lingotek\Cli\LingotekCliService;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
 use Drupal\lingotek\LingotekContentTranslationServiceInterface;
 use Drupal\Tests\UnitTestCase;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @coversDefaultClass \Drupal\lingotek\Cli\LingotekCliService
@@ -65,13 +68,13 @@ class LingotekCliServiceTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->entityTypeManager = $this->getMockBuilder('Drupal\Core\Entity\EntityTypeManager')
+    $this->entityTypeManager = $this->getMockBuilder(EntityTypeManager::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $this->languageLocaleMapper = $this->getMock('Drupal\lingotek\LanguageLocaleMapperInterface');
-    $this->translationService = $this->getMock(LingotekContentTranslationServiceInterface::class);
-    $this->output = $this->getMock('Symfony\Component\Console\Output\OutputInterface');
-    $this->logger = $this->getMock(LoggerInterface::class);
+    $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
+    $this->translationService = $this->createMock(LingotekContentTranslationServiceInterface::class);
+    $this->output = $this->createMock(OutputInterface::class);
+    $this->logger = $this->createMock(LoggerInterface::class);
 
     $this->cliService = new LingotekCliService($this->entityTypeManager, $this->translationService, $this->languageLocaleMapper);
     $this->cliService->setupOutput($this->output);
@@ -83,11 +86,11 @@ class LingotekCliServiceTest extends UnitTestCase {
     $this->logger->expects($this->once())
       ->method('error');
     $upload = $this->cliService->upload('xxxx', 1, NULL);
-    $this->assertEquals($this->cliService::COMMAND_ERROR_ENTITY_TYPE_ID, $upload);
+    $this->assertEquals(LingotekCliService::COMMAND_ERROR_ENTITY_TYPE_ID, $upload);
   }
 
   public function testUploadInvalidEntityId() {
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $this->entityTypeManager->expects($this->once())
       ->method('hasDefinition')
       ->with('xxxx')
@@ -103,8 +106,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testUpload() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -129,8 +132,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testUploadWithJobId() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -162,7 +165,7 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testCheckUploadInvalidEntityId() {
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $this->entityTypeManager->expects($this->once())
       ->method('hasDefinition')
       ->with('xxxx')
@@ -178,8 +181,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testCheckUpload() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -213,7 +216,7 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testRequestTranslationsInvalidEntityId() {
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $this->entityTypeManager->expects($this->once())
       ->method('hasDefinition')
       ->with('xxxx')
@@ -229,8 +232,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testRequestTranslations() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -256,8 +259,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testRequestTranslationsAll() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -283,8 +286,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testRequestTranslationsSome() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -319,8 +322,8 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testRequestTranslationsUnexistingLanguage() {
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -357,7 +360,7 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testCheckTranslationsStatusesInvalidEntityId() {
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $this->entityTypeManager->expects($this->once())
       ->method('hasDefinition')
       ->with('xxxx')
@@ -374,19 +377,19 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testCheckTranslationsStatuses() {
     /** @var \Drupal\Core\Language\LanguageInterface|\PHPUnit_Framework_MockObject_MockObject $language */
-    $language = $this->getMock(LanguageInterface::class);
+    $language = $this->createMock(LanguageInterface::class);
     $language->expects($this->once())
       ->method('getId')
       ->willReturn('en');
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
     $entity->expects($this->once())
       ->method('getUntranslated')
       ->willReturnSelf();
     $entity->expects($this->once())
       ->method('language')
       ->willReturn($language);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -421,19 +424,19 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testCheckTranslationsStatusesAll() {
     /** @var \Drupal\Core\Language\LanguageInterface|\PHPUnit_Framework_MockObject_MockObject $language */
-    $language = $this->getMock(LanguageInterface::class);
+    $language = $this->createMock(LanguageInterface::class);
     $language->expects($this->once())
       ->method('getId')
       ->willReturn('en');
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
     $entity->expects($this->once())
       ->method('getUntranslated')
       ->willReturnSelf();
     $entity->expects($this->once())
       ->method('language')
       ->willReturn($language);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -468,19 +471,19 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testCheckTranslationsStatusesSome() {
     /** @var \Drupal\Core\Language\LanguageInterface|\PHPUnit_Framework_MockObject_MockObject $language */
-    $language = $this->getMock(LanguageInterface::class);
+    $language = $this->createMock(LanguageInterface::class);
     $language->expects($this->once())
       ->method('getId')
       ->willReturn('en');
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
     $entity->expects($this->once())
       ->method('getUntranslated')
       ->willReturnSelf();
     $entity->expects($this->once())
       ->method('language')
       ->willReturn($language);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -514,19 +517,19 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testCheckTranslationsStatusesUnexistingLanguage() {
     /** @var \Drupal\Core\Language\LanguageInterface|\PHPUnit_Framework_MockObject_MockObject $language */
-    $language = $this->getMock(LanguageInterface::class);
+    $language = $this->createMock(LanguageInterface::class);
     $language->expects($this->once())
       ->method('getId')
       ->willReturn('en');
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
     $entity->expects($this->once())
       ->method('getUntranslated')
       ->willReturnSelf();
     $entity->expects($this->once())
       ->method('language')
       ->willReturn($language);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -565,7 +568,7 @@ class LingotekCliServiceTest extends UnitTestCase {
   }
 
   public function testDownloadTranslationsInvalidEntityId() {
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $this->entityTypeManager->expects($this->once())
       ->method('hasDefinition')
       ->with('xxxx')
@@ -587,8 +590,8 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testDownloadTranslationsAll() {
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -610,8 +613,8 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testDownloadTranslationsSome() {
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)
@@ -644,8 +647,8 @@ class LingotekCliServiceTest extends UnitTestCase {
 
   public function testDownloadTranslationsUnexistingLanguage() {
     /** @var \Drupal\Core\Entity\EntityInterface|\PHPUnit_Framework_MockObject_MockObject $entity */
-    $entity = $this->getMock(ContentEntityInterface::class);
-    $entityStorage = $this->getMock(EntityStorageInterface::class);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entityStorage = $this->createMock(EntityStorageInterface::class);
     $entityStorage->expects($this->once())
       ->method('load')
       ->with(1)

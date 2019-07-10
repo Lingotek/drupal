@@ -5,6 +5,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\content_translation\ContentTranslationManagerInterface;
   use Drupal\Core\Database\Connection;
   use Drupal\Core\Database\Query\PagerSelectExtender;
+  use Drupal\Core\Database\StatementInterface;
   use Drupal\Core\Entity\EntityManagerInterface;
   use Drupal\Core\Entity\EntityStorageInterface;
   use Drupal\Core\Entity\EntityTypeInterface;
@@ -124,21 +125,21 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->connection = $this->getMockBuilder(Connection::class)
         ->disableOriginalConstructor()
         ->getMock();
-      $this->entityManager = $this->getMock(EntityManagerInterface::class);
-      $this->languageManager = $this->getMock(LanguageManagerInterface::class);
+      $this->entityManager = $this->createMock(EntityManagerInterface::class);
+      $this->languageManager = $this->createMock(LanguageManagerInterface::class);
       $this->entityQuery = $this->getMockBuilder(QueryFactory::class)
         ->disableOriginalConstructor()
         ->getMock();
-      $this->lingotek = $this->getMock(LingotekInterface::class);
-      $this->lingotekConfiguration = $this->getMock(LingotekConfigurationServiceInterface::class);
-      $this->languageLocaleMapper = $this->getMock(LanguageLocaleMapperInterface::class);
-      $this->contentTranslationManager = $this->getMock(ContentTranslationManagerInterface::class);
-      $this->contentTranslationService = $this->getMock(LingotekContentTranslationServiceInterface::class);
+      $this->lingotek = $this->createMock(LingotekInterface::class);
+      $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
+      $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
+      $this->contentTranslationManager = $this->createMock(ContentTranslationManagerInterface::class);
+      $this->contentTranslationService = $this->createMock(LingotekContentTranslationServiceInterface::class);
       $this->tempStoreFactory = $this->getMockBuilder(PrivateTempStoreFactory::class)
         ->disableOriginalConstructor()
         ->getMock();
-      $this->state = $this->getMock(StateInterface::class);
-      $this->moduleHandler = $this->getMock(ModuleHandlerInterface::class);
+      $this->state = $this->createMock(StateInterface::class);
+      $this->moduleHandler = $this->createMock(ModuleHandlerInterface::class);
 
       $this->form = new LingotekManagementForm(
         $this->connection,
@@ -190,7 +191,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->with('entity_table', ['id'])
         ->willReturnSelf();
 
-      $statement = $this->getMock('Drupal\Core\Database\StatementInterface');
+      $statement = $this->createMock(StatementInterface::class);
 
       // Assert that condition is called filtering by the undefined language.
       $select->expects($this->any())
@@ -272,7 +273,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->with('profile')
         ->willReturn(NULL);
 
-      $entityType = $this->getMock(EntityTypeInterface::class);
+      $entityType = $this->createMock(EntityTypeInterface::class);
       $entityType->expects($this->any())
         ->method('get')
         ->with('bundle_entity_type')
@@ -286,7 +287,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('getKey')
         ->will($this->returnArgument(0));
 
-      $storage = $this->getMock(EntityStorageInterface::class);
+      $storage = $this->createMock(EntityStorageInterface::class);
 
       $this->entityManager->expects($this->once())
         ->method('getStorage')
@@ -300,7 +301,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('getBundleInfo')
         ->willReturn([]);
 
-      $language = $this->getMock(ConfigurableLanguageInterface::class);
+      $language = $this->createMock(ConfigurableLanguageInterface::class);
       $this->languageManager->expects($this->any())
         ->method('getLanguages')
         ->willReturn(['en' => $language]);

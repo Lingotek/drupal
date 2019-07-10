@@ -2,7 +2,12 @@
 
 namespace Drupal\Tests\lingotek\Unit\Form {
 
+  use Drupal\Core\Config\ConfigFactoryInterface;
+  use Drupal\Core\Form\FormStateInterface;
+  use Drupal\Core\Routing\RouteBuilderInterface;
+  use Drupal\Core\State\StateInterface;
   use Drupal\lingotek\Form\LingotekSettingsTabUtilitiesForm;
+  use Drupal\lingotek\LingotekInterface;
   use Drupal\Tests\UnitTestCase;
 
   /**
@@ -44,10 +49,10 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     protected function setUp() {
       parent::setUp();
 
-      $this->lingotek = $this->getMock('Drupal\lingotek\LingotekInterface');
-      $this->configFactory = $this->getMock('Drupal\Core\Config\ConfigFactoryInterface');
-      $this->state = $this->getMock('Drupal\Core\State\StateInterface');
-      $this->routeBuilder = $this->getMock('Drupal\Core\Routing\RouteBuilderInterface');
+      $this->lingotek = $this->createMock(LingotekInterface::class);
+      $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
+      $this->state = $this->createMock(StateInterface::class);
+      $this->routeBuilder = $this->createMock(RouteBuilderInterface::class);
 
       $this->form = new LingotekSettingsTabUtilitiesForm(
       $this->lingotek,
@@ -75,7 +80,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->with('lingotek.enable_debug_utilities')
         ->will($this->returnValue(FALSE));
       $build = [];
-      $form_state = $this->getMock('Drupal\Core\Form\FormStateInterface');
+      $form_state = $this->createMock(FormStateInterface::class);
       $build = $this->form->buildForm($build, $form_state);
       $this->assertSame($build['utilities']['lingotek_table']['enable_debug_utilities']['actions']['submit']['#value']->getUntranslatedString(), 'Enable debug operations');
     }
@@ -89,7 +94,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->with('lingotek.enable_debug_utilities')
         ->will($this->returnValue(TRUE));
       $build = [];
-      $form_state = $this->getMock('Drupal\Core\Form\FormStateInterface');
+      $form_state = $this->createMock(FormStateInterface::class);
       $build = $this->form->buildForm($build, $form_state);
       $this->assertSame($build['utilities']['lingotek_table']['enable_debug_utilities']['actions']['submit']['#value']->getUntranslatedString(), 'Disable debug operations');
     }

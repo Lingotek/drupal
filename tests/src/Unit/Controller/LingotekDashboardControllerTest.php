@@ -2,9 +2,21 @@
 
 namespace Drupal\Tests\lingotek\Unit\Controller;
 
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\Query\QueryFactory;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\language\ConfigurableLanguageInterface;
 use Drupal\lingotek\Controller\LingotekDashboardController;
+use Drupal\lingotek\LanguageLocaleMapperInterface;
+use Drupal\lingotek\LingotekConfigurationServiceInterface;
+use Drupal\lingotek\LingotekInterface;
 use Drupal\Tests\UnitTestCase;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @coversDefaultClass \Drupal\lingotek\Controller\LingotekDashboardController
@@ -96,20 +108,20 @@ class LingotekDashboardControllerTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->request = $this->getMock('Symfony\Component\HttpFoundation\Request');
+    $this->request = $this->createMock(Request::class);
     $this->configFactory = $this->getConfigFactoryStub(['lingotek.settings' => ['account' => ['access_token' => 'at', 'login_id' => 'login']]]);
-    $this->entityTypeManager = $this->getMockBuilder('Drupal\Core\Entity\EntityTypeManager')
+    $this->entityTypeManager = $this->getMockBuilder(EntityTypeManager::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $this->entityQueryFactory = $this->getMockBuilder('Drupal\Core\Entity\Query\QueryFactory')
+    $this->entityQueryFactory = $this->getMockBuilder(QueryFactory::class)
       ->disableOriginalConstructor()
       ->getMock();
-    $this->languageManager = $this->getMock('Drupal\Core\Language\LanguageManagerInterface');
-    $this->lingotek = $this->getMock('Drupal\lingotek\LingotekInterface');
-    $this->languageLocaleMapper = $this->getMock('Drupal\lingotek\LanguageLocaleMapperInterface');
-    $this->lingotekConfiguration = $this->getMock('Drupal\lingotek\LingotekConfigurationServiceInterface');
-    $this->formBuilder = $this->getMock('Drupal\Core\Form\FormBuilderInterface');
-    $this->logger = $this->getMock('Psr\Log\LoggerInterface');
+    $this->languageManager = $this->createMock(LanguageManagerInterface::class);
+    $this->lingotek = $this->createMock(LingotekInterface::class);
+    $this->languageLocaleMapper = $this->createMock(LanguageLocaleMapperInterface::class);
+    $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
+    $this->formBuilder = $this->createMock(FormBuilderInterface::class);
+    $this->logger = $this->createMock(LoggerInterface::class);
 
     $this->controller = new LingotekDashboardController(
       $this->request,
@@ -183,7 +195,7 @@ class LingotekDashboardControllerTest extends UnitTestCase {
       $languages[$langcode] = $language;
     }
 
-    $query = $this->getMock('Drupal\Core\Entity\Query\QueryInterface');
+    $query = $this->createMock(QueryInterface::class);
     $query->method('condition')
       ->willReturnSelf();
     $query->method('count')
@@ -235,8 +247,8 @@ class LingotekDashboardControllerTest extends UnitTestCase {
    * and its mocks.
    */
   protected function setUpConfigurableLanguageMock() {
-    $language = $this->getMock('Drupal\language\ConfigurableLanguageInterface');
-    $storage = $this->getMock('Drupal\Core\Entity\EntityStorageInterface');
+    $language = $this->createMock(ConfigurableLanguageInterface::class);
+    $storage = $this->createMock(EntityStorageInterface::class);
     $storage->expects($this->any())
       ->method('load')
       ->willReturn($language);
