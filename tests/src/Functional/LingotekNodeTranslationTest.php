@@ -102,7 +102,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['files[field_image_0]'] = drupal_realpath($test_image->uri);
+    $edit['files[field_image_0]'] = \Drupal::service('file_system')->realpath($test_image->uri);
 
     $this->drupalPostForm('node/add/article', $edit, t('Preview'));
 
@@ -187,7 +187,7 @@ class LingotekNodeTranslationTest extends LingotekTestBase {
     $edit['title[0][value]'] = 'Llamas are cool';
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
-    $edit['files[field_image_0]'] = drupal_realpath($test_image->uri);
+    $edit['files[field_image_0]'] = \Drupal::service('file_system')->realpath($test_image->uri);
     $edit['lingotek_translation_profile'] = 'manual';
 
     $this->drupalPostForm('node/add/article', $edit, t('Preview'));

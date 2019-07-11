@@ -135,7 +135,7 @@ class LingotekNodeEmbeddingTagsTranslationTest extends LingotekTestBase {
     $edit['body[0][value]'] = 'Llamas are very cool';
     $edit['langcode[0][value]'] = 'en';
     $edit['field_tags[target_id]'] = implode(',', ['Camelid', 'Herbivorous']);
-    $edit['files[field_image_0]'] = drupal_realpath($test_image->uri);
+    $edit['files[field_image_0]'] = \Drupal::service('file_system')->realpath($test_image->uri);
 
     $this->drupalPostForm('node/add/article', $edit, t('Preview'));
 
