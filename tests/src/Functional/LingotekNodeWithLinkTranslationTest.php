@@ -45,13 +45,13 @@ class LingotekNodeWithLinkTranslationTest extends LingotekTestBase {
 
     // Create a link field.
     // Create a field with settings to validate.
-    $fieldStorage = entity_create('field_storage_config', [
+    $fieldStorage = \Drupal::entityTypeManager()->getStorage('field_storage_config')->create([
       'field_name' => $this->field_name,
       'entity_type' => 'node',
       'type' => 'link',
     ]);
     $fieldStorage->save();
-    $field = entity_create('field_config', [
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->create([
       'field_storage' => $fieldStorage,
       'bundle' => 'article',
       'settings' => [

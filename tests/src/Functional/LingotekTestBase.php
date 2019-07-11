@@ -91,15 +91,15 @@ abstract class LingotekTestBase extends BrowserTestBase {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function createImageField($name, $type_name, $entity_type_id = 'node', array $storage_settings = [], array $field_settings = [], array $widget_settings = []) {
-    entity_create('field_storage_config', [
+    $fieldStorage = \Drupal::entityTypeManager()->getStorage('field_storage_config')->create([
       'field_name' => $name,
       'entity_type' => $entity_type_id,
       'type' => 'image',
       'settings' => $storage_settings,
       'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
-    ])->save();
-
-    $field_config = entity_create('field_config', [
+    ]);
+    $fieldStorage->save();
+    $field_config = \Drupal::entityTypeManager()->getStorage('field_config')->create([
       'field_name' => $name,
       'label' => $name,
       'entity_type' => $entity_type_id,

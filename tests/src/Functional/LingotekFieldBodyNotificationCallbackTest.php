@@ -157,7 +157,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
     // created returns SAVED_NEW, but it will return SAVED_UPDATED as we will
     // save the third party settings.
-    $type = entity_create('node_type', ['type' => 'article', 'name' => 'Article']);
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'article', 'name' => 'Article']);
     $type->save();
     node_add_body_field($type);
 
@@ -303,7 +303,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
     // created returns SAVED_NEW, but it will return SAVED_UPDATED as we will
     // save the third party settings.
-    $type = entity_create('node_type', ['type' => 'article', 'name' => 'Article']);
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'article', 'name' => 'Article']);
     $type->save();
     node_add_body_field($type);
 
@@ -443,11 +443,11 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
       'node_fields' => 'automatic',
     ]);
 
-    $type1 = entity_create('node_type', ['type' => 'article', 'name' => 'Article']);
+    $type1 = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'article', 'name' => 'Article']);
     $type1->save();
     node_add_body_field($type1);
 
-    $type2 = entity_create('node_type', ['type' => 'page', 'name' => 'Page']);
+    $type2 = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'page', 'name' => 'Page']);
     $type2->save();
     node_add_body_field($type2);
 

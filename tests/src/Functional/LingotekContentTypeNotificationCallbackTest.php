@@ -154,7 +154,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
     // created returns SAVED_NEW, but it will return SAVED_UPDATED as we will
     // save the third party settings.
-    $type = entity_create('node_type', ['type' => 'article', 'name' => 'Article']);
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'article', 'name' => 'Article']);
     $type->save();
 
     \Drupal::service('router.builder')->rebuild();
@@ -417,7 +417,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     // We cannot use drupalCreateContentType(), as it asserts that the last entity
     // created returns SAVED_NEW, but it will return SAVED_UPDATED as we will
     // save the third party settings.
-    $type = entity_create('node_type', ['type' => 'article', 'name' => 'Article']);
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->create(['type' => 'article', 'name' => 'Article']);
     $type->save();
     \Drupal::service('router.builder')->rebuild();
 

@@ -156,13 +156,13 @@ class LingotekNodeMetatagsTranslationTest extends LingotekTestBase {
    */
   protected function createMetatagField($field_name, $entity_type, $bundle) {
     // Create a field with settings to validate.
-    $fieldStorage = entity_create('field_storage_config', [
+    $fieldStorage = \Drupal::entityTypeManager()->getStorage('field_storage_config')->create([
       'field_name' => $field_name,
       'entity_type' => $entity_type,
       'type' => 'metatag',
     ]);
     $fieldStorage->save();
-    $field = entity_create('field_config', [
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->create([
       'field_storage' => $fieldStorage,
       'bundle' => $bundle,
     ]);
