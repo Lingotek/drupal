@@ -77,7 +77,13 @@ class LingotekActionsTest extends LingotekTestBase {
       11 => 'user_add_role_action.random_role_id',
       12 => 'user_remove_role_action.random_role_id',
     ];
-    $this->assertCount(13, $actions);
+    $expected = 13;
+    if ((float) \Drupal::VERSION >= 8.8) {
+      $expected += 2;
+      $default_actions[] = 'taxonomy_term_publish_action';
+      $default_actions[] = 'taxonomy_term_unpublish_action';
+    }
+    $this->assertCount($expected, $actions);
 
     // Enable Lingotek translation for nodes.
     $this->saveLingotekContentTranslationSettingsForNodeTypes();
@@ -85,7 +91,7 @@ class LingotekActionsTest extends LingotekTestBase {
     $actions = Action::loadMultiple();
     // We expect 13 initial actions, plus 7 that are the entity bulk Lingotek
     // actions for all targets, plus 4 per each target language.
-    $this->assertCount(13 + 7 + 4 + 4, $actions);
+    $this->assertCount($expected + 7 + 4 + 4, $actions);
 
     $expectedActions = [
       'node_lingotek_upload_action',
@@ -123,7 +129,7 @@ class LingotekActionsTest extends LingotekTestBase {
       'node_it_lingotek_delete_translation_action',
     ];
     $actions = Action::loadMultiple();
-    $this->assertCount(13 + 7 + 4 + 4 + 4, $actions);
+    $this->assertCount($expected + 7 + 4 + 4 + 4, $actions);
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);
     }
@@ -171,7 +177,7 @@ class LingotekActionsTest extends LingotekTestBase {
     ];
     $actions = Action::loadMultiple();
     // We add 7 for roundtrip and 12 for the 3 languages per 4 actions.
-    $this->assertCount(13 + 7 + 7 + 4 + 4 + 4 + 12, $actions);
+    $this->assertCount($expected + 7 + 7 + 4 + 4 + 4 + 12, $actions);
     foreach ($expectedActions as $expectedAction) {
       $this->assertArrayHasKey($expectedAction, $actions, 'There is an action with id: ' . $expectedAction);
     }
