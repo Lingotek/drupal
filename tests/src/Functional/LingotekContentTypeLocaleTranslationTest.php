@@ -41,7 +41,7 @@ class LingotekContentTypeLocaleTranslationTest extends LingotekTestBase {
     ConfigurableLanguage::createFromLangcode('es-ar')->setThirdPartySetting('lingotek', 'locale', 'es_AR')->save();
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.

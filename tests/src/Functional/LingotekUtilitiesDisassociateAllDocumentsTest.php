@@ -57,7 +57,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     \Drupal::service('content_translation.manager')->setEnabled('taxonomy_term', $vocabulary_id, TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -206,7 +206,7 @@ class LingotekUtilitiesDisassociateAllDocumentsTest extends LingotekTestBase {
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $content_translation_service->getSourceStatus($term));
 
     // Ensure we are disassociated the article type.
-    $article_type = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $article_type = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
     $this->assertNull($config_translation_service->getDocumentId($article_type), 'The article node type has been disassociated from its Lingotek Document ID');
     $this->assertIdentical(Lingotek::STATUS_UNTRACKED, $config_translation_service->getSourceStatus($article_type));
 

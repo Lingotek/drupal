@@ -28,7 +28,7 @@ class LingotekSettingsTabProfilesForm extends LingotekConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $profiles = \Drupal::entityManager()->getListBuilder('lingotek_profile')->load();
+    $profiles = \Drupal::entityTypeManager()->getListBuilder('lingotek_profile')->load();
     $this->profile_index = 0;
 
     $header = [

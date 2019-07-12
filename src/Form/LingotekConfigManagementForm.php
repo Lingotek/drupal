@@ -195,7 +195,7 @@ class LingotekConfigManagementForm extends FormBase {
       $label_filter = $temp_store->get('label');
 
       // Determine the machine name of the title for this entity type.
-      $entity_storage = \Drupal::entityManager()->getStorage($this->filter);
+      $entity_storage = \Drupal::entityTypeManager()->getStorage($this->filter);
       $entity_keys = $entity_storage->getEntityType()->getKeys();
       if (isset($entity_keys['label'])) {
         $label_key = $entity_keys['label'];
@@ -1648,7 +1648,7 @@ class LingotekConfigManagementForm extends FormBase {
       }
     }
     else {
-      $entities = \Drupal::entityManager()
+      $entities = \Drupal::entityTypeManager()
         ->getStorage($this->filter)
         ->loadMultiple($values);
       foreach ($entities as $entity) {

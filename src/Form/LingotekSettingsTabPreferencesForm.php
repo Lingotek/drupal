@@ -207,7 +207,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
         ->execute();
       if ($ids) {
         // We just take the first language switcher.
-        $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->load(reset($ids));
+        $this->lang_switcher = \Drupal::entityTypeManager()->getStorage('block')->load(reset($ids));
         $this->lang_switcher_value = $this->lang_switcher->status();
         $this->lang_region_selected = $this->lang_switcher->getRegion();
       }
@@ -235,7 +235,7 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
       if ($form_values['lang_switcher']) {
         $config = $this->config('system.theme');
         $theme_default = $config->get('default');
-        $this->lang_switcher = \Drupal::entityManager()->getStorage('block')->create(['plugin' => 'language_block:language_interface', 'theme' => $theme_default]);
+        $this->lang_switcher = \Drupal::entityTypeManager()->getStorage('block')->create(['plugin' => 'language_block:language_interface', 'theme' => $theme_default]);
         $this->lang_switcher->setRegion($form_values['lang_switcher_select']);
         $this->lang_switcher->enable();
         $this->lang_switcher->set('id', 'languageswitcher');
@@ -310,13 +310,13 @@ class LingotekSettingsTabPreferencesForm extends LingotekConfigFormBase {
   protected function saveShowLanguageFields($form_values) {
     // Only save if there's a change to the show_language_labels choice
     if ($this->lingotek->get('preference.show_language_labels') != $form_values['show_language_labels']) {
-      $bundles = \Drupal::entityManager()->getBundleInfo('node');
+      $bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo('node');
 
       foreach ($bundles as $bundle_id => $bundle) {
         if ($bundle['translatable']) {
-          $field_definitions = \Drupal::entityManager()->getFieldDefinitions('node', $bundle_id);
+          $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', $bundle_id);
           $langcode = $field_definitions['langcode'];
-          $display = $this->entityManager->getStorage('entity_view_display')
+          $display = $this->entityTypeManager->getStorage('entity_view_display')
             ->load('node.' . $bundle_id . '.default');
 
           if ($form_values['show_language_labels']) {

@@ -134,7 +134,7 @@ function lingotek_update_8001() {
 
       if (!empty($ids)) {
         /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface[] $entities */
-        $entities = \Drupal::entityManager()->getStorage($mapper_id)->loadMultiple($ids);
+        $entities = \Drupal::entityTypeManager()->getStorage($mapper_id)->loadMultiple($ids);
         foreach ($entities as $entity) {
           $settings = $entity->getThirdPartySettings('lingotek');
 
@@ -159,7 +159,7 @@ function lingotek_update_8001() {
     ->exists('third_party_settings.lingotek.lingotek_document_id')
     ->execute();
   if (!empty($ids)) {
-    $entities = \Drupal::entityManager()->getStorage('field_config')->loadMultiple($ids);
+    $entities = \Drupal::entityTypeManager()->getStorage('field_config')->loadMultiple($ids);
     foreach ($entities as $entity) {
       $settings = $entity->getThirdPartySettings('lingotek');
 

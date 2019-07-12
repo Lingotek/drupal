@@ -55,7 +55,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     \Drupal::service('content_translation.manager')->setEnabled('node', 'not_configured', TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -502,7 +502,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     \Drupal::service('content_translation.manager')->setEnabled('node', 'custom_type', TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -665,7 +665,7 @@ class LingotekNodeBulkFormTest extends LingotekTestBase {
     \Drupal::service('content_translation.manager')->setEnabled('node', 'page', TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.

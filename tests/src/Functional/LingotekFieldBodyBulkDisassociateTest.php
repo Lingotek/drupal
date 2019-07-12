@@ -61,8 +61,8 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
-    \Drupal::entityManager()->getStorage('field_config')->resetCache();
-    $entity = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    \Drupal::entityTypeManager()->getStorage('field_config')->resetCache();
+    $entity = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
 
     // Assert that no document has been deleted remotely.
     $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);
@@ -97,8 +97,8 @@ class LingotekFieldBodyBulkDisassociateTest extends LingotekTestBase {
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
-    \Drupal::entityManager()->getStorage('field_config')->resetCache();
-    $entity = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    \Drupal::entityTypeManager()->getStorage('field_config')->resetCache();
+    $entity = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
 
     // Assert that the document has been deleted remotely.
     $deleted_docs = \Drupal::state()->get('lingotek.deleted_docs', []);

@@ -43,7 +43,7 @@ class LingotekConfigImportTest extends KernelTestBase {
     // Create a content entity and some config that depends on it.
     $content_entity = EntityTestMul::create([]);
     $content_entity->save();
-    $storage = $this->container->get('entity.manager')->getStorage('config_test');
+    $storage = $this->container->get('entity_type.manager')->getStorage('config_test');
     // Test dependencies between modules.
     $entity1 = $storage->create(
       [

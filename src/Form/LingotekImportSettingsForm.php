@@ -19,7 +19,7 @@ class LingotekImportSettingsForm extends LingotekConfigFormBase {
       '#title' => t('Preferences'),
     ];
 
-    $contentTypes = \Drupal::service('entity.manager')->getStorage('node_type')->loadMultiple();
+    $contentTypes = \Drupal::service('entity_type.manager')->getStorage('node_type')->loadMultiple();
 
     $format_options = [];
     foreach ($contentTypes as $contentType) {

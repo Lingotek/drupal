@@ -8,7 +8,8 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -57,9 +58,16 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
 
   /**
    * The language manager.
@@ -79,18 +87,25 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
    *   The Lingotek configuration service.
    * @param \Drupal\lingotek\LingotekConfigTranslationServiceInterface $lingotek_config_translation
    *   The Lingotek config translation service.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   An entity manager object.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, LingotekConfigTranslationServiceInterface $lingotek_config_translation, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, EntityFieldManagerInterface $entity_field_manager = NULL) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->lingotekConfigTranslation = $lingotek_config_translation;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
+    if (!$entity_field_manager) {
+      @trigger_error('The entity_field.manager service must be passed to LingotekContentTranslationService::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $entity_field_manager = \Drupal::service('entity_field.manager');
+    }
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -439,8 +454,8 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $isParentEntity = count($visited) === 0;
     $visited[$entity->bundle()][] = $entity->id();
     $entity_type = $entity->getEntityType();
-    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
-    $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityManager->getFieldStorageDefinitions($entity_type->id()) : [];
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+    $storage_definitions = $entity_type instanceof ContentEntityTypeInterface ? $this->entityFieldManager->getFieldStorageDefinitions($entity_type->id()) : [];
     $translatable_fields = [];
     // We need to include computed fields, as we may have a URL alias.
     foreach ($entity->getFields(TRUE) as $field_name => $definition) {
@@ -450,7 +465,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $translatable_fields[$field_name] = $definition;
       }
     }
-    $default_display = $this->entityManager->getStorage('entity_view_display')
+    $default_display = $this->entityTypeManager->getStorage('entity_view_display')
       ->load($entity_type->id() . '.' . $entity->bundle() . '.' . 'default');
     if ($default_display !== NULL) {
       uksort($translatable_fields, function ($a, $b) use ($default_display) {
@@ -510,7 +525,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()->getSetting('target_type');
         foreach ($entity->{$k} as $field_item) {
           $embedded_entity_id = $field_item->get('target_id')->getValue();
-          $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
+          $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)->load($embedded_entity_id);
           // We may have orphan references, so ensure that they exist before
           // continuing.
           if ($embedded_entity !== NULL) {
@@ -547,7 +562,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
         foreach ($entity->{$k} as $field_item) {
           $embedded_entity_id = $field_item->get('target_id')->getValue();
           $embedded_entity_revision_id = $field_item->get('target_revision_id')->getValue();
-          $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
+          $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)->loadRevision($embedded_entity_revision_id);
           // Handle the unlikely case where a paragraph has lost its parent.
           if (!empty($embedded_entity)) {
             $embedded_data = $this->getSourceData($embedded_entity, $visited);
@@ -1019,7 +1034,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
     $entity = NULL;
     $metadata = LingotekContentMetadata::loadByDocumentID($document_id);
     if ($metadata && $metadata->getContentEntityTypeId() && $metadata->getContentEntityId()) {
-      $entity = $this->entityManager->getStorage($metadata->getContentEntityTypeId())->load($metadata->getContentEntityId());
+      $entity = $this->entityTypeManager->getStorage($metadata->getContentEntityTypeId())->load($metadata->getContentEntityId());
     }
     return $entity;
   }
@@ -1047,7 +1062,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
 
     $entity_type = $entity->getEntityType();
     $entity_type_id = $entity->getEntityTypeId();
-    $entity_storage = $this->entityManager->getStorage($entity_type_id);
+    $entity_storage = $this->entityTypeManager->getStorage($entity_type_id);
 
     if ($entity_type->isRevisionable()) {
       // If the entity type is revisionable, we need to check the proper revision.
@@ -1105,7 +1120,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
       // TODO: log warning that downloaded translation's langcode is not enabled.
       return FALSE;
     }
-    $storage_definitions = $this->entityManager->getFieldStorageDefinitions($entity->getEntityTypeId());
+    $storage_definitions = $this->entityFieldManager->getFieldStorageDefinitions($entity->getEntityTypeId());
 
     try {
       // We need to load the revision that was uploaded for consistency. For that,
@@ -1151,7 +1166,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                   ->get('target_id')
                   ->getValue();
               }
-              $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
+              $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
               // We may have orphan references, so ensure that they exist before
               // continuing.
@@ -1197,7 +1212,7 @@ class LingotekContentTranslationService implements LingotekContentTranslationSer
                 ->get('target_id')
                 ->getValue();
               /** @var \Drupal\Core\Entity\RevisionableInterface $embedded_entity */
-              $embedded_entity = $this->entityManager->getStorage($target_entity_type_id)
+              $embedded_entity = $this->entityTypeManager->getStorage($target_entity_type_id)
                 ->load($embedded_entity_id);
               if ($embedded_entity !== NULL) {
                 $this->saveTargetData($embedded_entity, $langcode, $field_item);

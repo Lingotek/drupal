@@ -20,7 +20,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    */
   public function getEnabledEntityTypes() {
     $enabled = [];
-    foreach (\Drupal::entityManager()->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
       if ($this->isEnabled($entity_type_id)) {
         $enabled[$entity_type_id] = $entity_type;
       }
@@ -36,7 +36,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
     $config = \Drupal::config('lingotek.settings');
     if ($bundle === NULL) {
       // Check if any bundle is enabled.
-      $bundles = \Drupal::entityManager()->getBundleInfo($entity_type_id);
+      $bundles = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type_id);
       foreach ($bundles as $bundle_id => $bundle_definition) {
         $result = $this->isEnabled($entity_type_id, $bundle_id);
         if ($result) {
@@ -240,7 +240,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function getProfileOptions() {
-    $profiles = \Drupal::entityManager()->getListBuilder('lingotek_profile')->load();
+    $profiles = \Drupal::entityTypeManager()->getListBuilder('lingotek_profile')->load();
     foreach ($profiles as $profile) {
       /** \Drupal\lingotek\LingotekProfileInterface $profile */
       $options[$profile->id()] = $profile->label();
@@ -271,7 +271,7 @@ class LingotekConfigurationService implements LingotekConfigurationServiceInterf
    * {@inheritDoc}
    */
   public function isFieldLingotekEnabled($entity_type_id, $bundle, $field_name) {
-    $field_definitions = \Drupal::entityManager()->getFieldDefinitions($entity_type_id, $bundle);
+    $field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type_id, $bundle);
     $config = \Drupal::config('lingotek.settings');
     $key = 'translate.entity.' . $entity_type_id . '.' . $bundle . '.field.' . $field_name;
 

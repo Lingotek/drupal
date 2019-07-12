@@ -88,7 +88,7 @@ class LingotekEntityController extends LingotekControllerBase {
   public function upload($entity_type, $entity_id) {
     /** @var \Drupal\lingotek\LingotekContentTranslationServiceInterface $translation_service */
     $translation_service = \Drupal::service('lingotek.content_translation');
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       if ($translation_service->uploadDocument($entity)) {
         drupal_set_message(t('@entity_type %title has been uploaded.', ['@entity_type' => ucfirst($entity->getEntityTypeId()), '%title' => $entity->label()]));

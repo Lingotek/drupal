@@ -4,7 +4,7 @@ namespace Drupal\lingotek;
 
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityHandlerInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -50,14 +50,14 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
    *   The info array of the given entity type.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $entity_last_installed_schema_repository
+   *   The entity last installed schema repository.
    */
-  public function __construct(EntityTypeInterface $entity_type, LanguageManagerInterface $language_manager, EntityManagerInterface $entity_manager) {
+  public function __construct(EntityTypeInterface $entity_type, LanguageManagerInterface $language_manager, EntityLastInstalledSchemaRepositoryInterface $entity_last_installed_schema_repository) {
     $this->entityTypeId = $entity_type->id();
     $this->entityType = $entity_type;
     $this->languageManager = $language_manager;
-    $this->fieldStorageDefinitions = $entity_manager->getLastInstalledFieldStorageDefinitions($this->entityTypeId);
+    $this->fieldStorageDefinitions = $entity_last_installed_schema_repository->getLastInstalledFieldStorageDefinitions($this->entityTypeId);
   }
 
   /**
@@ -67,7 +67,7 @@ class LingotekContentTranslationHandler implements LingotekContentTranslationHan
     return new static(
       $entity_type,
       $container->get('language_manager'),
-      $container->get('entity.manager')
+      $container->get('entity.last_installed_schema.repository')
     );
   }
 

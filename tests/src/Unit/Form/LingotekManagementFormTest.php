@@ -6,7 +6,9 @@ namespace Drupal\Tests\lingotek\Unit\Form {
   use Drupal\Core\Database\Connection;
   use Drupal\Core\Database\Query\PagerSelectExtender;
   use Drupal\Core\Database\StatementInterface;
-  use Drupal\Core\Entity\EntityManagerInterface;
+  use Drupal\Core\Entity\EntityFieldManagerInterface;
+  use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+  use Drupal\Core\Entity\EntityTypeManagerInterface;
   use Drupal\Core\Entity\EntityStorageInterface;
   use Drupal\Core\Entity\EntityTypeInterface;
   use Drupal\Core\Entity\Query\QueryFactory;
@@ -52,9 +54,23 @@ namespace Drupal\Tests\lingotek\Unit\Form {
     /**
      * The entity manager.
      *
-     * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
      */
-    protected $entityManager;
+    protected $entityTypeManager;
+
+    /**
+     * The entity field manager.
+     *
+     * @var \Drupal\Core\Entity\EntityFieldManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $entityFieldManager;
+
+    /**
+     * The entity type bundle info.
+     *
+     * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $entityTypeBundleInfo;
 
     /**
      * The language manager.
@@ -125,7 +141,9 @@ namespace Drupal\Tests\lingotek\Unit\Form {
       $this->connection = $this->getMockBuilder(Connection::class)
         ->disableOriginalConstructor()
         ->getMock();
-      $this->entityManager = $this->createMock(EntityManagerInterface::class);
+      $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
+      $this->entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
+      $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfoInterface::class);
       $this->languageManager = $this->createMock(LanguageManagerInterface::class);
       $this->entityQuery = $this->getMockBuilder(QueryFactory::class)
         ->disableOriginalConstructor()
@@ -143,7 +161,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
 
       $this->form = new LingotekManagementForm(
         $this->connection,
-        $this->entityManager,
+        $this->entityTypeManager,
         $this->languageManager,
         $this->entityQuery,
         $this->lingotek,
@@ -154,7 +172,9 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         $this->tempStoreFactory,
         $this->state,
         $this->moduleHandler,
-        'node'
+        'node',
+        $this->entityFieldManager,
+        $this->entityTypeBundleInfo
       );
       $this->form->setConfigFactory($this->getConfigFactoryStub(
         [
@@ -278,7 +298,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('get')
         ->with('bundle_entity_type')
         ->willReturn('node');
-      $this->entityManager->expects($this->exactly(3))
+      $this->entityTypeManager->expects($this->exactly(3))
         ->method('getDefinition')
         ->with('node')
         ->willReturn($entityType);
@@ -289,7 +309,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
 
       $storage = $this->createMock(EntityStorageInterface::class);
 
-      $this->entityManager->expects($this->once())
+      $this->entityTypeManager->expects($this->once())
         ->method('getStorage')
         ->with('node')
         ->willReturn($storage);
@@ -297,7 +317,7 @@ namespace Drupal\Tests\lingotek\Unit\Form {
         ->method('loadMultiple')
         ->willReturn([]);
 
-      $this->entityManager->expects($this->once())
+      $this->entityTypeBundleInfo->expects($this->once())
         ->method('getBundleInfo')
         ->willReturn([]);
 

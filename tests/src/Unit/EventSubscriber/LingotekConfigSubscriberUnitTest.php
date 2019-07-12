@@ -6,7 +6,9 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
   use Drupal\config_translation\ConfigNamesMapper;
   use Drupal\Core\Config\Config;
   use Drupal\Core\Config\ConfigCrudEvent;
-  use Drupal\Core\Entity\EntityManagerInterface;
+  use Drupal\Core\Entity\EntityFieldManagerInterface;
+  use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+  use Drupal\Core\Entity\EntityTypeManagerInterface;
   use Drupal\field\Entity\FieldConfig;
   use Drupal\lingotek\EventSubscriber\LingotekConfigSubscriber;
   use Drupal\lingotek\LingotekConfigTranslationServiceInterface;
@@ -58,9 +60,23 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
     /**
      * Entity manager.
      *
-     * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var \Drupal\Core\Entity\EntityTypeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
      */
-    protected $entityManager;
+    protected $entityTypeManager;
+
+    /**
+     * The entity field manager.
+     *
+     * @var \Drupal\Core\Entity\EntityFieldManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $entityFieldManager;
+
+    /**
+     * The entity type bundle info.
+     *
+     * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $entityTypeBundleInfo;
 
     /**
      * The config subscriber under test.
@@ -76,7 +92,8 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
       $this->mapperManager = $this->createMock(ConfigMapperManagerInterface::class);
       $this->mapper = $this->createMock(ConfigNamesMapper::class);
       $this->lingotekConfiguration = $this->createMock(LingotekConfigurationServiceInterface::class);
-      $this->entityManager = $this->createMock(EntityManagerInterface::class);
+      $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
+      $this->entityFieldManager = $this->createMock(EntityFieldManagerInterface::class);
 
       $this->mappers = [$this->mapper];
       $this->mapperManager->expects($this->any())
@@ -87,7 +104,8 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
         $this->translationService,
         $this->mapperManager,
         $this->lingotekConfiguration,
-        $this->entityManager
+        $this->entityTypeManager,
+        $this->entityFieldManager
       );
     }
 
@@ -120,7 +138,7 @@ namespace Drupal\Tests\lingotek\Unit\EventSubscriber {
         ->with('translatable')
         ->willReturn(TRUE);
 
-      $this->entityManager->expects($this->once())
+      $this->entityFieldManager->expects($this->once())
         ->method('getFieldDefinitions')
         ->with('node', 'article')
         ->willReturn(['myfieldname' => NULL]);

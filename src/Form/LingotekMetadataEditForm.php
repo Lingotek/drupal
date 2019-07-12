@@ -5,7 +5,7 @@ namespace Drupal\lingotek\Form;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityConstraintViolationListInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -50,8 +50,8 @@ class LingotekMetadataEditForm extends ContentEntityForm {
   /**
    * Constructs a new LingotekManagementForm object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   *   The entity repository.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\lingotek\LanguageLocaleMapperInterface $language_locale_mapper
@@ -61,8 +61,8 @@ class LingotekMetadataEditForm extends ContentEntityForm {
    * @param string $entity_type_id
    *   The entity type id.
    */
-  public function __construct(EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, LanguageLocaleMapperInterface $language_locale_mapper, LingotekContentTranslationServiceInterface $translation_service, ModuleHandlerInterface $module_handler, $entity_type_id) {
-    parent::__construct($entity_manager);
+  public function __construct(EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, LanguageLocaleMapperInterface $language_locale_mapper, LingotekContentTranslationServiceInterface $translation_service, ModuleHandlerInterface $module_handler, $entity_type_id) {
+    parent::__construct($entity_repository);
 
     $this->languageManager = $language_manager;
     $this->languageLocaleMapper = $language_locale_mapper;
@@ -84,7 +84,7 @@ class LingotekMetadataEditForm extends ContentEntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager'),
+      $container->get('entity.repository'),
       $container->get('language_manager'),
       $container->get('lingotek.language_locale_mapper'),
       $container->get('lingotek.content_translation'),

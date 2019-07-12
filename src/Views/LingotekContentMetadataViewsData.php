@@ -3,7 +3,7 @@
 namespace Drupal\lingotek\Views;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -27,13 +27,29 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
   protected $lingotekConfigService;
 
   /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @ToDo: Remove after 8.7.x compatibility is dropped. Since 8.8.x is in EntityViewsData
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   * @ToDo: Remove after 8.7.x compatibility is dropped. Since 8.8.x is in EntityViewsData
+   */
+  protected $entityFieldManager;
+
+  /**
    * Constructs an EntityViewsData object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
    *   The entity type to provide views integration for.
    * @param \Drupal\Core\Entity\Sql\SqlEntityStorageInterface $storage_controller
    *   The storage handler used for this entity type.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
@@ -42,8 +58,12 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The lingotek configuration service.
    */
-  public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, LingotekConfigurationServiceInterface $lingotek_configuration, EntityFieldManagerInterface $entity_field_manager = NULL) {
-    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager, $entity_field_manager);
+  public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, LingotekConfigurationServiceInterface $lingotek_configuration, EntityFieldManagerInterface $entity_field_manager = NULL) {
+    $entity_manager = \Drupal::service('entity.manager');
+    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager);
+    // @ToDo: Remove after 8.7.x compatibility is dropped. Since 8.8.x is in EntityViewsData
+    $this->entityTypeManager = $entity_type_manager;
+    $this->entityFieldManager = $entity_field_manager;
     $this->lingotekConfigService = $lingotek_configuration;
   }
 
@@ -53,8 +73,8 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
     return new static(
       $entity_type,
-      $container->get('entity.manager')->getStorage($entity_type->id()),
-      $container->get('entity.manager'),
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('entity_type.manager'),
       $container->get('module_handler'),
       $container->get('string_translation'),
       $container->get('lingotek.configuration'),
@@ -81,13 +101,13 @@ class LingotekContentMetadataViewsData extends EntityViewsData {
       ],
     ];
 
-    $enabled_entity_types = array_filter($this->entityManager->getDefinitions(), function (EntityTypeInterface $type) {
+    $enabled_entity_types = array_filter($this->entityTypeManager->getDefinitions(), function (EntityTypeInterface $type) {
       return $this->lingotekConfigService->isEnabled($type->id());
     });
 
     // Provides a relationship from the entity to its lingotek status metadata
     // entity.
-    $lingotek_state_entity_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+    $lingotek_state_entity_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
     $lingotek_state_entity_base_table = $lingotek_state_entity_type->getDataTable() ?: $lingotek_state_entity_type->getBaseTable();
 
     foreach ($enabled_entity_types as $entity_type_id => $entity_type) {

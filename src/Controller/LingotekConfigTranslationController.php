@@ -242,7 +242,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // Hack for fields, the entity is field config.
       $entity_type = 'field_config';
     }
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     if ($this->translationService->getDocumentId($entity)) {
       try {
         if ($this->translationService->updateDocument($entity)) {
@@ -296,7 +296,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // Hack for fields, the entity is field config.
       $entity_type = 'field_config';
     }
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       if ($this->translationService->updateDocument($entity)) {
         drupal_set_message($this->t('%label has been updated.', ['%label' => $entity->label()]));
@@ -331,7 +331,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // Hack for fields, the entity is field config.
       $entity_type = 'field_config';
     }
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       if ($this->translationService->checkSourceStatus($entity)) {
         drupal_set_message($this->t('%label status checked successfully', ['%label' => $entity->label()]));
@@ -365,7 +365,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // Hack for fields, the entity is field config.
       $entity_type = 'field_config';
     }
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       if ($this->translationService->addTarget($entity, $locale)) {
         drupal_set_message($this->t('Translation to %locale requested successfully', ['%locale' => $locale]));
@@ -400,7 +400,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // Hack for fields, the entity is field config.
       $entity_type = 'field_config';
     }
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       if ($this->translationService->checkTargetStatus($entity, $locale)) {
         drupal_set_message($this->t('Translation to %locale status checked successfully', ['%locale' => $locale]));
@@ -445,7 +445,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       // Hack for fields, the entity is field config.
       $entity_type = 'field_config';
     }
-    $entity = $this->entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = $this->entityTypeManager()->getStorage($entity_type)->load($entity_id);
     try {
       $success = $this->translationService->downloadDocument($entity, $locale);
       if ($success === TRUE) {
@@ -484,7 +484,7 @@ class LingotekConfigTranslationController extends ConfigTranslationController {
       $id = $field_config->getTargetEntityTypeId();
       $mapper = $mappers[$id . '_fields'];
       $mapper->setEntity($field_config);
-      $entity_definition = $this->entityManager->getDefinition($id);
+      $entity_definition = $this->entityTypeManager->getDefinition($id);
 
       $uri = Url::fromRoute($mapper->getOverviewRouteName(), [$entity_type => $entity_id, $entity_definition->getBundleEntityType() => $field_config->getTargetBundle()]);
     }

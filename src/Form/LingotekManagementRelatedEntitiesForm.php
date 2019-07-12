@@ -5,7 +5,9 @@ namespace Drupal\lingotek\Form;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityType;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -34,7 +36,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The current database connection.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
@@ -54,21 +56,13 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
    *   The factory for the temp store object.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
    */
-  public function __construct(Connection $connection, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler) {
-    $this->connection = $connection;
-    $this->entityManager = $entity_manager;
-    $this->languageManager = $language_manager;
-    $this->entityQuery = $entity_query;
-    $this->contentTranslationManager = $content_translation_manager;
-    $this->lingotek = $lingotek;
-    $this->translationService = $translation_service;
-    $this->tempStoreFactory = $temp_store_factory;
-    $this->lingotek = $lingotek;
-    $this->lingotekConfiguration = $lingotek_configuration;
-    $this->languageLocaleMapper = $language_locale_mapper;
-    $this->state = $state;
-    $this->moduleHandler = $module_handler;
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
+    parent::__construct($connection, $entity_type_manager, $language_manager, $entity_query, $lingotek, $lingotek_configuration, $language_locale_mapper, $content_translation_manager, $translation_service, $temp_store_factory, $state, $module_handler, NULL, $entity_field_manager, $entity_type_bundle_info);
   }
 
   /**
@@ -77,7 +71,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('database'),
-      $container->get('entity.manager'),
+      $container->get('entity_type.manager'),
       $container->get('language_manager'),
       $container->get('entity.query'),
       $container->get('lingotek'),
@@ -87,7 +81,9 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
       $container->get('lingotek.content_translation'),
       $container->get('tempstore.private'),
       $container->get('state'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('entity_field.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -125,7 +121,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     }
 
     foreach ($entityTypes as $type => $values) {
-      $entities = array_merge($entities, $this->entityManager->getStorage($type)->loadMultiple($values));
+      $entities = array_merge($entities, $this->entityTypeManager->getStorage($type)->loadMultiple($values));
     }
     return $entities;
   }
@@ -156,13 +152,13 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
   public function calculateNestedEntities(ContentEntityInterface &$entity, &$visited = [], &$entities = []) {
     $visited[$entity->bundle()][] = $entity->id();
     $entities[$entity->getEntityTypeId()][] = $entity;
-    $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
     foreach ($field_definitions as $k => $definition) {
       $field_type = $field_definitions[$k]->getType();
       if ($field_type === 'entity_reference' || $field_type === 'er_viewmode' || $field_type === 'entity_reference_revisions') {
         $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
           ->getSetting('target_type');
-        $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
+        $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);
         if ($target_entity_type instanceof ContentEntityType) {
           foreach ($entity->{$k} as $field_item) {
             if (!isset($entities[$target_entity_type_id])) {
@@ -181,13 +177,13 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
     $entities[$entity->getEntityTypeId()][$entity->id()] = $entity;
     if ($depth > 0) {
       --$depth;
-      $field_definitions = $this->entityManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
+      $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity->getEntityTypeId(), $entity->bundle());
       foreach ($field_definitions as $k => $definition) {
         $field_type = $field_definitions[$k]->getType();
         if (in_array($field_type, ['entity_reference', 'entity_reference_revisions', 'er_viewmode'])) {
           $target_entity_type_id = $field_definitions[$k]->getFieldStorageDefinition()
             ->getSetting('target_type');
-          $target_entity_type = $this->entityManager->getDefinition($target_entity_type_id);
+          $target_entity_type = $this->entityTypeManager->getDefinition($target_entity_type_id);
           if ($target_entity_type instanceof ContentEntityType) {
             $child_entities = $entity->{$k}->referencedEntities();
             foreach ($child_entities as $embedded_entity) {
@@ -232,7 +228,7 @@ class LingotekManagementRelatedEntitiesForm extends LingotekManagementFormBase {
 
   protected function getRow($entity) {
     $row = parent::getRow($entity);
-    $bundleInfo = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+    $bundleInfo = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
 
     if ($entity->hasLinkTemplate('canonical')) {
       $row['label'] = $entity->toLink();

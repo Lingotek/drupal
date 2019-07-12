@@ -2,7 +2,7 @@
 
 namespace Drupal\lingotek\Routing;
 
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
 use Symfony\Component\Routing\Route;
@@ -17,18 +17,18 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
   /**
    * The entity type manager
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * Constructs a RouteSubscriber object.
    *
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    */
-  public function __construct(EntityManagerInterface $entity_manager) {
-    $this->entityManager = $entity_manager;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -46,7 +46,7 @@ class LingotekRouteSubscriber extends RouteSubscriberBase {
     }
 
     $debug_enabled = \Drupal::state()->get('lingotek.enable_debug_utilities', FALSE);
-    foreach ($this->entityManager->getDefinitions() as $entity_type_id => $entity_type) {
+    foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
       if ($entity_type->isTranslatable()
           && \Drupal::config('lingotek.settings')->get('translate.entity.' . $entity_type_id)) {
 

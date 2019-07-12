@@ -50,7 +50,7 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
       ->setEnabled('node', 'article', TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -199,7 +199,7 @@ class LingotekNodeWhenFieldIsRemovedTest extends LingotekTestBase {
 
     // The teaser view mode is created by the Standard profile and therefore
     // might not exist.
-    $view_modes = \Drupal::entityManager()->getViewModes($entity_type_id);
+    $view_modes = \Drupal::service('entity_display.repository')->getViewModes($entity_type_id);
     if (isset($view_modes['teaser'])) {
       EntityViewDisplay::load($entity_type_id . '.' . $bundle . '.' . 'default')
         ->setComponent($field_name, [

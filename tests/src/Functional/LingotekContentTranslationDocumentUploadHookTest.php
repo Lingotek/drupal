@@ -53,7 +53,7 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
     \Drupal::service('content_translation.manager')->setEnabled('node', 'animal', TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -109,7 +109,7 @@ class LingotekContentTranslationDocumentUploadHookTest extends LingotekTestBase 
     $this->assertTrue(isset($data['animal_date']));
     $this->assertEqual('2016-05-01', $data['animal_date']);
 
-    // Assert he locale used was correct.
+    // Assert the locale used was correct.
     $this->assertIdentical('en_US', \Drupal::state()->get('lingotek.uploaded_locale'));
 
     // Check that the profile used was the right one.

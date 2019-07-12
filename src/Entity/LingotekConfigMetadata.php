@@ -178,9 +178,11 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
     if ($config_name == NULL) {
       return NULL;
     }
-    $config = \Drupal::entityManager()->getStorage('lingotek_config_metadata')->load($config_name);
+    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('lingotek_config_metadata');
+    $config = $storage->load($config_name);
     if ($config == NULL) {
-      $config = LingotekConfigMetadata::create(['config_name' => $config_name]);
+      $config = $storage->create(['config_name' => $config_name]);
     }
     return $config;
   }
@@ -211,8 +213,8 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
       $field_config = FieldConfig::load($entity_id);
       $value = $field_config->getConfigDependencyName();
     }
-    elseif ($this->entityManager()->hasDefinition($entity_type)) {
-      $storage = $this->entityManager()->getStorage($entity_type);
+    elseif ($this->entityTypeManager()->hasDefinition($entity_type)) {
+      $storage = $this->entityTypeManager()->getStorage($entity_type);
       $entity = $storage->load($entity_id);
       $value = ($entity) ? $entity->getConfigDependencyName() : $this->config_name;
     }
@@ -240,7 +242,7 @@ class LingotekConfigMetadata extends ConfigEntityBase implements LingotekConfigM
     else {
       list($entity_type, $entity_id) = explode('.', $this->config_name, 2);
       if (isset($mappers[$entity_type])) {
-        $storage = $this->entityManager()->getStorage($entity_type);
+        $storage = $this->entityTypeManager()->getStorage($entity_type);
         $entity = $storage->load($entity_id);
         $mapper = clone $mappers[$entity_type];
         $mapper->setEntity($entity);

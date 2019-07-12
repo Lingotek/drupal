@@ -61,7 +61,7 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
     $this->assertText('article uploaded successfully');
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($content_type));
 
-    $field = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
     // Go to config translation.
     $this->goToConfigBulkManagementForm('node_fields');
 
@@ -77,22 +77,22 @@ class LingotekConfigDependenciesTest extends LingotekTestBase {
     $content_type->delete();
 
     // Article doesn't exist anymore.
-    $type = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
     $this->assertNull($type, 'Article doesn\'t exist anymore');
 
-    $field = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
     $this->assertNull($field, 'Article Body doesn\'t exist anymore');
 
     // Import the config so everything should come back.
     $this->configImporter()->import();
 
     // Article is back.
-    $type = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $type = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
     $this->assertNotNull($type, 'Article is back');
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($type));
 
     // The Field is back.
-    $field = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    $field = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
     $this->assertNotNull($field, 'Article Body is back');
     $this->assertEqual(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($field));
   }

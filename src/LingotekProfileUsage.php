@@ -3,6 +3,7 @@
 namespace Drupal\lingotek;
 
 use Drupal\config_translation\ConfigMapperManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 
 /**
@@ -32,6 +33,13 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
   protected $configMapperManager;
 
   /**
+   * The entity type bundle info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $entityTypeBundleInfo;
+
+  /**
    * Constructs a new LingotekProfileUsage object.
    *
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
@@ -40,11 +48,18 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
    *   The entity query factory.
    * @param \Drupal\config_translation\ConfigMapperManagerInterface $config_mapper_manager
    *   The configuration mapper manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
    */
-  public function __construct(LingotekConfigurationServiceInterface $lingotek_configuration, QueryFactory $entity_query, ConfigMapperManagerInterface $config_mapper_manager) {
+  public function __construct(LingotekConfigurationServiceInterface $lingotek_configuration, QueryFactory $entity_query, ConfigMapperManagerInterface $config_mapper_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
     $this->lingotekConfiguration = $lingotek_configuration;
     $this->entityQuery = $entity_query;
     $this->configMapperManager = $config_mapper_manager;
+    if (!$entity_type_bundle_info) {
+      @trigger_error('The entity_type.bundle.info service must be passed to LingotekProfileUsage::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
+    }
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
   }
 
   /**
@@ -90,7 +105,7 @@ class LingotekProfileUsage implements LingotekProfileUsageInterface {
 
     $used = LingotekProfileUsageInterface::UNUSED;
     foreach ($entity_types as $entity_type_id => $entity_type_definition) {
-      $bundles = \Drupal::entityManager()->getBundleInfo($entity_type_id);
+      $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
       foreach ($bundles as $bundle_id => $bundle_definition) {
         $config_profile = $this->lingotekConfiguration->getDefaultProfileId($entity_type_id, $bundle_id);
         if ($config_profile === $profile->id()) {

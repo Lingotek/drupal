@@ -55,7 +55,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
 
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
@@ -88,7 +88,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity.manager')->getStorage('node_type');
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
     // The node cache needs to be reset before reload.
     $node_storage->resetCache();
     $entity = $node_storage->load('article');
@@ -162,7 +162,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
 
     // Assert the content is edited, but not auto-uploaded.
     $this->assertIdentical(Lingotek::STATUS_EDITED, $config_translation_service->getSourceStatus($entity));
@@ -200,7 +200,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity.manager')->getStorage('node_type');
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
     // The node cache needs to be reset before reload.
     $node_storage->resetCache();
     $entity = $node_storage->load('article');
@@ -283,7 +283,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
 
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
@@ -322,7 +322,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity.manager')->getStorage('node_type');
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
     // The node cache needs to be reset before reload.
     $node_storage->resetCache();
     $entity = $node_storage->load('article');
@@ -369,7 +369,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity.manager')->getStorage('node_type');
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
     // The node cache needs to be reset before reload.
     $node_storage->resetCache();
     $entity = $node_storage->load('article');
@@ -422,12 +422,12 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     \Drupal::service('router.builder')->rebuild();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $node_storage */
-    $node_storage = $this->container->get('entity.manager')->getStorage('node_type');
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node_type');
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
 
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
@@ -572,7 +572,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
     // Assert the content is importing.
-    $entity = \Drupal::entityManager()->getStorage('node_type')->load('article');
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('article');
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
 
     // Go to the bulk config management page.
@@ -604,7 +604,7 @@ class LingotekContentTypeNotificationCallbackTest extends LingotekTestBase {
     $lingotek_config->disableLanguage($italian);
 
     // Test with another content.
-    $entity = \Drupal::entityManager()->getStorage('node_type')->load('page');
+    $entity = \Drupal::entityTypeManager()->getStorage('node_type')->load('page');
 
     // Simulate the notification of content successfully uploaded.
     $url = Url::fromRoute('lingotek.notify', [], [

@@ -7,7 +7,8 @@ use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\Core\Config\ConfigCrudEvent;
 use Drupal\Core\Config\ConfigEvents;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\language\Config\LanguageConfigOverrideCrudEvent;
 use Drupal\language\Config\LanguageConfigOverrideEvents;
 use Drupal\lingotek\Lingotek;
@@ -51,9 +52,16 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
   /**
    * Entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
 
   /**
    * Constructs a LingotekConfigSubscriber.
@@ -64,21 +72,30 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
    *   The configuration mapper manager.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity manager service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
    */
-  public function __construct(LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $mapper_manager, LingotekConfigurationServiceInterface $lingotek_configuration = NULL, EntityManagerInterface $entity_manager = NULL) {
+  public function __construct(LingotekConfigTranslationServiceInterface $translation_service, ConfigMapperManagerInterface $mapper_manager, LingotekConfigurationServiceInterface $lingotek_configuration = NULL, EntityTypeManagerInterface $entity_type_manager = NULL, EntityFieldManagerInterface $entity_field_manager = NULL) {
     $this->translationService = $translation_service;
     $this->mapperManager = $mapper_manager;
     $this->mappers = $mapper_manager->getMappers();
     if (!$lingotek_configuration) {
+      @trigger_error('The lingotek.configuration service must be passed to LingotekConfigSubscriber::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
       $lingotek_configuration = \Drupal::service('lingotek.configuration');
     }
-    if (!$entity_manager) {
-      $entity_manager = \Drupal::service('entity.manager');
+    if (!$entity_type_manager) {
+      @trigger_error('The entity_type.manager service must be passed to LingotekConfigSubscriber::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $entity_type_manager = \Drupal::service('entity_type.manager');
+    }
+    if (!$entity_field_manager) {
+      @trigger_error('The entity_field.manager service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $entity_field_manager = \Drupal::service('entity_field.manager');
     }
     $this->lingotekConfiguration = $lingotek_configuration;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -133,13 +150,11 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
         $id = $config->get('id');
         list($entity_type_id, $bundle) = explode('.', $id);
         if (!$config->get('third_party_settings.content_translation.enabled')) {
-          /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
-          $lingotek_config = \Drupal::service('lingotek.configuration');
-          if ($lingotek_config->isEnabled($entity_type_id, $bundle)) {
-            $lingotek_config->setEnabled($entity_type_id, $bundle, FALSE);
-            $fields = $lingotek_config->getFieldsLingotekEnabled($entity_type_id, $bundle);
+          if ($this->lingotekConfiguration->isEnabled($entity_type_id, $bundle)) {
+            $this->lingotekConfiguration->setEnabled($entity_type_id, $bundle, FALSE);
+            $fields = $this->lingotekConfiguration->getFieldsLingotekEnabled($entity_type_id, $bundle);
             foreach ($fields as $field_name) {
-              $lingotek_config->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
+              $this->lingotekConfiguration->setFieldLingotekEnabled($entity_type_id, $bundle, $field_name, FALSE);
             }
           }
         }
@@ -150,7 +165,7 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
         if (!$config->get('translatable')) {
           /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
           $lingotek_config = $this->lingotekConfiguration;
-          $field_definition = $this->entityManager->getFieldDefinitions($entity_type_id, $bundle);
+          $field_definition = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
           // We need to make an exception for hosted entities. The field
           // reference may not be translatable, but we want to translate the
           // hosted entity. See https://www.drupal.org/node/2735121.
@@ -164,19 +179,20 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
 
     if ($event->getConfig()->getName() === 'lingotek.settings' && $event->isChanged('translate.entity')) {
       drupal_static_reset();
-      \Drupal::entityManager()->clearCachedDefinitions();
+      $this->entityFieldManager->clearCachedFieldDefinitions();
+      $this->entityTypeManager->clearCachedDefinitions();
       \Drupal::service('router.builder')->rebuild();
 
       if (\Drupal::service('entity.definition_update_manager')->needsUpdates()) {
-        $entity_types = \Drupal::service('lingotek.configuration')->getEnabledEntityTypes();
+        $entity_types = $this->lingotekConfiguration->getEnabledEntityTypes();
         foreach ($entity_types as $entity_type_id => $entity_type) {
-          $storage_definitions = \Drupal::entityManager()->getFieldStorageDefinitions($entity_type_id);
-          $installed_storage_definitions = \Drupal::entityManager()->getLastInstalledFieldStorageDefinitions($entity_type_id);
+          $storage_definitions = $this->entityFieldManager->getFieldStorageDefinitions($entity_type_id);
+          $installed_storage_definitions = \Drupal::service('entity.last_installed_schema.repository')->getLastInstalledFieldStorageDefinitions($entity_type_id);
 
           foreach (array_diff_key($storage_definitions, $installed_storage_definitions) as $storage_definition) {
             /** @var $storage_definition \Drupal\Core\Field\FieldStorageDefinitionInterface */
             if ($storage_definition->getProvider() == 'lingotek') {
-              \Drupal::entityManager()->onFieldStorageDefinitionCreate($storage_definition);
+              $this->entityTypeManager->onFieldStorageDefinitionCreate($storage_definition);
             }
           }
         }
@@ -199,38 +215,36 @@ class LingotekConfigSubscriber implements EventSubscriberInterface {
       $config_name = $configOverride->getName();
       $mapper = $this->getMapperFromConfigName($config_name);
       if ($mapper !== NULL) {
-        /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $translation_service */
-        $translation_service = \Drupal::service('lingotek.config_translation');
         if ($mapper instanceof ConfigEntityMapper) {
           $entity = $mapper->getEntity();
-          $document_id = $translation_service->getDocumentId($entity);
+          $document_id = $this->translationService->getDocumentId($entity);
           $translation_statuses = \Drupal::service('lingotek')
             ->getDocumentTranslationStatuses($document_id);
           foreach ($translation_statuses as $lingotek_locale => $progress) {
             $drupal_language = $languageMapper->getConfigurableLanguageForLocale($lingotek_locale);
             if ($drupal_language !== NULL && $drupal_language->getId() === $configOverride->getLangcode()) {
               if ($progress === Lingotek::PROGRESS_COMPLETE) {
-                $translation_service->setTargetStatus($entity, $configOverride->getLangcode(), Lingotek::STATUS_READY);
+                $this->translationService->setTargetStatus($entity, $configOverride->getLangcode(), Lingotek::STATUS_READY);
               }
               else {
-                $translation_service->setTargetStatus($entity, $configOverride->getLangcode(), Lingotek::STATUS_PENDING);
+                $this->translationService->setTargetStatus($entity, $configOverride->getLangcode(), Lingotek::STATUS_PENDING);
               }
               return;
             }
           }
         }
         else {
-          $document_id = $translation_service->getConfigDocumentId($mapper);
+          $document_id = $this->translationService->getConfigDocumentId($mapper);
           $translation_statuses = \Drupal::service('lingotek')
             ->getDocumentTranslationStatuses($document_id);
           foreach ($translation_statuses as $lingotek_locale => $progress) {
             $drupal_language = $languageMapper->getConfigurableLanguageForLocale($lingotek_locale);
             if ($drupal_language->getId() === $configOverride->getLangcode()) {
               if ($progress === Lingotek::PROGRESS_COMPLETE) {
-                $translation_service->setConfigTargetStatus($mapper, $configOverride->getLangcode(), Lingotek::STATUS_READY);
+                $this->translationService->setConfigTargetStatus($mapper, $configOverride->getLangcode(), Lingotek::STATUS_READY);
               }
               else {
-                $translation_service->setConfigTargetStatus($mapper, $configOverride->getLangcode(), Lingotek::STATUS_PENDING);
+                $this->translationService->setConfigTargetStatus($mapper, $configOverride->getLangcode(), Lingotek::STATUS_PENDING);
               }
               return;
             }

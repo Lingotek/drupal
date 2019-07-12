@@ -48,7 +48,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     \Drupal::service('content_translation.manager')->setEnabled('node', 'article', TRUE);
 
     drupal_static_reset();
-    \Drupal::entityManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
     \Drupal::service('entity.definition_update_manager')->applyUpdates();
     // Rebuild the container so that the new languages are picked up by services
     // that hold a list of languages.
@@ -85,10 +85,10 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     ];
     $translation_service->saveTargetData($node2, 'es', $es_data);
 
-    $nodeUntranslated = \Drupal::entityManager()->getStorage('node')->load(1);
+    $nodeUntranslated = \Drupal::entityTypeManager()->getStorage('node')->load(1);
     $this->assertFalse($nodeUntranslated->hasTranslation('es'));
 
-    $nodeTranslated = \Drupal::entityManager()->getStorage('node')->load(2);
+    $nodeTranslated = \Drupal::entityTypeManager()->getStorage('node')->load(2);
     $this->assertTrue($nodeTranslated->hasTranslation('es'));
   }
 
@@ -124,7 +124,7 @@ class LingotekSaveTargetDataTest extends LingotekTestBase {
     ];
     $translation_service->saveTargetData($node, 'es', $es_data);
 
-    $node = \Drupal::entityManager()->getStorage('node')->load(1);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load(1);
     $node = $node->getTranslation('es');
 
     $this->assertEqual('es body', $node->body->value, 'The body is translated correctly.');

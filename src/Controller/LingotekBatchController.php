@@ -15,7 +15,7 @@ class LingotekBatchController extends LingotekControllerBase {
     /** @var \Drupal\lingotek\Lingotek $lingotek */
     $lingotek = \Drupal::service('lingotek');
 
-    $entity = \Drupal::entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
 
     // This forces the hash to be set.
     if ($translation_service->hasEntityChanged($entity)) {
@@ -54,7 +54,7 @@ class LingotekBatchController extends LingotekControllerBase {
       'finished' => 'lingotek_operation_content_download_finished',
       'file' => drupal_get_path('module', 'lingotek') . '/lingotek.batch.inc',
     ];
-    $entity = \Drupal::entityManager()->getStorage($entity_type)->load($entity_id);
+    $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
     $redirect_url = \Drupal::urlGenerator()->generate("entity.$entity_type.content_translation_overview",
       [$entity_type => $entity_id], UrlGeneratorInterface::ABSOLUTE_URL);
     batch_set($batch);

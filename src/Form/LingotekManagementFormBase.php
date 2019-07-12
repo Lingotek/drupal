@@ -5,7 +5,9 @@ namespace Drupal\lingotek\Form;
 use Drupal\content_translation\ContentTranslationManagerInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
@@ -53,9 +55,23 @@ abstract class LingotekManagementFormBase extends FormBase {
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
+
+  /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
+
+  /**
+   * The entity type bundle info.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $entityTypeBundleInfo;
 
   /**
    * The language manager.
@@ -118,7 +134,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   The current database connection.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
@@ -141,10 +157,14 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The module handler.
    * @param string $entity_type_id
    *   The entity type id.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
    */
-  public function __construct(Connection $connection, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id) {
+  public function __construct(Connection $connection, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, QueryFactory $entity_query, LingotekInterface $lingotek, LingotekConfigurationServiceInterface $lingotek_configuration, LanguageLocaleMapperInterface $language_locale_mapper, ContentTranslationManagerInterface $content_translation_manager, LingotekContentTranslationServiceInterface $translation_service, PrivateTempStoreFactory $temp_store_factory, StateInterface $state, ModuleHandlerInterface $module_handler, $entity_type_id, EntityFieldManagerInterface $entity_field_manager = NULL, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL) {
     $this->connection = $connection;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->entityQuery = $entity_query;
     $this->contentTranslationManager = $content_translation_manager;
@@ -157,6 +177,16 @@ abstract class LingotekManagementFormBase extends FormBase {
     $this->state = $state;
     $this->moduleHandler = $module_handler;
     $this->entityTypeId = $entity_type_id;
+    if (!$entity_field_manager) {
+      @trigger_error('The entity_field.manager service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $entity_field_manager = \Drupal::service('entity_field.manager');
+    }
+    if (!$entity_type_bundle_info) {
+      @trigger_error('The entity_type.bundle.info service must be passed to LingotekManagementFormBase::__construct, it is required before Lingotek 9.x-1.0. See https://www.drupal.org/node/2549139.', E_USER_DEPRECATED);
+      $entity_type_bundle_info = \Drupal::service('entity_type.bundle.info');
+    }
+    $this->entityFieldManager = $entity_field_manager;
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
   }
 
   /**
@@ -484,11 +514,11 @@ abstract class LingotekManagementFormBase extends FormBase {
     $translations = $this->getTranslationsStatuses($entity);
     $profile = $this->lingotekConfiguration->getEntityProfile($entity, TRUE);
     $job_id = $this->translationService->getJobId($entity);
-    $entity_type = $this->entityManager->getDefinition($entityTypeId);
+    $entity_type = $this->entityTypeManager->getDefinition($entityTypeId);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
     if ($has_bundles) {
-      $bundleInfo = $this->entityManager->getBundleInfo($entityTypeId);
+      $bundleInfo = $this->entityTypeBundleInfo->getBundleInfo($entityTypeId);
       $row['bundle'] = $bundleInfo[$entity->bundle()]['label'];
     }
 
@@ -954,7 +984,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       $context['results']['exported'][] = $file->id();
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -983,7 +1013,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1006,7 +1036,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1030,7 +1060,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1054,7 +1084,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1079,7 +1109,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1105,7 +1135,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1135,7 +1165,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1169,7 +1199,7 @@ abstract class LingotekManagementFormBase extends FormBase {
       }
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1193,7 +1223,7 @@ abstract class LingotekManagementFormBase extends FormBase {
 
     }
     else {
-      $bundleInfos = $this->entityManager->getBundleInfo($entity->getEntityTypeId());
+      $bundleInfos = $this->entityTypeBundleInfo->getBundleInfo($entity->getEntityTypeId());
       drupal_set_message($this->t('The @type %label has no profile assigned so it was not processed.',
         ['@type' => $bundleInfos[$entity->bundle()]['label'], '%label' => $entity->label()]), 'warning');
     }
@@ -1283,7 +1313,7 @@ abstract class LingotekManagementFormBase extends FormBase {
    *   The bundles as a valid options array.
    */
   protected function getAllBundles() {
-    $bundles = $this->entityManager->getBundleInfo($this->entityTypeId);
+    $bundles = $this->entityTypeBundleInfo->getBundleInfo($this->entityTypeId);
     $options = [];
     foreach ($bundles as $id => $bundle) {
       $options[$id] = $bundle['label'];
@@ -1316,7 +1346,7 @@ abstract class LingotekManagementFormBase extends FormBase {
     $options = [];
     if ($this->entityTypeId === 'node') {
       /** @var GroupInterface[] $groups */
-      $groups = $this->entityManager->getStorage('group')->loadMultiple();
+      $groups = $this->entityTypeManager->getStorage('group')->loadMultiple();
       foreach ($groups as $id => $group) {
         $options[$id] = $group->label();
       }

@@ -5,9 +5,8 @@ namespace Drupal\lingotek;
 use Drupal\config_translation\ConfigEntityMapper;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\ConfigNamesMapper;
-use Drupal\Core\Config\Config;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\TypedData\TraversableTypedDataInterface;
@@ -42,9 +41,9 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
   /**
    * The entity manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * The language manager.
@@ -69,18 +68,18 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
    *   The language-locale mapper.
    * @param \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_configuration
    *   The Lingotek configuration service.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   An entity manager object.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
    * @param \Drupal\config_translation\ConfigMapperManagerInterface $mapper_manager
    *   The configuration mapper manager.
    */
-  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, ConfigMapperManagerInterface $mapper_manager) {
+  public function __construct(LingotekInterface $lingotek, LanguageLocaleMapperInterface $language_locale_mapper, LingotekConfigurationServiceInterface $lingotek_configuration, EntityTypeManagerInterface $entity_type_manager, LanguageManagerInterface $language_manager, ConfigMapperManagerInterface $mapper_manager) {
     $this->lingotek = $lingotek;
     $this->languageLocaleMapper = $language_locale_mapper;
     $this->lingotekConfiguration = $lingotek_configuration;
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->configMapperManager = $mapper_manager;
     $this->mappers = $mapper_manager->getMappers();
@@ -1333,7 +1332,7 @@ class LingotekConfigTranslationService implements LingotekConfigTranslationServi
           ->execute();
         if (!empty($id)) {
           list($mapper_id, $entity_id) = explode('.', reset($id), 2);
-          return $this->entityManager->getStorage($mapper_id)->load($entity_id);
+          return $this->entityTypeManager->getStorage($mapper_id)->load($entity_id);
         }
       }
     }

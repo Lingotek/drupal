@@ -72,7 +72,7 @@ class LingotekSourceStatusFormatterTest extends KernelTestBase {
     ]);
     $instance->save();
 
-    $this->display = $this->entityManager->getStorage('entity_view_display')
+    $this->display = $this->entityTypeManager->getStorage('entity_view_display')
       ->create([
         'targetEntityType' => $this->entityType,
         'bundle' => $this->bundle,

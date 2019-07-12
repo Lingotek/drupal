@@ -60,7 +60,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    $entity = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
 
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
@@ -91,7 +91,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');
@@ -166,7 +166,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    $entity = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
 
     // Assert the content is edited, but not auto-uploaded.
     $this->assertIdentical(Lingotek::STATUS_EDITED, $config_translation_service->getSourceStatus($entity));
@@ -204,7 +204,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->goToConfigBulkManagementForm();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');
@@ -310,12 +310,12 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     \Drupal::service('router.builder')->rebuild();
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
 
     /** @var \Drupal\lingotek\LingotekConfigTranslationServiceInterface $config_translation_service */
     $config_translation_service = \Drupal::service('lingotek.config_translation');
 
-    $entity = \Drupal::entityManager()->getStorage('field_config')->load('node.article.body');
+    $entity = \Drupal::entityTypeManager()->getStorage('field_config')->load('node.article.body');
 
     // Assert the content is importing.
     $this->assertIdentical(Lingotek::STATUS_IMPORTING, $config_translation_service->getSourceStatus($entity));
@@ -459,7 +459,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Assert the content is importing.
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');
@@ -495,7 +495,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Test with another content.
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
     $entity = $field_storage->load('node.page.body');
@@ -651,7 +651,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
     $this->assertTargetStatus('IT', Lingotek::STATUS_UNTRACKED);
 
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');
@@ -788,7 +788,7 @@ class LingotekFieldBodyNotificationCallbackTest extends LingotekTestBase {
 
     // Check that the Target Status is Untracked
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $field_storage */
-    $field_storage = $this->container->get('entity.manager')->getStorage('field_config');
+    $field_storage = $this->container->get('entity_type.manager')->getStorage('field_config');
     // The node cache needs to be reset before reload.
     $field_storage->resetCache();
     $entity = $field_storage->load('node.article.body');

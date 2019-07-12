@@ -21,7 +21,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('database'),
-      $container->get('entity.manager'),
+      $container->get('entity_type.manager'),
       $container->get('language_manager'),
       $container->get('entity.query'),
       $container->get('lingotek'),
@@ -32,7 +32,9 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       $container->get('tempstore.private'),
       $container->get('state'),
       $container->get('module_handler'),
-      \Drupal::routeMatch()->getParameter('entity_type_id')
+      \Drupal::routeMatch()->getParameter('entity_type_id'),
+      $container->get('entity_field.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -47,8 +49,8 @@ class LingotekManagementForm extends LingotekManagementFormBase {
    * {@inheritdoc}
    */
   protected function getHeaders() {
-    $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
-    $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
+    $entity_type = $this->entityTypeManager->getDefinition($this->entityTypeId);
+    $properties = $this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
     if ($has_bundles) {
       $headers['bundle'] = $entity_type->getBundleLabel();
@@ -73,7 +75,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
 
     /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
-    $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
+    $entity_type = $this->entityTypeManager->getDefinition($this->entityTypeId);
     /** @var \Drupal\Core\Database\Query\SelectInterface $query */
     $query = $this->connection->select($entity_type->getBaseTable(), 'entity_table')->extend('\Drupal\Core\Database\Query\PagerSelectExtender');
     $query->fields('entity_table', [$entity_type->getKey('id')]);
@@ -108,7 +110,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
           Lingotek::STATUS_REQUEST,
           Lingotek::STATUS_ERROR,
         ];
-        $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+        $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
         $query->innerJoin($metadata_type->getBaseTable(), 'metadata_source',
           'entity_table.' . $entity_type->getKey('id') . '= metadata_source.content_entity_id AND metadata_source.content_entity_type_id = \'' . $entity_type->id() . '\'');
         $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
@@ -140,7 +142,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $query->union($union2);
       }
       else {
-        $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+        $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
         $query->innerJoin($metadata_type->getBaseTable(), 'metadata_source',
           'entity_table.' . $entity_type->getKey('id') . '= metadata_source.content_entity_id AND metadata_source.content_entity_type_id = \'' . $entity_type->id() . '\'');
         $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_status',
@@ -209,7 +211,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     }
     if ($jobFilter) {
       /** @var \Drupal\Core\Entity\EntityTypeInterface $metadata_type */
-      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
       $query->condition('metadata.job_id', '%' . $jobFilter . '%', 'LIKE');
@@ -233,7 +235,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
       $documentIdOperator = (count($documentIdArray) > 1) ? 'IN' : 'LIKE';
       $documentIdValue = (count($documentIdArray) > 1) ? $documentIdArray : '%' . $documentIdFilter . '%';
 
-      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
         'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
       $query->condition('metadata.document_id', $documentIdValue, $documentIdOperator);
@@ -277,7 +279,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
         $profileFilter = [$profileFilter];
       }
       if (!in_array("", $profileFilter, TRUE)) {
-        $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+        $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
         $query->innerJoin($metadata_type->getBaseTable(), 'metadata',
           'entity_table.' . $entity_type->getKey('id') . '= metadata.content_entity_id AND metadata.content_entity_type_id = \'' . $entity_type->id() . '\'');
         $query->condition('metadata.profile', $profileFilter, 'IN');
@@ -315,7 +317,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     $query->condition('entity_table.' . $entity_type->getKey('langcode'), LanguageInterface::LANGCODE_NOT_SPECIFIED, '!=');
 
     if ($targetStatusFilter) {
-      $metadata_type = $this->entityManager->getDefinition('lingotek_content_metadata');
+      $metadata_type = $this->entityTypeManager->getDefinition('lingotek_content_metadata');
       $query->innerJoin($metadata_type->getBaseTable(), 'metadata_target',
         'entity_table.' . $entity_type->getKey('id') . '= metadata_target.content_entity_id AND metadata_target.content_entity_type_id = \'' . $entity_type->id() . '\'');
       $query->innerJoin('lingotek_content_metadata__translation_status', 'translation_target_status',
@@ -338,7 +340,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
     }
 
     $ids = $query->limit($items_per_page)->execute()->fetchCol(0);
-    $entities = $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($ids);
+    $entities = $this->entityTypeManager->getStorage($this->entityTypeId)->loadMultiple($ids);
 
     return $entities;
   }
@@ -347,7 +349,7 @@ class LingotekManagementForm extends LingotekManagementFormBase {
    * {@inheritdoc}
    */
   protected function getSelectedEntities($values) {
-    return $this->entityManager->getStorage($this->entityTypeId)->loadMultiple($values);
+    return $this->entityTypeManager->getStorage($this->entityTypeId)->loadMultiple($values);
   }
 
   /**
@@ -369,8 +371,8 @@ class LingotekManagementForm extends LingotekManagementFormBase {
 
     $temp_store = $this->tempStoreFactory->get($this->getTempStorageFilterKey());
 
-    $entity_type = $this->entityManager->getDefinition($this->entityTypeId);
-    $properties = $this->entityManager->getBaseFieldDefinitions($this->entityTypeId);
+    $entity_type = $this->entityTypeManager->getDefinition($this->entityTypeId);
+    $properties = $this->entityFieldManager->getBaseFieldDefinitions($this->entityTypeId);
     $has_bundles = $entity_type->get('bundle_entity_type') != 'bundle';
 
     $groupsExists = $this->moduleHandler->moduleExists('group') && $this->entityTypeId === 'node';

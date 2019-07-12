@@ -30,7 +30,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
 
-    $entity_type_definitions = \Drupal::entityManager()->getDefinitions();
+    $entity_type_definitions = \Drupal::entityTypeManager()->getDefinitions();
 
     // Get the profiles
     $this->retrieveProfileOptions();
@@ -192,7 +192,7 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveProfileOptions() {
-    $this->profiles = \Drupal::entityManager()->getListBuilder('lingotek_profile')->load();
+    $this->profiles = \Drupal::entityTypeManager()->getListBuilder('lingotek_profile')->load();
 
     foreach ($this->profiles as $profile) {
       $this->profile_options[$profile->id()] = $profile->label();
@@ -200,12 +200,12 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveBundles() {
-    $entities = \Drupal::entityManager()->getDefinitions();
+    $entities = \Drupal::entityTypeManager()->getDefinitions();
     $this->bundles = [];
 
     foreach ($entities as $entity) {
       if ($entity instanceof ContentEntityType && $entity->hasKey('langcode')) {
-        $bundle = \Drupal::entityManager()->getBundleInfo($entity->id());
+        $bundle = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity->id());
         $this->bundles[$entity->id()] = $bundle;
       }
     }
@@ -244,15 +244,15 @@ class LingotekSettingsTabContentForm extends LingotekConfigFormBase {
   }
 
   protected function retrieveFields($entity_id, $bundle_id) {
-    $entity_type = \Drupal::entityManager()->getDefinition($entity_id);
+    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_id);
     /** @var \Drupal\lingotek\LingotekConfigurationServiceInterface $lingotek_config */
     $lingotek_config = \Drupal::service('lingotek.configuration');
     $content_translation_manager = \Drupal::service('content_translation.manager');
-    $storage_definitions = \Drupal::entityManager()->getFieldStorageDefinitions($entity_id);
+    $storage_definitions = \Drupal::service('entity_field.manager')->getFieldStorageDefinitions($entity_id);
     $field_checkboxes = [];
 
     if ($content_translation_manager->isSupported($entity_id)) {
-      $fields = \Drupal::entityManager()->getFieldDefinitions($entity_id, $bundle_id);
+      $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($entity_id, $bundle_id);
       // Find which fields the user previously selected
       foreach ($fields as $field_id => $field_definition) {
         $checkbox_choice = 0;
